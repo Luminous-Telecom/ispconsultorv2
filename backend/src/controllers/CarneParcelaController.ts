@@ -434,35 +434,167 @@ export class CarneParcelaController {
       }
 
       await parcela.update({
+        pago: false,
         data_pagamento: null,
         valor_pago: null,
         observacoes: '',
         status: 'pendente'
       });
 
+      // Verificar e atualizar status do carnê
+      const carne = await parcela.getCarne();
+      await carne.verificarEAtualizarStatus();
+
       res.json({ success: true, message: 'Parcela desmarcada como paga' });
-    } catch (error) {
-      console.error('Erro ao desmarcar parcela como paga:', error);
+    } catch (error: any) {
+      logger.error('Erro ao desmarcar parcela como paga', {
+        parcela_id: req.params.id,
+        error: error.message
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 
-  static async update(req: Request, res: Response): Promise<void> {
+  /**
+   * Deletar parcela
+   */
+  static async destroy(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const updateData = req.body;
 
-      const parcela = await CarneParcela.findByPk(id);
+      const parcela = await CarneParcela.findByPk(id, {
+        include: [{ association: 'carne', include: [{ association: 'banco' }] }]
+      });
+
       if (!parcela) {
         res.status(404).json({ error: 'Parcela não encontrada' });
         return;
       }
 
-      await parcela.update(updateData);
+      // Verificar se a parcela já foi paga
+      if (parcela.status === 'pago') {
+        res.status(400).json({ error: 'Não é possível excluir parcela que já foi paga.' });
+        return;
+      }
 
-      res.json({ success: true, message: 'Parcela atualizada com sucesso' });
-    } catch (error) {
-      console.error('Erro ao atualizar parcela:', error);
+      const carne = await parcela.getCarne();
+      const banco = await carne.getBanco();
+
+      // Cancelar título no banco se existir
+      if (parcela.charge_id) {
+        logger.info('Cancelando título no banco antes de deletar', {
+          parcela_id: parcela.id,
+          charge_id: parcela.charge_id,
+          banco_tipo: banco.tipo_banco
+        });
+
+        const resultado = await BancoApiService.cancelarParcelaCarne(parcela);
+        if (!resultado.success) {
+          logger.warning('Erro ao cancelar parcela de carnê', {
+            parcela_id: parcela.id,
+            erro: resultado.message
+          });
+        }
+      }
+
+      await parcela.destroy();
+
+      res.json({ success: true, message: 'Parcela excluída com sucesso!' });
+    } catch (error: any) {
+      logger.error('Erro ao deletar parcela', {
+        parcela_id: req.params.id,
+        error: error.message
+      });
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  }
+
+  /**
+   * Atualizar parcela
+   */
+  static async update(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { data_vencimento, valor_parcela, observacoes } = req.body;
+
+      logger.info('=== INÍCIO UPDATE PARCELA ===', {
+        parcela_id: id,
+        request_data: req.body,
+        method: req.method,
+        url: req.url
+      });
+
+      const parcela = await CarneParcela.findByPk(id, {
+        include: [{ association: 'carne', include: [{ association: 'banco' }] }]
+      });
+
+      if (!parcela) {
+        res.status(404).json({ error: 'Parcela não encontrada' });
+        return;
+      }
+
+      const carne = await parcela.getCarne();
+      const banco = await carne.getBanco();
+
+      // Se o campo valor_parcela não foi enviado (carnê EFI), usar o valor atual
+      const novoValorParcela = valor_parcela || parcela.valor_parcela;
+
+      // Verificar se mudou a data de vencimento e se for Efí com carnê, alterar via API
+      const novaDataVencimento = data_vencimento ? new Date(data_vencimento).toISOString().split('T')[0] : null;
+      const dataVencimentoOriginal = parcela.data_vencimento.toISOString().split('T')[0];
+      
+      logger.info('Verificando alteração de vencimento', {
+        parcela_id: parcela.id,
+        data_original: dataVencimentoOriginal,
+        data_nova: novaDataVencimento,
+        mudou: novaDataVencimento !== dataVencimentoOriginal,
+        banco: banco?.tipo_banco,
+        carnet_id: carne.carnet_id
+      });
+      
+      if (
+        novaDataVencimento && 
+        novaDataVencimento !== dataVencimentoOriginal &&
+        banco && banco.tipo_banco === 'efi' &&
+        carne.carnet_id && parcela.numero_parcela
+      ) {
+        logger.info('Alterando vencimento via API da EFI', {
+          parcela_id: parcela.id,
+          nova_data: novaDataVencimento
+        });
+        
+        const resultado = await BancoApiService.alterarVencimentoParcelaCarne(parcela, novaDataVencimento);
+        if (!resultado.success) {
+          logger.error('Falha ao alterar vencimento na EFI', {
+            parcela_id: parcela.id,
+            erro: resultado.message || 'Erro desconhecido'
+          });
+          res.status(400).json({ 
+            error: 'Falha ao alterar vencimento na Efí: ' + (resultado.message || 'Erro desconhecido')
+          });
+          return;
+        }
+      }
+
+      // Atualizar dados locais
+      await parcela.update({
+        data_vencimento: novaDataVencimento ? new Date(novaDataVencimento) : parcela.data_vencimento,
+        valor_parcela: novoValorParcela,
+        observacoes: observacoes || parcela.observacoes
+      });
+
+      logger.info('Parcela atualizada com sucesso', {
+        parcela_id: parcela.id,
+        nova_data_vencimento: novaDataVencimento,
+        novo_valor: novoValorParcela
+      });
+
+      res.json({ success: true, message: 'Parcela atualizada com sucesso!' });
+    } catch (error: any) {
+      logger.error('Erro ao atualizar parcela', {
+        parcela_id: req.params.id,
+        error: error.message
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }

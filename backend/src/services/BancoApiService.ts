@@ -727,6 +727,264 @@ export class BancoApiService {
   }
 
   /**
+   * Cancelar parcela específica de carnê
+   */
+  static async cancelarParcelaCarne(parcela: CarneParcela): Promise<ApiResponse> {
+    const carne = await parcela.getCarne();
+    const banco = await carne.getBanco();
+    
+    try {
+      const config = this.getBancoConfig(banco.tipo_banco);
+      if (!config) {
+        return {
+          success: false,
+          message: 'Configurações do banco não encontradas'
+        };
+      }
+
+      // Verificar se o banco suporta operações de carnê
+      if (!config.operacoes_suportadas.cancelar_parcela_carne) {
+        // Para outros bancos, usar método individual
+        return this.cancelarTitulo(parcela);
+      }
+
+      const token = await this.obterToken(banco, config);
+      if (!token) {
+        return {
+          success: false,
+          message: 'Falha ao obter token de acesso'
+        };
+      }
+
+      // Verificar se o carnê tem carnet_id e a parcela tem número
+      if (!carne.carnet_id || !parcela.numero_parcela) {
+        return this.cancelarTitulo(parcela);
+      }
+      
+      // Endpoint para cancelar parcela do carnê
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_parcela_cancelar}/${carne.carnet_id}/parcel/${parcela.numero_parcela}/cancel`;
+      
+      logger.info('Enviando requisição para cancelar parcela do carnê', {
+        endpoint,
+        carnet_id: carne.carnet_id,
+        numero_parcela: parcela.numero_parcela,
+        parcela_id: parcela.id
+      });
+
+      const response = await axios.put(endpoint, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      logger.info('Resposta do cancelamento de parcela de carnê', {
+        endpoint,
+        status: response.status,
+        data: response.data
+      });
+
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          message: 'Parcela cancelada com sucesso'
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Erro ao cancelar parcela: ' + response.status
+      };
+    } catch (error: any) {
+      logger.error('Erro ao cancelar parcela do carnê', {
+        parcela_id: parcela.id,
+        carnet_id: carne.carnet_id,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao cancelar parcela: ' + error.message
+      };
+    }
+  }
+
+  /**
+   * Cancelar título individual
+   */
+  static async cancelarTitulo(parcela: CarneParcela): Promise<ApiResponse> {
+    const carne = await parcela.getCarne();
+    const banco = await carne.getBanco();
+    
+    try {
+      const config = this.getBancoConfig(banco.tipo_banco);
+      if (!config) {
+        return {
+          success: false,
+          message: 'Configurações do banco não encontradas'
+        };
+      }
+
+      if (!parcela.charge_id) {
+        return {
+          success: false,
+          message: 'Charge ID não encontrado'
+        };
+      }
+
+      const token = await this.obterToken(banco, config);
+      if (!token) {
+        return {
+          success: false,
+          message: 'Falha ao obter token de acesso'
+        };
+      }
+
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = `${baseUrlCobranca}${config.api_endpoints.cancelar}/${parcela.charge_id}/cancel`;
+
+      logger.info('Enviando requisição para cancelar título individual', {
+        endpoint,
+        charge_id: parcela.charge_id,
+        parcela_id: parcela.id
+      });
+
+      const response = await axios.put(endpoint, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      logger.info('Resposta do cancelamento de título individual', {
+        endpoint,
+        status: response.status,
+        data: response.data
+      });
+
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          message: 'Título cancelado com sucesso'
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Erro ao cancelar título: ' + response.status
+      };
+    } catch (error: any) {
+      logger.error('Erro ao cancelar título individual', {
+        parcela_id: parcela.id,
+        charge_id: parcela.charge_id,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao cancelar título: ' + error.message
+      };
+    }
+  }
+
+  /**
+   * Alterar vencimento de uma parcela específica do carnê
+   * PUT /v1/carnet/:id/parcel/:parcel { expire_at }
+   */
+  static async alterarVencimentoParcelaCarne(parcela: CarneParcela, expireAt: string): Promise<ApiResponse> {
+    const carne = await parcela.getCarne();
+    const banco = await carne.getBanco();
+    
+    try {
+      const config = this.getBancoConfig(banco.tipo_banco);
+      if (!config) {
+        return {
+          success: false,
+          message: 'Configurações do banco não encontradas'
+        };
+      }
+
+      if (!config.operacoes_suportadas.alterar_vencimento_parcela_carne || !carne.carnet_id || !parcela.numero_parcela) {
+        return {
+          success: false,
+          message: 'Operação não suportada ou identificadores ausentes'
+        };
+      }
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(expireAt)) {
+        return {
+          success: false,
+          message: 'Data inválida. Use o formato YYYY-MM-DD'
+        };
+      }
+
+      const token = await this.obterToken(banco, config);
+      if (!token) {
+        return {
+          success: false,
+          message: 'Falha ao obter token de acesso'
+        };
+      }
+
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_parcela_alterar_vencimento.replace(':id', carne.carnet_id.toString()).replace(':parcel', parcela.numero_parcela.toString())}`;
+
+      const payload = { expire_at: expireAt };
+
+      logger.info('Enviando requisição para alterar vencimento da parcela do carnê', {
+        endpoint,
+        carnet_id: carne.carnet_id,
+        numero_parcela: parcela.numero_parcela,
+        expire_at: expireAt,
+        parcela_id: parcela.id
+      });
+
+      const response = await axios.put(endpoint, payload, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      logger.info('Resposta da alteração de vencimento', {
+        endpoint,
+        status: response.status,
+        data: response.data
+      });
+
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          message: 'Vencimento alterado com sucesso'
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Erro ao alterar vencimento: ' + response.status
+      };
+    } catch (error: any) {
+      logger.error('Erro ao alterar vencimento da parcela do carnê', {
+        parcela_id: parcela.id,
+        carnet_id: carne.carnet_id,
+        expire_at: expireAt,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao alterar vencimento: ' + error.message
+      };
+    }
+  }
+
+  /**
    * Gerar títulos individuais quando carnê não é suportado
    */
   private static async gerarTitulosIndividuais(carne: Carne): Promise<ApiResponse> {
