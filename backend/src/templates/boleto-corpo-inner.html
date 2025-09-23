@@ -57,27 +57,71 @@ table.infRec { width: 100% !important; max-width: 100% !important; }
 <span> {{DATA_DOCUMENTO}} </span></td>
 <td colspan="2">N<u>o</u> documento<br>
 <span> {{NUMERO_DOCUMENTO}} </span></td>
-<td colspan="2">Nosso Número<br>
+<td>Tipo DOC<br>
+<span> {{ESPECIE_DOC}} </span></td>
+<td>Aceite<br>
+<span>N</span></td>
+<td>Processamento<br>
+<span> {{DATA_PROC}} </span></td>
+<td>Nosso Número<br>
 <span class="lD"> {{NOSSO_NUMERO}} </span></td>
-<td>Valor<br>
-<span class="vV lD"> {{VALOR_BOLETO}} </span></td>
 </tr>
 
 <tr>
-<td rowspan="1" colspan="4"> Instruções de responsabilidade do Beneficiário.<br />
+<td>Uso do Banco<br>
+<span>&nbsp;</span></td>
+<td>CIP<br>
+<span>&nbsp;</span></td>
+<td>Carteira<br>
+<span> {{CARTEIRA}} {{VAR_CARTEIRA}} </span></td>
+<td>Espécie<br>
+<span> {{ESPECIE}} </span></td>
+<td>Quantidade<br>
+<span><!-- {{QUANTIDADE}} --></span></td>
+<td>(x) Valor<br>
+<span><!-- {{VALOR_UNITARIO}} --></span></td>
+<td>(=) Valor<br>
+<span class="vV lD"> {{VALOR_BOLETO}} </span></td>
+</tr>
+<tr>
+<td rowspan="5" colspan="4"> Instruções de responsabilidade do Beneficiário.<br />
 Qualquer dúvida contate o beneficiário. <br>
 <span>
+
+<!-- BEGIN BLOCK_INSTAUTO -->
+{{TEXTO_MULTAMORA}} <br />
+<!-- END BLOCK_INSTAUTO -->
 {{INSTRUCOES1}} <br />
+{{INSTRUCOES2}} <br />
+{{INSTRUCOES3}} <br />
+{{INSTRUCOES4}} <br />
+{{INSTRUCOES5}} <br />
 </span></td>
-<td rowspan="1" colspan="2">
+<td rowspan="5" colspan="2">
 <div style="text-align: center;">
 <img src="{{QRCODE}}" hspace="1" vspace="1" style="width: 120px; height: 120px; max-width: 120px; max-height: 120px;" />
 <br>
 <span style="font-size: 10px; font-weight: bold; color: #0066cc;">Pague no Pix e da baixa na hora</span>
 </div>
 </td>
-<td>Valor Cobrado<br>
-<span class="vV lD"> {{VALOR_BOLETO}} </span></td>
+<td>(-) Desconto / Abatimentos<br>
+<span class="lD">&nbsp;</span></td>
+</tr>
+<tr>
+<td>(-) Outras Deduções<br>
+<span class="lD">&nbsp;</span></td>
+</tr>
+<tr>
+<td>(+) Mora/Multa<br>
+<span class="lD">&nbsp;</span></td>
+</tr>
+<tr>
+<td>(+) Outros Acréscimos<br>
+<span class="lD">&nbsp;</span></td>
+</tr>
+<tr>
+<td>(=) Valor Cobrado<br>
+<span class="vV lD">&nbsp;</span></td>
 </tr>
 <tr>
 <td colspan="7"><table width="666" class="infRec">
