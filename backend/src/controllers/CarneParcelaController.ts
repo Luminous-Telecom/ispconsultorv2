@@ -9,6 +9,288 @@ import { createCanvas } from 'canvas';
 import QRCode from 'qrcode';
 
 export class CarneParcelaController {
+  
+  // Método para processar template do topo
+  private static processarTemplateTopo(template: string, variables: any): string {
+    const topoVariables = {
+      LOGOMARCA: variables.LOGOMARCA,
+      CEDENTE: variables.CEDENTE,
+      EMPRESACPF: variables.EMPRESACPF,
+      EMPRESAENDERECO: variables.EMPRESAENDERECO,
+      EMPRESABAIRRO: variables.EMPRESABAIRRO,
+      EMPRESACEP: variables.EMPRESACEP,
+      EMPRESACIDADE: variables.EMPRESACIDADE,
+      EMPRESAESTADO: variables.EMPRESAESTADO,
+      LOGOSVA: variables.LOGOSVA,
+      NUMERO_DOCUMENTO: variables.NUMERO_DOCUMENTO,
+      SACADO_IDNOME: variables.SACADO_IDNOME,
+      SACADO_ENDERECO: variables.SACADO_ENDERECO,
+      SACADO_COMPLEMENTO: variables.SACADO_COMPLEMENTO,
+      SACADO_BAIRRO: variables.SACADO_BAIRRO,
+      SACADO_CEP: variables.SACADO_CEP,
+      SACADO_CIDADE: variables.SACADO_CIDADE,
+      SACADO_ESTADO: variables.SACADO_ESTADO,
+      TITULONN: variables.TITULONN,
+      DATA_ORIGINAL: variables.DATA_ORIGINAL,
+      SACADO_CPF: variables.SACADO_CPF,
+      DATA_PROC: variables.DATA_PROC,
+      MOVIMENTO: variables.MOVIMENTO,
+      VALOR_COBRADO: variables.VALOR_COBRADO,
+      TAXA_BOLETO: variables.TAXA_BOLETO,
+      MULTA_MORA: variables.MULTA_MORA,
+      DEMONSTRATIVO1: variables.DEMONSTRATIVO1,
+      DEMONSTRATIVO2: variables.DEMONSTRATIVO2,
+      DEMONSTRATIVO3: variables.DEMONSTRATIVO3,
+      DEMONSTRATIVO4: variables.DEMONSTRATIVO4,
+      VALOR_BOLETO: variables.VALOR_BOLETO
+    };
+
+    let processedTemplate = template;
+    Object.entries(topoVariables).forEach(([key, value]) => {
+      processedTemplate = processedTemplate.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    });
+
+    return processedTemplate;
+  }
+
+  // Método para processar template do corpo
+  private static processarTemplateCorpo(template: string, variables: any): string {
+    const corpoVariables = {
+      LOGOBANCO: variables.LOGOBANCO,
+      CODIGO_BANCO_COM_DV: variables.CODIGO_BANCO_COM_DV,
+      LINHA_DIGITAVEL: variables.LINHA_DIGITAVEL,
+      LOCAL_PAGAMENTO: variables.LOCAL_PAGAMENTO,
+      DATA_VENC: variables.DATA_VENC,
+      CEDENTE: variables.CEDENTE,
+      AGENCIA_CODIGO: variables.AGENCIA_CODIGO,
+      DATA_DOCUMENTO: variables.DATA_DOCUMENTO,
+      NUMERO_DOCUMENTO: variables.NUMERO_DOCUMENTO,
+      ESPECIE_DOC: variables.ESPECIE_DOC,
+      DATA_PROC: variables.DATA_PROC,
+      NOSSO_NUMERO: variables.NOSSO_NUMERO,
+      CARTEIRA: variables.CARTEIRA,
+      VAR_CARTEIRA: variables.VAR_CARTEIRA,
+      ESPECIE: variables.ESPECIE,
+      QUANTIDADE: variables.QUANTIDADE,
+      VALOR_UNITARIO: variables.VALOR_UNITARIO,
+      VALOR_BOLETO: variables.VALOR_BOLETO,
+      TEXTO_MULTAMORA: variables.TEXTO_MULTAMORA,
+      INSTRUCOES1: variables.INSTRUCOES1,
+      INSTRUCOES2: variables.INSTRUCOES2,
+      INSTRUCOES3: variables.INSTRUCOES3,
+      INSTRUCOES4: variables.INSTRUCOES4,
+      INSTRUCOES5: variables.INSTRUCOES5,
+      QRCODE: variables.QRCODE,
+      SACADO_NOME: variables.SACADO_NOME,
+      TIPO_PSACADO: variables.TIPO_PSACADO,
+      SACADO_ENDERECO: variables.SACADO_ENDERECO,
+      SACADO_BAIRRO: variables.SACADO_BAIRRO,
+      SACADO_COMPLEMENTO: variables.SACADO_COMPLEMENTO,
+      SACADO_CIDADE: variables.SACADO_CIDADE,
+      SACADO_ESTADO: variables.SACADO_ESTADO,
+      SACADO_CEP: variables.SACADO_CEP,
+      BOLETO_BARCODE2: variables.BOLETO_BARCODE2
+    };
+
+    let processedTemplate = template;
+    Object.entries(corpoVariables).forEach(([key, value]) => {
+      processedTemplate = processedTemplate.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    });
+
+    return processedTemplate;
+  }
+
+  // Método para gerar apenas o topo do boleto
+  static async gerarTopoBoleto(parcelaId: number): Promise<string> {
+    try {
+      console.log('DEBUG: Gerando topo para parcela ID:', parcelaId);
+      const parcela = await CarneParcela.findByPk(parcelaId, {
+        include: [{ association: 'carne', include: ['cliente', 'plano', 'banco'] }],
+      });
+
+      if (!parcela) {
+        throw new Error('Parcela não encontrada');
+      }
+
+      const dadosEmpresa = await DadosEmpresa.findOne();
+      
+      // Carregar apenas o template do topo
+      const templateTopoPath = path.join(__dirname, '../templates/boleto-topo.html');
+      let templateTopo = fs.readFileSync(templateTopoPath, { encoding: 'utf8' });
+
+      // Gerar variáveis (mesma lógica do imprimirBoleto)
+      const variables = await this.gerarVariaveisBoleto(parcela, dadosEmpresa);
+      
+      // Processar apenas o topo
+      return this.processarTemplateTopo(templateTopo, variables);
+    } catch (error) {
+      console.error('Erro ao gerar topo do boleto:', error);
+      throw error;
+    }
+  }
+
+  // Método para gerar apenas o corpo do boleto
+  static async gerarCorpoBoleto(parcelaId: number): Promise<string> {
+    try {
+      console.log('DEBUG: Gerando corpo para parcela ID:', parcelaId);
+      const parcela = await CarneParcela.findByPk(parcelaId, {
+        include: [{ association: 'carne', include: ['cliente', 'plano', 'banco'] }],
+      });
+
+      if (!parcela) {
+        throw new Error('Parcela não encontrada');
+      }
+
+      const dadosEmpresa = await DadosEmpresa.findOne();
+      
+      // Carregar apenas o template do corpo
+      const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo.html');
+      let templateCorpo = fs.readFileSync(templateCorpoPath, { encoding: 'utf8' });
+
+      // Gerar variáveis (mesma lógica do imprimirBoleto)
+      const variables = await this.gerarVariaveisBoleto(parcela, dadosEmpresa);
+      
+      // Processar apenas o corpo
+      return this.processarTemplateCorpo(templateCorpo, variables);
+    } catch (error) {
+      console.error('Erro ao gerar corpo do boleto:', error);
+      throw error;
+    }
+  }
+
+  // Método auxiliar para gerar variáveis do boleto
+  private static async gerarVariaveisBoleto(parcela: any, dadosEmpresa: any): Promise<any> {
+    const formatMoney = (value: number) => {
+      return value.toFixed(2).replace('.', ',');
+    };
+
+    const safe = (value: any, fallback = '') => {
+      return value !== null && value !== '' ? value : fallback;
+    };
+
+    const generateCodigoBarras = (parcela: any) => {
+      // Implementar lógica de geração do código de barras
+      return '12345678901234567890123456789012345678901234';
+    };
+
+    const generateLinhaDigitavel = (parcela: any) => {
+      // Implementar lógica de geração da linha digitável
+      return '12345.67890.12345.678901.23456.789012.3.45678901234567';
+    };
+
+    const generateQRCode = async (parcela: any) => {
+      try {
+        const qrData = `ID:${parcela.id}|VALOR:${parcela.valor_parcela}|VENC:${parcela.data_vencimento}`;
+        return await QRCode.toDataURL(qrData);
+      } catch (error) {
+        console.error('Erro ao gerar QR Code:', error);
+        return '';
+      }
+    };
+
+    const generateBarcodeBase64 = (data: string) => {
+      try {
+        const canvas = createCanvas(400, 70);
+        JsBarcode(canvas, data, {
+          format: "CODE128",
+          width: 3,
+          height: 55,
+          displayValue: false,
+          background: "#ffffff",
+          lineColor: "#000000"
+        });
+        return canvas.toDataURL('image/png');
+      } catch (error) {
+        console.error('Erro ao gerar código de barras:', error);
+        return '';
+      }
+    };
+
+    // Gerar QR Code primeiro
+    const qrCodeData = await generateQRCode(parcela);
+
+    return {
+      // Dados da empresa
+      LOGOMARCA: (() => {
+        if (dadosEmpresa?.logo) {
+          if (dadosEmpresa.logo.startsWith('http')) {
+            return dadosEmpresa.logo;
+          }
+          return `/uploads/empresa/${dadosEmpresa.logo}`;
+        }
+        return `/images/bancos/boletoproprio.png`;
+      })(),
+      
+      LOGOBANCO: (() => {
+        const banco = (parcela as any).carne?.banco;
+        if (banco?.tipo_banco) {
+          return `/images/bancos/${banco.tipo_banco}.png`;
+        }
+        return `/images/bancos/boletoproprio.png`;
+      })(),
+
+      CEDENTE: safe(dadosEmpresa?.razao_social),
+      EMPRESACPF: safe(dadosEmpresa?.cnpj),
+      EMPRESAENDERECO: safe(dadosEmpresa?.endereco),
+      EMPRESABAIRRO: safe(dadosEmpresa?.bairro),
+      EMPRESACEP: safe(dadosEmpresa?.cep),
+      EMPRESACIDADE: safe(dadosEmpresa?.cidade),
+      EMPRESAESTADO: safe(dadosEmpresa?.estado),
+      LOGOSVA: '',
+      QUANTIDADE: '1',
+      VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')}`,
+
+      // Dados do boleto
+      NUMERO_DOCUMENTO: safe(parcela.numero_parcela),
+      CODIGO_BANCO_COM_DV: safe((parcela as any).carne?.banco?.codigo_banco),
+      LINHA_DIGITAVEL: parcela.linha_digitavel || generateLinhaDigitavel(parcela),
+      LOCAL_PAGAMENTO: safe((parcela as any).carne?.banco?.local_pagamento),
+      DATA_VENC: safe(parcela.data_vencimento),
+      AGENCIA_CODIGO: safe((parcela as any).carne?.banco?.agencia_codigo),
+      DATA_DOCUMENTO: safe(parcela.data_emissao),
+      ESPECIE_DOC: safe((parcela as any).carne?.banco?.especie_doc),
+      DATA_PROC: safe(parcela.data_processamento),
+      NOSSO_NUMERO: safe(parcela.nosso_numero),
+      CARTEIRA: safe((parcela as any).carne?.banco?.carteira),
+      VAR_CARTEIRA: '',
+      ESPECIE: safe((parcela as any).carne?.banco?.especie),
+      VALOR_BOLETO: formatMoney(parcela.valor_parcela),
+      TEXTO_MULTAMORA: safe((parcela as any).carne?.banco?.texto_multamora),
+      INSTRUCOES1: safe((parcela as any).carne?.banco?.instrucoes1),
+      INSTRUCOES2: safe((parcela as any).carne?.banco?.instrucoes2),
+      INSTRUCOES3: safe((parcela as any).carne?.banco?.instrucoes3),
+      INSTRUCOES4: safe((parcela as any).carne?.banco?.instrucoes4),
+      INSTRUCOES5: safe((parcela as any).carne?.banco?.instrucoes5),
+      QRCODE: qrCodeData,
+      BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
+        <img src="${generateBarcodeBase64(parcela.codigo_barras || generateCodigoBarras(parcela))}" 
+             alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
+      </div>`,
+
+      // Dados do cliente
+      SACADO_IDNOME: safe((parcela as any).carne?.cliente?.razao_social),
+      SACADO_ENDERECO: safe((parcela as any).carne?.cliente?.endereco),
+      SACADO_COMPLEMENTO: safe((parcela as any).carne?.cliente?.complemento),
+      SACADO_BAIRRO: safe((parcela as any).carne?.cliente?.bairro),
+      SACADO_CEP: safe((parcela as any).carne?.cliente?.cep),
+      SACADO_CIDADE: safe((parcela as any).carne?.cliente?.cidade),
+      SACADO_ESTADO: safe((parcela as any).carne?.cliente?.estado),
+      SACADO_CPF: safe((parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf),
+      TITULONN: safe(parcela.numero_parcela),
+      DATA_ORIGINAL: safe(parcela.data_vencimento),
+      MOVIMENTO: 'Valor do título',
+      VALOR_COBRADO: formatMoney(parcela.valor_parcela),
+      TAXA_BOLETO: '0,00',
+      MULTA_MORA: '0,00',
+      DEMONSTRATIVO1: safe((parcela as any).carne?.banco?.demonstrativo1),
+      DEMONSTRATIVO2: safe((parcela as any).carne?.banco?.demonstrativo2),
+      DEMONSTRATIVO3: safe((parcela as any).carne?.banco?.demonstrativo3),
+      DEMONSTRATIVO4: safe((parcela as any).carne?.banco?.demonstrativo4),
+      SACADO_NOME: safe((parcela as any).carne?.cliente?.razao_social),
+      TIPO_PSACADO: (parcela as any).carne?.cliente?.cnpj ? 'CNPJ' : 'CPF'
+    };
+  }
+
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { carne_id, search, status, page = 1, limit = 10 } = req.query;
@@ -175,123 +457,36 @@ export class CarneParcelaController {
     try {
       console.log('DEBUG: Iniciando imprimirBoleto para ID:', req.params.id);
       const { id } = req.params;
+      
       const parcela = await CarneParcela.findByPk(id, {
         include: [{ association: 'carne', include: ['cliente', 'plano', 'banco'] }],
       });
 
       if (!parcela) {
-        console.log('DEBUG: Parcela não encontrada para ID:', id);
         res.status(404).json({ error: 'Parcela não encontrada' });
         return;
       }
+
+      const dadosEmpresa = await DadosEmpresa.findOne();
       
-      console.log('DEBUG: Parcela encontrada, iniciando geração do boleto');
+      // Carregar templates HTML separados
+      const templateTopoPath = path.join(__dirname, '../templates/boleto-topo.html');
+      const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo.html');
+      
+      let templateTopo = fs.readFileSync(templateTopoPath, { encoding: 'utf8' });
+      let templateCorpo = fs.readFileSync(templateCorpoPath, { encoding: 'utf8' });
 
-      const formatMoney = (value: number) => {
-        return value.toFixed(2).replace('.', ',');
-      };
-
-      const safe = (value: any, fallback = '') => {
-        return value !== null && value !== '' ? value : fallback;
-      };
-
-      // Função para calcular fator de vencimento (dias desde 07/10/1997)
-      const calculateFatorVencimento = (dataVencimento: string) => {
-        const dataBase = new Date('1997-10-07');
-        const dataVenc = new Date(dataVencimento);
-        const diffTime = dataVenc.getTime() - dataBase.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays.toString().padStart(4, '0');
-      };
-
-      // Função para calcular dígito verificador módulo 10
-      const calculateDV = (campo: string) => {
-        const multiplicadores = [2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1];
-        let soma = 0;
-        
-        for (let i = 0; i < campo.length && i < multiplicadores.length; i++) {
-          const digito = parseInt(campo[i]);
-          if (isNaN(digito)) continue;
-          
-          const produto = digito * multiplicadores[i];
-          soma += produto > 9 ? Math.floor(produto / 10) + (produto % 10) : produto;
+      // Gerar QR Code e código de barras
+      const generateQRCode = async (parcela: any) => {
+        try {
+          const qrData = `ID:${parcela.id}|VALOR:${parcela.valor_parcela}|VENC:${parcela.data_vencimento}`;
+          return await QRCode.toDataURL(qrData);
+        } catch (error) {
+          console.error('Erro ao gerar QR Code:', error);
+          return '';
         }
-        
-        const resto = soma % 10;
-        return resto === 0 ? 0 : 10 - resto;
       };
 
-      // Função para gerar Nosso Número realista
-      const generateNossoNumero = (parcela: any) => {
-        const banco = (parcela as any).carne?.banco;
-        const codigoBanco = banco?.codigo && banco.codigo.trim() !== '' ? banco.codigo : '000';
-        const parcelaId = parcela.id.toString().padStart(8, '0');
-        const carneId = (parcela as any).carne?.id?.toString().padStart(4, '0') || '0000';
-        
-        // Formato: Código do Banco + ID do Carnê + ID da Parcela + DV
-        const baseNumber = `${codigoBanco}${carneId}${parcelaId}`;
-        
-        // Calcular dígito verificador simples (soma dos dígitos módulo 10)
-        const soma = baseNumber.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
-        const dv = soma % 10;
-        
-        return `${baseNumber}${dv}`;
-      };
-
-      // Função para gerar código de barras realista (FEBRABAN)
-      const generateCodigoBarras = (parcela: any) => {
-        const banco = (parcela as any).carne?.banco;
-        const codigoBanco = banco?.codigo && banco.codigo.trim() !== '' ? banco.codigo : '000';
-        const moeda = '9'; // Real
-        const fatorVencimento = calculateFatorVencimento(parcela.data_vencimento);
-        const valor = parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', '').padStart(10, '0');
-        const nossoNumero = generateNossoNumero(parcela);
-        
-        // Usar dados reais do banco quando disponíveis
-        const identificadorConta = banco?.identificador_conta && banco.identificador_conta.trim() !== '' 
-          ? banco.identificador_conta.substring(0, 8) 
-          : parcela.id.toString().padStart(8, '0');
-        
-        // Formato: banco + moeda + fator vencimento + valor + identificador conta + nosso número (primeiros 8)
-        const codigoCompleto = `${codigoBanco}${moeda}${fatorVencimento}${valor}${identificadorConta}${nossoNumero.substring(0, 8)}`;
-        
-        return codigoCompleto;
-      };
-
-      // Função para gerar linha digitável no formato FEBRABAN
-      const generateLinhaDigitavel = (parcela: any) => {
-        const codigoBarras = generateCodigoBarras(parcela);
-        const banco = (parcela as any).carne?.banco;
-        const codigoBanco = banco?.codigo && banco.codigo.trim() !== '' ? banco.codigo : '000';
-        
-        // Garantir que o código de barras tenha pelo menos 44 caracteres
-        const codigoCompleto = codigoBarras.padEnd(44, '0');
-        
-        // Formato: 00000.00000 00000.000000 00000.000000 0 00000000000000
-        // Campo 1: Posições 1-3 (código banco) + 4 (moeda) + 5-9 (posições 1-5 do código de barras)
-        const campo1 = `${codigoBanco}9${codigoCompleto.substring(4, 9)}`.padEnd(10, '0');
-        const dv1 = calculateDV(campo1);
-        
-        // Campo 2: Posições 10-20 do código de barras
-        const campo2 = codigoCompleto.substring(9, 20).padEnd(11, '0');
-        const dv2 = calculateDV(campo2);
-        
-        // Campo 3: Posições 21-31 do código de barras
-        const campo3 = codigoCompleto.substring(20, 31).padEnd(11, '0');
-        const dv3 = calculateDV(campo3);
-        
-        // Campo 4: DV geral (posição 4 do código de barras)
-        const dvGeral = codigoCompleto.substring(3, 4);
-        
-        // Campo 5: Fator vencimento + valor
-        const fatorVencimento = calculateFatorVencimento(parcela.data_vencimento);
-        const valor = parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', '').padStart(10, '0');
-        const campo5 = `${fatorVencimento}${valor}`;
-        
-        return `${campo1.substring(0, 5)}.${campo1.substring(5)}${dv1} ${campo2.substring(0, 5)}.${campo2.substring(5)}${dv2} ${campo3.substring(0, 5)}.${campo3.substring(5)}${dv3} ${dvGeral} ${campo5}`;
-      };
-
-      // Função para gerar código de barras como base64
       const generateBarcodeBase64 = (data: string) => {
         try {
           const canvas = createCanvas(400, 70);
@@ -310,497 +505,84 @@ export class CarneParcelaController {
         }
       };
 
-      // Função para gerar QR Code usando biblioteca local
-      const generateQRCodeBase64 = async (data: string) => {
-        try {
-          const qrCodeDataURL = await QRCode.toDataURL(data, {
-            width: 100,
-            margin: 1,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
-          });
-          return qrCodeDataURL;
-        } catch (error) {
-          console.error('Erro ao gerar QR Code:', error);
-          return '';
-        }
-      };
+      const qrCodeData = await generateQRCode(parcela);
+      const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
 
-      // Função para gerar QR Code com dados estruturados do PIX
-      const generateQRCode = async (parcela: any) => {
-        const banco = (parcela as any).carne?.banco;
-        const dadosEmpresa = (parcela as any).carne?.cliente;
-        
-        // Dados para PIX (formato simplificado)
-        const pixData = {
-          chave: banco?.chave_pix || dadosEmpresa?.email || dadosEmpresa?.cnpj || dadosEmpresa?.cpf,
-          valor: parseFloat(parcela.valor_parcela.toString()).toFixed(2),
-          descricao: `Parcela ${parcela.numero_parcela} - ${(parcela as any).carne?.plano?.nome_plano || 'Serviço'}`,
-          beneficiario: dadosEmpresa?.razao_social || 'Empresa',
-          cidade: dadosEmpresa?.cidade || 'São Paulo',
-          identificador: parcela.id.toString(),
-          nossoNumero: generateNossoNumero(parcela),
-          linhaDigitavel: generateLinhaDigitavel(parcela)
-        };
-        
-        const qrString = JSON.stringify(pixData);
-        return await generateQRCodeBase64(qrString);
-      };
-
-      // Buscar dados da empresa
-      const dadosEmpresa = await DadosEmpresa.findOne();
-      
-      // Carregar template HTML
-      const templatePath = path.join(__dirname, '../templates/boleto.html');
-      let template = fs.readFileSync(templatePath, { encoding: 'utf8' });
-
-      // Substituir variáveis no template (usando as mesmas variáveis do PHP)
+      // Gerar variáveis básicas
       const variables = {
-        // Dados da empresa (usando variáveis do sistema PHP)
-        // Logo da empresa (para o topo do boleto)
-        LOGOMARCA: (() => {
-          if (dadosEmpresa?.logo) {
-            // Se já tem URL completa, usar como está
-            if (dadosEmpresa.logo.startsWith('http')) {
-              return dadosEmpresa.logo;
-            }
-            // Se é só o nome do arquivo, construir o caminho
-            return `/uploads/empresa/${dadosEmpresa.logo}`;
-          }
-          // Se não tem logo da empresa, usar logo própria
-          return `/images/bancos/boletoproprio.png`;
-        })(),
-        
-        // Logo do banco (para a área de autenticação bancária)
-        LOGOBANCO: (() => {
-          const banco = (parcela as any).carne?.banco;
-          
-          // Se tem banco específico, usar logo do banco
-          if (banco?.tipo_banco) {
-            return `/images/bancos/${banco.tipo_banco}.png`;
-          }
-          
-          // Se não tem banco específico, usar logo própria
-          return `/images/bancos/boletoproprio.png`;
-        })(),
-        
-        // Logo SVA (Sistema de Valores a Receber) - geralmente vazio
+        LOGOMARCA: dadosEmpresa?.logo ? dadosEmpresa.logo : `/images/bancos/boletoproprio.png`,
+        LOGOBANCO: (parcela as any).carne?.banco?.tipo_banco ? `/images/bancos/${(parcela as any).carne.banco.tipo_banco}.png` : `/images/bancos/boletoproprio.png`,
+        CEDENTE: dadosEmpresa?.razao_social || '',
+        EMPRESACPF: dadosEmpresa?.cnpj || '',
+        EMPRESAENDERECO: dadosEmpresa?.endereco || '',
+        EMPRESABAIRRO: dadosEmpresa?.bairro || '',
+        EMPRESACEP: dadosEmpresa?.cep || '',
+        EMPRESACIDADE: dadosEmpresa?.cidade || '',
+        EMPRESAESTADO: dadosEmpresa?.estado || '',
         LOGOSVA: '',
-        
-        // Quantidade e valor unitário
         QUANTIDADE: '1',
-        VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')},`,
-        CEDENTE: safe(dadosEmpresa?.razao_social, ''),
-        EMPRESACPF: safe(dadosEmpresa?.cnpj, ''),
-        EMPRESAENDERECO: safe(dadosEmpresa?.endereco, ''),
-        EMPRESABAIRRO: safe(dadosEmpresa?.bairro, ''),
-        EMPRESACEP: safe(dadosEmpresa?.cep, ''),
-        EMPRESACIDADE: safe(dadosEmpresa?.cidade, ''),
-        EMPRESAESTADO: safe(dadosEmpresa?.estado, ''),
-
-        // Dados do título/documento
-        NUMERO_DOCUMENTO: parcela.id.toString(),
-        TITULONN: parcela.id.toString(),
-        DATA_ORIGINAL: new Date(parcela.data_vencimento).toLocaleDateString('pt-BR'),
-        DATA_PROC: new Date().toLocaleDateString('pt-BR'),
-
-        // Dados do sacado/cliente
-        SACADO_IDNOME: safe((parcela as any).carne?.cliente?.razao_social),
-        SACADO_ENDERECO: safe((parcela as any).carne?.cliente?.endereco),
-        SACADO_COMPLEMENTO: safe((parcela as any).carne?.cliente?.complemento),
-        SACADO_BAIRRO: safe((parcela as any).carne?.cliente?.bairro),
-        SACADO_CEP: safe((parcela as any).carne?.cliente?.cep),
-        SACADO_CIDADE: safe((parcela as any).carne?.cliente?.cidade),
-        SACADO_ESTADO: safe((parcela as any).carne?.cliente?.estado),
-        SACADO_CPF: safe((parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf),
-
-        // Movimentações financeiras
-        MOVIMENTO: `Parcela ${parcela.numero_parcela} - ${(parcela as any).carne?.plano?.nome_plano || 'Serviço'}`,
-        VALOR_COBRADO: `R$ ${formatMoney(parseFloat(parcela.valor_parcela.toString()))}`,
-        TAXA_BOLETO: (parcela as any).carne?.banco?.incluir_taxa && (parcela as any).carne?.banco?.taxa_cobranca 
-          ? `R$ ${formatMoney((parcela as any).carne?.banco?.taxa_cobranca)}` 
-          : 'R$ 0,00',
-        MULTA_MORA: (parcela as any).carne?.banco?.percentual_multa 
-          ? `R$ ${formatMoney(parseFloat(parcela.valor_parcela.toString()) * ((parcela as any).carne?.banco?.percentual_multa / 100))}` 
-          : 'R$ 0,00',
-        VALOR_BOLETO: `R$ ${formatMoney(parseFloat(parcela.valor_parcela.toString()))}`,
-
-        // Demonstrativo (dados reais do banco)
-        DEMONSTRATIVO1: safe((parcela as any).carne?.banco?.observacao_linha_1 || `Parcela ${parcela.numero_parcela} de ${(parcela as any).carne?.quantidade_parcelas} do Carnê ${(parcela as any).carne?.numero_carne}`),
-        DEMONSTRATIVO2: safe((parcela as any).carne?.banco?.observacao_linha_2 || `Cliente: ${safe((parcela as any).carne?.cliente?.razao_social)}`),
-        DEMONSTRATIVO3: safe((parcela as any).carne?.banco?.observacao_linha_3 || `Plano: ${safe((parcela as any).carne?.plano?.nome_plano)}`),
-        DEMONSTRATIVO4: safe((parcela as any).carne?.banco?.observacao_linha_4 || ''),
-
-        // Dados do boleto bancário
-        CODIGO_BANCO_COM_DV: safe((parcela as any).carne?.banco?.codigo && (parcela as any).carne?.banco?.codigo.trim() !== '' ? (parcela as any).carne?.banco?.codigo : '000'),
-        LINHA_DIGITAVEL: parcela.linha_digitavel || generateLinhaDigitavel(parcela),
-        LOCAL_PAGAMENTO: safe((parcela as any).carne?.banco?.local_pagamento || ''),
-        DATA_VENC: new Date(parcela.data_vencimento).toLocaleDateString('pt-BR'),
-        AGENCIA_CODIGO: safe((parcela as any).carne?.banco?.identificador_conta || ''),
-        DATA_DOCUMENTO: new Date(parcela.created_at).toLocaleDateString('pt-BR'),
-        ESPECIE_DOC: 'DM',
-        NOSSO_NUMERO: generateNossoNumero(parcela),
-        CARTEIRA: '',
+        VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')}`,
+        NUMERO_DOCUMENTO: parcela.numero_parcela || '',
+        CODIGO_BANCO_COM_DV: (parcela as any).carne?.banco?.codigo_banco || '',
+        LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
+        LOCAL_PAGAMENTO: (parcela as any).carne?.banco?.local_pagamento || '',
+        DATA_VENC: parcela.data_vencimento || '',
+        AGENCIA_CODIGO: (parcela as any).carne?.banco?.agencia_codigo || '',
+        DATA_DOCUMENTO: parcela.created_at ? new Date(parcela.created_at).toLocaleDateString('pt-BR') : '',
+        ESPECIE_DOC: (parcela as any).carne?.banco?.especie_doc || '',
+        DATA_PROC: parcela.created_at ? new Date(parcela.created_at).toLocaleDateString('pt-BR') : '',
+        NOSSO_NUMERO: parcela.id.toString(),
+        CARTEIRA: (parcela as any).carne?.banco?.carteira || '',
         VAR_CARTEIRA: '',
-        ESPECIE: 'R$',
-
-        // Instruções (dados reais do banco)
-        TEXTO_MULTAMORA: (parcela as any).carne?.banco?.percentual_multa 
-          ? `Multa de ${(parcela as any).carne?.banco?.percentual_multa}% sobre o valor em atraso` 
-          : '',
-        INSTRUCOES1: safe((parcela as any).carne?.banco?.instrucao_linha_1 || ''),
-        INSTRUCOES2: safe((parcela as any).carne?.banco?.instrucao_linha_2 || ''),
-        INSTRUCOES3: safe((parcela as any).carne?.banco?.instrucao_linha_3 || ''),
-        INSTRUCOES4: safe((parcela as any).carne?.banco?.instrucao_linha_4 || ''),
-        INSTRUCOES5: safe((parcela as any).carne?.banco?.instrucao_linha_5 || ''),
-
-        // QR Code e código de barras (usando dados do banco)
-        QRCODE: parcela.qrcode_image || parcela.qrcode || await generateQRCode(parcela),
+        ESPECIE: (parcela as any).carne?.banco?.especie || '',
+        VALOR_BOLETO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
+        TEXTO_MULTAMORA: (parcela as any).carne?.banco?.texto_multamora || '',
+        INSTRUCOES1: (parcela as any).carne?.banco?.instrucao_linha_1 || '',
+        INSTRUCOES2: (parcela as any).carne?.banco?.instrucao_linha_2 || '',
+        INSTRUCOES3: (parcela as any).carne?.banco?.instrucao_linha_3 || '',
+        INSTRUCOES4: (parcela as any).carne?.banco?.instrucao_linha_4 || '',
+        INSTRUCOES5: (parcela as any).carne?.banco?.instrucao_linha_5 || '',
+        QRCODE: qrCodeData,
         BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
-          <img src="${generateBarcodeBase64(parcela.codigo_barras || generateCodigoBarras(parcela))}" 
+          <img src="${barcodeData}" 
                alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
         </div>`,
-
-        // Dados do pagador
-        SACADO_NOME: safe((parcela as any).carne?.cliente?.razao_social),
+        SACADO_IDNOME: (parcela as any).carne?.cliente?.razao_social || '',
+        SACADO_ENDERECO: (parcela as any).carne?.cliente?.endereco || '',
+        SACADO_COMPLEMENTO: (parcela as any).carne?.cliente?.complemento || '',
+        SACADO_BAIRRO: (parcela as any).carne?.cliente?.bairro || '',
+        SACADO_CEP: (parcela as any).carne?.cliente?.cep || '',
+        SACADO_CIDADE: (parcela as any).carne?.cliente?.cidade || '',
+        SACADO_ESTADO: (parcela as any).carne?.cliente?.estado || '',
+        SACADO_CPF: (parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf || '',
+        TITULONN: parcela.numero_parcela || '',
+        DATA_ORIGINAL: parcela.data_vencimento || '',
+        MOVIMENTO: 'Valor do título',
+        VALOR_COBRADO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
+        TAXA_BOLETO: '0,00',
+        MULTA_MORA: '0,00',
+        DEMONSTRATIVO1: (parcela as any).carne?.banco?.demonstrativo1 || '',
+        DEMONSTRATIVO2: (parcela as any).carne?.banco?.demonstrativo2 || '',
+        DEMONSTRATIVO3: (parcela as any).carne?.banco?.demonstrativo3 || '',
+        DEMONSTRATIVO4: (parcela as any).carne?.banco?.demonstrativo4 || '',
+        SACADO_NOME: (parcela as any).carne?.cliente?.razao_social || '',
         TIPO_PSACADO: (parcela as any).carne?.cliente?.cnpj ? 'CNPJ' : 'CPF'
       };
 
-      // Substituir todas as variáveis no template
+      // Substituir variáveis nos templates
       Object.entries(variables).forEach(([key, value]) => {
-        template = template.replace(new RegExp(`{{${key}}}`, 'g'), value);
+        templateTopo = templateTopo.replace(new RegExp(`{{${key}}}`, 'g'), value);
+        templateCorpo = templateCorpo.replace(new RegExp(`{{${key}}}`, 'g'), value);
       });
 
-      const htmlContent = template;
+      // Combinar os templates
+      const htmlContent = templateTopo + templateCorpo;
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.send(htmlContent);
+
     } catch (error) {
-      console.error('DEBUG: Erro detalhado ao imprimir boleto:', {
-        message: error instanceof Error ? error.message : 'Erro desconhecido',
-        stack: error instanceof Error ? error.stack : 'Stack não disponível',
-        error: error
-      });
-      res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-  }
-
-  static async gerarPdfBoleto(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      
-      const parcela = await CarneParcela.findByPk(id, {
-        include: [
-          {
-            association: 'carne',
-            include: [
-              { association: 'cliente' },
-              { association: 'plano' },
-              { association: 'banco' }
-            ]
-          }
-        ]
-      });
-
-      if (!parcela) {
-        res.status(404).json({ error: 'Parcela não encontrada' });
-        return;
-      }
-
-      const formatMoney = (value: number) => {
-        return value.toFixed(2).replace('.', ',');
-      };
-
-      const safe = (value: any, fallback = '') => {
-        return value !== null && value !== '' ? value : fallback;
-      };
-
-      // Função para calcular fator de vencimento (dias desde 07/10/1997)
-      const calculateFatorVencimento = (dataVencimento: string) => {
-        const dataBase = new Date('1997-10-07');
-        const dataVenc = new Date(dataVencimento);
-        const diffTime = dataVenc.getTime() - dataBase.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays.toString().padStart(4, '0');
-      };
-
-      // Função para calcular dígito verificador módulo 10
-      const calculateDV = (campo: string) => {
-        const multiplicadores = [2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1];
-        let soma = 0;
-        
-        for (let i = 0; i < campo.length && i < multiplicadores.length; i++) {
-          const digito = parseInt(campo[i]);
-          if (isNaN(digito)) continue;
-          
-          const produto = digito * multiplicadores[i];
-          soma += produto > 9 ? Math.floor(produto / 10) + (produto % 10) : produto;
-        }
-        
-        const resto = soma % 10;
-        return resto === 0 ? 0 : 10 - resto;
-      };
-
-      // Função para gerar Nosso Número realista
-      const generateNossoNumero = (parcela: any) => {
-        const banco = (parcela as any).carne?.banco;
-        const codigoBanco = banco?.codigo && banco.codigo.trim() !== '' ? banco.codigo : '000';
-        const parcelaId = parcela.id.toString().padStart(8, '0');
-        const carneId = (parcela as any).carne?.id?.toString().padStart(4, '0') || '0000';
-        
-        // Formato: Código do Banco + ID do Carnê + ID da Parcela + DV
-        const baseNumber = `${codigoBanco}${carneId}${parcelaId}`;
-        
-        // Calcular dígito verificador simples (soma dos dígitos módulo 10)
-        const soma = baseNumber.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
-        const dv = soma % 10;
-        
-        return `${baseNumber}${dv}`;
-      };
-
-      // Função para gerar código de barras realista (FEBRABAN)
-      const generateCodigoBarras = (parcela: any) => {
-        const banco = (parcela as any).carne?.banco;
-        const codigoBanco = banco?.codigo && banco.codigo.trim() !== '' ? banco.codigo : '000';
-        const moeda = '9'; // Real
-        const fatorVencimento = calculateFatorVencimento(parcela.data_vencimento);
-        const valor = parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', '').padStart(10, '0');
-        const nossoNumero = generateNossoNumero(parcela);
-        
-        // Usar dados reais do banco quando disponíveis
-        const identificadorConta = banco?.identificador_conta && banco.identificador_conta.trim() !== '' 
-          ? banco.identificador_conta.substring(0, 8) 
-          : parcela.id.toString().padStart(8, '0');
-        
-        // Formato: banco + moeda + fator vencimento + valor + identificador conta + nosso número (primeiros 8)
-        const codigoCompleto = `${codigoBanco}${moeda}${fatorVencimento}${valor}${identificadorConta}${nossoNumero.substring(0, 8)}`;
-        
-        return codigoCompleto;
-      };
-
-      // Função para gerar linha digitável no formato FEBRABAN
-      const generateLinhaDigitavel = (parcela: any) => {
-        const codigoBarras = generateCodigoBarras(parcela);
-        const banco = (parcela as any).carne?.banco;
-        const codigoBanco = banco?.codigo && banco.codigo.trim() !== '' ? banco.codigo : '000';
-        
-        // Garantir que o código de barras tenha pelo menos 44 caracteres
-        const codigoCompleto = codigoBarras.padEnd(44, '0');
-        
-        // Formato: 00000.00000 00000.000000 00000.000000 0 00000000000000
-        // Campo 1: Posições 1-3 (código banco) + 4 (moeda) + 5-9 (posições 1-5 do código de barras)
-        const campo1 = `${codigoBanco}9${codigoCompleto.substring(4, 9)}`.padEnd(10, '0');
-        const dv1 = calculateDV(campo1);
-        
-        // Campo 2: Posições 10-20 do código de barras
-        const campo2 = codigoCompleto.substring(9, 20).padEnd(11, '0');
-        const dv2 = calculateDV(campo2);
-        
-        // Campo 3: Posições 21-31 do código de barras
-        const campo3 = codigoCompleto.substring(20, 31).padEnd(11, '0');
-        const dv3 = calculateDV(campo3);
-        
-        // Campo 4: DV geral (posição 4 do código de barras)
-        const dvGeral = codigoCompleto.substring(3, 4);
-        
-        // Campo 5: Fator vencimento + valor
-        const fatorVencimento = calculateFatorVencimento(parcela.data_vencimento);
-        const valor = parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', '').padStart(10, '0');
-        const campo5 = `${fatorVencimento}${valor}`;
-        
-        return `${campo1.substring(0, 5)}.${campo1.substring(5)}${dv1} ${campo2.substring(0, 5)}.${campo2.substring(5)}${dv2} ${campo3.substring(0, 5)}.${campo3.substring(5)}${dv3} ${dvGeral} ${campo5}`;
-      };
-
-      // Função para gerar código de barras como base64
-      const generateBarcodeBase64 = (data: string) => {
-        try {
-          const canvas = createCanvas(400, 70);
-          JsBarcode(canvas, data, {
-            format: "CODE128",
-            width: 3,
-            height: 55,
-            displayValue: false,
-            background: "#ffffff",
-            lineColor: "#000000"
-          });
-          return canvas.toDataURL('image/png');
-        } catch (error) {
-          console.error('Erro ao gerar código de barras:', error);
-          return '';
-        }
-      };
-
-      // Função para gerar QR Code usando biblioteca local
-      const generateQRCodeBase64 = async (data: string) => {
-        try {
-          const qrCodeDataURL = await QRCode.toDataURL(data, {
-            width: 100,
-            margin: 1,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
-          });
-          return qrCodeDataURL;
-        } catch (error) {
-          console.error('Erro ao gerar QR Code:', error);
-          return '';
-        }
-      };
-
-      // Função para gerar QR Code com dados estruturados do PIX
-      const generateQRCode = async (parcela: any) => {
-        const banco = (parcela as any).carne?.banco;
-        const dadosEmpresa = (parcela as any).carne?.cliente;
-        
-        // Dados para PIX (formato simplificado)
-        const pixData = {
-          chave: banco?.chave_pix || dadosEmpresa?.email || dadosEmpresa?.cnpj || dadosEmpresa?.cpf,
-          valor: parseFloat(parcela.valor_parcela.toString()).toFixed(2),
-          descricao: `Parcela ${parcela.numero_parcela} - ${(parcela as any).carne?.plano?.nome_plano || 'Serviço'}`,
-          beneficiario: dadosEmpresa?.razao_social || 'Empresa',
-          cidade: dadosEmpresa?.cidade || 'São Paulo',
-          identificador: parcela.id.toString(),
-          nossoNumero: generateNossoNumero(parcela),
-          linhaDigitavel: generateLinhaDigitavel(parcela)
-        };
-        
-        const qrString = JSON.stringify(pixData);
-        return await generateQRCodeBase64(qrString);
-      };
-
-      // Buscar dados da empresa
-      const dadosEmpresa = await DadosEmpresa.findOne();
-      
-      // Carregar template HTML
-      const templatePath = path.join(__dirname, '../templates/boleto.html');
-      let template = fs.readFileSync(templatePath, { encoding: 'utf8' });
-
-      // Substituir variáveis no template (usando as mesmas variáveis do PHP)
-      const variables = {
-        // Dados da empresa (usando variáveis do sistema PHP)
-        // Logo da empresa (para o topo do boleto)
-        LOGOMARCA: (() => {
-          if (dadosEmpresa?.logo) {
-            // Se já tem URL completa, usar como está
-            if (dadosEmpresa.logo.startsWith('http')) {
-              return dadosEmpresa.logo;
-            }
-            // Se é só o nome do arquivo, construir o caminho
-            return `/uploads/empresa/${dadosEmpresa.logo}`;
-          }
-          // Se não tem logo da empresa, usar logo própria
-          return `/images/bancos/boletoproprio.png`;
-        })(),
-        
-        // Logo do banco (para a área de autenticação bancária)
-        LOGOBANCO: (() => {
-          const banco = (parcela as any).carne?.banco;
-          
-          // Se tem banco específico, usar logo do banco
-          if (banco?.tipo_banco) {
-            return `/images/bancos/${banco.tipo_banco}.png`;
-          }
-          
-          // Se não tem banco específico, usar logo própria
-          return `/images/bancos/boletoproprio.png`;
-        })(),
-        
-        // Logo SVA (Sistema de Valores a Receber) - geralmente vazio
-        LOGOSVA: '',
-        
-        // Quantidade e valor unitário
-        QUANTIDADE: '1',
-        VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')},`,
-        CEDENTE: safe(dadosEmpresa?.razao_social, ''),
-        EMPRESACPF: safe(dadosEmpresa?.cnpj, ''),
-        EMPRESAENDERECO: safe(dadosEmpresa?.endereco, ''),
-        EMPRESABAIRRO: safe(dadosEmpresa?.bairro, ''),
-        EMPRESACEP: safe(dadosEmpresa?.cep, ''),
-        EMPRESACIDADE: safe(dadosEmpresa?.cidade, ''),
-        EMPRESAESTADO: safe(dadosEmpresa?.estado, ''),
-
-        // Dados do título/documento
-        NUMERO_DOCUMENTO: parcela.id.toString(),
-        TITULONN: parcela.id.toString(),
-        DATA_ORIGINAL: new Date(parcela.data_vencimento).toLocaleDateString('pt-BR'),
-        DATA_PROC: new Date().toLocaleDateString('pt-BR'),
-
-        // Dados do sacado/cliente
-        SACADO_IDNOME: safe((parcela as any).carne?.cliente?.razao_social),
-        SACADO_ENDERECO: safe((parcela as any).carne?.cliente?.endereco),
-        SACADO_COMPLEMENTO: safe((parcela as any).carne?.cliente?.complemento),
-        SACADO_BAIRRO: safe((parcela as any).carne?.cliente?.bairro),
-        SACADO_CEP: safe((parcela as any).carne?.cliente?.cep),
-        SACADO_CIDADE: safe((parcela as any).carne?.cliente?.cidade),
-        SACADO_ESTADO: safe((parcela as any).carne?.cliente?.estado),
-        SACADO_CPF: safe((parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf),
-
-        // Movimentações financeiras
-        MOVIMENTO: `Parcela ${parcela.numero_parcela} - ${(parcela as any).carne?.plano?.nome_plano || 'Serviço'}`,
-        VALOR_COBRADO: `R$ ${formatMoney(parseFloat(parcela.valor_parcela.toString()))}`,
-        TAXA_BOLETO: (parcela as any).carne?.banco?.incluir_taxa && (parcela as any).carne?.banco?.taxa_cobranca 
-          ? `R$ ${formatMoney((parcela as any).carne?.banco?.taxa_cobranca)}` 
-          : 'R$ 0,00',
-        MULTA_MORA: (parcela as any).carne?.banco?.percentual_multa 
-          ? `R$ ${formatMoney(parseFloat(parcela.valor_parcela.toString()) * ((parcela as any).carne?.banco?.percentual_multa / 100))}` 
-          : 'R$ 0,00',
-        VALOR_BOLETO: `R$ ${formatMoney(parseFloat(parcela.valor_parcela.toString()))}`,
-
-        // Demonstrativo (dados reais do banco)
-        DEMONSTRATIVO1: safe((parcela as any).carne?.banco?.observacao_linha_1 || `Parcela ${parcela.numero_parcela} de ${(parcela as any).carne?.quantidade_parcelas} do Carnê ${(parcela as any).carne?.numero_carne}`),
-        DEMONSTRATIVO2: safe((parcela as any).carne?.banco?.observacao_linha_2 || `Cliente: ${safe((parcela as any).carne?.cliente?.razao_social)}`),
-        DEMONSTRATIVO3: safe((parcela as any).carne?.banco?.observacao_linha_3 || `Plano: ${safe((parcela as any).carne?.plano?.nome_plano)}`),
-        DEMONSTRATIVO4: safe((parcela as any).carne?.banco?.observacao_linha_4 || ''),
-
-        // Dados do boleto bancário
-        CODIGO_BANCO_COM_DV: safe((parcela as any).carne?.banco?.codigo && (parcela as any).carne?.banco?.codigo.trim() !== '' ? (parcela as any).carne?.banco?.codigo : '000'),
-        LINHA_DIGITAVEL: parcela.linha_digitavel || generateLinhaDigitavel(parcela),
-        LOCAL_PAGAMENTO: safe((parcela as any).carne?.banco?.local_pagamento || ''),
-        DATA_VENC: new Date(parcela.data_vencimento).toLocaleDateString('pt-BR'),
-        AGENCIA_CODIGO: safe((parcela as any).carne?.banco?.identificador_conta || ''),
-        DATA_DOCUMENTO: new Date(parcela.created_at).toLocaleDateString('pt-BR'),
-        ESPECIE_DOC: 'DM',
-        NOSSO_NUMERO: generateNossoNumero(parcela),
-        CARTEIRA: '',
-        VAR_CARTEIRA: '',
-        ESPECIE: 'R$',
-
-        // Instruções (dados reais do banco)
-        TEXTO_MULTAMORA: (parcela as any).carne?.banco?.percentual_multa 
-          ? `Multa de ${(parcela as any).carne?.banco?.percentual_multa}% sobre o valor em atraso` 
-          : '',
-        INSTRUCOES1: safe((parcela as any).carne?.banco?.instrucao_linha_1 || ''),
-        INSTRUCOES2: safe((parcela as any).carne?.banco?.instrucao_linha_2 || ''),
-        INSTRUCOES3: safe((parcela as any).carne?.banco?.instrucao_linha_3 || ''),
-        INSTRUCOES4: safe((parcela as any).carne?.banco?.instrucao_linha_4 || ''),
-        INSTRUCOES5: safe((parcela as any).carne?.banco?.instrucao_linha_5 || ''),
-
-        // QR Code e código de barras (usando dados do banco)
-        QRCODE: parcela.qrcode_image || parcela.qrcode || await generateQRCode(parcela),
-        BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
-          <img src="${generateBarcodeBase64(parcela.codigo_barras || generateCodigoBarras(parcela))}" 
-               alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
-        </div>`,
-
-        // Dados do pagador
-        SACADO_NOME: safe((parcela as any).carne?.cliente?.razao_social),
-        TIPO_PSACADO: (parcela as any).carne?.cliente?.cnpj ? 'CNPJ' : 'CPF'
-      };
-
-      // Substituir todas as variáveis no template
-      Object.entries(variables).forEach(([key, value]) => {
-        template = template.replace(new RegExp(`{{${key}}}`, 'g'), value);
-      });
-
-      const htmlContent = template;
-
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.send(htmlContent);
-    } catch (error) {
-      console.error('Erro ao gerar PDF do boleto:', error);
+      console.log('DEBUG: Erro ao gerar boleto:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }

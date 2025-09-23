@@ -21,7 +21,7 @@ router.get('/:id/imprimir', CarneParcelaController.imprimirBoleto);
 // Atualizar parcela
 router.put('/:id', CarneParcelaController.update);
 
-// Gerar PDF do boleto
-router.get('/:id/pdf', CarneParcelaController.gerarPdfBoleto);
+// Gerar PDF do boleto (usando o mesmo método de imprimir)
+router.get('/:id/pdf', CarneParcelaController.imprimirBoleto);
 
 export default router;

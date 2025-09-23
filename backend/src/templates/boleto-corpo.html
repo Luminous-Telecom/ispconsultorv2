@@ -2,12 +2,11 @@
 <html xml:lang="pt" xmlns="http://www.w3.org/1999/xhtml" lang="pt">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv=Content-Type>
-<title>Boleto</title>
+<title>Boleto - Corpo</title>
 <style type="text/css">
 body{background:#fff;font:8px Verdana,Arial,Helvetica,sans-serif;color:#000;cursor:default;margin:0;padding:2px;width:100%;max-width:100%;}
 h1{font-size:11px;margin:0;text-align:left;display:inline-block;} h2{font-size:9px;margin:0;text-align:right;vertical-align:bottom;display:inline-block;float:right;}
 table{width:100% !important;border-collapse:collapse;margin:0;clear:both;max-width:100% !important;} table.tab{border:1px solid #000;width:100% !important;max-width:100% !important;} table.tab td{border:1px solid #000;text-align:left;vertical-align:top;padding:1px;} table.tab td span{display:block;font-size:8px;line-height:1.1;padding:1px;} table.tab td span.vV{text-align:center;font-size:8px;font-weight:bold;} table.infRec td{vertical-align:top;border:0!important;} table.infRec{width:100% !important;max-width:100% !important;}
-.pnFatura2Via{border:1px solid #000;font-family:arial;width:100%;max-width:100%;} .pnFatura2Via2{border-bottom:1px solid #000;border-left:1px solid #000;border-right:1px solid #000;font-family:arial;width:100%;max-width:100%;}
 .labels{padding:1px 1px 1px 2px;font-size:7pt;} .labelsBold{padding:1px 1px 1px 4px;font-size:7pt;font-weight:bold;}
 .tabBottom{border-bottom:1px solid #000;} .tabBottomRight{border-bottom:1px solid #000;border-right:1px solid #000;}
 .lD{text-align:right!important;}
@@ -36,145 +35,7 @@ table.infRec { width: 100% !important; max-width: 100% !important; }
 </head>
 <body text="#000000" bgColor="#fff">
 
-<!-- BEGIN BLOCK_AVALISTA -->
-<!-- END BLOCK_AVALISTA -->
-
 <div class="custom">
-<table width="666" border="0" cellPadding="0" cellSpacing="0" class="pnFatura2Via">
-<tr>
-<td align="middle"><img src="{{LOGOMARCA}}" style="max-height: 75px" hspace="5" vspace="5" /></td>
-<td align="middle"><span class="label11"> {{CEDENTE}} </span> <BR>
-<span class="labels">CNPJ {{EMPRESACPF}} </span> <BR>
-<span class="labels"> {{EMPRESAENDERECO}} - {{EMPRESABAIRRO}} <br>
-CEP {{EMPRESACEP}} - {{EMPRESACIDADE}} - {{EMPRESAESTADO}}</span> </td>
-<td align="middle">
-
-<!-- BEGIN BLOCK_COMLOGOSVA -->
-<img src="{{LOGOSVA}}" style="max-height: 75px" hspace="5" vspace="5" />
-<!-- END BLOCK_COMLOGOSVA -->
-
-<!-- BEGIN BLOCK_SEMLOGOSVA -->
-<table id="Table1" width="100%">
-<tr>
-<td><span> Dados do Titulo </span> </td>
-</tr>
-<tr>
-<td><span> NÚMERO: {{NUMERO_DOCUMENTO}} </span></td>
-</tr>
-</table>
-<!-- END BLOCK_SEMLOGOSVA -->
-
-</td>
-</tr>
-</table>
-<table width="666" border="0" cellPadding="3" cellSpacing="0" class="pnFatura2Via2">
-<tr>
-<td colSpan="2" align="center" class="tabBottom"><SPAN><strong>DADOS PARA ENTREGA</strong></SPAN> </td>
-</tr>
-<tr>
-<td class="tabBottom" colSpan="2"><table id="Table3" border="0" cellSpacing="2" cellPadding="2" width="100%">
-<tr>
-<td><span class="labels">NOME:</span> </td>
-<td colspan="3" class="labelsBold"><span> {{SACADO_IDNOME}} </span> </td>
-</tr>
-
-<tr>
-<td><span class="labels">ENDEREÇO:</span> </td>
-<td class="labelsBold"><span> {{SACADO_ENDERECO}} </span> </td>
-<td><span style="WIDTH: 50px; DISPLAY: inline-block" class="labels">COMPL:</span> </td>
-<td width="110" class="labelsBold"><span> {{SACADO_COMPLEMENTO}} </span> </td>
-</tr>
-
-<tr>
-<td><span class="labels">BAIRRO:</span> </td>
-<td class="labelsBold" width="320"><span> {{SACADO_BAIRRO}} </span> </td>
-<td><span style="WIDTH: 50px; DISPLAY: inline-block" class="labels">CEP:</span> </td>
-<td class="labelsBold"><span> {{SACADO_CEP}} </span> </td>
-</tr>
-
-<tr>
-<td><span class="labels">MUNICÍPIO:</span> </td>
-<td class="labelsBold"><span> {{SACADO_CIDADE}} </span> </td>
-<td><span class="labels">ESTADO:</span> </td>
-<td class="labelsBold"> {{SACADO_ESTADO}} </td>
-</tr>
-</table>
-</td>
-</tr>
-
-<tr>
-<td class="tabBottom" colSpan="2">
-<table id="Table11" border="0" cellspacing="2" cellpadding="2" width="100%">
-<tr>
-<td width="1%"><span style="WIDTH: 110px; DISPLAY: inline-block" class="labels"> TÍTULO / NN: </span> </td>
-<td align="left" class="labelsBold"><span> {{TITULONN}} </span> <span class="labels"></span></td>
-<td><span class="labels">VENCIMENTO ORIGINAL:</span> </td>
-<td width="110" align="left" class="labelsBold"><span> {{DATA_ORIGINAL}} </span> </td>
-</tr>
-
-<tr>
-<td><span class="labels">CPF:</span> </td>
-<td class="labelsBold"><span> {{SACADO_CPF}} </span> </td>
-<td><span class="labels">PROCESSAMENTO:</span> </td>
-<td class="labelsBold"><span> {{DATA_PROC}} </span> </td>
-</tr>
-</table>
-</td>
-</tr>
-
-<tr>
-<td class="tabBottom" colSpan="2"><table id="Table4" border="0" cellSpacing="0" cellPadding="2" width="100%">
-<tr>
-<td width="100%" align="middle"><SPAN>RESUMO DAS MOVIMENTAÇÕES (R$)</SPAN> </td>
-</tr>
-</table>
-</td>
-</tr>
-
-<tr>
-<td class="tabBottom" colSpan="2"><table id="tbValores" border="0" cellSpacing="0" cellPadding="2" width="100%">
-<tr>
-<td class="labels"> {{MOVIMENTO}} </td>
-<td class="labelsBold" align="right"> {{VALOR_COBRADO}} </td>
-</tr>
-<tr>
-<td class="labels">taxa de cobrança </td>
-<td class="labelsBold" align="right"> {{TAXA_BOLETO}} </td>
-</tr>
-
-
-<tr>
-<td class="labels">multa e mora atualizada</td>
-<td class="labelsBold" align="right"> {{MULTA_MORA}} </td>
-</tr>
-
-</table>
-</td>
-</tr>
-
-<tr>
-<td class="tabBottom" colSpan="2" align="middle"><SPAN>DEMONSTRATIVO </SPAN> </td>
-</tr>
-<tr>
-<td class="tabBottom" colSpan="2" align="middle"><span class="labels">
-{{DEMONSTRATIVO1}} <BR>
-{{DEMONSTRATIVO2}} <BR>
-{{DEMONSTRATIVO3}} <BR>
-{{DEMONSTRATIVO4}} </span></td>
-</tr>
-<tr>
-<td class="tabBottom" colSpan="2"><table id="Table9" border="0" cellSpacing="0" cellPadding="2" width="100%">
-<tr>
-<td width="55%" align="middle"><SPAN class="labels">AUTENTICAÇÃO MECANICA</SPAN> </td>
-<td align="left" bgcolor="#ffffcc"><SPAN class="labels">TOTAL A PAGAR (R$) </SPAN> </td>
-<td align="right" bgcolor="#ffffcc" class="labelsBold"><SPAN> {{VALOR_BOLETO}} </SPAN> </td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-<hr>
-
 <table width="666" border="0" cellpadding="0" cellspacing="0">
 <tr>
 <td width="150"><img src="{{LOGOBANCO}}" style="max-height: 75px" /></td>

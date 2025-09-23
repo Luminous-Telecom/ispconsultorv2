@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
 import { Carne } from '../models/Carne';
+import { DadosEmpresa } from '../models/DadosEmpresa';
+import fs from 'fs';
+import path from 'path';
+import QRCode from 'qrcode';
+import JsBarcode from 'jsbarcode';
+import { createCanvas } from 'canvas';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
@@ -219,7 +225,20 @@ export class CarneController {
           { association: 'cliente' },
           { association: 'plano' },
           { association: 'banco' },
-          { association: 'parcelas', order: [['numero_parcela', 'ASC']] }
+          { 
+            association: 'parcelas', 
+            order: [['numero_parcela', 'ASC']],
+            include: [
+              {
+                association: 'carne',
+                include: [
+                  { association: 'cliente' },
+                  { association: 'plano' },
+                  { association: 'banco' }
+                ]
+              }
+            ]
+          }
         ]
       });
       
@@ -228,35 +247,161 @@ export class CarneController {
         return;
       }
 
-      // Importar o CarneParcelaController para usar o método de gerar boleto
+      // Importar o CarneParcelaController para usar os métodos de gerar boleto
       const { CarneParcelaController } = await import('./CarneParcelaController');
       
-      // Gerar HTML de todos os boletos
-      const boletosHtml: string[] = [];
+      // Gerar apenas 1 topo (usando a primeira parcela como referência)
+      let topoHtml = '';
+      if ((registro as any).parcelas.length > 0) {
+        try {
+          const primeiraParcela = (registro as any).parcelas[0];
+          const dadosEmpresa = await DadosEmpresa.findOne();
+          
+          // Carregar template do topo
+          const templateTopoPath = path.join(__dirname, '../templates/boleto-topo.html');
+          let templateTopo = fs.readFileSync(templateTopoPath, { encoding: 'utf8' });
+
+          // Gerar variáveis básicas
+          const variables = {
+            LOGOMARCA: dadosEmpresa?.logo ? dadosEmpresa.logo : `/images/bancos/boletoproprio.png`,
+            CEDENTE: dadosEmpresa?.razao_social || '',
+            EMPRESACPF: dadosEmpresa?.cnpj || '',
+            EMPRESAENDERECO: dadosEmpresa?.endereco || '',
+            EMPRESABAIRRO: dadosEmpresa?.bairro || '',
+            EMPRESACEP: dadosEmpresa?.cep || '',
+            EMPRESACIDADE: dadosEmpresa?.cidade || '',
+            EMPRESAESTADO: dadosEmpresa?.estado || '',
+            LOGOSVA: '',
+            NUMERO_DOCUMENTO: primeiraParcela.numero_parcela || '',
+            SACADO_IDNOME: primeiraParcela.carne?.cliente?.razao_social || '',
+            SACADO_ENDERECO: primeiraParcela.carne?.cliente?.endereco || '',
+            SACADO_COMPLEMENTO: primeiraParcela.carne?.cliente?.complemento || '',
+            SACADO_BAIRRO: primeiraParcela.carne?.cliente?.bairro || '',
+            SACADO_CEP: primeiraParcela.carne?.cliente?.cep || '',
+            SACADO_CIDADE: primeiraParcela.carne?.cliente?.cidade || '',
+            SACADO_ESTADO: primeiraParcela.carne?.cliente?.estado || '',
+            TITULONN: primeiraParcela.numero_parcela || '',
+            DATA_ORIGINAL: primeiraParcela.data_vencimento || '',
+            SACADO_CPF: primeiraParcela.carne?.cliente?.cnpj || primeiraParcela.carne?.cliente?.cpf || '',
+            DATA_PROC: primeiraParcela.created_at ? new Date(primeiraParcela.created_at).toLocaleDateString('pt-BR') : '',
+            MOVIMENTO: 'Valor do título',
+            VALOR_COBRADO: parseFloat(primeiraParcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
+            TAXA_BOLETO: '0,00',
+            MULTA_MORA: '0,00',
+            DEMONSTRATIVO1: primeiraParcela.carne?.banco?.demonstrativo1 || '',
+            DEMONSTRATIVO2: primeiraParcela.carne?.banco?.demonstrativo2 || '',
+            DEMONSTRATIVO3: primeiraParcela.carne?.banco?.demonstrativo3 || '',
+            DEMONSTRATIVO4: primeiraParcela.carne?.banco?.demonstrativo4 || '',
+            VALOR_BOLETO: parseFloat(primeiraParcela.valor_parcela.toString()).toFixed(2).replace('.', ',')
+          };
+
+          // Substituir variáveis no template do topo
+          Object.entries(variables).forEach(([key, value]) => {
+            templateTopo = templateTopo.replace(new RegExp(`{{${key}}}`, 'g'), value);
+          });
+
+          topoHtml = templateTopo;
+        } catch (error) {
+          console.error(`Erro ao gerar topo do boleto:`, error);
+        }
+      }
+      
+      // Gerar corpos de todos os boletos
+      const corposHtml: string[] = [];
       
       for (const parcela of (registro as any).parcelas) {
         try {
-          // Simular request para o método imprimirBoleto
-          const mockReq = {
-            params: { id: parcela.id.toString() },
-            query: {}
-          } as any;
+          const dadosEmpresa = await DadosEmpresa.findOne();
           
-          const mockRes = {
-            setHeader: () => {},
-            send: (html: string) => {
-              boletosHtml.push(html);
+          // Carregar template do corpo
+          const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo.html');
+          let templateCorpo = fs.readFileSync(templateCorpoPath, { encoding: 'utf8' });
+
+          // Gerar QR Code e código de barras
+          const generateQRCode = async (parcela: any) => {
+            try {
+              const qrData = `ID:${parcela.id}|VALOR:${parcela.valor_parcela}|VENC:${parcela.data_vencimento}`;
+              return await QRCode.toDataURL(qrData);
+            } catch (error) {
+              console.error('Erro ao gerar QR Code:', error);
+              return '';
             }
-          } as any;
-          
-          // Chamar o método imprimirBoleto para cada parcela
-          await CarneParcelaController.imprimirBoleto(mockReq, mockRes);
+          };
+
+          const generateBarcodeBase64 = (data: string) => {
+            try {
+              const canvas = createCanvas(400, 70);
+              JsBarcode(canvas, data, {
+                format: "CODE128",
+                width: 3,
+                height: 55,
+                displayValue: false,
+                background: "#ffffff",
+                lineColor: "#000000"
+              });
+              return canvas.toDataURL('image/png');
+            } catch (error) {
+              console.error('Erro ao gerar código de barras:', error);
+              return '';
+            }
+          };
+
+          const qrCodeData = await generateQRCode(parcela);
+          const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
+
+          // Gerar variáveis básicas
+          const variables = {
+            LOGOBANCO: parcela.carne?.banco?.tipo_banco ? `/images/bancos/${parcela.carne.banco.tipo_banco}.png` : `/images/bancos/boletoproprio.png`,
+            CODIGO_BANCO_COM_DV: parcela.carne?.banco?.codigo_banco || '',
+            LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
+            LOCAL_PAGAMENTO: parcela.carne?.banco?.local_pagamento || '',
+            DATA_VENC: parcela.data_vencimento || '',
+            CEDENTE: dadosEmpresa?.razao_social || '',
+            AGENCIA_CODIGO: parcela.carne?.banco?.agencia_codigo || '',
+            DATA_DOCUMENTO: parcela.created_at ? new Date(parcela.created_at).toLocaleDateString('pt-BR') : '',
+            NUMERO_DOCUMENTO: parcela.numero_parcela || '',
+            ESPECIE_DOC: parcela.carne?.banco?.especie_doc || '',
+            DATA_PROC: parcela.created_at ? new Date(parcela.created_at).toLocaleDateString('pt-BR') : '',
+            NOSSO_NUMERO: parcela.id.toString(),
+            CARTEIRA: parcela.carne?.banco?.carteira || '',
+            VAR_CARTEIRA: '',
+            ESPECIE: parcela.carne?.banco?.especie || '',
+            QUANTIDADE: '1',
+            VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')}`,
+            VALOR_BOLETO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
+            TEXTO_MULTAMORA: parcela.carne?.banco?.texto_multamora || '',
+            INSTRUCOES1: parcela.carne?.banco?.instrucao_linha_1 || '',
+            INSTRUCOES2: parcela.carne?.banco?.instrucao_linha_2 || '',
+            INSTRUCOES3: parcela.carne?.banco?.instrucao_linha_3 || '',
+            INSTRUCOES4: parcela.carne?.banco?.instrucao_linha_4 || '',
+            INSTRUCOES5: parcela.carne?.banco?.instrucao_linha_5 || '',
+            QRCODE: qrCodeData,
+            SACADO_NOME: parcela.carne?.cliente?.razao_social || '',
+            TIPO_PSACADO: parcela.carne?.cliente?.cnpj ? 'CNPJ' : 'CPF',
+            SACADO_ENDERECO: parcela.carne?.cliente?.endereco || '',
+            SACADO_BAIRRO: parcela.carne?.cliente?.bairro || '',
+            SACADO_COMPLEMENTO: parcela.carne?.cliente?.complemento || '',
+            SACADO_CIDADE: parcela.carne?.cliente?.cidade || '',
+            SACADO_ESTADO: parcela.carne?.cliente?.estado || '',
+            SACADO_CEP: parcela.carne?.cliente?.cep || '',
+            BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
+              <img src="${barcodeData}" 
+                   alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
+            </div>`
+          };
+
+          // Substituir variáveis no template do corpo
+          Object.entries(variables).forEach(([key, value]) => {
+            templateCorpo = templateCorpo.replace(new RegExp(`{{${key}}}`, 'g'), value);
+          });
+
+          corposHtml.push(templateCorpo);
         } catch (error) {
-          console.error(`Erro ao gerar boleto da parcela ${parcela.id}:`, error);
+          console.error(`Erro ao gerar corpo do boleto da parcela ${parcela.id}:`, error);
         }
       }
 
-      // Combinar todos os boletos em um documento
+      // Combinar 1 topo + múltiplos corpos
       const htmlContent = `
         <!DOCTYPE html>
         <html lang="pt-BR">
@@ -276,17 +421,18 @@ export class CarneController {
                     background: #fff;
                     color: #000;
                 }
-                .boleto-page {
+                .boleto-corpo {
                     page-break-after: always;
                     margin-bottom: 20px;
                 }
-                .boleto-page:last-child {
+                .boleto-corpo:last-child {
                     page-break-after: avoid;
                 }
             </style>
         </head>
         <body>
-            ${boletosHtml.map(html => `<div class="boleto-page">${html}</div>`).join('')}
+            ${topoHtml}
+            ${corposHtml.map(corpo => `<div class="boleto-corpo">${corpo}</div>`).join('')}
         </body>
         </html>
       `;
