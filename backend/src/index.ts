@@ -21,6 +21,7 @@ import carneParcelaRoutes from './routes/carneParcelaRoutes';
 import boletoRoutes from './routes/boletoRoutes';
 import dadosEmpresaRoutes from './routes/dadosEmpresaRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
+import webhookRoutes from './routes/webhookRoutes';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -89,15 +90,14 @@ app.use('/boleto', boletoRoutes);
 app.use('/api/dados-empresa', dadosEmpresaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
+// Rotas de webhook
+app.use('/webhook', webhookRoutes);
+
 // Rota de CEP (seguindo padrão PHP)
 app.get('/api/buscar-cep/:cep', (req, res) => {
   res.json({ success: true, message: 'Buscar CEP - Em desenvolvimento' });
 });
 
-// Rota de webhook (seguindo padrão PHP)
-app.post('/webhook/efi', (req, res) => {
-  res.json({ success: true, message: 'Webhook EFI - Em desenvolvimento' });
-});
 
 // Rota de health check
 app.get('/health', (req, res) => {

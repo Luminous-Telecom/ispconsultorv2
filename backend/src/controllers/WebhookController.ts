@@ -1,0 +1,592 @@
+import { Request, Response } from 'express';
+import { Banco } from '../models/Banco';
+import { CarneParcela } from '../models/CarneParcela';
+import { Carne } from '../models/Carne';
+import { BancoApiService } from '../services/BancoApiService';
+import { logger } from '../utils/logger';
+
+export class WebhookController {
+  /**
+   * Webhook unificado para receber notificações da Efí sobre todos os tipos de operações
+   * (PIX, Bolix, carnês, boletos individuais, etc.)
+   */
+  static async efiWebhook(req: Request, res: Response): Promise<void> {
+    logger.info('=== WEBHOOK EFÍ UNIFICADO RECEBIDO ===');
+    logger.info('Headers:', req.headers);
+    logger.info('Body:', req.body);
+    logger.info('Content-Type:', req.get('Content-Type'));
+    logger.info('Payload decodificado:', JSON.stringify(req.body, null, 2));
+
+    const payload = req.body;
+    
+    try {
+      // Verificar se é um token de notificação (form-urlencoded)
+      if (req.get('Content-Type') === 'application/x-www-form-urlencoded' && 
+          payload.notification && 
+          typeof payload.notification === 'string' && 
+          !Array.isArray(payload.notification)) {
+        
+        const notificationToken = payload.notification;
+        logger.info(`Token de notificação recebido: ${notificationToken}`);
+        
+        // Processar token de notificação - consultar API do EFI
+        const result = await WebhookController.processarTokenNotificacao(notificationToken);
+        res.status(result.status || 200).json(result);
+        return;
+      }
+      
+      // Verificar se é uma notificação válida da Efí
+      if (!payload.notification && !payload.charge && !payload.carnet && !payload.pix) {
+        logger.warning('Payload não contém campos esperados da Efí');
+        res.status(400).json({
+          success: false,
+          message: 'Payload inválido'
+        });
+        return;
+      }
+
+      // Determinar tipo de notificação
+      let notificationType = '';
+      let notification = null;
+
+      if (payload.notification) {
+        notification = payload.notification;
+        notificationType = notification.type || '';
+      } else if (payload.charge) {
+        notification = payload.charge;
+        notificationType = 'charge_' + (notification.status || 'unknown');
+      } else if (payload.carnet) {
+        notification = payload.carnet;
+        notificationType = 'carnet_' + (notification.status || 'unknown');
+      } else if (payload.pix) {
+        notification = payload.pix;
+        notificationType = 'pix_' + (notification.status || 'unknown');
+      }
+
+      logger.info(`Tipo de notificação identificado: ${notificationType}`);
+
+      // Processar diferentes tipos de notificação
+      switch (notificationType) {
+        case 'charge_paid':
+        case 'charge_settled':
+        case 'charge_canceled':
+        case 'charge_expired':
+        case 'charge_waiting':
+        case 'charge_pending':
+          const chargeResult = await WebhookController.processarNotificacaoCharge(notification);
+          res.status(chargeResult.status || 200).json(chargeResult);
+          break;
+        
+        case 'carnet_paid':
+        case 'carnet_settled':
+        case 'carnet_canceled':
+        case 'carnet_expired':
+        case 'carnet_waiting':
+        case 'carnet_pending':
+          const carnetResult = await WebhookController.processarNotificacaoCarnet(notification);
+          res.status(carnetResult.status || 200).json(carnetResult);
+          break;
+        
+        case 'pix_paid':
+        case 'pix_settled':
+        case 'pix_canceled':
+        case 'pix_expired':
+        case 'pix_waiting':
+        case 'pix_pending':
+          const pixResult = await WebhookController.processarNotificacaoPix(notification);
+          res.status(pixResult.status || 200).json(pixResult);
+          break;
+        
+        // Processar notificações genéricas
+        case 'payment':
+        case 'paid':
+        case 'settled':
+        case 'canceled':
+        case 'expired':
+          logger.info(`Processando notificação genérica: ${notificationType}`);
+          const genericResult = await WebhookController.processarNotificacaoGenerica(notification);
+          res.status(genericResult.status || 200).json(genericResult);
+          break;
+        
+        default:
+          logger.warning(`Tipo de notificação não reconhecido: ${notificationType}`);
+          logger.warning('Payload completo:', JSON.stringify(payload, null, 2));
+          res.status(200).json({ message: 'Tipo de notificação não processado' });
+      }
+
+    } catch (error: any) {
+      logger.error('Erro ao processar webhook Efí unificado', {
+        error: error.message,
+        stack: error.stack
+      });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Processar token de notificação
+   */
+  private static async processarTokenNotificacao(notificationToken: string): Promise<any> {
+    try {
+      logger.info(`Iniciando processamento de token de notificação: ${notificationToken}`);
+      
+      // Buscar bancos EFI ativos
+      const bancosEfi = await Banco.findAll({
+        where: { tipo_banco: 'efi', ativo: true }
+      });
+      
+      if (bancosEfi.length === 0) {
+        logger.error('Nenhum banco EFI ativo encontrado para processar notificação');
+        return {
+          success: false,
+          message: 'Nenhum banco EFI ativo encontrado',
+          status: 400
+        };
+      }
+      
+      // Tentar consultar a notificação em cada banco EFI
+      for (const banco of bancosEfi) {
+        logger.info(`Consultando notificação no banco EFI: ${banco.id}`);
+        
+        const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
+        
+        if (resultado.success) {
+          logger.info('Notificação consultada com sucesso', {
+            banco_id: banco.id,
+            data: resultado.data
+          });
+          
+          // Processar os dados da notificação
+          return await WebhookController.processarDadosNotificacao(resultado.data, banco);
+        } else {
+          logger.warning(`Falha ao consultar notificação no banco ${banco.id}`, {
+            message: resultado.message
+          });
+        }
+      }
+      
+      logger.error('Falha ao consultar notificação em todos os bancos EFI');
+      return {
+        success: false,
+        message: 'Não foi possível consultar a notificação',
+        status: 400
+      };
+      
+    } catch (error: any) {
+      logger.error('Erro ao processar token de notificação', {
+        token: notificationToken,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao processar token de notificação',
+        status: 500
+      };
+    }
+  }
+
+  /**
+   * Processar dados da notificação
+   */
+  private static async processarDadosNotificacao(dados: any, banco: Banco): Promise<any> {
+    try {
+      logger.info('Processando dados da notificação', {
+        banco_id: banco.id,
+        dados
+      });
+
+      // Verificar se é uma notificação individual ou múltipla
+      if (Array.isArray(dados)) {
+        // Notificação múltipla
+        let totalProcessadas = 0;
+        for (const notificacao of dados) {
+          const processadas = await WebhookController.processarNotificacaoIndividual(notificacao, banco);
+          totalProcessadas += processadas;
+        }
+        
+        return {
+          success: true,
+          message: `${totalProcessadas} notificações processadas`,
+          data: { total_processadas: totalProcessadas }
+        };
+      } else {
+        // Notificação individual
+        const processadas = await WebhookController.processarNotificacaoIndividual(dados, banco);
+        
+        return {
+          success: true,
+          message: 'Notificação processada',
+          data: { processadas }
+        };
+      }
+    } catch (error: any) {
+      logger.error('Erro ao processar dados da notificação', {
+        banco_id: banco.id,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao processar dados da notificação',
+        status: 500
+      };
+    }
+  }
+
+  /**
+   * Processar notificação individual
+   */
+  private static async processarNotificacaoIndividual(notificacao: any, banco: Banco): Promise<number> {
+    try {
+      const type = notificacao.type || '';
+      const identifiers = notificacao.identifiers || {};
+      const status = notificacao.status?.current || null;
+      const customId = notificacao.custom_id || null;
+      
+      logger.info('Processando notificação individual', {
+        type,
+        custom_id: customId,
+        status,
+        identifiers
+      });
+      
+      switch (type) {
+        case 'carnet_charge':
+          return await WebhookController.processarNotificacaoParcela(identifiers, status, customId);
+          
+        case 'carnet':
+          return await WebhookController.processarNotificacaoCarne(identifiers, status, customId);
+          
+        default:
+          logger.warning('Tipo de notificação não suportado', { type });
+          return 0;
+      }
+    } catch (error: any) {
+      logger.error('Erro ao processar notificação individual', {
+        notificacao,
+        error: error.message
+      });
+      return 0;
+    }
+  }
+
+  /**
+   * Processar notificação de parcela (carnet_charge)
+   */
+  private static async processarNotificacaoParcela(identifiers: any, status: string, customId: string): Promise<number> {
+    const chargeId = identifiers.charge_id || null;
+    
+    if (!chargeId) {
+      logger.warning('Charge ID não encontrado na notificação de parcela');
+      return 0;
+    }
+
+    try {
+      // Buscar parcela pelo charge_id
+      const parcela = await CarneParcela.findOne({
+        where: { charge_id: chargeId }
+      });
+
+      if (!parcela) {
+        logger.warning('Parcela não encontrada', { charge_id: chargeId });
+        return 0;
+      }
+
+      // Atualizar status da parcela
+      const novoStatus = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+      await parcela.update({ status: novoStatus });
+
+      logger.info('Status da parcela atualizado', {
+        parcela_id: parcela.id,
+        charge_id: chargeId,
+        status_anterior: parcela.status,
+        status_novo: novoStatus
+      });
+
+      return 1;
+    } catch (error: any) {
+      logger.error('Erro ao processar notificação de parcela', {
+        charge_id: chargeId,
+        error: error.message
+      });
+      return 0;
+    }
+  }
+
+  /**
+   * Processar notificação de carnê
+   */
+  private static async processarNotificacaoCarne(identifiers: any, status: string, customId: string): Promise<number> {
+    const carnetId = identifiers.carnet_id || null;
+    
+    if (!carnetId) {
+      logger.warning('Carnet ID não encontrado na notificação de carnê');
+      return 0;
+    }
+
+    try {
+      // Buscar carnê pelo carnet_id
+      const carne = await Carne.findOne({
+        where: { carnet_id: carnetId }
+      });
+
+      if (!carne) {
+        logger.warning('Carnê não encontrado', { carnet_id: carnetId });
+        return 0;
+      }
+
+      // Atualizar status do carnê
+      const novoStatus = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente';
+      await carne.update({ status: novoStatus });
+
+      logger.info('Status do carnê atualizado', {
+        carne_id: carne.id,
+        carnet_id: carnetId,
+        status_anterior: carne.status,
+        status_novo: novoStatus
+      });
+
+      return 1;
+    } catch (error: any) {
+      logger.error('Erro ao processar notificação de carnê', {
+        carnet_id: carnetId,
+        error: error.message
+      });
+      return 0;
+    }
+  }
+
+  /**
+   * Processar notificação de charge
+   */
+  private static async processarNotificacaoCharge(notification: any): Promise<any> {
+    try {
+      const chargeId = notification.charge_id || notification.id;
+      const status = notification.status;
+      const customId = notification.custom_id;
+
+      logger.info('Processando notificação de charge', {
+        charge_id: chargeId,
+        status,
+        custom_id: customId
+      });
+
+      if (!chargeId) {
+        return {
+          success: false,
+          message: 'Charge ID não encontrado',
+          status: 400
+        };
+      }
+
+      // Buscar parcela pelo charge_id
+      const parcela = await CarneParcela.findOne({
+        where: { charge_id: chargeId }
+      });
+
+      if (!parcela) {
+        logger.warning('Parcela não encontrada para charge', { charge_id: chargeId });
+        return {
+          success: false,
+          message: 'Parcela não encontrada',
+          status: 404
+        };
+      }
+
+      // Atualizar status da parcela
+      const novoStatus = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+      await parcela.update({ status: novoStatus });
+
+      logger.info('Status da parcela atualizado via charge', {
+        parcela_id: parcela.id,
+        charge_id: chargeId,
+        status_anterior: parcela.status,
+        status_novo: novoStatus
+      });
+
+      return {
+        success: true,
+        message: 'Status da parcela atualizado',
+        data: {
+          parcela_id: parcela.id,
+          status: novoStatus
+        }
+      };
+    } catch (error: any) {
+      logger.error('Erro ao processar notificação de charge', {
+        notification,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao processar notificação de charge',
+        status: 500
+      };
+    }
+  }
+
+  /**
+   * Processar notificação de carnê
+   */
+  private static async processarNotificacaoCarnet(notification: any): Promise<any> {
+    try {
+      const carnetId = notification.carnet_id || notification.id;
+      const status = notification.status;
+      const customId = notification.custom_id;
+
+      logger.info('Processando notificação de carnê', {
+        carnet_id: carnetId,
+        status,
+        custom_id: customId
+      });
+
+      if (!carnetId) {
+        return {
+          success: false,
+          message: 'Carnet ID não encontrado',
+          status: 400
+        };
+      }
+
+      // Buscar carnê pelo carnet_id
+      const carne = await Carne.findOne({
+        where: { carnet_id: carnetId }
+      });
+
+      if (!carne) {
+        logger.warning('Carnê não encontrado para carnet', { carnet_id: carnetId });
+        return {
+          success: false,
+          message: 'Carnê não encontrado',
+          status: 404
+        };
+      }
+
+      // Atualizar status do carnê
+      const novoStatus = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente';
+      await carne.update({ status: novoStatus });
+
+      logger.info('Status do carnê atualizado via carnet', {
+        carne_id: carne.id,
+        carnet_id: carnetId,
+        status_anterior: carne.status,
+        status_novo: novoStatus
+      });
+
+      return {
+        success: true,
+        message: 'Status do carnê atualizado',
+        data: {
+          carne_id: carne.id,
+          status: novoStatus
+        }
+      };
+    } catch (error: any) {
+      logger.error('Erro ao processar notificação de carnê', {
+        notification,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao processar notificação de carnê',
+        status: 500
+      };
+    }
+  }
+
+  /**
+   * Processar notificação de PIX
+   */
+  private static async processarNotificacaoPix(notification: any): Promise<any> {
+    try {
+      logger.info('Processando notificação de PIX', { notification });
+
+      // Implementar lógica específica para PIX se necessário
+      // Por enquanto, tratar como notificação genérica
+      return await WebhookController.processarNotificacaoGenerica(notification);
+    } catch (error: any) {
+      logger.error('Erro ao processar notificação de PIX', {
+        notification,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao processar notificação de PIX',
+        status: 500
+      };
+    }
+  }
+
+  /**
+   * Processar notificação genérica
+   */
+  private static async processarNotificacaoGenerica(notification: any): Promise<any> {
+    try {
+      logger.info('Processando notificação genérica', { notification });
+
+      // Tentar identificar o tipo de notificação pelos campos disponíveis
+      const chargeId = notification.charge_id || notification.id;
+      const carnetId = notification.carnet_id;
+      const customId = notification.custom_id;
+
+      if (chargeId) {
+        return await WebhookController.processarNotificacaoCharge(notification);
+      } else if (carnetId) {
+        return await WebhookController.processarNotificacaoCarnet(notification);
+      } else if (customId) {
+        // Tentar buscar por custom_id
+        const parcela = await CarneParcela.findByPk(customId);
+        if (parcela) {
+          const novoStatus = WebhookController.mapearStatusEfi(notification.status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+          await parcela.update({ status: novoStatus });
+          
+          return {
+            success: true,
+            message: 'Status atualizado via custom_id',
+            data: {
+              parcela_id: parcela.id,
+              status: novoStatus
+            }
+          };
+        }
+      }
+
+      logger.warning('Não foi possível processar notificação genérica', { notification });
+      return {
+        success: false,
+        message: 'Não foi possível processar notificação genérica',
+        status: 400
+      };
+    } catch (error: any) {
+      logger.error('Erro ao processar notificação genérica', {
+        notification,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao processar notificação genérica',
+        status: 500
+      };
+    }
+  }
+
+  /**
+   * Mapear status da Efí para status interno
+   */
+  private static mapearStatusEfi(statusEfi: string): string {
+    const statusMap: Record<string, string> = {
+      'paid': 'pago',
+      'settled': 'pago',
+      'canceled': 'cancelado',
+      'expired': 'vencido',
+      'waiting': 'pendente',
+      'pending': 'pendente',
+      'active': 'ativo',
+      'inactive': 'inativo'
+    };
+
+    return statusMap[statusEfi?.toLowerCase()] || 'pendente';
+  }
+}
