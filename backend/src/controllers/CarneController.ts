@@ -258,7 +258,7 @@ export class CarneController {
           const dadosEmpresa = await DadosEmpresa.findOne();
           
           // Carregar template do topo
-          const templateTopoPath = path.join(__dirname, '../templates/boleto-topo.html');
+          const templateTopoPath = path.join(__dirname, '../templates/boleto-topo-inner.html');
           let templateTopo = fs.readFileSync(templateTopoPath, { encoding: 'utf8' });
 
           // Gerar variáveis básicas
@@ -326,7 +326,7 @@ export class CarneController {
           const dadosEmpresa = await DadosEmpresa.findOne();
           
           // Carregar template do corpo
-          const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo.html');
+          const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo-inner.html');
           let templateCorpo = fs.readFileSync(templateCorpoPath, { encoding: 'utf8' });
 
           // Gerar QR Code e código de barras
@@ -452,17 +452,20 @@ export class CarneController {
                     background: #fff;
                     color: #000;
                 }
+                .boleto-topo {
+                    margin-bottom: 5px;
+                }
                 .boleto-corpo {
-                    page-break-after: always;
-                    margin-bottom: 20px;
+                    margin-bottom: 2px;
+                    page-break-inside: avoid;
                 }
                 .boleto-corpo:last-child {
-                    page-break-after: avoid;
+                    margin-bottom: 0;
                 }
             </style>
         </head>
         <body>
-            ${topoHtml}
+            <div class="boleto-topo">${topoHtml}</div>
             ${corposHtml.map(corpo => `<div class="boleto-corpo">${corpo}</div>`).join('')}
         </body>
         </html>
