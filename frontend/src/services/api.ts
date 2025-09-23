@@ -32,17 +32,12 @@ class ApiService {
     // Interceptor para responses
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
-        console.log('Interceptor - Raw response:', response);
-        console.log('Interceptor - Response data:', response.data);
-        console.log('Interceptor - Response data type:', typeof response.data);
-        
         // Garantir que sempre retornamos um valor válido
         const data = response.data;
         if (data === undefined || data === null) {
           console.warn('API response data is undefined/null:', response);
           return {};
         }
-        console.log('Interceptor - Returning data:', data);
         return data;
       },
       (error) => {
