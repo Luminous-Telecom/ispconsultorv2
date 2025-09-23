@@ -443,7 +443,7 @@ export class CarneController {
             <style>
                 @page {
                     size: A4;
-                    margin: 5mm;
+                    margin: 3mm;
                 }
                 body {
                     margin: 0;
@@ -453,20 +453,33 @@ export class CarneController {
                     color: #000;
                 }
                 .boleto-topo {
-                    margin-bottom: 5px;
+                    margin-bottom: 2px;
                 }
                 .boleto-corpo {
-                    margin-bottom: 2px;
+                    margin-bottom: 1px;
                     page-break-inside: avoid;
                 }
                 .boleto-corpo:last-child {
                     margin-bottom: 0;
                 }
+                .separador {
+                    width: 100%;
+                    margin: 0;
+                    border-top: 1px dashed #999;
+                    padding: 0;
+                    height: 1px;
+                    box-sizing: border-box;
+                    position: relative;
+                    z-index: 10;
+                }
             </style>
         </head>
         <body>
             <div class="boleto-topo">${topoHtml}</div>
-            ${corposHtml.map(corpo => `<div class="boleto-corpo">${corpo}</div>`).join('')}
+            ${corposHtml.length > 0 ? '<div class="separador"></div>' : ''}
+            ${corposHtml.map((corpo, index) => 
+              `<div class="separador"></div><div class="boleto-corpo">${corpo}</div>`
+            ).join('')}
         </body>
         </html>
       `;
