@@ -94,6 +94,53 @@ export class BancoApiService {
   }
 
   /**
+   * Testar autenticação com o banco
+   */
+  static async testarAutenticacao(banco: Banco): Promise<ApiResponse> {
+    try {
+      // Carregar configurações do banco
+      const config = this.getBancoConfig(banco.tipo_banco);
+      if (!config) {
+        return {
+          success: false,
+          message: 'Configurações do banco não encontradas'
+        };
+      }
+
+      // Verificar credenciais
+      if (!this.verificarCredenciais(banco, config)) {
+        return {
+          success: false,
+          message: 'Credenciais do banco não configuradas'
+        };
+      }
+      
+      // Obter token para testar autenticação
+      const token = await this.obterToken(banco, config);
+      if (!token) {
+        return {
+          success: false,
+          message: 'Falha ao obter token de acesso'
+        };
+      }
+          
+      return {
+        success: true,
+        message: 'Autenticação realizada com sucesso'
+      };
+    } catch (error: any) {
+      logger.error('Exceção ao testar autenticação', {
+        banco: banco.tipo_banco,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao testar autenticação: ' + error.message
+      };
+    }
+  }
+
+  /**
    * Obter token de acesso
    */
   private static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {

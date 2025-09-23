@@ -33,18 +33,20 @@ const Bancos: React.FC = () => {
 
   const getTipoBadgeClass = (tipo: string) => {
     switch (tipo) {
-      case 'tradicional': return 'bg-primary';
+      case 'bancario': return 'bg-primary';
       case 'efi': return 'bg-info';
       case 'asaas': return 'bg-warning';
+      case 'outros': return 'bg-secondary';
       default: return 'bg-secondary';
     }
   };
 
   const getTipoLabel = (tipo: string) => {
     switch (tipo) {
-      case 'tradicional': return 'Banco Tradicional';
+      case 'bancario': return 'Banco Tradicional';
       case 'efi': return 'EFI (Gerencianet)';
       case 'asaas': return 'ASAAS';
+      case 'outros': return 'Outros';
       default: return tipo;
     }
   };
@@ -108,9 +110,10 @@ const Bancos: React.FC = () => {
                     onChange={(e) => setTipo(e.target.value)}
                   >
                     <option value="">Todos</option>
-                    <option value="tradicional">Banco Tradicional</option>
+                    <option value="bancario">Banco Tradicional</option>
                     <option value="efi">EFI (Gerencianet)</option>
                     <option value="asaas">ASAAS</option>
+                    <option value="outros">Outros</option>
                   </select>
                 </div>
               </div>
@@ -138,9 +141,9 @@ const Bancos: React.FC = () => {
                 <tr>
                   <th>Nome</th>
                   <th>Tipo</th>
-                  <th>URL</th>
+                  <th>Descrição</th>
+                  <th>Sandbox</th>
                   <th>Status</th>
-                  <th>Data de Criação</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -160,21 +163,27 @@ const Bancos: React.FC = () => {
                         <strong>{banco.nome}</strong>
                       </td>
                       <td>
-                        <span className={`badge ${getTipoBadgeClass(banco.tipo)}`}>
-                          {getTipoLabel(banco.tipo)}
+                        <span className={`badge ${getTipoBadgeClass(banco.tipo_banco)}`}>
+                          {getTipoLabel(banco.tipo_banco)}
                         </span>
                       </td>
                       <td>
-                        <a href={banco.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-                          {banco.url} <i className="bi bi-box-arrow-up-right"></i>
-                        </a>
+                        {banco.descricao ? (
+                          banco.descricao.length > 50 
+                            ? `${banco.descricao.substring(0, 50)}...` 
+                            : banco.descricao
+                        ) : '-'}
+                      </td>
+                      <td>
+                        <span className={`badge ${banco.sandbox ? 'bg-warning' : 'bg-success'}`}>
+                          {banco.sandbox ? 'Sim' : 'Não'}
+                        </span>
                       </td>
                       <td>
                         <span className={`badge ${banco.ativo ? 'bg-success' : 'bg-danger'}`}>
                           {banco.ativo ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
-                      <td>{new Date(banco.data_criacao).toLocaleDateString('pt-BR')}</td>
                       <td>
                         <div className="btn-group btn-group-sm" role="group">
                           <Link 

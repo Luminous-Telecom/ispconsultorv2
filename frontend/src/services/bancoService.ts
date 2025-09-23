@@ -7,7 +7,7 @@ export class BancoService {
     const params = new URLSearchParams();
     
     if (filters.search) params.append('search', filters.search);
-    if (filters.tipo_banco) params.append('tipo', filters.tipo_banco);
+    if (filters.tipo_banco) params.append('tipo_banco', filters.tipo_banco);
     if (filters.ativo !== undefined) params.append('ativo', filters.ativo.toString());
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
@@ -24,8 +24,8 @@ export class BancoService {
   // Buscar banco por ID
   static async getById(id: number): Promise<Banco> {
     try {
-      const response = await apiService.get<Banco>(`/bancos/${id}`);
-      return response;
+      const response = await apiService.get<{success: boolean, data: Banco}>(`/bancos/${id}`);
+      return response.data;
     } catch (error) {
       console.error('Erro ao buscar banco:', error);
       throw error;
@@ -35,8 +35,8 @@ export class BancoService {
   // Criar novo banco
   static async create(data: CreateBanco): Promise<Banco> {
     try {
-      const response = await apiService.post<Banco>('/bancos', data);
-      return response;
+      const response = await apiService.post<{success: boolean, data: Banco}>('/bancos', data);
+      return response.data;
     } catch (error) {
       console.error('Erro ao criar banco:', error);
       throw error;
@@ -46,8 +46,8 @@ export class BancoService {
   // Atualizar banco
   static async update(id: number, data: UpdateBanco): Promise<Banco> {
     try {
-      const response = await apiService.put<Banco>(`/bancos/${id}`, data);
-      return response;
+      const response = await apiService.put<{success: boolean, data: Banco}>(`/bancos/${id}`, data);
+      return response.data;
     } catch (error) {
       console.error('Erro ao atualizar banco:', error);
       throw error;
