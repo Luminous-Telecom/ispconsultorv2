@@ -37,7 +37,7 @@ export class WebhookController {
       
       // Verificar se é uma notificação válida da Efí
       if (!payload.notification && !payload.charge && !payload.carnet && !payload.pix) {
-        logger.warning('Payload não contém campos esperados da Efí');
+        logger.warn('Payload não contém campos esperados da Efí');
         res.status(400).json({
           success: false,
           message: 'Payload inválido'
@@ -109,8 +109,8 @@ export class WebhookController {
           break;
         
         default:
-          logger.warning(`Tipo de notificação não reconhecido: ${notificationType}`);
-          logger.warning('Payload completo:', JSON.stringify(payload, null, 2));
+          logger.warn(`Tipo de notificação não reconhecido: ${notificationType}`);
+          logger.warn('Payload completo:', JSON.stringify(payload, null, 2));
           res.status(200).json({ message: 'Tipo de notificação não processado' });
       }
 
@@ -162,7 +162,7 @@ export class WebhookController {
           // Processar os dados da notificação
           return await WebhookController.processarDadosNotificacao(resultado.data, banco);
         } else {
-          logger.warning(`Falha ao consultar notificação no banco ${banco.id}`, {
+          logger.warn(`Falha ao consultar notificação no banco ${banco.id}`, {
             message: resultado.message
           });
         }
@@ -260,7 +260,7 @@ export class WebhookController {
           return await WebhookController.processarNotificacaoCarne(identifiers, status, customId);
           
         default:
-          logger.warning('Tipo de notificação não suportado', { type });
+          logger.warn('Tipo de notificação não suportado', { type });
           return 0;
       }
     } catch (error: any) {
@@ -279,7 +279,7 @@ export class WebhookController {
     const chargeId = identifiers.charge_id || null;
     
     if (!chargeId) {
-      logger.warning('Charge ID não encontrado na notificação de parcela');
+      logger.warn('Charge ID não encontrado na notificação de parcela');
       return 0;
     }
 
@@ -290,7 +290,7 @@ export class WebhookController {
       });
 
       if (!parcela) {
-        logger.warning('Parcela não encontrada', { charge_id: chargeId });
+        logger.warn('Parcela não encontrada', { charge_id: chargeId });
         return 0;
       }
 
@@ -322,7 +322,7 @@ export class WebhookController {
     const carnetId = identifiers.carnet_id || null;
     
     if (!carnetId) {
-      logger.warning('Carnet ID não encontrado na notificação de carnê');
+      logger.warn('Carnet ID não encontrado na notificação de carnê');
       return 0;
     }
 
@@ -333,7 +333,7 @@ export class WebhookController {
       });
 
       if (!carne) {
-        logger.warning('Carnê não encontrado', { carnet_id: carnetId });
+        logger.warn('Carnê não encontrado', { carnet_id: carnetId });
         return 0;
       }
 
@@ -387,7 +387,7 @@ export class WebhookController {
       });
 
       if (!parcela) {
-        logger.warning('Parcela não encontrada para charge', { charge_id: chargeId });
+        logger.warn('Parcela não encontrada para charge', { charge_id: chargeId });
         return {
           success: false,
           message: 'Parcela não encontrada',
@@ -456,7 +456,7 @@ export class WebhookController {
       });
 
       if (!carne) {
-        logger.warning('Carnê não encontrado para carnet', { carnet_id: carnetId });
+        logger.warn('Carnê não encontrado para carnet', { carnet_id: carnetId });
         return {
           success: false,
           message: 'Carnê não encontrado',
@@ -553,7 +553,7 @@ export class WebhookController {
         }
       }
 
-      logger.warning('Não foi possível processar notificação genérica', { notification });
+      logger.warn('Não foi possível processar notificação genérica', { notification });
       return {
         success: false,
         message: 'Não foi possível processar notificação genérica',
