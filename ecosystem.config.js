@@ -4,9 +4,9 @@ module.exports = {
       name: 'ctm-backend',
       cwd: '/home/lucas/vantora/ctm-telecom/backend',
       script: 'npm',
-      args: 'start',
+      args: 'run dev',
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: 'development',
         PORT: 3001
       },
       instances: 1,
@@ -24,7 +24,7 @@ module.exports = {
       script: 'npm',
       args: 'start',
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: 'development',
         PORT: 3000,
         BROWSER: 'none'
       },
