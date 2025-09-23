@@ -352,7 +352,7 @@ export class CarneController {
           // Gerar variáveis básicas
           const variables = {
             LOGOBANCO: parcela.carne?.banco?.tipo_banco ? `/images/bancos/${parcela.carne.banco.tipo_banco}.png` : `/images/bancos/boletoproprio.png`,
-            CODIGO_BANCO_COM_DV: parcela.carne?.banco?.codigo_banco || '',
+            CODIGO_BANCO_COM_DV: parcela.carne?.banco?.codigo_banco || parcela.carne?.banco?.codigo || '237',
             LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
             LOCAL_PAGAMENTO: parcela.carne?.banco?.local_pagamento || '',
             DATA_VENC: parcela.data_vencimento || '',
@@ -378,6 +378,7 @@ export class CarneController {
             QRCODE: qrCodeData,
             SACADO_NOME: parcela.carne?.cliente?.razao_social || '',
             TIPO_PSACADO: parcela.carne?.cliente?.cnpj ? 'CNPJ' : 'CPF',
+            SACADO_CPF: parcela.carne?.cliente?.cnpj || parcela.carne?.cliente?.cpf || '',
             SACADO_ENDERECO: parcela.carne?.cliente?.endereco || '',
             SACADO_BAIRRO: parcela.carne?.cliente?.bairro || '',
             SACADO_COMPLEMENTO: parcela.carne?.cliente?.complemento || '',

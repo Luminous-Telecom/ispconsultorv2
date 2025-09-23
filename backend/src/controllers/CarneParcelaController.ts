@@ -523,7 +523,7 @@ export class CarneParcelaController {
         QUANTIDADE: '1',
         VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')}`,
         NUMERO_DOCUMENTO: parcela.numero_parcela || '',
-        CODIGO_BANCO_COM_DV: (parcela as any).carne?.banco?.codigo_banco || '',
+        CODIGO_BANCO_COM_DV: (parcela as any).carne?.banco?.codigo_banco || (parcela as any).carne?.banco?.codigo || '237',
         LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
         LOCAL_PAGAMENTO: (parcela as any).carne?.banco?.local_pagamento || '',
         DATA_VENC: parcela.data_vencimento || '',
