@@ -259,39 +259,10 @@ const CarneParcelasEdit: React.FC = () => {
                 )}
                 <button
                   type="button"
-                  className="btn btn-info"
-                  onClick={async () => {
-                    try {
-                      const htmlContent = await CarneParcelaService.imprimirBoleto(Number(id));
-                      const newWindow = window.open('', '_blank');
-                      if (newWindow) {
-                        newWindow.document.write(htmlContent);
-                        newWindow.document.close();
-                      }
-                    } catch (error) {
-                      console.error('Erro ao imprimir boleto:', error);
-                    }
-                  }}
+                  className="btn btn-primary"
+                  onClick={() => window.open(`http://localhost:3001/boleto/web/${id}`, '_blank')}
                 >
                   <i className="bi bi-printer"></i> Imprimir Boleto
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={async () => {
-                    try {
-                      const htmlContent = await CarneParcelaService.gerarPdfBoleto(Number(id));
-                      const newWindow = window.open('', '_blank');
-                      if (newWindow) {
-                        newWindow.document.write(htmlContent);
-                        newWindow.document.close();
-                      }
-                    } catch (error) {
-                      console.error('Erro ao gerar PDF:', error);
-                    }
-                  }}
-                >
-                  <i className="bi bi-file-pdf"></i> Gerar PDF
                 </button>
               </div>
             </div>

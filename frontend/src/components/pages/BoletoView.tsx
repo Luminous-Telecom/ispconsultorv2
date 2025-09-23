@@ -30,12 +30,6 @@ const BoletoView: React.FC = () => {
             <h2>Boleto - Parcela {id}</h2>
             <div>
               <button 
-                className="btn btn-primary me-2"
-                onClick={() => window.print()}
-              >
-                <i className="bi bi-printer"></i> Imprimir
-              </button>
-              <button 
                 className="btn btn-secondary"
                 onClick={() => window.history.back()}
               >

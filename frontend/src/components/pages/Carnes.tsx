@@ -204,7 +204,7 @@ const Carnes: React.FC = () => {
                             type="button" 
                             className="btn btn-outline-primary"
                             title="Imprimir"
-                            onClick={() => handleImprimir(carne.id)}
+                            onClick={() => window.open(`http://localhost:3001/carne/${carne.id}/imprimir`, '_blank')}
                           >
                             <i className="bi bi-printer"></i>
                           </button>

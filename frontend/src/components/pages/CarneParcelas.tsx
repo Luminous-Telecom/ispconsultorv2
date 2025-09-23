@@ -306,40 +306,13 @@ const CarneParcelas: React.FC = () => {
                               <i className="bi bi-check"></i>
                             </button>
                           )}
-                          {parcela.status === 'pago' && (
-                            <button 
-                              type="button" 
-                              className="btn btn-outline-warning"
-                              title="Desmarcar Pagamento"
-                              onClick={() => handleDesmarcarPago(parcela.id)}
-                              disabled={desmarcarPagoMutation.isPending}
-                            >
-                              <i className="bi bi-x"></i>
-                            </button>
-                          )}
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-info"
-                            title="Visualizar Boleto"
-                            onClick={() => window.open(`http://localhost:3001/boleto/web/${parcela.id}`, '_blank')}
-                          >
-                            <i className="bi bi-eye"></i>
-                          </button>
                           <button 
                             type="button" 
                             className="btn btn-outline-primary"
                             title="Imprimir Boleto"
-                            onClick={() => handleImprimirBoleto(parcela.id)}
+                            onClick={() => window.open(`http://localhost:3001/boleto/web/${parcela.id}`, '_blank')}
                           >
                             <i className="bi bi-printer"></i>
-                          </button>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-secondary"
-                            title="PDF Boleto"
-                            onClick={() => handleGerarPdfBoleto(parcela.id)}
-                          >
-                            <i className="bi bi-file-pdf"></i>
                           </button>
                           <button 
                             type="button" 
