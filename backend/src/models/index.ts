@@ -1,0 +1,129 @@
+// Importar todos os modelos
+import { Cliente } from './Cliente';
+import { Plano } from './Plano';
+import { Banco } from './Banco';
+import { BancoConfiguracao } from './BancoConfiguracao';
+import { Carne } from './Carne';
+import { CarneParcela } from './CarneParcela';
+import { ClientePlano } from './ClientePlano';
+import { DadosEmpresa } from './DadosEmpresa';
+
+// Configurar relacionamentos
+
+// Cliente
+Cliente.belongsToMany(Plano, {
+  through: ClientePlano,
+  foreignKey: 'cliente_id',
+  otherKey: 'plano_id',
+  as: 'planos'
+});
+
+Cliente.hasMany(ClientePlano, {
+  foreignKey: 'cliente_id',
+  as: 'contratos'
+});
+
+Cliente.hasMany(Carne, {
+  foreignKey: 'cliente_id',
+  as: 'carnes'
+});
+
+Cliente.belongsTo(Banco, {
+  foreignKey: 'conta_boleto',
+  as: 'bancoBoleto'
+});
+
+// Plano
+Plano.belongsToMany(Cliente, {
+  through: ClientePlano,
+  foreignKey: 'plano_id',
+  otherKey: 'cliente_id',
+  as: 'clientes'
+});
+
+Plano.hasMany(ClientePlano, {
+  foreignKey: 'plano_id',
+  as: 'contratos'
+});
+
+Plano.hasMany(Carne, {
+  foreignKey: 'plano_id',
+  as: 'carnes'
+});
+
+// Banco
+Banco.hasMany(Cliente, {
+  foreignKey: 'conta_boleto',
+  as: 'clientes'
+});
+
+Banco.hasMany(Carne, {
+  foreignKey: 'banco_id',
+  as: 'carnes'
+});
+
+Banco.hasMany(BancoConfiguracao, {
+  foreignKey: 'banco_id',
+  as: 'bancoConfiguracoes'
+});
+
+Banco.hasOne(BancoConfiguracao, {
+  foreignKey: 'banco_id',
+  as: 'configuracaoPrincipal'
+});
+
+// Carne
+Carne.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente'
+});
+
+Carne.belongsTo(Plano, {
+  foreignKey: 'plano_id',
+  as: 'plano'
+});
+
+Carne.belongsTo(Banco, {
+  foreignKey: 'banco_id',
+  as: 'banco'
+});
+
+Carne.hasMany(CarneParcela, {
+  foreignKey: 'carne_id',
+  as: 'parcelas'
+});
+
+// CarneParcela
+CarneParcela.belongsTo(Carne, {
+  foreignKey: 'carne_id',
+  as: 'carne'
+});
+
+// ClientePlano
+ClientePlano.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente'
+});
+
+ClientePlano.belongsTo(Plano, {
+  foreignKey: 'plano_id',
+  as: 'plano'
+});
+
+// BancoConfiguracao
+BancoConfiguracao.belongsTo(Banco, {
+  foreignKey: 'banco_id',
+  as: 'banco'
+});
+
+// Exportar todos os modelos
+export {
+  Cliente,
+  Plano,
+  Banco,
+  BancoConfiguracao,
+  Carne,
+  CarneParcela,
+  ClientePlano,
+  DadosEmpresa
+};

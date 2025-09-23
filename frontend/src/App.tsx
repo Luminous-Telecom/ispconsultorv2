@@ -1,0 +1,70 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Layout
+import Layout from './components/layout/Layout';
+
+// Pages
+import Dashboard from './components/pages/Dashboard';
+import Clientes from './components/pages/Clientes';
+import ClientesCreate from './components/pages/ClientesCreate';
+import ClientesEdit from './components/pages/ClientesEdit';
+import Planos from './components/pages/Planos';
+import PlanosCreate from './components/pages/PlanosCreate';
+import PlanosEdit from './components/pages/PlanosEdit';
+import Bancos from './components/pages/Bancos';
+import BancosCreate from './components/pages/BancosCreate';
+import BancosEdit from './components/pages/BancosEdit';
+import Carnes from './components/pages/Carnes';
+import CarnesCreate from './components/pages/CarnesCreate';
+import CarnesEdit from './components/pages/CarnesEdit';
+import CarneParcelas from './components/pages/CarneParcelas';
+import CarneParcelasEdit from './components/pages/CarneParcelasEdit';
+import DadosEmpresa from './components/pages/DadosEmpresa';
+import Login from './components/pages/Login';
+
+// Query Client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="clientes" element={<Clientes />} />
+            <Route path="clientes/create" element={<ClientesCreate />} />
+            <Route path="clientes/:id/edit" element={<ClientesEdit />} />
+            <Route path="planos" element={<Planos />} />
+            <Route path="planos/create" element={<PlanosCreate />} />
+            <Route path="planos/:id/edit" element={<PlanosEdit />} />
+            <Route path="bancos" element={<Bancos />} />
+            <Route path="bancos/create" element={<BancosCreate />} />
+            <Route path="bancos/:id/edit" element={<BancosEdit />} />
+            <Route path="carnes" element={<Carnes />} />
+            <Route path="carnes/create" element={<CarnesCreate />} />
+            <Route path="carnes/:id/edit" element={<CarnesEdit />} />
+            <Route path="carnes/:carneId/imprimir" element={<div>Funcionalidade de impressão será implementada</div>} />
+            <Route path="carnes/:carneId/pdf" element={<div>Funcionalidade de PDF será implementada</div>} />
+            <Route path="carne-parcelas" element={<CarneParcelas />} />
+            <Route path="carne-parcelas/:id/edit" element={<CarneParcelasEdit />} />
+            <Route path="dados-empresa" element={<DadosEmpresa />} />
+          </Route>
+        </Routes>
+      </Router>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
