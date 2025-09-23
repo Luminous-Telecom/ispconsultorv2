@@ -198,7 +198,129 @@ export class WebhookController {
         dados
       });
 
-      // Verificar se é uma notificação individual ou múltipla
+      // Nova estrutura da EFI: array de notificações
+      if (dados.code && dados.data && Array.isArray(dados.data)) {
+        logger.info('Processando notificações em lote', {
+          count: dados.data.length
+        });
+        
+        let processadas = 0;
+        for (const notificacao of dados.data) {
+          if (notificacao.type && notificacao.identifiers) {
+            processadas += await WebhookController.processarNotificacaoIndividual(notificacao, banco);
+          }
+        }
+        
+        return {
+          success: true,
+          message: `${processadas} notificações processadas`,
+          data: { total_processadas: processadas }
+        };
+      }
+
+      // Verificar se é uma notificação de charge (boleto individual) - estrutura antiga
+      if (dados.charge) {
+        const charge = dados.charge;
+        const chargeId = charge.charge_id || null;
+        const status = charge.status || 'unknown';
+        
+        if (chargeId) {
+          logger.info('Processando notificação de charge', {
+            charge_id: chargeId,
+            status
+          });
+          
+          // Buscar parcela pelo charge_id
+          const parcela = await CarneParcela.findOne({
+            where: { charge_id: chargeId }
+          });
+          
+          if (parcela) {
+            const statusLocal = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+            const oldStatus = parcela.status;
+            const oldPago = parcela.pago;
+            
+            await parcela.update({
+              status: statusLocal,
+              pago: ['pago', 'liquidado'].includes(statusLocal)
+            });
+            
+            // Verificar e atualizar status do carnê
+            const carne = await parcela.getCarne();
+            await carne.verificarEAtualizarStatus();
+            
+            logger.info('Parcela atualizada via webhook', {
+              parcela_id: parcela.id,
+              charge_id: chargeId,
+              status_anterior: oldStatus,
+              status_novo: statusLocal,
+              pago_anterior: oldPago,
+              pago_novo: parcela.pago
+            });
+            
+            return {
+              success: true,
+              message: 'Parcela atualizada com sucesso',
+              data: { parcela_id: parcela.id }
+            };
+          } else {
+            logger.warn('Parcela não encontrada para charge', { charge_id: chargeId });
+            return {
+              success: false,
+              message: 'Parcela não encontrada',
+              status: 404
+            };
+          }
+        }
+      }
+
+      // Verificar se é uma notificação de carnê - estrutura antiga
+      if (dados.carnet) {
+        const carnet = dados.carnet;
+        const carnetId = carnet.carnet_id || null;
+        const status = carnet.status || 'unknown';
+        
+        if (carnetId) {
+          logger.info('Processando notificação de carnê', {
+            carnet_id: carnetId,
+            status
+          });
+          
+          // Buscar carnê pelo carnet_id
+          const carne = await Carne.findOne({
+            where: { carnet_id: carnetId }
+          });
+          
+          if (carne) {
+            const statusLocal = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente';
+            const oldStatus = carne.status;
+            
+            await carne.update({ status: statusLocal });
+            
+            logger.info('Carnê atualizado via webhook', {
+              carne_id: carne.id,
+              carnet_id: carnetId,
+              status_anterior: oldStatus,
+              status_novo: statusLocal
+            });
+            
+            return {
+              success: true,
+              message: 'Carnê atualizado com sucesso',
+              data: { carne_id: carne.id }
+            };
+          } else {
+            logger.warn('Carnê não encontrado para carnet', { carnet_id: carnetId });
+            return {
+              success: false,
+              message: 'Carnê não encontrado',
+              status: 404
+            };
+          }
+        }
+      }
+
+      // Verificar se é uma notificação individual ou múltipla (estrutura direta)
       if (Array.isArray(dados)) {
         // Notificação múltipla
         let totalProcessadas = 0;
@@ -296,7 +418,14 @@ export class WebhookController {
 
       // Atualizar status da parcela
       const novoStatus = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-      await parcela.update({ status: novoStatus });
+      await parcela.update({ 
+        status: novoStatus,
+        pago: ['pago', 'liquidado'].includes(novoStatus)
+      });
+
+      // Verificar e atualizar status do carnê
+      const carne = await parcela.getCarne();
+      await carne.verificarEAtualizarStatus();
 
       logger.info('Status da parcela atualizado', {
         parcela_id: parcela.id,
