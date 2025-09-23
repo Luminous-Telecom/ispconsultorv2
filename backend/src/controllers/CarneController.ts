@@ -281,9 +281,21 @@ export class CarneController {
             SACADO_CIDADE: primeiraParcela.carne?.cliente?.cidade || '',
             SACADO_ESTADO: primeiraParcela.carne?.cliente?.estado || '',
             TITULONN: primeiraParcela.numero_parcela || '',
-            DATA_ORIGINAL: primeiraParcela.data_vencimento || '',
+            DATA_ORIGINAL: (() => {
+              if (!primeiraParcela.data_vencimento) return '';
+              const dateStr = primeiraParcela.data_vencimento instanceof Date 
+                ? primeiraParcela.data_vencimento.toISOString()
+                : (primeiraParcela.data_vencimento as any).toString();
+              return dateStr.split('T')[0].split('-').reverse().join('/');
+            })(),
             SACADO_CPF: primeiraParcela.carne?.cliente?.cnpj || primeiraParcela.carne?.cliente?.cpf || '',
-            DATA_PROC: primeiraParcela.created_at ? new Date(primeiraParcela.created_at).toLocaleDateString('pt-BR') : '',
+            DATA_PROC: (() => {
+              if (!primeiraParcela.created_at) return '';
+              const dateStr = primeiraParcela.created_at instanceof Date 
+                ? primeiraParcela.created_at.toISOString()
+                : (primeiraParcela.created_at as any).toString();
+              return dateStr.split('T')[0].split('-').reverse().join('/');
+            })(),
             MOVIMENTO: 'Valor do título',
             VALOR_COBRADO: parseFloat(primeiraParcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
             TAXA_BOLETO: '0,00',
@@ -355,13 +367,31 @@ export class CarneController {
             CODIGO_BANCO_COM_DV: parcela.carne?.banco?.codigo_banco || parcela.carne?.banco?.codigo || '237',
             LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
             LOCAL_PAGAMENTO: parcela.carne?.banco?.local_pagamento || '',
-            DATA_VENC: parcela.data_vencimento || '',
+            DATA_VENC: (() => {
+              if (!parcela.data_vencimento) return '';
+              const dateStr = parcela.data_vencimento instanceof Date 
+                ? parcela.data_vencimento.toISOString()
+                : (parcela.data_vencimento as any).toString();
+              return dateStr.split('T')[0].split('-').reverse().join('/');
+            })(),
             CEDENTE: dadosEmpresa?.razao_social || '',
             AGENCIA_CODIGO: parcela.carne?.banco?.agencia_codigo || '',
-            DATA_DOCUMENTO: parcela.created_at ? new Date(parcela.created_at).toLocaleDateString('pt-BR') : '',
+            DATA_DOCUMENTO: (() => {
+              if (!parcela.created_at) return '';
+              const dateStr = parcela.created_at instanceof Date 
+                ? parcela.created_at.toISOString()
+                : (parcela.created_at as any).toString();
+              return dateStr.split('T')[0].split('-').reverse().join('/');
+            })(),
             NUMERO_DOCUMENTO: parcela.numero_parcela || '',
             ESPECIE_DOC: parcela.carne?.banco?.especie_doc || '',
-            DATA_PROC: parcela.created_at ? new Date(parcela.created_at).toLocaleDateString('pt-BR') : '',
+            DATA_PROC: (() => {
+              if (!parcela.created_at) return '';
+              const dateStr = parcela.created_at instanceof Date 
+                ? parcela.created_at.toISOString()
+                : (parcela.created_at as any).toString();
+              return dateStr.split('T')[0].split('-').reverse().join('/');
+            })(),
             NOSSO_NUMERO: parcela.id.toString(),
             CARTEIRA: parcela.carne?.banco?.carteira || '',
             VAR_CARTEIRA: '',
@@ -511,5 +541,13 @@ export class CarneController {
       console.error('Erro ao cancelar carnê:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
+  }
+
+  private static formatarData(data: string | Date): string {
+    const dataObj = new Date(data);
+    const dia = dataObj.getDate().toString().padStart(2, '0');
+    const mes = (dataObj.getMonth() + 1).toString().padStart(2, '0');
+    const ano = dataObj.getFullYear();
+    return `${dia}/${mes}/${ano}`;
   }
 }

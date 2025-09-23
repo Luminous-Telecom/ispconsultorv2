@@ -245,11 +245,28 @@ export class CarneParcelaController {
       CODIGO_BANCO_COM_DV: safe((parcela as any).carne?.banco?.codigo_banco),
       LINHA_DIGITAVEL: parcela.linha_digitavel || generateLinhaDigitavel(parcela),
       LOCAL_PAGAMENTO: safe((parcela as any).carne?.banco?.local_pagamento),
-      DATA_VENC: safe(parcela.data_vencimento),
+      DATA_VENC: parcela.data_vencimento ? (() => {
+        const dateStr = parcela.data_vencimento instanceof Date 
+          ? parcela.data_vencimento.toISOString()
+          : (parcela.data_vencimento as any).toString();
+        return dateStr.split('T')[0].split('-').reverse().join('/');
+      })() : '',
       AGENCIA_CODIGO: safe((parcela as any).carne?.banco?.agencia_codigo),
-      DATA_DOCUMENTO: safe(parcela.data_emissao),
+      DATA_DOCUMENTO: (() => {
+        if (!parcela.created_at) return '';
+        const dateStr = parcela.created_at instanceof Date 
+          ? parcela.created_at.toISOString()
+          : (parcela.created_at as any).toString();
+        return dateStr.split('T')[0].split('-').reverse().join('/');
+      })(),
       ESPECIE_DOC: safe((parcela as any).carne?.banco?.especie_doc),
-      DATA_PROC: safe(parcela.data_processamento),
+      DATA_PROC: (() => {
+        if (!parcela.created_at) return '';
+        const dateStr = parcela.created_at instanceof Date 
+          ? parcela.created_at.toISOString()
+          : (parcela.created_at as any).toString();
+        return dateStr.split('T')[0].split('-').reverse().join('/');
+      })(),
       NOSSO_NUMERO: safe(parcela.nosso_numero),
       CARTEIRA: safe((parcela as any).carne?.banco?.carteira),
       VAR_CARTEIRA: '',
@@ -277,7 +294,13 @@ export class CarneParcelaController {
       SACADO_ESTADO: safe((parcela as any).carne?.cliente?.estado),
       SACADO_CPF: safe((parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf),
       TITULONN: safe(parcela.numero_parcela),
-      DATA_ORIGINAL: safe(parcela.data_vencimento),
+      DATA_ORIGINAL: (() => {
+        if (!parcela.data_vencimento) return '';
+        const dateStr = parcela.data_vencimento instanceof Date 
+          ? parcela.data_vencimento.toISOString()
+          : (parcela.data_vencimento as any).toString();
+        return dateStr.split('T')[0].split('-').reverse().join('/');
+      })(),
       MOVIMENTO: 'Valor do título',
       VALOR_COBRADO: formatMoney(parcela.valor_parcela),
       TAXA_BOLETO: '0,00',
@@ -455,7 +478,6 @@ export class CarneParcelaController {
 
   static async imprimirBoleto(req: Request, res: Response): Promise<void> {
     try {
-      console.log('DEBUG: Iniciando imprimirBoleto para ID:', req.params.id);
       const { id } = req.params;
       
       const parcela = await CarneParcela.findByPk(id, {
@@ -526,11 +548,29 @@ export class CarneParcelaController {
         CODIGO_BANCO_COM_DV: (parcela as any).carne?.banco?.codigo_banco || (parcela as any).carne?.banco?.codigo || '237',
         LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
         LOCAL_PAGAMENTO: (parcela as any).carne?.banco?.local_pagamento || '',
-        DATA_VENC: parcela.data_vencimento || '',
+        DATA_VENC: (() => {
+          if (!parcela.data_vencimento) return '';
+          const dateStr = parcela.data_vencimento instanceof Date 
+            ? parcela.data_vencimento.toISOString()
+            : (parcela.data_vencimento as any).toString();
+          return dateStr.split('T')[0].split('-').reverse().join('/');
+        })(),
         AGENCIA_CODIGO: (parcela as any).carne?.banco?.agencia_codigo || '',
-        DATA_DOCUMENTO: parcela.created_at ? new Date(parcela.created_at).toLocaleDateString('pt-BR') : '',
+        DATA_DOCUMENTO: (() => {
+          if (!parcela.created_at) return '';
+          const dateStr = parcela.created_at instanceof Date 
+            ? parcela.created_at.toISOString()
+            : (parcela.created_at as any).toString();
+          return dateStr.split('T')[0].split('-').reverse().join('/');
+        })(),
         ESPECIE_DOC: (parcela as any).carne?.banco?.especie_doc || '',
-        DATA_PROC: parcela.created_at ? new Date(parcela.created_at).toLocaleDateString('pt-BR') : '',
+        DATA_PROC: (() => {
+          if (!parcela.created_at) return '';
+          const dateStr = parcela.created_at instanceof Date 
+            ? parcela.created_at.toISOString()
+            : (parcela.created_at as any).toString();
+          return dateStr.split('T')[0].split('-').reverse().join('/');
+        })(),
         NOSSO_NUMERO: parcela.id.toString(),
         CARTEIRA: (parcela as any).carne?.banco?.carteira || '',
         VAR_CARTEIRA: '',
@@ -556,7 +596,13 @@ export class CarneParcelaController {
         SACADO_ESTADO: (parcela as any).carne?.cliente?.estado || '',
         SACADO_CPF: (parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf || '',
         TITULONN: parcela.numero_parcela || '',
-        DATA_ORIGINAL: parcela.data_vencimento || '',
+        DATA_ORIGINAL: (() => {
+          if (!parcela.data_vencimento) return '';
+          const dateStr = parcela.data_vencimento instanceof Date 
+            ? parcela.data_vencimento.toISOString()
+            : (parcela.data_vencimento as any).toString();
+          return dateStr.split('T')[0].split('-').reverse().join('/');
+        })(),
         MOVIMENTO: 'Valor do título',
         VALOR_COBRADO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
         TAXA_BOLETO: '0,00',
@@ -569,11 +615,24 @@ export class CarneParcelaController {
         TIPO_PSACADO: (parcela as any).carne?.cliente?.cnpj ? 'CNPJ' : 'CPF'
       };
 
-      // Substituir variáveis nos templates
+      // Substituir variáveis nos templates - abordagem mais simples
+      templateTopo = templateTopo.replace(/\{\{DATA_ORIGINAL\}\}/g, variables.DATA_ORIGINAL);
+      templateTopo = templateTopo.replace(/\{\{DATA_PROC\}\}/g, variables.DATA_PROC);
+      templateTopo = templateTopo.replace(/\{\{DATA_VENC\}\}/g, variables.DATA_VENC);
+      templateTopo = templateTopo.replace(/\{\{DATA_DOCUMENTO\}\}/g, variables.DATA_DOCUMENTO);
+      
+      // Substituir outras variáveis
       Object.entries(variables).forEach(([key, value]) => {
-        templateTopo = templateTopo.replace(new RegExp(`{{${key}}}`, 'g'), value);
-        templateCorpo = templateCorpo.replace(new RegExp(`{{${key}}}`, 'g'), value);
+        if (!['DATA_ORIGINAL', 'DATA_PROC', 'DATA_VENC', 'DATA_DOCUMENTO'].includes(key)) {
+          templateTopo = templateTopo.replace(new RegExp(`{{${key}}}`, 'g'), value);
+          templateCorpo = templateCorpo.replace(new RegExp(`{{${key}}}`, 'g'), value);
+        }
       });
+      
+      // Substituir variáveis no corpo
+      templateCorpo = templateCorpo.replace(/\{\{DATA_VENC\}\}/g, variables.DATA_VENC);
+      templateCorpo = templateCorpo.replace(/\{\{DATA_DOCUMENTO\}\}/g, variables.DATA_DOCUMENTO);
+      templateCorpo = templateCorpo.replace(/\{\{DATA_PROC\}\}/g, variables.DATA_PROC);
 
       // Combinar os templates
       const htmlContent = templateTopo + templateCorpo;
@@ -585,5 +644,13 @@ export class CarneParcelaController {
       console.log('DEBUG: Erro ao gerar boleto:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
+  }
+
+  private static formatarData(data: string | Date): string {
+    const dataObj = new Date(data);
+    const dia = dataObj.getDate().toString().padStart(2, '0');
+    const mes = (dataObj.getMonth() + 1).toString().padStart(2, '0');
+    const ano = dataObj.getFullYear();
+    return `${dia}/${mes}/${ano}`;
   }
 }
