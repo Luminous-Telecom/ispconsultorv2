@@ -100,63 +100,7 @@ export class CarneParcelaController {
     return processedTemplate;
   }
 
-  // Método para gerar apenas o topo do boleto
-  static async gerarTopoBoleto(parcelaId: number): Promise<string> {
-    try {
-      console.log('DEBUG: Gerando topo para parcela ID:', parcelaId);
-      const parcela = await CarneParcela.findByPk(parcelaId, {
-        include: [{ association: 'carne', include: ['cliente', 'plano', 'banco'] }],
-      });
 
-      if (!parcela) {
-        throw new Error('Parcela não encontrada');
-      }
-
-      const dadosEmpresa = await DadosEmpresa.findOne();
-      
-      // Carregar apenas o template do topo
-      const templateTopoPath = path.join(__dirname, '../templates/boleto-topo.html');
-      let templateTopo = fs.readFileSync(templateTopoPath, { encoding: 'utf8' });
-
-      // Gerar variáveis (mesma lógica do imprimirBoleto)
-      const variables = await this.gerarVariaveisBoleto(parcela, dadosEmpresa);
-      
-      // Processar apenas o topo
-      return this.processarTemplateTopo(templateTopo, variables);
-    } catch (error) {
-      console.error('Erro ao gerar topo do boleto:', error);
-      throw error;
-    }
-  }
-
-  // Método para gerar apenas o corpo do boleto
-  static async gerarCorpoBoleto(parcelaId: number): Promise<string> {
-    try {
-      console.log('DEBUG: Gerando corpo para parcela ID:', parcelaId);
-      const parcela = await CarneParcela.findByPk(parcelaId, {
-        include: [{ association: 'carne', include: ['cliente', 'plano', 'banco'] }],
-      });
-
-      if (!parcela) {
-        throw new Error('Parcela não encontrada');
-      }
-
-      const dadosEmpresa = await DadosEmpresa.findOne();
-      
-      // Carregar apenas o template do corpo
-      const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo.html');
-      let templateCorpo = fs.readFileSync(templateCorpoPath, { encoding: 'utf8' });
-
-      // Gerar variáveis (mesma lógica do imprimirBoleto)
-      const variables = await this.gerarVariaveisBoleto(parcela, dadosEmpresa);
-      
-      // Processar apenas o corpo
-      return this.processarTemplateCorpo(templateCorpo, variables);
-    } catch (error) {
-      console.error('Erro ao gerar corpo do boleto:', error);
-      throw error;
-    }
-  }
 
   // Método auxiliar para gerar variáveis do boleto
   private static async gerarVariaveisBoleto(parcela: any, dadosEmpresa: any): Promise<any> {
@@ -492,8 +436,8 @@ export class CarneParcelaController {
       const dadosEmpresa = await DadosEmpresa.findOne();
       
       // Carregar templates HTML separados
-      const templateTopoPath = path.join(__dirname, '../templates/boleto-topo.html');
-      const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo.html');
+      const templateTopoPath = path.join(__dirname, '../templates/boleto-topo-inner.html');
+      const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo-inner.html');
       
       let templateTopo = fs.readFileSync(templateTopoPath, { encoding: 'utf8' });
       let templateCorpo = fs.readFileSync(templateCorpoPath, { encoding: 'utf8' });
@@ -634,8 +578,54 @@ export class CarneParcelaController {
       templateCorpo = templateCorpo.replace(/\{\{DATA_DOCUMENTO\}\}/g, variables.DATA_DOCUMENTO);
       templateCorpo = templateCorpo.replace(/\{\{DATA_PROC\}\}/g, variables.DATA_PROC);
 
-      // Combinar os templates
-      const htmlContent = templateTopo + templateCorpo;
+      // Combinar os templates com estrutura HTML completa
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Boleto - Parcela ${parcela.id}</title>
+            <style>
+                @page {
+                    size: A4;
+                    margin: 3mm;
+                }
+                body {
+                    margin: 0;
+                    padding: 0;
+                    font-family: Arial, sans-serif;
+                    background: #fff;
+                    color: #000;
+                }
+                .boleto-topo {
+                    margin-bottom: 2px;
+                }
+                .boleto-corpo {
+                    margin-bottom: 1px;
+                    page-break-inside: avoid;
+                }
+                .boleto-corpo:last-child {
+                    margin-bottom: 0;
+                }
+                .separador {
+                    width: 100%;
+                    margin: 0;
+                    border-top: 1px dashed #999;
+                    padding: 0;
+                    height: 1px;
+                    box-sizing: border-box;
+                    position: relative;
+                    z-index: 10;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="boleto-topo">${templateTopo}</div>
+            <div class="boleto-corpo">${templateCorpo}</div>
+        </body>
+        </html>
+      `;
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.send(htmlContent);
