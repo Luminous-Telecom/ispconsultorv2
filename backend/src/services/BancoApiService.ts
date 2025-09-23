@@ -268,7 +268,7 @@ export class BancoApiService {
     plano: any, 
     config: BancoConfig
   ): any {
-    const baseUrl = process.env.APP_URL || 'http://localhost:3001';
+    const baseUrl = banco.url_retorno || process.env.APP_URL || 'http://localhost:3001';
     
     return {
       items: [{
@@ -570,7 +570,7 @@ export class BancoApiService {
     cliente: any, 
     config: BancoConfig
   ): Promise<any> {
-    const baseUrl = process.env.APP_URL || 'http://localhost:3001';
+    const baseUrl = banco.url_retorno || process.env.APP_URL || 'http://localhost:3001';
     const parcelas = await CarneParcela.findAll({
       where: { carne_id: carne.id },
       order: [['numero_parcela', 'ASC']]
@@ -640,7 +640,7 @@ export class BancoApiService {
       charges,
       metadata: {
         custom_id: carne.id.toString(),
-        notification_url: `${baseUrl}/webhook/efi/carne`
+        notification_url: `${baseUrl}/webhook/efi`
       }
     };
   }
