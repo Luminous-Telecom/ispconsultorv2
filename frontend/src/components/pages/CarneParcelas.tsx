@@ -76,12 +76,7 @@ const CarneParcelas: React.FC = () => {
 
   const handleImprimirBoleto = async (parcelaId: number) => {
     try {
-      const htmlContent = await CarneParcelaService.imprimirBoleto(parcelaId);
-      const newWindow = window.open('', '_blank');
-      if (newWindow) {
-        newWindow.document.write(htmlContent);
-        newWindow.document.close();
-      }
+      window.open(`http://localhost:3001/boleto/web/${parcelaId}`, '_blank');
     } catch (error) {
       console.error('Erro ao imprimir boleto:', error);
     }
@@ -326,7 +321,7 @@ const CarneParcelas: React.FC = () => {
                             type="button" 
                             className="btn btn-outline-info"
                             title="Visualizar Boleto"
-                            onClick={() => window.open(`/boleto/web/${parcela.id}`, '_blank')}
+                            onClick={() => window.open(`http://localhost:3001/boleto/web/${parcela.id}`, '_blank')}
                           >
                             <i className="bi bi-eye"></i>
                           </button>

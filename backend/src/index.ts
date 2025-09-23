@@ -61,6 +61,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Middleware de logging
 app.use(morgan('combined'));
 
+// Servir arquivos estáticos (imagens, etc.)
+app.use('/images', express.static(path.join(__dirname, '../images')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Rotas da API
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/planos', planoRoutes);

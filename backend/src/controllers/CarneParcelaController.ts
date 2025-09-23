@@ -290,11 +290,11 @@ export class CarneParcelaController {
       // Função para gerar código de barras como base64
       const generateBarcodeBase64 = (data: string) => {
         try {
-          const canvas = createCanvas(800, 80);
+          const canvas = createCanvas(400, 70);
           JsBarcode(canvas, data, {
             format: "CODE128",
             width: 3,
-            height: 70,
+            height: 55,
             displayValue: false,
             background: "#ffffff",
             lineColor: "#000000"
@@ -355,7 +355,39 @@ export class CarneParcelaController {
       // Substituir variáveis no template (usando as mesmas variáveis do PHP)
       const variables = {
         // Dados da empresa (usando variáveis do sistema PHP)
-        LOGOMARCA: dadosEmpresa?.logo || '/images/logo-boleto.png',
+        // Logo da empresa (para o topo do boleto)
+        LOGOMARCA: (() => {
+          if (dadosEmpresa?.logo) {
+            // Se já tem URL completa, usar como está
+            if (dadosEmpresa.logo.startsWith('http')) {
+              return dadosEmpresa.logo;
+            }
+            // Se é só o nome do arquivo, construir o caminho
+            return `/uploads/empresa/${dadosEmpresa.logo}`;
+          }
+          // Se não tem logo da empresa, usar logo própria
+          return `/images/bancos/boletoproprio.png`;
+        })(),
+        
+        // Logo do banco (para a área de autenticação bancária)
+        LOGOBANCO: (() => {
+          const banco = (parcela as any).carne?.banco;
+          
+          // Se tem banco específico, usar logo do banco
+          if (banco?.tipo_banco) {
+            return `/images/bancos/${banco.tipo_banco}.png`;
+          }
+          
+          // Se não tem banco específico, usar logo própria
+          return `/images/bancos/boletoproprio.png`;
+        })(),
+        
+        // Logo SVA (Sistema de Valores a Receber) - geralmente vazio
+        LOGOSVA: '',
+        
+        // Quantidade e valor unitário
+        QUANTIDADE: '1',
+        VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')},`,
         CEDENTE: safe(dadosEmpresa?.razao_social, ''),
         EMPRESACPF: safe(dadosEmpresa?.cnpj, ''),
         EMPRESAENDERECO: safe(dadosEmpresa?.endereco, ''),
@@ -399,11 +431,7 @@ export class CarneParcelaController {
 
         // Dados do boleto bancário
         CODIGO_BANCO_COM_DV: safe((parcela as any).carne?.banco?.codigo && (parcela as any).carne?.banco?.codigo.trim() !== '' ? (parcela as any).carne?.banco?.codigo : '000'),
-        LINHA_DIGITAVEL: parcela.linha_digitavel ? `<div style="font-family: monospace; font-size: 14px; font-weight: bold; text-align: center; letter-spacing: 2px; margin: 10px 0; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-          ${parcela.linha_digitavel}
-        </div>` : `<div style="font-family: monospace; font-size: 14px; font-weight: bold; text-align: center; letter-spacing: 2px; margin: 10px 0; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-          ${generateLinhaDigitavel(parcela)}
-        </div>`,
+        LINHA_DIGITAVEL: parcela.linha_digitavel || generateLinhaDigitavel(parcela),
         LOCAL_PAGAMENTO: safe((parcela as any).carne?.banco?.local_pagamento || ''),
         DATA_VENC: new Date(parcela.data_vencimento).toLocaleDateString('pt-BR'),
         AGENCIA_CODIGO: safe((parcela as any).carne?.banco?.identificador_conta || ''),
@@ -426,9 +454,9 @@ export class CarneParcelaController {
 
         // QR Code e código de barras (usando dados do banco)
         QRCODE: parcela.qrcode_image || parcela.qrcode || await generateQRCode(parcela),
-        BOLETO_BARCODE2: `<div style="text-align: center; margin: 10px 0;">
+        BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
           <img src="${generateBarcodeBase64(parcela.codigo_barras || generateCodigoBarras(parcela))}" 
-               alt="Código de Barras" style="height: 70px; max-width: 100%;" />
+               alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
         </div>`,
 
         // Dados do pagador
@@ -580,11 +608,11 @@ export class CarneParcelaController {
       // Função para gerar código de barras como base64
       const generateBarcodeBase64 = (data: string) => {
         try {
-          const canvas = createCanvas(800, 80);
+          const canvas = createCanvas(400, 70);
           JsBarcode(canvas, data, {
             format: "CODE128",
             width: 3,
-            height: 70,
+            height: 55,
             displayValue: false,
             background: "#ffffff",
             lineColor: "#000000"
@@ -645,7 +673,39 @@ export class CarneParcelaController {
       // Substituir variáveis no template (usando as mesmas variáveis do PHP)
       const variables = {
         // Dados da empresa (usando variáveis do sistema PHP)
-        LOGOMARCA: dadosEmpresa?.logo || '/images/logo-boleto.png',
+        // Logo da empresa (para o topo do boleto)
+        LOGOMARCA: (() => {
+          if (dadosEmpresa?.logo) {
+            // Se já tem URL completa, usar como está
+            if (dadosEmpresa.logo.startsWith('http')) {
+              return dadosEmpresa.logo;
+            }
+            // Se é só o nome do arquivo, construir o caminho
+            return `/uploads/empresa/${dadosEmpresa.logo}`;
+          }
+          // Se não tem logo da empresa, usar logo própria
+          return `/images/bancos/boletoproprio.png`;
+        })(),
+        
+        // Logo do banco (para a área de autenticação bancária)
+        LOGOBANCO: (() => {
+          const banco = (parcela as any).carne?.banco;
+          
+          // Se tem banco específico, usar logo do banco
+          if (banco?.tipo_banco) {
+            return `/images/bancos/${banco.tipo_banco}.png`;
+          }
+          
+          // Se não tem banco específico, usar logo própria
+          return `/images/bancos/boletoproprio.png`;
+        })(),
+        
+        // Logo SVA (Sistema de Valores a Receber) - geralmente vazio
+        LOGOSVA: '',
+        
+        // Quantidade e valor unitário
+        QUANTIDADE: '1',
+        VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')},`,
         CEDENTE: safe(dadosEmpresa?.razao_social, ''),
         EMPRESACPF: safe(dadosEmpresa?.cnpj, ''),
         EMPRESAENDERECO: safe(dadosEmpresa?.endereco, ''),
@@ -689,11 +749,7 @@ export class CarneParcelaController {
 
         // Dados do boleto bancário
         CODIGO_BANCO_COM_DV: safe((parcela as any).carne?.banco?.codigo && (parcela as any).carne?.banco?.codigo.trim() !== '' ? (parcela as any).carne?.banco?.codigo : '000'),
-        LINHA_DIGITAVEL: parcela.linha_digitavel ? `<div style="font-family: monospace; font-size: 14px; font-weight: bold; text-align: center; letter-spacing: 2px; margin: 10px 0; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-          ${parcela.linha_digitavel}
-        </div>` : `<div style="font-family: monospace; font-size: 14px; font-weight: bold; text-align: center; letter-spacing: 2px; margin: 10px 0; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-          ${generateLinhaDigitavel(parcela)}
-        </div>`,
+        LINHA_DIGITAVEL: parcela.linha_digitavel || generateLinhaDigitavel(parcela),
         LOCAL_PAGAMENTO: safe((parcela as any).carne?.banco?.local_pagamento || ''),
         DATA_VENC: new Date(parcela.data_vencimento).toLocaleDateString('pt-BR'),
         AGENCIA_CODIGO: safe((parcela as any).carne?.banco?.identificador_conta || ''),
@@ -716,9 +772,9 @@ export class CarneParcelaController {
 
         // QR Code e código de barras (usando dados do banco)
         QRCODE: parcela.qrcode_image || parcela.qrcode || await generateQRCode(parcela),
-        BOLETO_BARCODE2: `<div style="text-align: center; margin: 10px 0;">
+        BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
           <img src="${generateBarcodeBase64(parcela.codigo_barras || generateCodigoBarras(parcela))}" 
-               alt="Código de Barras" style="height: 70px; max-width: 100%;" />
+               alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
         </div>`,
 
         // Dados do pagador

@@ -21,6 +21,7 @@ import CarnesCreate from './components/pages/CarnesCreate';
 import CarnesEdit from './components/pages/CarnesEdit';
 import CarneParcelas from './components/pages/CarneParcelas';
 import CarneParcelasEdit from './components/pages/CarneParcelasEdit';
+import BoletoView from './components/pages/BoletoView';
 import DadosEmpresa from './components/pages/DadosEmpresa';
 import Login from './components/pages/Login';
 
@@ -59,6 +60,7 @@ function App() {
             <Route path="carnes/:carneId/pdf" element={<div>Funcionalidade de PDF será implementada</div>} />
             <Route path="carne-parcelas" element={<CarneParcelas />} />
             <Route path="carne-parcelas/:id/edit" element={<CarneParcelasEdit />} />
+            <Route path="boleto/web/:id" element={<BoletoView />} />
             <Route path="dados-empresa" element={<DadosEmpresa />} />
           </Route>
         </Routes>
