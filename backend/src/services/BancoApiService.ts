@@ -6,33 +6,62 @@ import { logger } from '../utils/logger';
 import { efiConfig } from '../config/bancos/efi';
 
 export interface BancoConfig {
+  nome: string;
+  codigo: string;
+  api_url: string;
+  sandbox_url: string;
   cobranca_base_url: string;
+  api_base_url: string;
   api_endpoints: {
+    auth: string;
+    carnet: string;
+    carnet_consultar: string;
+    carnet_cancelar: string;
+    carnet_metadata: string;
+    carnet_alterar_vencimento: string;
+    carnet_parcela_alterar_vencimento: string;
+    carnet_parcela_cancelar: string;
     boleto: string;
-    carnets: string;
     consultar: string;
-    token: string;
+    cancelar: string;
+    listar_cobrancas: string;
     notification: string;
   };
   api_response_mapping: {
-    boleto: {
-      id: string;
-      barcode: string;
-      url: string;
-      linha_digitavel?: string;
-    };
-    carnets: {
+    carnet: {
       id: string;
       charges: string;
+    };
+    boleto: {
+      id: string;
+      url: string;
+      barcode: string;
+      linha_digitavel: string;
     };
     status: {
       status: string;
     };
   };
+  auth_config: {
+    grant_type: string;
+    auth_type: string;
+  };
   suporta_carne: boolean;
+  operacoes_suportadas: {
+    gerar_carne: boolean;
+    cancelar_carne: boolean;
+    cancelar_parcela_carne: boolean;
+    alterar_vencimento_carne: boolean;
+    alterar_vencimento_parcela_carne: boolean;
+    liquidar_carne: boolean;
+    liquidar_parcela_carne: boolean;
+  };
   auth_type: 'basic' | 'bearer';
   client_id_field: string;
   client_secret_field: string;
+  carnets: string;
+  token: string;
+  notification: string;
 }
 
 export interface ApiResponse {
@@ -69,7 +98,7 @@ export class BancoApiService {
    */
   private static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
     try {
-      const endpoint = config.cobranca_base_url + config.api_endpoints.token;
+      const endpoint = config.cobranca_base_url + config.token;
       
       let authData: any = {};
       
@@ -375,7 +404,7 @@ export class BancoApiService {
         };
       }
 
-      const endpoint = config.cobranca_base_url + config.api_endpoints.notification + '/' + notificationToken;
+      const endpoint = config.cobranca_base_url + config.notification + '/' + notificationToken;
       
       const response = await axios.get(endpoint, {
         headers: {
@@ -464,7 +493,7 @@ export class BancoApiService {
       // Preparar dados do carnê
       const dadosCarne = await this.prepararDadosCarne(banco, carne, cliente, config);
 
-      const endpoint = config.cobranca_base_url + config.api_endpoints.carnets;
+      const endpoint = config.cobranca_base_url + config.carnets;
       const headers = this.prepareHeaders(banco.tipo_banco, token);
       headers['Content-Type'] = 'application/json';
       
@@ -472,8 +501,8 @@ export class BancoApiService {
       
       if (response.status >= 200 && response.status < 300) {
         const dados = response.data;
-        const carnetId = this.getNestedValue(dados, config.api_response_mapping.carnets.id);
-        const charges = this.getNestedValue(dados, config.api_response_mapping.carnets.charges) || [];
+        const carnetId = this.getNestedValue(dados, config.api_response_mapping.carnet.id);
+        const charges = this.getNestedValue(dados, config.api_response_mapping.carnet.charges) || [];
 
         // Atualizar carnê
         await carne.update({
