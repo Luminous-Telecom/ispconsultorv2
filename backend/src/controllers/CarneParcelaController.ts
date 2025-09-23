@@ -173,15 +173,19 @@ export class CarneParcelaController {
 
   static async imprimirBoleto(req: Request, res: Response): Promise<void> {
     try {
+      console.log('DEBUG: Iniciando imprimirBoleto para ID:', req.params.id);
       const { id } = req.params;
       const parcela = await CarneParcela.findByPk(id, {
         include: [{ association: 'carne', include: ['cliente', 'plano', 'banco'] }],
       });
 
       if (!parcela) {
+        console.log('DEBUG: Parcela não encontrada para ID:', id);
         res.status(404).json({ error: 'Parcela não encontrada' });
         return;
       }
+      
+      console.log('DEBUG: Parcela encontrada, iniciando geração do boleto');
 
       const formatMoney = (value: number) => {
         return value.toFixed(2).replace('.', ',');
@@ -474,7 +478,11 @@ export class CarneParcelaController {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.send(htmlContent);
     } catch (error) {
-      console.error('Erro ao imprimir boleto:', error);
+      console.error('DEBUG: Erro detalhado ao imprimir boleto:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : 'Stack não disponível',
+        error: error
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
