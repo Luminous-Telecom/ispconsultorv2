@@ -646,6 +646,87 @@ export class BancoApiService {
   }
 
   /**
+   * Marcar como paga (baixa manual) uma parcela específica do carnê no banco
+   * PUT /v1/carnet/:id/parcel/:parcel/settle
+   */
+  static async liquidarParcelaCarne(parcela: CarneParcela): Promise<ApiResponse> {
+    const carne = await parcela.getCarne();
+    const banco = await carne.getBanco();
+    
+    try {
+      const config = this.getBancoConfig(banco.tipo_banco);
+      if (!config) {
+        return {
+          success: false,
+          message: 'Configurações do banco não encontradas'
+        };
+      }
+
+      if (!config.operacoes_suportadas.liquidar_parcela_carne || !carne.carnet_id || !parcela.numero_parcela) {
+        return {
+          success: false,
+          message: 'Operação não suportada ou identificadores ausentes'
+        };
+      }
+
+      const token = await this.obterToken(banco, config);
+      if (!token) {
+        return {
+          success: false,
+          message: 'Falha ao obter token de acesso'
+        };
+      }
+
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_parcela_cancelar}/${carne.carnet_id}/parcel/${parcela.numero_parcela}/settle`;
+
+      logger.info('Enviando requisição para liquidar parcela', {
+        endpoint,
+        carnet_id: carne.carnet_id,
+        numero_parcela: parcela.numero_parcela,
+        parcela_id: parcela.id
+      });
+
+      const response = await axios.put(endpoint, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      logger.info('Resposta da liquidação', {
+        endpoint,
+        status: response.status,
+        data: response.data
+      });
+
+      if (response.status >= 200 && response.status < 300) {
+        return {
+          success: true,
+          message: 'Parcela marcada como paga (settled) com sucesso'
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Erro ao liquidar parcela: ' + response.status
+      };
+    } catch (error: any) {
+      logger.error('Erro ao liquidar parcela do carnê', {
+        parcela_id: parcela.id,
+        carnet_id: carne.carnet_id,
+        error: error.message
+      });
+      return {
+        success: false,
+        message: 'Erro ao liquidar parcela: ' + error.message
+      };
+    }
+  }
+
+  /**
    * Gerar títulos individuais quando carnê não é suportado
    */
   private static async gerarTitulosIndividuais(carne: Carne): Promise<ApiResponse> {

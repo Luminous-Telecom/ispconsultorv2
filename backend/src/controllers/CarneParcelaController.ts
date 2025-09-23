@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { CarneParcela } from '../models/CarneParcela';
 import { DadosEmpresa } from '../models/DadosEmpresa';
+import { BancoApiService } from '../services/BancoApiService';
+import { logger } from '../utils/logger';
 import { Op } from 'sequelize';
 import fs from 'fs';
 import path from 'path';
@@ -356,22 +358,67 @@ export class CarneParcelaController {
       const { id } = req.params;
       const { data_pagamento, valor_pago, observacoes } = req.body;
 
-      const parcela = await CarneParcela.findByPk(id);
+      const parcela = await CarneParcela.findByPk(id, {
+        include: [{ association: 'carne', include: [{ association: 'banco' }] }]
+      });
+      
       if (!parcela) {
         res.status(404).json({ error: 'Parcela não encontrada' });
         return;
       }
 
+      const carne = await parcela.getCarne();
+      const banco = await carne.getBanco();
+
+      // Se for EFI e houver carnet_id + numero_parcela, tentar baixa manual (settle)
+      let settleOk = false;
+      if (banco && banco.tipo_banco === 'efi' && carne.carnet_id && parcela.numero_parcela) {
+        logger.info('Tentando liquidar parcela na EFI', {
+          parcela_id: parcela.id,
+          carnet_id: carne.carnet_id,
+          numero_parcela: parcela.numero_parcela
+        });
+
+        const resultado = await BancoApiService.liquidarParcelaCarne(parcela);
+        if (resultado.success) {
+          settleOk = true;
+          logger.info('Parcela liquidada com sucesso na EFI', {
+            parcela_id: parcela.id
+          });
+        } else {
+          logger.error('Falha ao liquidar parcela na EFI', {
+            parcela_id: parcela.id,
+            error: resultado.message
+          });
+          res.status(400).json({ 
+            error: 'Falha ao marcar como paga na Efí: ' + (resultado.message || 'Erro')
+          });
+          return;
+        }
+      }
+
+      // Atualização local
       await parcela.update({
+        pago: true,
         data_pagamento: data_pagamento || new Date(),
         valor_pago: valor_pago || parcela.valor_parcela,
         observacoes: observacoes || '',
         status: 'pago'
       });
 
-      res.json({ success: true, message: 'Parcela marcada como paga' });
-    } catch (error) {
-      console.error('Erro ao marcar parcela como paga:', error);
+      // Verificar e atualizar status do carnê
+      await carne.verificarEAtualizarStatus();
+
+      const msg = settleOk 
+        ? 'Parcela marcada como paga na Efí e no sistema.' 
+        : 'Parcela marcada como paga no sistema.';
+
+      res.json({ success: true, message: msg });
+    } catch (error: any) {
+      logger.error('Erro ao marcar parcela como paga', {
+        parcela_id: req.params.id,
+        error: error.message
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
