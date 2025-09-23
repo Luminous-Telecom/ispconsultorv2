@@ -19,6 +19,8 @@ build/
 .env.test.local
 .env.production.local
 
+.cursorrules
+
 # Logs
 logs/
 *.log
