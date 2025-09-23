@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import { CarneParcela, CarneParcelaFilters, PaginatedResponse } from '../types';
+import { API_CONFIG } from '../config/api';
 
 export class CarneParcelaService {
   // Listar parcelas com filtros e paginação
@@ -127,7 +128,7 @@ export class CarneParcelaService {
 
   // Visualizar boleto na web
   static getBoletoUrl(id: number): string {
-    return `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/boleto/web/${id}`;
+    return `${API_CONFIG.BASE_URL_WITHOUT_API}/boleto/web/${id}`;
   }
 }
 

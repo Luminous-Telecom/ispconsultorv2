@@ -1,9 +1,19 @@
 // Configurações da API
+if (!process.env.REACT_APP_API_URL) {
+  throw new Error('REACT_APP_API_URL não definida nas variáveis de ambiente');
+}
+
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
+  BASE_URL: process.env.REACT_APP_API_URL,
+  BASE_URL_WITHOUT_API: process.env.REACT_APP_API_URL.replace('/api', ''),
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
+};
+
+// Função para gerar URLs dinâmicas
+export const getApiUrl = (endpoint: string) => {
+  return `${API_CONFIG.BASE_URL_WITHOUT_API}${endpoint}`;
 };
 
 // Endpoints da API

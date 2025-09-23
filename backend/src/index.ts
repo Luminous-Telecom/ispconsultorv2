@@ -25,8 +25,19 @@ import dashboardRoutes from './routes/dashboardRoutes';
 // Carregar variáveis de ambiente
 dotenv.config();
 
+// Validar variáveis de ambiente obrigatórias
+if (!process.env.PORT) {
+  console.error('❌ PORT não definida nas variáveis de ambiente');
+  process.exit(1);
+}
+
+if (!process.env.FRONTEND_URL) {
+  console.error('❌ FRONTEND_URL não definida nas variáveis de ambiente');
+  process.exit(1);
+}
+
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 
 // Middleware de segurança
 app.use(helmet({
@@ -34,10 +45,13 @@ app.use(helmet({
 }));
 
 // Middleware de CORS
+const corsOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.PRODUCTION_URL
+].filter((url): url is string => Boolean(url));
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://seudominio.com'] 
-    : ['http://localhost:3000'],
+  origin: corsOrigins,
   credentials: true
 }));
 
@@ -150,8 +164,8 @@ const startServer = async () => {
     // Iniciar servidor
     app.listen(PORT, () => {
       console.log(`🚀 Servidor rodando na porta ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`📊 Health check: /health`);
+      console.log(`🌐 API Base URL: /api`);
     });
   } catch (error) {
     console.error('❌ Erro ao inicializar servidor:', error);

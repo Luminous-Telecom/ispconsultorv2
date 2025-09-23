@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CarneParcelaService } from '../../services/carneParcelaService';
+import { getApiUrl } from '../../config/api';
 
 const CarneParcelas: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -76,7 +77,7 @@ const CarneParcelas: React.FC = () => {
 
   const handleImprimirBoleto = async (parcelaId: number) => {
     try {
-      window.open(`http://localhost:3001/boleto/web/${parcelaId}`, '_blank');
+      window.open(getApiUrl(`/boleto/web/${parcelaId}`), '_blank');
     } catch (error) {
       console.error('Erro ao imprimir boleto:', error);
     }
@@ -310,7 +311,7 @@ const CarneParcelas: React.FC = () => {
                             type="button" 
                             className="btn btn-outline-primary"
                             title="Imprimir Boleto"
-                            onClick={() => window.open(`http://localhost:3001/boleto/web/${parcela.id}`, '_blank')}
+                            onClick={() => window.open(getApiUrl(`/boleto/web/${parcela.id}`), '_blank')}
                           >
                             <i className="bi bi-printer"></i>
                           </button>

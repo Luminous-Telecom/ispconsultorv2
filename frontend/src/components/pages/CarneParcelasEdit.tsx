@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CarneParcelaService } from '../../services/carneParcelaService';
+import { getApiUrl } from '../../config/api';
 
 const CarneParcelasEdit: React.FC = () => {
   const { id } = useParams();
@@ -260,7 +261,7 @@ const CarneParcelasEdit: React.FC = () => {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={() => window.open(`http://localhost:3001/boleto/web/${id}`, '_blank')}
+                  onClick={() => window.open(getApiUrl(`/boleto/web/${id}`), '_blank')}
                 >
                   <i className="bi bi-printer"></i> Imprimir Boleto
                 </button>

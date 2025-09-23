@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { CarneService } from '../../services/carneService';
+import { getApiUrl } from '../../config/api';
 import { useNotification } from '../../hooks/useNotification';
 
 const Carnes: React.FC = () => {
@@ -204,7 +205,7 @@ const Carnes: React.FC = () => {
                             type="button" 
                             className="btn btn-outline-primary"
                             title="Imprimir"
-                            onClick={() => window.open(`http://localhost:3001/carne/${carne.id}/imprimir`, '_blank')}
+                            onClick={() => window.open(getApiUrl(`/api/carnes/${carne.id}/imprimir`), '_blank')}
                           >
                             <i className="bi bi-printer"></i>
                           </button>
