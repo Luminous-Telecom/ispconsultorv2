@@ -107,6 +107,7 @@ export class PlanoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      
       const [updatedRowsCount] = await Plano.update(req.body, {
         where: { id }
       });

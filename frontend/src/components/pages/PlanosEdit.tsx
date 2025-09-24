@@ -123,7 +123,17 @@ const PlanosEdit: React.FC = () => {
       return;
     }
 
-    updatePlanoMutation.mutate({ id: planoId, data: formData });
+    // Filtrar campos vazios ou nulos
+    const dataToSend = Object.fromEntries(
+      Object.entries(formData).filter(([key, value]) => {
+        if (value === null || value === undefined) return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        if (typeof value === 'string' && value.trim() === '') return false;
+        return true;
+      })
+    );
+    
+    updatePlanoMutation.mutate({ id: planoId, data: dataToSend as PlanoForm });
   };
 
   const handleCancel = () => {
