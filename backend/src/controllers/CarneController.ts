@@ -405,7 +405,7 @@ export class CarneController {
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
       const carnes = await Carne.findAll({
-        where: { status: 'ativo' },
+        where: { status: 'pendente' },
         include: [
           { 
             association: 'cliente', 
