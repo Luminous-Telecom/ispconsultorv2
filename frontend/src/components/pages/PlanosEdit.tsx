@@ -8,7 +8,7 @@ interface PlanoForm {
   nome_plano: string;
   descricao?: string;
   valor_mensal: number;
-  tipo_servico: 'internet' | 'telefone' | 'tv' | 'combo';
+  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
   servicos_inclusos?: string[];
   quantidade_usuarios?: number;
   desconto_percentual?: number;
@@ -176,9 +176,12 @@ const PlanosEdit: React.FC = () => {
                     onChange={(e) => handleInputChange('tipo_servico', e.target.value as PlanoForm['tipo_servico'])}
                   >
                     <option value="internet">Internet</option>
-                    <option value="telefone">Telefone</option>
+                    <option value="telefonia">Telefonia</option>
                     <option value="tv">TV</option>
-                    <option value="combo">Combo</option>
+                    <option value="suporte">Suporte Técnico</option>
+                    <option value="infraestrutura">Infraestrutura</option>
+                    <option value="consultoria">Consultoria</option>
+                    <option value="outros">Outros</option>
                   </select>
                   {errors.tipo_servico && <div className="invalid-feedback">{errors.tipo_servico}</div>}
                 </div>
