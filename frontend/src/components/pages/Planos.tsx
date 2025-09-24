@@ -10,6 +10,7 @@ interface Plano {
   id: number;
   nome_plano: string;
   descricao?: string;
+  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
   valor_mensal: number;
   status: 'ativo' | 'inativo' | 'suspenso';
   created_at: string;
@@ -84,6 +85,15 @@ const Planos: React.FC = () => {
       key: 'descricao',
       label: 'Descrição',
       render: (plano: Plano) => plano.descricao || '-'
+    },
+    {
+      key: 'tipo_servico',
+      label: 'Tipo de Serviço',
+      render: (plano: Plano) => (
+        <span className="badge bg-info">
+          {plano.tipo_servico ? plano.tipo_servico.charAt(0).toUpperCase() + plano.tipo_servico.slice(1) : 'N/A'}
+        </span>
+      )
     },
     {
       key: 'valor_mensal',

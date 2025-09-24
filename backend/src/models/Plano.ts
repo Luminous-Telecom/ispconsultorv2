@@ -27,7 +27,7 @@ export class Plano extends Model<
   declare id: CreationOptional<number>;
   declare nome_plano: string;
   declare descricao: string | null;
-  declare tipo_servico: string | null;
+  declare tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
   declare servicos_inclusos: string[] | null;
   declare quantidade_usuarios: number | null;
   declare valor_mensal: number;
@@ -174,8 +174,9 @@ Plano.init(
       allowNull: true
     },
     tipo_servico: {
-      type: DataTypes.STRING(100),
-      allowNull: true
+      type: DataTypes.ENUM('internet', 'telefonia', 'tv', 'suporte', 'infraestrutura', 'consultoria', 'outros'),
+      allowNull: false,
+      defaultValue: 'internet'
     },
     servicos_inclusos: {
       type: DataTypes.JSON,
