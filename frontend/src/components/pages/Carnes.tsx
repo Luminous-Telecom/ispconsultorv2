@@ -195,13 +195,6 @@ const Carnes: React.FC = () => {
                       <td>
                         <div className="btn-group btn-group-sm" role="group">
                           <Link 
-                            to={`/carnes/${carne.id}`} 
-                            className="btn btn-outline-primary"
-                            title="Visualizar"
-                          >
-                            <i className="bi bi-eye"></i>
-                          </Link>
-                          <Link 
                             to={`/carne-parcelas?carne_id=${carne.id}`} 
                             className="btn btn-outline-info"
                             title="Ver Parcelas"

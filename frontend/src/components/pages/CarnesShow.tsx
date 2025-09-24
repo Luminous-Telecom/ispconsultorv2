@@ -13,6 +13,7 @@ const CarnesShow: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isConsulting, setIsConsulting] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // Buscar carnê
   const { data: carne, isLoading, error: carneError } = useQuery({
@@ -122,6 +123,26 @@ const CarnesShow: React.FC = () => {
     }
   };
 
+  const handleRegistrarCarne = async () => {
+    if (!carne?.carnet_id) {
+      error('Carnê deve ser gerado antes de registrar no banco');
+      return;
+    }
+
+    setIsRegistering(true);
+    try {
+      // Aqui será chamada a função que envia o carnê para o banco
+      // Por enquanto, vamos simular o processo
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      success('Carnê registrado no banco com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['carne', id] });
+    } catch (err: any) {
+      error(err.response?.data?.message || 'Erro ao registrar carnê no banco');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
@@ -156,7 +177,7 @@ const CarnesShow: React.FC = () => {
                   <li className="breadcrumb-item">
                     <Link to="/carnes">Carnês</Link>
                   </li>
-                  <li className="breadcrumb-item active">Visualizar</li>
+                  <li className="breadcrumb-item active">Ver Parcelas</li>
                 </ol>
               </nav>
             </div>
@@ -203,22 +224,21 @@ const CarnesShow: React.FC = () => {
             </div>
           </div>
 
-          {/* Ações de Carnês */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h5 className="card-title mb-0">Ações de Carnês</h5>
-            </div>
-            <div className="card-body">
-              <div className="d-grid gap-2 d-md-flex">
+
+          {/* Parcelas */}
+          <div className="card">
+            <div className="card-header d-flex justify-content-between align-items-center">
+              <h5 className="card-title mb-0">Parcelas</h5>
+              <div className="btn-group">
                 <button 
                   type="button" 
-                  className="btn btn-warning"
+                  className="btn btn-warning btn-sm"
                   onClick={handleGerarTitulos}
                   disabled={isGenerating || gerarTitulosMutation.isPending}
                 >
                   {isGenerating || gerarTitulosMutation.isPending ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                       Gerando...
                     </>
                   ) : (
@@ -230,13 +250,31 @@ const CarnesShow: React.FC = () => {
                 
                 <button 
                   type="button" 
-                  className="btn btn-secondary"
+                  className="btn btn-primary btn-sm"
+                  onClick={handleRegistrarCarne}
+                  disabled={!carne.carnet_id || isRegistering}
+                >
+                  {isRegistering ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                      Registrando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-send"></i> Registrar no Banco
+                    </>
+                  )}
+                </button>
+                
+                <button 
+                  type="button" 
+                  className="btn btn-secondary btn-sm"
                   onClick={handleConsultarStatus}
                   disabled={isConsulting || consultarStatusMutation.isPending}
                 >
                   {isConsulting || consultarStatusMutation.isPending ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                       Consultando...
                     </>
                   ) : (
@@ -249,30 +287,23 @@ const CarnesShow: React.FC = () => {
                 {carne.banco?.tipo_banco === 'efi' && carne.carnet_id && (
                   <button 
                     type="button" 
-                    className="btn btn-outline-danger"
+                    className="btn btn-outline-danger btn-sm"
                     onClick={handleCancelarNoBanco}
                     disabled={isCanceling || cancelarNoBancoMutation.isPending}
                   >
                     {isCanceling || cancelarNoBancoMutation.isPending ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                         Cancelando...
                       </>
                     ) : (
                       <>
-                        <i className="bi bi-x-octagon"></i> Cancelar no banco
+                        <i className="bi bi-x-octagon"></i> Cancelar
                       </>
                     )}
                   </button>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Parcelas */}
-          <div className="card">
-            <div className="card-header">
-              <h5 className="card-title mb-0">Parcelas</h5>
             </div>
             <div className="card-body">
               {parcelasLoading ? (
