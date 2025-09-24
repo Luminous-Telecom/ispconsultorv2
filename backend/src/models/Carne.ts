@@ -165,19 +165,48 @@ export class Carne extends Model<
       const dataVencimento = new Date(this.data_vencimento_primeira);
       dataVencimento.setMonth(dataVencimento.getMonth() + (i - 1));
       
+      // Gerar código de barras e linha digitável
+      const codigoBarras = this.gerarCodigoBarras(i);
+      const linhaDigitavel = this.gerarLinhaDigitavel(codigoBarras);
+      
       const parcela = await this.createParcela({
         carne_id: this.id,
         numero_parcela: i,
         valor_parcela: valor,
         data_vencimento: dataVencimento,
         pago: false,
-        status: 'pendente'
+        status: 'pendente',
+        codigo_barras: codigoBarras,
+        linha_digitavel: linhaDigitavel
       });
       
       parcelas.push(parcela);
     }
     
     return parcelas;
+  }
+
+  /**
+   * Gerar código de barras para parcela
+   */
+  private gerarCodigoBarras(parcela: number): string {
+    // Implementar geração de código de barras específico do banco
+    return '237' + this.id.toString().padStart(8, '0') + parcela.toString().padStart(2, '0') + '00000000000';
+  }
+
+  /**
+   * Gerar linha digitável para parcela
+   */
+  private gerarLinhaDigitavel(codigoBarras: string): string {
+    // Implementar geração de linha digitável específica do banco
+    return codigoBarras.substring(0, 5) + '.' + 
+           codigoBarras.substring(5, 10) + ' ' + 
+           codigoBarras.substring(10, 15) + '.' + 
+           codigoBarras.substring(15, 21) + ' ' + 
+           codigoBarras.substring(21, 26) + '.' + 
+           codigoBarras.substring(26, 32) + ' ' + 
+           codigoBarras.substring(32, 33) + ' ' + 
+           codigoBarras.substring(33);
   }
 
   async getResumo(): Promise<{

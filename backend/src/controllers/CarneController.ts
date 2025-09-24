@@ -11,6 +11,7 @@ import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { Op } from 'sequelize';
 import { BancoApiService } from '../services/BancoApiService';
+import { logger } from '../utils/logger';
 
 function gerarNumeroCarne(): string {
   const ano = new Date().getFullYear();
@@ -175,14 +176,68 @@ export class CarneController {
       // Gerar parcelas automaticamente
       await carne.gerarParcelas(valorParcela, data);
 
+      // Carregar relacionamentos para geração de títulos
       const carneComRelacionamentos = await Carne.findByPk(carne.id, {
+        include: ['cliente', 'plano', 'banco', 'parcelas']
+      });
+
+      // Gerar títulos automaticamente se for banco EFI
+      let resultadoGeracao = null;
+      if (carneComRelacionamentos) {
+        const banco = await carneComRelacionamentos.getBanco();
+        if (banco && banco.tipo_banco === 'efi') {
+          logger.info('Gerando títulos automaticamente para carnê EFI', {
+            carne_id: carne.id,
+            banco_id: banco.id
+          });
+          
+          resultadoGeracao = await BancoApiService.gerarCarne(carneComRelacionamentos);
+          
+          if (resultadoGeracao.success) {
+            // Atualizar carnê com dados retornados
+            await carneComRelacionamentos.update({
+              carnet_id: resultadoGeracao.data?.carnet_id || null,
+              codigo_barras: resultadoGeracao.data?.codigo_barras || null,
+              linha_digitavel: resultadoGeracao.data?.linha_digitavel || null,
+              status: 'ativo'
+            });
+
+            // Atualizar parcelas com charge_ids
+            if (resultadoGeracao.data?.charges && Array.isArray(resultadoGeracao.data.charges)) {
+              const parcelas = await carneComRelacionamentos.getParcelas();
+              for (let i = 0; i < parcelas.length && i < resultadoGeracao.data.charges.length; i++) {
+                const parcela = parcelas[i];
+                const charge = resultadoGeracao.data.charges[i];
+                await parcela.update({
+                  charge_id: charge.charge_id || null,
+                  numero_parcela: charge.parcel || (i + 1)
+                });
+              }
+            }
+            
+            logger.info('Títulos gerados automaticamente com sucesso', {
+              carne_id: carne.id,
+              carnet_id: resultadoGeracao.data?.carnet_id
+            });
+          } else {
+            logger.warn('Falha ao gerar títulos automaticamente', {
+              carne_id: carne.id,
+              error: resultadoGeracao.message
+            });
+          }
+        }
+      }
+
+      // Retornar carnê atualizado
+      const carneFinal = await Carne.findByPk(carne.id, {
         include: ['cliente', 'plano', 'banco', 'parcelas']
       });
 
       res.status(201).json({
         success: true,
-        message: 'Carnê gerado com sucesso!',
-        data: carneComRelacionamentos || carne
+        message: 'Carnê gerado com sucesso!' + (resultadoGeracao?.success ? ' Títulos gerados automaticamente.' : ''),
+        data: carneFinal || carne,
+        geracao_titulos: resultadoGeracao
       });
     } catch (error: any) {
       console.error('Erro ao criar carnê:', error);

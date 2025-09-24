@@ -82,8 +82,17 @@ const CarnesCreate: React.FC = () => {
   // Mutation para criar carnê
   const createCarneMutation = useMutation({
     mutationFn: CarneService.create,
-    onSuccess: () => {
-      success('Carnê criado com sucesso!');
+    onSuccess: (response: any) => {
+      let mensagem = 'Carnê criado com sucesso!';
+      
+      // Verificar se títulos foram gerados automaticamente
+      if (response.geracao_titulos?.success) {
+        mensagem += ' Títulos gerados automaticamente na EFI.';
+      } else if (response.geracao_titulos && !response.geracao_titulos.success) {
+        mensagem += ' Carnê criado, mas falha ao gerar títulos automaticamente.';
+      }
+      
+      success(mensagem);
       navigate('/carnes');
     },
     onError: (err: any) => {
