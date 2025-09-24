@@ -69,8 +69,19 @@ export class CarneController {
         offset
       });
 
+      // Adicionar informações de parcelas pagas para cada carnê
+      const carnesComParcelas = await Promise.all(
+        carnes.map(async (carne: any) => {
+          const resumo = await carne.getResumo();
+          return {
+            ...carne.toJSON(),
+            parcelas_pagas: resumo.parcelas_pagas
+          };
+        })
+      );
+
       res.json({
-        data: carnes,
+        data: carnesComParcelas,
         pagination: {
           current_page: page,
           per_page: limit,

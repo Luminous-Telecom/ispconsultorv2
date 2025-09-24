@@ -164,7 +164,7 @@ const Carnes: React.FC = () => {
                   <th>Número do Carnê</th>
                   <th>Cliente</th>
                   <th>Valor Total</th>
-                  <th>Parcelas</th>
+                  <th>Parcelas Pagas</th>
                   <th>Status</th>
                   <th>Data de Criação</th>
                   <th>Ações</th>
@@ -197,7 +197,11 @@ const Carnes: React.FC = () => {
                       <td>
                         <strong>R$ {parseFloat(carne.valor_total).toFixed(2).replace('.', ',')}</strong>
                       </td>
-                      <td>{carne.quantidade_parcelas}</td>
+                      <td>
+                        <span className="badge bg-success">{carne.parcelas_pagas || 0}</span>
+                        <span className="text-muted"> / </span>
+                        <span className="badge bg-secondary">{carne.quantidade_parcelas}</span>
+                      </td>
                       <td>
                         <span className={`badge ${getStatusBadgeClass(carne.status)}`}>
                           {carne.status.charAt(0).toUpperCase() + carne.status.slice(1)}
