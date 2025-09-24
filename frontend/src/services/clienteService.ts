@@ -15,8 +15,12 @@ export class ClienteService {
     if (filters.limit) params.append('limit', filters.limit.toString());
 
     try {
-      const response = await apiService.get<PaginatedResponse<Cliente>>(`/clientes?${params.toString()}`);
-      return response;
+      const response = await apiService.get<{success: boolean, data: Cliente[], pagination: any}>(`/clientes?${params.toString()}`);
+      return {
+        success: true,
+        data: response.success ? response.data : response as any,
+        pagination: response.pagination
+      } as PaginatedResponse<Cliente>;
     } catch (error) {
       console.error('Erro ao listar clientes:', error);
       throw error;
@@ -26,8 +30,8 @@ export class ClienteService {
   // Buscar cliente por ID
   static async getById(id: number): Promise<Cliente> {
     try {
-      const response = await apiService.get<Cliente>(`/clientes/${id}`);
-      return response;
+      const response = await apiService.get<{success: boolean, data: Cliente}>(`/clientes/${id}`);
+      return response.success ? response.data : response as any;
     } catch (error) {
       console.error('Erro ao buscar cliente:', error);
       throw error;
