@@ -472,48 +472,70 @@ export class WebhookController {
         pago: isPago
       };
 
-      // Gerar/atualizar dados específicos da parcela (código de barras, linha digitável, etc.)
+      // Consultar dados atualizados da EFI para obter código de barras, linha digitável, PIX, etc.
       try {
-        // Gerar código de barras e linha digitável automaticamente
-        const codigoBarras = await parcela.gerarCodigoBarras();
-        const linhaDigitavel = await parcela.gerarLinhaDigitavel();
-        
-        updateData.codigo_barras = codigoBarras;
-        updateData.linha_digitavel = linhaDigitavel;
-        
-        logger.info('Dados específicos da parcela gerados automaticamente', {
-          parcela_id: parcela.id,
-          charge_id: chargeId,
-          codigo_barras: codigoBarras,
-          linha_digitavel: linhaDigitavel
-        });
-        
-        // Tentar consultar dados adicionais da EFI (PIX, URL do boleto, etc.)
         const dadosAtualizados = await WebhookController.consultarDadosAtualizadosParcela(parcela);
         if (dadosAtualizados.success && dadosAtualizados.data) {
           const dados = dadosAtualizados.data;
           
-          // Atualizar dados específicos se disponíveis (manter os gerados automaticamente)
+          // Atualizar dados específicos se disponíveis (usar dados reais da EFI)
+          if (dados.codigo_barras) updateData.codigo_barras = dados.codigo_barras;
+          if (dados.linha_digitavel) updateData.linha_digitavel = dados.linha_digitavel;
           if (dados.url_boleto) updateData.url_boleto = dados.url_boleto;
           if (dados.qrcode) updateData.qrcode = dados.qrcode;
           if (dados.qrcode_image) updateData.qrcode_image = dados.qrcode_image;
           
-          logger.info('Dados adicionais obtidos da EFI', {
+          logger.info('Dados atualizados da parcela obtidos da EFI', {
             parcela_id: parcela.id,
             charge_id: chargeId,
-            dados_adicionais: {
+            dados_atualizados: {
+              codigo_barras: !!dados.codigo_barras,
+              linha_digitavel: !!dados.linha_digitavel,
               url_boleto: !!dados.url_boleto,
               qrcode: !!dados.qrcode,
               qrcode_image: !!dados.qrcode_image
             }
           });
+        } else {
+          // Se não conseguir consultar da EFI, gerar dados fictícios como fallback
+          const codigoBarras = await parcela.gerarCodigoBarras();
+          const linhaDigitavel = await parcela.gerarLinhaDigitavel();
+          
+          updateData.codigo_barras = codigoBarras;
+          updateData.linha_digitavel = linhaDigitavel;
+          
+          logger.warn('Usando dados fictícios como fallback', {
+            parcela_id: parcela.id,
+            charge_id: chargeId,
+            codigo_barras: codigoBarras,
+            linha_digitavel: linhaDigitavel,
+            motivo: dadosAtualizados.message || 'Erro ao consultar EFI'
+          });
         }
       } catch (error) {
-        logger.warn('Erro ao gerar/consultar dados da parcela', {
-          parcela_id: parcela.id,
-          charge_id: chargeId,
-          error: error instanceof Error ? error.message : 'Erro desconhecido'
-        });
+        // Em caso de erro, gerar dados fictícios como fallback
+        try {
+          const codigoBarras = await parcela.gerarCodigoBarras();
+          const linhaDigitavel = await parcela.gerarLinhaDigitavel();
+          
+          updateData.codigo_barras = codigoBarras;
+          updateData.linha_digitavel = linhaDigitavel;
+          
+          logger.warn('Erro ao consultar dados da EFI, usando fallback', {
+            parcela_id: parcela.id,
+            charge_id: chargeId,
+            error: error instanceof Error ? error.message : 'Erro desconhecido',
+            codigo_barras: codigoBarras,
+            linha_digitavel: linhaDigitavel
+          });
+        } catch (fallbackError) {
+          logger.error('Erro crítico ao gerar dados de fallback', {
+            parcela_id: parcela.id,
+            charge_id: chargeId,
+            error: error instanceof Error ? error.message : 'Erro desconhecido',
+            fallback_error: fallbackError instanceof Error ? fallbackError.message : 'Erro de fallback'
+          });
+        }
       }
       
       // Se está sendo marcada como paga via webhook, atualizar data_pagamento
