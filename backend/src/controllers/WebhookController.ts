@@ -162,9 +162,11 @@ export class WebhookController {
           // Processar os dados da notificação
           return await WebhookController.processarDadosNotificacao(resultado.data, banco);
         } else {
-          // Se o token não foi encontrado ou expirou, não tentar outros bancos
-          if (resultado.message?.includes('não encontrado') || resultado.message?.includes('expirado')) {
-            logger.warn('Token de notificação não encontrado ou expirado', {
+          // Se o token não foi encontrado, expirou ou não existe, não tentar outros bancos
+          if (resultado.message?.includes('não encontrado') || 
+              resultado.message?.includes('expirado') ||
+              resultado.message?.includes('property_does_not_exists')) {
+            logger.warn('Token de notificação inválido - parando tentativas', {
               banco_id: banco.id,
               token: notificationToken,
               message: resultado.message
