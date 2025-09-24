@@ -328,6 +328,7 @@ const CarneParcelas: React.FC = () => {
                   <th>Parcela</th>
                   <th>Valor</th>
                   <th>Vencimento</th>
+                  <th>Nosso Número</th>
                   <th>Pagamento</th>
                   <th>Status</th>
                   <th>Ações</th>
@@ -336,7 +337,7 @@ const CarneParcelas: React.FC = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="text-center">
+                    <td colSpan={7} className="text-center">
                       <div className="spinner-border" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
@@ -352,6 +353,11 @@ const CarneParcelas: React.FC = () => {
                         <strong>R$ {parseFloat(parcela.valor_parcela).toFixed(2).replace('.', ',')}</strong>
                       </td>
                       <td>{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                      <td>
+                        <code className="text-primary">
+                          {parcela.nosso_numero || 'Não gerado'}
+                        </code>
+                      </td>
                       <td>
                         {parcela.data_pagamento ? 
                           new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : 
@@ -398,7 +404,7 @@ const CarneParcelas: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="text-center">Nenhuma parcela encontrada</td>
+                    <td colSpan={7} className="text-center">Nenhuma parcela encontrada</td>
                   </tr>
                 )}
               </tbody>

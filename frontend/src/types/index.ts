@@ -165,6 +165,7 @@ export interface CarneParcela extends BaseEntity {
   observacoes?: string;
   charge_id?: string;
   url_boleto?: string;
+  nosso_numero?: string;
   
   // Relacionamentos
   carne?: Carne;

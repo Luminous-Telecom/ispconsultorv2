@@ -33,6 +33,7 @@ export class CarneParcela extends Model<
   declare observacoes: string | null;
   declare charge_id: string | null;
   declare url_boleto: string | null;
+  declare nosso_numero: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -219,6 +220,27 @@ export class CarneParcela extends Model<
     return linha;
   }
 
+  async gerarNossoNumero(): Promise<string> {
+    // Gerar nosso número baseado no ID da parcela e data
+    const carne = await this.getCarne();
+    const banco = await carne.getBanco();
+    
+    // Formato: AAAAMMDD + ID da parcela (8 dígitos) + número da parcela (2 dígitos)
+    const data = new Date();
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
+    const idParcela = String(this.id).padStart(8, '0');
+    const numeroParcela = String(this.numero_parcela).padStart(2, '0');
+    
+    const nossoNumero = `${ano}${mes}${dia}${idParcela}${numeroParcela}`;
+    
+    // Atualizar o campo nosso_numero
+    await this.update({ nosso_numero: nossoNumero });
+    
+    return nossoNumero;
+  }
+
   async getResumo(): Promise<{
     numero_parcela: number;
     valor_original: number;
@@ -233,6 +255,7 @@ export class CarneParcela extends Model<
     codigo_barras: string | null;
     linha_digitavel: string | null;
     url_boleto: string | null;
+    nosso_numero: string | null;
   }> {
     const carne = await this.getCarne();
     const banco = await carne.getBanco();
@@ -256,7 +279,8 @@ export class CarneParcela extends Model<
       valor_multa_juros: valorAtual - parseFloat(this.valor_parcela.toString()),
       codigo_barras: codigoBarras,
       linha_digitavel: linhaDigitavel,
-      url_boleto: this.url_boleto
+      url_boleto: this.url_boleto,
+      nosso_numero: this.nosso_numero
     };
   }
 }
@@ -344,6 +368,11 @@ CarneParcela.init(
     url_boleto: {
       type: DataTypes.STRING(500),
       allowNull: true
+    },
+    nosso_numero: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'Número do título gerado pelo nosso sistema'
     },
     created_at: {
       type: DataTypes.DATE,

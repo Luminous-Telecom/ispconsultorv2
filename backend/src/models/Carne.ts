@@ -184,6 +184,9 @@ export class Carne extends Model<
         codigo_barras: codigoBarras,
         linha_digitavel: linhaDigitavel
       });
+
+      // Gerar nosso número automaticamente
+      await parcela.gerarNossoNumero();
       
       parcelas.push(parcela);
     }
