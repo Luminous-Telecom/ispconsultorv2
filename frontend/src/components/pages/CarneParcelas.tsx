@@ -275,7 +275,7 @@ const CarneParcelas: React.FC = () => {
           <div className="card-body">
             <div className="row">
               <div className="col-md-6">
-                <p><strong>ID do Carnê:</strong> <code className="text-primary">#{carneData.id}</code></p>
+                <p><strong>ID:</strong> <code className="text-primary">#{carneData.id}</code></p>
                 <p><strong>Número do Carnê:</strong> {carneData.numero_carne}</p>
                 <p><strong>Cliente:</strong> {carneData.cliente?.razao_social}</p>
                 <p><strong>Plano:</strong> {carneData.plano?.nome_plano}</p>
@@ -357,7 +357,7 @@ const CarneParcelas: React.FC = () => {
             <table className="table table-striped">
               <thead>
                 <tr>
-                  <th>ID Parcela</th>
+                  <th>ID</th>
                   <th>Charge ID</th>
                   <th>Parcela</th>
                   <th>Valor</th>
