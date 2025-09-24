@@ -49,11 +49,25 @@ export class PlanoController {
         ],
         order: [['created_at', 'DESC']],
         limit,
-        offset
+        offset,
+        raw: false
+      });
+
+      // Garantir que servicos_inclusos seja um array
+      const planosProcessados = planos.map(plano => {
+        const planoData = plano.toJSON();
+        if (typeof planoData.servicos_inclusos === 'string') {
+          try {
+            planoData.servicos_inclusos = JSON.parse(planoData.servicos_inclusos);
+          } catch (e) {
+            planoData.servicos_inclusos = [];
+          }
+        }
+        return planoData;
       });
 
       res.json({
-        data: planos,
+        data: planosProcessados,
         pagination: {
           current_page: page,
           per_page: limit,
@@ -87,7 +101,17 @@ export class PlanoController {
         return;
       }
 
-      res.json(plano);
+      // Garantir que servicos_inclusos seja um array
+      const planoData = plano.toJSON();
+      if (typeof planoData.servicos_inclusos === 'string') {
+        try {
+          planoData.servicos_inclusos = JSON.parse(planoData.servicos_inclusos);
+        } catch (e) {
+          planoData.servicos_inclusos = [];
+        }
+      }
+
+      res.json(planoData);
     } catch (error) {
       console.error('Erro ao buscar plano:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });

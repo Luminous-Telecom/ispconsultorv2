@@ -76,7 +76,11 @@ const PlanosEdit: React.FC = () => {
         desconto_ativo: plano.desconto_ativo || false,
         quantidade_usuarios: plano.quantidade_usuarios || 1,
         periodicidade: (plano.periodicidade as PlanoForm['periodicidade']) || 'mensal',
-        servicos_inclusos: Array.isArray(plano.servicos_inclusos) ? plano.servicos_inclusos : [],
+        servicos_inclusos: Array.isArray(plano.servicos_inclusos) 
+          ? plano.servicos_inclusos 
+          : typeof plano.servicos_inclusos === 'string' 
+            ? JSON.parse(plano.servicos_inclusos) 
+            : [],
         renovacao_automatica: plano.renovacao_automatica || false,
         status: (plano.status as PlanoForm['status']) || 'ativo',
         data_inicio: plano.data_inicio || new Date().toISOString().split('T')[0],
@@ -253,7 +257,7 @@ const PlanosEdit: React.FC = () => {
                   <div className="col-md-4">
                     <div className="mb-3">
                       <label htmlFor="valor_mensal" className="form-label">
-                        Valor Mensal <span className="text-danger">*</span>
+                        Valor <span className="text-danger">*</span>
                       </label>
                       <div className="input-group">
                         <span className="input-group-text">R$</span>
