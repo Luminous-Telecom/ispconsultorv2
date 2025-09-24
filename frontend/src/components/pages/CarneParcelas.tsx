@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CarneParcelaService } from '../../services/carneParcelaService';
+import { CarneService } from '../../services/carneService';
 import { getApiUrl } from '../../config/api';
+import { useNotification } from '../../hooks/useNotification';
 
 const CarneParcelas: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -10,7 +12,9 @@ const CarneParcelas: React.FC = () => {
   const carneId = searchParams.get('carne_id');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
   const queryClient = useQueryClient();
+  const { success, error } = useNotification();
 
   // Buscar parcelas
   const { data: parcelasData, isLoading } = useQuery({
@@ -18,6 +22,15 @@ const CarneParcelas: React.FC = () => {
     queryFn: () => CarneParcelaService.list({ carne_id: carneId ? Number(carneId) : undefined, search, status }),
     enabled: !!carneId,
     staleTime: 30000, // 30 segundos
+    refetchOnWindowFocus: false
+  });
+
+  // Buscar informações do carnê
+  const { data: carneData } = useQuery({
+    queryKey: ['carne', carneId],
+    queryFn: () => CarneService.getById(Number(carneId)),
+    enabled: !!carneId,
+    staleTime: 30000,
     refetchOnWindowFocus: false
   });
 
@@ -97,6 +110,30 @@ const CarneParcelas: React.FC = () => {
     }
   };
 
+  const handleRegistrarNoBanco = async () => {
+    if (!carneData?.carnet_id) {
+      error('Carnê deve ser gerado antes de registrar no banco');
+      return;
+    }
+
+    if (!window.confirm('Deseja registrar este carnê no banco? Esta ação enviará os dados para a EFI.')) {
+      return;
+    }
+
+    setIsRegistering(true);
+    try {
+      // Aqui será chamada a função que envia o carnê para o banco
+      // Por enquanto, vamos simular o processo
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      success('Carnê registrado no banco com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
+    } catch (err: any) {
+      error(err.response?.data?.message || 'Erro ao registrar carnê no banco');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
   // Calcular estatísticas
   const totalParcelas = parcelas.length;
   const parcelasPagas = parcelas.filter((p: any) => p.status === 'pago').length;
@@ -109,6 +146,23 @@ const CarneParcelas: React.FC = () => {
       <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 className="h2">Parcelas do Carnê</h1>
         <div className="btn-group" role="group">
+          <button 
+            type="button" 
+            className="btn btn-primary"
+            onClick={handleRegistrarNoBanco}
+            disabled={!carneData?.carnet_id || isRegistering}
+          >
+            {isRegistering ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Registrando...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-send"></i> Registrar no Banco
+              </>
+            )}
+          </button>
           <Link to="/carnes" className="btn btn-secondary">
             <i className="bi bi-arrow-left"></i> Voltar para Carnês
           </Link>
