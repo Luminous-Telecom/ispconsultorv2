@@ -111,9 +111,9 @@ export class CarneService {
   }
 
   // Imprimir carnê
-  static async imprimir(id: number): Promise<Blob> {
+  static async imprimir(id: number): Promise<string> {
     try {
-      const response = await apiService.get<Blob>(`/carnes/${id}/imprimir`, {}, { responseType: 'blob' });
+      const response = await apiService.get<string>(`/carnes/${id}/imprimir`);
       return response;
     } catch (error) {
       console.error('Erro ao imprimir carnê:', error);

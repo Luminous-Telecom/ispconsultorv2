@@ -93,10 +93,19 @@ const Carnes: React.FC = () => {
 
   const handleImprimir = async (carneId: number) => {
     try {
-      const blob = await CarneService.imprimir(carneId);
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+      const html = await CarneService.imprimir(carneId);
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(html);
+        newWindow.document.close();
+        
+        // Aguardar o carregamento das imagens antes de imprimir
+        newWindow.onload = () => {
+          setTimeout(() => {
+            newWindow.print();
+          }, 1000);
+        };
+      }
     } catch (err) {
       error('Erro ao imprimir carnê');
     }
