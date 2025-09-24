@@ -170,23 +170,23 @@ export class Carne extends Model<
         String(dataVencimento.getMonth() + 1).padStart(2, '0') + '-' + 
         String(dataVencimento.getDate()).padStart(2, '0');
       
-      // Gerar código de barras e linha digitável
-      const codigoBarras = this.gerarCodigoBarras(i);
-      const linhaDigitavel = this.gerarLinhaDigitavel(codigoBarras);
-      
       const parcela = await this.createParcela({
         carne_id: this.id,
         numero_parcela: i,
         valor_parcela: valor,
-        data_vencimento: dataVencimento, // Corrigido para tipo Date
+        data_vencimento: dataVencimento,
         pago: false,
-        status: 'pendente',
-        codigo_barras: codigoBarras,
-        linha_digitavel: linhaDigitavel
+        status: 'pendente'
       });
 
       // Gerar nosso número automaticamente
       await parcela.gerarNossoNumero();
+      
+      // Gerar código de barras e linha digitável automaticamente
+      await parcela.update({
+        codigo_barras: await parcela.gerarCodigoBarras(),
+        linha_digitavel: await parcela.gerarLinhaDigitavel()
+      });
       
       parcelas.push(parcela);
     }

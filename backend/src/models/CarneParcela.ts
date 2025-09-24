@@ -199,25 +199,40 @@ export class CarneParcela extends Model<
   }
 
   async gerarCodigoBarras(): Promise<string> {
-    // Implementar geração de código de barras baseado no banco
-    // Por enquanto, retorna um código fictício
+    // Implementar geração de código de barras igual ao PHP
     const carne = await this.getCarne();
     const banco = await carne.getBanco();
     
-    // Código fictício baseado no ID da parcela
-    return `${banco?.codigo || '000'}${this.id.toString().padStart(10, '0')}`;
+    // Formato do PHP: '237' + carne_id (8 dígitos) + parcela (2 dígitos) + '00000000000'
+    // Usar código do banco ou '237' como padrão
+    const codigoBanco = banco?.codigo || '237';
+    const carneId = carne.id.toString().padStart(8, '0');
+    const numeroParcela = this.numero_parcela.toString().padStart(2, '0');
+    const zeros = '00000000000';
+    
+    return `${codigoBanco}${carneId}${numeroParcela}${zeros}`;
   }
 
   async gerarLinhaDigitavel(): Promise<string> {
-    // Implementar geração de linha digitável baseado no banco
-    // Por enquanto, retorna uma linha fictícia
+    // Implementar geração de linha digitável igual ao PHP
     const codigoBarras = await this.gerarCodigoBarras();
     
-    // Linha digitável fictícia (formato padrão brasileiro)
-    const linha = codigoBarras.replace(/(\d{5})(\d{5})(\d{5})(\d{6})(\d{5})(\d{6})(\d{1})(\d{14})/, 
-      '$1.$2 $3.$4 $5.$6 $7 $8');
+    // Formato da linha digitável: 00000.00000 00000.000000 00000.000000 0 00000000000000
+    // Dividir o código de barras em grupos específicos
+    const codigo = codigoBarras;
     
-    return linha;
+    // Formato: 00000.00000 00000.000000 00000.000000 0 00000000000000
+    const linhaDigitavel = 
+      codigo.substring(0, 5) + '.' +
+      codigo.substring(5, 10) + ' ' +
+      codigo.substring(10, 15) + '.' +
+      codigo.substring(15, 21) + ' ' +
+      codigo.substring(21, 26) + '.' +
+      codigo.substring(26, 32) + ' ' +
+      codigo.substring(32, 33) + ' ' +
+      codigo.substring(33);
+    
+    return linhaDigitavel;
   }
 
   async gerarNossoNumero(): Promise<string> {
