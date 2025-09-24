@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { CarneService } from '../../services/carneService';
@@ -43,20 +43,48 @@ const CarnesCreate: React.FC = () => {
   const { success, error } = useNotification();
 
   // Queries para buscar dados
-  const { data: clientes, isLoading: clientesLoading } = useQuery({
+  const { data: clientes, isLoading: clientesLoading, error: clientesError } = useQuery({
     queryKey: ['clientes-ativos'],
     queryFn: () => ClienteService.listAtivos(),
   });
 
-  const { data: planos, isLoading: planosLoading } = useQuery({
+  const { data: planos, isLoading: planosLoading, error: planosError } = useQuery({
     queryKey: ['planos-ativos'],
     queryFn: () => PlanoService.findAtivos(),
   });
 
-  const { data: bancos, isLoading: bancosLoading } = useQuery({
+  const { data: bancos, isLoading: bancosLoading, error: bancosError } = useQuery({
     queryKey: ['bancos-ativos'],
     queryFn: () => BancoService.findAtivos(),
   });
+
+  // Logs para monitorar carregamento dos dados
+  useEffect(() => {
+    if (clientes) {
+      console.log('✅ Clientes carregados:', clientes);
+    }
+    if (clientesError) {
+      console.error('❌ Erro ao carregar clientes:', clientesError);
+    }
+  }, [clientes, clientesError]);
+
+  useEffect(() => {
+    if (planos) {
+      console.log('✅ Planos carregados:', planos);
+    }
+    if (planosError) {
+      console.error('❌ Erro ao carregar planos:', planosError);
+    }
+  }, [planos, planosError]);
+
+  useEffect(() => {
+    if (bancos) {
+      console.log('✅ Bancos carregados:', bancos);
+    }
+    if (bancosError) {
+      console.error('❌ Erro ao carregar bancos:', bancosError);
+    }
+  }, [bancos, bancosError]);
 
   // Mutation para criar carnê
   const createCarneMutation = useMutation({

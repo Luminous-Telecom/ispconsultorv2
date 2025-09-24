@@ -53,20 +53,48 @@ const CarnesEdit: React.FC = () => {
   });
 
   // Queries para buscar dados
-  const { data: clientes, isLoading: clientesLoading } = useQuery({
+  const { data: clientes, isLoading: clientesLoading, error: clientesError } = useQuery({
     queryKey: ['clientes-ativos'],
     queryFn: () => ClienteService.listAtivos(),
   });
 
-  const { data: planos, isLoading: planosLoading } = useQuery({
+  const { data: planos, isLoading: planosLoading, error: planosError } = useQuery({
     queryKey: ['planos-ativos'],
     queryFn: () => PlanoService.findAtivos(),
   });
 
-  const { data: bancos, isLoading: bancosLoading } = useQuery({
+  const { data: bancos, isLoading: bancosLoading, error: bancosError } = useQuery({
     queryKey: ['bancos-ativos'],
     queryFn: () => BancoService.findAtivos(),
   });
+
+  // Logs para monitorar carregamento dos dados
+  useEffect(() => {
+    if (clientes) {
+      console.log('✅ Clientes carregados (Edit):', clientes);
+    }
+    if (clientesError) {
+      console.error('❌ Erro ao carregar clientes (Edit):', clientesError);
+    }
+  }, [clientes, clientesError]);
+
+  useEffect(() => {
+    if (planos) {
+      console.log('✅ Planos carregados (Edit):', planos);
+    }
+    if (planosError) {
+      console.error('❌ Erro ao carregar planos (Edit):', planosError);
+    }
+  }, [planos, planosError]);
+
+  useEffect(() => {
+    if (bancos) {
+      console.log('✅ Bancos carregados (Edit):', bancos);
+    }
+    if (bancosError) {
+      console.error('❌ Erro ao carregar bancos (Edit):', bancosError);
+    }
+  }, [bancos, bancosError]);
 
   // Mutation para atualizar carnê
   const updateCarneMutation = useMutation({

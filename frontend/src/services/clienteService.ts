@@ -48,10 +48,12 @@ export class ClienteService {
   // Listar clientes ativos
   static async listAtivos(): Promise<Cliente[]> {
     try {
+      console.log('🔍 ClienteService.listAtivos: Iniciando busca de clientes ativos...');
       const response = await apiService.get<Cliente[]>('/clientes/ativos');
+      console.log('✅ ClienteService.listAtivos: Resposta recebida:', response);
       return response;
     } catch (error) {
-      console.error('Erro ao buscar clientes ativos:', error);
+      console.error('❌ ClienteService.listAtivos: Erro ao buscar clientes ativos:', error);
       throw error;
     }
   }

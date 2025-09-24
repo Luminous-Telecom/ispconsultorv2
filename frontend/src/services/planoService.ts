@@ -68,10 +68,12 @@ export class PlanoService {
   // Buscar planos ativos
   static async findAtivos(): Promise<Plano[]> {
     try {
+      console.log('🔍 PlanoService.findAtivos: Iniciando busca de planos ativos...');
       const response = await apiService.get<Plano[]>('/planos/ativos');
+      console.log('✅ PlanoService.findAtivos: Resposta recebida:', response);
       return response;
     } catch (error) {
-      console.error('Erro ao buscar planos ativos:', error);
+      console.error('❌ PlanoService.findAtivos: Erro ao buscar planos ativos:', error);
       throw error;
     }
   }

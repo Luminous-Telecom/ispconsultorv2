@@ -67,10 +67,12 @@ export class BancoService {
   // Buscar bancos ativos
   static async findAtivos(): Promise<Banco[]> {
     try {
+      console.log('🔍 BancoService.findAtivos: Iniciando busca de bancos ativos...');
       const response = await apiService.get<Banco[]>('/bancos/ativos');
+      console.log('✅ BancoService.findAtivos: Resposta recebida:', response);
       return response;
     } catch (error) {
-      console.error('Erro ao buscar bancos ativos:', error);
+      console.error('❌ BancoService.findAtivos: Erro ao buscar bancos ativos:', error);
       throw error;
     }
   }
