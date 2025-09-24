@@ -601,7 +601,12 @@ export class BancoApiService {
         dadosCarne: dadosCarne
       });
 
-      const endpoint = config.cobranca_base_url + config.carnets;
+      // Usar URL sandbox se estiver configurado
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = baseUrlCobranca + config.carnets;
       const headers = this.prepareHeaders(banco.tipo_banco, token);
       headers['Content-Type'] = 'application/json';
       
