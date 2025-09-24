@@ -447,7 +447,7 @@ export class CarneController {
 
           // Gerar variáveis básicas
           const variables = {
-            LOGOMARCA: dadosEmpresa?.logo ? dadosEmpresa.logo : `http://localhost:3001/images/bancos/boletoproprio.png`,
+            LOGOMARCA: dadosEmpresa?.logo ? dadosEmpresa.logo : `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/boletoproprio.png`,
             CEDENTE: dadosEmpresa?.razao_social || '',
             EMPRESACPF: dadosEmpresa?.cnpj || '',
             EMPRESAENDERECO: dadosEmpresa?.endereco || '',
@@ -547,7 +547,7 @@ export class CarneController {
 
           // Gerar variáveis básicas
           const variables = {
-            LOGOBANCO: parcela.carne?.banco?.tipo_banco ? `http://localhost:3001/images/bancos/${parcela.carne.banco.tipo_banco}.png` : `http://localhost:3001/images/bancos/boletoproprio.png`,
+            LOGOBANCO: parcela.carne?.banco?.tipo_banco ? `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/${parcela.carne.banco.tipo_banco}.png` : `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/boletoproprio.png`,
             CODIGO_BANCO_COM_DV: parcela.carne?.banco?.codigo_banco || parcela.carne?.banco?.codigo || '237',
             LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
             LOCAL_PAGAMENTO: parcela.carne?.banco?.local_pagamento || '',
