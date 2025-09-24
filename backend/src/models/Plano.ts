@@ -38,7 +38,7 @@ export class Plano extends Model<
   declare renovacao_automatica: boolean;
   declare data_inicio: Date | null;
   declare data_fim: Date | null;
-  declare status: 'ativo' | 'inativo' | 'suspenso';
+  declare status: 'ativo' | 'suspenso' | 'cancelado';
   declare observacoes: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -235,7 +235,7 @@ Plano.init(
       allowNull: true
     },
     status: {
-      type: DataTypes.ENUM('ativo', 'inativo', 'suspenso'),
+      type: DataTypes.ENUM('ativo', 'suspenso', 'cancelado'),
       allowNull: false,
       defaultValue: 'ativo'
     },

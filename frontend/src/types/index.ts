@@ -42,18 +42,18 @@ export interface Cliente extends BaseEntity {
 export interface Plano extends BaseEntity {
   nome_plano: string;
   descricao?: string;
-  tipo_servico?: string;
+  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
   servicos_inclusos?: string[];
   quantidade_usuarios?: number;
   valor_mensal: number;
   desconto_percentual?: number;
   desconto_valor?: number;
   desconto_ativo: boolean;
-  periodicidade?: string;
+  periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   renovacao_automatica: boolean;
   data_inicio?: string;
   data_fim?: string;
-  status: 'ativo' | 'inativo' | 'suspenso';
+  status: 'ativo' | 'suspenso' | 'cancelado';
   observacoes?: string;
   
   // Relacionamentos
