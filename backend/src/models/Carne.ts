@@ -157,9 +157,9 @@ export class Carne extends Model<
     }
   }
 
-  async gerarParcelas(): Promise<CarneParcela[]> {
+  async gerarParcelas(valorParcela?: number, data?: any): Promise<CarneParcela[]> {
     const parcelas: CarneParcela[] = [];
-    const valorParcela = await this.getValorParcela();
+    const valor = valorParcela || await this.getValorParcela();
     
     for (let i = 1; i <= this.quantidade_parcelas; i++) {
       const dataVencimento = new Date(this.data_vencimento_primeira);
@@ -168,7 +168,7 @@ export class Carne extends Model<
       const parcela = await this.createParcela({
         carne_id: this.id,
         numero_parcela: i,
-        valor_parcela: valorParcela,
+        valor_parcela: valor,
         data_vencimento: dataVencimento,
         pago: false,
         status: 'pendente'

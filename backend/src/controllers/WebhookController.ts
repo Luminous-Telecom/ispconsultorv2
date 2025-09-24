@@ -11,13 +11,13 @@ export class WebhookController {
    * (PIX, Bolix, carnês, boletos individuais, etc.)
    */
   static async efiWebhook(req: Request, res: Response): Promise<void> {
-    logger.info('=== WEBHOOK EFÍ UNIFICADO RECEBIDO ===');
-    logger.info('Headers:', req.headers);
-    logger.info('Body:', req.body);
-    logger.info('Content-Type:', req.get('Content-Type'));
-    logger.info('Payload decodificado:', JSON.stringify(req.body, null, 2));
-
-    const payload = req.body;
+      logger.info('=== WEBHOOK EFÍ UNIFICADO RECEBIDO ===');
+      logger.info('Headers:', req.headers);
+      logger.info('Body:', req.body);
+      logger.info('Content-Type:', req.get('Content-Type'));
+      
+      const payload = req.body;
+      logger.info('Payload decodificado:', JSON.stringify(payload, null, 2));
     
     try {
       // Verificar se é um token de notificação (form-urlencoded)
@@ -162,6 +162,16 @@ export class WebhookController {
           // Processar os dados da notificação
           return await WebhookController.processarDadosNotificacao(resultado.data, banco);
         } else {
+          // Se o token não foi encontrado ou expirou, não tentar outros bancos
+          if (resultado.message?.includes('não encontrado') || resultado.message?.includes('expirado')) {
+            logger.warn('Token de notificação não encontrado ou expirado', {
+              banco_id: banco.id,
+              token: notificationToken,
+              message: resultado.message
+            });
+            break; // Não tentar outros bancos se o token é inválido
+          }
+          
           logger.warn(`Falha ao consultar notificação no banco ${banco.id}`, {
             message: resultado.message
           });
@@ -172,7 +182,7 @@ export class WebhookController {
       return {
         success: false,
         message: 'Não foi possível consultar a notificação',
-        status: 400
+        status: 400 // Retornar 400 como no PHP
       };
       
     } catch (error: any) {

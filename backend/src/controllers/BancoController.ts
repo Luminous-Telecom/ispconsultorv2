@@ -8,6 +8,31 @@ export class BancoController {
   /**
    * Listar bancos com filtros
    */
+  static async findAtivos(req: Request, res: Response): Promise<void> {
+    try {
+      const bancos = await Banco.findAll({
+        where: { ativo: true },
+        include: [
+          { association: 'carnes' },
+          { association: 'clientes' }
+        ],
+        order: [['nome', 'ASC']]
+      });
+
+      res.json({
+        success: true,
+        data: bancos
+      });
+    } catch (error: any) {
+      logger.error('Erro ao buscar bancos ativos', { error: error.message });
+      res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor',
+        message: error.message
+      });
+    }
+  }
+
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { search, status, tipo_banco, page = 1, limit = 15 } = req.query;

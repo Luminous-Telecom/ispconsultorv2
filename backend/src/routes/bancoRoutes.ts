@@ -5,6 +5,7 @@ const router = Router();
 
 // Rotas para bancos
 router.get('/', BancoController.list);
+router.get('/ativos', BancoController.findAtivos);
 router.get('/:id', BancoController.getById);
 router.post('/', BancoController.create);
 router.put('/:id', BancoController.update);

@@ -453,11 +453,47 @@ export class BancoApiService {
 
       const endpoint = config.cobranca_base_url + config.notification + '/' + notificationToken;
       
-      const response = await axios.get(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      logger.info('Consultando notificação por token', {
+        endpoint: endpoint,
+        token: notificationToken
       });
+      
+      // Implementar retry para lidar com erros temporários (como no PHP)
+      const maxTentativas = 3;
+      let delay = 1000; // 1 segundo
+      let response: any = null;
+      
+      for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+        try {
+          response = await axios.get(endpoint, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            timeout: 30000
+          });
+          
+          if (response.status >= 200 && response.status < 300) {
+            break; // Sucesso, sair do loop
+          }
+        } catch (error: any) {
+          // Se não é a última tentativa e é erro temporário (502, 503, 504), tentar novamente
+          if (tentativa < maxTentativas && 
+              error.response?.status && 
+              [502, 503, 504].includes(error.response.status)) {
+            
+            logger.warn(`Tentativa ${tentativa} falhou, tentando novamente em ${delay}ms`, {
+              status: error.response.status,
+              endpoint: endpoint
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2; // Exponential backoff
+            continue;
+          } else {
+            throw error; // Re-throw se não é erro temporário ou é última tentativa
+          }
+        }
+      }
       
       if (response.status >= 200 && response.status < 300) {
         return {
@@ -474,8 +510,20 @@ export class BancoApiService {
       logger.error('Erro ao consultar notificação por token', { 
         banco_id: banco.id,
         token: notificationToken,
-        error: error.message 
+        error: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
       });
+      
+      // Se o erro for 3500010 (propriedade não existe), o token pode ter expirado
+      if (error.response?.data?.code === 3500010) {
+        return {
+          success: false,
+          message: 'Token de notificação não encontrado ou expirado'
+        };
+      }
+      
       return {
         success: false,
         message: 'Erro ao consultar notificação: ' + error.message 
@@ -1062,6 +1110,164 @@ export class BancoApiService {
       return {
         success: false,
         message: 'Erro ao gerar títulos individuais: ' + error.message
+      };
+    }
+  }
+
+  /**
+   * Consultar status do carnê
+   */
+  static async consultarStatusCarne(carne: Carne): Promise<ApiResponse> {
+    const banco = await carne.getBanco();
+    
+    try {
+      const config = this.getBancoConfig(banco.tipo_banco);
+      if (!config) {
+        return {
+          success: false,
+          message: 'Configurações do banco não encontradas'
+        };
+      }
+
+      if (!carne.carnet_id) {
+        return {
+          success: false,
+          message: 'Carnet ID ausente'
+        };
+      }
+
+      const token = await this.obterToken(banco, config);
+      if (!token) {
+        return {
+          success: false,
+          message: 'Falha ao obter token de acesso'
+        };
+      }
+
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_consultar}/${carne.carnet_id}`;
+
+      logger.info('Consultando status do carnê', {
+        endpoint,
+        carnet_id: carne.carnet_id,
+        carne_id: carne.id
+      });
+
+      const response = await axios.get(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status >= 200 && response.status < 300) {
+        logger.info('Status do carnê consultado com sucesso', {
+          carnet_id: carne.carnet_id,
+          carne_id: carne.id
+        });
+
+        return {
+          success: true,
+          message: 'Status consultado com sucesso',
+          data: response.data
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Erro ao consultar status'
+      };
+    } catch (error: any) {
+      logger.error('Erro ao consultar status do carnê', { 
+        carne_id: carne.id,
+        carnet_id: carne.carnet_id,
+        error: error.message 
+      });
+      return {
+        success: false,
+        message: 'Erro ao consultar status: ' + error.message
+      };
+    }
+  }
+
+  /**
+   * Cancelar carnê completo
+   */
+  static async cancelarCarne(carne: Carne): Promise<ApiResponse> {
+    const banco = await carne.getBanco();
+    
+    try {
+      const config = this.getBancoConfig(banco.tipo_banco);
+      if (!config) {
+        return {
+          success: false,
+          message: 'Configurações do banco não encontradas'
+        };
+      }
+
+      if (!config.operacoes_suportadas.cancelar_carne || !carne.carnet_id) {
+        return {
+          success: false,
+          message: 'Operação não suportada ou carnet_id ausente'
+        };
+      }
+
+      const token = await this.obterToken(banco, config);
+      if (!token) {
+        return {
+          success: false,
+          message: 'Falha ao obter token de acesso'
+        };
+      }
+
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_cancelar}/${carne.carnet_id}`;
+
+      logger.info('Cancelando carnê', {
+        endpoint,
+        carnet_id: carne.carnet_id,
+        carne_id: carne.id
+      });
+
+      const response = await axios.delete(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status >= 200 && response.status < 300) {
+        logger.info('Carnê cancelado com sucesso', {
+          carnet_id: carne.carnet_id,
+          carne_id: carne.id
+        });
+
+        return {
+          success: true,
+          message: 'Carnê cancelado com sucesso',
+          data: response.data
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Erro ao cancelar carnê'
+      };
+    } catch (error: any) {
+      logger.error('Erro ao cancelar carnê', { 
+        carne_id: carne.id,
+        carnet_id: carne.carnet_id,
+        error: error.message 
+      });
+      return {
+        success: false,
+        message: 'Erro ao cancelar carnê: ' + error.message
       };
     }
   }
