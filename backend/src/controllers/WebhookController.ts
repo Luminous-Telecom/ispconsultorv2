@@ -471,6 +471,39 @@ export class WebhookController {
         status: novoStatus,
         pago: isPago
       };
+
+      // Consultar dados atualizados da EFI para obter código de barras, linha digitável, PIX, etc.
+      try {
+        const dadosAtualizados = await WebhookController.consultarDadosAtualizadosParcela(parcela);
+        if (dadosAtualizados.success && dadosAtualizados.data) {
+          const dados = dadosAtualizados.data;
+          
+          // Atualizar dados específicos se disponíveis
+          if (dados.codigo_barras) updateData.codigo_barras = dados.codigo_barras;
+          if (dados.linha_digitavel) updateData.linha_digitavel = dados.linha_digitavel;
+          if (dados.url_boleto) updateData.url_boleto = dados.url_boleto;
+          if (dados.qrcode) updateData.qrcode = dados.qrcode;
+          if (dados.qrcode_image) updateData.qrcode_image = dados.qrcode_image;
+          
+          logger.info('Dados atualizados da parcela obtidos da EFI', {
+            parcela_id: parcela.id,
+            charge_id: chargeId,
+            dados_atualizados: {
+              codigo_barras: !!dados.codigo_barras,
+              linha_digitavel: !!dados.linha_digitavel,
+              url_boleto: !!dados.url_boleto,
+              qrcode: !!dados.qrcode,
+              qrcode_image: !!dados.qrcode_image
+            }
+          });
+        }
+      } catch (error) {
+        logger.warn('Erro ao consultar dados atualizados da parcela', {
+          parcela_id: parcela.id,
+          charge_id: chargeId,
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
+      }
       
       // Se está sendo marcada como paga via webhook, atualizar data_pagamento
       if (isPago && !parcela.pago) {
@@ -797,6 +830,82 @@ export class WebhookController {
         success: false,
         message: 'Erro ao processar notificação genérica',
         status: 500
+      };
+    }
+  }
+
+  /**
+   * Consultar dados atualizados da parcela na EFI
+   */
+  private static async consultarDadosAtualizadosParcela(parcela: CarneParcela): Promise<{ success: boolean; data?: any; message?: string }> {
+    try {
+      if (!parcela.charge_id) {
+        return { success: false, message: 'Charge ID não disponível' };
+      }
+
+      // Buscar o banco da parcela
+      const carne = await parcela.getCarne();
+      const banco = await carne.getBanco();
+      
+      if (!banco || banco.tipo_banco !== 'efi') {
+        return { success: false, message: 'Banco EFI não encontrado' };
+      }
+
+      // Usar o BancoApiService para consultar dados atualizados
+      const resultado = await BancoApiService.consultarStatus(parcela);
+      
+      if (resultado.success && resultado.data) {
+        const dados = resultado.data;
+        
+        // Extrair dados específicos baseado na estrutura da EFI
+        const dadosAtualizados: any = {};
+        
+        // Código de barras
+        if (dados.barcode) {
+          dadosAtualizados.codigo_barras = dados.barcode;
+        }
+        
+        // Linha digitável
+        if (dados.line) {
+          dadosAtualizados.linha_digitavel = dados.line;
+        }
+        
+        // URL do boleto
+        if (dados.payment_url || dados.link) {
+          dadosAtualizados.url_boleto = dados.payment_url || dados.link;
+        }
+        
+        // Dados PIX
+        if (dados.pix) {
+          if (dados.pix.qrcode) {
+            dadosAtualizados.qrcode = dados.pix.qrcode;
+          }
+          if (dados.pix.qrcode_image) {
+            dadosAtualizados.qrcode_image = dados.pix.qrcode_image;
+          }
+        }
+        
+        return { 
+          success: true, 
+          data: dadosAtualizados 
+        };
+      }
+      
+      return { 
+        success: false, 
+        message: resultado.message || 'Erro ao consultar dados' 
+      };
+      
+    } catch (error: any) {
+      logger.error('Erro ao consultar dados atualizados da parcela', {
+        parcela_id: parcela.id,
+        charge_id: parcela.charge_id,
+        error: error.message
+      });
+      
+      return { 
+        success: false, 
+        message: 'Erro interno ao consultar dados' 
       };
     }
   }
