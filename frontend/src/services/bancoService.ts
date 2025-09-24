@@ -68,9 +68,14 @@ export class BancoService {
   static async findAtivos(): Promise<Banco[]> {
     try {
       console.log('🔍 BancoService.findAtivos: Iniciando busca de bancos ativos...');
-      const response = await apiService.get<Banco[]>('/bancos/ativos');
+      const response = await apiService.get<{success: boolean, data: Banco[]}>('/bancos/ativos');
       console.log('✅ BancoService.findAtivos: Resposta recebida:', response);
-      return response;
+      
+      // Extrair dados do objeto de resposta
+      const bancos = response.success ? response.data : response;
+      console.log('📦 BancoService.findAtivos: Dados extraídos:', bancos);
+      
+      return Array.isArray(bancos) ? bancos : [];
     } catch (error) {
       console.error('❌ BancoService.findAtivos: Erro ao buscar bancos ativos:', error);
       throw error;
