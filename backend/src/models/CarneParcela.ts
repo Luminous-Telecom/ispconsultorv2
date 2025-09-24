@@ -223,14 +223,6 @@ export class CarneParcela extends Model<
     // Implementar geração de linha digitável igual ao PHP
     const codigoBarras = await this.gerarCodigoBarras();
     
-    // Debug: verificar tamanho do código
-    console.log('Debug linha digitável:', {
-      codigoBarras,
-      tamanho: codigoBarras.length,
-      parcela_id: this.id,
-      numero_parcela: this.numero_parcela
-    });
-    
     // Formato da linha digitável: 00000.00000 00000.000000 00000.000000 0 00000000000000
     // Dividir o código de barras em grupos específicos
     const codigo = codigoBarras;
@@ -245,8 +237,6 @@ export class CarneParcela extends Model<
       codigo.substring(26, 32) + ' ' +
       codigo.substring(32, 33) + ' ' +
       codigo.substring(33);
-    
-    console.log('Linha digitável gerada:', linhaDigitavel);
     
     return linhaDigitavel;
   }

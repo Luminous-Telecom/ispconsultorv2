@@ -472,25 +472,36 @@ export class WebhookController {
         pago: isPago
       };
 
-      // Consultar dados atualizados da EFI para obter código de barras, linha digitável, PIX, etc.
+      // Gerar/atualizar dados específicos da parcela (código de barras, linha digitável, etc.)
       try {
+        // Gerar código de barras e linha digitável automaticamente
+        const codigoBarras = await parcela.gerarCodigoBarras();
+        const linhaDigitavel = await parcela.gerarLinhaDigitavel();
+        
+        updateData.codigo_barras = codigoBarras;
+        updateData.linha_digitavel = linhaDigitavel;
+        
+        logger.info('Dados específicos da parcela gerados automaticamente', {
+          parcela_id: parcela.id,
+          charge_id: chargeId,
+          codigo_barras: codigoBarras,
+          linha_digitavel: linhaDigitavel
+        });
+        
+        // Tentar consultar dados adicionais da EFI (PIX, URL do boleto, etc.)
         const dadosAtualizados = await WebhookController.consultarDadosAtualizadosParcela(parcela);
         if (dadosAtualizados.success && dadosAtualizados.data) {
           const dados = dadosAtualizados.data;
           
-          // Atualizar dados específicos se disponíveis
-          if (dados.codigo_barras) updateData.codigo_barras = dados.codigo_barras;
-          if (dados.linha_digitavel) updateData.linha_digitavel = dados.linha_digitavel;
+          // Atualizar dados específicos se disponíveis (manter os gerados automaticamente)
           if (dados.url_boleto) updateData.url_boleto = dados.url_boleto;
           if (dados.qrcode) updateData.qrcode = dados.qrcode;
           if (dados.qrcode_image) updateData.qrcode_image = dados.qrcode_image;
           
-          logger.info('Dados atualizados da parcela obtidos da EFI', {
+          logger.info('Dados adicionais obtidos da EFI', {
             parcela_id: parcela.id,
             charge_id: chargeId,
-            dados_atualizados: {
-              codigo_barras: !!dados.codigo_barras,
-              linha_digitavel: !!dados.linha_digitavel,
+            dados_adicionais: {
               url_boleto: !!dados.url_boleto,
               qrcode: !!dados.qrcode,
               qrcode_image: !!dados.qrcode_image
@@ -498,7 +509,7 @@ export class WebhookController {
           });
         }
       } catch (error) {
-        logger.warn('Erro ao consultar dados atualizados da parcela', {
+        logger.warn('Erro ao gerar/consultar dados da parcela', {
           parcela_id: parcela.id,
           charge_id: chargeId,
           error: error instanceof Error ? error.message : 'Erro desconhecido'
