@@ -706,15 +706,10 @@ export class BancoApiService {
       customer: {
         name: cliente.nome_fantasia || cliente.razao_social,
         email: cliente.email,
-        phone: cliente.telefone,
-        document: cliente.cnpj,
-        address: {
-          street: cliente.endereco,
-          number: cliente.numero,
-          neighborhood: cliente.bairro,
-          city: cliente.cidade,
-          state: cliente.estado,
-          zipcode: cliente.cep
+        phone_number: cliente.telefone,
+        juridical_person: {
+          corporate_name: cliente.nome_fantasia || cliente.razao_social,
+          cnpj: cliente.cnpj.replace(/[^\d]/g, '') // Remover formatação do CNPJ
         }
       },
       expire_at: new Date(carne.data_vencimento_primeira).toISOString().split('T')[0], // Formato YYYY-MM-DD
@@ -726,7 +721,7 @@ export class BancoApiService {
       },
       metadata: {
         custom_id: `carne_${carne.id}`,
-        notification_url: `${baseUrl}/webhook/efi`
+        notification_url: baseUrl
       }
     };
   }
