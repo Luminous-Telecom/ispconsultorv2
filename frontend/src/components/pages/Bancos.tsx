@@ -139,13 +139,13 @@ const Bancos: React.FC = () => {
             <table className="table table-striped table-sm">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nome</th>
-                  <th>Tipo</th>
-                  <th>Descrição</th>
-                  <th>Sandbox</th>
-                  <th>Status</th>
-                  <th>Ações</th>
+                  <th className="py-1 px-2">ID</th>
+                  <th className="py-1 px-2">Nome</th>
+                  <th className="py-1 px-2">Tipo</th>
+                  <th className="py-1 px-2">Descrição</th>
+                  <th className="py-1 px-2">Sandbox</th>
+                  <th className="py-1 px-2">Status</th>
+                  <th className="py-1 px-2">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -160,35 +160,35 @@ const Bancos: React.FC = () => {
                 ) : bancosData?.data && bancosData.data.length > 0 ? (
                   bancosData.data.map((banco: any) => (
                     <tr key={banco.id}>
-                      <td>
+                      <td className="py-1 px-2">
                         <code className="text-primary">#{banco.id}</code>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <strong>{banco.nome}</strong>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <span className={`badge ${getTipoBadgeClass(banco.tipo_banco)}`}>
                           {getTipoLabel(banco.tipo_banco)}
                         </span>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         {banco.descricao ? (
                           banco.descricao.length > 50 
                             ? `${banco.descricao.substring(0, 50)}...` 
                             : banco.descricao
                         ) : '-'}
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <span className={`badge ${banco.sandbox ? 'bg-warning' : 'bg-success'}`}>
                           {banco.sandbox ? 'Sim' : 'Não'}
                         </span>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <span className={`badge ${banco.ativo ? 'bg-success' : 'bg-danger'}`}>
                           {banco.ativo ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <div className="btn-group btn-group-sm" role="group">
                           <Link 
                             to={`/bancos/${banco.id}`} 

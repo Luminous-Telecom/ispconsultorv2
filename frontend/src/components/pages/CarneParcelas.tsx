@@ -357,15 +357,15 @@ const CarneParcelas: React.FC = () => {
             <table className="table table-striped table-sm">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Charge ID</th>
-                  <th>Parcela</th>
-                  <th>Valor</th>
-                  <th>Vencimento</th>
-                  <th>Nosso Número</th>
-                  <th>Pagamento</th>
-                  <th>Status</th>
-                  <th>Ações</th>
+                  <th className="py-1 px-2">ID</th>
+                  <th className="py-1 px-2">Charge ID</th>
+                  <th className="py-1 px-2">Parcela</th>
+                  <th className="py-1 px-2">Valor</th>
+                  <th className="py-1 px-2">Vencimento</th>
+                  <th className="py-1 px-2">Nosso Número</th>
+                  <th className="py-1 px-2">Pagamento</th>
+                  <th className="py-1 px-2">Status</th>
+                  <th className="py-1 px-2">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -380,38 +380,38 @@ const CarneParcelas: React.FC = () => {
                 ) : parcelas.length > 0 ? (
                   parcelas.map((parcela: any) => (
                     <tr key={parcela.id}>
-                      <td>
+                      <td className="py-1 px-2">
                         <code className="text-primary">#{parcela.id}</code>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <code className="text-info">
                           {parcela.charge_id || 'Não gerado'}
                         </code>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <strong>#{parcela.numero_parcela}</strong>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <strong>R$ {parseFloat(parcela.valor_parcela).toFixed(2).replace('.', ',')}</strong>
                       </td>
-                      <td>{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
-                      <td>
+                      <td className="py-1 px-2">{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                      <td className="py-1 px-2">
                         <code className="text-primary">
                           {parcela.nosso_numero || 'Não gerado'}
                         </code>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         {parcela.data_pagamento ? 
                           new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : 
                           '-'
                         }
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <span className={`badge ${getStatusBadgeClass(parcela.status)}`}>
                           {getStatusLabel(parcela.status)}
                         </span>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <div className="btn-group btn-group-sm" role="group">
                           {parcela.status === 'pendente' && (
                             <button 

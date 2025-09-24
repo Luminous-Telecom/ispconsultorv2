@@ -129,20 +129,20 @@ const Clientes: React.FC = () => {
                 ) : clientesData?.data && clientesData.data.length > 0 ? (
                   clientesData.data.map((cliente) => (
                     <tr key={cliente.id}>
-                      <td>
+                      <td className="py-1 px-2">
                         <code className="text-primary">#{cliente.id}</code>
                       </td>
-                      <td>{cliente.cnpj}</td>
-                      <td>{cliente.razao_social}</td>
-                      <td>{cliente.nome_fantasia || '-'}</td>
-                      <td>{cliente.email}</td>
-                      <td>{cliente.whatsapp || '-'}</td>
-                      <td>
+                      <td className="py-1 px-2">{cliente.cnpj}</td>
+                      <td className="py-1 px-2">{cliente.razao_social}</td>
+                      <td className="py-1 px-2">{cliente.nome_fantasia || '-'}</td>
+                      <td className="py-1 px-2">{cliente.email}</td>
+                      <td className="py-1 px-2">{cliente.whatsapp || '-'}</td>
+                      <td className="py-1 px-2">
                         <span className={`badge ${cliente.ativo ? 'bg-success' : 'bg-danger'}`}>
                           {cliente.ativo ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <div className="btn-group btn-group-sm" role="group">
                           <Link 
                             to={`/clientes/${cliente.id}`} 

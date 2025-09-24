@@ -127,13 +127,13 @@ const Planos: React.FC = () => {
             <table className="table table-striped table-sm">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nome do Plano</th>
-                  <th>Descrição</th>
-                  <th>Valor Mensal</th>
-                  <th>Status</th>
-                  <th>Data de Criação</th>
-                  <th>Ações</th>
+                  <th className="py-1 px-2">ID</th>
+                  <th className="py-1 px-2">Nome do Plano</th>
+                  <th className="py-1 px-2">Descrição</th>
+                  <th className="py-1 px-2">Valor Mensal</th>
+                  <th className="py-1 px-2">Status</th>
+                  <th className="py-1 px-2">Data de Criação</th>
+                  <th className="py-1 px-2">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,23 +148,23 @@ const Planos: React.FC = () => {
                 ) : planosData?.data && planosData.data.length > 0 ? (
                   planosData.data.map((plano: any) => (
                     <tr key={plano.id}>
-                      <td>
+                      <td className="py-1 px-2">
                         <code className="text-primary">#{plano.id}</code>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <strong>{plano.nome_plano}</strong>
                       </td>
-                      <td>{plano.descricao || '-'}</td>
-                      <td>
+                      <td className="py-1 px-2">{plano.descricao || '-'}</td>
+                      <td className="py-1 px-2">
                         <strong>R$ {parseFloat(plano.valor_mensal).toFixed(2).replace('.', ',')}</strong>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <span className={`badge ${getStatusBadgeClass(plano.status)}`}>
                           {plano.status.charAt(0).toUpperCase() + plano.status.slice(1)}
                         </span>
                       </td>
-                      <td>{new Date(plano.data_criacao).toLocaleDateString('pt-BR')}</td>
-                      <td>
+                      <td className="py-1 px-2">{new Date(plano.data_criacao).toLocaleDateString('pt-BR')}</td>
+                      <td className="py-1 px-2">
                         <div className="btn-group btn-group-sm" role="group">
                           <Link 
                             to={`/planos/${plano.id}`} 
