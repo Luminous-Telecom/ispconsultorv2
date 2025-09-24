@@ -168,125 +168,17 @@ const Clientes: React.FC = () => {
       </div>
 
       {/* Tabela de Clientes */}
-      <div className="card">
-        <div className="card-body p-2">
-          <div className="table-responsive">
-            <table className="table table-striped table-sm">
-              <thead>
-                <tr>
-                  <th className="py-1 px-2">ID</th>
-                  <th className="py-1 px-2">CNPJ</th>
-                  <th className="py-1 px-2">Razão Social</th>
-                  <th className="py-1 px-2">Nome Fantasia</th>
-                  <th className="py-1 px-2">Email</th>
-                  <th className="py-1 px-2">WhatsApp</th>
-                  <th className="py-1 px-2">Status</th>
-                  <th className="py-1 px-2">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={8} className="text-center">
-                      <div className="spinner-border" role="status">
-                        <span className="visually-hidden">Carregando...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : clientesData?.data && clientesData.data.length > 0 ? (
-                  clientesData.data.map((cliente) => (
-                    <tr key={cliente.id}>
-                      <td className="py-1 px-2">
-                        <code className="text-primary">#{cliente.id}</code>
-                      </td>
-                      <td className="py-1 px-2">{cliente.cnpj}</td>
-                      <td className="py-1 px-2">{cliente.razao_social}</td>
-                      <td className="py-1 px-2">{cliente.nome_fantasia || '-'}</td>
-                      <td className="py-1 px-2">{cliente.email}</td>
-                      <td className="py-1 px-2">{cliente.whatsapp || '-'}</td>
-                      <td className="py-1 px-2">
-                        <span className={`badge ${cliente.ativo ? 'bg-success' : 'bg-danger'}`}>
-                          {cliente.ativo ? 'Ativo' : 'Inativo'}
-                        </span>
-                      </td>
-                      <td className="py-1 px-2">
-                        <div className="btn-group btn-group-sm" role="group">
-                          <Link 
-                            to={`/clientes/${cliente.id}`} 
-                            className="btn btn-outline-info"
-                            title="Visualizar"
-                          >
-                            <i className="bi bi-eye"></i>
-                          </Link>
-                          <Link 
-                            to={`/clientes/${cliente.id}/edit`} 
-                            className="btn btn-outline-warning"
-                            title="Editar"
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </Link>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-danger"
-                            title="Excluir"
-                            onClick={() => handleDelete(cliente.id)}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={8} className="text-center">Nenhum cliente encontrado</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Paginação */}
-          {clientesData?.pagination && (
-            <div className="d-flex justify-content-center mt-3">
-              <nav aria-label="Paginação de clientes">
-                <ul className="pagination">
-                  <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                    >
-                      Anterior
-                    </button>
-                  </li>
-                  
-                  {Array.from({ length: clientesData.pagination.last_page }, (_, i) => i + 1).map((pageNum) => (
-                    <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}>
-                      <button 
-                        className="page-link" 
-                        onClick={() => setPage(pageNum)}
-                      >
-                        {pageNum}
-                      </button>
-                    </li>
-                  ))}
-                  
-                  <li className={`page-item ${page === clientesData.pagination.last_page ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === clientesData.pagination.last_page}
-                    >
-                      Próximo
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          )}
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={clientesData?.data || []}
+        isLoading={isLoading}
+        pagination={clientesData?.pagination}
+        limit={limit}
+        setLimit={setLimit}
+        setPage={setPage}
+        emptyMessage="Nenhum cliente encontrado"
+        actions={renderActions}
+      />
     </>
   );
 };
