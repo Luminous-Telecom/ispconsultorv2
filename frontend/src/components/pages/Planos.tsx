@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { PlanoService } from '../../services/planoService';
 import { useNotification } from '../../hooks/useNotification';
 import DataTable from '../common/DataTable';
+import TableFilters from '../common/TableFilters';
 
 interface Plano {
   id: number;
@@ -44,6 +45,13 @@ const Planos: React.FC = () => {
 
   const handleFilter = (e: React.FormEvent) => {
     e.preventDefault();
+    setPage(1);
+    refetch();
+  };
+
+  const handleReset = () => {
+    setSearch('');
+    setStatus('');
     setPage(1);
     refetch();
   };
@@ -133,55 +141,34 @@ const Planos: React.FC = () => {
       </div>
 
       {/* Filtros */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <form onSubmit={handleFilter}>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="search" className="form-label">Buscar</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="search" 
-                    name="search" 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Nome do plano"
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="mb-3">
-                  <label htmlFor="status" className="form-label">Status</label>
-                  <select 
-                    className="form-select" 
-                    id="status" 
-                    name="status"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
-                    <option value="suspenso">Suspenso</option>
-                  </select>
-                </div>
-              </div>
-              <div className="col-md-2">
-                <div className="mb-3">
-                  <label className="form-label">&nbsp;</label>
-                  <div className="d-grid">
-                    <button type="submit" className="btn btn-outline-primary">
-                      <i className="bi bi-search"></i> Filtrar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
+      <TableFilters
+        fields={[
+          {
+            name: 'search',
+            label: 'Buscar',
+            type: 'text',
+            placeholder: 'Nome do plano',
+            value: search,
+            onChange: setSearch
+          },
+          {
+            name: 'status',
+            label: 'Status',
+            type: 'select',
+            value: status,
+            onChange: setStatus,
+            options: [
+              { value: '', label: 'Todos' },
+              { value: 'ativo', label: 'Ativo' },
+              { value: 'inativo', label: 'Inativo' },
+              { value: 'suspenso', label: 'Suspenso' }
+            ]
+          }
+        ]}
+        onFilter={handleFilter}
+        onReset={handleReset}
+        showResetButton={true}
+      />
 
       {/* Tabela de Planos */}
       <DataTable

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useClientes, useDeleteCliente } from '../../hooks/useClientes';
 import DataTable from '../common/DataTable';
+import TableFilters from '../common/TableFilters';
 
 interface Cliente {
   id: number;
@@ -31,6 +32,13 @@ const Clientes: React.FC = () => {
 
   const handleFilter = (e: React.FormEvent) => {
     e.preventDefault();
+    setPage(1);
+    refetch();
+  };
+
+  const handleReset = () => {
+    setSearch('');
+    setStatus('');
     setPage(1);
     refetch();
   };
@@ -118,54 +126,33 @@ const Clientes: React.FC = () => {
       </div>
 
       {/* Filtros */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <form onSubmit={handleFilter}>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="search" className="form-label">Buscar</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="search" 
-                    name="search" 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Nome, CNPJ ou email"
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="mb-3">
-                  <label htmlFor="status" className="form-label">Status</label>
-                  <select 
-                    className="form-select" 
-                    id="status" 
-                    name="status"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
-                  </select>
-                </div>
-              </div>
-              <div className="col-md-2">
-                <div className="mb-3">
-                  <label className="form-label">&nbsp;</label>
-                  <div className="d-grid">
-                    <button type="submit" className="btn btn-outline-primary">
-                      <i className="bi bi-search"></i> Filtrar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
+      <TableFilters
+        fields={[
+          {
+            name: 'search',
+            label: 'Buscar',
+            type: 'text',
+            placeholder: 'Nome, CNPJ ou email',
+            value: search,
+            onChange: setSearch
+          },
+          {
+            name: 'status',
+            label: 'Status',
+            type: 'select',
+            value: status,
+            onChange: setStatus,
+            options: [
+              { value: '', label: 'Todos' },
+              { value: 'ativo', label: 'Ativo' },
+              { value: 'inativo', label: 'Inativo' }
+            ]
+          }
+        ]}
+        onFilter={handleFilter}
+        onReset={handleReset}
+        showResetButton={true}
+      />
 
       {/* Tabela de Clientes */}
       <DataTable

@@ -5,6 +5,7 @@ import { CarneService } from '../../services/carneService';
 import { getApiUrl } from '../../config/api';
 import { useNotification } from '../../hooks/useNotification';
 import DataTable from '../common/DataTable';
+import TableFilters from '../common/TableFilters';
 
 const Carnes: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -64,6 +65,13 @@ const Carnes: React.FC = () => {
 
   const handleFilter = (e: React.FormEvent) => {
     e.preventDefault();
+    setPage(1);
+    refetch();
+  };
+
+  const handleReset = () => {
+    setSearch('');
+    setStatus('');
     setPage(1);
     refetch();
   };
@@ -238,56 +246,35 @@ const Carnes: React.FC = () => {
       </div>
 
       {/* Filtros */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <form onSubmit={handleFilter}>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="search" className="form-label">Buscar</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="search" 
-                    name="search" 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Número do carnê ou cliente"
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="mb-3">
-                  <label htmlFor="status" className="form-label">Status</label>
-                  <select 
-                    className="form-select" 
-                    id="status" 
-                    name="status"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    <option value="em-dias">Em dias</option>
-                    <option value="atrasado">Atrasado</option>
-                    <option value="pago">Pago</option>
-                    <option value="cancelado">Cancelado</option>
-                  </select>
-                </div>
-              </div>
-              <div className="col-md-2">
-                <div className="mb-3">
-                  <label className="form-label">&nbsp;</label>
-                  <div className="d-grid">
-                    <button type="submit" className="btn btn-outline-primary">
-                      <i className="bi bi-search"></i> Filtrar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
+      <TableFilters
+        fields={[
+          {
+            name: 'search',
+            label: 'Buscar',
+            type: 'text',
+            placeholder: 'Número do carnê ou cliente',
+            value: search,
+            onChange: setSearch
+          },
+          {
+            name: 'status',
+            label: 'Status',
+            type: 'select',
+            value: status,
+            onChange: setStatus,
+            options: [
+              { value: '', label: 'Todos' },
+              { value: 'em-dias', label: 'Em dias' },
+              { value: 'atrasado', label: 'Atrasado' },
+              { value: 'pago', label: 'Pago' },
+              { value: 'cancelado', label: 'Cancelado' }
+            ]
+          }
+        ]}
+        onFilter={handleFilter}
+        onReset={handleReset}
+        showResetButton={true}
+      />
 
       {/* Tabela de Carnês */}
       <DataTable

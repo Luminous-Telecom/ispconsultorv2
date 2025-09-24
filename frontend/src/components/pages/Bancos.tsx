@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BancoService } from '../../services/bancoService';
 import { useNotification } from '../../hooks/useNotification';
 import DataTable from '../common/DataTable';
+import TableFilters from '../common/TableFilters';
 
 interface Banco {
   id: number;
@@ -44,6 +45,13 @@ const Bancos: React.FC = () => {
 
   const handleFilter = (e: React.FormEvent) => {
     e.preventDefault();
+    setPage(1);
+    refetch();
+  };
+
+  const handleReset = () => {
+    setSearch('');
+    setTipo('');
     setPage(1);
     refetch();
   };
@@ -139,55 +147,34 @@ const Bancos: React.FC = () => {
       </div>
 
       {/* Filtros */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <form onSubmit={handleFilter}>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="search" className="form-label">Buscar</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="search" 
-                    name="search" 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Nome do banco"
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="mb-3">
-                  <label htmlFor="tipo" className="form-label">Tipo</label>
-                  <select 
-                    className="form-select" 
-                    id="tipo" 
-                    name="tipo"
-                    value={tipo}
-                    onChange={(e) => setTipo(e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    <option value="efi">EFI</option>
-                    <option value="asaas">ASAAS</option>
-                    <option value="tradicional">Tradicional</option>
-                  </select>
-                </div>
-              </div>
-              <div className="col-md-2">
-                <div className="mb-3">
-                  <label className="form-label">&nbsp;</label>
-                  <div className="d-grid">
-                    <button type="submit" className="btn btn-outline-primary">
-                      <i className="bi bi-search"></i> Filtrar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
+      <TableFilters
+        fields={[
+          {
+            name: 'search',
+            label: 'Buscar',
+            type: 'text',
+            placeholder: 'Nome do banco',
+            value: search,
+            onChange: setSearch
+          },
+          {
+            name: 'tipo',
+            label: 'Tipo',
+            type: 'select',
+            value: tipo,
+            onChange: setTipo,
+            options: [
+              { value: '', label: 'Todos' },
+              { value: 'efi', label: 'EFI' },
+              { value: 'asaas', label: 'ASAAS' },
+              { value: 'tradicional', label: 'Tradicional' }
+            ]
+          }
+        ]}
+        onFilter={handleFilter}
+        onReset={handleReset}
+        showResetButton={true}
+      />
 
       {/* Tabela de Bancos */}
       <DataTable
