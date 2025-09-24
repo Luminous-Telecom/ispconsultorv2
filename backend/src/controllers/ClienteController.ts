@@ -259,18 +259,19 @@ export class ClienteController {
 
   // Atualizar cliente
   static async update(req: Request, res: Response): Promise<void> {
+    console.log('CLIENTE UPDATE INICIADO');
     try {
       const { id } = req.params;
       
-      console.log('=== CLIENTE UPDATE CHAMADO ===');
-      console.log('ID:', id);
-      console.log('Body:', req.body);
+      console.log('CLIENTE UPDATE - ID:', id);
+      console.log('CLIENTE UPDATE - BODY:', JSON.stringify(req.body));
 
       // Validar dados
+      console.log('CLIENTE UPDATE - VALIDANDO DADOS');
       const { error, value } = this.updateSchema.validate(req.body);
       
       if (error) {
-        console.log('Erro de validação:', error.details);
+        console.log('CLIENTE UPDATE - ERRO VALIDAÇÃO:', error.details);
         res.status(400).json({
           success: false,
           error: 'Dados inválidos',
@@ -279,7 +280,7 @@ export class ClienteController {
         return;
       }
       
-      console.log('Dados validados:', JSON.stringify(value, null, 2));
+      console.log('CLIENTE UPDATE - DADOS VALIDADOS:', JSON.stringify(value));
 
       // Buscar cliente
       const cliente = await Cliente.findByPk(id);
@@ -329,6 +330,7 @@ export class ClienteController {
         message: 'Cliente atualizado com sucesso'
       });
     } catch (error) {
+      console.log('CLIENTE UPDATE - ERRO CAPTURADO:', error);
       console.error('Erro ao atualizar cliente:', error);
       res.status(500).json({
         success: false,
