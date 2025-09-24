@@ -921,10 +921,32 @@ export class WebhookController {
           dadosAtualizados.pdf_url = dados.payment.carnet.pdf.charge;
         }
         
-        // Para carnês, o código de barras real pode não estar disponível ainda
-        // A EFI pode gerar depois que o carnê for processado
-        if (dados.payment?.carnet?.barcode && dados.payment.carnet.barcode !== "00000.00000 00000.000000 00000.000000 0 00000000000000") {
-          dadosAtualizados.codigo_barras = dados.payment.carnet.barcode;
+        // Para carnês, usar dados da EFI (reais ou zeros)
+        if (dados.payment?.carnet?.barcode) {
+          // Usar linha digitável da EFI (pode ser real ou zeros)
+          dadosAtualizados.linha_digitavel = dados.payment.carnet.barcode;
+          // Converter linha digitável para código de barras (remover pontos e espaços)
+          dadosAtualizados.codigo_barras = dados.payment.carnet.barcode.replace(/[.\s]/g, '');
+        }
+        
+        // Verificar se há dados PIX disponíveis (pode estar em diferentes locais)
+        if (dados.payment?.pix) {
+          if (dados.payment.pix.qrcode) {
+            dadosAtualizados.qrcode = dados.payment.pix.qrcode;
+          }
+          if (dados.payment.pix.qrcode_image) {
+            dadosAtualizados.qrcode_image = dados.payment.pix.qrcode_image;
+          }
+        }
+        
+        // Verificar se há dados PIX no nível raiz
+        if (dados.pix) {
+          if (dados.pix.qrcode) {
+            dadosAtualizados.qrcode = dados.pix.qrcode;
+          }
+          if (dados.pix.qrcode_image) {
+            dadosAtualizados.qrcode_image = dados.pix.qrcode_image;
+          }
         }
         
         // Log dos dados extraídos
