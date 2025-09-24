@@ -147,6 +147,13 @@ export class BancoApiService {
     try {
       const endpoint = config.cobranca_base_url + config.token;
       
+      logger.info('Obtendo token da EFI', {
+        endpoint,
+        banco_id: banco.id,
+        client_id: banco.client_id_producao ? 'configurado' : 'não configurado',
+        client_secret: banco.client_secret_producao ? 'configurado' : 'não configurado'
+      });
+      
       let authData: any = {};
       
       if (config.auth_type === 'basic') {
@@ -164,12 +171,24 @@ export class BancoApiService {
       });
 
       if (response.data && response.data.access_token) {
+        logger.info('Token obtido com sucesso', {
+          token_length: response.data.access_token.length,
+          expires_in: response.data.expires_in
+        });
         return response.data.access_token;
       }
 
+      logger.warn('Token não encontrado na resposta', {
+        response_keys: Object.keys(response.data || {})
+      });
       return null;
     } catch (error: any) {
-      logger.error('Erro ao obter token', { error: error.message });
+      logger.error('Erro ao obter token', { 
+        error: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
       return null;
     }
   }
@@ -394,7 +413,19 @@ export class BancoApiService {
         };
       }
       
-      const endpoint = config.cobranca_base_url + config.api_endpoints.consultar + '/' + parcela.charge_id;
+      // Usar URL correta baseada no ambiente (sandbox vs produção)
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = baseUrlCobranca + config.api_endpoints.consultar + '/' + parcela.charge_id;
+      
+      logger.info('Consultando status da parcela', {
+        endpoint,
+        charge_id: parcela.charge_id,
+        parcela_id: parcela.id,
+        token_length: token ? token.length : 0
+      });
       
       const response = await axios.get(endpoint, {
         headers: {

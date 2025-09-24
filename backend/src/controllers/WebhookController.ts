@@ -890,33 +890,49 @@ export class WebhookController {
       if (resultado.success && resultado.data) {
         const dados = resultado.data;
         
-        // Extrair dados específicos baseado na estrutura da EFI
+        // Log detalhado da resposta da EFI
+        logger.info('Resposta completa da EFI', {
+          parcela_id: parcela.id,
+          charge_id: parcela.charge_id,
+          dados_completos: dados,
+          chaves_disponiveis: Object.keys(dados || {})
+        });
+        
+        // Extrair dados específicos baseado na estrutura real da EFI
         const dadosAtualizados: any = {};
         
-        // Código de barras
-        if (dados.barcode) {
-          dadosAtualizados.codigo_barras = dados.barcode;
+        // Código de barras (linha digitável) - está em payment.carnet.barcode
+        if (dados.payment?.carnet?.barcode) {
+          dadosAtualizados.linha_digitavel = dados.payment.carnet.barcode;
         }
         
-        // Linha digitável
-        if (dados.line) {
-          dadosAtualizados.linha_digitavel = dados.line;
+        // URL do boleto - está em payment.carnet.url
+        if (dados.payment?.carnet?.url) {
+          dadosAtualizados.url_boleto = dados.payment.carnet.url;
         }
         
-        // URL do boleto
-        if (dados.payment_url || dados.link) {
-          dadosAtualizados.url_boleto = dados.payment_url || dados.link;
+        // Link da parcela - está em payment.carnet.parcel_link
+        if (dados.payment?.carnet?.parcel_link) {
+          dadosAtualizados.parcel_link = dados.payment.carnet.parcel_link;
         }
         
-        // Dados PIX
-        if (dados.pix) {
-          if (dados.pix.qrcode) {
-            dadosAtualizados.qrcode = dados.pix.qrcode;
-          }
-          if (dados.pix.qrcode_image) {
-            dadosAtualizados.qrcode_image = dados.pix.qrcode_image;
-          }
+        // PDF do boleto - está em payment.carnet.pdf.charge
+        if (dados.payment?.carnet?.pdf?.charge) {
+          dadosAtualizados.pdf_url = dados.payment.carnet.pdf.charge;
         }
+        
+        // Para carnês, o código de barras real pode não estar disponível ainda
+        // A EFI pode gerar depois que o carnê for processado
+        if (dados.payment?.carnet?.barcode && dados.payment.carnet.barcode !== "00000.00000 00000.000000 00000.000000 0 00000000000000") {
+          dadosAtualizados.codigo_barras = dados.payment.carnet.barcode;
+        }
+        
+        // Log dos dados extraídos
+        logger.info('Dados extraídos da EFI', {
+          parcela_id: parcela.id,
+          charge_id: parcela.charge_id,
+          dados_extraidos: dadosAtualizados
+        });
         
         return { 
           success: true, 
