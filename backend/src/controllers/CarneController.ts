@@ -456,6 +456,13 @@ export class CarneController {
         return;
       }
 
+      console.log('=== DEBUG CARNE CONTROLLER ===');
+      console.log('Carne ID:', registro.id);
+      console.log('Plano carregado:', !!(registro as any).plano);
+      console.log('Dados do plano:', JSON.stringify((registro as any).plano, null, 2));
+      console.log('Parcelas carregadas:', (registro as any).parcelas?.length || 0);
+      console.log('==============================');
+
       // Importar o CarneParcelaController para usar os métodos de gerar boleto
       const { CarneParcelaController } = await import('./CarneParcelaController');
       
@@ -645,6 +652,12 @@ export class CarneController {
             SACADO_CIDADE: parcela.carne?.cliente?.cidade || '',
             SACADO_ESTADO: parcela.carne?.cliente?.estado || '',
             SACADO_CEP: parcela.carne?.cliente?.cep || '',
+            NOME_PLANO: parcela.carne?.plano?.nome_plano || '',
+            DESCRICAO_PLANO: parcela.carne?.plano?.descricao || '',
+            TIPO_SERVICO: parcela.carne?.plano?.tipo_servico || '',
+            QUANTIDADE_USUARIOS: parcela.carne?.plano?.quantidade_usuarios?.toString() || '0',
+            VALOR_PLANO: parcela.carne?.plano?.valor_mensal ? parseFloat(parcela.carne.plano.valor_mensal.toString()).toFixed(2).replace('.', ',') : '0,00',
+            PERIODICIDADE: parcela.carne?.plano?.periodicidade || '',
             BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
               <img src="${barcodeData}" 
                    alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
@@ -655,6 +668,23 @@ export class CarneController {
           Object.entries(variables).forEach(([key, value]) => {
             templateCorpo = templateCorpo.replace(new RegExp(`{{${key}}}`, 'g'), value);
           });
+
+          // Substituir especificamente as variáveis do plano no template do corpo
+          console.log('CarneController - Variáveis do plano:', {
+            NOME_PLANO: variables.NOME_PLANO,
+            DESCRICAO_PLANO: variables.DESCRICAO_PLANO,
+            TIPO_SERVICO: variables.TIPO_SERVICO,
+            QUANTIDADE_USUARIOS: variables.QUANTIDADE_USUARIOS,
+            VALOR_PLANO: variables.VALOR_PLANO,
+            PERIODICIDADE: variables.PERIODICIDADE
+          });
+          
+          templateCorpo = templateCorpo.replace(/\{\{NOME_PLANO\}\}/g, variables.NOME_PLANO);
+          templateCorpo = templateCorpo.replace(/\{\{DESCRICAO_PLANO\}\}/g, variables.DESCRICAO_PLANO);
+          templateCorpo = templateCorpo.replace(/\{\{TIPO_SERVICO\}\}/g, variables.TIPO_SERVICO);
+          templateCorpo = templateCorpo.replace(/\{\{QUANTIDADE_USUARIOS\}\}/g, variables.QUANTIDADE_USUARIOS);
+          templateCorpo = templateCorpo.replace(/\{\{VALOR_PLANO\}\}/g, variables.VALOR_PLANO);
+          templateCorpo = templateCorpo.replace(/\{\{PERIODICIDADE\}\}/g, variables.PERIODICIDADE);
 
           corposHtml.push(templateCorpo);
         } catch (error) {

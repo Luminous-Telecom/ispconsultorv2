@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { CarneService } from '../../services/carneService';
-import { getApiUrl } from '../../config/api';
+import { getApiUrl, API_CONFIG } from '../../config/api';
 import { useNotification } from '../../hooks/useNotification';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
@@ -99,24 +99,9 @@ const Carnes: React.FC = () => {
     }
   };
 
-  const handleImprimir = async (carneId: number) => {
-    try {
-      const html = await CarneService.imprimir(carneId);
-      const newWindow = window.open('', '_blank');
-      if (newWindow) {
-        newWindow.document.write(html);
-        newWindow.document.close();
-        
-        // Aguardar o carregamento das imagens antes de imprimir
-        newWindow.onload = () => {
-          setTimeout(() => {
-            newWindow.print();
-          }, 1000);
-        };
-      }
-    } catch (err) {
-      error('Erro ao imprimir carnê');
-    }
+  const handleImprimir = (carneId: number) => {
+    // Abrir boleto em nova guia com URL normal
+    window.open(`${API_CONFIG.BASE_URL}/carnes/${carneId}/imprimir`, '_blank');
   };
 
   const handlePdf = async (carneId: number) => {

@@ -31,8 +31,6 @@ export class CarneParcelaController {
       SACADO_CEP: variables.SACADO_CEP,
       SACADO_CIDADE: variables.SACADO_CIDADE,
       SACADO_ESTADO: variables.SACADO_ESTADO,
-      TITULONN: variables.TITULONN,
-      DATA_ORIGINAL: variables.DATA_ORIGINAL,
       SACADO_CPF: variables.SACADO_CPF,
       DATA_PROC: variables.DATA_PROC,
       MOVIMENTO: variables.MOVIMENTO,
@@ -229,14 +227,6 @@ export class CarneParcelaController {
       SACADO_CIDADE: safe((parcela as any).carne?.cliente?.cidade),
       SACADO_ESTADO: safe((parcela as any).carne?.cliente?.estado),
       SACADO_CPF: safe((parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf),
-      TITULONN: safe(parcela.numero_parcela),
-      DATA_ORIGINAL: (() => {
-        if (!parcela.data_vencimento) return '';
-        const dateStr = parcela.data_vencimento instanceof Date 
-          ? parcela.data_vencimento.toISOString()
-          : (parcela.data_vencimento as any).toString();
-        return dateStr.split('T')[0].split('-').reverse().join('/');
-      })(),
       MOVIMENTO: 'Valor do título',
       VALOR_COBRADO: formatMoney(parcela.valor_parcela),
       TAXA_BOLETO: '0,00',
@@ -594,13 +584,28 @@ export class CarneParcelaController {
       const { id } = req.params;
       
       const parcela = await CarneParcela.findByPk(id, {
-        include: [{ association: 'carne', include: ['cliente', 'plano', 'banco'] }],
+        include: [{ 
+          association: 'carne', 
+          include: [
+            { association: 'cliente' }, 
+            { association: 'plano' }, 
+            { association: 'banco' }
+          ] 
+        }],
       });
 
       if (!parcela) {
         res.status(404).json({ error: 'Parcela não encontrada' });
         return;
       }
+
+      console.log('=== DEBUG COMPLETO DA PARCELA ===');
+      console.log('Parcela ID:', parcela.id);
+      console.log('Carne ID:', parcela.carne_id);
+      console.log('Carne carregado:', !!(parcela as any).carne);
+      console.log('Plano carregado:', !!(parcela as any).carne?.plano);
+      console.log('Dados completos do plano:', JSON.stringify((parcela as any).carne?.plano, null, 2));
+      console.log('================================');
 
       const dadosEmpresa = await DadosEmpresa.findOne();
       
@@ -729,14 +734,12 @@ export class CarneParcelaController {
         SACADO_CIDADE: (parcela as any).carne?.cliente?.cidade || '',
         SACADO_ESTADO: (parcela as any).carne?.cliente?.estado || '',
         SACADO_CPF: (parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf || '',
-        TITULONN: parcela.numero_parcela || '',
-        DATA_ORIGINAL: (() => {
-          if (!parcela.data_vencimento) return '';
-          const dateStr = parcela.data_vencimento instanceof Date 
-            ? parcela.data_vencimento.toISOString()
-            : (parcela.data_vencimento as any).toString();
-          return dateStr.split('T')[0].split('-').reverse().join('/');
-        })(),
+        NOME_PLANO: (parcela as any).carne?.plano?.nome_plano || '',
+        DESCRICAO_PLANO: (parcela as any).carne?.plano?.descricao || '',
+        TIPO_SERVICO: (parcela as any).carne?.plano?.tipo_servico || '',
+        QUANTIDADE_USUARIOS: (parcela as any).carne?.plano?.quantidade_usuarios?.toString() || '0',
+        VALOR_PLANO: (parcela as any).carne?.plano?.valor_mensal ? parseFloat((parcela as any).carne.plano.valor_mensal.toString()).toFixed(2).replace('.', ',') : '0,00',
+        PERIODICIDADE: (parcela as any).carne?.plano?.periodicidade || '',
         MOVIMENTO: 'Valor do título',
         VALOR_COBRADO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
         TAXA_BOLETO: '0,00',
@@ -750,14 +753,40 @@ export class CarneParcelaController {
       };
 
       // Substituir variáveis nos templates - abordagem mais simples
-      templateTopo = templateTopo.replace(/\{\{DATA_ORIGINAL\}\}/g, variables.DATA_ORIGINAL);
       templateTopo = templateTopo.replace(/\{\{DATA_PROC\}\}/g, variables.DATA_PROC);
       templateTopo = templateTopo.replace(/\{\{DATA_VENC\}\}/g, variables.DATA_VENC);
       templateTopo = templateTopo.replace(/\{\{DATA_DOCUMENTO\}\}/g, variables.DATA_DOCUMENTO);
       
+      // Substituir especificamente as variáveis do plano no template do topo PRIMEIRO
+      console.log('Variáveis do plano:', {
+        NOME_PLANO: variables.NOME_PLANO,
+        DESCRICAO_PLANO: variables.DESCRICAO_PLANO,
+        TIPO_SERVICO: variables.TIPO_SERVICO,
+        QUANTIDADE_USUARIOS: variables.QUANTIDADE_USUARIOS,
+        VALOR_PLANO: variables.VALOR_PLANO,
+        PERIODICIDADE: variables.PERIODICIDADE
+      });
+      
+      console.log('Dados da parcela:', {
+        carne_id: parcela.carne_id,
+        plano_nome: (parcela as any).carne?.plano?.nome_plano,
+        plano_descricao: (parcela as any).carne?.plano?.descricao,
+        plano_tipo_servico: (parcela as any).carne?.plano?.tipo_servico,
+        plano_quantidade_usuarios: (parcela as any).carne?.plano?.quantidade_usuarios,
+        plano_valor_mensal: (parcela as any).carne?.plano?.valor_mensal,
+        plano_periodicidade: (parcela as any).carne?.plano?.periodicidade
+      });
+      
+      templateTopo = templateTopo.replace(/\{\{NOME_PLANO\}\}/g, variables.NOME_PLANO);
+      templateTopo = templateTopo.replace(/\{\{DESCRICAO_PLANO\}\}/g, variables.DESCRICAO_PLANO);
+      templateTopo = templateTopo.replace(/\{\{TIPO_SERVICO\}\}/g, variables.TIPO_SERVICO);
+      templateTopo = templateTopo.replace(/\{\{QUANTIDADE_USUARIOS\}\}/g, variables.QUANTIDADE_USUARIOS);
+      templateTopo = templateTopo.replace(/\{\{VALOR_PLANO\}\}/g, variables.VALOR_PLANO);
+      templateTopo = templateTopo.replace(/\{\{PERIODICIDADE\}\}/g, variables.PERIODICIDADE);
+      
       // Substituir outras variáveis
       Object.entries(variables).forEach(([key, value]) => {
-        if (!['DATA_ORIGINAL', 'DATA_PROC', 'DATA_VENC', 'DATA_DOCUMENTO'].includes(key)) {
+        if (!['DATA_PROC', 'DATA_VENC', 'DATA_DOCUMENTO'].includes(key)) {
           templateTopo = templateTopo.replace(new RegExp(`{{${key}}}`, 'g'), value);
           templateCorpo = templateCorpo.replace(new RegExp(`{{${key}}}`, 'g'), value);
         }
