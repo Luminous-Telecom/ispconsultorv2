@@ -14,64 +14,42 @@ class ApiService {
       },
     });
 
-    // Interceptor para requests
-    this.api.interceptors.request.use(
-      (config) => {
-        console.log('🌐 API Request:', {
-          method: config.method?.toUpperCase(),
-          url: config.url,
-          baseURL: config.baseURL,
-          fullURL: `${config.baseURL}${config.url}`
-        });
-        
-        // Adicionar token de autenticação se existir
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        console.error('❌ API Request Error:', error);
-        return Promise.reject(error);
-      }
-    );
+          // Interceptor para requests
+          this.api.interceptors.request.use(
+            (config) => {
+              // Adicionar token de autenticação se existir
+              const token = localStorage.getItem('auth_token');
+              if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+              }
+              return config;
+            },
+            (error) => {
+              return Promise.reject(error);
+            }
+          );
 
-    // Interceptor para responses
-    this.api.interceptors.response.use(
-      (response: AxiosResponse) => {
-        console.log('✅ API Response:', {
-          status: response.status,
-          url: response.config.url,
-          data: response.data
-        });
-        
-        // Garantir que sempre retornamos um valor válido
-        const data = response.data;
-        if (data === undefined || data === null) {
-          console.warn('⚠️ API response data is undefined/null:', response);
-          return {};
-        }
-        return data;
-      },
-      (error) => {
-        console.error('❌ API Response Error:', {
-          status: error.response?.status,
-          url: error.config?.url,
-          message: error.message,
-          data: error.response?.data
-        });
-        
-        // Tratar erros globais
-        if (error.response?.status === 401) {
-          // Token expirado ou inválido
-          localStorage.removeItem('auth_token');
-          window.location.href = '/login';
-        }
-        
-        return Promise.reject(error);
-      }
-    );
+          // Interceptor para responses
+          this.api.interceptors.response.use(
+            (response: AxiosResponse) => {
+              // Garantir que sempre retornamos um valor válido
+              const data = response.data;
+              if (data === undefined || data === null) {
+                return {};
+              }
+              return data;
+            },
+            (error) => {
+              // Tratar erros globais
+              if (error.response?.status === 401) {
+                // Token expirado ou inválido
+                localStorage.removeItem('auth_token');
+                window.location.href = '/login';
+              }
+              
+              return Promise.reject(error);
+            }
+          );
   }
 
   // Métodos HTTP genéricos

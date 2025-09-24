@@ -171,7 +171,8 @@ const CarnesEdit: React.FC = () => {
   };
 
   // Filtrar planos baseado no cliente selecionado
-  const planosFiltrados = (planos && Array.isArray(planos)) ? planos.filter((plano: any) => plano.cliente_id === formData.cliente_id) : [];
+  // Filtrar planos (todos os planos estão disponíveis para todos os clientes)
+  const planosFiltrados = (planos && Array.isArray(planos)) ? planos : [];
 
   if (carneLoading) {
     return (

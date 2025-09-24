@@ -13,6 +13,7 @@ interface CarneForm {
   banco_id: number;
   numero_carne: string;
   carnet_id?: string;
+  valor_parcela: number;
   valor_total: number;
   quantidade_parcelas: number;
   data_vencimento_primeira: string;
@@ -30,6 +31,7 @@ const CarnesCreate: React.FC = () => {
     banco_id: 0,
     numero_carne: '',
     carnet_id: '',
+    valor_parcela: 0,
     valor_total: 0,
     quantidade_parcelas: 1,
     data_vencimento_primeira: '',
@@ -60,31 +62,22 @@ const CarnesCreate: React.FC = () => {
 
   // Logs para monitorar carregamento dos dados
   useEffect(() => {
-    if (clientes) {
-      console.log('✅ Clientes carregados:', clientes);
-    }
     if (clientesError) {
-      console.error('❌ Erro ao carregar clientes:', clientesError);
+      console.error('Erro ao carregar clientes:', clientesError);
     }
-  }, [clientes, clientesError]);
+  }, [clientesError]);
 
   useEffect(() => {
-    if (planos) {
-      console.log('✅ Planos carregados:', planos);
-    }
     if (planosError) {
-      console.error('❌ Erro ao carregar planos:', planosError);
+      console.error('Erro ao carregar planos:', planosError);
     }
-  }, [planos, planosError]);
+  }, [planosError]);
 
   useEffect(() => {
-    if (bancos) {
-      console.log('✅ Bancos carregados:', bancos);
-    }
     if (bancosError) {
-      console.error('❌ Erro ao carregar bancos:', bancosError);
+      console.error('Erro ao carregar bancos:', bancosError);
     }
-  }, [bancos, bancosError]);
+  }, [bancosError]);
 
   // Mutation para criar carnê
   const createCarneMutation = useMutation({
@@ -98,7 +91,7 @@ const CarnesCreate: React.FC = () => {
     }
   });
 
-  const handleInputChange = (field: keyof CarneForm, value: string | number) => {
+  const handleInputChange = <K extends keyof CarneForm>(field: K, value: CarneForm[K]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -119,7 +112,7 @@ const CarnesCreate: React.FC = () => {
     if (!formData.cliente_id) newErrors.cliente_id = 'Cliente é obrigatório';
     if (!formData.plano_id) newErrors.plano_id = 'Plano é obrigatório';
     if (!formData.banco_id) newErrors.banco_id = 'Banco é obrigatório';
-    if (!formData.valor_total || formData.valor_total <= 0) newErrors.valor_total = 'Valor total deve ser maior que zero';
+    if (!formData.valor_parcela || formData.valor_parcela <= 0) newErrors.valor_parcela = 'Valor da parcela deve ser maior que zero';
     if (!formData.quantidade_parcelas || formData.quantidade_parcelas <= 0) newErrors.quantidade_parcelas = 'Quantidade de parcelas deve ser maior que zero';
     if (!formData.data_vencimento_primeira) newErrors.data_vencimento_primeira = 'Data do primeiro vencimento é obrigatória';
 
@@ -134,7 +127,13 @@ const CarnesCreate: React.FC = () => {
       return;
     }
 
-    createCarneMutation.mutate(formData);
+    // Preparar dados para envio (incluir valor_parcela)
+    const dadosEnvio = {
+      ...formData,
+      valor_parcela: formData.valor_parcela
+    };
+
+    createCarneMutation.mutate(dadosEnvio);
   };
 
   const handleCancel = () => {
@@ -142,7 +141,8 @@ const CarnesCreate: React.FC = () => {
   };
 
   // Filtrar planos baseado no cliente selecionado
-  const planosFiltrados = (planos && Array.isArray(planos)) ? planos.filter((plano: any) => plano.cliente_id === formData.cliente_id) : [];
+  // Filtrar planos (todos os planos estão disponíveis para todos os clientes)
+  const planosFiltrados = (planos && Array.isArray(planos)) ? planos : [];
 
   // Calcular valor total
   const valorTotal = formData.valor_total;
@@ -212,10 +212,14 @@ const CarnesCreate: React.FC = () => {
                         onChange={(e) => {
                           const planoId = parseInt(e.target.value);
                           handleInputChange('plano_id', planoId);
-                          // Definir valor total baseado no plano selecionado
+                          // Definir valor da parcela baseado no plano selecionado
                           const planoSelecionado = (planos && Array.isArray(planos)) ? planos.find((p: any) => p.id === planoId) : null;
                           if (planoSelecionado) {
-                            handleInputChange('valor_total', planoSelecionado.valor_mensal * formData.quantidade_parcelas);
+                            const valorMensal = typeof planoSelecionado.valor_mensal === 'string' 
+                              ? parseFloat(planoSelecionado.valor_mensal) 
+                              : planoSelecionado.valor_mensal;
+                            handleInputChange('valor_parcela', valorMensal);
+                            handleInputChange('valor_total', valorMensal * formData.quantidade_parcelas);
                           }
                         }}
                         disabled={!formData.cliente_id}
@@ -286,15 +290,19 @@ const CarnesCreate: React.FC = () => {
                       </label>
                       <input
                         type="number"
-                        className={`form-control ${errors.valor_total ? 'is-invalid' : ''}`}
-                        id="valor_total"
-                        value={formData.valor_total}
-                        onChange={(e) => handleInputChange('valor_total', parseFloat(e.target.value) || 0)}
+                        className={`form-control ${errors.valor_parcela ? 'is-invalid' : ''}`}
+                        id="valor_parcela"
+                        value={formData.valor_parcela}
+                        onChange={(e) => {
+                          const valorParcela = parseFloat(e.target.value) || 0;
+                          handleInputChange('valor_parcela', valorParcela);
+                          handleInputChange('valor_total', valorParcela * formData.quantidade_parcelas);
+                        }}
                         placeholder="99.90"
                         step="0.01"
                         min="0"
                       />
-                      {errors.valor_total && <div className="invalid-feedback">{errors.valor_total}</div>}
+                      {errors.valor_parcela && <div className="invalid-feedback">{errors.valor_parcela}</div>}
                     </div>
                   </div>
                   <div className="col-md-4">
@@ -307,7 +315,11 @@ const CarnesCreate: React.FC = () => {
                         className={`form-control ${errors.quantidade_parcelas ? 'is-invalid' : ''}`}
                         id="quantidade_parcelas"
                         value={formData.quantidade_parcelas}
-                        onChange={(e) => handleInputChange('quantidade_parcelas', parseInt(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const quantidade = parseInt(e.target.value) || 0;
+                          handleInputChange('quantidade_parcelas', quantidade);
+                          handleInputChange('valor_total', formData.valor_parcela * quantidade);
+                        }}
                         placeholder="12"
                         min="1"
                         max="120"
