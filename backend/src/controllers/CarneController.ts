@@ -560,8 +560,39 @@ export class CarneController {
           const qrCodeData = parcela.qrcode_image || '';
           const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
 
+          // Função para processar variáveis nas instruções
+          const processarInstrucoes = (instrucao: string): string => {
+            if (!instrucao) return '';
+            
+            let instrucaoProcessada = instrucao;
+            
+            // Substituir variáveis específicas do plano e cliente
+            instrucaoProcessada = instrucaoProcessada.replace(/%nome_plano%/g, parcela.carne?.plano?.nome_plano || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%tipo_servico%/g, parcela.carne?.plano?.tipo_servico || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%quantidade_usuarios%/g, parcela.carne?.plano?.quantidade_usuarios?.toString() || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%valor_mensal%/g, parcela.carne?.plano?.valor_mensal?.toString() || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%periodicidade%/g, parcela.carne?.plano?.periodicidade || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%descricao%/g, parcela.carne?.plano?.descricao || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%razao_social%/g, parcela.carne?.cliente?.razao_social || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%nome_fantasia%/g, parcela.carne?.cliente?.nome_fantasia || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%cnpj%/g, parcela.carne?.cliente?.cnpj || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%email%/g, parcela.carne?.cliente?.email || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%telefone%/g, parcela.carne?.cliente?.telefone || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%whatsapp%/g, parcela.carne?.cliente?.whatsapp || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%endereco%/g, parcela.carne?.cliente?.endereco || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%numero%/g, parcela.carne?.cliente?.numero || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%complemento%/g, parcela.carne?.cliente?.complemento || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%bairro%/g, parcela.carne?.cliente?.bairro || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%cidade%/g, parcela.carne?.cliente?.cidade || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%estado%/g, parcela.carne?.cliente?.estado || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%cep%/g, parcela.carne?.cliente?.cep || '');
+            instrucaoProcessada = instrucaoProcessada.replace(/%observacoes%/g, parcela.carne?.cliente?.observacoes || '');
+            
+            return instrucaoProcessada;
+          };
+
           // Gerar variáveis básicas
-          const variables = {
+          const variables: Record<string, string> = {
             LOGOBANCO: parcela.carne?.banco?.tipo_banco ? `${process.env.BASE_URL}/images/bancos/${parcela.carne.banco.tipo_banco}.png` : `${process.env.BASE_URL}/images/bancos/boletoproprio.png`,
             CODIGO_BANCO_COM_DV: parcela.carne?.banco?.codigo_banco || parcela.carne?.banco?.codigo || '237',
             LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
@@ -599,11 +630,11 @@ export class CarneController {
             VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')}`,
             VALOR_BOLETO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
             TEXTO_MULTAMORA: parcela.carne?.banco?.texto_multamora || '',
-            INSTRUCOES1: parcela.carne?.banco?.instrucao_linha_1 || '',
-            INSTRUCOES2: parcela.carne?.banco?.instrucao_linha_2 || '',
-            INSTRUCOES3: parcela.carne?.banco?.instrucao_linha_3 || '',
-            INSTRUCOES4: parcela.carne?.banco?.instrucao_linha_4 || '',
-            INSTRUCOES5: parcela.carne?.banco?.instrucao_linha_5 || '',
+            INSTRUCOES1: processarInstrucoes(parcela.carne?.banco?.instrucao_linha_1 || ''),
+            INSTRUCOES2: processarInstrucoes(parcela.carne?.banco?.instrucao_linha_2 || ''),
+            INSTRUCOES3: processarInstrucoes(parcela.carne?.banco?.instrucao_linha_3 || ''),
+            INSTRUCOES4: processarInstrucoes(parcela.carne?.banco?.instrucao_linha_4 || ''),
+            INSTRUCOES5: processarInstrucoes(parcela.carne?.banco?.instrucao_linha_5 || ''),
             QRCODE: qrCodeData,
             SACADO_NOME: parcela.carne?.cliente?.razao_social || '',
             TIPO_PSACADO: parcela.carne?.cliente?.cnpj ? 'CNPJ' : 'CPF',

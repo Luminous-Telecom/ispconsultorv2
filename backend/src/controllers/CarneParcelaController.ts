@@ -633,6 +633,37 @@ export class CarneParcelaController {
       const qrCodeData = parcela.qrcode_image || '';
       const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
 
+      // Função para processar variáveis nas instruções
+      const processarInstrucoes = (instrucao: string): string => {
+        if (!instrucao) return '';
+        
+        let instrucaoProcessada = instrucao;
+        
+        // Substituir variáveis específicas do plano e cliente
+        instrucaoProcessada = instrucaoProcessada.replace(/%nome_plano%/g, (parcela as any).carne?.plano?.nome_plano || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%tipo_servico%/g, (parcela as any).carne?.plano?.tipo_servico || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%quantidade_usuarios%/g, (parcela as any).carne?.plano?.quantidade_usuarios?.toString() || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%valor_mensal%/g, (parcela as any).carne?.plano?.valor_mensal?.toString() || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%periodicidade%/g, (parcela as any).carne?.plano?.periodicidade || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%descricao%/g, (parcela as any).carne?.plano?.descricao || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%razao_social%/g, (parcela as any).carne?.cliente?.razao_social || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%nome_fantasia%/g, (parcela as any).carne?.cliente?.nome_fantasia || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%cnpj%/g, (parcela as any).carne?.cliente?.cnpj || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%email%/g, (parcela as any).carne?.cliente?.email || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%telefone%/g, (parcela as any).carne?.cliente?.telefone || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%whatsapp%/g, (parcela as any).carne?.cliente?.whatsapp || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%endereco%/g, (parcela as any).carne?.cliente?.endereco || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%numero%/g, (parcela as any).carne?.cliente?.numero || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%complemento%/g, (parcela as any).carne?.cliente?.complemento || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%bairro%/g, (parcela as any).carne?.cliente?.bairro || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%cidade%/g, (parcela as any).carne?.cliente?.cidade || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%estado%/g, (parcela as any).carne?.cliente?.estado || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%cep%/g, (parcela as any).carne?.cliente?.cep || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%observacoes%/g, (parcela as any).carne?.cliente?.observacoes || '');
+        
+        return instrucaoProcessada;
+      };
+
       // Gerar variáveis básicas
       const variables = {
         LOGOMARCA: dadosEmpresa?.logo ? dadosEmpresa.logo : `${process.env.BASE_URL}/images/bancos/boletoproprio.png`,
@@ -680,11 +711,11 @@ export class CarneParcelaController {
         ESPECIE: (parcela as any).carne?.banco?.especie || '',
         VALOR_BOLETO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
         TEXTO_MULTAMORA: (parcela as any).carne?.banco?.texto_multamora || '',
-        INSTRUCOES1: (parcela as any).carne?.banco?.instrucao_linha_1 || '',
-        INSTRUCOES2: (parcela as any).carne?.banco?.instrucao_linha_2 || '',
-        INSTRUCOES3: (parcela as any).carne?.banco?.instrucao_linha_3 || '',
-        INSTRUCOES4: (parcela as any).carne?.banco?.instrucao_linha_4 || '',
-        INSTRUCOES5: (parcela as any).carne?.banco?.instrucao_linha_5 || '',
+        INSTRUCOES1: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_1 || ''),
+        INSTRUCOES2: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_2 || ''),
+        INSTRUCOES3: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_3 || ''),
+        INSTRUCOES4: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_4 || ''),
+        INSTRUCOES5: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_5 || ''),
         QRCODE: qrCodeData,
         BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
           <img src="${barcodeData}" 
