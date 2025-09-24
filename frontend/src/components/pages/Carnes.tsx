@@ -26,14 +26,40 @@ const Carnes: React.FC = () => {
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'ativo': return 'bg-success';
+      case 'em-dias': return 'bg-success';
+      case 'atrasado': return 'bg-warning';
       case 'cancelado': return 'bg-danger';
       case 'pago': return 'bg-primary';
-      case 'pendente': return 'bg-warning';
-      case 'parcial': return 'bg-warning';
-      case 'registrado': return 'bg-info';
       default: return 'bg-secondary';
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'em-dias': return 'Em dias';
+      case 'atrasado': return 'Atrasado';
+      case 'cancelado': return 'Cancelado';
+      case 'pago': return 'Pago';
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  const determinarStatusCarne = (carne: any) => {
+    // Se o carnê está cancelado, retorna cancelado
+    if (carne.status === 'cancelado') {
+      return 'cancelado';
+    }
+    
+    // Se todas as parcelas foram pagas, retorna pago
+    if (carne.parcelas_pagas && carne.quantidade_parcelas && 
+        carne.parcelas_pagas >= carne.quantidade_parcelas) {
+      return 'pago';
+    }
+    
+    // Se há parcelas pagas mas não todas, verifica se há parcelas atrasadas
+    // Por enquanto, vamos considerar como "em-dias" se não está cancelado nem totalmente pago
+    // TODO: Implementar lógica para verificar parcelas vencidas
+    return 'em-dias';
   };
 
   const handleFilter = (e: React.FormEvent) => {
@@ -134,11 +160,14 @@ const Carnes: React.FC = () => {
     {
       key: 'status',
       label: 'Status',
-      render: (carne: any) => (
-        <span className={`badge ${getStatusBadgeClass(carne.status)}`}>
-          {carne.status.charAt(0).toUpperCase() + carne.status.slice(1)}
-        </span>
-      )
+      render: (carne: any) => {
+        const statusCalculado = determinarStatusCarne(carne);
+        return (
+          <span className={`badge ${getStatusBadgeClass(statusCalculado)}`}>
+            {getStatusLabel(statusCalculado)}
+          </span>
+        );
+      }
     },
     {
       key: 'created_at',
@@ -229,8 +258,8 @@ const Carnes: React.FC = () => {
                     onChange={(e) => setStatus(e.target.value)}
                   >
                     <option value="">Todos</option>
-                    <option value="ativo">Ativo</option>
-                    <option value="pendente">Pendente</option>
+                    <option value="em-dias">Em dias</option>
+                    <option value="atrasado">Atrasado</option>
                     <option value="pago">Pago</option>
                     <option value="cancelado">Cancelado</option>
                   </select>

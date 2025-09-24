@@ -41,7 +41,24 @@ export class CarneController {
       }
 
       if (status) {
-        where.status = status;
+        // Mapear novos status para status do banco
+        switch (status) {
+          case 'em-dias':
+            where.status = { [Op.in]: ['ativo', 'pendente', 'registrado'] };
+            break;
+          case 'atrasado':
+            where.status = { [Op.in]: ['ativo', 'pendente', 'registrado'] };
+            // TODO: Adicionar lógica para verificar parcelas vencidas
+            break;
+          case 'pago':
+            where.status = 'pago';
+            break;
+          case 'cancelado':
+            where.status = 'cancelado';
+            break;
+          default:
+            where.status = status;
+        }
       }
 
       if (cliente_id) {
