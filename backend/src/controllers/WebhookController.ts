@@ -180,7 +180,7 @@ export class WebhookController {
         }
       }
       
-      logger.error('Falha ao consultar notificação em todos os bancos EFI');
+      logger.warn('Webhook: Token de notificação não processado (normal para tokens expirados)');
       return {
         success: false,
         message: 'Não foi possível consultar a notificação',

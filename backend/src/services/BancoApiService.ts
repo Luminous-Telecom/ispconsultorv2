@@ -507,14 +507,23 @@ export class BancoApiService {
         message: 'Erro ao consultar notificação'
       };
     } catch (error: any) {
-      logger.error('Erro ao consultar notificação por token', { 
-        banco_id: banco.id,
-        token: notificationToken,
-        error: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data
-      });
+        // Se é erro de token inválido/expirado, logar como warning em vez de error
+        if (error.response?.data?.code === 3500010 || error.response?.status === 500) {
+          logger.warn('Token de notificação inválido ou expirado', {
+            banco_id: banco.id,
+            token: notificationToken,
+            status: error.response?.status
+          });
+        } else {
+          logger.error('Erro ao consultar notificação por token', {
+            banco_id: banco.id,
+            token: notificationToken,
+            error: error.message,
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data
+          });
+        }
       
       // Se o erro for 3500010 (propriedade não existe), o token pode ter expirado
       if (error.response?.data?.code === 3500010) {
