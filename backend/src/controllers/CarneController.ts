@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Carne } from '../models/Carne';
+import { CarneParcela } from '../models/CarneParcela';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import fs from 'fs';
 import path from 'path';
@@ -47,7 +48,7 @@ export class CarneController {
             break;
           case 'atrasado':
             where.status = { [Op.in]: ['ativo', 'pendente', 'registrado'] };
-            // TODO: Adicionar lógica para verificar parcelas vencidas
+            // Carnês atrasados serão filtrados após buscar os dados
             break;
           case 'pago':
             where.status = 'pago';
@@ -96,15 +97,40 @@ export class CarneController {
         })
       );
 
+      // Filtrar carnês atrasados se necessário
+      let carnesFiltradas = carnesComParcelas;
+      if (status === 'atrasado') {
+        carnesFiltradas = await Promise.all(
+          carnesComParcelas.map(async (carne: any) => {
+            // Buscar parcelas vencidas não pagas
+            const parcelasVencidas = await CarneParcela.findAll({
+              where: {
+                carne_id: carne.id,
+                data_vencimento: { [Op.lt]: new Date() },
+                pago: false
+              }
+            });
+            
+            return {
+              ...carne,
+              tem_parcelas_atrasadas: parcelasVencidas.length > 0
+            };
+          })
+        );
+        
+        // Filtrar apenas carnês com parcelas atrasadas
+        carnesFiltradas = carnesFiltradas.filter((carne: any) => carne.tem_parcelas_atrasadas);
+      }
+
       res.json({
-        data: carnesComParcelas,
+        data: carnesFiltradas,
         pagination: {
           current_page: page,
           per_page: limit,
-          total: count,
-          last_page: Math.ceil(count / limit),
+          total: status === 'atrasado' ? carnesFiltradas.length : count,
+          last_page: status === 'atrasado' ? Math.ceil(carnesFiltradas.length / limit) : Math.ceil(count / limit),
           from: offset + 1,
-          to: Math.min(offset + limit, count)
+          to: Math.min(offset + limit, status === 'atrasado' ? carnesFiltradas.length : count)
         }
       });
     } catch (error) {
