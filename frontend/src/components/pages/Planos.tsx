@@ -81,7 +81,7 @@ const Planos: React.FC = () => {
       key: 'valor_mensal',
       label: 'Valor Mensal',
       render: (plano: Plano) => (
-        <strong>R$ {plano.valor_mensal.toFixed(2).replace('.', ',')}</strong>
+        <strong>R$ {plano.valor_mensal ? parseFloat(plano.valor_mensal).toFixed(2).replace('.', ',') : '0,00'}</strong>
       )
     },
     {

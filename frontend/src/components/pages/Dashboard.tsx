@@ -154,7 +154,7 @@ const Dashboard: React.FC = () => {
                         <tr key={carne.id}>
                           <td>{carne.numero_carne}</td>
                           <td>{carne.cliente?.razao_social || 'N/A'}</td>
-                          <td>R$ {parseFloat(carne.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                          <td>R$ {carne.valor_total ? parseFloat(carne.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00'}</td>
                           <td>
                             <span className={`badge ${getStatusBadgeClass(carne.status)}`}>
                               {carne.status ? carne.status.charAt(0).toUpperCase() + carne.status.slice(1) : 'Desconhecido'}

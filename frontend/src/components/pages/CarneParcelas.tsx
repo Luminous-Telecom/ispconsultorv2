@@ -185,7 +185,7 @@ const CarneParcelas: React.FC = () => {
       key: 'valor_parcela',
       label: 'Valor',
       render: (parcela: any) => (
-        <strong>R$ {parseFloat(parcela.valor_parcela).toFixed(2).replace('.', ',')}</strong>
+        <strong>R$ {parcela.valor_parcela ? parseFloat(parcela.valor_parcela).toFixed(2).replace('.', ',') : '0,00'}</strong>
       )
     },
     {
