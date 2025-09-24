@@ -299,7 +299,7 @@ const CarnesShow: React.FC = () => {
                         <tr key={parcela.id}>
                           <td>{parcela.numero_parcela}</td>
                           <td>R$ {Number(parcela.valor_parcela || 0).toFixed(2).replace('.', ',')}</td>
-                          <td>{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                          <td>{parcela.data_vencimento ? new Date(parcela.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
                           <td>
                             {parcela.pago ? (
                               <span className="badge bg-success">Pago</span>
