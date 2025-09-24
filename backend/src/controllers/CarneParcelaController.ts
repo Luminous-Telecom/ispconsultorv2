@@ -143,7 +143,7 @@ export class CarneParcelaController {
     };
 
     // Gerar QR Code primeiro
-    const qrCodeData = parcela.qrcode || '';
+    const qrCodeData = parcela.qrcode_image || '';
 
     return {
       // Dados da empresa
@@ -630,7 +630,7 @@ export class CarneParcelaController {
         }
       };
 
-      const qrCodeData = parcela.qrcode || '';
+      const qrCodeData = parcela.qrcode_image || '';
       const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
 
       // Gerar variáveis básicas

@@ -531,7 +531,7 @@ export class CarneController {
             }
           };
 
-          const qrCodeData = parcela.qrcode || '';
+          const qrCodeData = parcela.qrcode_image || '';
           const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
 
           // Gerar variáveis básicas
