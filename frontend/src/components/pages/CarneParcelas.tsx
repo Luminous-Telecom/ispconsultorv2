@@ -352,9 +352,9 @@ const CarneParcelas: React.FC = () => {
 
       {/* Tabela de Parcelas */}
       <div className="card">
-        <div className="card-body">
+        <div className="card-body p-2">
           <div className="table-responsive">
-            <table className="table table-striped">
+            <table className="table table-striped table-sm">
               <thead>
                 <tr>
                   <th>ID</th>

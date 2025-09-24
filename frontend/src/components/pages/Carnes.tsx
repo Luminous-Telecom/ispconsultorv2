@@ -154,20 +154,20 @@ const Carnes: React.FC = () => {
 
       {/* Tabela de Carnês */}
       <div className="card">
-        <div className="card-body">
+        <div className="card-body p-2">
           <div className="table-responsive">
-            <table className="table table-striped">
+            <table className="table table-striped table-sm">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Carnet ID</th>
-                  <th>Número do Carnê</th>
-                  <th>Cliente</th>
-                  <th>Valor Total</th>
-                  <th>Parcelas Pagas</th>
-                  <th>Status</th>
-                  <th>Data de Criação</th>
-                  <th>Ações</th>
+                  <th className="py-1 px-2">ID</th>
+                  <th className="py-1 px-2">Carnet ID</th>
+                  <th className="py-1 px-2">Número do Carnê</th>
+                  <th className="py-1 px-2">Cliente</th>
+                  <th className="py-1 px-2">Valor Total</th>
+                  <th className="py-1 px-2">Parcelas Pagas</th>
+                  <th className="py-1 px-2">Status</th>
+                  <th className="py-1 px-2">Data de Criação</th>
+                  <th className="py-1 px-2">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -182,33 +182,33 @@ const Carnes: React.FC = () => {
                 ) : carnesData?.data && carnesData.data.length > 0 ? (
                   carnesData.data.map((carne: any) => (
                     <tr key={carne.id}>
-                      <td>
+                      <td className="py-1 px-2">
                         <code className="text-primary">#{carne.id}</code>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <code className="text-info">
                           {carne.carnet_id || 'Não gerado'}
                         </code>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <strong>{carne.numero_carne}</strong>
                       </td>
-                      <td>{carne.cliente?.razao_social || 'N/A'}</td>
-                      <td>
+                      <td className="py-1 px-2">{carne.cliente?.razao_social || 'N/A'}</td>
+                      <td className="py-1 px-2">
                         <strong>R$ {parseFloat(carne.valor_total).toFixed(2).replace('.', ',')}</strong>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <span className="badge bg-success">{carne.parcelas_pagas || 0}</span>
                         <span className="text-muted"> / </span>
                         <span className="badge bg-secondary">{carne.quantidade_parcelas}</span>
                       </td>
-                      <td>
+                      <td className="py-1 px-2">
                         <span className={`badge ${getStatusBadgeClass(carne.status)}`}>
                           {carne.status.charAt(0).toUpperCase() + carne.status.slice(1)}
                         </span>
                       </td>
-                      <td>{new Date(carne.created_at).toLocaleDateString('pt-BR')}</td>
-                      <td>
+                      <td className="py-1 px-2">{new Date(carne.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td className="py-1 px-2">
                         <div className="btn-group btn-group-sm" role="group">
                           <Link 
                             to={`/carne-parcelas?carne_id=${carne.id}`} 

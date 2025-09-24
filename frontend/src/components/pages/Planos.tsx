@@ -122,9 +122,9 @@ const Planos: React.FC = () => {
 
       {/* Tabela de Planos */}
       <div className="card">
-        <div className="card-body">
+        <div className="card-body p-2">
           <div className="table-responsive">
-            <table className="table table-striped">
+            <table className="table table-striped table-sm">
               <thead>
                 <tr>
                   <th>ID</th>

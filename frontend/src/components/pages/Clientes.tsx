@@ -102,19 +102,19 @@ const Clientes: React.FC = () => {
 
       {/* Tabela de Clientes */}
       <div className="card">
-        <div className="card-body">
+        <div className="card-body p-2">
           <div className="table-responsive">
-            <table className="table table-striped">
+            <table className="table table-striped table-sm">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>CNPJ</th>
-                  <th>Razão Social</th>
-                  <th>Nome Fantasia</th>
-                  <th>Email</th>
-                  <th>WhatsApp</th>
-                  <th>Status</th>
-                  <th>Ações</th>
+                  <th className="py-1 px-2">ID</th>
+                  <th className="py-1 px-2">CNPJ</th>
+                  <th className="py-1 px-2">Razão Social</th>
+                  <th className="py-1 px-2">Nome Fantasia</th>
+                  <th className="py-1 px-2">Email</th>
+                  <th className="py-1 px-2">WhatsApp</th>
+                  <th className="py-1 px-2">Status</th>
+                  <th className="py-1 px-2">Ações</th>
                 </tr>
               </thead>
               <tbody>
