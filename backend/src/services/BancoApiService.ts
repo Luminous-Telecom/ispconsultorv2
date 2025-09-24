@@ -673,7 +673,7 @@ export class BancoApiService {
 
     const charges = parcelas.map(parcela => ({
         value: Math.round(parcela.valor_parcela * 100), // Converter para centavos
-      expire_at: parcela.data_vencimento.toISOString().split('T')[0], // Formato YYYY-MM-DD
+      expire_at: new Date(parcela.data_vencimento).toISOString().split('T')[0], // Formato YYYY-MM-DD
       customer: {
         name: cliente.nome_fantasia || cliente.razao_social,
         email: cliente.email,
@@ -715,7 +715,7 @@ export class BancoApiService {
       },
       payment: {
         banking_billet: {
-          expire_at: parcelas[0]?.data_vencimento.toISOString().split('T')[0], // Formato YYYY-MM-DD
+          expire_at: new Date(parcelas[0]?.data_vencimento).toISOString().split('T')[0], // Formato YYYY-MM-DD
           customer: {
             name: cliente.nome_fantasia || cliente.razao_social,
             email: cliente.email,

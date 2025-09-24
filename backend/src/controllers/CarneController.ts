@@ -792,7 +792,7 @@ export class CarneController {
             status_banco: resultado.data?.status,
             carnet_id: carne.carnet_id,
             parcelas_total: (await carne.getParcelas()).length,
-            parcelas_pagas: (await carne.getParcelas()).filter(p => p.status === 'pago').length
+            parcelas_pagas: (await carne.getParcelas()).filter((p: any) => p.status === 'pago').length
           }
         });
       } else {
