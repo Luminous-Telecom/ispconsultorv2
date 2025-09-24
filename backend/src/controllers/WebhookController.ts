@@ -11,15 +11,9 @@ export class WebhookController {
    * (PIX, Bolix, carnês, boletos individuais, etc.)
    */
   static async efiWebhook(req: Request, res: Response): Promise<void> {
-      logger.info('=== WEBHOOK EFÍ UNIFICADO RECEBIDO ===');
-      logger.info('Headers:', req.headers);
-      logger.info('Body:', req.body);
-      logger.info('Content-Type:', req.get('Content-Type'));
-      
-      const payload = req.body;
-      logger.info('Payload decodificado:', JSON.stringify(payload, null, 2));
-    
     try {
+      const payload = req.body;
+      
       // Verificar se é um token de notificação (form-urlencoded)
       if (req.get('Content-Type') === 'application/x-www-form-urlencoded' && 
           payload.notification && 
@@ -485,17 +479,6 @@ export class WebhookController {
           if (dados.qrcode) updateData.qrcode = dados.qrcode;
           if (dados.qrcode_image) updateData.qrcode_image = dados.qrcode_image;
           
-          logger.info('Dados atualizados da parcela obtidos da EFI', {
-            parcela_id: parcela.id,
-            charge_id: chargeId,
-            dados_atualizados: {
-              codigo_barras: !!dados.codigo_barras,
-              linha_digitavel: !!dados.linha_digitavel,
-              url_boleto: !!dados.url_boleto,
-              qrcode: !!dados.qrcode,
-              qrcode_image: !!dados.qrcode_image
-            }
-          });
         } else {
           // Se não conseguir consultar da EFI, gerar dados fictícios como fallback
           const codigoBarras = await parcela.gerarCodigoBarras();
@@ -890,13 +873,6 @@ export class WebhookController {
       if (resultado.success && resultado.data) {
         const dados = resultado.data;
         
-        // Log detalhado da resposta da EFI
-        logger.info('Resposta completa da EFI', {
-          parcela_id: parcela.id,
-          charge_id: parcela.charge_id,
-          dados_completos: dados,
-          chaves_disponiveis: Object.keys(dados || {})
-        });
         
         // Extrair dados específicos baseado na estrutura real da EFI
         const dadosAtualizados: any = {};
@@ -953,12 +929,6 @@ export class WebhookController {
           });
         }
         
-        // Log dos dados extraídos
-        logger.info('Dados extraídos da EFI', {
-          parcela_id: parcela.id,
-          charge_id: parcela.charge_id,
-          dados_extraidos: dadosAtualizados
-        });
         
         return { 
           success: true, 

@@ -147,12 +147,6 @@ export class BancoApiService {
     try {
       const endpoint = config.cobranca_base_url + config.token;
       
-      logger.info('Obtendo token da EFI', {
-        endpoint,
-        banco_id: banco.id,
-        client_id: banco.client_id_producao ? 'configurado' : 'não configurado',
-        client_secret: banco.client_secret_producao ? 'configurado' : 'não configurado'
-      });
       
       let authData: any = {};
       
@@ -171,10 +165,6 @@ export class BancoApiService {
       });
 
       if (response.data && response.data.access_token) {
-        logger.info('Token obtido com sucesso', {
-          token_length: response.data.access_token.length,
-          expires_in: response.data.expires_in
-        });
         return response.data.access_token;
       }
 
@@ -809,12 +799,6 @@ export class BancoApiService {
       
       const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_parcela_cancelar}/${carne.carnet_id}/parcel/${parcela.numero_parcela}/settle`;
 
-      logger.info('Enviando requisição para liquidar parcela', {
-        endpoint,
-        carnet_id: carne.carnet_id,
-        numero_parcela: parcela.numero_parcela,
-        parcela_id: parcela.id
-      });
 
       const response = await axios.put(endpoint, {}, {
         headers: {
@@ -822,11 +806,6 @@ export class BancoApiService {
         }
       });
 
-      logger.info('Resposta da liquidação', {
-        endpoint,
-        status: response.status,
-        data: response.data
-      });
 
       if (response.status >= 200 && response.status < 300) {
         return {
