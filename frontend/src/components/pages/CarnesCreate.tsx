@@ -202,7 +202,7 @@ const CarnesCreate: React.FC = () => {
                         <option value={0}>Selecione um cliente</option>
                         {(clientes && Array.isArray(clientes)) ? clientes.map((cliente: any) => (
                           <option key={cliente.id} value={cliente.id}>
-                            {cliente.razao_social}
+                            #{cliente.id} - {cliente.razao_social}
                           </option>
                         )) : []}
                       </select>
@@ -236,7 +236,7 @@ const CarnesCreate: React.FC = () => {
                         <option value={0}>Selecione um plano</option>
                         {planosFiltrados.map((plano: any) => (
                           <option key={plano.id} value={plano.id}>
-                            {plano.nome_plano} - R$ {parseFloat(plano.valor_mensal).toFixed(2)}
+                            #{plano.id} - {plano.nome_plano} - R$ {parseFloat(plano.valor_mensal).toFixed(2)}
                           </option>
                         ))}
                       </select>
@@ -264,7 +264,7 @@ const CarnesCreate: React.FC = () => {
                         <option value={0}>Selecione um banco</option>
                         {(bancos && Array.isArray(bancos)) ? bancos.filter((banco: any) => banco.ativo).map((banco: any) => (
                           <option key={banco.id} value={banco.id}>
-                            {banco.nome} ({banco.tipo})
+                            #{banco.id} - {banco.nome} ({banco.tipo})
                           </option>
                         )) : []}
                       </select>
@@ -425,21 +425,21 @@ const CarnesCreate: React.FC = () => {
                   <div className="mb-3">
                     <strong>Cliente:</strong><br />
                     <span className="text-muted">
-                      {(clientes && Array.isArray(clientes)) ? clientes.find((c: any) => c.id === formData.cliente_id)?.razao_social : 'N/A'}
+                      {(clientes && Array.isArray(clientes)) ? `#${clientes.find((c: any) => c.id === formData.cliente_id)?.id} - ${clientes.find((c: any) => c.id === formData.cliente_id)?.razao_social}` : 'N/A'}
                     </span>
                   </div>
                   
                   <div className="mb-3">
                     <strong>Plano:</strong><br />
                     <span className="text-muted">
-                      {(planos && Array.isArray(planos)) ? planos.find((p: any) => p.id === formData.plano_id)?.nome_plano : 'N/A'}
+                      {(planos && Array.isArray(planos)) ? `#${planos.find((p: any) => p.id === formData.plano_id)?.id} - ${planos.find((p: any) => p.id === formData.plano_id)?.nome_plano}` : 'N/A'}
                     </span>
                   </div>
                   
                   <div className="mb-3">
                     <strong>Banco:</strong><br />
                     <span className="text-muted">
-                      {(bancos && Array.isArray(bancos)) ? bancos.find((b: any) => b.id === formData.banco_id)?.nome : 'N/A'}
+                      {(bancos && Array.isArray(bancos)) ? `#${bancos.find((b: any) => b.id === formData.banco_id)?.id} - ${bancos.find((b: any) => b.id === formData.banco_id)?.nome}` : 'N/A'}
                     </span>
                   </div>
                   

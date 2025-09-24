@@ -266,6 +266,38 @@ const CarneParcelas: React.FC = () => {
         </div>
       </div>
 
+      {/* Informações do Carnê */}
+      {carneData && (
+        <div className="card mb-4">
+          <div className="card-header">
+            <h5 className="card-title mb-0">Informações do Carnê</h5>
+          </div>
+          <div className="card-body">
+            <div className="row">
+              <div className="col-md-6">
+                <p><strong>ID do Carnê:</strong> <code className="text-primary">#{carneData.id}</code></p>
+                <p><strong>Número do Carnê:</strong> {carneData.numero_carne}</p>
+                <p><strong>Cliente:</strong> {carneData.cliente?.razao_social}</p>
+                <p><strong>Plano:</strong> {carneData.plano?.nome_plano}</p>
+                <p><strong>Banco:</strong> {carneData.banco?.nome}</p>
+              </div>
+              <div className="col-md-6">
+                <p><strong>Valor Total:</strong> R$ {Number(carneData.valor_total || 0).toFixed(2).replace('.', ',')}</p>
+                <p><strong>Parcelas:</strong> {carneData.quantidade_parcelas}</p>
+                <p><strong>Status:</strong> 
+                  <span className={`badge ms-2 ${getStatusBadgeClass(carneData.status)}`}>
+                    {getStatusLabel(carneData.status)}
+                  </span>
+                </p>
+                {carneData.carnet_id && (
+                  <p><strong>Carnet ID:</strong> <code className="text-info">{carneData.carnet_id}</code></p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filtros */}
       <div className="card mb-4">
         <div className="card-body">
@@ -325,6 +357,7 @@ const CarneParcelas: React.FC = () => {
             <table className="table table-striped">
               <thead>
                 <tr>
+                  <th>ID Parcela</th>
                   <th>Parcela</th>
                   <th>Valor</th>
                   <th>Vencimento</th>
@@ -337,7 +370,7 @@ const CarneParcelas: React.FC = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="text-center">
+                    <td colSpan={8} className="text-center">
                       <div className="spinner-border" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
@@ -346,6 +379,9 @@ const CarneParcelas: React.FC = () => {
                 ) : parcelas.length > 0 ? (
                   parcelas.map((parcela: any) => (
                     <tr key={parcela.id}>
+                      <td>
+                        <code className="text-primary">#{parcela.id}</code>
+                      </td>
                       <td>
                         <strong>#{parcela.numero_parcela}</strong>
                       </td>
@@ -404,7 +440,7 @@ const CarneParcelas: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="text-center">Nenhuma parcela encontrada</td>
+                    <td colSpan={8} className="text-center">Nenhuma parcela encontrada</td>
                   </tr>
                 )}
               </tbody>

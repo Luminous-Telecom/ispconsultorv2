@@ -107,6 +107,7 @@ const Clientes: React.FC = () => {
             <table className="table table-striped">
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>CNPJ</th>
                   <th>Razão Social</th>
                   <th>Nome Fantasia</th>
@@ -119,7 +120,7 @@ const Clientes: React.FC = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="text-center">
+                    <td colSpan={8} className="text-center">
                       <div className="spinner-border" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
@@ -128,6 +129,9 @@ const Clientes: React.FC = () => {
                 ) : clientesData?.data && clientesData.data.length > 0 ? (
                   clientesData.data.map((cliente) => (
                     <tr key={cliente.id}>
+                      <td>
+                        <code className="text-primary">#{cliente.id}</code>
+                      </td>
                       <td>{cliente.cnpj}</td>
                       <td>{cliente.razao_social}</td>
                       <td>{cliente.nome_fantasia || '-'}</td>
@@ -168,7 +172,7 @@ const Clientes: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="text-center">Nenhum cliente encontrado</td>
+                    <td colSpan={8} className="text-center">Nenhum cliente encontrado</td>
                   </tr>
                 )}
               </tbody>

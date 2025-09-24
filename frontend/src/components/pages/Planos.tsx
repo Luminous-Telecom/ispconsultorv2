@@ -127,6 +127,7 @@ const Planos: React.FC = () => {
             <table className="table table-striped">
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Nome do Plano</th>
                   <th>Descrição</th>
                   <th>Valor Mensal</th>
@@ -138,7 +139,7 @@ const Planos: React.FC = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="text-center">
+                    <td colSpan={7} className="text-center">
                       <div className="spinner-border" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
@@ -147,6 +148,9 @@ const Planos: React.FC = () => {
                 ) : planosData?.data && planosData.data.length > 0 ? (
                   planosData.data.map((plano: any) => (
                     <tr key={plano.id}>
+                      <td>
+                        <code className="text-primary">#{plano.id}</code>
+                      </td>
                       <td>
                         <strong>{plano.nome_plano}</strong>
                       </td>
@@ -190,7 +194,7 @@ const Planos: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="text-center">Nenhum plano encontrado</td>
+                    <td colSpan={7} className="text-center">Nenhum plano encontrado</td>
                   </tr>
                 )}
               </tbody>

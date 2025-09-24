@@ -139,6 +139,7 @@ const Bancos: React.FC = () => {
             <table className="table table-striped">
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Nome</th>
                   <th>Tipo</th>
                   <th>Descrição</th>
@@ -150,7 +151,7 @@ const Bancos: React.FC = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="text-center">
+                    <td colSpan={7} className="text-center">
                       <div className="spinner-border" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
@@ -159,6 +160,9 @@ const Bancos: React.FC = () => {
                 ) : bancosData?.data && bancosData.data.length > 0 ? (
                   bancosData.data.map((banco: any) => (
                     <tr key={banco.id}>
+                      <td>
+                        <code className="text-primary">#{banco.id}</code>
+                      </td>
                       <td>
                         <strong>{banco.nome}</strong>
                       </td>
@@ -214,7 +218,7 @@ const Bancos: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="text-center">Nenhum banco encontrado</td>
+                    <td colSpan={7} className="text-center">Nenhum banco encontrado</td>
                   </tr>
                 )}
               </tbody>
