@@ -265,6 +265,10 @@ export class ClienteController {
       console.log('=== DEBUG CLIENTE UPDATE ===');
       console.log('ID:', id);
       console.log('Body recebido:', JSON.stringify(req.body, null, 2));
+      console.log('Tipos dos campos:');
+      Object.entries(req.body).forEach(([key, value]) => {
+        console.log(`${key}: ${typeof value} = ${value}`);
+      });
 
       // Validar dados
       const { error, value } = this.updateSchema.validate(req.body);
