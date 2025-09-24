@@ -13,6 +13,7 @@ interface Plano {
   tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
   quantidade_usuarios?: number;
   valor_mensal: number;
+  periodicidade?: string;
   status: 'ativo' | 'inativo' | 'suspenso';
   created_at: string;
 }
@@ -107,9 +108,18 @@ const Planos: React.FC = () => {
     },
     {
       key: 'valor_mensal',
-      label: 'Valor Mensal',
+      label: 'Valor',
       render: (plano: Plano) => (
         <strong>R$ {plano.valor_mensal ? Number(plano.valor_mensal).toFixed(2).replace('.', ',') : '0,00'}</strong>
+      )
+    },
+    {
+      key: 'periodicidade',
+      label: 'Periodicidade',
+      render: (plano: Plano) => (
+        <span className="badge bg-light text-dark">
+          {plano.periodicidade ? plano.periodicidade.charAt(0).toUpperCase() + plano.periodicidade.slice(1) : 'N/A'}
+        </span>
       )
     },
     {
