@@ -236,7 +236,7 @@ const CarnesCreate: React.FC = () => {
                         <option value={0}>Selecione um plano</option>
                         {planosFiltrados.map((plano: any) => (
                           <option key={plano.id} value={plano.id}>
-                            #{plano.id} - {plano.nome_plano} - R$ {plano.valor_mensal ? parseFloat(plano.valor_mensal).toFixed(2) : '0,00'}
+                            #{plano.id} - {plano.nome_plano} - R$ {plano.valor_mensal ? Number(plano.valor_mensal).toFixed(2) : '0,00'}
                           </option>
                         ))}
                       </select>

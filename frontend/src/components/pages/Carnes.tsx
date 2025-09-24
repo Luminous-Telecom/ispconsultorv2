@@ -143,7 +143,7 @@ const Carnes: React.FC = () => {
       key: 'valor_total',
       label: 'Valor Total',
       render: (carne: any) => (
-        <strong>R$ {carne.valor_total ? parseFloat(carne.valor_total).toFixed(2).replace('.', ',') : '0,00'}</strong>
+        <strong>R$ {carne.valor_total ? Number(carne.valor_total).toFixed(2).replace('.', ',') : '0,00'}</strong>
       )
     },
     {
