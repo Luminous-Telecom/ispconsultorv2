@@ -28,6 +28,8 @@ const Carnes: React.FC = () => {
       case 'cancelado': return 'bg-danger';
       case 'pago': return 'bg-primary';
       case 'pendente': return 'bg-warning';
+      case 'parcial': return 'bg-warning';
+      case 'registrado': return 'bg-info';
       default: return 'bg-secondary';
     }
   };

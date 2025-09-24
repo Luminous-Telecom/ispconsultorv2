@@ -339,7 +339,7 @@ export class WebhookController {
           });
           
           if (carne) {
-            const statusLocal = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente';
+            const statusLocal = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
             const oldStatus = carne.status;
             
             await carne.update({ status: statusLocal });
@@ -567,7 +567,7 @@ export class WebhookController {
       }
 
       // Atualizar status do carnê
-      const novoStatus = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente';
+      const novoStatus = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
       await carne.update({ status: novoStatus });
 
       logger.info('Status do carnê atualizado', {
@@ -694,7 +694,7 @@ export class WebhookController {
       }
 
       // Atualizar status do carnê
-      const novoStatus = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente';
+      const novoStatus = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
       await carne.update({ status: novoStatus });
 
       logger.info('Status do carnê atualizado via carnet', {

@@ -131,7 +131,7 @@ export interface Carne extends BaseEntity {
   valor_total: number;
   quantidade_parcelas: number;
   data_vencimento_primeira: Date;
-  status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente';
+  status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
   observacoes?: string;
   codigo_barras?: string;
   linha_digitavel?: string;

@@ -58,6 +58,9 @@ const CarneParcelas: React.FC = () => {
       case 'pendente': return 'bg-warning';
       case 'vencido': return 'bg-danger';
       case 'cancelado': return 'bg-secondary';
+      case 'registrado': return 'bg-info';
+      case 'ativo': return 'bg-primary';
+      case 'parcial': return 'bg-warning';
       default: return 'bg-secondary';
     }
   };
@@ -68,6 +71,9 @@ const CarneParcelas: React.FC = () => {
       case 'pendente': return 'Pendente';
       case 'vencido': return 'Vencido';
       case 'cancelado': return 'Cancelado';
+      case 'registrado': return 'Registrado';
+      case 'ativo': return 'Ativo';
+      case 'parcial': return 'Parcial';
       default: return status;
     }
   };
@@ -125,8 +131,12 @@ const CarneParcelas: React.FC = () => {
       // Aqui será chamada a função que envia o carnê para o banco
       // Por enquanto, vamos simular o processo
       await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Atualizar o status do carnê para 'registrado'
+      // Em uma implementação real, isso seria feito via API
       success('Carnê registrado no banco com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
     } catch (err: any) {
       error(err.response?.data?.message || 'Erro ao registrar carnê no banco');
     } finally {
@@ -148,14 +158,18 @@ const CarneParcelas: React.FC = () => {
         <div className="btn-group" role="group">
           <button 
             type="button" 
-            className="btn btn-primary"
+            className={`btn ${carneData?.status === 'registrado' ? 'btn-success' : 'btn-primary'}`}
             onClick={handleRegistrarNoBanco}
-            disabled={!carneData?.carnet_id || isRegistering}
+            disabled={!carneData?.carnet_id || isRegistering || carneData?.status === 'registrado'}
           >
             {isRegistering ? (
               <>
                 <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                 Registrando...
+              </>
+            ) : carneData?.status === 'registrado' ? (
+              <>
+                <i className="bi bi-check-circle"></i> Registrado no Banco
               </>
             ) : (
               <>

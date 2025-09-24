@@ -37,7 +37,7 @@ export class Carne extends Model<
   declare valor_total: number;
   declare quantidade_parcelas: number;
   declare data_vencimento_primeira: Date;
-  declare status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente';
+  declare status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
   declare observacoes: string | null;
   declare codigo_barras: string | null;
   declare linha_digitavel: string | null;
@@ -311,7 +311,7 @@ Carne.init(
       allowNull: false
     },
     status: {
-      type: DataTypes.ENUM('ativo', 'pago', 'cancelado', 'parcial', 'pendente'),
+      type: DataTypes.ENUM('ativo', 'pago', 'cancelado', 'parcial', 'pendente', 'registrado'),
       allowNull: false,
       defaultValue: 'ativo'
     },
