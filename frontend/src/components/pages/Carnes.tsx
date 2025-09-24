@@ -148,40 +148,45 @@ const Carnes: React.FC = () => {
   ];
 
   // Renderizar ações da tabela
-  const renderActions = (carne: any) => (
-    <div className="btn-group btn-group-sm" role="group">
-      <Link 
-        to={`/carne-parcelas?carne_id=${carne.id}`} 
-        className="btn btn-outline-info"
-        title="Ver Parcelas"
-      >
-        <i className="bi bi-list-ol"></i>
-      </Link>
-      <button 
-        type="button" 
-        className="btn btn-outline-primary"
-        title="Imprimir"
-        onClick={() => handleImprimir(carne.id)}
-      >
-        <i className="bi bi-printer"></i>
-      </button>
-      <Link 
-        to={`/carnes/${carne.id}/edit`} 
-        className="btn btn-outline-warning"
-        title="Editar"
-      >
-        <i className="bi bi-pencil"></i>
-      </Link>
-      <button 
-        type="button" 
-        className="btn btn-outline-danger"
-        title="Excluir"
-        onClick={() => handleDelete(carne.id)}
-      >
-        <i className="bi bi-trash"></i>
-      </button>
-    </div>
-  );
+  const renderActions = (carne: any) => {
+    const temParcelasPagas = carne.parcelas_pagas && carne.parcelas_pagas > 0;
+    
+    return (
+      <div className="btn-group btn-group-sm" role="group">
+        <Link 
+          to={`/carne-parcelas?carne_id=${carne.id}`} 
+          className="btn btn-outline-info"
+          title="Ver Parcelas"
+        >
+          <i className="bi bi-list-ol"></i>
+        </Link>
+        <button 
+          type="button" 
+          className="btn btn-outline-primary"
+          title="Imprimir"
+          onClick={() => handleImprimir(carne.id)}
+        >
+          <i className="bi bi-printer"></i>
+        </button>
+        <Link 
+          to={`/carnes/${carne.id}/edit`} 
+          className="btn btn-outline-warning"
+          title="Editar"
+        >
+          <i className="bi bi-pencil"></i>
+        </Link>
+        <button 
+          type="button" 
+          className={`btn ${temParcelasPagas ? 'btn-outline-secondary' : 'btn-outline-danger'}`}
+          title={temParcelasPagas ? "Não é possível excluir carnê com parcelas pagas" : "Excluir"}
+          onClick={() => handleDelete(carne.id)}
+          disabled={temParcelasPagas}
+        >
+          <i className="bi bi-trash"></i>
+        </button>
+      </div>
+    );
+  };
 
   return (
     <>
