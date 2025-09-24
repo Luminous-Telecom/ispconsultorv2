@@ -429,6 +429,8 @@ export class CarneController {
   static async imprimir(req: Request, res: Response): Promise<void> {
     try {
       const { carne } = req.params;
+      console.log('=== CARNE CONTROLLER IMPRIMIR CHAMADO ===');
+      console.log('Carne ID recebido:', carne);
       const registro = await Carne.findByPk(carne, { 
         include: [
           { association: 'cliente' },
@@ -520,8 +522,24 @@ export class CarneController {
             DEMONSTRATIVO2: primeiraParcela.carne?.banco?.demonstrativo2 || '',
             DEMONSTRATIVO3: primeiraParcela.carne?.banco?.demonstrativo3 || '',
             DEMONSTRATIVO4: primeiraParcela.carne?.banco?.demonstrativo4 || '',
-            VALOR_BOLETO: parseFloat(primeiraParcela.valor_parcela.toString()).toFixed(2).replace('.', ',')
+            VALOR_BOLETO: parseFloat(primeiraParcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
+            // Variáveis do plano
+            NOME_PLANO: primeiraParcela.carne?.plano?.nome_plano || '',
+            DESCRICAO_PLANO: primeiraParcela.carne?.plano?.descricao || '',
+            TIPO_SERVICO: primeiraParcela.carne?.plano?.tipo_servico || '',
+            QUANTIDADE_USUARIOS: primeiraParcela.carne?.plano?.quantidade_usuarios?.toString() || '0',
+            VALOR_PLANO: primeiraParcela.carne?.plano?.valor_mensal ? parseFloat(primeiraParcela.carne.plano.valor_mensal.toString()).toFixed(2).replace('.', ',') : '0,00',
+            PERIODICIDADE: primeiraParcela.carne?.plano?.periodicidade || ''
           };
+
+          console.log('=== VARIÁVEIS DO PLANO NO TOPO ===');
+          console.log('NOME_PLANO:', variables.NOME_PLANO);
+          console.log('DESCRICAO_PLANO:', variables.DESCRICAO_PLANO);
+          console.log('TIPO_SERVICO:', variables.TIPO_SERVICO);
+          console.log('QUANTIDADE_USUARIOS:', variables.QUANTIDADE_USUARIOS);
+          console.log('VALOR_PLANO:', variables.VALOR_PLANO);
+          console.log('PERIODICIDADE:', variables.PERIODICIDADE);
+          console.log('==================================');
 
           // Substituir variáveis no template do topo
           Object.entries(variables).forEach(([key, value]) => {
