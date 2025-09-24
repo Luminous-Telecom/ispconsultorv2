@@ -11,6 +11,7 @@ interface Plano {
   nome_plano: string;
   descricao?: string;
   tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
+  quantidade_usuarios?: number;
   valor_mensal: number;
   status: 'ativo' | 'inativo' | 'suspenso';
   created_at: string;
@@ -92,6 +93,15 @@ const Planos: React.FC = () => {
       render: (plano: Plano) => (
         <span className="badge bg-info">
           {plano.tipo_servico ? plano.tipo_servico.charAt(0).toUpperCase() + plano.tipo_servico.slice(1) : 'N/A'}
+        </span>
+      )
+    },
+    {
+      key: 'quantidade_usuarios',
+      label: 'Quantidade de Usuários',
+      render: (plano: Plano) => (
+        <span className="badge bg-secondary">
+          {plano.quantidade_usuarios ? plano.quantidade_usuarios.toString() : 'N/A'}
         </span>
       )
     },
