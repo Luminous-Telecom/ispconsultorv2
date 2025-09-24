@@ -3,7 +3,6 @@ import { Carne } from '../models/Carne';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import fs from 'fs';
 import path from 'path';
-import QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
 import { createCanvas } from 'canvas';
 import { Cliente } from '../models/Cliente';
@@ -513,16 +512,6 @@ export class CarneController {
           const templateCorpoPath = path.join(__dirname, '../templates/boleto-corpo-inner.html');
           let templateCorpo = fs.readFileSync(templateCorpoPath, { encoding: 'utf8' });
 
-          // Gerar QR Code e código de barras
-          const generateQRCode = async (parcela: any) => {
-            try {
-              const qrData = `ID:${parcela.id}|VALOR:${parcela.valor_parcela}|VENC:${parcela.data_vencimento}`;
-              return await QRCode.toDataURL(qrData);
-            } catch (error) {
-              console.error('Erro ao gerar QR Code:', error);
-              return '';
-            }
-          };
 
           const generateBarcodeBase64 = (data: string) => {
             try {
@@ -542,7 +531,7 @@ export class CarneController {
             }
           };
 
-          const qrCodeData = await generateQRCode(parcela);
+          const qrCodeData = parcela.qrcode || '';
           const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
 
           // Gerar variáveis básicas

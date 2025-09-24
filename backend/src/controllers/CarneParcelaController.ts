@@ -8,7 +8,6 @@ import fs from 'fs';
 import path from 'path';
 import JsBarcode from 'jsbarcode';
 import { createCanvas } from 'canvas';
-import QRCode from 'qrcode';
 
 export class CarneParcelaController {
   
@@ -124,15 +123,6 @@ export class CarneParcelaController {
       return '12345.67890.12345.678901.23456.789012.3.45678901234567';
     };
 
-    const generateQRCode = async (parcela: any) => {
-      try {
-        const qrData = `ID:${parcela.id}|VALOR:${parcela.valor_parcela}|VENC:${parcela.data_vencimento}`;
-        return await QRCode.toDataURL(qrData);
-      } catch (error) {
-        console.error('Erro ao gerar QR Code:', error);
-        return '';
-      }
-    };
 
     const generateBarcodeBase64 = (data: string) => {
       try {
@@ -153,7 +143,7 @@ export class CarneParcelaController {
     };
 
     // Gerar QR Code primeiro
-    const qrCodeData = await generateQRCode(parcela);
+    const qrCodeData = parcela.qrcode || '';
 
     return {
       // Dados da empresa
@@ -621,16 +611,6 @@ export class CarneParcelaController {
       let templateTopo = fs.readFileSync(templateTopoPath, { encoding: 'utf8' });
       let templateCorpo = fs.readFileSync(templateCorpoPath, { encoding: 'utf8' });
 
-      // Gerar QR Code e código de barras
-      const generateQRCode = async (parcela: any) => {
-        try {
-          const qrData = `ID:${parcela.id}|VALOR:${parcela.valor_parcela}|VENC:${parcela.data_vencimento}`;
-          return await QRCode.toDataURL(qrData);
-        } catch (error) {
-          console.error('Erro ao gerar QR Code:', error);
-          return '';
-        }
-      };
 
       const generateBarcodeBase64 = (data: string) => {
         try {
@@ -650,7 +630,7 @@ export class CarneParcelaController {
         }
       };
 
-      const qrCodeData = await generateQRCode(parcela);
+      const qrCodeData = parcela.qrcode || '';
       const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
 
       // Gerar variáveis básicas
