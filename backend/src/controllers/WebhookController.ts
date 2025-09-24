@@ -929,24 +929,28 @@ export class WebhookController {
           dadosAtualizados.codigo_barras = dados.payment.carnet.barcode.replace(/[.\s]/g, '');
         }
         
-        // Verificar se há dados PIX disponíveis (pode estar em diferentes locais)
-        if (dados.payment?.pix) {
-          if (dados.payment.pix.qrcode) {
-            dadosAtualizados.qrcode = dados.payment.pix.qrcode;
+        // Para carnês, verificar se há dados PIX disponíveis
+        // Nota: No sandbox da EFI, dados PIX podem não estar disponíveis para carnês
+        if (dados.payment?.carnet?.pix) {
+          logger.info('Dados PIX encontrados em payment.carnet.pix', {
+            parcela_id: parcela.id,
+            charge_id: parcela.charge_id,
+            pix_data: dados.payment.carnet.pix
+          });
+          
+          if (dados.payment.carnet.pix.qrcode) {
+            dadosAtualizados.qrcode = dados.payment.carnet.pix.qrcode;
           }
-          if (dados.payment.pix.qrcode_image) {
-            dadosAtualizados.qrcode_image = dados.payment.pix.qrcode_image;
+          if (dados.payment.carnet.pix.qrcode_image) {
+            dadosAtualizados.qrcode_image = dados.payment.carnet.pix.qrcode_image;
           }
-        }
-        
-        // Verificar se há dados PIX no nível raiz
-        if (dados.pix) {
-          if (dados.pix.qrcode) {
-            dadosAtualizados.qrcode = dados.pix.qrcode;
-          }
-          if (dados.pix.qrcode_image) {
-            dadosAtualizados.qrcode_image = dados.pix.qrcode_image;
-          }
+        } else {
+          logger.info('Dados PIX não disponíveis para carnê (normal no sandbox)', {
+            parcela_id: parcela.id,
+            charge_id: parcela.charge_id,
+            tem_payment_carnet: !!dados.payment?.carnet,
+            chaves_carnet: dados.payment?.carnet ? Object.keys(dados.payment.carnet) : []
+          });
         }
         
         // Log dos dados extraídos
