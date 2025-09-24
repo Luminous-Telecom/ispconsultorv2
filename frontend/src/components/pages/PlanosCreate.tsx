@@ -195,7 +195,7 @@ const PlanosCreate: React.FC = () => {
                   <div className="col-md-4">
                     <div className="mb-3">
                       <label htmlFor="valor_mensal" className="form-label">
-                        Valor Mensal (R$) <span className="text-danger">*</span>
+                        Valor (R$) <span className="text-danger">*</span>
                       </label>
                       <input
                         type="number"
