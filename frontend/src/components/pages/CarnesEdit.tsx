@@ -70,31 +70,22 @@ const CarnesEdit: React.FC = () => {
 
   // Logs para monitorar carregamento dos dados
   useEffect(() => {
-    if (clientes) {
-      console.log('✅ Clientes carregados (Edit):', clientes);
-    }
     if (clientesError) {
-      console.error('❌ Erro ao carregar clientes (Edit):', clientesError);
+      console.error('Erro ao carregar clientes:', clientesError);
     }
-  }, [clientes, clientesError]);
+  }, [clientesError]);
 
   useEffect(() => {
-    if (planos) {
-      console.log('✅ Planos carregados (Edit):', planos);
-    }
     if (planosError) {
-      console.error('❌ Erro ao carregar planos (Edit):', planosError);
+      console.error('Erro ao carregar planos:', planosError);
     }
-  }, [planos, planosError]);
+  }, [planosError]);
 
   useEffect(() => {
-    if (bancos) {
-      console.log('✅ Bancos carregados (Edit):', bancos);
-    }
     if (bancosError) {
-      console.error('❌ Erro ao carregar bancos (Edit):', bancosError);
+      console.error('Erro ao carregar bancos:', bancosError);
     }
-  }, [bancos, bancosError]);
+  }, [bancosError]);
 
   // Mutation para atualizar carnê
   const updateCarneMutation = useMutation({
