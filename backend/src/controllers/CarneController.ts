@@ -669,8 +669,8 @@ export class CarneController {
 
   static async gerarTitulos(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params as any;
-      const carne = await Carne.findByPk(id, {
+      const { carne } = req.params as any;
+      const carneObj = await Carne.findByPk(carne, {
         include: [
           { association: 'cliente' },
           { association: 'plano' },
@@ -679,7 +679,7 @@ export class CarneController {
         ]
       });
       
-      if (!carne) {
+      if (!carneObj) {
         res.status(404).json({ 
           success: false,
           error: 'Carnê não encontrado' 
@@ -687,7 +687,7 @@ export class CarneController {
         return;
       }
 
-      const banco = await carne.getBanco();
+      const banco = await carneObj.getBanco();
       
       if (!banco || banco.tipo_banco !== 'efi') {
         res.status(400).json({ 
@@ -698,11 +698,11 @@ export class CarneController {
       }
 
       // Gerar carnê via API da EFI
-      const resultado = await BancoApiService.gerarCarne(carne);
+      const resultado = await BancoApiService.gerarCarne(carneObj);
       
       if (resultado.success) {
         // Atualizar carnê com dados retornados
-        await carne.update({
+        await carneObj.update({
           carnet_id: resultado.data?.carnet_id || null,
           codigo_barras: resultado.data?.codigo_barras || null,
           linha_digitavel: resultado.data?.linha_digitavel || null,
@@ -711,7 +711,7 @@ export class CarneController {
 
         // Atualizar parcelas com charge_ids
         if (resultado.data?.charges && Array.isArray(resultado.data.charges)) {
-          const parcelas = await carne.getParcelas();
+          const parcelas = await carneObj.getParcelas();
           for (let i = 0; i < parcelas.length && i < resultado.data.charges.length; i++) {
             const parcela = parcelas[i];
             const charge = resultado.data.charges[i];
@@ -749,8 +749,8 @@ export class CarneController {
 
   static async consultarStatus(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params as any;
-      const carne = await Carne.findByPk(id, {
+      const { carne } = req.params as any;
+      const carneObj = await Carne.findByPk(carne, {
         include: [
           { association: 'banco' },
           { association: 'parcelas' }
@@ -813,8 +813,8 @@ export class CarneController {
 
   static async cancelarNoBanco(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params as any;
-      const carne = await Carne.findByPk(id, {
+      const { carne } = req.params as any;
+      const carneObj = await Carne.findByPk(carne, {
         include: [
           { association: 'banco' },
           { association: 'parcelas' }
