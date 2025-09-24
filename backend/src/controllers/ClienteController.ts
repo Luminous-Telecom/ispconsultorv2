@@ -34,14 +34,18 @@ export class ClienteController {
     tipo_cobranca: Joi.string().max(50).allow(null, ''),
     valor_primeiro_titulo: Joi.alternatives().try(
       Joi.number().min(0),
-      Joi.string().valid('total', 'proporcional')
+      Joi.string().valid('total', 'proporcional'),
+      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "1.00"
     ).allow(null),
     isento_mensalidade: Joi.boolean().default(false),
     recebe_email: Joi.boolean().default(true),
     recebe_sms: Joi.boolean().default(false),
     recebe_whatsapp: Joi.boolean().default(false),
     dia_vencimento: Joi.number().min(1).max(31).allow(null),
-    conta_boleto: Joi.number().integer().min(1).allow(null),
+    conta_boleto: Joi.alternatives().try(
+      Joi.number().integer().min(1),
+      Joi.string().pattern(/^\d+$/) // Aceitar strings numéricas como "8"
+    ).allow(null),
     data_validade_desconto: Joi.date().allow(null)
   });
 
@@ -72,14 +76,18 @@ export class ClienteController {
     tipo_cobranca: Joi.string().max(50).allow(null, ''),
     valor_primeiro_titulo: Joi.alternatives().try(
       Joi.number().min(0),
-      Joi.string().valid('total', 'proporcional')
+      Joi.string().valid('total', 'proporcional'),
+      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "1.00"
     ).allow(null),
     isento_mensalidade: Joi.boolean(),
     recebe_email: Joi.boolean(),
     recebe_sms: Joi.boolean(),
     recebe_whatsapp: Joi.boolean(),
     dia_vencimento: Joi.number().min(1).max(31).allow(null),
-    conta_boleto: Joi.number().integer().min(1).allow(null),
+    conta_boleto: Joi.alternatives().try(
+      Joi.number().integer().min(1),
+      Joi.string().pattern(/^\d+$/) // Aceitar strings numéricas como "8"
+    ).allow(null),
     data_validade_desconto: Joi.date().allow(null)
   });
 
