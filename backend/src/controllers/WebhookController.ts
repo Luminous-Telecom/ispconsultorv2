@@ -133,7 +133,42 @@ export class WebhookController {
     try {
       logger.info(`Iniciando processamento de token de notificação: ${notificationToken}`);
       
-      // Buscar bancos EFI ativos
+      // Primeiro, tentar consultar usando custom_id para identificar o banco correto
+      // Buscar carnês recentes que possam ter esse token
+      const carnesRecentes = await Carne.findAll({
+        where: { 
+          status: ['ativo', 'pendente'],
+          created_at: {
+            [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) // Últimas 24h
+          }
+        },
+        include: [{ association: 'banco', where: { tipo_banco: 'efi', ativo: true } }],
+        order: [['created_at', 'DESC']]
+      });
+
+      // Tentar cada carnê recente para encontrar o banco correto
+      for (const carne of carnesRecentes) {
+        const banco = await carne.getBanco();
+        logger.info(`Tentando consultar token no banco do carnê ${carne.id}`, {
+          banco_id: banco.id,
+          banco_nome: banco.nome,
+          sandbox: banco.sandbox
+        });
+        
+        const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
+        
+        if (resultado.success) {
+          logger.info('Token encontrado no banco correto!', {
+            banco_id: banco.id,
+            carne_id: carne.id,
+            data_count: resultado.data?.data?.length || 0
+          });
+          
+          return await WebhookController.processarDadosNotificacao(resultado.data, banco);
+        }
+      }
+      
+      // Fallback: Buscar todos os bancos EFI ativos
       const bancosEfi = await Banco.findAll({
         where: { tipo_banco: 'efi', ativo: true }
       });
