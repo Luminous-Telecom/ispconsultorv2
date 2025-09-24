@@ -318,7 +318,7 @@ const CarnesShow: React.FC = () => {
                           </td>
                           <td>
                             <div className="btn-group btn-group-sm" role="group">
-                              {!parcela.pago ? (
+                              {!parcela.pago && (
                                 <button 
                                   type="button" 
                                   className="btn btn-success"
@@ -326,15 +326,6 @@ const CarnesShow: React.FC = () => {
                                   title="Marcar como pago"
                                 >
                                   <i className="bi bi-check"></i>
-                                </button>
-                              ) : (
-                                <button 
-                                  type="button" 
-                                  className="btn btn-warning"
-                                  onClick={() => handleDesmarcarPago(parcela.id)}
-                                  title="Desmarcar como pago"
-                                >
-                                  <i className="bi bi-x"></i>
                                 </button>
                               )}
                               <Link 
