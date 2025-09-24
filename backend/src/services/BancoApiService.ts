@@ -555,7 +555,7 @@ export class BancoApiService {
         parcelas: carne.quantidade_parcelas
       });
 
-      console.log('🔍 BancoApiService.gerarCarne - Dados do banco:', {
+      logger.info('🔍 BancoApiService.gerarCarne - Dados do banco:', {
         id: banco.id,
         nome: banco.nome,
         tipo_banco: banco.tipo_banco,
@@ -597,7 +597,9 @@ export class BancoApiService {
       // Preparar dados do carnê
       const dadosCarne = await this.prepararDadosCarne(banco, carne, cliente, config);
       
-      console.log('🔍 BancoApiService.gerarCarne - Dados preparados:', JSON.stringify(dadosCarne, null, 2));
+      logger.info('🔍 BancoApiService.gerarCarne - Dados preparados:', {
+        dadosCarne: dadosCarne
+      });
 
       const endpoint = config.cobranca_base_url + config.carnets;
       const headers = this.prepareHeaders(banco.tipo_banco, token);
@@ -682,32 +684,18 @@ export class BancoApiService {
       order: [['numero_parcela', 'ASC']]
     });
 
-    const charges = parcelas.map(parcela => ({
-        value: Math.round(parcela.valor_parcela * 100), // Converter para centavos
-      expire_at: new Date(parcela.data_vencimento).toISOString().split('T')[0], // Formato YYYY-MM-DD
-      customer: {
-        name: cliente.nome_fantasia || cliente.razao_social,
-        email: cliente.email,
-        phone: cliente.telefone,
-        document: cliente.cnpj,
-        address: {
-          street: cliente.endereco,
-          number: cliente.numero,
-          neighborhood: cliente.bairro,
-          city: cliente.cidade,
-          state: cliente.estado,
-          zipcode: cliente.cep
-        }
-      },
-      metadata: {
-        custom_id: parcela.id.toString()
-      }
-    }));
+    // Calcular valor por parcela (EFI espera valor do item em centavos por parcela)
+    const valorParcela = Number(carne.valor_total) / Number(carne.quantidade_parcelas);
+    const valorParcelaCentavos = Math.round(valorParcela * 100);
+
+    // Multa/Juros em basis points (ex.: 2.00% => 200)
+    const fineBp = Math.round(Number(banco.percentual_multa || 0) * 100);
+    const interestBp = Math.round(Number(banco.percentual_juros || 0) * 100);
 
     return {
       items: [{
-        name: 'Carnê de Serviços',
-        value: Math.round((Number(carne.valor_total) / Number(carne.quantidade_parcelas)) * 100), // Valor por parcela em centavos
+        name: 'Serviço',
+        value: valorParcelaCentavos,
         amount: 1
       }],
       customer: {
@@ -724,28 +712,15 @@ export class BancoApiService {
           zipcode: cliente.cep
         }
       },
-      payment: {
-        banking_billet: {
-          expire_at: new Date(parcelas[0]?.data_vencimento).toISOString().split('T')[0], // Formato YYYY-MM-DD
-          customer: {
-            name: cliente.nome_fantasia || cliente.razao_social,
-            email: cliente.email,
-            phone: cliente.telefone,
-            document: cliente.cnpj,
-            address: {
-              street: cliente.endereco,
-              number: cliente.numero,
-              neighborhood: cliente.bairro,
-              city: cliente.cidade,
-              state: cliente.estado,
-              zipcode: cliente.cep
-            }
-          }
-        }
+      expire_at: new Date(carne.data_vencimento_primeira).toISOString().split('T')[0], // Formato YYYY-MM-DD
+      repeats: Number(carne.quantidade_parcelas),
+      split_items: false,
+      configurations: {
+        fine: fineBp,
+        interest: interestBp
       },
-      charges,
       metadata: {
-        custom_id: carne.id.toString(),
+        custom_id: `carne_${carne.id}`,
         notification_url: `${baseUrl}/webhook/efi`
       }
     };
