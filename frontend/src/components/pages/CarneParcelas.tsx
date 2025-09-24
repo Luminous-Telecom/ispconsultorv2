@@ -5,6 +5,7 @@ import { CarneParcelaService } from '../../services/carneParcelaService';
 import { CarneService } from '../../services/carneService';
 import { getApiUrl } from '../../config/api';
 import { useNotification } from '../../hooks/useNotification';
+import DataTable from '../common/DataTable';
 
 const CarneParcelas: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -150,6 +151,101 @@ const CarneParcelas: React.FC = () => {
   const parcelasVencidas = parcelas.filter((p: any) => p.status === 'vencido').length;
   const valorTotal = parcelas.reduce((sum: number, p: any) => sum + parseFloat(p.valor_parcela), 0);
   const valorPago = parcelas.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + parseFloat(p.valor_parcela), 0);
+
+  // Definição das colunas da tabela
+  const columns = [
+    {
+      key: 'id',
+      label: 'ID',
+      render: (parcela: any) => <code className="text-primary">#{parcela.id}</code>
+    },
+    {
+      key: 'charge_id',
+      label: 'Charge ID',
+      render: (parcela: any) => (
+        <code className="text-info">
+          {parcela.charge_id || 'Não gerado'}
+        </code>
+      )
+    },
+    {
+      key: 'numero_parcela',
+      label: 'Parcela',
+      render: (parcela: any) => <strong>#{parcela.numero_parcela}</strong>
+    },
+    {
+      key: 'valor_parcela',
+      label: 'Valor',
+      render: (parcela: any) => (
+        <strong>R$ {parseFloat(parcela.valor_parcela).toFixed(2).replace('.', ',')}</strong>
+      )
+    },
+    {
+      key: 'data_vencimento',
+      label: 'Vencimento',
+      render: (parcela: any) => new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')
+    },
+    {
+      key: 'nosso_numero',
+      label: 'Nosso Número',
+      render: (parcela: any) => (
+        <code className="text-primary">
+          {parcela.nosso_numero || 'Não gerado'}
+        </code>
+      )
+    },
+    {
+      key: 'data_pagamento',
+      label: 'Pagamento',
+      render: (parcela: any) => (
+        parcela.data_pagamento ? 
+          new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : 
+          '-'
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (parcela: any) => (
+        <span className={`badge ${getStatusBadgeClass(parcela.status)}`}>
+          {getStatusLabel(parcela.status)}
+        </span>
+      )
+    }
+  ];
+
+  // Renderizar ações da tabela
+  const renderActions = (parcela: any) => (
+    <div className="btn-group btn-group-sm" role="group">
+      {parcela.status === 'pendente' && (
+        <button 
+          type="button" 
+          className="btn btn-outline-success"
+          title="Marcar como Pago"
+          onClick={() => handleMarcarPago(parcela.id)}
+          disabled={marcarPagoMutation.isPending}
+        >
+          <i className="bi bi-check"></i>
+        </button>
+      )}
+      <button 
+        type="button" 
+        className="btn btn-outline-primary"
+        title="Imprimir Boleto"
+        onClick={() => window.open(getApiUrl(`/boleto/web/${parcela.id}`), '_blank')}
+      >
+        <i className="bi bi-printer"></i>
+      </button>
+      <button 
+        type="button" 
+        className="btn btn-outline-warning"
+        title="Editar Parcela"
+        onClick={() => navigate(`/carne-parcelas/${parcela.id}/edit`)}
+      >
+        <i className="bi bi-pencil"></i>
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -351,126 +447,16 @@ const CarneParcelas: React.FC = () => {
       </div>
 
       {/* Tabela de Parcelas */}
-      <div className="card">
-        <div className="card-body p-2">
-          <div className="table-responsive">
-            <table className="table table-striped table-sm">
-              <thead>
-                <tr>
-                  <th className="py-1 px-2">ID</th>
-                  <th className="py-1 px-2">Charge ID</th>
-                  <th className="py-1 px-2">Parcela</th>
-                  <th className="py-1 px-2">Valor</th>
-                  <th className="py-1 px-2">Vencimento</th>
-                  <th className="py-1 px-2">Nosso Número</th>
-                  <th className="py-1 px-2">Pagamento</th>
-                  <th className="py-1 px-2">Status</th>
-                  <th className="py-1 px-2">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={9} className="text-center">
-                      <div className="spinner-border" role="status">
-                        <span className="visually-hidden">Carregando...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : parcelas.length > 0 ? (
-                  parcelas.map((parcela: any) => (
-                    <tr key={parcela.id}>
-                      <td className="py-1 px-2">
-                        <code className="text-primary">#{parcela.id}</code>
-                      </td>
-                      <td className="py-1 px-2">
-                        <code className="text-info">
-                          {parcela.charge_id || 'Não gerado'}
-                        </code>
-                      </td>
-                      <td className="py-1 px-2">
-                        <strong>#{parcela.numero_parcela}</strong>
-                      </td>
-                      <td className="py-1 px-2">
-                        <strong>R$ {parseFloat(parcela.valor_parcela).toFixed(2).replace('.', ',')}</strong>
-                      </td>
-                      <td className="py-1 px-2">{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
-                      <td className="py-1 px-2">
-                        <code className="text-primary">
-                          {parcela.nosso_numero || 'Não gerado'}
-                        </code>
-                      </td>
-                      <td className="py-1 px-2">
-                        {parcela.data_pagamento ? 
-                          new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : 
-                          '-'
-                        }
-                      </td>
-                      <td className="py-1 px-2">
-                        <span className={`badge ${getStatusBadgeClass(parcela.status)}`}>
-                          {getStatusLabel(parcela.status)}
-                        </span>
-                      </td>
-                      <td className="py-1 px-2">
-                        <div className="btn-group btn-group-sm" role="group">
-                          {parcela.status === 'pendente' && (
-                            <button 
-                              type="button" 
-                              className="btn btn-outline-success"
-                              title="Marcar como Pago"
-                              onClick={() => handleMarcarPago(parcela.id)}
-                              disabled={marcarPagoMutation.isPending}
-                            >
-                              <i className="bi bi-check"></i>
-                            </button>
-                          )}
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-primary"
-                            title="Imprimir Boleto"
-                            onClick={() => window.open(getApiUrl(`/boleto/web/${parcela.id}`), '_blank')}
-                          >
-                            <i className="bi bi-printer"></i>
-                          </button>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-warning"
-                            title="Editar Parcela"
-                            onClick={() => navigate(`/carne-parcelas/${parcela.id}/edit`)}
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={9} className="text-center">Nenhuma parcela encontrada</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Paginação */}
-          <div className="d-flex justify-content-center mt-3">
-            <nav aria-label="Paginação de parcelas">
-              <ul className="pagination">
-                <li className="page-item disabled">
-                  <span className="page-link">Anterior</span>
-                </li>
-                <li className="page-item active">
-                  <span className="page-link">1</span>
-                </li>
-                <li className="page-item">
-                  <span className="page-link">Próximo</span>
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={parcelas}
+        isLoading={isLoading}
+        limit={15}
+        setLimit={() => {}} // Não usado nesta página
+        setPage={() => {}} // Não usado nesta página
+        emptyMessage="Nenhuma parcela encontrada"
+        actions={renderActions}
+      />
     </>
   );
 };

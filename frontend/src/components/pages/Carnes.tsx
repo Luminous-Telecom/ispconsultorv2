@@ -4,20 +4,22 @@ import { useQuery } from '@tanstack/react-query';
 import { CarneService } from '../../services/carneService';
 import { getApiUrl } from '../../config/api';
 import { useNotification } from '../../hooks/useNotification';
+import DataTable from '../common/DataTable';
 
 const Carnes: React.FC = () => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
   const { success, error, warning } = useNotification() as any;
 
   const { data: carnesData, isLoading, refetch } = useQuery({
-    queryKey: ['carnes', search, status, page],
+    queryKey: ['carnes', search, status, page, limit],
     queryFn: () => CarneService.list({
       search: search || undefined,
       status: status || undefined,
       page,
-      limit: 15
+      limit
     }),
     placeholderData: (previousData) => previousData,
   });
@@ -85,9 +87,101 @@ const Carnes: React.FC = () => {
     }
   };
 
-  const pagination = carnesData?.pagination;
-  const totalPages = pagination ? pagination.last_page : 1;
-  const currentPage = pagination ? pagination.current_page : 1;
+  // Definição das colunas da tabela
+  const columns = [
+    {
+      key: 'id',
+      label: 'ID',
+      render: (carne: any) => <code className="text-primary">#{carne.id}</code>
+    },
+    {
+      key: 'carnet_id',
+      label: 'Carnet ID',
+      render: (carne: any) => (
+        <code className="text-info">
+          {carne.carnet_id || 'Não gerado'}
+        </code>
+      )
+    },
+    {
+      key: 'numero_carne',
+      label: 'Número do Carnê',
+      render: (carne: any) => <strong>{carne.numero_carne}</strong>
+    },
+    {
+      key: 'cliente',
+      label: 'Cliente',
+      render: (carne: any) => carne.cliente?.razao_social || 'N/A'
+    },
+    {
+      key: 'valor_total',
+      label: 'Valor Total',
+      render: (carne: any) => (
+        <strong>R$ {parseFloat(carne.valor_total).toFixed(2).replace('.', ',')}</strong>
+      )
+    },
+    {
+      key: 'parcelas',
+      label: 'Parcelas Pagas',
+      render: (carne: any) => (
+        <>
+          <span className="badge bg-success">{carne.parcelas_pagas || 0}</span>
+          <span className="text-muted"> / </span>
+          <span className="badge bg-secondary">{carne.quantidade_parcelas}</span>
+        </>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (carne: any) => (
+        <span className={`badge ${getStatusBadgeClass(carne.status)}`}>
+          {carne.status.charAt(0).toUpperCase() + carne.status.slice(1)}
+        </span>
+      )
+    },
+    {
+      key: 'created_at',
+      label: 'Data de Criação',
+      render: (carne: any) => new Date(carne.created_at).toLocaleDateString('pt-BR')
+    }
+  ];
+
+  // Renderizar ações da tabela
+  const renderActions = (carne: any) => (
+    <div className="btn-group btn-group-sm" role="group">
+      <Link 
+        to={`/carne-parcelas?carne_id=${carne.id}`} 
+        className="btn btn-outline-info"
+        title="Ver Parcelas"
+      >
+        <i className="bi bi-list-ol"></i>
+      </Link>
+      <button 
+        type="button" 
+        className="btn btn-outline-primary"
+        title="Imprimir"
+        onClick={() => handleImprimir(carne.id)}
+      >
+        <i className="bi bi-printer"></i>
+      </button>
+      <Link 
+        to={`/carnes/${carne.id}/edit`} 
+        className="btn btn-outline-warning"
+        title="Editar"
+      >
+        <i className="bi bi-pencil"></i>
+      </Link>
+      <button 
+        type="button" 
+        className="btn btn-outline-danger"
+        title="Excluir"
+        onClick={() => handleDelete(carne.id)}
+      >
+        <i className="bi bi-trash"></i>
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -153,120 +247,17 @@ const Carnes: React.FC = () => {
       </div>
 
       {/* Tabela de Carnês */}
-      <div className="card">
-        <div className="card-body p-2">
-          <div className="table-responsive">
-            <table className="table table-striped table-sm">
-              <thead>
-                <tr>
-                  <th className="py-1 px-2">ID</th>
-                  <th className="py-1 px-2">Carnet ID</th>
-                  <th className="py-1 px-2">Número do Carnê</th>
-                  <th className="py-1 px-2">Cliente</th>
-                  <th className="py-1 px-2">Valor Total</th>
-                  <th className="py-1 px-2">Parcelas Pagas</th>
-                  <th className="py-1 px-2">Status</th>
-                  <th className="py-1 px-2">Data de Criação</th>
-                  <th className="py-1 px-2">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={9} className="text-center">
-                      <div className="spinner-border" role="status">
-                        <span className="visualmente-hidden">Carregando...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : carnesData?.data && carnesData.data.length > 0 ? (
-                  carnesData.data.map((carne: any) => (
-                    <tr key={carne.id}>
-                      <td className="py-1 px-2">
-                        <code className="text-primary">#{carne.id}</code>
-                      </td>
-                      <td className="py-1 px-2">
-                        <code className="text-info">
-                          {carne.carnet_id || 'Não gerado'}
-                        </code>
-                      </td>
-                      <td className="py-1 px-2">
-                        <strong>{carne.numero_carne}</strong>
-                      </td>
-                      <td className="py-1 px-2">{carne.cliente?.razao_social || 'N/A'}</td>
-                      <td className="py-1 px-2">
-                        <strong>R$ {parseFloat(carne.valor_total).toFixed(2).replace('.', ',')}</strong>
-                      </td>
-                      <td className="py-1 px-2">
-                        <span className="badge bg-success">{carne.parcelas_pagas || 0}</span>
-                        <span className="text-muted"> / </span>
-                        <span className="badge bg-secondary">{carne.quantidade_parcelas}</span>
-                      </td>
-                      <td className="py-1 px-2">
-                        <span className={`badge ${getStatusBadgeClass(carne.status)}`}>
-                          {carne.status.charAt(0).toUpperCase() + carne.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="py-1 px-2">{new Date(carne.created_at).toLocaleDateString('pt-BR')}</td>
-                      <td className="py-1 px-2">
-                        <div className="btn-group btn-group-sm" role="group">
-                          <Link 
-                            to={`/carne-parcelas?carne_id=${carne.id}`} 
-                            className="btn btn-outline-info"
-                            title="Ver Parcelas"
-                          >
-                            <i className="bi bi-list-ol"></i>
-                          </Link>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-primary"
-                            title="Imprimir"
-                            onClick={() => window.open(getApiUrl(`/api/carnes/${carne.id}/imprimir`), '_blank')}
-                          >
-                            <i className="bi bi-printer"></i>
-                          </button>
-                          <Link 
-                            to={`/carnes/${carne.id}/edit`} 
-                            className="btn btn-outline-warning"
-                            title="Editar"
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </Link>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-danger"
-                            title="Excluir"
-                            onClick={() => handleDelete(carne.id)}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={9} className="text-center">Nenhum carnê encontrado</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Paginação */}
-          {pagination && (
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <span>
-                Página {pagination.current_page} de {pagination.last_page}
-              </span>
-              <div className="btn-group">
-                <button className="btn btn-outline-secondary" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>Anterior</button>
-                <button className="btn btn-outline-secondary" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Próximo</button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={carnesData?.data || []}
+        isLoading={isLoading}
+        pagination={carnesData?.pagination}
+        limit={limit}
+        setLimit={setLimit}
+        setPage={setPage}
+        emptyMessage="Nenhum carnê encontrado"
+        actions={renderActions}
+      />
     </>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useClientes, useDeleteCliente } from '../../hooks/useClientes';
+import DataTable from '../common/DataTable';
 
 interface Cliente {
   id: number;
@@ -16,13 +17,14 @@ const Clientes: React.FC = () => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
 
   // Hooks para gerenciar clientes
   const { data: clientesData, isLoading, refetch } = useClientes({
     search: search || undefined,
     ativo: status ? status === 'ativo' : undefined,
     page,
-    limit: 15
+    limit
   });
 
   const deleteClienteMutation = useDeleteCliente();
@@ -38,6 +40,71 @@ const Clientes: React.FC = () => {
       deleteClienteMutation.mutate(clienteId);
     }
   };
+
+  // Definição das colunas da tabela
+  const columns = [
+    {
+      key: 'id',
+      label: 'ID',
+      render: (cliente: Cliente) => <code className="text-primary">#{cliente.id}</code>
+    },
+    {
+      key: 'cnpj',
+      label: 'CNPJ',
+      render: (cliente: Cliente) => cliente.cnpj
+    },
+    {
+      key: 'razao_social',
+      label: 'Razão Social',
+      render: (cliente: Cliente) => <strong>{cliente.razao_social}</strong>
+    },
+    {
+      key: 'nome_fantasia',
+      label: 'Nome Fantasia',
+      render: (cliente: Cliente) => cliente.nome_fantasia || '-'
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      render: (cliente: Cliente) => cliente.email
+    },
+    {
+      key: 'whatsapp',
+      label: 'WhatsApp',
+      render: (cliente: Cliente) => cliente.whatsapp || '-'
+    },
+    {
+      key: 'ativo',
+      label: 'Status',
+      render: (cliente: Cliente) => (
+        <span className={`badge ${cliente.ativo ? 'bg-success' : 'bg-danger'}`}>
+          {cliente.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      )
+    }
+  ];
+
+  // Renderizar ações da tabela
+  const renderActions = (cliente: Cliente) => (
+    <div className="btn-group btn-group-sm" role="group">
+      <Link 
+        to={`/clientes/${cliente.id}/edit`} 
+        className="btn btn-outline-warning"
+        title="Editar"
+      >
+        <i className="bi bi-pencil"></i>
+      </Link>
+      <button 
+        type="button" 
+        className="btn btn-outline-danger"
+        title="Excluir"
+        onClick={() => handleDelete(cliente.id)}
+        disabled={deleteClienteMutation.isPending}
+      >
+        <i className="bi bi-trash"></i>
+      </button>
+    </div>
+  );
 
   return (
     <>
