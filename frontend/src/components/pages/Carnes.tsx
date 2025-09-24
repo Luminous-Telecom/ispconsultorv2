@@ -160,6 +160,7 @@ const Carnes: React.FC = () => {
               <thead>
                 <tr>
                   <th>ID</th>
+                  <th>Carnet ID</th>
                   <th>Número do Carnê</th>
                   <th>Cliente</th>
                   <th>Valor Total</th>
@@ -172,7 +173,7 @@ const Carnes: React.FC = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="text-center">
+                    <td colSpan={9} className="text-center">
                       <div className="spinner-border" role="status">
                         <span className="visualmente-hidden">Carregando...</span>
                       </div>
@@ -183,6 +184,11 @@ const Carnes: React.FC = () => {
                     <tr key={carne.id}>
                       <td>
                         <code className="text-primary">#{carne.id}</code>
+                      </td>
+                      <td>
+                        <code className="text-info">
+                          {carne.carnet_id || 'Não gerado'}
+                        </code>
                       </td>
                       <td>
                         <strong>{carne.numero_carne}</strong>
@@ -236,7 +242,7 @@ const Carnes: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="text-center">Nenhum carnê encontrado</td>
+                    <td colSpan={9} className="text-center">Nenhum carnê encontrado</td>
                   </tr>
                 )}
               </tbody>
