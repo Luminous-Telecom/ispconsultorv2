@@ -210,12 +210,26 @@ export class CarneParcela extends Model<
     const numeroParcela = this.numero_parcela.toString().padStart(2, '0');
     const zeros = '00000000000';
     
-    return `${codigoBanco}${carneId}${numeroParcela}${zeros}`;
+    const codigoCompleto = `${codigoBanco}${carneId}${numeroParcela}${zeros}`;
+    
+    // Garantir que o código tenha exatamente 47 caracteres para linha digitável
+    // Se for menor, completar com zeros à direita
+    const codigoFinal = codigoCompleto.padEnd(47, '0');
+    
+    return codigoFinal;
   }
 
   async gerarLinhaDigitavel(): Promise<string> {
     // Implementar geração de linha digitável igual ao PHP
     const codigoBarras = await this.gerarCodigoBarras();
+    
+    // Debug: verificar tamanho do código
+    console.log('Debug linha digitável:', {
+      codigoBarras,
+      tamanho: codigoBarras.length,
+      parcela_id: this.id,
+      numero_parcela: this.numero_parcela
+    });
     
     // Formato da linha digitável: 00000.00000 00000.000000 00000.000000 0 00000000000000
     // Dividir o código de barras em grupos específicos
@@ -231,6 +245,8 @@ export class CarneParcela extends Model<
       codigo.substring(26, 32) + ' ' +
       codigo.substring(32, 33) + ' ' +
       codigo.substring(33);
+    
+    console.log('Linha digitável gerada:', linhaDigitavel);
     
     return linhaDigitavel;
   }
