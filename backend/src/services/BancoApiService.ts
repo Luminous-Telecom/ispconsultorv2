@@ -324,10 +324,10 @@ export class BancoApiService {
         amount: 1
       }],
       customer: {
-        name: cliente.nome,
+        name: cliente.nome_fantasia || cliente.razao_social,
         email: cliente.email,
         phone: cliente.telefone,
-        document: cliente.cpf_cnpj,
+        document: cliente.cnpj,
         address: {
           street: cliente.endereco,
           number: cliente.numero,
@@ -341,10 +341,10 @@ export class BancoApiService {
         banking_billet: {
           expire_at: parcela.data_vencimento,
           customer: {
-            name: cliente.nome,
+            name: cliente.nome_fantasia || cliente.razao_social,
             email: cliente.email,
             phone: cliente.telefone,
-            document: cliente.cpf_cnpj,
+            document: cliente.cnpj,
             address: {
               street: cliente.endereco,
               number: cliente.numero,
@@ -672,13 +672,13 @@ export class BancoApiService {
     });
 
     const charges = parcelas.map(parcela => ({
-        value: parcela.valor_parcela,
-      expire_at: parcela.data_vencimento,
+        value: Math.round(parcela.valor_parcela * 100), // Converter para centavos
+      expire_at: parcela.data_vencimento.toISOString().split('T')[0], // Formato YYYY-MM-DD
       customer: {
-        name: cliente.nome,
+        name: cliente.nome_fantasia || cliente.razao_social,
         email: cliente.email,
         phone: cliente.telefone,
-        document: cliente.cpf_cnpj,
+        document: cliente.cnpj,
         address: {
           street: cliente.endereco,
           number: cliente.numero,
@@ -696,14 +696,14 @@ export class BancoApiService {
     return {
       items: [{
         name: 'Carnê de Serviços',
-        value: carne.valor_total,
+        value: Math.round(carne.valor_total * 100), // Converter para centavos
         amount: 1
       }],
       customer: {
-        name: cliente.nome,
+        name: cliente.nome_fantasia || cliente.razao_social,
         email: cliente.email,
         phone: cliente.telefone,
-        document: cliente.cpf_cnpj,
+        document: cliente.cnpj,
         address: {
           street: cliente.endereco,
           number: cliente.numero,
@@ -715,12 +715,12 @@ export class BancoApiService {
       },
       payment: {
         banking_billet: {
-          expire_at: parcelas[0]?.data_vencimento,
+          expire_at: parcelas[0]?.data_vencimento.toISOString().split('T')[0], // Formato YYYY-MM-DD
           customer: {
-            name: cliente.nome,
+            name: cliente.nome_fantasia || cliente.razao_social,
             email: cliente.email,
             phone: cliente.telefone,
-            document: cliente.cpf_cnpj,
+            document: cliente.cnpj,
             address: {
               street: cliente.endereco,
               number: cliente.numero,
