@@ -14,7 +14,7 @@ interface PlanoForm {
   desconto_percentual?: number;
   desconto_valor?: number;
   desconto_ativo: boolean;
-  periodicidade?: string;
+  periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   renovacao_automatica: boolean;
   status: 'ativo' | 'inativo' | 'suspenso';
   data_inicio?: string;
@@ -37,7 +37,7 @@ const PlanosEdit: React.FC = () => {
     desconto_percentual: 0,
     desconto_valor: 0,
     desconto_ativo: false,
-    periodicidade: '',
+    periodicidade: undefined,
     renovacao_automatica: false,
     status: 'ativo',
     data_inicio: new Date().toISOString().split('T')[0],
@@ -81,7 +81,7 @@ const PlanosEdit: React.FC = () => {
         desconto_percentual: plano.desconto_percentual || 0,
         desconto_valor: plano.desconto_valor || 0,
         desconto_ativo: plano.desconto_ativo || false,
-        periodicidade: plano.periodicidade || '',
+        periodicidade: (plano.periodicidade as PlanoForm['periodicidade']) || undefined,
         renovacao_automatica: plano.renovacao_automatica || false,
         status: plano.status || 'ativo',
         data_inicio: plano.data_inicio || new Date().toISOString().split('T')[0],
@@ -300,14 +300,21 @@ const PlanosEdit: React.FC = () => {
               <div className="col-md-4">
                 <div className="mb-3">
                   <label htmlFor="periodicidade" className="form-label">Periodicidade</label>
-                  <input
-                    type="text"
-                    className={`form-control ${errors.periodicidade ? 'is-invalid' : ''}`}
+                  <select
+                    className={`form-select ${errors.periodicidade ? 'is-invalid' : ''}`}
                     id="periodicidade"
                     value={formData.periodicidade}
                     onChange={(e) => handleInputChange('periodicidade', e.target.value)}
-                    placeholder="Ex: Mensal"
-                  />
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="anual">Anual</option>
+                    <option value="bimestral">Bimestral</option>
+                    <option value="quinzenal">Quinzenal</option>
+                    <option value="semanal">Semanal</option>
+                  </select>
                   {errors.periodicidade && <div className="invalid-feedback">{errors.periodicidade}</div>}
                 </div>
               </div>

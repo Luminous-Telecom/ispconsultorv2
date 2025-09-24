@@ -13,7 +13,7 @@ interface Plano {
   tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
   quantidade_usuarios?: number;
   valor_mensal: number;
-  periodicidade?: string;
+  periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   status: 'ativo' | 'inativo' | 'suspenso';
   created_at: string;
 }

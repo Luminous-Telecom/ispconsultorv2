@@ -17,7 +17,7 @@ interface PlanoForm {
   desconto_ativo: boolean;
   desconto_tipo?: string;
   desconto_valor?: number;
-  periodicidade?: string;
+  periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   renovacao_automatica: boolean;
   status: 'ativo' | 'inativo' | 'suspenso';
   data_inicio?: string;
@@ -39,7 +39,7 @@ const PlanosCreate: React.FC = () => {
     desconto_ativo: false,
     desconto_tipo: '',
     desconto_valor: 0,
-    periodicidade: '',
+    periodicidade: undefined,
     renovacao_automatica: false,
     status: 'ativo',
     data_inicio: new Date().toISOString().split('T')[0],

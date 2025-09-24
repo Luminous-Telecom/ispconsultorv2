@@ -34,7 +34,7 @@ export class Plano extends Model<
   declare desconto_percentual: number | null;
   declare desconto_valor: number | null;
   declare desconto_ativo: boolean;
-  declare periodicidade: string | null;
+  declare periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null;
   declare renovacao_automatica: boolean;
   declare data_inicio: Date | null;
   declare data_fim: Date | null;
@@ -217,7 +217,7 @@ Plano.init(
       defaultValue: false
     },
     periodicidade: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.ENUM('mensal', 'trimestral', 'semestral', 'anual', 'bimestral', 'quinzenal', 'semanal'),
       allowNull: true,
       defaultValue: 'mensal'
     },
