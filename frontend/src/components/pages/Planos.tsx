@@ -12,7 +12,7 @@ interface Plano {
   descricao?: string;
   valor_mensal: number;
   status: 'ativo' | 'inativo' | 'suspenso';
-  data_criacao: string;
+  created_at: string;
 }
 
 const Planos: React.FC = () => {
@@ -102,9 +102,9 @@ const Planos: React.FC = () => {
       )
     },
     {
-      key: 'data_criacao',
+      key: 'created_at',
       label: 'Data de Criação',
-      render: (plano: Plano) => new Date(plano.data_criacao).toLocaleDateString('pt-BR')
+      render: (plano: Plano) => new Date(plano.created_at).toLocaleDateString('pt-BR')
     }
   ];
 

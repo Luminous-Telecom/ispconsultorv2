@@ -34,6 +34,12 @@ export class PlanoController {
 
       const { count, rows: planos } = await Plano.findAndCountAll({
         where,
+        attributes: [
+          'id', 'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
+          'quantidade_usuarios', 'valor_mensal', 'desconto_percentual', 'desconto_valor',
+          'desconto_ativo', 'periodicidade', 'renovacao_automatica', 'data_inicio',
+          'data_fim', 'status', 'observacoes', 'created_at', 'updated_at'
+        ],
         include: [
           { 
             association: 'clientes', 
