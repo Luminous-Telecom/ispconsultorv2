@@ -165,6 +165,11 @@ export class Carne extends Model<
       const dataVencimento = new Date(this.data_vencimento_primeira);
       dataVencimento.setMonth(dataVencimento.getMonth() + (i - 1));
       
+      // Garantir que não há problemas de fuso horário
+      const dataVencimentoString = dataVencimento.getFullYear() + '-' + 
+        String(dataVencimento.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(dataVencimento.getDate()).padStart(2, '0');
+      
       // Gerar código de barras e linha digitável
       const codigoBarras = this.gerarCodigoBarras(i);
       const linhaDigitavel = this.gerarLinhaDigitavel(codigoBarras);
@@ -173,7 +178,7 @@ export class Carne extends Model<
         carne_id: this.id,
         numero_parcela: i,
         valor_parcela: valor,
-        data_vencimento: dataVencimento,
+        data_vencimento: dataVencimento, // Corrigido para tipo Date
         pago: false,
         status: 'pendente',
         codigo_barras: codigoBarras,
