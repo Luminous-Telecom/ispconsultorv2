@@ -465,20 +465,39 @@ export class WebhookController {
 
       // Atualizar status da parcela
       const novoStatus = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-      await parcela.update({ 
+      const isPago = ['pago', 'liquidado'].includes(novoStatus);
+      
+      const updateData: any = { 
         status: novoStatus,
-        pago: ['pago', 'liquidado'].includes(novoStatus)
-      });
+        pago: isPago
+      };
+      
+      // Se está sendo marcada como paga via webhook, atualizar data_pagamento
+      if (isPago && !parcela.pago) {
+        updateData.data_pagamento = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        updateData.valor_pago = parcela.valor_parcela; // Assumir valor total pago
+      }
+      
+      // Se está sendo desmarcada como paga, limpar data_pagamento
+      if (!isPago && parcela.pago) {
+        updateData.data_pagamento = null;
+        updateData.valor_pago = null;
+      }
+      
+      await parcela.update(updateData);
 
       // Verificar e atualizar status do carnê
       const carne = await parcela.getCarne();
       await carne.verificarEAtualizarStatus();
 
-      logger.info('Status da parcela atualizado', {
+      logger.info('Status da parcela atualizado via webhook', {
         parcela_id: parcela.id,
         charge_id: chargeId,
         status_anterior: parcela.status,
-        status_novo: novoStatus
+        status_novo: novoStatus,
+        pago_anterior: parcela.pago,
+        pago_novo: isPago,
+        data_pagamento: updateData.data_pagamento || 'não alterada'
       });
 
       return 1;
