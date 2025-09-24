@@ -40,7 +40,7 @@ const Carnes: React.FC = () => {
       case 'atrasado': return 'Atrasado';
       case 'cancelado': return 'Cancelado';
       case 'pago': return 'Pago';
-      default: return status.charAt(0).toUpperCase() + status.slice(1);
+      default: return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Desconhecido';
     }
   };
 

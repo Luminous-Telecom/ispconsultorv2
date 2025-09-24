@@ -157,7 +157,7 @@ const Dashboard: React.FC = () => {
                           <td>R$ {parseFloat(carne.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                           <td>
                             <span className={`badge ${getStatusBadgeClass(carne.status)}`}>
-                              {carne.status.charAt(0).toUpperCase() + carne.status.slice(1)}
+                              {carne.status ? carne.status.charAt(0).toUpperCase() + carne.status.slice(1) : 'Desconhecido'}
                             </span>
                           </td>
                           <td>{new Date(carne.created_at).toLocaleDateString('pt-BR')}</td>

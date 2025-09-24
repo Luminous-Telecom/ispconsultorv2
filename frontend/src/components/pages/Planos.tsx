@@ -89,7 +89,7 @@ const Planos: React.FC = () => {
       label: 'Status',
       render: (plano: Plano) => (
         <span className={`badge ${getStatusBadgeClass(plano.status)}`}>
-          {plano.status.charAt(0).toUpperCase() + plano.status.slice(1)}
+          {plano.status ? plano.status.charAt(0).toUpperCase() + plano.status.slice(1) : 'Desconhecido'}
         </span>
       )
     },

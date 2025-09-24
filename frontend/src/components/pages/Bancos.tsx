@@ -77,7 +77,7 @@ const Bancos: React.FC = () => {
       label: 'Tipo',
       render: (banco: Banco) => (
         <span className={`badge ${getTipoBadgeClass(banco.tipo)}`}>
-          {banco.tipo.charAt(0).toUpperCase() + banco.tipo.slice(1)}
+          {banco.tipo ? banco.tipo.charAt(0).toUpperCase() + banco.tipo.slice(1) : 'Desconhecido'}
         </span>
       )
     },
