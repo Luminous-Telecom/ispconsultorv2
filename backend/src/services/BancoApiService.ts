@@ -555,6 +555,15 @@ export class BancoApiService {
         parcelas: carne.quantidade_parcelas
       });
 
+      console.log('🔍 BancoApiService.gerarCarne - Dados do banco:', {
+        id: banco.id,
+        nome: banco.nome,
+        tipo_banco: banco.tipo_banco,
+        sandbox: banco.sandbox,
+        client_id_producao: banco.client_id_producao ? '***' : 'não definido',
+        client_secret_producao: banco.client_secret_producao ? '***' : 'não definido'
+      });
+
       // Verificar se já foi gerado
       if (carne.carnet_id) {
         return {
@@ -587,6 +596,8 @@ export class BancoApiService {
 
       // Preparar dados do carnê
       const dadosCarne = await this.prepararDadosCarne(banco, carne, cliente, config);
+      
+      console.log('🔍 BancoApiService.gerarCarne - Dados preparados:', JSON.stringify(dadosCarne, null, 2));
 
       const endpoint = config.cobranca_base_url + config.carnets;
       const headers = this.prepareHeaders(banco.tipo_banco, token);
