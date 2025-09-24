@@ -246,7 +246,16 @@ export class CarneParcelaController {
       DEMONSTRATIVO3: safe((parcela as any).carne?.banco?.demonstrativo3),
       DEMONSTRATIVO4: safe((parcela as any).carne?.banco?.demonstrativo4),
       SACADO_NOME: safe((parcela as any).carne?.cliente?.razao_social),
-      TIPO_PSACADO: (parcela as any).carne?.cliente?.cnpj ? 'CNPJ' : 'CPF'
+      TIPO_PSACADO: (parcela as any).carne?.cliente?.cnpj ? 'CNPJ' : 'CPF',
+      
+      // Variáveis específicas do plano
+      QUANTIDADE_USUARIOS: safe((parcela as any).carne?.plano?.quantidade_usuarios?.toString()),
+      TIPO_SERVICO: safe((parcela as any).carne?.plano?.tipo_servico),
+      NOME_PLANO: safe((parcela as any).carne?.plano?.nome_plano),
+      DESCRICAO_PLANO: safe((parcela as any).carne?.plano?.descricao),
+      SERVICOS_INCLUSOS: safe((parcela as any).carne?.plano?.servicos_inclusos?.join(', ')),
+      VALOR_MENSAL: (parcela as any).carne?.plano?.valor_mensal ? formatMoney((parcela as any).carne.plano.valor_mensal) : '',
+      PERIODICIDADE: safe((parcela as any).carne?.plano?.periodicidade)
     };
   }
 

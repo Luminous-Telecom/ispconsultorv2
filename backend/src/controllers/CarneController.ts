@@ -588,6 +588,14 @@ export class CarneController {
             SACADO_CIDADE: parcela.carne?.cliente?.cidade || '',
             SACADO_ESTADO: parcela.carne?.cliente?.estado || '',
             SACADO_CEP: parcela.carne?.cliente?.cep || '',
+            // Variáveis específicas do plano
+            QUANTIDADE_USUARIOS: parcela.carne?.plano?.quantidade_usuarios?.toString() || '',
+            TIPO_SERVICO: parcela.carne?.plano?.tipo_servico || '',
+            NOME_PLANO: parcela.carne?.plano?.nome_plano || '',
+            DESCRICAO_PLANO: parcela.carne?.plano?.descricao || '',
+            SERVICOS_INCLUSOS: parcela.carne?.plano?.servicos_inclusos?.join(', ') || '',
+            VALOR_MENSAL: parcela.carne?.plano?.valor_mensal ? `R$ ${parseFloat(parcela.carne.plano.valor_mensal.toString()).toFixed(2).replace('.', ',')}` : '',
+            PERIODICIDADE: parcela.carne?.plano?.periodicidade || '',
             BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
               <img src="${barcodeData}" 
                    alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
