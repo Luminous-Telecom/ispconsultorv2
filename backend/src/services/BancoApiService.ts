@@ -451,7 +451,12 @@ export class BancoApiService {
         };
       }
 
-      const endpoint = config.cobranca_base_url + config.notification + '/' + notificationToken;
+      // Usar URL sandbox se estiver configurado
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      
+      const endpoint = baseUrlCobranca + config.notification + '/' + notificationToken;
       
       logger.info('Consultando notificação por token', {
         endpoint: endpoint,
