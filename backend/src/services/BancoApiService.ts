@@ -324,7 +324,7 @@ export class BancoApiService {
     plano: any, 
     config: BancoConfig
   ): any {
-    const baseUrl = banco.url_retorno || process.env.APP_URL || 'http://localhost:3001';
+    const baseUrl = banco.url_retorno || process.env.APP_URL;
     
     return {
       items: [{
@@ -718,7 +718,7 @@ export class BancoApiService {
     cliente: any, 
     config: BancoConfig
   ): Promise<any> {
-    const baseUrl = banco.url_retorno || process.env.APP_URL || 'http://localhost:3001';
+    const baseUrl = banco.url_retorno || process.env.APP_URL;
     const parcelas = await CarneParcela.findAll({
       where: { carne_id: carne.id },
       order: [['numero_parcela', 'ASC']]

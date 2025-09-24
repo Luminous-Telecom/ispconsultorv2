@@ -164,15 +164,15 @@ export class CarneParcelaController {
           }
           return `/uploads/empresa/${dadosEmpresa.logo}`;
         }
-        return `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/boletoproprio.png`;
+        return `${process.env.BASE_URL}/images/bancos/boletoproprio.png`;
       })(),
       
       LOGOBANCO: (() => {
         const banco = (parcela as any).carne?.banco;
         if (banco?.tipo_banco) {
-          return `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/${banco.tipo_banco}.png`;
+          return `${process.env.BASE_URL}/images/bancos/${banco.tipo_banco}.png`;
         }
-        return `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/boletoproprio.png`;
+        return `${process.env.BASE_URL}/images/bancos/boletoproprio.png`;
       })(),
 
       CEDENTE: safe(dadosEmpresa?.razao_social),
@@ -655,8 +655,8 @@ export class CarneParcelaController {
 
       // Gerar variáveis básicas
       const variables = {
-        LOGOMARCA: dadosEmpresa?.logo ? dadosEmpresa.logo : `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/boletoproprio.png`,
-        LOGOBANCO: (parcela as any).carne?.banco?.tipo_banco ? `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/${(parcela as any).carne.banco.tipo_banco}.png` : `${process.env.BASE_URL || 'http://localhost:3001'}/images/bancos/boletoproprio.png`,
+        LOGOMARCA: dadosEmpresa?.logo ? dadosEmpresa.logo : `${process.env.BASE_URL}/images/bancos/boletoproprio.png`,
+        LOGOBANCO: (parcela as any).carne?.banco?.tipo_banco ? `${process.env.BASE_URL}/images/bancos/${(parcela as any).carne.banco.tipo_banco}.png` : `${process.env.BASE_URL}/images/bancos/boletoproprio.png`,
         CEDENTE: dadosEmpresa?.razao_social || '',
         EMPRESACPF: dadosEmpresa?.cnpj || '',
         EMPRESAENDERECO: dadosEmpresa?.endereco || '',
