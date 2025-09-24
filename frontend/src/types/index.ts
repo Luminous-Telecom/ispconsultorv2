@@ -22,8 +22,8 @@ export interface Cliente extends BaseEntity {
   estado?: string;
   observacoes?: string;
   ativo: boolean;
-  tipo_cobranca?: string;
-  valor_primeiro_titulo?: number;
+  tipo_cobranca?: 'titulo' | 'carne';
+  valor_primeiro_titulo?: 'total' | 'proporcional';
   isento_mensalidade: boolean;
   recebe_email: boolean;
   recebe_sms: boolean;
