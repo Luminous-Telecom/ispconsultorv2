@@ -423,7 +423,7 @@ export class WebhookController {
       
       switch (type) {
         case 'carnet_charge':
-          return await WebhookController.processarNotificacaoParcela(identifiers, status, customId);
+          return await WebhookController.processarNotificacaoParcela(identifiers, status, customId, notificacao);
           
         case 'carnet':
           return await WebhookController.processarNotificacaoCarne(identifiers, status, customId);
@@ -444,7 +444,7 @@ export class WebhookController {
   /**
    * Processar notificação de parcela (carnet_charge)
    */
-  private static async processarNotificacaoParcela(identifiers: any, status: string, customId: string): Promise<number> {
+  private static async processarNotificacaoParcela(identifiers: any, status: string, customId: string, dadosCompletos?: any): Promise<number> {
     const chargeId = identifiers.charge_id || null;
     
     if (!chargeId) {
@@ -474,7 +474,25 @@ export class WebhookController {
       
       // Se está sendo marcada como paga via webhook, atualizar data_pagamento
       if (isPago && !parcela.pago) {
-        updateData.data_pagamento = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        // Usar data do webhook se disponível, senão usar data atual
+        let dataPagamento = new Date().toISOString().split('T')[0]; // Default: hoje
+        
+        if (dadosCompletos?.created_at) {
+          // Converter data do webhook (formato: "2025-09-23 23:11:17" ou "2025-09-23")
+          try {
+            const dataWebhook = dadosCompletos.created_at.includes(' ') 
+              ? dadosCompletos.created_at.split(' ')[0] // Pegar apenas a data
+              : dadosCompletos.created_at;
+            
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dataWebhook)) {
+              dataPagamento = dataWebhook;
+            }
+          } catch (error) {
+            // Manter data atual se houver erro na conversão
+          }
+        }
+        
+        updateData.data_pagamento = dataPagamento;
         updateData.valor_pago = parcela.valor_parcela; // Assumir valor total pago
       }
       
@@ -482,6 +500,20 @@ export class WebhookController {
       if (!isPago && parcela.pago) {
         updateData.data_pagamento = null;
         updateData.valor_pago = null;
+      }
+      
+      // Atualizar data de vencimento se fornecida no webhook
+      if (dadosCompletos?.expire_at) {
+        const novaDataVencimento = dadosCompletos.expire_at;
+        // Validar formato de data (YYYY-MM-DD)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(novaDataVencimento)) {
+          updateData.data_vencimento = novaDataVencimento;
+        }
+      } else if (dadosCompletos?.due_date) {
+        const novaDataVencimento = dadosCompletos.due_date;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(novaDataVencimento)) {
+          updateData.data_vencimento = novaDataVencimento;
+        }
       }
       
       await parcela.update(updateData);
@@ -497,7 +529,9 @@ export class WebhookController {
         status_novo: novoStatus,
         pago_anterior: parcela.pago,
         pago_novo: isPago,
-        data_pagamento: updateData.data_pagamento || 'não alterada'
+        data_pagamento: updateData.data_pagamento || 'não alterada',
+        data_vencimento: updateData.data_vencimento || 'não alterada',
+        valor_pago: updateData.valor_pago || 'não alterado'
       });
 
       return 1;
