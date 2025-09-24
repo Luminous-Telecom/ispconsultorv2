@@ -252,7 +252,7 @@ export class DashboardController {
   // Obter carnês recentes
   static async getCarnesRecentes(req: Request, res: Response): Promise<void> {
     try {
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = parseInt(req.query.limit as string) || 15;
 
       const carnes = await Carne.findAll({
         include: [

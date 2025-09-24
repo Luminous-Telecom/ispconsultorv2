@@ -81,7 +81,7 @@ export class ClienteController {
   static async index(req: Request, res: Response): Promise<void> {
     try {
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = parseInt(req.query.limit as string) || 15;
       const search = req.query.search as string;
       const ativo = req.query.ativo as string;
       const cidade = req.query.cidade as string;

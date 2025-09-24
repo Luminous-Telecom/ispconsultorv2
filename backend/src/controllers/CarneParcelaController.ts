@@ -262,7 +262,7 @@ export class CarneParcelaController {
 
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { carne_id, search, status, page = 1, limit = 10 } = req.query;
+      const { carne_id, search, status, page = 1, limit = 15 } = req.query;
 
       const where: any = {};
       

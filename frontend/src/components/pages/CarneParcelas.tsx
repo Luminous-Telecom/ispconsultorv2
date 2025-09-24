@@ -13,14 +13,22 @@ const CarneParcelas: React.FC = () => {
   const carneId = searchParams.get('carne_id');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
   const [isRegistering, setIsRegistering] = useState(false);
   const queryClient = useQueryClient();
   const { success, error } = useNotification();
 
   // Buscar parcelas
   const { data: parcelasData, isLoading } = useQuery({
-    queryKey: ['carne-parcelas', carneId, search, status],
-    queryFn: () => CarneParcelaService.list({ carne_id: carneId ? Number(carneId) : undefined, search, status }),
+    queryKey: ['carne-parcelas', carneId, search, status, page, limit],
+    queryFn: () => CarneParcelaService.list({ 
+      carne_id: carneId ? Number(carneId) : undefined, 
+      search, 
+      status,
+      page,
+      limit
+    }),
     enabled: !!carneId,
     staleTime: 30000, // 30 segundos
     refetchOnWindowFocus: false
@@ -449,11 +457,12 @@ const CarneParcelas: React.FC = () => {
       {/* Tabela de Parcelas */}
       <DataTable
         columns={columns}
-        data={parcelas}
+        data={parcelasData?.data || []}
         isLoading={isLoading}
-        limit={15}
-        setLimit={() => {}} // Não usado nesta página
-        setPage={() => {}} // Não usado nesta página
+        pagination={parcelasData?.pagination}
+        limit={limit}
+        setLimit={setLimit}
+        setPage={setPage}
         emptyMessage="Nenhuma parcela encontrada"
         actions={renderActions}
       />
