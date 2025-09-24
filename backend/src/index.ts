@@ -62,7 +62,7 @@ app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 // Middleware de rate limiting
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutos
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // limite por IP
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'), // limite por IP aumentado para desenvolvimento
   message: {
     error: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
   }

@@ -17,7 +17,8 @@ const CarneParcelas: React.FC = () => {
     queryKey: ['carne-parcelas', carneId, search, status],
     queryFn: () => CarneParcelaService.list({ carne_id: carneId ? Number(carneId) : undefined, search, status }),
     enabled: !!carneId,
-    placeholderData: (prev) => prev
+    staleTime: 30000, // 30 segundos
+    refetchOnWindowFocus: false
   });
 
   // Mutação para marcar como pago
