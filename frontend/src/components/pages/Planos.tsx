@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { PlanoService } from '../../services/planoService';
 import { useNotification } from '../../hooks/useNotification';
+import DataTable from '../common/DataTable';
 
 interface Plano {
   id: number;
@@ -17,16 +18,17 @@ const Planos: React.FC = () => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
   const { success, error } = useNotification();
 
   // Query para buscar planos
   const { data: planosData, isLoading, refetch } = useQuery({
-    queryKey: ['planos', search, status, page],
+    queryKey: ['planos', search, status, page, limit],
     queryFn: () => PlanoService.list({
       search: search || undefined,
       status: status || undefined,
       page,
-      limit: 15
+      limit
     }),
     placeholderData: (previousData) => previousData,
   });
@@ -58,6 +60,67 @@ const Planos: React.FC = () => {
     }
   };
 
+  // Definição das colunas da tabela
+  const columns = [
+    {
+      key: 'id',
+      label: 'ID',
+      render: (plano: Plano) => <code className="text-primary">#{plano.id}</code>
+    },
+    {
+      key: 'nome_plano',
+      label: 'Nome do Plano',
+      render: (plano: Plano) => <strong>{plano.nome_plano}</strong>
+    },
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      render: (plano: Plano) => plano.descricao || '-'
+    },
+    {
+      key: 'valor_mensal',
+      label: 'Valor Mensal',
+      render: (plano: Plano) => (
+        <strong>R$ {plano.valor_mensal.toFixed(2).replace('.', ',')}</strong>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (plano: Plano) => (
+        <span className={`badge ${getStatusBadgeClass(plano.status)}`}>
+          {plano.status.charAt(0).toUpperCase() + plano.status.slice(1)}
+        </span>
+      )
+    },
+    {
+      key: 'data_criacao',
+      label: 'Data de Criação',
+      render: (plano: Plano) => new Date(plano.data_criacao).toLocaleDateString('pt-BR')
+    }
+  ];
+
+  // Renderizar ações da tabela
+  const renderActions = (plano: Plano) => (
+    <div className="btn-group btn-group-sm" role="group">
+      <Link 
+        to={`/planos/${plano.id}/edit`} 
+        className="btn btn-outline-warning"
+        title="Editar"
+      >
+        <i className="bi bi-pencil"></i>
+      </Link>
+      <button 
+        type="button" 
+        className="btn btn-outline-danger"
+        title="Excluir"
+        onClick={() => handleDelete(plano.id)}
+      >
+        <i className="bi bi-trash"></i>
+      </button>
+    </div>
+  );
+
   return (
     <>
       <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -84,7 +147,7 @@ const Planos: React.FC = () => {
                     name="search" 
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Nome do plano ou descrição"
+                    placeholder="Nome do plano"
                   />
                 </div>
               </div>
@@ -121,127 +184,17 @@ const Planos: React.FC = () => {
       </div>
 
       {/* Tabela de Planos */}
-      <div className="card">
-        <div className="card-body p-2">
-          <div className="table-responsive">
-            <table className="table table-striped table-sm">
-              <thead>
-                <tr>
-                  <th className="py-1 px-2">ID</th>
-                  <th className="py-1 px-2">Nome do Plano</th>
-                  <th className="py-1 px-2">Descrição</th>
-                  <th className="py-1 px-2">Valor Mensal</th>
-                  <th className="py-1 px-2">Status</th>
-                  <th className="py-1 px-2">Data de Criação</th>
-                  <th className="py-1 px-2">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="text-center">
-                      <div className="spinner-border" role="status">
-                        <span className="visually-hidden">Carregando...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : planosData?.data && planosData.data.length > 0 ? (
-                  planosData.data.map((plano: any) => (
-                    <tr key={plano.id}>
-                      <td className="py-1 px-2">
-                        <code className="text-primary">#{plano.id}</code>
-                      </td>
-                      <td className="py-1 px-2">
-                        <strong>{plano.nome_plano}</strong>
-                      </td>
-                      <td className="py-1 px-2">{plano.descricao || '-'}</td>
-                      <td className="py-1 px-2">
-                        <strong>R$ {parseFloat(plano.valor_mensal).toFixed(2).replace('.', ',')}</strong>
-                      </td>
-                      <td className="py-1 px-2">
-                        <span className={`badge ${getStatusBadgeClass(plano.status)}`}>
-                          {plano.status.charAt(0).toUpperCase() + plano.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="py-1 px-2">{new Date(plano.data_criacao).toLocaleDateString('pt-BR')}</td>
-                      <td className="py-1 px-2">
-                        <div className="btn-group btn-group-sm" role="group">
-                          <Link 
-                            to={`/planos/${plano.id}`} 
-                            className="btn btn-outline-info"
-                            title="Visualizar"
-                          >
-                            <i className="bi bi-eye"></i>
-                          </Link>
-                          <Link 
-                            to={`/planos/${plano.id}/edit`} 
-                            className="btn btn-outline-warning"
-                            title="Editar"
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </Link>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-danger"
-                            title="Excluir"
-                            onClick={() => handleDelete(plano.id)}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="text-center">Nenhum plano encontrado</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Paginação */}
-          {planosData?.pagination && (
-            <div className="d-flex justify-content-center mt-3">
-              <nav aria-label="Paginação de planos">
-                <ul className="pagination">
-                  <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
-                      onClick={() => setPage(page - 1)}
-                      disabled={page === 1}
-                    >
-                      Anterior
-                    </button>
-                  </li>
-                  
-                  {Array.from({ length: planosData.pagination.last_page }, (_, i) => i + 1).map((pageNum) => (
-                    <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}>
-                      <button 
-                        className="page-link" 
-                        onClick={() => setPage(pageNum)}
-                      >
-                        {pageNum}
-                      </button>
-                    </li>
-                  ))}
-                  
-                  <li className={`page-item ${page === planosData.pagination.last_page ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === planosData.pagination.last_page}
-                    >
-                      Próximo
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          )}
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={planosData?.data || []}
+        isLoading={isLoading}
+        pagination={planosData?.pagination}
+        limit={limit}
+        setLimit={setLimit}
+        setPage={setPage}
+        emptyMessage="Nenhum plano encontrado"
+        actions={renderActions}
+      />
     </>
   );
 };
