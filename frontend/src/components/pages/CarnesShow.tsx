@@ -183,7 +183,7 @@ const CarnesShow: React.FC = () => {
                   <p><strong>Banco:</strong> {carne.banco?.nome}</p>
                 </div>
                 <div className="col-md-6">
-                  <p><strong>Valor Total:</strong> R$ {carne.valor_total?.toFixed(2).replace('.', ',')}</p>
+                  <p><strong>Valor Total:</strong> R$ {Number(carne.valor_total || 0).toFixed(2).replace('.', ',')}</p>
                   <p><strong>Parcelas:</strong> {carne.quantidade_parcelas}</p>
                   <p><strong>Status:</strong> 
                     <span className={`badge ms-2 ${carne.status === 'ativo' ? 'bg-success' : 'bg-warning'}`}>
@@ -298,7 +298,7 @@ const CarnesShow: React.FC = () => {
                       {parcelas.map((parcela: any) => (
                         <tr key={parcela.id}>
                           <td>{parcela.numero_parcela}</td>
-                          <td>R$ {parcela.valor_parcela?.toFixed(2).replace('.', ',')}</td>
+                          <td>R$ {Number(parcela.valor_parcela || 0).toFixed(2).replace('.', ',')}</td>
                           <td>{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
                           <td>
                             {parcela.pago ? (
