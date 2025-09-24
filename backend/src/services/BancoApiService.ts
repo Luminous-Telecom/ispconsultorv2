@@ -1201,6 +1201,21 @@ export class BancoApiService {
         };
       }
 
+      // Verificar se tem parcelas pagas
+      const parcelasPagas = await CarneParcela.count({
+        where: { 
+          carne_id: carne.id, 
+          status: 'pago' 
+        }
+      });
+
+      if (parcelasPagas > 0) {
+        return {
+          success: false,
+          message: 'Não é possível cancelar carnê com parcelas pagas.'
+        };
+      }
+
       const token = await this.obterToken(banco, config);
       if (!token) {
         return {
@@ -1213,7 +1228,7 @@ export class BancoApiService {
         ? (config.sandbox_url || config.cobranca_base_url)
         : config.cobranca_base_url;
       
-      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_cancelar}/${carne.carnet_id}`;
+      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_cancelar}/${carne.carnet_id}/cancel`;
 
       logger.info('Cancelando carnê', {
         endpoint,
@@ -1221,7 +1236,7 @@ export class BancoApiService {
         carne_id: carne.id
       });
 
-      const response = await axios.delete(endpoint, {
+      const response = await axios.put(endpoint, {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
