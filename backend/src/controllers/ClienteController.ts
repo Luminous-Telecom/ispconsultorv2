@@ -32,7 +32,10 @@ export class ClienteController {
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean().default(true),
     tipo_cobranca: Joi.string().max(50).allow(null, ''),
-    valor_primeiro_titulo: Joi.number().min(0).allow(null),
+    valor_primeiro_titulo: Joi.alternatives().try(
+      Joi.number().min(0),
+      Joi.string().valid('total', 'proporcional')
+    ).allow(null),
     isento_mensalidade: Joi.boolean().default(false),
     recebe_email: Joi.boolean().default(true),
     recebe_sms: Joi.boolean().default(false),
@@ -67,7 +70,10 @@ export class ClienteController {
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean(),
     tipo_cobranca: Joi.string().max(50).allow(null, ''),
-    valor_primeiro_titulo: Joi.number().min(0).allow(null),
+    valor_primeiro_titulo: Joi.alternatives().try(
+      Joi.number().min(0),
+      Joi.string().valid('total', 'proporcional')
+    ).allow(null),
     isento_mensalidade: Joi.boolean(),
     recebe_email: Joi.boolean(),
     recebe_sms: Joi.boolean(),
@@ -255,11 +261,16 @@ export class ClienteController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      
+      console.log('=== DEBUG CLIENTE UPDATE ===');
+      console.log('ID:', id);
+      console.log('Body recebido:', JSON.stringify(req.body, null, 2));
 
       // Validar dados
       const { error, value } = this.updateSchema.validate(req.body);
       
       if (error) {
+        console.log('Erro de validação:', error.details);
         res.status(400).json({
           success: false,
           error: 'Dados inválidos',
@@ -267,6 +278,8 @@ export class ClienteController {
         });
         return;
       }
+      
+      console.log('Dados validados:', JSON.stringify(value, null, 2));
 
       // Buscar cliente
       const cliente = await Cliente.findByPk(id);
