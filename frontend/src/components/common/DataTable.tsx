@@ -91,29 +91,40 @@ const DataTable: React.FC<TableProps> = ({
       {/* Header com botões de ação - sempre visível se houver bulkActions */}
       {bulkActions.length > 0 && (
         <div className="card-header py-2 border-bottom">
-          <div className="d-flex align-items-center gap-2">
-            <span className="text-muted small" style={{ minWidth: '120px' }}>
+          <div className="d-flex align-items-center" style={{ gap: '8px' }}>
+            <span 
+              className="text-muted small" 
+              style={{ 
+                minWidth: '150px', 
+                maxWidth: '150px',
+                flexShrink: 0,
+                display: 'block'
+              }}
+            >
               {selectedItems.length > 0 
                 ? `${selectedItems.length} item(s) selecionado(s)`
-                : '\u00A0' // Espaço em branco não-quebrável
+                : ' ' // Espaço fixo
               }
             </span>
-            {bulkActions.map((bulkAction, index) => {
-              // Novo sempre habilitado, outros só quando há seleção
-              const isNewButton = bulkAction.label.toLowerCase() === 'novo';
-              const isDisabled = !isNewButton && selectedItems.length === 0;
-              
-              return (
-                <button
-                  key={index}
-                  className="btn btn-sm btn-primary"
-                  onClick={() => !isDisabled && handleBulkAction(bulkAction.action)}
-                  disabled={isDisabled}
-                >
-                  {bulkAction.label}
-                </button>
-              );
-            })}
+            <div className="d-flex" style={{ gap: '8px' }}>
+              {bulkActions.map((bulkAction, index) => {
+                // Novo sempre habilitado, outros só quando há seleção
+                const isNewButton = bulkAction.label.toLowerCase() === 'novo';
+                const isDisabled = !isNewButton && selectedItems.length === 0;
+                
+                return (
+                  <button
+                    key={index}
+                    className="btn btn-sm btn-primary"
+                    onClick={() => !isDisabled && handleBulkAction(bulkAction.action)}
+                    disabled={isDisabled}
+                    style={{ flexShrink: 0 }}
+                  >
+                    {bulkAction.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
