@@ -19,6 +19,8 @@ const Clientes: React.FC = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Hooks para gerenciar clientes
   const { data: clientesData, isLoading, refetch } = useClientes({

@@ -21,6 +21,8 @@ const Planos: React.FC = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Query para buscar planos
   const { data: planosData, isLoading, refetch } = usePlanos({
