@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useBanco, useUpdateBanco } from '../../hooks/useBancos';
 import { BancoService } from '../../services/bancoService';
-import { useNotification } from '../../hooks/useNotification';
 
 interface BancoForm {
   nome: string;
@@ -97,26 +96,12 @@ const BancosEdit: React.FC = () => {
 
   const [errors, setErrors] = useState<Partial<BancoForm>>({});
   const [testResult, setTestResult] = useState<string>('');
-  const { success, error } = useNotification();
 
   // Query para buscar banco
-  const { data: banco, isLoading: bancoLoading } = useQuery({
-    queryKey: ['banco', bancoId],
-    queryFn: () => BancoService.getById(bancoId),
-    enabled: !!bancoId,
-  });
+  const { data: banco, isLoading: bancoLoading } = useBanco(bancoId);
 
   // Mutation para atualizar banco
-  const updateBancoMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: BancoForm }) => BancoService.update(id, data),
-    onSuccess: () => {
-      success('Banco atualizado com sucesso!');
-      navigate('/bancos');
-    },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao atualizar banco');
-    }
-  });
+  const updateBancoMutation = useUpdateBanco();
 
   // Carregar dados do banco quando disponível
   useEffect(() => {
@@ -209,7 +194,11 @@ const BancosEdit: React.FC = () => {
       return;
     }
 
-    updateBancoMutation.mutate({ id: bancoId, data: formData });
+    updateBancoMutation.mutate({ id: bancoId, data: formData }, {
+      onSuccess: () => {
+        navigate('/bancos');
+      }
+    });
   };
 
   const handleCancel = () => {

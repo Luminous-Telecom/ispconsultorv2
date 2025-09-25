@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { BancoService } from '../../services/bancoService';
-import { useNotification } from '../../hooks/useNotification';
+import { useBancos, useDeleteBanco } from '../../hooks/useBancos';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
 
@@ -20,19 +18,16 @@ const Bancos: React.FC = () => {
   const [tipo, setTipo] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const { success, error } = useNotification();
 
   // Query para buscar bancos
-  const { data: bancosData, isLoading, refetch } = useQuery({
-    queryKey: ['bancos', search, tipo, page, limit],
-    queryFn: () => BancoService.list({
-      search: search || undefined,
-      tipo_banco: tipo || undefined,
-      page,
-      limit
-    }),
-    placeholderData: (previousData) => previousData,
+  const { data: bancosData, isLoading, refetch } = useBancos({
+    search: search || undefined,
+    tipo_banco: tipo || undefined,
+    page,
+    limit
   });
+
+  const deleteBancoMutation = useDeleteBanco();
 
   const getTipoBadgeClass = (tipo: string) => {
     switch (tipo) {
@@ -58,13 +53,7 @@ const Bancos: React.FC = () => {
 
   const handleDelete = async (bancoId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este banco?')) {
-      try {
-        await BancoService.delete(bancoId);
-        success('Banco excluído com sucesso!');
-        refetch();
-      } catch (err) {
-        error('Erro ao excluir banco');
-      }
+      deleteBancoMutation.mutate(bancoId);
     }
   };
 
@@ -129,6 +118,7 @@ const Bancos: React.FC = () => {
         className="btn btn-outline-danger"
         title="Excluir"
         onClick={() => handleDelete(banco.id)}
+        disabled={deleteBancoMutation.isPending}
       >
         <i className="bi bi-trash"></i>
       </button>

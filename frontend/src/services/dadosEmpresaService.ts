@@ -51,13 +51,9 @@ export class DadosEmpresaService {
   static async get(): Promise<DadosEmpresa> {
     try {
       const response = await apiService.get<DadosEmpresa>('/dados-empresa');
-      console.log('DadosEmpresaService.get response:', response);
       
       // Garantir que sempre retornamos um objeto válido
-      console.log('Response type:', typeof response);
-      console.log('Response value:', response);
       if (!response || typeof response !== 'object' || response === null || Array.isArray(response)) {
-        console.warn('Response inválida, retornando dados padrão');
         return {
           id: 1,
           razao_social: '',
@@ -85,7 +81,6 @@ export class DadosEmpresaService {
       
       return response;
     } catch (error) {
-      console.error('Erro ao buscar dados da empresa:', error);
       // Retornar dados padrão em caso de erro
       return {
         id: 1,

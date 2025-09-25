@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { CarneService } from '../../services/carneService';
-import { ClienteService } from '../../services/clienteService';
-import { PlanoService } from '../../services/planoService';
-import { BancoService } from '../../services/bancoService';
-import { useNotification } from '../../hooks/useNotification';
+import { useCreateCarne } from '../../hooks/useCarnes';
+import { useClientesAtivos } from '../../hooks/useClientes';
+import { usePlanosAtivos } from '../../hooks/usePlanos';
+import { useBancosAtivos } from '../../hooks/useBancos';
 
 interface CarneForm {
   cliente_id: number;
@@ -42,23 +40,11 @@ const CarnesCreate: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Partial<CarneForm>>({});
-  const { success, error } = useNotification();
 
-  // Queries para buscar dados
-  const { data: clientes, isLoading: clientesLoading, error: clientesError } = useQuery({
-    queryKey: ['clientes-ativos'],
-    queryFn: () => ClienteService.listAtivos(),
-  });
-
-  const { data: planos, isLoading: planosLoading, error: planosError } = useQuery({
-    queryKey: ['planos-ativos'],
-    queryFn: () => PlanoService.findAtivos(),
-  });
-
-  const { data: bancos, isLoading: bancosLoading, error: bancosError } = useQuery({
-    queryKey: ['bancos-ativos'],
-    queryFn: () => BancoService.findAtivos(),
-  });
+  // Queries para buscar dados usando os hooks
+  const { data: clientes, isLoading: clientesLoading, error: clientesError } = useClientesAtivos();
+  const { data: planos, isLoading: planosLoading, error: planosError } = usePlanosAtivos();
+  const { data: bancos, isLoading: bancosLoading, error: bancosError } = useBancosAtivos();
 
   // Logs para monitorar carregamento dos dados
   useEffect(() => {
@@ -80,25 +66,7 @@ const CarnesCreate: React.FC = () => {
   }, [bancosError]);
 
   // Mutation para criar carnê
-  const createCarneMutation = useMutation({
-    mutationFn: CarneService.create,
-    onSuccess: (response: any) => {
-      let mensagem = 'Carnê criado com sucesso!';
-      
-      // Verificar se títulos foram gerados automaticamente
-      if (response.geracao_titulos?.success) {
-        mensagem += ' Títulos gerados automaticamente na EFI.';
-      } else if (response.geracao_titulos && !response.geracao_titulos.success) {
-        mensagem += ' Carnê criado, mas falha ao gerar títulos automaticamente.';
-      }
-      
-      success(mensagem);
-      navigate('/carnes');
-    },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar carnê');
-    }
-  });
+  const createCarneMutation = useCreateCarne();
 
   const handleInputChange = <K extends keyof CarneForm>(field: K, value: CarneForm[K]) => {
     setFormData(prev => ({
@@ -142,7 +110,11 @@ const CarnesCreate: React.FC = () => {
       valor_parcela: formData.valor_parcela
     };
 
-    createCarneMutation.mutate(dadosEnvio);
+    createCarneMutation.mutate(dadosEnvio, {
+      onSuccess: () => {
+        navigate('/carnes');
+      }
+    });
   };
 
   const handleCancel = () => {

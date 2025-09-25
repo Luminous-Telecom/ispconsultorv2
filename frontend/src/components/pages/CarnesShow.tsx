@@ -3,13 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CarneService } from '../../services/carneService';
 import { CarneParcelaService } from '../../services/carneParcelaService';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 const CarnesShow: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isConsulting, setIsConsulting] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);

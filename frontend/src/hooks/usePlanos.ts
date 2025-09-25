@@ -1,0 +1,94 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { PlanoService } from '../services/planoService';
+import { useNotificationContext } from '../contexts/NotificationContext';
+import { CACHE_CONFIG } from '../config/api';
+
+const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
+
+// Hook para listar planos
+export const usePlanos = (filters: any = {}) => {
+  return useQuery({
+    queryKey: ['planos', filters],
+    queryFn: () => PlanoService.list(filters),
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_CACHE_TIME,
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+// Hook para buscar plano por ID
+export const usePlano = (id: number) => {
+  return useQuery({
+    queryKey: ['plano', id],
+    queryFn: () => PlanoService.getById(id),
+    enabled: !!id,
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_CACHE_TIME,
+  });
+};
+
+// Hook para buscar planos ativos
+export const usePlanosAtivos = () => {
+  return useQuery({
+    queryKey: ['planos-ativos'],
+    queryFn: () => PlanoService.findAtivos(),
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_CACHE_TIME,
+  });
+};
+
+// Hook para criar plano
+export const useCreatePlano = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+
+  return useMutation({
+    mutationFn: PlanoService.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
+      success('Plano criado com sucesso!');
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao criar plano');
+    },
+  });
+};
+
+// Hook para atualizar plano
+export const useUpdatePlano = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      PlanoService.update(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      queryClient.invalidateQueries({ queryKey: ['plano', id] });
+      queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
+      success('Plano atualizado com sucesso!');
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao atualizar plano');
+    },
+  });
+};
+
+// Hook para excluir plano
+export const useDeletePlano = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+
+  return useMutation({
+    mutationFn: PlanoService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
+      success('Plano excluído com sucesso!');
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao excluir plano');
+    },
+  });
+};

@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { PlanoService } from '../../services/planoService';
-import { useNotification } from '../../hooks/useNotification';
+import { usePlano, useUpdatePlano } from '../../hooks/usePlanos';
 
 interface PlanoForm {
   nome_plano: string;
@@ -25,7 +23,6 @@ interface PlanoForm {
 const PlanosEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { success, error } = useNotification();
 
   const [formData, setFormData] = useState<PlanoForm>({
     nome_plano: '',
@@ -47,22 +44,9 @@ const PlanosEdit: React.FC = () => {
 
   const [errors, setErrors] = useState<Partial<PlanoForm>>({});
 
-  const { data: plano, isLoading } = useQuery({
-    queryKey: ['plano', id],
-    queryFn: () => PlanoService.getById(Number(id)),
-    enabled: !!id
-  });
+  const { data: plano, isLoading } = usePlano(Number(id));
 
-  const updatePlanoMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: PlanoForm }) => PlanoService.update(id, data),
-    onSuccess: () => {
-      success('Plano atualizado com sucesso!');
-      navigate('/planos');
-    },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao atualizar plano');
-    }
-  });
+  const updatePlanoMutation = useUpdatePlano();
 
   useEffect(() => {
     if (plano) {
@@ -141,7 +125,11 @@ const PlanosEdit: React.FC = () => {
       })
     );
 
-    updatePlanoMutation.mutate({ id: Number(id), data: dataToSend as PlanoForm });
+    updatePlanoMutation.mutate({ id: Number(id), data: dataToSend as PlanoForm }, {
+      onSuccess: () => {
+        navigate('/planos');
+      }
+    });
   };
 
   const handleCancel = () => {

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useCarnes, useDeleteCarne } from '../../hooks/useCarnes';
 import { CarneService } from '../../services/carneService';
-import { getApiUrl, API_CONFIG } from '../../config/api';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotificationContext } from '../../contexts/NotificationContext';
+import { API_CONFIG } from '../../config/api';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
 
@@ -12,18 +12,16 @@ const Carnes: React.FC = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const { success, error, warning } = useNotification() as any;
+  const { error } = useNotificationContext();
 
-  const { data: carnesData, isLoading, refetch } = useQuery({
-    queryKey: ['carnes', search, status, page, limit],
-    queryFn: () => CarneService.list({
-      search: search || undefined,
-      status: status || undefined,
-      page,
-      limit
-    }),
-    placeholderData: (previousData) => previousData,
+  const { data: carnesData, isLoading, refetch } = useCarnes({
+    search: search || undefined,
+    status: status || undefined,
+    page,
+    limit
   });
+
+  const deleteCarneMutation = useDeleteCarne();
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -77,25 +75,8 @@ const Carnes: React.FC = () => {
   };
 
   const handleDelete = async (carneId: number) => {
-    try {
-      // Buscar detalhes para verificar parcelas pagas
-      const carne = await CarneService.getById(carneId);
-      const temParcelasPagas = Array.isArray((carne as any).parcelas)
-        ? (carne as any).parcelas.some((p: any) => p.pago === true)
-        : false;
-
-      if (temParcelasPagas) {
-        warning ? warning('Não é possível excluir carnê com parcelas pagas.') : error('Não é possível excluir carnê com parcelas pagas.');
-        return;
-      }
-
-      if (window.confirm('Tem certeza que deseja excluir este carnê?')) {
-        await CarneService.delete(carneId);
-        success('Carnê excluído com sucesso!');
-        refetch();
-      }
-    } catch (err) {
-      error('Erro ao excluir carnê');
+    if (window.confirm('Tem certeza que deseja excluir este carnê?')) {
+      deleteCarneMutation.mutate(carneId);
     }
   };
 

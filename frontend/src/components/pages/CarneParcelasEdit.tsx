@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CarneParcelaService } from '../../services/carneParcelaService';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 import { getApiUrl } from '../../config/api';
 
 const CarneParcelasEdit: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+  
   const [formData, setFormData] = useState({
     valor_parcela: '',
     data_vencimento: '',
@@ -30,7 +33,11 @@ const CarneParcelasEdit: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcela'] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
+      success('Parcela atualizada com sucesso!');
       navigate('/carne-parcelas');
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao atualizar parcela');
     }
   });
 

@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
 import { BancoService } from '../../services/bancoService';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 interface ClienteForm {
   cnpj: string;
@@ -40,7 +40,7 @@ interface ClienteForm {
 const ClientesEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   const [formData, setFormData] = useState<ClienteForm>({
     cnpj: '',

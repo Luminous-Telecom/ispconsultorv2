@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { PlanoService } from '../../services/planoService';
-import { useNotification } from '../../hooks/useNotification';
+import { usePlanos, useDeletePlano } from '../../hooks/usePlanos';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
 
@@ -23,19 +21,16 @@ const Planos: React.FC = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const { success, error } = useNotification();
 
   // Query para buscar planos
-  const { data: planosData, isLoading, refetch } = useQuery({
-    queryKey: ['planos', search, status, page, limit],
-    queryFn: () => PlanoService.list({
-      search: search || undefined,
-      status: status || undefined,
-      page,
-      limit
-    }),
-    placeholderData: (previousData) => previousData,
+  const { data: planosData, isLoading, refetch } = usePlanos({
+    search: search || undefined,
+    status: status || undefined,
+    page,
+    limit
   });
+
+  const deletePlanoMutation = useDeletePlano();
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -61,13 +56,7 @@ const Planos: React.FC = () => {
 
   const handleDelete = async (planoId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este plano?')) {
-      try {
-        await PlanoService.delete(planoId);
-        success('Plano excluído com sucesso!');
-        refetch();
-      } catch (err) {
-        error('Erro ao excluir plano');
-      }
+      deletePlanoMutation.mutate(planoId);
     }
   };
 
@@ -153,6 +142,7 @@ const Planos: React.FC = () => {
         className="btn btn-outline-danger"
         title="Excluir"
         onClick={() => handleDelete(plano.id)}
+        disabled={deletePlanoMutation.isPending}
       >
         <i className="bi bi-trash"></i>
       </button>

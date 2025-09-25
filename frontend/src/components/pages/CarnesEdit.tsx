@@ -5,7 +5,7 @@ import { CarneService } from '../../services/carneService';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
 import { BancoService } from '../../services/bancoService';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 interface CarneForm {
   cliente_id: number;
@@ -43,7 +43,7 @@ const CarnesEdit: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Partial<CarneForm>>({});
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   // Query para buscar carnê
   const { data: carne, isLoading: carneLoading } = useQuery({

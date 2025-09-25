@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { PlanoService } from '../../services/planoService';
-import { useNotification } from '../../hooks/useNotification';
+import { useCreatePlano } from '../../hooks/usePlanos';
 
 interface PlanoForm {
   nome_plano: string;
@@ -24,7 +22,6 @@ interface PlanoForm {
 
 const PlanosCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { success, error } = useNotification();
 
   const [formData, setFormData] = useState<PlanoForm>({
     nome_plano: '',
@@ -46,16 +43,7 @@ const PlanosCreate: React.FC = () => {
 
   const [errors, setErrors] = useState<Partial<PlanoForm>>({});
 
-  const createPlanoMutation = useMutation({
-    mutationFn: PlanoService.create,
-    onSuccess: () => {
-      success('Plano criado com sucesso!');
-      navigate('/planos');
-    },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar plano');
-    }
-  });
+  const createPlanoMutation = useCreatePlano();
 
   const handleInputChange = (field: keyof PlanoForm, value: string | number | boolean | string[]) => {
     setFormData(prev => ({
@@ -108,7 +96,11 @@ const PlanosCreate: React.FC = () => {
       })
     );
 
-    createPlanoMutation.mutate(dataToSend as PlanoForm);
+    createPlanoMutation.mutate(dataToSend as PlanoForm, {
+      onSuccess: () => {
+        navigate('/planos');
+      }
+    });
   };
 
   const handleCancel = () => {

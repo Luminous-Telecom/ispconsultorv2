@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType, UpdateDadosEmpresa } from '../../services/dadosEmpresaService';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 const DadosEmpresa: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   // Query para buscar dados da empresa
   const { data: dadosEmpresa, isLoading, refetch } = useQuery({

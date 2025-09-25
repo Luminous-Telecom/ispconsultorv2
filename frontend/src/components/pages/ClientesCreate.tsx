@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
 import { BancoService } from '../../services/bancoService';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 interface ClienteForm {
   cnpj: string;
@@ -39,7 +39,7 @@ interface ClienteForm {
 
 const ClientesCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   const [formData, setFormData] = useState<ClienteForm>({
     cnpj: '',

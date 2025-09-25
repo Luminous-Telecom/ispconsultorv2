@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
 import { Cliente, CreateCliente, UpdateCliente, ClienteFilters, PaginatedResponse } from '../types';
-import { useNotification } from './useNotification';
+import { useNotificationContext } from '../contexts/NotificationContext';
 import { CACHE_CONFIG } from '../config/api';
 
 // Para React Query v5, use gcTime ao invés de cacheTime
@@ -42,7 +42,7 @@ export const useClientesAtivos = () => {
 // Hook para criar cliente
 export const useCreateCliente = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: ClienteService.create,
@@ -60,7 +60,7 @@ export const useCreateCliente = () => {
 // Hook para atualizar cliente
 export const useUpdateCliente = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateCliente }) =>
@@ -80,7 +80,7 @@ export const useUpdateCliente = () => {
 // Hook para excluir cliente
 export const useDeleteCliente = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: ClienteService.delete,

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import NotificationContainer from '../common/NotificationContainer';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 const Layout: React.FC = () => {
   const location = useLocation();
-  const { notifications, removeNotification } = useNotification();
+  const { notifications, removeNotification } = useNotificationContext();
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');

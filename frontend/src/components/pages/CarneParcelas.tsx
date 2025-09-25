@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CarneParcelaService } from '../../services/carneParcelaService';
 import { CarneService } from '../../services/carneService';
 import { getApiUrl } from '../../config/api';
-import { useNotification } from '../../hooks/useNotification';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 import DataTable from '../common/DataTable';
 
 const CarneParcelas: React.FC = () => {
@@ -17,7 +17,7 @@ const CarneParcelas: React.FC = () => {
   const [limit, setLimit] = useState(15);
   const [isRegistering, setIsRegistering] = useState(false);
   const queryClient = useQueryClient();
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   // Buscar parcelas
   const { data: parcelasData, isLoading } = useQuery({

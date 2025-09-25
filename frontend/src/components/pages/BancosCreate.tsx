@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { BancoService } from '../../services/bancoService';
-import { useNotification } from '../../hooks/useNotification';
+import { useCreateBanco } from '../../hooks/useBancos';
 
 interface BancoForm {
   nome: string;
@@ -95,19 +93,9 @@ const BancosCreate: React.FC = () => {
 
   const [errors, setErrors] = useState<Partial<BancoForm>>({});
   const [testResult, setTestResult] = useState<string>('');
-  const { success, error } = useNotification();
 
   // Mutation para criar banco
-  const createBancoMutation = useMutation({
-    mutationFn: (data: BancoForm) => BancoService.create(data),
-    onSuccess: () => {
-      success('Banco criado com sucesso!');
-      navigate('/bancos');
-    },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar banco');
-    }
-  });
+  const createBancoMutation = useCreateBanco();
 
   const handleInputChange = (field: keyof BancoForm, value: string | boolean | number) => {
     setFormData(prev => ({
@@ -152,7 +140,11 @@ const BancosCreate: React.FC = () => {
       return;
     }
 
-    createBancoMutation.mutate(formData);
+    createBancoMutation.mutate(formData, {
+      onSuccess: () => {
+        navigate('/bancos');
+      }
+    });
   };
 
   const handleCancel = () => {
