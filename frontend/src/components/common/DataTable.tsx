@@ -244,11 +244,19 @@ const DataTable: React.FC<TableProps> = ({
                     key={item.id || index} 
                     className={isSelected ? 'table-active' : ''}
                     onClick={() => handleSelectItem(item, !isSelected)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ 
+                      cursor: 'pointer',
+                      backgroundColor: isSelected ? '#e3f2fd' : 'inherit',
+                      borderLeft: isSelected ? '3px solid var(--primary-color)' : 'none'
+                    }}
                   >
                     {/* Radio button para seleção única */}
                     {(bulkActions.length > 0 || onSelectionChange) && (
-                      <td className="py-1 px-2" onClick={(e) => e.stopPropagation()}>
+                      <td 
+                        className="py-1 px-2" 
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ backgroundColor: isSelected ? '#e3f2fd' : 'inherit' }}
+                      >
                         <input
                           type="radio"
                           className="form-check-input"
@@ -260,7 +268,11 @@ const DataTable: React.FC<TableProps> = ({
                     )}
                     
                     {columns.map((column) => (
-                      <td key={column.key} className="py-1 px-2">
+                      <td 
+                        key={column.key} 
+                        className="py-1 px-2"
+                        style={{ backgroundColor: isSelected ? '#e3f2fd' : 'inherit' }}
+                      >
                         {column.render ? column.render(item) : item[column.key]}
                       </td>
                     ))}

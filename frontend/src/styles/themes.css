@@ -422,30 +422,30 @@ body {
   background: #e8eaed;
 }
 
-/* Linha selecionada - modo claro */
+/* Linha selecionada - modo claro - MAIS ESPECÍFICO */
+:root .table.table-striped tbody tr.table-active,
 :root .table tbody tr.table-active {
   background-color: #e3f2fd !important;
-  border-left: 3px solid var(--primary-color);
+  border-left: 3px solid var(--primary-color) !important;
 }
 
-:root .table tbody tr.table-active td {
-  background-color: #e3f2fd !important;
-}
-
+:root .table.table-striped tbody tr.table-active td,
+:root .table tbody tr.table-active td,
+:root .table.table-striped tbody tr.table-active th,
 :root .table tbody tr.table-active th {
   background-color: #e3f2fd !important;
 }
 
-/* Linha selecionada - modo escuro */
+/* Linha selecionada - modo escuro - MAIS ESPECÍFICO */
+[data-theme="dark"] .table.table-striped tbody tr.table-active,
 [data-theme="dark"] .table tbody tr.table-active {
   background-color: #2c3e50 !important;
-  border-left: 3px solid var(--primary-color);
+  border-left: 3px solid var(--primary-color) !important;
 }
 
-[data-theme="dark"] .table tbody tr.table-active td {
-  background-color: #2c3e50 !important;
-}
-
+[data-theme="dark"] .table.table-striped tbody tr.table-active td,
+[data-theme="dark"] .table tbody tr.table-active td,
+[data-theme="dark"] .table.table-striped tbody tr.table-active th,
 [data-theme="dark"] .table tbody tr.table-active th {
   background-color: #2c3e50 !important;
 }
