@@ -198,38 +198,7 @@ const Carnes: React.FC = () => {
         </div>
       </div>
 
-      {/* Filtros */}
-      <TableFilters
-        fields={[
-          {
-            name: 'search',
-            label: 'Buscar',
-            type: 'text',
-            placeholder: 'Número do carnê ou cliente',
-            value: search,
-            onChange: setSearch
-          },
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'select',
-            value: status,
-            onChange: setStatus,
-            options: [
-              { value: '', label: 'Todos' },
-              { value: 'em-dias', label: 'Em dias' },
-              { value: 'atrasado', label: 'Atrasado' },
-              { value: 'pago', label: 'Pago' },
-              { value: 'cancelado', label: 'Cancelado' }
-            ]
-          }
-        ]}
-        onFilter={handleFilter}
-        onReset={handleReset}
-        showResetButton={true}
-      />
-
-      {/* Tabela de Carnês */}
+      {/* Tabela de Carnês com controles integrados */}
       <DataTable
         columns={columns}
         data={carnesData?.data || []}
@@ -240,6 +209,26 @@ const Carnes: React.FC = () => {
         setPage={setPage}
         emptyMessage="Nenhum carnê encontrado"
         actions={renderActions}
+        searchPlaceholder="Número do carnê ou cliente"
+        onSearch={setSearch}
+        bulkActions={[
+          {
+            label: "Excluir Selecionados",
+            action: (selectedItems) => {
+              // Implementar lógica de exclusão em lote
+              console.log('Excluir itens:', selectedItems);
+            },
+            variant: 'danger'
+          },
+          {
+            label: "Marcar como Pago",
+            action: (selectedItems) => {
+              // Implementar lógica para marcar como pago
+              console.log('Marcar como pago:', selectedItems);
+            },
+            variant: 'success'
+          }
+        ]}
       />
     </>
   );
