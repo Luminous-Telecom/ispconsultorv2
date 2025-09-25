@@ -92,11 +92,12 @@ const DataTable: React.FC<TableProps> = ({
       {bulkActions.length > 0 && (
         <div className="card-header py-2 border-bottom">
           <div className="d-flex align-items-center gap-2">
-            {selectedItems.length > 0 && (
-              <span className="text-muted small">
-                {selectedItems.length} item(s) selecionado(s)
-              </span>
-            )}
+            <span className="text-muted small" style={{ minWidth: '120px' }}>
+              {selectedItems.length > 0 
+                ? `${selectedItems.length} item(s) selecionado(s)`
+                : '\u00A0' // Espaço em branco não-quebrável
+              }
+            </span>
             {bulkActions.map((bulkAction, index) => {
               // Novo sempre habilitado, outros só quando há seleção
               const isNewButton = bulkAction.label.toLowerCase() === 'novo';
