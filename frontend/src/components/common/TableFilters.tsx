@@ -1,89 +1,109 @@
 import React from 'react';
 
-interface FilterField {
-  name: string;
-  label: string;
-  type: 'text' | 'select';
-  placeholder?: string;
-  options?: { value: string; label: string }[];
-  value: string;
-  onChange: (value: string) => void;
-}
-
 interface TableFiltersProps {
-  fields: FilterField[];
-  onFilter: (e: React.FormEvent) => void;
-  onReset?: () => void;
-  showResetButton?: boolean;
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+  searchPlaceholder?: string;
+  showLimitSelector?: boolean;
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  limitOptions?: number[];
+  showPagination?: boolean;
+  pagination?: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  onPageChange?: (page: number) => void;
 }
 
 const TableFilters: React.FC<TableFiltersProps> = ({
-  fields,
-  onFilter,
-  onReset,
-  showResetButton = false
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = "Buscar...",
+  showLimitSelector = true,
+  limit = 15,
+  onLimitChange,
+  limitOptions = [10, 15, 25, 50],
+  showPagination = true,
+  pagination,
+  onPageChange
 }) => {
+  const goToFirstPage = () => onPageChange?.(1);
+  const goToLastPage = () => onPageChange?.(pagination?.last_page || 1);
+  const goToPrevPage = () => onPageChange?.(Math.max(1, (pagination?.current_page || 1) - 1));
+  const goToNextPage = () => onPageChange?.(Math.min(pagination?.last_page || 1, (pagination?.current_page || 1) + 1));
+
   return (
-    <div className="card mb-4">
-      <div className="card-body">
-        <form onSubmit={onFilter}>
-          <div className="row">
-            {fields.map((field, index) => (
-              <div key={field.name} className={`col-md-${field.type === 'text' ? '6' : '4'}`}>
-                <div className="mb-3">
-                  <label htmlFor={field.name} className="form-label">{field.label}</label>
-                  {field.type === 'text' ? (
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      id={field.name} 
-                      name={field.name} 
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder={field.placeholder}
-                    />
-                  ) : (
-                    <select 
-                      className="form-select" 
-                      id={field.name} 
-                      name={field.name}
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                    >
-                      {field.options?.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              </div>
+    <div className="d-flex align-items-center justify-content-between">
+      <div className="d-flex align-items-center gap-2">
+        {/* Busca */}
+        <input
+          type="text"
+          className="form-control form-control-sm"
+          placeholder={searchPlaceholder}
+          value={searchValue}
+          onChange={(e) => onSearchChange(e.target.value)}
+          style={{ width: '200px', height: '32px' }}
+        />
+
+        {/* Seletor de limite */}
+        {showLimitSelector && onLimitChange && (
+          <select
+            className="form-select form-select-sm"
+            value={limit}
+            onChange={(e) => onLimitChange(parseInt(e.target.value))}
+            style={{ width: '80px', height: '32px' }}
+          >
+            {limitOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
             ))}
-            
-            {/* Botões de ação */}
-            <div className="col-md-2">
-              <div className="mb-3">
-                <label className="form-label">&nbsp;</label>
-                <div className="d-grid gap-2">
-                  <button type="submit" className="btn btn-outline-primary">
-                    <i className="bi bi-search"></i> Filtrar
-                  </button>
-                  {showResetButton && onReset && (
-                    <button 
-                      type="button" 
-                      className="btn btn-outline-secondary"
-                      onClick={onReset}
-                    >
-                      <i className="bi bi-arrow-clockwise"></i> Limpar
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
+          </select>
+        )}
       </div>
+
+      {/* Paginação */}
+      {showPagination && pagination && onPageChange && (
+        <div className="d-flex align-items-center gap-2">
+          <span className="text-muted small">
+            Página {pagination.current_page} de {pagination.last_page}
+          </span>
+          
+          <div className="btn-group" role="group">
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={goToFirstPage}
+              disabled={pagination.current_page === 1}
+            >
+              <i className="bi bi-chevron-double-left"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={goToPrevPage}
+              disabled={pagination.current_page === 1}
+            >
+              <i className="bi bi-chevron-left"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={goToNextPage}
+              disabled={pagination.current_page === pagination.last_page}
+            >
+              <i className="bi bi-chevron-right"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={goToLastPage}
+              disabled={pagination.current_page === pagination.last_page}
+            >
+              <i className="bi bi-chevron-double-right"></i>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
