@@ -184,11 +184,6 @@ const DataTable: React.FC<TableProps> = ({
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            
-            {/* Download */}
-            <button className="btn btn-outline-secondary btn-sm">
-              <i className="bi bi-download"></i>
-            </button>
           </div>
 
           <div className="d-flex align-items-center gap-2">
