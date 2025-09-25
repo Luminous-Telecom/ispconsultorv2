@@ -28,11 +28,11 @@
   --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
   
-  /* Sidebar */
-  --sidebar-bg: #2c3e50;
-  --sidebar-text: #ecf0f1;
-  --sidebar-hover: #34495e;
-  --sidebar-active: #3498db;
+  /* Sidebar - Modo claro harmonizado */
+  --sidebar-bg: #f8f9fa;
+  --sidebar-text: #212529;
+  --sidebar-hover: #e9ecef;
+  --sidebar-active: #007bff;
   
   /* Transições */
   --transition: all 0.3s ease;
@@ -41,10 +41,10 @@
 
 /* Tema escuro */
 [data-theme="dark"] {
-  /* Cores de fundo - Tons de cinza/verde */
-  --bg-primary: #263237;
-  --bg-secondary: #263237;
-  --bg-tertiary: #101619;
+  /* Cores de fundo - Tons harmonizados */
+  --bg-primary: #314249;
+  --bg-secondary: #2a3a42;
+  --bg-tertiary: #1e2a30;
   
   /* Cores de texto */
   --text-primary: #ffffff;
@@ -60,11 +60,11 @@
   --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.6);
   
-  /* Sidebar */
-  --sidebar-bg: #101619;
+  /* Sidebar - Modo escuro harmonizado */
+  --sidebar-bg: #314249;
   --sidebar-text: #ffffff;
-  --sidebar-hover: #263237;
-  --sidebar-active: #4a9eff;
+  --sidebar-hover: #586f79;
+  --sidebar-active: #1b272c;
 }
 
 /* Estilos base para ambos os temas */
@@ -84,6 +84,7 @@ body {
   left: 0;
   height: 100vh;
   width: 240px;
+  background: var(--sidebar-bg);
   color: var(--sidebar-text);
   z-index: 1000;
   transition: var(--transition);
@@ -97,7 +98,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: #101619;
+  background-color: var(--bg-tertiary);
 }
 
 .sidebar-logo {
@@ -122,7 +123,7 @@ body {
 
 .sidebar-nav {
   padding: 0.5rem 0;
-  background-color: var(--bg-secondary);
+  background-color: var(--sidebar-bg);
 }
 
 .sidebar-nav-item {
@@ -153,13 +154,7 @@ body {
   color: white;
 }
 
-/* Ícones removidos do menu */
-
-/* Hover específico para modo escuro */
-[data-theme="dark"] .sidebar-nav-link:hover {
-  background: #586f79 !important;
-  color: #ffffff !important;
-}
+/* Hover usa variáveis CSS para consistência */
 
 /* Layout principal */
 .main-layout {
@@ -216,22 +211,22 @@ body {
   border-color: var(--primary-color);
 }
 
-/* Cards modernos */
+/* Cards limpos */
 .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.card-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem;
 }
 
 /* Card hover removido para evitar efeitos visuais */
-
-.card-header {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--bg-secondary);
-  border-radius: 8px 8px 0 0;
-}
 
 .card-header h1,
 .card-header h2,
@@ -401,7 +396,7 @@ body {
 }
 
 .table tbody tr:hover {
-  background: var(--bg-tertiary);
+  background: #3a4a52;
 }
 
 .table tbody tr:nth-child(even) {
@@ -409,7 +404,7 @@ body {
 }
 
 .table tbody tr:nth-child(even):hover {
-  background: var(--bg-tertiary);
+  background: #3a4a52;
 }
 
 /* Garantir hover visível no modo claro */
@@ -421,7 +416,7 @@ body {
   background: #e8eaed;
 }
 
-/* Linha selecionada - modo claro - MAIS ESPECÍFICO */
+/* Linha selecionada - modo claro - Limpa */
 :root .table.table-striped tbody tr.table-active,
 :root .table tbody tr.table-active {
   background-color: #0d6efd !important;
@@ -435,7 +430,7 @@ body {
   color: white !important;
 }
 
-/* Linha selecionada - modo escuro - MAIS ESPECÍFICO */
+/* Linha selecionada - modo escuro - Limpa */
 [data-theme="dark"] .table.table-striped tbody tr.table-active,
 [data-theme="dark"] .table tbody tr.table-active {
   background-color: #1e40af !important;
@@ -449,15 +444,22 @@ body {
   color: white !important;
 }
 
-/* Tabela sem border-radius e com separadores */
+/* Tabelas modernas e elegantes */
 .table {
-  border-radius: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: none;
 }
 
 .table th,
 .table td {
   border-radius: 0;
-  border-right: 1px solid #505050;
+  border-right: 1px solid var(--border-light);
+  padding: 1rem 0.75rem;
+  vertical-align: middle;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .table th:last-child,
@@ -465,16 +467,29 @@ body {
   border-right: none;
 }
 
-.table tbody td {
-  padding: 0.5rem;
-  border-bottom: 1px solid #505050;
-  border-right: 1px solid #505050;
+.table thead th {
+  background: var(--bg-tertiary);
   color: var(--text-primary);
-  font-size: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.table tbody td {
+  border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-size: 0.875rem;
 }
 
 .table tbody td:last-child {
   border-right: none;
+}
+
+.table tbody tr:hover {
+  background-color: #3a4a52;
 }
 
 /* Garantir texto claro no modo escuro para linhas não selecionadas */
@@ -629,44 +644,45 @@ body {
 /* Sobrescrever classes Bootstrap para tema escuro - Mais específico */
 [data-theme="dark"] .table,
 [data-theme="dark"] .table-striped {
-  background-color: #263237 !important;
+  background-color: #2a3a42 !important;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td,
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > th {
-  background-color: #263237 !important;
+  background-color: #2a3a42 !important;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > td,
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > th {
-  background-color: #101619 !important;
+  background-color: #1e2a30 !important;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:hover > td,
 [data-theme="dark"] .table-striped > tbody > tr:hover > th {
-  background-color: var(--bg-tertiary) !important;
+  background-color: #3a4a52 !important;
 }
 
 
 [data-theme="dark"] .table thead th {
   background-color: #1b272c !important;
   color: #ffffff !important;
+  border-bottom: 2px solid #007bff !important;
 }
 
 [data-theme="dark"] .table tbody tr {
-  background-color: #263237 !important;
+  background-color: #2a3a42 !important;
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even) {
-  background-color: #101619 !important;
+  background-color: #1e2a30 !important;
 }
 
 [data-theme="dark"] .table tbody tr:hover {
-  background-color: var(--bg-tertiary) !important;
+  background-color: #3a4a52 !important;
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even):hover {
-  background-color: var(--bg-tertiary) !important;
+  background-color: #3a4a52 !important;
 }
 
 /* Sobrescrever bg-light para tema escuro */
@@ -689,8 +705,8 @@ body {
 [data-theme="dark"] .card,
 [data-theme="dark"] .card-body,
 [data-theme="dark"] .table-responsive {
-  background-color: #263237 !important;
-  border-color: #505050 !important;
+  background-color: #2a3a42 !important;
+  border-color: var(--border-color) !important;
 }
 
 /* Sobrescrever qualquer estilo inline ou Bootstrap que force fundo branco */
@@ -705,19 +721,37 @@ body {
   color: var(--text-primary) !important;
 }
 
+/* Botões limpos */
+.btn {
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+}
+
+.btn-sm {
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+  padding: 0.375rem 0.75rem !important;
+}
+
+/* Badges limpos */
+.badge {
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+}
+
 /* Corrigir cores do campo de busca no tema escuro */
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .form-control:focus,
 [data-theme="dark"] .form-control:active {
-  background-color: #1b272c !important;
+  background-color: var(--sidebar-active) !important;
   color: #ffffff !important;
-  border-color: #505050 !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .form-control:focus {
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2) !important;
-  background-color: #101619 !important;
+  background-color: var(--bg-tertiary) !important;
   color: #ffffff !important;
 }
 
@@ -726,13 +760,13 @@ body {
 }
 
 [data-theme="dark"] .form-control-sm {
-  background-color: #1b272c !important;
+  background-color: var(--sidebar-active) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .form-control-sm:focus {
-  background-color: #101619 !important;
+  background-color: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2) !important;
