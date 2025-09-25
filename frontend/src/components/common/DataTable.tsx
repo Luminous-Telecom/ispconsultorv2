@@ -88,10 +88,11 @@ const DataTable: React.FC<TableProps> = ({
 
   return (
     <div className="card">
-      {/* Header com botões de ação - sempre visível se houver bulkActions */}
-      {bulkActions.length > 0 && (
-        <div className="card-header py-2 border-bottom">
-          <div className="d-flex align-items-center justify-content-between">
+      {/* Header com botões de ação e filtros */}
+      <div className="card-header py-2 border-bottom">
+        {/* Botões de ação */}
+        {bulkActions.length > 0 && (
+          <div className="d-flex align-items-center justify-content-between mb-2">
             <div className="d-flex" style={{ gap: '8px' }}>
               {bulkActions.map((bulkAction, index) => {
                 // Novo sempre habilitado, outros só quando há seleção
@@ -126,12 +127,10 @@ const DataTable: React.FC<TableProps> = ({
               }
             </span>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Controles compactos */}
-      <div className="card-body p-2">
-        <div className="d-flex align-items-center justify-content-between mb-2">
+        {/* Controles compactos */}
+        <div className="d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-2">
             {/* Busca */}
             {onSearch && (
@@ -207,8 +206,9 @@ const DataTable: React.FC<TableProps> = ({
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Tabela */}
+      {/* Tabela */}
         <div className="table-responsive">
           <table className="table table-striped table-sm">
             <thead>
