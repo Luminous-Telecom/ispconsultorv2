@@ -476,6 +476,10 @@ body {
   letter-spacing: 0.5px;
   border-bottom: 2px solid var(--primary-color);
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .table tbody td {
