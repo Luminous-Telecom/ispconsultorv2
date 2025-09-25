@@ -35,8 +35,8 @@ const Carnes: React.FC = () => {
     }
 
     return [...carnesData.data].sort((a, b) => {
-      let aValue = a[sortColumn];
-      let bValue = b[sortColumn];
+      let aValue = (a as any)[sortColumn];
+      let bValue = (b as any)[sortColumn];
 
       // Converter para string se necessário para comparação
       if (typeof aValue === 'string') {
