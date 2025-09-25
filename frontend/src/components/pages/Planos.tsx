@@ -160,38 +160,8 @@ const Planos: React.FC = () => {
     }
   ];
 
-  // Renderizar ações da tabela
-  const renderActions = (plano: Plano) => (
-    <div className="btn-group btn-group-sm" role="group">
-      <Link 
-        to={`/planos/${plano.id}/edit`} 
-        className="btn btn-outline-warning"
-        title="Editar"
-      >
-        <i className="bi bi-pencil"></i>
-      </Link>
-      <button 
-        type="button" 
-        className="btn btn-outline-danger"
-        title="Excluir"
-        onClick={() => handleDelete(plano.id)}
-        disabled={deletePlanoMutation.isPending}
-      >
-        <i className="bi bi-trash"></i>
-      </button>
-    </div>
-  );
-
   return (
     <>
-      <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <div className="btn-group" role="group">
-          <Link to="/planos/create" className="btn btn-primary">
-            <i className="bi bi-plus"></i> Novo Plano
-          </Link>
-        </div>
-      </div>
-
       {/* Tabela de Planos com controles integrados */}
       <DataTable
         columns={columns}

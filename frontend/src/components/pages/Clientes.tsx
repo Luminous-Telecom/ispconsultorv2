@@ -123,77 +123,38 @@ const Clientes: React.FC = () => {
     }
   ];
 
-  // Renderizar ações da tabela
-  const renderActions = (cliente: Cliente) => (
-    <div className="btn-group btn-group-sm" role="group">
-      <Link 
-        to={`/clientes/${cliente.id}/edit`} 
-        className="btn btn-outline-warning"
-        title="Editar"
-      >
-        <i className="bi bi-pencil"></i>
-      </Link>
-      <button 
-        type="button" 
-        className="btn btn-outline-danger"
-        title="Excluir"
-        onClick={() => handleDelete(cliente.id)}
-        disabled={deleteClienteMutation.isPending}
-      >
-        <i className="bi bi-trash"></i>
-      </button>
-    </div>
-  );
-
   return (
-    <div className="fade-in">
-      <div className="card">
-        <div className="card-header">
-          <div className="d-flex justify-content-between align-items-center">
-            <h1 className="h4 mb-0">
-              <i className="bi bi-people me-2"></i>
-              Clientes
-            </h1>
-            <Link to="/clientes/create" className="btn btn-primary">
-              <i className="bi bi-plus"></i> Novo Cliente
-            </Link>
-          </div>
-        </div>
-        <div className="card-body">
-
-          {/* Tabela de Clientes com controles integrados */}
-          <DataTable
-            columns={columns}
-            data={clientesData?.data || []}
-            isLoading={isLoading}
-            pagination={clientesData?.pagination}
-            limit={limit}
-            setLimit={setLimit}
-            setPage={setPage}
-            emptyMessage="Nenhum cliente encontrado"
-            searchPlaceholder="Nome, CNPJ ou email"
-            onSearch={setSearch}
-            bulkActions={[
-              {
-                label: "Novo",
-                action: () => window.location.href = "/clientes/create"
-              },
-              {
-                label: "Editar",
-                action: (selectedItems) => handleTopoActions('editar', selectedItems)
-              },
-              {
-                label: "Deletar",
-                action: (selectedItems) => handleTopoActions('deletar', selectedItems)
-              }
-            ]}
-            onSort={handleSort}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-          />
-        </div>
-      </div>
-    </div>
+    <>
+      {/* Tabela de Clientes com controles integrados */}
+      <DataTable
+        columns={columns}
+        data={clientesData?.data || []}
+        isLoading={isLoading}
+        pagination={clientesData?.pagination}
+        limit={limit}
+        setLimit={setLimit}
+        setPage={setPage}
+        emptyMessage="Nenhum cliente encontrado"
+        searchPlaceholder="Nome, CNPJ ou email"
+        onSearch={setSearch}
+        bulkActions={[
+          {
+            label: "Novo",
+            action: () => window.location.href = "/clientes/create"
+          },
+          {
+            label: "Editar",
+            action: (selectedItems) => handleTopoActions('editar', selectedItems)
+          },
+          {
+            label: "Deletar",
+            action: (selectedItems) => handleTopoActions('deletar', selectedItems)
+          }
+        ]}
+        onSort={handleSort}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+      />
   );
 };
 
