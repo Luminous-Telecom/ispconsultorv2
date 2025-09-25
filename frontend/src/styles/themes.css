@@ -219,17 +219,8 @@ body {
 .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 0;
+  border-radius: 8px;
   box-shadow: var(--shadow-sm);
-}
-
-/* Botões sem border-radius */
-.btn {
-  border-radius: 0 !important;
-}
-
-.btn-sm {
-  border-radius: 0 !important;
 }
 
 .card:hover {
@@ -459,11 +450,32 @@ body {
   color: white !important;
 }
 
+/* Tabela sem border-radius e com separadores */
+.table {
+  border-radius: 0;
+}
+
+.table th,
+.table td {
+  border-radius: 0;
+  border-right: 1px solid var(--border-light);
+}
+
+.table th:last-child,
+.table td:last-child {
+  border-right: none;
+}
+
 .table tbody td {
   padding: 0.5rem;
-  border: none;
+  border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
   color: var(--text-primary);
   font-size: 0.75rem;
+}
+
+.table tbody td:last-child {
+  border-right: none;
 }
 
 /* Garantir texto claro no modo escuro para linhas não selecionadas */

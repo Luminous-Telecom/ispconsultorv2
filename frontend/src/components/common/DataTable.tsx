@@ -5,6 +5,7 @@ interface Column {
   label: string;
   render?: (item: any) => React.ReactNode;
   className?: string;
+  sortable?: boolean;
 }
 
 interface TableProps {
@@ -31,6 +32,9 @@ interface TableProps {
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
   onSelectionChange?: (selectedItems: any[]) => void;
+  onSort?: (column: string, direction: 'asc' | 'desc') => void;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
 const DataTable: React.FC<TableProps> = ({
@@ -45,7 +49,10 @@ const DataTable: React.FC<TableProps> = ({
   bulkActions = [],
   onSearch,
   searchPlaceholder = 'Buscar...',
-  onSelectionChange
+  onSelectionChange,
+  onSort,
+  sortColumn,
+  sortDirection = 'asc'
 }) => {
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,6 +99,18 @@ const DataTable: React.FC<TableProps> = ({
       backgroundColor: isDarkMode ? '#1e40af' : '#0d6efd',
       color: 'white'
     };
+  };
+
+  // Função para lidar com ordenação
+  const handleSort = (columnKey: string) => {
+    if (!onSort) return;
+    
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortColumn === columnKey && sortDirection === 'asc') {
+      direction = 'desc';
+    }
+    
+    onSort(columnKey, direction);
   };
 
   return (
@@ -222,8 +241,27 @@ const DataTable: React.FC<TableProps> = ({
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className={`py-1 px-2 ${column.className || ''}`} style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
-                  {column.label}
+                <th 
+                  key={column.key} 
+                  className={`py-1 px-2 ${column.className || ''} ${column.sortable !== false && onSort ? 'cursor-pointer' : ''}`} 
+                  style={{ fontSize: '0.75rem', padding: '0.5rem' }}
+                  onClick={() => column.sortable !== false && onSort && handleSort(column.key)}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>{column.label}</span>
+                    {column.sortable !== false && onSort && (
+                      <div className="d-flex flex-column">
+                        <i 
+                          className={`bi bi-caret-up-fill ${sortColumn === column.key && sortDirection === 'asc' ? 'text-primary' : 'text-muted'}`}
+                          style={{ fontSize: '0.6rem', lineHeight: '0.5' }}
+                        ></i>
+                        <i 
+                          className={`bi bi-caret-down-fill ${sortColumn === column.key && sortDirection === 'desc' ? 'text-primary' : 'text-muted'}`}
+                          style={{ fontSize: '0.6rem', lineHeight: '0.5' }}
+                        ></i>
+                      </div>
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
