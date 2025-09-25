@@ -223,27 +223,35 @@ const DataTable: React.FC<TableProps> = ({
                     </td>
                   </tr>
                 ) : data.length > 0 ? (
-                  data.map((item, index) => (
-                    <tr key={item.id || index} className={selectedItems.some(selected => selected.id === item.id) ? 'table-active' : ''}>
-                      {/* Checkbox para selecionar item */}
-                      {(bulkActions.length > 0 || onSelectionChange) && (
-                        <td className="py-1 px-2">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={selectedItems.some(selected => selected.id === item.id)}
-                            onChange={(e) => handleSelectItem(item, e.target.checked)}
-                          />
-                        </td>
-                      )}
-                      
-                      {columns.map((column) => (
-                        <td key={column.key} className="py-1 px-2">
-                          {column.render ? column.render(item) : item[column.key]}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
+                  data.map((item, index) => {
+                    const isSelected = selectedItems.some(selected => selected.id === item.id);
+                    return (
+                      <tr 
+                        key={item.id || index} 
+                        className={isSelected ? 'table-active' : ''}
+                        onClick={() => handleSelectItem(item, !isSelected)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {/* Checkbox apenas como indicador visual */}
+                        {(bulkActions.length > 0 || onSelectionChange) && (
+                          <td className="py-1 px-2" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={isSelected}
+                              onChange={(e) => handleSelectItem(item, e.target.checked)}
+                            />
+                          </td>
+                        )}
+                        
+                        {columns.map((column) => (
+                          <td key={column.key} className="py-1 px-2">
+                            {column.render ? column.render(item) : item[column.key]}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
