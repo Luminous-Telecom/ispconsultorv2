@@ -221,25 +221,17 @@ const DataTable: React.FC<TableProps> = ({
         <table className="table table-striped table-sm">
           <thead>
             <tr>
-              {/* Checkbox para seleção individual */}
-              {(bulkActions.length > 0 || onSelectionChange) && (
-                <th className="py-1 px-2" style={{ width: '40px' }}>
-                  {/* Sem checkbox no cabeçalho para seleção única */}
-                </th>
-              )}
-              
               {columns.map((column) => (
-                <th key={column.key} className={`py-1 px-2 ${column.className || ''}`}>
+                <th key={column.key} className={`py-1 px-2 ${column.className || ''}`} style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
                   {column.label}
                 </th>
               ))}
-              
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
+                <td colSpan={columns.length} className="text-center">
                   <div className="spinner-border spinner-border-sm" role="status">
                     <span className="visually-hidden">Carregando...</span>
                   </div>
@@ -260,30 +252,12 @@ const DataTable: React.FC<TableProps> = ({
                       borderLeft: isSelected ? '3px solid var(--primary-color)' : 'none'
                     }}
                   >
-                    {/* Radio button para seleção única */}
-                    {(bulkActions.length > 0 || onSelectionChange) && (
-                      <td 
-                        className="py-1 px-2" 
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ 
-                          backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
-                          color: isSelected ? getSelectionColors().color : 'inherit'
-                        }}
-                      >
-                        <input
-                          type="radio"
-                          className="form-check-input"
-                          name="tableSelection"
-                          checked={isSelected}
-                          onChange={(e) => handleSelectItem(item, e.target.checked)}
-                        />
-                      </td>
-                    )}
                     
                     {columns.map((column) => (
                       <td 
                         key={column.key} 
                         className="py-1 px-2"
+                        style={{ fontSize: '0.75rem', padding: '0.5rem' }}
                         style={{ 
                           backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
                           color: isSelected ? getSelectionColors().color : 'inherit'
@@ -297,7 +271,7 @@ const DataTable: React.FC<TableProps> = ({
               })
             ) : (
               <tr>
-                <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
+                <td colSpan={columns.length} className="text-center">
                   {emptyMessage}
                 </td>
               </tr>
