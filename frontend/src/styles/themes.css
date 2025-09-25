@@ -41,8 +41,8 @@
 
 /* Tema escuro */
 [data-theme="dark"] {
-  /* Cores de fundo - Verde escuro */
-  --bg-primary: #263237;
+  /* Cores de fundo - Cinza escuro */
+  --bg-primary: #212121;
   --bg-secondary: #1b272c;
   --bg-tertiary: #243447;
   
