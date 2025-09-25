@@ -244,10 +244,7 @@ const DataTable: React.FC<TableProps> = ({
                     key={item.id || index} 
                     className={isSelected ? 'table-active' : ''}
                     onClick={() => handleSelectItem(item, !isSelected)}
-                    style={{ 
-                      cursor: 'pointer',
-                      backgroundColor: isSelected ? '#e3f2fd' : 'inherit'
-                    }}
+                    style={{ cursor: 'pointer' }}
                   >
                     {/* Radio button para seleção única */}
                     {(bulkActions.length > 0 || onSelectionChange) && (
