@@ -244,19 +244,19 @@ const DataTable: React.FC<TableProps> = ({
                     {column.sortable !== false && onSort && (
                       <div className="d-flex flex-column">
                         <i 
-                          className={`bi bi-caret-up-fill ${sortColumn === column.key && sortDirection === 'asc' ? 'text-white' : 'text-muted'}`}
+                          className={`bi bi-caret-up-fill`}
                           style={{ 
                             fontSize: '0.6rem', 
                             lineHeight: '0.5',
-                            color: sortColumn === column.key && sortDirection === 'asc' ? '#ffffff' : '#6c757d'
+                            color: sortColumn === column.key && sortDirection === 'asc' ? '#ffffff' : '#adb5bd'
                           }}
                         ></i>
                         <i 
-                          className={`bi bi-caret-down-fill ${sortColumn === column.key && sortDirection === 'desc' ? 'text-white' : 'text-muted'}`}
+                          className={`bi bi-caret-down-fill`}
                           style={{ 
                             fontSize: '0.6rem', 
                             lineHeight: '0.5',
-                            color: sortColumn === column.key && sortDirection === 'desc' ? '#ffffff' : '#6c757d'
+                            color: sortColumn === column.key && sortDirection === 'desc' ? '#ffffff' : '#adb5bd'
                           }}
                         ></i>
                       </div>
