@@ -221,12 +221,10 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: var(--shadow-sm);
-  transition: var(--transition);
 }
 
 .card:hover {
   box-shadow: var(--shadow);
-  transform: translateY(-1px);
 }
 
 .card-header {
