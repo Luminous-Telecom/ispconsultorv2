@@ -85,6 +85,15 @@ const DataTable: React.FC<TableProps> = ({
   const goToPrevPage = () => setPage(Math.max(1, (pagination?.current_page || 1) - 1));
   const goToNextPage = () => setPage(Math.min(pagination?.last_page || 1, (pagination?.current_page || 1) + 1));
 
+  // Função para obter cores baseadas no tema
+  const getSelectionColors = () => {
+    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+      backgroundColor: isDarkMode ? '#1e40af' : '#0d6efd',
+      color: 'white'
+    };
+  };
+
   return (
     <div className="card">
       {/* Header com botões de ação e filtros */}
@@ -246,7 +255,8 @@ const DataTable: React.FC<TableProps> = ({
                     onClick={() => handleSelectItem(item, !isSelected)}
                     style={{ 
                       cursor: 'pointer',
-                      backgroundColor: isSelected ? '#0d6efd' : 'inherit',
+                      backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
+                      color: isSelected ? getSelectionColors().color : 'inherit',
                       borderLeft: isSelected ? '3px solid var(--primary-color)' : 'none'
                     }}
                   >
@@ -256,8 +266,8 @@ const DataTable: React.FC<TableProps> = ({
                         className="py-1 px-2" 
                         onClick={(e) => e.stopPropagation()}
                         style={{ 
-                          backgroundColor: isSelected ? '#0d6efd' : 'inherit',
-                          color: isSelected ? 'white' : 'inherit'
+                          backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
+                          color: isSelected ? getSelectionColors().color : 'inherit'
                         }}
                       >
                         <input
@@ -275,8 +285,8 @@ const DataTable: React.FC<TableProps> = ({
                         key={column.key} 
                         className="py-1 px-2"
                         style={{ 
-                          backgroundColor: isSelected ? '#0d6efd' : 'inherit',
-                          color: isSelected ? 'white' : 'inherit'
+                          backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
+                          color: isSelected ? getSelectionColors().color : 'inherit'
                         }}
                       >
                         {column.render ? column.render(item) : item[column.key]}
