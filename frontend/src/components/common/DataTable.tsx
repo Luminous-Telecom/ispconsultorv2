@@ -67,6 +67,12 @@ const DataTable: React.FC<TableProps> = ({
 
   const handleSelectItem = (item: any, checked: boolean) => {
     // Permitir seleção de apenas uma linha
+    // Se já está selecionado, não desselecionar
+    const isAlreadySelected = selectedItems.some(selected => selected.id === item.id);
+    if (isAlreadySelected && !checked) {
+      return; // Não permitir desseleção
+    }
+    
     const newSelection = checked ? [item] : [];
     
     setSelectedItems(newSelection);
@@ -282,9 +288,9 @@ const DataTable: React.FC<TableProps> = ({
                   <tr
                     key={item.id || index} 
                     className={isSelected ? 'table-active' : ''}
-                    onClick={() => handleSelectItem(item, !isSelected)}
+                    onClick={() => !isSelected && handleSelectItem(item, true)}
                     style={{ 
-                      cursor: 'pointer',
+                      cursor: isSelected ? 'default' : 'pointer',
                       backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
                       color: isSelected ? getSelectionColors().color : 'inherit'
                     }}
