@@ -42,9 +42,9 @@
 /* Tema escuro */
 [data-theme="dark"] {
   /* Cores de fundo - Cinza escuro */
-  --bg-primary: #212121;
-  --bg-secondary: #1b272c;
-  --bg-tertiary: #243447;
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2a2a2a;
+  --bg-tertiary: #3a3a3a;
   
   /* Cores de texto */
   --text-primary: #e8f4f8;
@@ -630,17 +630,17 @@ body {
 /* Sobrescrever classes Bootstrap para tema escuro - Mais específico */
 [data-theme="dark"] .table,
 [data-theme="dark"] .table-striped {
-  background-color: var(--bg-primary) !important;
+  background-color: #1a1a1a !important;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td,
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > th {
-  background-color: var(--bg-primary) !important;
+  background-color: #1a1a1a !important;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > td,
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > th {
-  background-color: var(--bg-secondary) !important;
+  background-color: #252525 !important;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:hover > td,
@@ -649,12 +649,17 @@ body {
 }
 
 
+[data-theme="dark"] .table thead th {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
 [data-theme="dark"] .table tbody tr {
-  background-color: var(--bg-primary) !important;
+  background-color: #1a1a1a !important;
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even) {
-  background-color: var(--bg-secondary) !important;
+  background-color: #252525 !important;
 }
 
 [data-theme="dark"] .table tbody tr:hover {
