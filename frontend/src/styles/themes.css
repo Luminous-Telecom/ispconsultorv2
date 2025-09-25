@@ -219,8 +219,17 @@ body {
 .card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 0;
   box-shadow: var(--shadow-sm);
+}
+
+/* Botões sem border-radius */
+.btn {
+  border-radius: 0 !important;
+}
+
+.btn-sm {
+  border-radius: 0 !important;
 }
 
 .card:hover {
