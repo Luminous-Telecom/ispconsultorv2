@@ -500,6 +500,11 @@ body {
   border-right: none;
 }
 
+/* Borda na última linha da tabela igual ao cabeçalho */
+.table tbody tr:last-child td {
+  border-bottom: 2px solid var(--primary-color);
+}
+
 .table tbody tr:hover {
   background-color: #3a4a52;
 }
