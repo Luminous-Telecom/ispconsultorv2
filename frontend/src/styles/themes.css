@@ -398,6 +398,7 @@ body {
 .table tbody tr {
   transition: var(--transition);
   border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
 }
 
 .table tbody tr:hover {
