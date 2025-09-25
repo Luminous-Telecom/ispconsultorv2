@@ -538,6 +538,76 @@ body {
   flex: 1;
 }
 
+/* Dashboard - Estilo Minimalista */
+.dashboard-container {
+  padding: 2rem 0;
+}
+
+.stat-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+}
+
+/* Cores dos cards */
+.stat-card-primary .stat-number {
+  color: #007bff;
+}
+
+.stat-card-success .stat-number {
+  color: #28a745;
+}
+
+.stat-card-info .stat-number {
+  color: #17a2b8;
+}
+
+.stat-card-warning .stat-number {
+  color: #ffc107;
+}
+
+/* Modo escuro */
+[data-theme="dark"] .stat-card {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .stat-card-primary .stat-number {
+  color: #4dabf7;
+}
+
+[data-theme="dark"] .stat-card-success .stat-number {
+  color: #51cf66;
+}
+
+[data-theme="dark"] .stat-card-info .stat-number {
+  color: #74c0fc;
+}
+
+[data-theme="dark"] .stat-card-warning .stat-number {
+  color: #ffd43b;
+}
+
 /* Borda na última linha da tabela igual ao cabeçalho */
 .table tbody tr:last-child td {
   border-bottom: 2px solid var(--primary-color);
