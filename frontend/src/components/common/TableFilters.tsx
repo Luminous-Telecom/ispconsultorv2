@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { FormEvent } from 'react';
+
+interface Field {
+  name: string;
+  label: string;
+  type: string;
+  placeholder?: string;
+  value: string | number;
+  onChange: (value: any) => void;
+  options?: { value: string | number; label: string }[];
+}
 
 interface TableFiltersProps {
-  searchValue: string;
-  onSearchChange: (value: string) => void;
+  // Nova interface para compatibilidade
+  fields?: Field[];
+  onFilter?: (e: FormEvent) => void;
+  onReset?: () => void;
+  showReset?: boolean;
+  // Interface original para uso direto
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
   showLimitSelector?: boolean;
   limit?: number;
@@ -19,7 +35,13 @@ interface TableFiltersProps {
 }
 
 const TableFilters: React.FC<TableFiltersProps> = ({
-  searchValue,
+  // Campos dinâmicos (modo legacy)
+  fields = [],
+  onFilter,
+  onReset,
+  showReset = false,
+  // Campos diretos (modo novo)
+  searchValue = '',
   onSearchChange,
   searchPlaceholder = "Buscar...",
   showLimitSelector = true,
@@ -35,18 +57,67 @@ const TableFilters: React.FC<TableFiltersProps> = ({
   const goToPrevPage = () => onPageChange?.(Math.max(1, (pagination?.current_page || 1) - 1));
   const goToNextPage = () => onPageChange?.(Math.min(pagination?.last_page || 1, (pagination?.current_page || 1) + 1));
 
+  // Modo legacy: usar campos dinâmicos
+  if (fields.length > 0) {
+    return (
+      <form onSubmit={onFilter} className="d-flex align-items-center gap-2">
+        {fields.map((field) => (
+          <div key={field.name} className="d-flex flex-column">
+            <label className="form-label small mb-1">{field.label}</label>
+            {field.type === 'select' ? (
+              <select
+                className="form-select form-select-sm"
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                style={{ height: '32px' }}
+              >
+                {field.options?.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={field.type}
+                className="form-control form-control-sm"
+                placeholder={field.placeholder}
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                style={{ height: '32px' }}
+              />
+            )}
+          </div>
+        ))}
+        
+        <button type="submit" className="btn btn-sm btn-primary" style={{ height: '32px' }}>
+          Filtrar
+        </button>
+        
+        {showReset && onReset && (
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onReset} style={{ height: '32px' }}>
+            Limpar
+          </button>
+        )}
+      </form>
+    );
+  }
+
+  // Modo novo: campos diretos
   return (
     <div className="d-flex align-items-center justify-content-between">
       <div className="d-flex align-items-center gap-2">
         {/* Busca */}
-        <input
-          type="text"
-          className="form-control form-control-sm"
-          placeholder={searchPlaceholder}
-          value={searchValue}
-          onChange={(e) => onSearchChange(e.target.value)}
-          style={{ width: '200px', height: '32px' }}
-        />
+        {onSearchChange && (
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder={searchPlaceholder}
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            style={{ width: '200px', height: '32px' }}
+          />
+        )}
 
         {/* Seletor de limite */}
         {showLimitSelector && onLimitChange && (
