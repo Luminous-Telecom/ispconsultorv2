@@ -193,7 +193,7 @@ const Carnes: React.FC = () => {
         <h1 className="h2">Carnês</h1>
         <div className="btn-group" role="group">
           <Link to="/carnes/create" className="btn btn-primary">
-            <i className="bi bi-plus"></i> Gerar Carnê
+            <i className="bi bi-plus"></i> Novo
           </Link>
         </div>
       </div>
