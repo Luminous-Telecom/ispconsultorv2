@@ -89,22 +89,31 @@ const DataTable: React.FC<TableProps> = ({
 
   return (
     <div className="card">
-      {/* Header com botões de ação - apenas se houver bulkActions */}
-      {bulkActions.length > 0 && selectedItems.length > 0 && (
+      {/* Header com botões de ação - sempre visível se houver bulkActions */}
+      {bulkActions.length > 0 && (
         <div className="card-header py-2 border-bottom">
           <div className="d-flex align-items-center gap-2">
-            <span className="text-muted small">
-              {selectedItems.length} item(s) selecionado(s)
-            </span>
-            {bulkActions.map((bulkAction, index) => (
-              <button
-                key={index}
-                className={`btn btn-sm btn-${bulkAction.variant || 'primary'}`}
-                onClick={() => handleBulkAction(bulkAction.action)}
-              >
-                {bulkAction.label}
-              </button>
-            ))}
+            {selectedItems.length > 0 && (
+              <span className="text-muted small">
+                {selectedItems.length} item(s) selecionado(s)
+              </span>
+            )}
+            {bulkActions.map((bulkAction, index) => {
+              // Novo sempre habilitado, outros só quando há seleção
+              const isNewButton = bulkAction.label.toLowerCase() === 'novo';
+              const isDisabled = !isNewButton && selectedItems.length === 0;
+              
+              return (
+                <button
+                  key={index}
+                  className={`btn btn-sm btn-${bulkAction.variant || 'primary'}`}
+                  onClick={() => !isDisabled && handleBulkAction(bulkAction.action)}
+                  disabled={isDisabled}
+                >
+                  {bulkAction.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

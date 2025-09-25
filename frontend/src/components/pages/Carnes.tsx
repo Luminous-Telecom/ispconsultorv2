@@ -180,37 +180,6 @@ const Carnes: React.FC = () => {
         <h1 className="h2">Carnês</h1>
       </div>
 
-      {/* Botões de ação acima do filtro */}
-      <div className="d-flex gap-2 mb-3">
-        <Link to="/carnes/create" className="btn btn-primary">
-          <i className="bi bi-plus"></i> Novo
-        </Link>
-        <button 
-          className="btn btn-outline-warning"
-          title="Editar (selecione uma linha)"
-          disabled={true}
-          id="btn-editar"
-        >
-          <i className="bi bi-pencil"></i> Editar
-        </button>
-        <button 
-          className="btn btn-outline-danger"
-          title="Deletar (selecione uma linha)"
-          disabled={true}
-          id="btn-deletar"
-        >
-          <i className="bi bi-trash"></i> Deletar
-        </button>
-        <button 
-          className="btn btn-outline-info"
-          title="Imprimir (selecione uma linha)"
-          disabled={true}
-          id="btn-imprimir"
-        >
-          <i className="bi bi-printer"></i> Imprimir
-        </button>
-      </div>
-
       {/* Tabela de Carnês com controles integrados */}
       <DataTable
         columns={columns}
@@ -223,26 +192,28 @@ const Carnes: React.FC = () => {
         emptyMessage="Nenhum carnê encontrado"
         searchPlaceholder="Número do carnê ou cliente"
         onSearch={setSearch}
-        onSelectionChange={(selectedItems) => {
-          // Habilitar/desabilitar botões baseado na seleção
-          const editarBtn = document.getElementById('btn-editar') as HTMLButtonElement;
-          const deletarBtn = document.getElementById('btn-deletar') as HTMLButtonElement;
-          const imprimirBtn = document.getElementById('btn-imprimir') as HTMLButtonElement;
-          
-          if (editarBtn) {
-            editarBtn.disabled = selectedItems.length !== 1;
-            editarBtn.onclick = () => handleTopoActions('editar', selectedItems);
+        bulkActions={[
+          {
+            label: "Novo",
+            action: () => window.location.href = "/carnes/create",
+            variant: 'primary'
+          },
+          {
+            label: "Editar",
+            action: (selectedItems) => handleTopoActions('editar', selectedItems),
+            variant: 'warning'
+          },
+          {
+            label: "Deletar",
+            action: (selectedItems) => handleTopoActions('deletar', selectedItems),
+            variant: 'danger'
+          },
+          {
+            label: "Imprimir",
+            action: (selectedItems) => handleTopoActions('imprimir', selectedItems),
+            variant: 'info'
           }
-          if (deletarBtn) {
-            deletarBtn.disabled = selectedItems.length !== 1;
-            deletarBtn.onclick = () => handleTopoActions('deletar', selectedItems);
-          }
-          if (imprimirBtn) {
-            imprimirBtn.disabled = selectedItems.length !== 1;
-            imprimirBtn.onclick = () => handleTopoActions('imprimir', selectedItems);
-          }
-        }}
-        bulkActions={[]}
+        ]}
       />
     </>
   );
