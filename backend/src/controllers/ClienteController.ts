@@ -310,6 +310,35 @@ export class ClienteController {
       
       console.log('CLIENTE UPDATE - DADOS VALIDADOS:', JSON.stringify(value));
 
+      // Transformar dados antes de salvar
+      const dadosParaSalvar = { ...value };
+      
+      // Converter valor_primeiro_titulo
+      if (dadosParaSalvar.valor_primeiro_titulo === 'total') {
+        dadosParaSalvar.valor_primeiro_titulo = 1.00;
+      } else if (dadosParaSalvar.valor_primeiro_titulo === 'proporcional') {
+        dadosParaSalvar.valor_primeiro_titulo = 0.50;
+      } else if (typeof dadosParaSalvar.valor_primeiro_titulo === 'string') {
+        dadosParaSalvar.valor_primeiro_titulo = parseFloat(dadosParaSalvar.valor_primeiro_titulo);
+      }
+      
+      // Converter conta_boleto
+      if (typeof dadosParaSalvar.conta_boleto === 'string') {
+        dadosParaSalvar.conta_boleto = parseInt(dadosParaSalvar.conta_boleto);
+      }
+      
+      // Converter desconto_percentual
+      if (typeof dadosParaSalvar.desconto_percentual === 'string') {
+        dadosParaSalvar.desconto_percentual = parseFloat(dadosParaSalvar.desconto_percentual);
+      }
+      
+      // Converter desconto_valor
+      if (typeof dadosParaSalvar.desconto_valor === 'string') {
+        dadosParaSalvar.desconto_valor = parseFloat(dadosParaSalvar.desconto_valor);
+      }
+      
+      console.log('CLIENTE UPDATE - DADOS TRANSFORMADOS:', JSON.stringify(dadosParaSalvar));
+
       // Buscar cliente
       const cliente = await Cliente.findByPk(id);
       
@@ -341,7 +370,7 @@ export class ClienteController {
       }
 
       // Atualizar cliente
-      await cliente.update(value);
+      await cliente.update(dadosParaSalvar);
 
       // Buscar cliente atualizado com relacionamentos
       const clienteAtualizado = await Cliente.findByPk(id, {
