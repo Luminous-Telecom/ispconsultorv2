@@ -51,13 +51,6 @@ const CarneParcelas: React.FC = () => {
     }
   });
 
-  // Mutação para desmarcar pagamento
-  const desmarcarPagoMutation = useMutation({
-    mutationFn: (id: number) => CarneParcelaService.desmarcarPago(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
-    }
-  });
 
   const parcelas = parcelasData?.data || [];
 
@@ -98,32 +91,6 @@ const CarneParcelas: React.FC = () => {
     }
   };
 
-  const handleDesmarcarPago = (parcelaId: number) => {
-    if (window.confirm('Deseja desmarcar o pagamento desta parcela?')) {
-      desmarcarPagoMutation.mutate(parcelaId);
-    }
-  };
-
-  const handleImprimirBoleto = async (parcelaId: number) => {
-    try {
-      window.open(getApiUrl(`/boleto/web/${parcelaId}`), '_blank');
-    } catch (error) {
-      console.error('Erro ao imprimir boleto:', error);
-    }
-  };
-
-  const handleGerarPdfBoleto = async (parcelaId: number) => {
-    try {
-      const htmlContent = await CarneParcelaService.gerarPdfBoleto(parcelaId);
-      const newWindow = window.open('', '_blank');
-      if (newWindow) {
-        newWindow.document.write(htmlContent);
-        newWindow.document.close();
-      }
-    } catch (error) {
-      console.error('Erro ao gerar PDF do boleto:', error);
-    }
-  };
 
   const handleRegistrarNoBanco = async () => {
     if (!carneData?.carnet_id) {
@@ -157,7 +124,6 @@ const CarneParcelas: React.FC = () => {
   const totalParcelas = parcelas.length;
   const parcelasPagas = parcelas.filter((p: any) => p.status === 'pago').length;
   const parcelasVencidas = parcelas.filter((p: any) => p.status === 'vencido').length;
-  const valorTotal = parcelas.reduce((sum: number, p: any) => sum + parseFloat(p.valor_parcela), 0);
   const valorPago = parcelas.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + parseFloat(p.valor_parcela), 0);
 
   // Definição das colunas da tabela

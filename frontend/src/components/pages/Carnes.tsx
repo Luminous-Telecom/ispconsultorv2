@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCarnes, useDeleteCarne } from '../../hooks/useCarnes';
-import { CarneService } from '../../services/carneService';
-import { useNotificationContext } from '../../contexts/NotificationContext';
 import { API_CONFIG } from '../../config/api';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
@@ -12,7 +10,6 @@ const Carnes: React.FC = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const { error } = useNotificationContext();
 
   const { data: carnesData, isLoading, refetch } = useCarnes({
     search: search || undefined,
@@ -85,16 +82,6 @@ const Carnes: React.FC = () => {
     window.open(`${API_CONFIG.BASE_URL}/carnes/${carneId}/imprimir`, '_blank');
   };
 
-  const handlePdf = async (carneId: number) => {
-    try {
-      const blob = await CarneService.gerarPdf(carneId);
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => window.URL.revokeObjectURL(url), 5000);
-    } catch (err) {
-      error('Erro ao gerar PDF do carnê');
-    }
-  };
 
   // Definição das colunas da tabela
   const columns = [

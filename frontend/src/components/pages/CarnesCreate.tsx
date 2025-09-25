@@ -42,9 +42,9 @@ const CarnesCreate: React.FC = () => {
   const [errors, setErrors] = useState<Partial<CarneForm>>({});
 
   // Queries para buscar dados usando os hooks
-  const { data: clientes, isLoading: clientesLoading, error: clientesError } = useClientesAtivos();
-  const { data: planos, isLoading: planosLoading, error: planosError } = usePlanosAtivos();
-  const { data: bancos, isLoading: bancosLoading, error: bancosError } = useBancosAtivos();
+  const { data: clientes, error: clientesError } = useClientesAtivos();
+  const { data: planos, error: planosError } = usePlanosAtivos();
+  const { data: bancos, error: bancosError } = useBancosAtivos();
 
   // Logs para monitorar carregamento dos dados
   useEffect(() => {

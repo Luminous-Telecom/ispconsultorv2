@@ -53,17 +53,17 @@ const CarnesEdit: React.FC = () => {
   });
 
   // Queries para buscar dados
-  const { data: clientes, isLoading: clientesLoading, error: clientesError } = useQuery({
+  const { data: clientes, error: clientesError } = useQuery({
     queryKey: ['clientes-ativos'],
     queryFn: () => ClienteService.listAtivos(),
   });
 
-  const { data: planos, isLoading: planosLoading, error: planosError } = useQuery({
+  const { data: planos, error: planosError } = useQuery({
     queryKey: ['planos-ativos'],
     queryFn: () => PlanoService.findAtivos(),
   });
 
-  const { data: bancos, isLoading: bancosLoading, error: bancosError } = useQuery({
+  const { data: bancos, error: bancosError } = useQuery({
     queryKey: ['bancos-ativos'],
     queryFn: () => BancoService.findAtivos(),
   });

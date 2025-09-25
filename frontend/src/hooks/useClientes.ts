@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
-import { Cliente, CreateCliente, UpdateCliente, ClienteFilters, PaginatedResponse } from '../types';
+import { UpdateCliente, ClienteFilters } from '../types';
 import { useNotificationContext } from '../contexts/NotificationContext';
 import { CACHE_CONFIG } from '../config/api';
 

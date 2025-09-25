@@ -96,9 +96,13 @@ const Login: React.FC = () => {
                 </form>
 
                 <div className="text-center mt-4">
-                  <a href="#" className="text-decoration-none">
+                  <button 
+                    type="button" 
+                    className="btn btn-link text-decoration-none p-0 border-0 bg-transparent"
+                    onClick={() => alert('Funcionalidade em desenvolvimento')}
+                  >
                     Esqueceu sua senha?
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
