@@ -32,30 +32,17 @@ export class ClienteController {
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean().default(true),
     tipo_cobranca: Joi.string().max(50).allow(null, ''),
-    valor_primeiro_titulo: Joi.alternatives().try(
-      Joi.number().min(0),
-      Joi.string().valid('total', 'proporcional'),
-      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "1.00"
-    ).allow(null),
+    valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
     isento_mensalidade: Joi.boolean().default(false),
     recebe_email: Joi.boolean().default(true),
     recebe_sms: Joi.boolean().default(false),
     recebe_whatsapp: Joi.boolean().default(false),
     dia_vencimento: Joi.number().min(1).max(31).allow(null),
-    conta_boleto: Joi.alternatives().try(
-      Joi.number().integer().min(1),
-      Joi.string().pattern(/^\d+$/) // Aceitar strings numéricas como "8"
-    ).allow(null),
+    conta_boleto: Joi.number().integer().min(1).required(),
     data_validade_desconto: Joi.date().allow(null),
     plano_id: Joi.number().integer().min(1).allow(null),
-    desconto_percentual: Joi.alternatives().try(
-      Joi.number().min(0).max(100),
-      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "0.00"
-    ).allow(null),
-    desconto_valor: Joi.alternatives().try(
-      Joi.number().min(0),
-      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "0.00"
-    ).allow(null),
+    desconto_percentual: Joi.number().min(0).max(100).allow(null),
+    desconto_valor: Joi.number().min(0).allow(null),
     data_inicio_plano: Joi.date().allow(null)
   });
 
@@ -84,30 +71,17 @@ export class ClienteController {
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean(),
     tipo_cobranca: Joi.string().max(50).allow(null, ''),
-    valor_primeiro_titulo: Joi.alternatives().try(
-      Joi.number().min(0),
-      Joi.string().valid('total', 'proporcional'),
-      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "1.00"
-    ).allow(null),
+    valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
     isento_mensalidade: Joi.boolean(),
     recebe_email: Joi.boolean(),
     recebe_sms: Joi.boolean(),
     recebe_whatsapp: Joi.boolean(),
     dia_vencimento: Joi.number().min(1).max(31).allow(null),
-    conta_boleto: Joi.alternatives().try(
-      Joi.number().integer().min(1),
-      Joi.string().pattern(/^\d+$/) // Aceitar strings numéricas como "8"
-    ).allow(null),
+    conta_boleto: Joi.number().integer().min(1).required(),
     data_validade_desconto: Joi.date().allow(null),
     plano_id: Joi.number().integer().min(1).allow(null),
-    desconto_percentual: Joi.alternatives().try(
-      Joi.number().min(0).max(100),
-      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "0.00"
-    ).allow(null),
-    desconto_valor: Joi.alternatives().try(
-      Joi.number().min(0),
-      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "0.00"
-    ).allow(null),
+    desconto_percentual: Joi.number().min(0).max(100).allow(null),
+    desconto_valor: Joi.number().min(0).allow(null),
     data_inicio_plano: Joi.date().allow(null)
   });
 
@@ -310,35 +284,6 @@ export class ClienteController {
       
       console.log('CLIENTE UPDATE - DADOS VALIDADOS:', JSON.stringify(value));
 
-      // Transformar dados antes de salvar
-      const dadosParaSalvar = { ...value };
-      
-      // Converter valor_primeiro_titulo
-      if (dadosParaSalvar.valor_primeiro_titulo === 'total') {
-        dadosParaSalvar.valor_primeiro_titulo = 1.00;
-      } else if (dadosParaSalvar.valor_primeiro_titulo === 'proporcional') {
-        dadosParaSalvar.valor_primeiro_titulo = 0.50;
-      } else if (typeof dadosParaSalvar.valor_primeiro_titulo === 'string') {
-        dadosParaSalvar.valor_primeiro_titulo = parseFloat(dadosParaSalvar.valor_primeiro_titulo);
-      }
-      
-      // Converter conta_boleto
-      if (typeof dadosParaSalvar.conta_boleto === 'string') {
-        dadosParaSalvar.conta_boleto = parseInt(dadosParaSalvar.conta_boleto);
-      }
-      
-      // Converter desconto_percentual
-      if (typeof dadosParaSalvar.desconto_percentual === 'string') {
-        dadosParaSalvar.desconto_percentual = parseFloat(dadosParaSalvar.desconto_percentual);
-      }
-      
-      // Converter desconto_valor
-      if (typeof dadosParaSalvar.desconto_valor === 'string') {
-        dadosParaSalvar.desconto_valor = parseFloat(dadosParaSalvar.desconto_valor);
-      }
-      
-      console.log('CLIENTE UPDATE - DADOS TRANSFORMADOS:', JSON.stringify(dadosParaSalvar));
-
       // Buscar cliente
       const cliente = await Cliente.findByPk(id);
       
@@ -370,7 +315,7 @@ export class ClienteController {
       }
 
       // Atualizar cliente
-      await cliente.update(dadosParaSalvar);
+      await cliente.update(value);
 
       // Buscar cliente atualizado com relacionamentos
       const clienteAtualizado = await Cliente.findByPk(id, {

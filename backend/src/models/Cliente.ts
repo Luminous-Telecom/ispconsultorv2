@@ -45,7 +45,7 @@ export class Cliente extends Model<
   declare observacoes: string | null;
   declare ativo: boolean;
   declare tipo_cobranca: string | null;
-  declare valor_primeiro_titulo: number | null;
+  declare valor_primeiro_titulo: string | null;
   declare isento_mensalidade: boolean;
   declare recebe_email: boolean;
   declare recebe_sms: boolean;
@@ -226,8 +226,9 @@ Cliente.init(
       allowNull: true
     },
     valor_primeiro_titulo: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: true
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      comment: 'Valor do primeiro título: total, proporcional ou valor numérico'
     },
     isento_mensalidade: {
       type: DataTypes.BOOLEAN,
