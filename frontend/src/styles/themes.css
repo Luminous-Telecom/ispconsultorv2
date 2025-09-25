@@ -650,7 +650,7 @@ body {
 
 
 [data-theme="dark"] .table thead th {
-  background-color: #101619 !important;
+  background-color: #1b272c !important;
   color: #ffffff !important;
 }
 
@@ -710,7 +710,7 @@ body {
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .form-control:focus,
 [data-theme="dark"] .form-control:active {
-  background-color: #263237 !important;
+  background-color: #1b272c !important;
   color: #ffffff !important;
   border-color: #505050 !important;
 }
