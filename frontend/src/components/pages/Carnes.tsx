@@ -10,6 +10,8 @@ const Carnes: React.FC = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const { data: carnesData, isLoading, refetch } = useCarnes({
     search: search || undefined,
@@ -19,6 +21,52 @@ const Carnes: React.FC = () => {
   });
 
   const deleteCarneMutation = useDeleteCarne();
+
+  const handleSort = (column: string, direction: 'asc' | 'desc') => {
+    setSortColumn(column);
+    setSortDirection(direction);
+    setPage(1); // Voltar para primeira página ao ordenar
+  };
+
+  // Função para ordenar os dados localmente
+  const getSortedData = () => {
+    if (!carnesData?.data || !sortColumn) {
+      return carnesData?.data || [];
+    }
+
+    return [...carnesData.data].sort((a, b) => {
+      let aValue = a[sortColumn];
+      let bValue = b[sortColumn];
+
+      // Converter para string se necessário para comparação
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+      }
+      if (typeof bValue === 'string') {
+        bValue = bValue.toLowerCase();
+      }
+
+      // Converter datas se necessário
+      if (sortColumn.includes('data') || sortColumn.includes('created_at')) {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      }
+
+      // Converter números se necessário
+      if (sortColumn.includes('valor') || sortColumn.includes('total')) {
+        aValue = parseFloat(aValue) || 0;
+        bValue = parseFloat(bValue) || 0;
+      }
+
+      if (aValue < bValue) {
+        return sortDirection === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -180,7 +228,7 @@ const Carnes: React.FC = () => {
       {/* Tabela de Carnês com controles integrados */}
       <DataTable
         columns={columns}
-        data={carnesData?.data || []}
+        data={getSortedData()}
         isLoading={isLoading}
         pagination={carnesData?.pagination}
         limit={limit}
@@ -207,6 +255,9 @@ const Carnes: React.FC = () => {
             action: (selectedItems) => handleTopoActions('imprimir', selectedItems)
           }
         ]}
+        onSort={handleSort}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
       />
     </>
   );
