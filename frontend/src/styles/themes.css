@@ -139,11 +139,13 @@ body {
   margin-right: 0;
   position: relative;
   font-size: 0.75rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar-nav-link:hover {
   background: var(--sidebar-hover);
   color: var(--sidebar-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar-nav-link.active {
