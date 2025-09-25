@@ -49,41 +49,70 @@ const Clientes: React.FC = () => {
     }
   };
 
+  const handleSort = (column: string, direction: 'asc' | 'desc') => {
+    setSortColumn(column);
+    setSortDirection(direction);
+  };
+
+  const handleTopoActions = (action: string, selectedItems: any[]) => {
+    if (selectedItems.length === 0) return;
+    
+    switch (action) {
+      case 'editar':
+        if (selectedItems.length === 1) {
+          window.location.href = `/clientes/${selectedItems[0].id}/edit`;
+        }
+        break;
+      case 'deletar':
+        if (selectedItems.length === 1) {
+          handleDelete(selectedItems[0].id);
+        }
+        break;
+    }
+  };
+
   // Definição das colunas da tabela
   const columns = [
     {
       key: 'id',
       label: 'ID',
+      sortable: true,
       render: (cliente: Cliente) => <code className="text-primary">#{cliente.id}</code>
     },
     {
       key: 'cnpj',
       label: 'CNPJ',
+      sortable: true,
       render: (cliente: Cliente) => cliente.cnpj
     },
     {
       key: 'razao_social',
       label: 'Razão Social',
+      sortable: true,
       render: (cliente: Cliente) => <strong>{cliente.razao_social}</strong>
     },
     {
       key: 'nome_fantasia',
       label: 'Nome Fantasia',
+      sortable: true,
       render: (cliente: Cliente) => cliente.nome_fantasia || '-'
     },
     {
       key: 'email',
       label: 'Email',
+      sortable: true,
       render: (cliente: Cliente) => cliente.email
     },
     {
       key: 'whatsapp',
       label: 'WhatsApp',
+      sortable: false,
       render: (cliente: Cliente) => cliente.whatsapp || '-'
     },
     {
       key: 'ativo',
       label: 'Status',
+      sortable: true,
       render: (cliente: Cliente) => (
         <span className={`badge ${cliente.ativo ? 'bg-success' : 'bg-danger'}`}>
           {cliente.ativo ? 'Ativo' : 'Inativo'}
@@ -130,47 +159,36 @@ const Clientes: React.FC = () => {
         </div>
         <div className="card-body">
 
-          {/* Filtros */}
-          <TableFilters
-        fields={[
-          {
-            name: 'search',
-            label: 'Buscar',
-            type: 'text',
-            placeholder: 'Nome, CNPJ ou email',
-            value: search,
-            onChange: setSearch
-          },
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'select',
-            value: status,
-            onChange: setStatus,
-            options: [
-              { value: '', label: 'Todos' },
-              { value: 'ativo', label: 'Ativo' },
-              { value: 'inativo', label: 'Inativo' }
-            ]
-          }
-        ]}
-          onFilter={handleFilter}
-          onReset={handleReset}
-          showResetButton={true}
-        />
-
-        {/* Tabela de Clientes */}
-        <DataTable
-          columns={columns}
-          data={clientesData?.data || []}
-          isLoading={isLoading}
-          pagination={clientesData?.pagination}
-          limit={limit}
-          setLimit={setLimit}
-          setPage={setPage}
-          emptyMessage="Nenhum cliente encontrado"
-          actions={renderActions}
-        />
+          {/* Tabela de Clientes com controles integrados */}
+          <DataTable
+            columns={columns}
+            data={clientesData?.data || []}
+            isLoading={isLoading}
+            pagination={clientesData?.pagination}
+            limit={limit}
+            setLimit={setLimit}
+            setPage={setPage}
+            emptyMessage="Nenhum cliente encontrado"
+            searchPlaceholder="Nome, CNPJ ou email"
+            onSearch={setSearch}
+            bulkActions={[
+              {
+                label: "Novo",
+                action: () => window.location.href = "/clientes/create"
+              },
+              {
+                label: "Editar",
+                action: (selectedItems) => handleTopoActions('editar', selectedItems)
+              },
+              {
+                label: "Deletar",
+                action: (selectedItems) => handleTopoActions('deletar', selectedItems)
+              }
+            ]}
+            onSort={handleSort}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+          />
         </div>
       </div>
     </div>
