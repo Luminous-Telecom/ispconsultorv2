@@ -479,6 +479,10 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table tbody td {
@@ -486,6 +490,10 @@ body {
   border-right: 1px solid var(--border-light);
   color: var(--text-primary);
   font-size: 0.875rem;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table tbody td:last-child {
