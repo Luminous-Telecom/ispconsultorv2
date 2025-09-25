@@ -91,21 +91,7 @@ const DataTable: React.FC<TableProps> = ({
       {/* Header com botões de ação - sempre visível se houver bulkActions */}
       {bulkActions.length > 0 && (
         <div className="card-header py-2 border-bottom">
-          <div className="d-flex align-items-center" style={{ gap: '8px' }}>
-            <span 
-              className="text-muted small" 
-              style={{ 
-                minWidth: '150px', 
-                maxWidth: '150px',
-                flexShrink: 0,
-                display: 'block'
-              }}
-            >
-              {selectedItems.length > 0 
-                ? `${selectedItems.length} item(s) selecionado(s)`
-                : ' ' // Espaço fixo
-              }
-            </span>
+          <div className="d-flex align-items-center justify-content-between">
             <div className="d-flex" style={{ gap: '8px' }}>
               {bulkActions.map((bulkAction, index) => {
                 // Novo sempre habilitado, outros só quando há seleção
@@ -125,6 +111,20 @@ const DataTable: React.FC<TableProps> = ({
                 );
               })}
             </div>
+            <span 
+              className="text-muted small" 
+              style={{ 
+                minWidth: '150px', 
+                maxWidth: '150px',
+                flexShrink: 0,
+                textAlign: 'right'
+              }}
+            >
+              {selectedItems.length > 0 
+                ? `${selectedItems.length} item(s) selecionado(s)`
+                : ' ' // Espaço fixo
+              }
+            </span>
           </div>
         </div>
       )}
