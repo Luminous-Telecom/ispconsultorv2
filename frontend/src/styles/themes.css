@@ -623,3 +623,36 @@ body {
 [data-theme="dark"] .table tbody th {
   background-color: inherit !important;
 }
+
+/* Corrigir cores do campo de busca no tema escuro */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-control:active {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .form-control:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2) !important;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .form-control-sm {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .form-control-sm:focus {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2) !important;
+}
