@@ -246,7 +246,7 @@ const DataTable: React.FC<TableProps> = ({
                     onClick={() => handleSelectItem(item, !isSelected)}
                     style={{ 
                       cursor: 'pointer',
-                      backgroundColor: isSelected ? '#e3f2fd' : 'inherit',
+                      backgroundColor: isSelected ? '#0d6efd' : 'inherit',
                       borderLeft: isSelected ? '3px solid var(--primary-color)' : 'none'
                     }}
                   >
@@ -255,7 +255,10 @@ const DataTable: React.FC<TableProps> = ({
                       <td 
                         className="py-1 px-2" 
                         onClick={(e) => e.stopPropagation()}
-                        style={{ backgroundColor: isSelected ? '#e3f2fd' : 'inherit' }}
+                        style={{ 
+                          backgroundColor: isSelected ? '#0d6efd' : 'inherit',
+                          color: isSelected ? 'white' : 'inherit'
+                        }}
                       >
                         <input
                           type="radio"
@@ -271,7 +274,10 @@ const DataTable: React.FC<TableProps> = ({
                       <td 
                         key={column.key} 
                         className="py-1 px-2"
-                        style={{ backgroundColor: isSelected ? '#e3f2fd' : 'inherit' }}
+                        style={{ 
+                          backgroundColor: isSelected ? '#0d6efd' : 'inherit',
+                          color: isSelected ? 'white' : 'inherit'
+                        }}
                       >
                         {column.render ? column.render(item) : item[column.key]}
                       </td>
