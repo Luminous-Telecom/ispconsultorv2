@@ -398,20 +398,11 @@ body {
 }
 
 .table tbody tr {
-  transition: var(--transition);
   border-bottom: 1px solid var(--border-light);
-}
-
-.table tbody tr:hover {
-  background: var(--bg-tertiary);
 }
 
 .table tbody tr:nth-child(even) {
   background: var(--bg-secondary);
-}
-
-.table tbody tr:nth-child(even):hover {
-  background: var(--bg-tertiary);
 }
 
 .table tbody td {
@@ -577,10 +568,6 @@ body {
   background-color: var(--bg-secondary) !important;
 }
 
-[data-theme="dark"] .table-striped > tbody > tr:hover > td,
-[data-theme="dark"] .table-striped > tbody > tr:hover > th {
-  background-color: var(--bg-tertiary) !important;
-}
 
 [data-theme="dark"] .table tbody tr {
   background-color: var(--bg-primary) !important;
