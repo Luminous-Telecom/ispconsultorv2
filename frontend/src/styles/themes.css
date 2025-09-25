@@ -476,7 +476,6 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  max-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -487,7 +486,6 @@ body {
   border-right: 1px solid var(--border-light);
   color: var(--text-primary);
   font-size: 0.875rem;
-  max-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -495,6 +493,49 @@ body {
 
 .table tbody td:last-child {
   border-right: none;
+}
+
+/* Larguras específicas para colunas */
+.table th.col-id,
+.table td.col-id {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+}
+
+.table th.col-small,
+.table td.col-small {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+}
+
+.table th.col-medium,
+.table td.col-medium {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.table th.col-large,
+.table td.col-large {
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.table th.col-extra-large,
+.table td.col-extra-large {
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.table th.col-flex,
+.table td.col-flex {
+  width: auto;
+  min-width: 150px;
+  flex: 1;
 }
 
 /* Borda na última linha da tabela igual ao cabeçalho */

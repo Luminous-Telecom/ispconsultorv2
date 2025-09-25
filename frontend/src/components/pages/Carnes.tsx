@@ -136,11 +136,13 @@ const Carnes: React.FC = () => {
     {
       key: 'id',
       label: 'ID',
+      className: 'col-id',
       render: (carne: any) => <code className="text-primary">#{carne.id}</code>
     },
     {
       key: 'carnet_id',
       label: 'Carnet ID',
+      className: 'col-medium',
       render: (carne: any) => (
         <code className="text-info">
           {carne.carnet_id || 'Não gerado'}
@@ -150,16 +152,19 @@ const Carnes: React.FC = () => {
     {
       key: 'numero_carne',
       label: 'Número do Carnê',
+      className: 'col-medium',
       render: (carne: any) => <strong>{carne.numero_carne}</strong>
     },
     {
       key: 'cliente',
       label: 'Cliente',
+      className: 'col-extra-large',
       render: (carne: any) => carne.cliente?.razao_social || 'N/A'
     },
     {
       key: 'valor_total',
       label: 'Valor Total',
+      className: 'col-medium',
       render: (carne: any) => (
         <strong>R$ {carne.valor_total ? Number(carne.valor_total).toFixed(2).replace('.', ',') : '0,00'}</strong>
       )
@@ -167,6 +172,7 @@ const Carnes: React.FC = () => {
     {
       key: 'parcelas',
       label: 'Parcelas Pagas',
+      className: 'col-large',
       render: (carne: any) => (
         <>
           <span className="badge bg-success">{carne.parcelas_pagas || 0}</span>
@@ -178,6 +184,7 @@ const Carnes: React.FC = () => {
     {
       key: 'status',
       label: 'Status',
+      className: 'col-small',
       render: (carne: any) => {
         const statusCalculado = determinarStatusCarne(carne);
         return (
@@ -190,6 +197,7 @@ const Carnes: React.FC = () => {
     {
       key: 'created_at',
       label: 'Data de Criação',
+      className: 'col-medium',
       render: (carne: any) => new Date(carne.created_at).toLocaleDateString('pt-BR')
     }
   ];
