@@ -28,8 +28,8 @@ interface TableProps {
     action: (selectedItems: any[]) => void;
     variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
   }[];
+  onSearch?: (value: string) => void;
   searchPlaceholder?: string;
-  onSearch?: (search: string) => void;
   onSelectionChange?: (selectedItems: any[]) => void;
 }
 
@@ -41,11 +41,10 @@ const DataTable: React.FC<TableProps> = ({
   limit,
   setLimit,
   setPage,
-  emptyMessage = "Nenhum registro encontrado",
-  actions,
+  emptyMessage = 'Nenhum dado encontrado',
   bulkActions = [],
-  searchPlaceholder = "Buscar...",
   onSearch,
+  searchPlaceholder = 'Buscar...',
   onSelectionChange
 }) => {
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
@@ -76,7 +75,7 @@ const DataTable: React.FC<TableProps> = ({
     }
   };
 
-  const handleBulkAction = (action: (items: any[]) => void) => {
+  const handleBulkAction = (action: (selectedItems: any[]) => void) => {
     action(selectedItems);
     setSelectedItems([]);
   };
@@ -210,74 +209,73 @@ const DataTable: React.FC<TableProps> = ({
 
       {/* Tabela */}
       <div className="table-responsive">
-          <table className="table table-striped table-sm">
-            <thead>
+        <table className="table table-striped table-sm">
+          <thead>
+            <tr>
+              {/* Checkbox para seleção individual */}
+              {(bulkActions.length > 0 || onSelectionChange) && (
+                <th className="py-1 px-2" style={{ width: '40px' }}>
+                  {/* Sem checkbox no cabeçalho para seleção única */}
+                </th>
+              )}
+              
+              {columns.map((column) => (
+                <th key={column.key} className={`py-1 px-2 ${column.className || ''}`}>
+                  {column.label}
+                </th>
+              ))}
+              
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
               <tr>
-                {/* Checkbox para seleção individual */}
-                {(bulkActions.length > 0 || onSelectionChange) && (
-                  <th className="py-1 px-2" style={{ width: '40px' }}>
-                    {/* Sem checkbox no cabeçalho para seleção única */}
-                  </th>
-                )}
-                
-                {columns.map((column) => (
-                  <th key={column.key} className={`py-1 px-2 ${column.className || ''}`}>
-                    {column.label}
-                  </th>
-                ))}
-                
+                <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
+                  <div className="spinner-border spinner-border-sm" role="status">
+                    <span className="visually-hidden">Carregando...</span>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
-                      <div className="spinner-border spinner-border-sm" role="status">
-                        <span className="visually-hidden">Carregando...</span>
-                      </div>
-                    </td>
+            ) : data.length > 0 ? (
+              data.map((item, index) => {
+                const isSelected = selectedItems.some(selected => selected.id === item.id);
+                return (
+                  <tr
+                    key={item.id || index} 
+                    className={isSelected ? 'table-active' : ''}
+                    onClick={() => handleSelectItem(item, !isSelected)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {/* Radio button para seleção única */}
+                    {(bulkActions.length > 0 || onSelectionChange) && (
+                      <td className="py-1 px-2" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="radio"
+                          className="form-check-input"
+                          name="tableSelection"
+                          checked={isSelected}
+                          onChange={(e) => handleSelectItem(item, e.target.checked)}
+                        />
+                      </td>
+                    )}
+                    
+                    {columns.map((column) => (
+                      <td key={column.key} className="py-1 px-2">
+                        {column.render ? column.render(item) : item[column.key]}
+                      </td>
+                    ))}
                   </tr>
-                ) : data.length > 0 ? (
-                  data.map((item, index) => {
-                    const isSelected = selectedItems.some(selected => selected.id === item.id);
-                    return (
-                      <tr 
-                        key={item.id || index} 
-                        className={isSelected ? 'table-active' : ''}
-                        onClick={() => handleSelectItem(item, !isSelected)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        {/* Radio button para seleção única */}
-                        {(bulkActions.length > 0 || onSelectionChange) && (
-                          <td className="py-1 px-2" onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="radio"
-                              className="form-check-input"
-                              name="tableSelection"
-                              checked={isSelected}
-                              onChange={(e) => handleSelectItem(item, e.target.checked)}
-                            />
-                          </td>
-                        )}
-                        
-                        {columns.map((column) => (
-                          <td key={column.key} className="py-1 px-2">
-                            {column.render ? column.render(item) : item[column.key]}
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
-                      {emptyMessage}
-                    </td>
-                  </tr>
-                )}
-            </tbody>
-          </table>
-        </div>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
+                  {emptyMessage}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
