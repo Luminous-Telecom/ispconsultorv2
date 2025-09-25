@@ -178,32 +178,37 @@ const Carnes: React.FC = () => {
     <>
       <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 className="h2">Carnês</h1>
-        <div className="btn-group" role="group">
-          <Link to="/carnes/create" className="btn btn-primary">
-            <i className="bi bi-plus"></i> Novo
-          </Link>
-          <button 
-            className="btn btn-outline-warning"
-            title="Editar (selecione uma linha)"
-            disabled={true}
-          >
-            <i className="bi bi-pencil"></i> Editar
-          </button>
-          <button 
-            className="btn btn-outline-danger"
-            title="Deletar (selecione uma linha)"
-            disabled={true}
-          >
-            <i className="bi bi-trash"></i> Deletar
-          </button>
-          <button 
-            className="btn btn-outline-info"
-            title="Imprimir (selecione uma linha)"
-            disabled={true}
-          >
-            <i className="bi bi-printer"></i> Imprimir
-          </button>
-        </div>
+      </div>
+
+      {/* Botões de ação acima do filtro */}
+      <div className="d-flex gap-2 mb-3">
+        <Link to="/carnes/create" className="btn btn-primary">
+          <i className="bi bi-plus"></i> Novo
+        </Link>
+        <button 
+          className="btn btn-outline-warning"
+          title="Editar (selecione uma linha)"
+          disabled={true}
+          id="btn-editar"
+        >
+          <i className="bi bi-pencil"></i> Editar
+        </button>
+        <button 
+          className="btn btn-outline-danger"
+          title="Deletar (selecione uma linha)"
+          disabled={true}
+          id="btn-deletar"
+        >
+          <i className="bi bi-trash"></i> Deletar
+        </button>
+        <button 
+          className="btn btn-outline-info"
+          title="Imprimir (selecione uma linha)"
+          disabled={true}
+          id="btn-imprimir"
+        >
+          <i className="bi bi-printer"></i> Imprimir
+        </button>
       </div>
 
       {/* Tabela de Carnês com controles integrados */}
@@ -220,9 +225,9 @@ const Carnes: React.FC = () => {
         onSearch={setSearch}
         onSelectionChange={(selectedItems) => {
           // Habilitar/desabilitar botões baseado na seleção
-          const editarBtn = document.querySelector('.btn-outline-warning') as HTMLButtonElement;
-          const deletarBtn = document.querySelector('.btn-outline-danger') as HTMLButtonElement;
-          const imprimirBtn = document.querySelector('.btn-outline-info') as HTMLButtonElement;
+          const editarBtn = document.getElementById('btn-editar') as HTMLButtonElement;
+          const deletarBtn = document.getElementById('btn-deletar') as HTMLButtonElement;
+          const imprimirBtn = document.getElementById('btn-imprimir') as HTMLButtonElement;
           
           if (editarBtn) {
             editarBtn.disabled = selectedItems.length !== 1;
