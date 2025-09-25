@@ -412,6 +412,15 @@ body {
   background: var(--bg-tertiary);
 }
 
+/* Garantir hover visível no modo claro */
+:root .table tbody tr:hover {
+  background: #f1f3f4;
+}
+
+:root .table tbody tr:nth-child(even):hover {
+  background: #e8eaed;
+}
+
 .table tbody td {
   padding: 0.75rem;
   border-bottom: 1px solid var(--border-light);
@@ -587,6 +596,14 @@ body {
 
 [data-theme="dark"] .table tbody tr:nth-child(even) {
   background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .table tbody tr:nth-child(even):hover {
+  background-color: var(--bg-tertiary) !important;
 }
 
 /* Sobrescrever bg-light para tema escuro */
