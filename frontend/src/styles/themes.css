@@ -42,7 +42,7 @@
 /* Tema escuro */
 [data-theme="dark"] {
   /* Cores de fundo - Tons de cinza/verde */
-  --bg-primary: #314249;
+  --bg-primary: #263237;
   --bg-secondary: #263237;
   --bg-tertiary: #101619;
   
@@ -123,7 +123,7 @@ body {
 
 .sidebar-nav {
   padding: 0.5rem 0;
-  background-color: var(--bg-secondary);
+  background-color: #314249;
 }
 
 .sidebar-nav-item {
