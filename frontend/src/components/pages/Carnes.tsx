@@ -147,44 +147,31 @@ const Carnes: React.FC = () => {
   ];
 
   // Renderizar ações da tabela
-  const renderActions = (carne: any) => {
-    const temParcelasPagas = carne.parcelas_pagas && carne.parcelas_pagas > 0;
+  // Funções para os botões do topo
+  const handleTopoActions = (action: string, selectedItems: any[]) => {
+    if (selectedItems.length === 0) return;
     
-    return (
-      <div className="btn-group btn-group-sm" role="group">
-        <Link 
-          to={`/carne-parcelas?carne_id=${carne.id}`} 
-          className="btn btn-outline-info"
-          title="Ver Parcelas"
-        >
-          <i className="bi bi-list-ol"></i>
-        </Link>
-        <button 
-          type="button" 
-          className="btn btn-outline-primary"
-          title="Imprimir"
-          onClick={() => handleImprimir(carne.id)}
-        >
-          <i className="bi bi-printer"></i>
-        </button>
-        <Link 
-          to={`/carnes/${carne.id}/edit`} 
-          className="btn btn-outline-warning"
-          title="Editar"
-        >
-          <i className="bi bi-pencil"></i>
-        </Link>
-        <button 
-          type="button" 
-          className={`btn ${temParcelasPagas ? 'btn-outline-secondary' : 'btn-outline-danger'}`}
-          title={temParcelasPagas ? "Não é possível excluir carnê com parcelas pagas" : "Excluir"}
-          onClick={() => handleDelete(carne.id)}
-          disabled={temParcelasPagas}
-        >
-          <i className="bi bi-trash"></i>
-        </button>
-      </div>
-    );
+    switch (action) {
+      case 'editar':
+        if (selectedItems.length === 1) {
+          window.location.href = `/carnes/${selectedItems[0].id}/edit`;
+        }
+        break;
+      case 'deletar':
+        if (selectedItems.length === 1) {
+          const carne = selectedItems[0];
+          const temParcelasPagas = carne.parcelas_pagas && carne.parcelas_pagas > 0;
+          if (!temParcelasPagas) {
+            handleDelete(carne.id);
+          }
+        }
+        break;
+      case 'imprimir':
+        if (selectedItems.length === 1) {
+          handleImprimir(selectedItems[0].id);
+        }
+        break;
+    }
   };
 
   return (
@@ -195,6 +182,27 @@ const Carnes: React.FC = () => {
           <Link to="/carnes/create" className="btn btn-primary">
             <i className="bi bi-plus"></i> Novo
           </Link>
+          <button 
+            className="btn btn-outline-warning"
+            title="Editar (selecione uma linha)"
+            disabled={true}
+          >
+            <i className="bi bi-pencil"></i> Editar
+          </button>
+          <button 
+            className="btn btn-outline-danger"
+            title="Deletar (selecione uma linha)"
+            disabled={true}
+          >
+            <i className="bi bi-trash"></i> Deletar
+          </button>
+          <button 
+            className="btn btn-outline-info"
+            title="Imprimir (selecione uma linha)"
+            disabled={true}
+          >
+            <i className="bi bi-printer"></i> Imprimir
+          </button>
         </div>
       </div>
 
@@ -208,25 +216,33 @@ const Carnes: React.FC = () => {
         setLimit={setLimit}
         setPage={setPage}
         emptyMessage="Nenhum carnê encontrado"
-        actions={renderActions}
         searchPlaceholder="Número do carnê ou cliente"
         onSearch={setSearch}
+        onSelectionChange={(selectedItems) => {
+          // Habilitar/desabilitar botões baseado na seleção
+          const editarBtn = document.querySelector('.btn-outline-warning') as HTMLButtonElement;
+          const deletarBtn = document.querySelector('.btn-outline-danger') as HTMLButtonElement;
+          const imprimirBtn = document.querySelector('.btn-outline-info') as HTMLButtonElement;
+          
+          if (editarBtn) editarBtn.disabled = selectedItems.length !== 1;
+          if (deletarBtn) deletarBtn.disabled = selectedItems.length !== 1;
+          if (imprimirBtn) imprimirBtn.disabled = selectedItems.length !== 1;
+        }}
         bulkActions={[
           {
-            label: "Excluir Selecionados",
-            action: (selectedItems) => {
-              // Implementar lógica de exclusão em lote
-              console.log('Excluir itens:', selectedItems);
-            },
+            label: "Editar",
+            action: (selectedItems) => handleTopoActions('editar', selectedItems),
+            variant: 'warning'
+          },
+          {
+            label: "Deletar",
+            action: (selectedItems) => handleTopoActions('deletar', selectedItems),
             variant: 'danger'
           },
           {
-            label: "Marcar como Pago",
-            action: (selectedItems) => {
-              // Implementar lógica para marcar como pago
-              console.log('Marcar como pago:', selectedItems);
-            },
-            variant: 'success'
+            label: "Imprimir",
+            action: (selectedItems) => handleTopoActions('imprimir', selectedItems),
+            variant: 'info'
           }
         ]}
       />

@@ -26,10 +26,11 @@ interface TableProps {
   bulkActions?: {
     label: string;
     action: (selectedItems: any[]) => void;
-    variant?: 'primary' | 'secondary' | 'danger' | 'success';
+    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
   }[];
   searchPlaceholder?: string;
   onSearch?: (search: string) => void;
+  onSelectionChange?: (selectedItems: any[]) => void;
 }
 
 const DataTable: React.FC<TableProps> = ({
@@ -44,24 +45,28 @@ const DataTable: React.FC<TableProps> = ({
   actions,
   bulkActions = [],
   searchPlaceholder = "Buscar...",
-  onSearch
+  onSearch,
+  onSelectionChange
 }) => {
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedItems(data);
-    } else {
-      setSelectedItems([]);
+    const newSelection = checked ? data : [];
+    setSelectedItems(newSelection);
+    if (onSelectionChange) {
+      onSelectionChange(newSelection);
     }
   };
 
   const handleSelectItem = (item: any, checked: boolean) => {
-    if (checked) {
-      setSelectedItems([...selectedItems, item]);
-    } else {
-      setSelectedItems(selectedItems.filter(selected => selected.id !== item.id));
+    const newSelection = checked 
+      ? [...selectedItems, item]
+      : selectedItems.filter(selected => selected.id !== item.id);
+    
+    setSelectedItems(newSelection);
+    if (onSelectionChange) {
+      onSelectionChange(newSelection);
     }
   };
 
@@ -189,7 +194,7 @@ const DataTable: React.FC<TableProps> = ({
             <thead>
               <tr>
                 {/* Checkbox para selecionar todos */}
-                {(bulkActions.length > 0 || actions) && (
+                {bulkActions.length > 0 && (
                   <th className="py-1 px-2" style={{ width: '40px' }}>
                     <input
                       type="checkbox"
@@ -206,55 +211,46 @@ const DataTable: React.FC<TableProps> = ({
                   </th>
                 ))}
                 
-                {actions && (
-                  <th className="py-1 px-2">Ações</th>
-                )}
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={columns.length + (actions ? 1 : 0) + (bulkActions.length > 0 || actions ? 1 : 0)} className="text-center">
-                    <div className="spinner-border spinner-border-sm" role="status">
-                      <span className="visually-hidden">Carregando...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : data.length > 0 ? (
-                data.map((item, index) => (
-                  <tr key={item.id || index} className={selectedItems.some(selected => selected.id === item.id) ? 'table-active' : ''}>
-                    {/* Checkbox para selecionar item */}
-                    {(bulkActions.length > 0 || actions) && (
-                      <td className="py-1 px-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={selectedItems.some(selected => selected.id === item.id)}
-                          onChange={(e) => handleSelectItem(item, e.target.checked)}
-                        />
-                      </td>
-                    )}
-                    
-                    {columns.map((column) => (
-                      <td key={column.key} className="py-1 px-2">
-                        {column.render ? column.render(item) : item[column.key]}
-                      </td>
-                    ))}
-                    
-                    {actions && (
-                      <td className="py-1 px-2">
-                        {actions(item)}
-                      </td>
-                    )}
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={columns.length + (bulkActions.length > 0 ? 1 : 0)} className="text-center">
+                      <div className="spinner-border spinner-border-sm" role="status">
+                        <span className="visually-hidden">Carregando...</span>
+                      </div>
+                    </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length + (actions ? 1 : 0) + (bulkActions.length > 0 || actions ? 1 : 0)} className="text-center">
-                    {emptyMessage}
-                  </td>
-                </tr>
-              )}
+                ) : data.length > 0 ? (
+                  data.map((item, index) => (
+                    <tr key={item.id || index} className={selectedItems.some(selected => selected.id === item.id) ? 'table-active' : ''}>
+                      {/* Checkbox para selecionar item */}
+                      {bulkActions.length > 0 && (
+                        <td className="py-1 px-2">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={selectedItems.some(selected => selected.id === item.id)}
+                            onChange={(e) => handleSelectItem(item, e.target.checked)}
+                          />
+                        </td>
+                      )}
+                      
+                      {columns.map((column) => (
+                        <td key={column.key} className="py-1 px-2">
+                          {column.render ? column.render(item) : item[column.key]}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={columns.length + (bulkActions.length > 0 ? 1 : 0)} className="text-center">
+                      {emptyMessage}
+                    </td>
+                  </tr>
+                )}
             </tbody>
           </table>
         </div>
