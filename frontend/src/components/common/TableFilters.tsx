@@ -16,6 +16,7 @@ interface TableFiltersProps {
   onFilter?: (e: FormEvent) => void;
   onReset?: () => void;
   showReset?: boolean;
+  showResetButton?: boolean;
   // Interface original para uso direto
   searchValue?: string;
   onSearchChange?: (value: string) => void;
@@ -40,6 +41,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
   onFilter,
   onReset,
   showReset = false,
+  showResetButton = false,
   // Campos diretos (modo novo)
   searchValue = '',
   onSearchChange,
@@ -94,7 +96,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
           Filtrar
         </button>
         
-        {showReset && onReset && (
+        {(showReset || showResetButton) && onReset && (
           <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onReset} style={{ height: '32px' }}>
             Limpar
           </button>
