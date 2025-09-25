@@ -192,23 +192,19 @@ const Carnes: React.FC = () => {
         bulkActions={[
           {
             label: "Novo",
-            action: () => window.location.href = "/carnes/create",
-            variant: 'primary'
+            action: () => window.location.href = "/carnes/create"
           },
           {
             label: "Editar",
-            action: (selectedItems) => handleTopoActions('editar', selectedItems),
-            variant: 'warning'
+            action: (selectedItems) => handleTopoActions('editar', selectedItems)
           },
           {
             label: "Deletar",
-            action: (selectedItems) => handleTopoActions('deletar', selectedItems),
-            variant: 'danger'
+            action: (selectedItems) => handleTopoActions('deletar', selectedItems)
           },
           {
             label: "Imprimir",
-            action: (selectedItems) => handleTopoActions('imprimir', selectedItems),
-            variant: 'info'
+            action: (selectedItems) => handleTopoActions('imprimir', selectedItems)
           }
         ]}
       />

@@ -60,9 +60,8 @@ const DataTable: React.FC<TableProps> = ({
   };
 
   const handleSelectItem = (item: any, checked: boolean) => {
-    const newSelection = checked 
-      ? [...selectedItems, item]
-      : selectedItems.filter(selected => selected.id !== item.id);
+    // Permitir seleção de apenas uma linha
+    const newSelection = checked ? [item] : [];
     
     setSelectedItems(newSelection);
     if (onSelectionChange) {
@@ -106,7 +105,7 @@ const DataTable: React.FC<TableProps> = ({
               return (
                 <button
                   key={index}
-                  className={`btn btn-sm btn-${bulkAction.variant || 'primary'}`}
+                  className="btn btn-sm btn-primary"
                   onClick={() => !isDisabled && handleBulkAction(bulkAction.action)}
                   disabled={isDisabled}
                 >
@@ -202,15 +201,10 @@ const DataTable: React.FC<TableProps> = ({
           <table className="table table-striped table-sm">
             <thead>
               <tr>
-                {/* Checkbox para selecionar todos */}
+                {/* Checkbox para seleção individual */}
                 {(bulkActions.length > 0 || onSelectionChange) && (
                   <th className="py-1 px-2" style={{ width: '40px' }}>
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={selectedItems.length === data.length && data.length > 0}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                    />
+                    {/* Sem checkbox no cabeçalho para seleção única */}
                   </th>
                 )}
                 
@@ -241,12 +235,13 @@ const DataTable: React.FC<TableProps> = ({
                         onClick={() => handleSelectItem(item, !isSelected)}
                         style={{ cursor: 'pointer' }}
                       >
-                        {/* Checkbox apenas como indicador visual */}
+                        {/* Radio button para seleção única */}
                         {(bulkActions.length > 0 || onSelectionChange) && (
                           <td className="py-1 px-2" onClick={(e) => e.stopPropagation()}>
                             <input
-                              type="checkbox"
+                              type="radio"
                               className="form-check-input"
+                              name="tableSelection"
                               checked={isSelected}
                               onChange={(e) => handleSelectItem(item, e.target.checked)}
                             />
