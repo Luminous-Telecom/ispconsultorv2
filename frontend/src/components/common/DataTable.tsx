@@ -168,7 +168,7 @@ const DataTable: React.FC<TableProps> = ({
               className="form-select form-select-sm"
               value={limit}
               onChange={(e) => setLimit(parseInt(e.target.value))}
-              style={{ width: '100px', height: '32px' }}
+              style={{ width: '100px', height: '32px', cursor: 'pointer' }}
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
