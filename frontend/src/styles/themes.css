@@ -157,7 +157,7 @@ body {
 
 /* Hover específico para modo escuro */
 [data-theme="dark"] .sidebar-nav-link:hover {
-  background: #263237 !important;
+  background: #586f79 !important;
   color: #ffffff !important;
 }
 
