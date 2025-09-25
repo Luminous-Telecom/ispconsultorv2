@@ -46,7 +46,17 @@ export class ClienteController {
       Joi.number().integer().min(1),
       Joi.string().pattern(/^\d+$/) // Aceitar strings numéricas como "8"
     ).allow(null),
-    data_validade_desconto: Joi.date().allow(null)
+    data_validade_desconto: Joi.date().allow(null),
+    plano_id: Joi.number().integer().min(1).allow(null),
+    desconto_percentual: Joi.alternatives().try(
+      Joi.number().min(0).max(100),
+      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "0.00"
+    ).allow(null),
+    desconto_valor: Joi.alternatives().try(
+      Joi.number().min(0),
+      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "0.00"
+    ).allow(null),
+    data_inicio_plano: Joi.date().allow(null)
   });
 
   // Schema de validação para atualização
@@ -88,7 +98,17 @@ export class ClienteController {
       Joi.number().integer().min(1),
       Joi.string().pattern(/^\d+$/) // Aceitar strings numéricas como "8"
     ).allow(null),
-    data_validade_desconto: Joi.date().allow(null)
+    data_validade_desconto: Joi.date().allow(null),
+    plano_id: Joi.number().integer().min(1).allow(null),
+    desconto_percentual: Joi.alternatives().try(
+      Joi.number().min(0).max(100),
+      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "0.00"
+    ).allow(null),
+    desconto_valor: Joi.alternatives().try(
+      Joi.number().min(0),
+      Joi.string().pattern(/^\d+\.?\d*$/) // Aceitar strings numéricas como "0.00"
+    ).allow(null),
+    data_inicio_plano: Joi.date().allow(null)
   });
 
   // Listar todos os clientes
