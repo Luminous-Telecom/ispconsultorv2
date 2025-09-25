@@ -237,6 +237,7 @@ const Carnes: React.FC = () => {
             imprimirBtn.onclick = () => handleTopoActions('imprimir', selectedItems);
           }
         }}
+        bulkActions={[]}
       />
     </>
   );
