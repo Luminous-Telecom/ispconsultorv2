@@ -143,8 +143,8 @@ body {
 }
 
 .sidebar-nav-link:hover {
-  background: var(--sidebar-hover);
-  color: var(--sidebar-text);
+  background: var(--sidebar-hover) !important;
+  color: var(--sidebar-text) !important;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -154,6 +154,12 @@ body {
 }
 
 /* Ícones removidos do menu */
+
+/* Hover específico para modo escuro */
+[data-theme="dark"] .sidebar-nav-link:hover {
+  background: #263237 !important;
+  color: #ffffff !important;
+}
 
 /* Layout principal */
 .main-layout {
