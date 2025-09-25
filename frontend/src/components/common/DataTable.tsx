@@ -89,7 +89,7 @@ const DataTable: React.FC<TableProps> = ({
 
   return (
     <div className="card">
-      {/* Header com botões de ação */}
+      {/* Header com botões de ação - apenas se houver bulkActions */}
       {bulkActions.length > 0 && selectedItems.length > 0 && (
         <div className="card-header py-2 border-bottom">
           <div className="d-flex align-items-center gap-2">

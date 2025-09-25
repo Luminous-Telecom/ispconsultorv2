@@ -224,27 +224,19 @@ const Carnes: React.FC = () => {
           const deletarBtn = document.querySelector('.btn-outline-danger') as HTMLButtonElement;
           const imprimirBtn = document.querySelector('.btn-outline-info') as HTMLButtonElement;
           
-          if (editarBtn) editarBtn.disabled = selectedItems.length !== 1;
-          if (deletarBtn) deletarBtn.disabled = selectedItems.length !== 1;
-          if (imprimirBtn) imprimirBtn.disabled = selectedItems.length !== 1;
-        }}
-        bulkActions={[
-          {
-            label: "Editar",
-            action: (selectedItems) => handleTopoActions('editar', selectedItems),
-            variant: 'warning'
-          },
-          {
-            label: "Deletar",
-            action: (selectedItems) => handleTopoActions('deletar', selectedItems),
-            variant: 'danger'
-          },
-          {
-            label: "Imprimir",
-            action: (selectedItems) => handleTopoActions('imprimir', selectedItems),
-            variant: 'info'
+          if (editarBtn) {
+            editarBtn.disabled = selectedItems.length !== 1;
+            editarBtn.onclick = () => handleTopoActions('editar', selectedItems);
           }
-        ]}
+          if (deletarBtn) {
+            deletarBtn.disabled = selectedItems.length !== 1;
+            deletarBtn.onclick = () => handleTopoActions('deletar', selectedItems);
+          }
+          if (imprimirBtn) {
+            imprimirBtn.disabled = selectedItems.length !== 1;
+            imprimirBtn.onclick = () => handleTopoActions('imprimir', selectedItems);
+          }
+        }}
       />
     </>
   );
