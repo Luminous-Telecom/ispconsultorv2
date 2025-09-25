@@ -163,13 +163,6 @@ const DataTable: React.FC<TableProps> = ({
               />
             )}
             
-            {/* Filtros */}
-            <div className="dropdown">
-              <button className="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown">
-                <i className="bi bi-funnel"></i>
-              </button>
-            </div>
-            
             {/* Seletor de linhas por página */}
             <select
               className="form-select form-select-sm"
