@@ -276,7 +276,7 @@ export class ClienteController {
 
       // Validar dados
       console.log('CLIENTE UPDATE - VALIDANDO DADOS');
-      const { error, value } = this.updateSchema.validate(req.body);
+      const { error, value } = ClienteController.updateSchema.validate(req.body);
       
       if (error) {
         console.log('CLIENTE UPDATE - ERRO VALIDAÇÃO:', error.details);
