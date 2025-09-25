@@ -727,13 +727,13 @@ body {
 }
 
 [data-theme="dark"] .form-control-sm {
-  background-color: var(--bg-secondary) !important;
+  background-color: #1b272c !important;
   color: var(--text-primary) !important;
   border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .form-control-sm:focus {
-  background-color: var(--bg-primary) !important;
+  background-color: #101619 !important;
   color: var(--text-primary) !important;
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2) !important;
