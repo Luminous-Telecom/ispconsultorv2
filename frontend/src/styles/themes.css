@@ -472,7 +472,6 @@ body {
   color: var(--text-primary);
   font-weight: 600;
   font-size: 0.875rem;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 2px solid var(--primary-color);
   cursor: pointer;
