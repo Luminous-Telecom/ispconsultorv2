@@ -16,17 +16,9 @@ const NotificationContainer: React.FC<NotificationContainerProps> = ({
   }
 
   return (
-    <div 
-      className="position-fixed top-0 end-0 p-3" 
-      style={{ 
-        zIndex: 99999, 
-        maxWidth: '400px',
-        width: '100%',
-        pointerEvents: 'none'
-      }}
-    >
+    <div className="notification-container">
       {notifications.map(notification => (
-        <div key={notification.id} className="mb-2" style={{ pointerEvents: 'auto' }}>
+        <div key={notification.id} className="notification fade-in">
           <Alert
             type={notification.type}
             message={notification.message}

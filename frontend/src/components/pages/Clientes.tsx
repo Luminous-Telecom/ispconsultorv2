@@ -115,18 +115,23 @@ const Clientes: React.FC = () => {
   );
 
   return (
-    <>
-      <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 className="h2">Clientes</h1>
-        <div className="btn-group" role="group">
-          <Link to="/clientes/create" className="btn btn-primary">
-            <i className="bi bi-plus"></i> Novo Cliente
-          </Link>
+    <div className="fade-in">
+      <div className="card">
+        <div className="card-header">
+          <div className="d-flex justify-content-between align-items-center">
+            <h1 className="h4 mb-0">
+              <i className="bi bi-people me-2"></i>
+              Clientes
+            </h1>
+            <Link to="/clientes/create" className="btn btn-primary">
+              <i className="bi bi-plus"></i> Novo Cliente
+            </Link>
+          </div>
         </div>
-      </div>
+        <div className="card-body">
 
-      {/* Filtros */}
-      <TableFilters
+          {/* Filtros */}
+          <TableFilters
         fields={[
           {
             name: 'search',
@@ -149,24 +154,26 @@ const Clientes: React.FC = () => {
             ]
           }
         ]}
-        onFilter={handleFilter}
-        onReset={handleReset}
-        showResetButton={true}
-      />
+          onFilter={handleFilter}
+          onReset={handleReset}
+          showResetButton={true}
+        />
 
-      {/* Tabela de Clientes */}
-      <DataTable
-        columns={columns}
-        data={clientesData?.data || []}
-        isLoading={isLoading}
-        pagination={clientesData?.pagination}
-        limit={limit}
-        setLimit={setLimit}
-        setPage={setPage}
-        emptyMessage="Nenhum cliente encontrado"
-        actions={renderActions}
-      />
-    </>
+        {/* Tabela de Clientes */}
+        <DataTable
+          columns={columns}
+          data={clientesData?.data || []}
+          isLoading={isLoading}
+          pagination={clientesData?.pagination}
+          limit={limit}
+          setLimit={setLimit}
+          setPage={setPage}
+          emptyMessage="Nenhum cliente encontrado"
+          actions={renderActions}
+        />
+        </div>
+      </div>
+    </div>
   );
 };
 

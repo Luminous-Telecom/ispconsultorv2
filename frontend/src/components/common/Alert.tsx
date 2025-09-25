@@ -43,11 +43,14 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = tru
       className={`alert ${getAlertClass()} alert-dismissible fade show`} 
       role="alert"
       style={{
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        border: 'none',
-        borderRadius: '8px',
+        background: 'var(--bg-primary)',
+        color: 'var(--text-primary)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '12px',
+        boxShadow: 'var(--shadow-lg)',
         minWidth: '300px',
-        maxWidth: '400px'
+        maxWidth: '400px',
+        padding: '1rem'
       }}
     >
       <i className={`bi ${getIcon()} me-2`}></i>
@@ -58,6 +61,13 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = tru
           className="btn-close"
           onClick={onClose}
           aria-label="Close"
+          style={{ 
+            background: 'none',
+            border: 'none',
+            fontSize: '1.2rem',
+            color: 'var(--text-muted)',
+            cursor: 'pointer'
+          }}
         ></button>
       )}
     </div>

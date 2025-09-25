@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import './styles/themes.css';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -39,9 +41,10 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <NotificationProvider>
-        <Router>
-          <Routes>
+      <ThemeProvider>
+        <NotificationProvider>
+          <Router>
+            <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
@@ -65,9 +68,10 @@ function App() {
             <Route path="boleto/web/:id" element={<BoletoView />} />
             <Route path="dados-empresa" element={<DadosEmpresa />} />
           </Route>
-        </Routes>
-        </Router>
-      </NotificationProvider>
+            </Routes>
+          </Router>
+        </NotificationProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -1,119 +1,94 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import NotificationContainer from '../common/NotificationContainer';
 import { useNotificationContext } from '../../contexts/NotificationContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Layout: React.FC = () => {
   const location = useLocation();
   const { notifications, removeNotification } = useNotificationContext();
+  const { theme, toggleTheme } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  return (
-    <div className="container-fluid">
-      <div className="row">
-        {/* Sidebar */}
-        <nav className="col-md-3 col-lg-2 d-md-block sidebar collapse" style={{ 
-          minHeight: '100vh', 
-          backgroundColor: '#343a40' 
-        }}>
-          <div className="position-sticky pt-3">
-            <div className="text-center mb-4">
-              <h4 className="text-white">ERP Assessoria</h4>
-            </div>
-            
-            <ul className="nav flex-column">
-              <li className="nav-item">
-                <Link 
-                  className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}
-                  to="/dashboard"
-                  style={{ 
-                    color: isActive('/dashboard') ? '#fff' : '#adb5bd',
-                    backgroundColor: isActive('/dashboard') ? '#495057' : 'transparent'
-                  }}
-                >
-                  <i className="bi bi-house-door"></i> Dashboard
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link 
-                  className={`nav-link ${isActive('/clientes') ? 'active' : ''}`}
-                  to="/clientes"
-                  style={{ 
-                    color: isActive('/clientes') ? '#fff' : '#adb5bd',
-                    backgroundColor: isActive('/clientes') ? '#495057' : 'transparent'
-                  }}
-                >
-                  <i className="bi bi-people"></i> Clientes
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link 
-                  className={`nav-link ${isActive('/planos') ? 'active' : ''}`}
-                  to="/planos"
-                  style={{ 
-                    color: isActive('/planos') ? '#fff' : '#adb5bd',
-                    backgroundColor: isActive('/planos') ? '#495057' : 'transparent'
-                  }}
-                >
-                  <i className="bi bi-wifi"></i> Planos
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link 
-                  className={`nav-link ${isActive('/bancos') ? 'active' : ''}`}
-                  to="/bancos"
-                  style={{ 
-                    color: isActive('/bancos') ? '#fff' : '#adb5bd',
-                    backgroundColor: isActive('/bancos') ? '#495057' : 'transparent'
-                  }}
-                >
-                  <i className="bi bi-bank"></i> Bancos
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link 
-                  className={`nav-link ${isActive('/carnes') ? 'active' : ''}`}
-                  to="/carnes"
-                  style={{ 
-                    color: isActive('/carnes') ? '#fff' : '#adb5bd',
-                    backgroundColor: isActive('/carnes') ? '#495057' : 'transparent'
-                  }}
-                >
-                  <i className="bi bi-receipt"></i> Carnês
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link 
-                  className={`nav-link ${isActive('/dados-empresa') ? 'active' : ''}`}
-                  to="/dados-empresa"
-                  style={{ 
-                    color: isActive('/dados-empresa') ? '#fff' : '#adb5bd',
-                    backgroundColor: isActive('/dados-empresa') ? '#495057' : 'transparent'
-                  }}
-                >
-                  <i className="bi bi-building"></i> Dados da Empresa
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </nav>
+  const menuItems = [
+    { path: '/dashboard', icon: 'bi-house', label: 'Dashboard' },
+    { path: '/clientes', icon: 'bi-people', label: 'Clientes' },
+    { path: '/planos', icon: 'bi-wifi', label: 'Planos' },
+    { path: '/bancos', icon: 'bi-bank', label: 'Bancos' },
+    { path: '/carnes', icon: 'bi-receipt', label: 'Carnês' },
+    { path: '/carne-parcelas', icon: 'bi-calendar-check', label: 'Parcelas' },
+    { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa' },
+  ];
 
-        {/* Main content */}
-        <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content" style={{ 
-          backgroundColor: '#f8f9fa', 
-          minHeight: '100vh' 
-        }}>
+  return (
+    <div className="app-layout">
+      {/* Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <i className="bi bi-broadcast"></i>
+          </div>
+          <h1 className="sidebar-title">CTM Telecom</h1>
+        </div>
+        
+        <nav className="sidebar-nav">
+          {menuItems.map((item) => (
+            <div key={item.path} className="sidebar-nav-item">
+              <Link 
+                to={item.path}
+                className={`sidebar-nav-link ${isActive(item.path) ? 'active' : ''}`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <i className={item.icon}></i>
+                {item.label}
+              </Link>
+            </div>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Main Layout */}
+      <div className="main-layout">
+        {/* Header */}
+        <header className="main-header">
+          <div className="d-flex align-items-center">
+            <button 
+              className="btn btn-link d-md-none me-3"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <i className="bi bi-list"></i>
+            </button>
+            <h2 className="h4 mb-0">
+              {menuItems.find(item => isActive(item.path))?.label || 'Dashboard'}
+            </h2>
+          </div>
+          
+          <div className="d-flex align-items-center gap-3">
+            <button 
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
+            >
+              <i className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'}`}></i>
+            </button>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="main-content">
           <Outlet />
         </main>
       </div>
-      
+
       {/* Notifications */}
-      <NotificationContainer 
-        notifications={notifications} 
-        onRemove={removeNotification} 
+      <NotificationContainer
+        notifications={notifications}
+        onRemove={removeNotification}
       />
     </div>
   );
