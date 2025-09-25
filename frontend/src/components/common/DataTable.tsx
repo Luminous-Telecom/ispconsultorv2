@@ -170,10 +170,20 @@ const DataTable: React.FC<TableProps> = ({
               </button>
             </div>
             
-            {/* Configurações */}
-            <button className="btn btn-outline-secondary btn-sm">
-              <i className="bi bi-gear"></i>
-            </button>
+            {/* Seletor de linhas por página */}
+            <select
+              className="form-select form-select-sm"
+              value={limit}
+              onChange={(e) => setLimit(parseInt(e.target.value))}
+              style={{ width: '80px', height: '32px' }}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={15}>15</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
             
             {/* Download */}
             <button className="btn btn-outline-secondary btn-sm">

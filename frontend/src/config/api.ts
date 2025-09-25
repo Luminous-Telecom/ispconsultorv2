@@ -59,7 +59,7 @@ export const API_ENDPOINTS = {
 export const PAGINATION_CONFIG = {
   DEFAULT_PAGE_SIZE: 15,
   MAX_PAGE_SIZE: 100,
-  PAGE_SIZE_OPTIONS: [10, 15, 25, 50, 100],
+  PAGE_SIZE_OPTIONS: [5, 10, 15, 25, 50, 100],
 };
 
 // Configurações de cache
