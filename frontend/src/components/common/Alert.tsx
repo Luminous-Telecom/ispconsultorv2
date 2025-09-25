@@ -46,11 +46,12 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = tru
         background: 'var(--bg-primary)',
         color: 'var(--text-primary)',
         border: '1px solid var(--border-color)',
-        borderRadius: '12px',
+        borderRadius: '8px',
         boxShadow: 'var(--shadow-lg)',
-        minWidth: '300px',
-        maxWidth: '400px',
-        padding: '1rem'
+        minWidth: '280px',
+        maxWidth: '350px',
+        padding: '0.75rem',
+        fontSize: '0.875rem'
       }}
     >
       <i className={`bi ${getIcon()} me-2`}></i>
