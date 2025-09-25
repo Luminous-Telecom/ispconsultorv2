@@ -41,9 +41,9 @@
 
 /* Tema escuro */
 [data-theme="dark"] {
-  /* Cores de fundo - Azul escuro */
-  --bg-primary: #0f1419;
-  --bg-secondary: #1a2332;
+  /* Cores de fundo - Verde escuro */
+  --bg-primary: #263237;
+  --bg-secondary: #1b272c;
   --bg-tertiary: #243447;
   
   /* Cores de texto */
