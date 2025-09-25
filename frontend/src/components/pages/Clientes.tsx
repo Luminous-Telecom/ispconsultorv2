@@ -155,6 +155,7 @@ const Clientes: React.FC = () => {
         sortColumn={sortColumn}
         sortDirection={sortDirection}
       />
+    </>
   );
 };
 
