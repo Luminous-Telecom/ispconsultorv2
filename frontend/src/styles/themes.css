@@ -224,7 +224,7 @@ body {
 }
 
 .card:hover {
-  box-shadow: var(--shadow);
+  /* Sem efeitos visuais no hover */
 }
 
 .card-header {
