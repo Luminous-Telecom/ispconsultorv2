@@ -374,7 +374,6 @@ body {
 /* Tabelas modernas */
 .table {
   background: var(--bg-primary);
-  border-radius: 8px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   font-size: 0.875rem;
@@ -446,7 +445,6 @@ body {
 
 /* Tabelas modernas e elegantes */
 .table {
-  border-radius: 8px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border: none;
