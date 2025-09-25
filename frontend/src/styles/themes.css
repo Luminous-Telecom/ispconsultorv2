@@ -98,6 +98,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  background-color: #101619;
 }
 
 .sidebar-logo {
@@ -122,6 +123,7 @@ body {
 
 .sidebar-nav {
   padding: 0.5rem 0;
+  background-color: var(--bg-secondary);
 }
 
 .sidebar-nav-item {
