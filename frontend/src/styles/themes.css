@@ -721,10 +721,49 @@ body {
   color: var(--text-primary) !important;
 }
 
-/* Botões limpos */
+/* Botões com cor das linhas selecionadas */
+.btn-primary {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  color: white !important;
+}
+
+.btn-primary:hover {
+  background-color: #0a58ca !important;
+  border-color: #0a58ca !important;
+  color: white !important;
+}
+
+.btn-primary:focus {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  color: white !important;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25) !important;
+}
+
+[data-theme="dark"] .btn-primary {
+  background-color: #1e40af !important;
+  border-color: #1e40af !important;
+  color: white !important;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  color: white !important;
+}
+
+[data-theme="dark"] .btn-primary:focus {
+  background-color: #1e40af !important;
+  border-color: #1e40af !important;
+  color: white !important;
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.25) !important;
+}
+
 .btn {
   border-radius: 6px !important;
   font-weight: 500 !important;
+  border: 1px solid transparent !important;
 }
 
 .btn-sm {
