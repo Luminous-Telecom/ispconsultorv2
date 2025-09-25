@@ -422,6 +422,30 @@ body {
   background: #e8eaed;
 }
 
+/* Linha selecionada - modo claro */
+:root .table tbody tr.table-active,
+:root .table tbody tr[style*="background-color: #e3f2fd"] {
+  background-color: #e3f2fd !important;
+  border-left: 3px solid var(--primary-color);
+}
+
+:root .table tbody tr.table-active td,
+:root .table tbody tr[style*="background-color: #e3f2fd"] td {
+  background-color: #e3f2fd !important;
+}
+
+/* Linha selecionada - modo escuro */
+[data-theme="dark"] .table tbody tr.table-active,
+[data-theme="dark"] .table tbody tr[style*="background-color: #e3f2fd"] {
+  background-color: #2c3e50 !important;
+  border-left: 3px solid var(--primary-color);
+}
+
+[data-theme="dark"] .table tbody tr.table-active td,
+[data-theme="dark"] .table tbody tr[style*="background-color: #e3f2fd"] td {
+  background-color: #2c3e50 !important;
+}
+
 .table tbody td {
   padding: 0.75rem;
   border-bottom: 1px solid var(--border-light);
