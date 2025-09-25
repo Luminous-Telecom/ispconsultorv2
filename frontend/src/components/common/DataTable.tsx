@@ -248,8 +248,7 @@ const DataTable: React.FC<TableProps> = ({
                     style={{ 
                       cursor: 'pointer',
                       backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
-                      color: isSelected ? getSelectionColors().color : 'inherit',
-                      borderLeft: isSelected ? '3px solid var(--primary-color)' : 'none'
+                      color: isSelected ? getSelectionColors().color : 'inherit'
                     }}
                   >
                     
