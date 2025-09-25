@@ -43,7 +43,6 @@ const Layout: React.FC = () => {
                 className={`sidebar-nav-link ${isActive(item.path) ? 'active' : ''}`}
                 onClick={() => setSidebarOpen(false)}
               >
-                <i className={item.icon}></i>
                 {item.label}
               </Link>
             </div>
