@@ -104,7 +104,7 @@ body {
 .sidebar-logo {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background-color: #007bff;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -271,13 +271,13 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  background-color: var(--primary-color);
   color: white;
   border: 1px solid var(--primary-color);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--primary-hover), var(--primary-color));
+  background-color: var(--primary-hover);
   border-color: var(--primary-hover);
 }
 
@@ -475,6 +475,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 2px solid var(--primary-color);
+  cursor: pointer;
 }
 
 .table tbody td {

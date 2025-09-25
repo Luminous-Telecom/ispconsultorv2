@@ -145,20 +145,6 @@ const DataTable: React.FC<TableProps> = ({
                 );
               })}
             </div>
-            <span 
-              className="text-muted small" 
-              style={{ 
-                minWidth: '150px', 
-                maxWidth: '150px',
-                flexShrink: 0,
-                textAlign: 'right'
-              }}
-            >
-              {selectedItems.length > 0 
-                ? `${selectedItems.length} item(s) selecionado(s)`
-                : ' ' // Espaço fixo
-              }
-            </span>
           </div>
         )}
 
