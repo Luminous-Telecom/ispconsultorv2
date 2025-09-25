@@ -148,7 +148,7 @@ const DataTable: React.FC<TableProps> = ({
                 placeholder={searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: '200px' }}
+                style={{ width: '200px', height: '32px' }}
               />
             )}
             
