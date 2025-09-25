@@ -290,7 +290,7 @@ const DataTable: React.FC<TableProps> = ({
                     className={isSelected ? 'table-active' : ''}
                     onClick={() => !isSelected && handleSelectItem(item, true)}
                     style={{ 
-                      cursor: isSelected ? 'default' : 'pointer',
+                      cursor: 'pointer',
                       backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
                       color: isSelected ? getSelectionColors().color : 'inherit'
                     }}
