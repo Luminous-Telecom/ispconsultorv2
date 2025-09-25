@@ -257,8 +257,9 @@ const DataTable: React.FC<TableProps> = ({
                       <td 
                         key={column.key} 
                         className="py-1 px-2"
-                        style={{ fontSize: '0.75rem', padding: '0.5rem' }}
                         style={{ 
+                          fontSize: '0.75rem', 
+                          padding: '0.5rem',
                           backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
                           color: isSelected ? getSelectionColors().color : 'inherit'
                         }}
