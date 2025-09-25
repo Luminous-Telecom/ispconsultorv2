@@ -682,6 +682,62 @@ const BancosEdit: React.FC = () => {
               </div>
             </div>
 
+            {/* Configurações de Layout */}
+            <div className="card mb-4">
+              <div className="card-header">
+                <h5 className="card-title mb-0">Configurações de Layout</h5>
+              </div>
+              <div className="card-body">
+                <div className="row">
+                  <div className="col-md-4">
+                    <div className="mb-3">
+                      <label htmlFor="layout_web" className="form-label">Layout Web</label>
+                      <select
+                        className="form-select"
+                        id="layout_web"
+                        value={formData.layout_web}
+                        onChange={(e) => handleInputChange('layout_web', e.target.value)}
+                      >
+                        <option value="pdf">PDF</option>
+                        <option value="html">HTML</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="mb-3">
+                      <label htmlFor="layout_pdf" className="form-label">Layout PDF</label>
+                      <select
+                        className="form-select"
+                        id="layout_pdf"
+                        value={formData.layout_pdf}
+                        onChange={(e) => handleInputChange('layout_pdf', e.target.value)}
+                      >
+                        <option value="pdf">PDF</option>
+                        <option value="html">HTML</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="mb-3">
+                      <label htmlFor="layout_carne" className="form-label">Layout Carnê (Linhas por Página)</label>
+                      <select
+                        className="form-select"
+                        id="layout_carne"
+                        value={formData.layout_carne}
+                        onChange={(e) => handleInputChange('layout_carne', e.target.value)}
+                      >
+                        <option value="2folhas">2 Linhas por Página</option>
+                        <option value="3folhas">3 Linhas por Página</option>
+                      </select>
+                      <div className="form-text">
+                        Define quantas linhas de boletos serão impressas por página no carnê
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Botões de Ação */}
             <div className="d-flex justify-content-end gap-2 mb-4">
               <button
