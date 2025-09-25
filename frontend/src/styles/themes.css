@@ -459,6 +459,15 @@ body {
   font-size: 0.875rem;
 }
 
+/* Garantir texto claro no modo escuro para linhas não selecionadas */
+[data-theme="dark"] .table tbody tr:not(.table-active) td {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .table tbody tr:not(.table-active) th {
+  color: var(--text-primary) !important;
+}
+
 /* Badges modernos */
 .badge {
   border-radius: 12px;
@@ -669,6 +678,7 @@ body {
 [data-theme="dark"] .table tbody td,
 [data-theme="dark"] .table tbody th {
   background-color: inherit !important;
+  color: var(--text-primary) !important;
 }
 
 /* Corrigir cores do campo de busca no tema escuro */
