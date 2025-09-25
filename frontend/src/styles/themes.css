@@ -560,3 +560,66 @@ body {
   border-color: #3b82f6;
   color: #3b82f6;
 }
+
+/* Sobrescrever classes Bootstrap para tema escuro - Mais específico */
+[data-theme="dark"] .table,
+[data-theme="dark"] .table-striped {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td,
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > th {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > td,
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > th {
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:hover > td,
+[data-theme="dark"] .table-striped > tbody > tr:hover > th {
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .table tbody tr {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme="dark"] .table tbody tr:nth-child(even) {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Sobrescrever bg-light para tema escuro */
+[data-theme="dark"] .bg-light {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Sobrescrever text-dark para tema escuro */
+[data-theme="dark"] .text-dark {
+  color: var(--text-primary) !important;
+}
+
+/* Sobrescrever badges bg-light no tema escuro */
+[data-theme="dark"] .badge.bg-light {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Garantir que cards e table-responsive também tenham fundo correto */
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .table-responsive {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Sobrescrever qualquer estilo inline ou Bootstrap que force fundo branco */
+[data-theme="dark"] .table,
+[data-theme="dark"] .table * {
+  background-color: inherit !important;
+}
+
+[data-theme="dark"] .table tbody td,
+[data-theme="dark"] .table tbody th {
+  background-color: inherit !important;
+}
