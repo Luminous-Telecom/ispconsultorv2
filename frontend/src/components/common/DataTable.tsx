@@ -194,7 +194,7 @@ const DataTable: React.FC<TableProps> = ({
             <thead>
               <tr>
                 {/* Checkbox para selecionar todos */}
-                {bulkActions.length > 0 && (
+                {(bulkActions.length > 0 || onSelectionChange) && (
                   <th className="py-1 px-2" style={{ width: '40px' }}>
                     <input
                       type="checkbox"
@@ -216,7 +216,7 @@ const DataTable: React.FC<TableProps> = ({
             <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={columns.length + (bulkActions.length > 0 ? 1 : 0)} className="text-center">
+                    <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
                       <div className="spinner-border spinner-border-sm" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
@@ -226,7 +226,7 @@ const DataTable: React.FC<TableProps> = ({
                   data.map((item, index) => (
                     <tr key={item.id || index} className={selectedItems.some(selected => selected.id === item.id) ? 'table-active' : ''}>
                       {/* Checkbox para selecionar item */}
-                      {bulkActions.length > 0 && (
+                      {(bulkActions.length > 0 || onSelectionChange) && (
                         <td className="py-1 px-2">
                           <input
                             type="checkbox"
@@ -246,7 +246,7 @@ const DataTable: React.FC<TableProps> = ({
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={columns.length + (bulkActions.length > 0 ? 1 : 0)} className="text-center">
+                    <td colSpan={columns.length + ((bulkActions.length > 0 || onSelectionChange) ? 1 : 0)} className="text-center">
                       {emptyMessage}
                     </td>
                   </tr>
