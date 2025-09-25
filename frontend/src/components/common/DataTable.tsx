@@ -90,7 +90,7 @@ const DataTable: React.FC<TableProps> = ({
 
   const handleBulkAction = (action: (selectedItems: any[]) => void) => {
     action(selectedItems);
-    setSelectedItems([]);
+    // Não limpar seleção após ação - manter linha selecionada
   };
 
   const goToFirstPage = () => setPage(1);
