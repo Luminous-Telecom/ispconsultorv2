@@ -70,9 +70,9 @@ export class CarneParcelaService {
   }
 
   // Marcar parcela como paga
-  static async marcarPago(id: number, dataPagamento?: string): Promise<CarneParcela> {
+  static async marcarPago(id: number, dataPagamento?: string): Promise<{ success: boolean; message: string; novo_carne_gerado?: any }> {
     try {
-      const response = await apiService.post<CarneParcela>(`/carne-parcelas/${id}/pagar`, {
+      const response = await apiService.post<{ success: boolean; message: string; novo_carne_gerado?: any }>(`/carne-parcelas/${id}/pagar`, {
         data_pagamento: dataPagamento || new Date().toISOString().split('T')[0]
       });
       return response;
@@ -116,9 +116,9 @@ export class CarneParcelaService {
   }
 
   // Atualizar parcela
-  static async update(id: number, data: Partial<CarneParcela>): Promise<CarneParcela> {
+  static async update(id: number, data: Partial<CarneParcela>): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiService.put<CarneParcela>(`/carne-parcelas/${id}`, data);
+      const response = await apiService.put<{ success: boolean; message: string }>(`/carne-parcelas/${id}`, data);
       return response;
     } catch (error) {
       console.error('Erro ao atualizar parcela:', error);
