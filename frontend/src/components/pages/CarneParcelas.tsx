@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CarneParcelaService } from '../../services/carneParcelaService';
 import { CarneService } from '../../services/carneService';
@@ -10,7 +10,9 @@ import DataTable from '../common/DataTable';
 const CarneParcelas: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const carneId = searchParams.get('carne_id');
+  const { carneId: carneIdParam } = useParams<{ carneId: string }>();
+  const carneIdFromParams = searchParams.get('carne_id');
+  const carneId = carneIdParam || carneIdFromParams;
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);

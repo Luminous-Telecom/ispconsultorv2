@@ -227,6 +227,11 @@ const Carnes: React.FC = () => {
           handleImprimir(selectedItems[0].id);
         }
         break;
+      case 'visualizar':
+        if (selectedItems.length === 1) {
+          window.location.href = `/carnes/${selectedItems[0].id}/parcelas`;
+        }
+        break;
     }
   };
 
@@ -249,6 +254,10 @@ const Carnes: React.FC = () => {
           {
             label: "Novo",
             action: () => window.location.href = "/carnes/create"
+          },
+          {
+            label: "Visualizar",
+            action: (selectedItems) => handleTopoActions('visualizar', selectedItems)
           },
           {
             label: "Editar",
