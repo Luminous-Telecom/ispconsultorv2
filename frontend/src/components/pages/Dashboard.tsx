@@ -386,7 +386,9 @@ const Dashboard: React.FC = () => {
               background: `conic-gradient(${gradientStops})`
             }}>
               <div className="pie-center">
-                <span className="pie-total">{total}</span>
+                <span className="pie-total">
+                  {title === 'Taxa de Pagamento' ? `${total.toFixed(1)}%` : total}
+                </span>
               </div>
             </div>
           </div>
