@@ -384,9 +384,9 @@ const CarneParcelas: React.FC = () => {
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
                       <div className="text-muted small">Total de Parcelas</div>
-                      <div className="h5 mb-0">{totalParcelas}</div>
+                      <div className="h5 mb-0" style={{ color: 'var(--text-primary)' }}>{totalParcelas}</div>
                     </div>
-                    <div className="text-primary">
+                    <div style={{ color: 'var(--primary-color)' }}>
                       <i className="bi bi-list-ol fs-4"></i>
                     </div>
                   </div>
@@ -400,9 +400,9 @@ const CarneParcelas: React.FC = () => {
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
                       <div className="text-muted small">Parcelas Pagas</div>
-                      <div className="h5 mb-0 text-success">{parcelasPagas}</div>
+                      <div className="h5 mb-0" style={{ color: '#28a745' }}>{parcelasPagas}</div>
                     </div>
-                    <div className="text-success">
+                    <div style={{ color: '#28a745' }}>
                       <i className="bi bi-check-circle fs-4"></i>
                     </div>
                   </div>
@@ -416,9 +416,9 @@ const CarneParcelas: React.FC = () => {
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
                       <div className="text-muted small">Parcelas Vencidas</div>
-                      <div className="h5 mb-0 text-danger">{parcelasVencidas}</div>
+                      <div className="h5 mb-0" style={{ color: '#dc3545' }}>{parcelasVencidas}</div>
                     </div>
-                    <div className="text-danger">
+                    <div style={{ color: '#dc3545' }}>
                       <i className="bi bi-exclamation-triangle fs-4"></i>
                     </div>
                   </div>
@@ -432,9 +432,9 @@ const CarneParcelas: React.FC = () => {
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
                       <div className="text-muted small">Valor Pago</div>
-                      <div className="h5 mb-0 text-info">R$ {parseFloat(valorPago.toString()).toFixed(2).replace('.', ',')}</div>
+                      <div className="h5 mb-0" style={{ color: '#17a2b8' }}>R$ {parseFloat(valorPago.toString()).toFixed(2).replace('.', ',')}</div>
                     </div>
-                    <div className="text-info">
+                    <div style={{ color: '#17a2b8' }}>
                       <i className="bi bi-currency-dollar fs-4"></i>
                     </div>
                   </div>
