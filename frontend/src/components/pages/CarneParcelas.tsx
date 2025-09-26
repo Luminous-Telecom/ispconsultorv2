@@ -377,65 +377,65 @@ const CarneParcelas: React.FC = () => {
           </div>
 
           {/* Cards de Estatísticas */}
-          <div className="row mb-4">
-            <div className="col-xl-3 col-md-6 mb-4">
+          <div className="row g-1 mb-2">
+            <div className="col-xl-3 col-md-6">
               <div className="card">
-                <div className="card-body">
+                <div className="card-body py-2">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <div className="text-muted small">Total de Parcelas</div>
-                      <div className="h5 mb-0" style={{ color: 'var(--text-primary)' }}>{totalParcelas}</div>
+                      <div className="small" style={{ color: 'var(--text-secondary)' }}>Total de Parcelas</div>
+                      <div className="h6 mb-0" style={{ color: 'var(--text-primary)' }}>{totalParcelas}</div>
                     </div>
                     <div style={{ color: 'var(--primary-color)' }}>
-                      <i className="bi bi-list-ol fs-4"></i>
+                      <i className="bi bi-list-ol fs-5"></i>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="col-xl-3 col-md-6 mb-4">
+            <div className="col-xl-3 col-md-6">
               <div className="card">
-                <div className="card-body">
+                <div className="card-body py-2">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <div className="text-muted small">Parcelas Pagas</div>
-                      <div className="h5 mb-0" style={{ color: '#28a745' }}>{parcelasPagas}</div>
+                      <div className="small" style={{ color: 'var(--text-secondary)' }}>Parcelas Pagas</div>
+                      <div className="h6 mb-0" style={{ color: '#28a745' }}>{parcelasPagas}</div>
                     </div>
                     <div style={{ color: '#28a745' }}>
-                      <i className="bi bi-check-circle fs-4"></i>
+                      <i className="bi bi-check-circle fs-5"></i>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="col-xl-3 col-md-6 mb-4">
+            <div className="col-xl-3 col-md-6">
               <div className="card">
-                <div className="card-body">
+                <div className="card-body py-2">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <div className="text-muted small">Parcelas Vencidas</div>
-                      <div className="h5 mb-0" style={{ color: '#dc3545' }}>{parcelasVencidas}</div>
+                      <div className="small" style={{ color: 'var(--text-secondary)' }}>Parcelas Vencidas</div>
+                      <div className="h6 mb-0" style={{ color: '#dc3545' }}>{parcelasVencidas}</div>
                     </div>
                     <div style={{ color: '#dc3545' }}>
-                      <i className="bi bi-exclamation-triangle fs-4"></i>
+                      <i className="bi bi-exclamation-triangle fs-5"></i>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="col-xl-3 col-md-6 mb-4">
+            <div className="col-xl-3 col-md-6">
               <div className="card">
-                <div className="card-body">
+                <div className="card-body py-2">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <div className="text-muted small">Valor Pago</div>
-                      <div className="h5 mb-0" style={{ color: '#17a2b8' }}>R$ {parseFloat(valorPago.toString()).toFixed(2).replace('.', ',')}</div>
+                      <div className="small" style={{ color: 'var(--text-secondary)' }}>Valor Pago</div>
+                      <div className="h6 mb-0" style={{ color: '#17a2b8' }}>R$ {parseFloat(valorPago.toString()).toFixed(2).replace('.', ',')}</div>
                     </div>
                     <div style={{ color: '#17a2b8' }}>
-                      <i className="bi bi-currency-dollar fs-4"></i>
+                      <i className="bi bi-currency-dollar fs-5"></i>
                     </div>
                   </div>
                 </div>
@@ -445,53 +445,53 @@ const CarneParcelas: React.FC = () => {
 
           {/* Informações do Carnê e Gráficos */}
           {carneData && (
-            <div className="row g-2 mb-2">
+            <div className="row g-1 mb-2">
               <div className="col-xl-8 col-lg-7">
                 <div className="card">
-                  <div className="card-header py-2">
+                  <div className="card-header py-1">
                     <h6 className="card-title mb-0" style={{ color: 'var(--text-primary)' }}>Informações do Carnê</h6>
                   </div>
-                  <div className="card-body py-2">
+                  <div className="card-body py-1">
                     <div className="row">
                       <div className="col-md-6">
-                        <div className="mb-1">
+                        <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>ID:</span>
                           <span className="ms-1" style={{ color: 'var(--primary-color)' }}>#{carneData.id}</span>
                         </div>
-                        <div className="mb-1">
+                        <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Número do Carnê:</span>
                           <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.numero_carne}</span>
                         </div>
-                        <div className="mb-1">
+                        <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Cliente:</span>
                           <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.cliente?.razao_social}</span>
                         </div>
-                        <div className="mb-1">
+                        <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Plano:</span>
                           <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.plano?.nome_plano}</span>
                         </div>
-                        <div className="mb-1">
+                        <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Banco:</span>
                           <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.banco?.nome}</span>
                         </div>
                       </div>
                       <div className="col-md-6">
-                        <div className="mb-1">
+                        <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Valor Total:</span>
                           <span className="ms-1" style={{ color: 'var(--text-primary)' }}>R$ {Number(carneData.valor_total || 0).toFixed(2).replace('.', ',')}</span>
                         </div>
-                        <div className="mb-1">
+                        <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Parcelas:</span>
                           <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.quantidade_parcelas}</span>
                         </div>
-                        <div className="mb-1">
+                        <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Status:</span>
                           <span className={`badge ms-1 ${getStatusBadgeClass(carneData.status)}`}>
                             {getStatusLabel(carneData.status)}
                           </span>
                         </div>
                         {carneData.carnet_id && (
-                          <div className="mb-1">
+                          <div className="mb-0">
                             <span className="small" style={{ color: 'var(--text-secondary)' }}>Carnet ID:</span>
                             <span className="ms-1" style={{ color: '#17a2b8' }}>{carneData.carnet_id}</span>
                           </div>
@@ -503,7 +503,7 @@ const CarneParcelas: React.FC = () => {
               </div>
 
               <div className="col-xl-4 col-lg-5">
-                <div className="row g-2">
+                <div className="row g-1">
                   <div className="col-12">
                     <div className="chart-card">
                       {(() => {
