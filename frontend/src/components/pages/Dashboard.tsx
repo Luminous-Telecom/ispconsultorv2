@@ -366,25 +366,29 @@ const Dashboard: React.FC = () => {
     const visibleData = data.filter((_, index) => !hiddenItems.has(index));
     const total = visibleData.reduce((sum, item) => sum + item.value, 0);
     
+    // Construir o conic-gradient com todas as fatias
+    let currentAngle = 0;
+    const gradientStops = visibleData.map(item => {
+      const percentage = total > 0 ? (item.value / total) * 100 : 0;
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + (percentage * 3.6);
+      currentAngle = endAngle;
+      
+      return `${item.color} ${startAngle}deg ${endAngle}deg`;
+    }).join(', ');
+    
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
         <div className="d-flex align-items-center">
           <div className="pie-chart">
-            {data.map((item, index) => {
-              if (hiddenItems.has(index)) return null;
-              
-              const percentage = total > 0 ? (item.value / total) * 100 : 0;
-              return (
-                <div key={index} className="pie-slice" style={{
-                  background: `conic-gradient(${item.color} 0deg ${percentage * 3.6}deg, transparent ${percentage * 3.6}deg)`
-                }}>
-                  <div className="pie-center">
-                    <span className="pie-total">{total}</span>
-                  </div>
-                </div>
-              );
-            })}
+            <div className="pie-slice" style={{
+              background: `conic-gradient(${gradientStops})`
+            }}>
+              <div className="pie-center">
+                <span className="pie-total">{total}</span>
+              </div>
+            </div>
           </div>
           <div className="chart-legend">
             {data.map((item, index) => (
