@@ -187,26 +187,26 @@ const CarnesShow: React.FC = () => {
       label: 'Valor',
       sortable: true,
       className: 'col-medium',
-      render: (value: number) => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
+      render: (item: any) => `R$ ${Number(item.valor_parcela || 0).toFixed(2).replace('.', ',')}`
     },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
       sortable: true,
       className: 'col-medium',
-      render: (value: string) => value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : ''
+      render: (item: any) => item.data_vencimento ? new Date(item.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : ''
     },
     {
       key: 'status',
       label: 'Status',
       sortable: true,
       className: 'col-small',
-      render: (value: string, row: any) => {
-        if (row.pago) {
+      render: (item: any) => {
+        if (item.pago) {
           return <span className="badge bg-success">Pago</span>;
         }
-        const badgeClass = value === 'pendente' ? 'bg-warning' : 'bg-danger';
-        return <span className={`badge ${badgeClass}`}>{value}</span>;
+        const badgeClass = item.status === 'pendente' ? 'bg-warning' : 'bg-danger';
+        return <span className={`badge ${badgeClass}`}>{item.status}</span>;
       }
     },
     {
@@ -214,8 +214,8 @@ const CarnesShow: React.FC = () => {
       label: 'Carnê',
       sortable: true,
       className: 'col-small',
-      render: (value: string) => {
-        if (value) {
+      render: (item: any) => {
+        if (item.charge_id) {
           return <span className="badge bg-info">Gerado</span>;
         }
         return <span className="badge bg-secondary">Não gerado</span>;
