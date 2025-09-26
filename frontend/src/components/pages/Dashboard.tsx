@@ -545,29 +545,48 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Gráficos */}
+      {/* Gráficos de Pizza - 6 em linha */}
       <div className="row g-2 mb-2">
-        <div className="col-xl-6 col-lg-6">
+        <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
             {renderPieChart(clientesChartData, 'Status dos Clientes')}
           </div>
         </div>
 
-        <div className="col-xl-6 col-lg-6">
+        <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
             {renderPieChart(planosChartData, 'Status dos Planos')}
           </div>
         </div>
-      </div>
 
-      <div className="row g-4 mb-4">
-        <div className="col-xl-6 col-lg-6">
+        <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
             {renderPieChart(carnesChartData, 'Status dos Carnês')}
           </div>
         </div>
 
-        <div className="col-xl-6 col-lg-6">
+        <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="chart-card">
+            {renderPieChart(getStatusPagamento(), 'Status dos Pagamentos')}
+          </div>
+        </div>
+
+        <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="chart-card">
+            {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano')}
+          </div>
+        </div>
+
+        <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="chart-card">
+            {renderPieChart(getClientesPorStatus(), 'Clientes por Status')}
+          </div>
+        </div>
+      </div>
+
+      {/* Gráfico de Barras - Receitas */}
+      <div className="row g-2 mb-2">
+        <div className="col-12">
           <div className="chart-card">
             {renderBarChart(receitasChartData, 'Distribuição de Receitas')}
           </div>
@@ -616,20 +635,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Gráficos de Análise */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderPieChart(getStatusPagamento(), 'Status dos Pagamentos')}
-          </div>
-        </div>
-
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano')}
-          </div>
-        </div>
-      </div>
 
       {/* Novos Gráficos Adicionais */}
       <div className="row g-2 mb-2">
@@ -675,19 +680,13 @@ const Dashboard: React.FC = () => {
 
       {/* Gráficos de Performance e Análise */}
       <div className="row g-2 mb-2">
-        <div className="col-xl-4 col-lg-6">
-          <div className="chart-card">
-            {renderPieChart(getClientesPorStatus(), 'Clientes por Status')}
-          </div>
-        </div>
-
-        <div className="col-xl-4 col-lg-6">
+        <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderValueChart([{ label: 'Total Boletos', value: getMetricasPerformance().totalBoletos, color: '#007bff' }], 'Total de Boletos', 'number')}
           </div>
         </div>
 
-        <div className="col-xl-4 col-lg-6">
+        <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderValueChart([{ label: 'Taxa Inadimplência', value: getMetricasPerformance().taxaInadimplencia, color: '#dc3545' }], 'Taxa de Inadimplência', 'percentage')}
           </div>
