@@ -164,20 +164,20 @@ const DataTable: React.FC<TableProps> = ({
             )}
             
             {/* Seletor de linhas por página */}
-            <select
-              className="form-select form-select-sm"
-              value={limit}
+                <select 
+                  className="form-select form-select-sm" 
+                  value={limit}
               onChange={(e) => setLimit(parseInt(e.target.value))}
               style={{ width: '100px', height: '32px', cursor: 'pointer' }}
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={15}>15</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
 
           <div className="d-flex align-items-center gap-2">
             {/* Paginação compacta */}
@@ -226,11 +226,11 @@ const DataTable: React.FC<TableProps> = ({
       </div>
 
       {/* Tabela */}
-      <div className="table-responsive">
-        <table className="table table-striped table-sm">
-          <thead>
-            <tr>
-              {columns.map((column) => (
+          <div className="table-responsive">
+            <table className="table table-striped table-sm">
+              <thead>
+                <tr>
+                  {columns.map((column) => (
                 <th 
                   key={column.key} 
                   className={`py-1 px-2 ${column.className || ''} ${column.sortable !== false && onSort ? 'cursor-pointer' : ''}`} 
@@ -260,20 +260,20 @@ const DataTable: React.FC<TableProps> = ({
                       </div>
                     )}
                   </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
                 <td colSpan={columns.length} className="text-center">
                   <div className="spinner-border spinner-border-sm" role="status">
-                    <span className="visually-hidden">Carregando...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : data.length > 0 ? (
+                        <span className="visually-hidden">Carregando...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : data.length > 0 ? (
               data.map((item, index) => {
                 const isSelected = selectedItems.some(selected => selected.id === item.id);
                 return (
@@ -288,7 +288,7 @@ const DataTable: React.FC<TableProps> = ({
                     }}
                   >
                     
-                    {columns.map((column) => (
+                      {columns.map((column) => (
                       <td 
                         key={column.key} 
                         className="py-1 px-2"
@@ -299,23 +299,23 @@ const DataTable: React.FC<TableProps> = ({
                           color: isSelected ? getSelectionColors().color : 'inherit'
                         }}
                       >
-                        {column.render ? column.render(item) : item[column.key]}
-                      </td>
-                    ))}
-                  </tr>
+                          {column.render ? column.render(item) : item[column.key]}
+                        </td>
+                      ))}
+                    </tr>
                 );
               })
-            ) : (
-              <tr>
+                ) : (
+                  <tr>
                 <td colSpan={columns.length} className="text-center">
-                  {emptyMessage}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                      {emptyMessage}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
   );
 };
 
