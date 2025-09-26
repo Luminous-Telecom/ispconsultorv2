@@ -798,7 +798,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  align-items: center;
+  align-items: flex-start;
+  margin-left: 0.5rem;
 }
 
 .legend-item {

@@ -309,27 +309,29 @@ const Dashboard: React.FC = () => {
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
-        <div className="pie-chart">
-          {data.map((item, index) => {
-            const percentage = total > 0 ? (item.value / total) * 100 : 0;
-  return (
-              <div key={index} className="pie-slice" style={{
-                background: `conic-gradient(${item.color} 0deg ${percentage * 3.6}deg, transparent ${percentage * 3.6}deg)`
-              }}>
-                <div className="pie-center">
-                  <span className="pie-total">{total}</span>
+        <div className="d-flex align-items-center">
+          <div className="pie-chart">
+            {data.map((item, index) => {
+              const percentage = total > 0 ? (item.value / total) * 100 : 0;
+              return (
+                <div key={index} className="pie-slice" style={{
+                  background: `conic-gradient(${item.color} 0deg ${percentage * 3.6}deg, transparent ${percentage * 3.6}deg)`
+                }}>
+                  <div className="pie-center">
+                    <span className="pie-total">{total}</span>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+          <div className="chart-legend">
+            {data.map((item, index) => (
+              <div key={index} className="legend-item">
+                <div className="legend-color" style={{ backgroundColor: item.color }}></div>
+                <span className="legend-label">{item.label}: {item.value}</span>
               </div>
-            );
-          })}
-        </div>
-        <div className="chart-legend">
-          {data.map((item, index) => (
-            <div key={index} className="legend-item">
-              <div className="legend-color" style={{ backgroundColor: item.color }}></div>
-              <span className="legend-label">{item.label}: {item.value}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     );
