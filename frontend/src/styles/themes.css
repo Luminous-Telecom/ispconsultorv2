@@ -42,9 +42,9 @@
 /* Tema escuro */
 [data-theme="dark"] {
   /* Cores de fundo - Tons harmonizados */
-  --bg-primary: #314249;
-  --bg-secondary: #2a3a42;
-  --bg-tertiary: #1e2a30;
+  --bg-primary: #101619;
+  --bg-secondary: #1b272c;
+  --bg-tertiary: #263237;
   
   /* Cores de texto */
   --text-primary: #ffffff;
@@ -1223,10 +1223,44 @@ body {
   color: var(--text-primary) !important;
 }
 
+/* Sobrescrever text-muted para tema escuro */
+[data-theme="dark"] .text-muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Sobrescrever small para tema escuro */
+[data-theme="dark"] .small {
+  color: var(--text-secondary) !important;
+}
+
 /* Sobrescrever badges bg-light no tema escuro */
 [data-theme="dark"] .badge.bg-light {
   background-color: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
+}
+
+/* Sobrescrever badge bg-warning para tema escuro */
+[data-theme="dark"] .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000000 !important;
+}
+
+/* Sobrescrever badge bg-success para tema escuro */
+[data-theme="dark"] .badge.bg-success {
+  background-color: #28a745 !important;
+  color: #ffffff !important;
+}
+
+/* Sobrescrever badge bg-danger para tema escuro */
+[data-theme="dark"] .badge.bg-danger {
+  background-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+
+/* Sobrescrever badge bg-info para tema escuro */
+[data-theme="dark"] .badge.bg-info {
+  background-color: #17a2b8 !important;
+  color: #ffffff !important;
 }
 
 /* Garantir que cards e table-responsive também tenham fundo correto */
