@@ -66,7 +66,9 @@ const CarneParcelas: React.FC = () => {
             }}>
               <div className="pie-center">
                 <span className="pie-total">
-                  {title === 'Taxa de Pagamento' ? `${total.toFixed(1)}%` : total}
+                  {title === 'Taxa de Pagamento' ? `${total.toFixed(1)}%` : 
+                   title.includes('Valores por Status') ? `R$ ${total.toFixed(2).replace('.', ',')}` : 
+                   total}
                 </span>
               </div>
             </div>
@@ -85,7 +87,9 @@ const CarneParcelas: React.FC = () => {
               >
                 <div className="legend-color" style={{ backgroundColor: item.color }}></div>
                 <span className="legend-label">
-                  {item.label}: {title === 'Taxa de Pagamento' ? `${item.value.toFixed(1)}%` : item.value}
+                  {item.label}: {title === 'Taxa de Pagamento' ? `${item.value.toFixed(1)}%` : 
+                               title.includes('Valores por Status') ? `R$ ${item.value.toFixed(2).replace('.', ',')}` : 
+                               item.value}
                 </span>
               </div>
             ))}
@@ -540,7 +544,7 @@ const CarneParcelas: React.FC = () => {
                           { label: 'Cancelado', value: valorCancelado, color: '#6c757d' }
                         ].filter(item => item.value > 0);
                         
-                        return renderPieChart(valoresChartData, 'Valores por Status', hiddenValores, toggleValores);
+                        return renderPieChart(valoresChartData, 'Valores por Status (R$)', hiddenValores, toggleValores);
                       })()}
                     </div>
                   </div>
