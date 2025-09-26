@@ -18,14 +18,13 @@ const NotificationContainer: React.FC<NotificationContainerProps> = ({
   return (
     <div className="notification-container">
       {notifications.map(notification => (
-        <div key={notification.id} className="notification fade-in">
-          <Alert
-            type={notification.type}
-            message={notification.message}
-            onClose={() => onRemove(notification.id)}
-            dismissible={true}
-          />
-        </div>
+        <Alert
+          key={notification.id}
+          type={notification.type}
+          message={notification.message}
+          onClose={() => onRemove(notification.id)}
+          dismissible={true}
+        />
       ))}
     </div>
   );
