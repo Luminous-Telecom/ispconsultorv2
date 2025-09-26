@@ -405,146 +405,126 @@ const CarneParcelas: React.FC = () => {
           <div className="row mb-4">
             <div className="col-md-6 mb-4">
               <div className="card">
-                <div className="card-header">
-                  <h6 className="card-title mb-0">Status das Parcelas</h6>
-                </div>
                 <div className="card-body">
-                  <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
-                    <div className="text-center">
-                      <div className="pie-chart" style={{
-                        width: '120px',
-                        height: '120px',
-                        borderRadius: '50%',
-                        background: `conic-gradient(
-                          #28a745 0deg ${(parcelasData?.data?.filter((p: any) => p.status === 'pago').length || 0) / (parcelasData?.data?.length || 1) * 360}deg,
-                          #ffc107 ${(parcelasData?.data?.filter((p: any) => p.status === 'pago').length || 0) / (parcelasData?.data?.length || 1) * 360}deg ${((parcelasData?.data?.filter((p: any) => p.status === 'pago').length || 0) + (parcelasData?.data?.filter((p: any) => p.status === 'pendente').length || 0)) / (parcelasData?.data?.length || 1) * 360}deg,
-                          #dc3545 ${((parcelasData?.data?.filter((p: any) => p.status === 'pago').length || 0) + (parcelasData?.data?.filter((p: any) => p.status === 'pendente').length || 0)) / (parcelasData?.data?.length || 1) * 360}deg 360deg
-                        )`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative'
-                      }}>
-                        <div className="pie-total" style={{
-                          background: 'var(--bg-primary)',
-                          width: '60px',
-                          height: '60px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.8rem',
-                          fontWeight: 'bold',
-                          color: 'var(--text-primary)'
-                        }}>
-                          {parcelasData?.data?.length || 0}
+                  {(() => {
+                    const parcelas = parcelasData?.data || [];
+                    const parcelasPagas = parcelas.filter((p: any) => p.status === 'pago').length;
+                    const parcelasPendentes = parcelas.filter((p: any) => p.status === 'pendente').length;
+                    const parcelasVencidas = parcelas.filter((p: any) => p.status === 'vencido').length;
+                    const parcelasCanceladas = parcelas.filter((p: any) => p.status === 'cancelado').length;
+                    
+                    const chartData = [
+                      { label: 'Pagas', value: parcelasPagas, color: '#28a745' },
+                      { label: 'Pendentes', value: parcelasPendentes, color: '#ffc107' },
+                      { label: 'Vencidas', value: parcelasVencidas, color: '#dc3545' },
+                      { label: 'Canceladas', value: parcelasCanceladas, color: '#6c757d' }
+                    ].filter(item => item.value > 0);
+                    
+                    const total = chartData.reduce((sum, item) => sum + item.value, 0);
+                    
+                    // Construir o conic-gradient
+                    let currentAngle = 0;
+                    const gradientStops = chartData.map(item => {
+                      const percentage = total > 0 ? (item.value / total) * 100 : 0;
+                      const startAngle = currentAngle;
+                      const endAngle = currentAngle + (percentage * 3.6);
+                      currentAngle = endAngle;
+                      
+                      return `${item.color} ${startAngle}deg ${endAngle}deg`;
+                    }).join(', ');
+                    
+                    return (
+                      <div className="chart-container">
+                        <h6 className="chart-title">Status das Parcelas</h6>
+                        <div className="d-flex align-items-center">
+                          <div className="pie-chart">
+                            <div className="pie-slice" style={{
+                              background: `conic-gradient(${gradientStops})`
+                            }}>
+                              <div className="pie-center">
+                                <span className="pie-total">
+                                  {total}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="chart-legend">
+                            {chartData.map((item, index) => (
+                              <div key={index} className="legend-item">
+                                <div className="legend-color" style={{ backgroundColor: item.color }}></div>
+                                <span className="legend-label">
+                                  {item.label}: {item.value}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <div className="mt-2">
-                        <small className="text-muted">Total de Parcelas</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="row mt-3">
-                    <div className="col-6">
-                      <div className="d-flex align-items-center">
-                        <div className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#28a745', borderRadius: '2px' }}></div>
-                        <small>Pagas: {parcelasData?.data?.filter((p: any) => p.status === 'pago').length || 0}</small>
-                      </div>
-                    </div>
-                    <div className="col-6">
-                      <div className="d-flex align-items-center">
-                        <div className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#ffc107', borderRadius: '2px' }}></div>
-                        <small>Pendentes: {parcelasData?.data?.filter((p: any) => p.status === 'pendente').length || 0}</small>
-                      </div>
-                    </div>
-                    <div className="col-6 mt-2">
-                      <div className="d-flex align-items-center">
-                        <div className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#dc3545', borderRadius: '2px' }}></div>
-                        <small>Vencidas: {parcelasData?.data?.filter((p: any) => p.status === 'vencido').length || 0}</small>
-                      </div>
-                    </div>
-                    <div className="col-6 mt-2">
-                      <div className="d-flex align-items-center">
-                        <div className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#6c757d', borderRadius: '2px' }}></div>
-                        <small>Canceladas: {parcelasData?.data?.filter((p: any) => p.status === 'cancelado').length || 0}</small>
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
 
             <div className="col-md-6 mb-4">
               <div className="card">
-                <div className="card-header">
-                  <h6 className="card-title mb-0">Valores por Status</h6>
-                </div>
                 <div className="card-body">
-                  <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
-                    <div className="text-center">
-                      <div className="pie-chart" style={{
-                        width: '120px',
-                        height: '120px',
-                        borderRadius: '50%',
-                        background: `conic-gradient(
-                          #28a745 0deg ${(parcelasData?.data?.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0) / ((parcelasData?.data?.reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 1)) * 360}deg,
-                          #ffc107 ${(parcelasData?.data?.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0) / ((parcelasData?.data?.reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 1)) * 360}deg ${((parcelasData?.data?.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0) + (parcelasData?.data?.filter((p: any) => p.status === 'pendente').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0)) / ((parcelasData?.data?.reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 1)) * 360}deg,
-                          #dc3545 ${((parcelasData?.data?.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0) + (parcelasData?.data?.filter((p: any) => p.status === 'pendente').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0)) / ((parcelasData?.data?.reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 1)) * 360}deg 360deg
-                        )`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative'
-                      }}>
-                        <div className="pie-total" style={{
-                          background: 'var(--bg-primary)',
-                          width: '60px',
-                          height: '60px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.7rem',
-                          fontWeight: 'bold',
-                          color: 'var(--text-primary)',
-                          textAlign: 'center',
-                          lineHeight: '1.2'
-                        }}>
-                          R$ {(parcelasData?.data?.reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0).toFixed(2).replace('.', ',')}
+                  {(() => {
+                    const parcelas = parcelasData?.data || [];
+                    const valorPago = parcelas.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                    const valorPendente = parcelas.filter((p: any) => p.status === 'pendente').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                    const valorVencido = parcelas.filter((p: any) => p.status === 'vencido').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                    const valorCancelado = parcelas.filter((p: any) => p.status === 'cancelado').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                    
+                    const chartData = [
+                      { label: 'Pago', value: valorPago, color: '#28a745' },
+                      { label: 'Pendente', value: valorPendente, color: '#ffc107' },
+                      { label: 'Vencido', value: valorVencido, color: '#dc3545' },
+                      { label: 'Cancelado', value: valorCancelado, color: '#6c757d' }
+                    ].filter(item => item.value > 0);
+                    
+                    const total = chartData.reduce((sum, item) => sum + item.value, 0);
+                    
+                    // Construir o conic-gradient
+                    let currentAngle = 0;
+                    const gradientStops = chartData.map(item => {
+                      const percentage = total > 0 ? (item.value / total) * 100 : 0;
+                      const startAngle = currentAngle;
+                      const endAngle = currentAngle + (percentage * 3.6);
+                      currentAngle = endAngle;
+                      
+                      return `${item.color} ${startAngle}deg ${endAngle}deg`;
+                    }).join(', ');
+                    
+                    return (
+                      <div className="chart-container">
+                        <h6 className="chart-title">Valores por Status</h6>
+                        <div className="d-flex align-items-center">
+                          <div className="pie-chart">
+                            <div className="pie-slice" style={{
+                              background: `conic-gradient(${gradientStops})`
+                            }}>
+                              <div className="pie-center">
+                                <span className="pie-total">
+                                  R$ {total.toFixed(2).replace('.', ',')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="chart-legend">
+                            {chartData.map((item, index) => (
+                              <div key={index} className="legend-item">
+                                <div className="legend-color" style={{ backgroundColor: item.color }}></div>
+                                <span className="legend-label">
+                                  {item.label}: R$ {item.value.toFixed(2).replace('.', ',')}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <div className="mt-2">
-                        <small className="text-muted">Valor Total</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="row mt-3">
-                    <div className="col-6">
-                      <div className="d-flex align-items-center">
-                        <div className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#28a745', borderRadius: '2px' }}></div>
-                        <small>Pago: R$ {(parcelasData?.data?.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0).toFixed(2).replace('.', ',')}</small>
-                      </div>
-                    </div>
-                    <div className="col-6">
-                      <div className="d-flex align-items-center">
-                        <div className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#ffc107', borderRadius: '2px' }}></div>
-                        <small>Pendente: R$ {(parcelasData?.data?.filter((p: any) => p.status === 'pendente').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0).toFixed(2).replace('.', ',')}</small>
-                      </div>
-                    </div>
-                    <div className="col-6 mt-2">
-                      <div className="d-flex align-items-center">
-                        <div className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#dc3545', borderRadius: '2px' }}></div>
-                        <small>Vencido: R$ {(parcelasData?.data?.filter((p: any) => p.status === 'vencido').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0).toFixed(2).replace('.', ',')}</small>
-                      </div>
-                    </div>
-                    <div className="col-6 mt-2">
-                      <div className="d-flex align-items-center">
-                        <div className="me-2" style={{ width: '12px', height: '12px', backgroundColor: '#6c757d', borderRadius: '2px' }}></div>
-                        <small>Cancelado: R$ {(parcelasData?.data?.filter((p: any) => p.status === 'cancelado').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0) || 0).toFixed(2).replace('.', ',')}</small>
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
