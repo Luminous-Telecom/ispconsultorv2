@@ -21,6 +21,80 @@ const CarneParcelas: React.FC = () => {
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
 
+  // Estados para controlar itens ocultos nos gráficos
+  const [hiddenStatus, setHiddenStatus] = useState<Set<number>>(new Set());
+  const [hiddenValores, setHiddenValores] = useState<Set<number>>(new Set());
+
+  // Funções de toggle para os gráficos
+  const toggleStatus = (index: number) => {
+    const newHidden = new Set(hiddenStatus);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenStatus(newHidden);
+  };
+
+  const toggleValores = (index: number) => {
+    const newHidden = new Set(hiddenValores);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenValores(newHidden);
+  };
+
+  // Função para renderizar gráfico de pizza (igual ao dashboard)
+  const renderPieChart = (data: any[], title: string, hiddenItems: Set<number>, onToggleItem: (index: number) => void) => {
+    const visibleData = data.filter((_, index) => !hiddenItems.has(index));
+    const total = visibleData.reduce((sum, item) => sum + item.value, 0);
+    
+    // Construir o conic-gradient com todas as fatias
+    let currentAngle = 0;
+    const gradientStops = visibleData.map(item => {
+      const percentage = total > 0 ? (item.value / total) * 100 : 0;
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + (percentage * 3.6);
+      currentAngle = endAngle;
+      
+      return `${item.color} ${startAngle}deg ${endAngle}deg`;
+    }).join(', ');
+    
+    return (
+      <div className="chart-container">
+        <h6 className="chart-title">{title}</h6>
+        <div className="d-flex align-items-center">
+          <div className="pie-chart">
+            <div className="pie-slice" style={{
+              background: `conic-gradient(${gradientStops})`
+            }}>
+              <div className="pie-center">
+                <span className="pie-total">
+                  {title === 'Taxa de Pagamento' ? `${total.toFixed(1)}%` : total}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="chart-legend">
+            {data.map((item, index) => (
+              <div 
+                key={index} 
+                className="legend-item" 
+                style={{ 
+                  cursor: 'pointer',
+                  opacity: hiddenItems.has(index) ? 0.5 : 1,
+                  textDecoration: hiddenItems.has(index) ? 'line-through' : 'none'
+                }}
+                onClick={() => onToggleItem(index)}
+              >
+                <div className="legend-color" style={{ backgroundColor: item.color }}></div>
+                <span className="legend-label">
+                  {item.label}: {title === 'Taxa de Pagamento' ? `${item.value.toFixed(1)}%` : item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Buscar parcelas
   const { data: parcelasData, isLoading } = useQuery({
     queryKey: ['carne-parcelas', carneId, search, status, page, limit],
@@ -402,130 +476,46 @@ const CarneParcelas: React.FC = () => {
           )}
 
           {/* Gráficos de Estatísticas */}
-          <div className="row mb-4">
-            <div className="col-md-6 mb-4">
-              <div className="card">
-                <div className="card-body">
-                  {(() => {
-                    const parcelas = parcelasData?.data || [];
-                    const parcelasPagas = parcelas.filter((p: any) => p.status === 'pago').length;
-                    const parcelasPendentes = parcelas.filter((p: any) => p.status === 'pendente').length;
-                    const parcelasVencidas = parcelas.filter((p: any) => p.status === 'vencido').length;
-                    const parcelasCanceladas = parcelas.filter((p: any) => p.status === 'cancelado').length;
-                    
-                    const chartData = [
-                      { label: 'Pagas', value: parcelasPagas, color: '#28a745' },
-                      { label: 'Pendentes', value: parcelasPendentes, color: '#ffc107' },
-                      { label: 'Vencidas', value: parcelasVencidas, color: '#dc3545' },
-                      { label: 'Canceladas', value: parcelasCanceladas, color: '#6c757d' }
-                    ].filter(item => item.value > 0);
-                    
-                    const total = chartData.reduce((sum, item) => sum + item.value, 0);
-                    
-                    // Construir o conic-gradient
-                    let currentAngle = 0;
-                    const gradientStops = chartData.map(item => {
-                      const percentage = total > 0 ? (item.value / total) * 100 : 0;
-                      const startAngle = currentAngle;
-                      const endAngle = currentAngle + (percentage * 3.6);
-                      currentAngle = endAngle;
-                      
-                      return `${item.color} ${startAngle}deg ${endAngle}deg`;
-                    }).join(', ');
-                    
-                    return (
-                      <div className="chart-container">
-                        <h6 className="chart-title">Status das Parcelas</h6>
-                        <div className="d-flex align-items-center">
-                          <div className="pie-chart">
-                            <div className="pie-slice" style={{
-                              background: `conic-gradient(${gradientStops})`
-                            }}>
-                              <div className="pie-center">
-                                <span className="pie-total">
-                                  {total}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="chart-legend">
-                            {chartData.map((item, index) => (
-                              <div key={index} className="legend-item">
-                                <div className="legend-color" style={{ backgroundColor: item.color }}></div>
-                                <span className="legend-label">
-                                  {item.label}: {item.value}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
+          <div className="row g-2 mb-2">
+            <div className="col-xl-6 col-lg-6">
+              <div className="chart-card">
+                {(() => {
+                  const parcelas = parcelasData?.data || [];
+                  const parcelasPagas = parcelas.filter((p: any) => p.status === 'pago').length;
+                  const parcelasPendentes = parcelas.filter((p: any) => p.status === 'pendente').length;
+                  const parcelasVencidas = parcelas.filter((p: any) => p.status === 'vencido').length;
+                  const parcelasCanceladas = parcelas.filter((p: any) => p.status === 'cancelado').length;
+                  
+                  const statusChartData = [
+                    { label: 'Pagas', value: parcelasPagas, color: '#28a745' },
+                    { label: 'Pendentes', value: parcelasPendentes, color: '#ffc107' },
+                    { label: 'Vencidas', value: parcelasVencidas, color: '#dc3545' },
+                    { label: 'Canceladas', value: parcelasCanceladas, color: '#6c757d' }
+                  ].filter(item => item.value > 0);
+                  
+                  return renderPieChart(statusChartData, 'Status das Parcelas', hiddenStatus, toggleStatus);
+                })()}
               </div>
             </div>
 
-            <div className="col-md-6 mb-4">
-              <div className="card">
-                <div className="card-body">
-                  {(() => {
-                    const parcelas = parcelasData?.data || [];
-                    const valorPago = parcelas.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
-                    const valorPendente = parcelas.filter((p: any) => p.status === 'pendente').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
-                    const valorVencido = parcelas.filter((p: any) => p.status === 'vencido').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
-                    const valorCancelado = parcelas.filter((p: any) => p.status === 'cancelado').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
-                    
-                    const chartData = [
-                      { label: 'Pago', value: valorPago, color: '#28a745' },
-                      { label: 'Pendente', value: valorPendente, color: '#ffc107' },
-                      { label: 'Vencido', value: valorVencido, color: '#dc3545' },
-                      { label: 'Cancelado', value: valorCancelado, color: '#6c757d' }
-                    ].filter(item => item.value > 0);
-                    
-                    const total = chartData.reduce((sum, item) => sum + item.value, 0);
-                    
-                    // Construir o conic-gradient
-                    let currentAngle = 0;
-                    const gradientStops = chartData.map(item => {
-                      const percentage = total > 0 ? (item.value / total) * 100 : 0;
-                      const startAngle = currentAngle;
-                      const endAngle = currentAngle + (percentage * 3.6);
-                      currentAngle = endAngle;
-                      
-                      return `${item.color} ${startAngle}deg ${endAngle}deg`;
-                    }).join(', ');
-                    
-                    return (
-                      <div className="chart-container">
-                        <h6 className="chart-title">Valores por Status</h6>
-                        <div className="d-flex align-items-center">
-                          <div className="pie-chart">
-                            <div className="pie-slice" style={{
-                              background: `conic-gradient(${gradientStops})`
-                            }}>
-                              <div className="pie-center">
-                                <span className="pie-total">
-                                  R$ {total.toFixed(2).replace('.', ',')}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="chart-legend">
-                            {chartData.map((item, index) => (
-                              <div key={index} className="legend-item">
-                                <div className="legend-color" style={{ backgroundColor: item.color }}></div>
-                                <span className="legend-label">
-                                  {item.label}: R$ {item.value.toFixed(2).replace('.', ',')}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
+            <div className="col-xl-6 col-lg-6">
+              <div className="chart-card">
+                {(() => {
+                  const parcelas = parcelasData?.data || [];
+                  const valorPago = parcelas.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                  const valorPendente = parcelas.filter((p: any) => p.status === 'pendente').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                  const valorVencido = parcelas.filter((p: any) => p.status === 'vencido').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                  const valorCancelado = parcelas.filter((p: any) => p.status === 'cancelado').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                  
+                  const valoresChartData = [
+                    { label: 'Pago', value: valorPago, color: '#28a745' },
+                    { label: 'Pendente', value: valorPendente, color: '#ffc107' },
+                    { label: 'Vencido', value: valorVencido, color: '#dc3545' },
+                    { label: 'Cancelado', value: valorCancelado, color: '#6c757d' }
+                  ].filter(item => item.value > 0);
+                  
+                  return renderPieChart(valoresChartData, 'Valores por Status', hiddenValores, toggleValores);
+                })()}
               </div>
             </div>
           </div>
