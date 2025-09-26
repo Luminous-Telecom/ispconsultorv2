@@ -620,16 +620,10 @@ body {
   padding: 1.5rem;
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
   height: 100%;
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
 }
 
 .metric-icon {
@@ -645,19 +639,19 @@ body {
 }
 
 .metric-card-primary .metric-icon {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: #007bff;
 }
 
 .metric-card-info .metric-icon {
-  background: linear-gradient(135deg, #17a2b8, #117a8b);
+  background: #17a2b8;
 }
 
 .metric-card-success .metric-icon {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
+  background: #28a745;
 }
 
 .metric-card-warning .metric-icon {
-  background: linear-gradient(135deg, #ffc107, #e0a800);
+  background: #ffc107;
 }
 
 .metric-content {
@@ -691,16 +685,10 @@ body {
   padding: 1.5rem;
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
   height: 100%;
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.revenue-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
 }
 
 .revenue-icon {
@@ -716,15 +704,15 @@ body {
 }
 
 .revenue-total .revenue-icon {
-  background: linear-gradient(135deg, #6f42c1, #5a2d91);
+  background: #6f42c1;
 }
 
 .revenue-received .revenue-icon {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
+  background: #28a745;
 }
 
 .revenue-pending .revenue-icon {
-  background: linear-gradient(135deg, #ffc107, #e0a800);
+  background: #ffc107;
 }
 
 .revenue-content {
@@ -769,8 +757,8 @@ body {
 /* Gráfico de Pizza */
 .pie-chart {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 100px;
+  height: 100px;
   margin: 0 auto 1rem;
   border-radius: 50%;
   background: var(--bg-tertiary);
@@ -790,8 +778,8 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
+  width: 50px;
+  height: 50px;
   background: var(--bg-secondary);
   border-radius: 50%;
   display: flex;
@@ -801,7 +789,7 @@ body {
 }
 
 .pie-total {
-  font-size: 1.25rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -836,7 +824,7 @@ body {
   align-items: end;
   justify-content: center;
   gap: 1rem;
-  height: 120px;
+  height: 80px;
   margin-bottom: 1rem;
 }
 
@@ -852,11 +840,6 @@ body {
   width: 100%;
   min-height: 20px;
   border-radius: 4px 4px 0 0;
-  transition: all 0.3s ease;
-}
-
-.bar-item:hover .bar {
-  opacity: 0.8;
 }
 
 .bar-label {
@@ -921,9 +904,7 @@ body {
   font-size: 0.875rem;
 }
 
-.table-card .table tbody tr:hover {
-  background: var(--bg-tertiary);
-}
+/* Removido hover da tabela */
 
 /* Modo Escuro */
 [data-theme="dark"] .metric-card,
