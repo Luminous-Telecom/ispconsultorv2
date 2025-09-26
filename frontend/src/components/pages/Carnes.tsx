@@ -38,6 +38,12 @@ const Carnes: React.FC = () => {
       let aValue = (a as any)[sortColumn];
       let bValue = (b as any)[sortColumn];
 
+      // Tratar campos aninhados
+      if (sortColumn === 'cliente') {
+        aValue = a.cliente?.razao_social || '';
+        bValue = b.cliente?.razao_social || '';
+      }
+
       // Converter para string se necessário para comparação
       if (typeof aValue === 'string') {
         aValue = aValue.toLowerCase();
@@ -53,10 +59,14 @@ const Carnes: React.FC = () => {
       }
 
       // Converter números se necessário
-      if (sortColumn.includes('valor') || sortColumn.includes('total')) {
+      if (sortColumn.includes('valor') || sortColumn.includes('total') || sortColumn.includes('parcelas_pagas')) {
         aValue = parseFloat(aValue) || 0;
         bValue = parseFloat(bValue) || 0;
       }
+
+      // Tratar valores nulos/undefined
+      if (aValue == null) aValue = '';
+      if (bValue == null) bValue = '';
 
       if (aValue < bValue) {
         return sortDirection === 'asc' ? -1 : 1;
@@ -137,12 +147,14 @@ const Carnes: React.FC = () => {
       key: 'id',
       label: 'ID',
       className: 'col-id',
+      sortable: true,
       render: (carne: any) => <code className="text-primary">#{carne.id}</code>
     },
     {
       key: 'carnet_id',
       label: 'Carnet ID',
       className: 'col-medium',
+      sortable: true,
       render: (carne: any) => (
         <code className="text-info">
           {carne.carnet_id || 'Não gerado'}
@@ -153,26 +165,30 @@ const Carnes: React.FC = () => {
       key: 'numero_carne',
       label: 'Número do Carnê',
       className: 'col-medium',
+      sortable: true,
       render: (carne: any) => <strong>{carne.numero_carne}</strong>
     },
     {
       key: 'cliente',
       label: 'Cliente',
       className: 'col-extra-large',
+      sortable: true,
       render: (carne: any) => carne.cliente?.razao_social || 'N/A'
     },
     {
       key: 'valor_total',
       label: 'Valor Total',
       className: 'col-medium',
+      sortable: true,
       render: (carne: any) => (
         <strong>R$ {carne.valor_total ? Number(carne.valor_total).toFixed(2).replace('.', ',') : '0,00'}</strong>
       )
     },
     {
-      key: 'parcelas',
+      key: 'parcelas_pagas',
       label: 'Parcelas Pagas',
       className: 'col-large',
+      sortable: true,
       render: (carne: any) => (
         <>
           <span className="badge bg-success">{carne.parcelas_pagas || 0}</span>
@@ -185,6 +201,7 @@ const Carnes: React.FC = () => {
       key: 'status',
       label: 'Status',
       className: 'col-small',
+      sortable: false, // Status calculado dinamicamente, não ordenável
       render: (carne: any) => {
         const statusCalculado = determinarStatusCarne(carne);
         return (
@@ -198,6 +215,7 @@ const Carnes: React.FC = () => {
       key: 'created_at',
       label: 'Data de Criação',
       className: 'col-medium',
+      sortable: true,
       render: (carne: any) => new Date(carne.created_at).toLocaleDateString('pt-BR')
     }
   ];
