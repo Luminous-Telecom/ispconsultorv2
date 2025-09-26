@@ -22,6 +22,7 @@ import boletoRoutes from './routes/boletoRoutes';
 import dadosEmpresaRoutes from './routes/dadosEmpresaRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import webhookRoutes from './routes/webhookRoutes';
+import carneAutoRoutes from './routes/carneAutoRoutes';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -86,6 +87,7 @@ app.use('/api/planos', planoRoutes);
 app.use('/api/bancos', bancoRoutes);
 app.use('/api/carnes', carneRoutes);
 app.use('/api/carne-parcelas', carneParcelaRoutes);
+app.use('/api/carne-auto', carneAutoRoutes);
 app.use('/boleto', boletoRoutes);
 app.use('/api/dados-empresa', dadosEmpresaRoutes);
 app.use('/api/dashboard', dashboardRoutes);

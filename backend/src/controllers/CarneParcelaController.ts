@@ -389,11 +389,26 @@ export class CarneParcelaController {
       // Verificar e atualizar status do carnê
       await carne.verificarEAtualizarStatus();
 
+      // Verificar se deve gerar novo carnê automaticamente
+      const { CarneAutoService } = await import('../services/CarneAutoService');
+      const novoCarne = await CarneAutoService.verificarEGerarCarneAutomatico(carne.id);
+
       const msg = settleOk 
         ? 'Parcela marcada como paga na Efí e no sistema.' 
         : 'Parcela marcada como paga no sistema.';
 
-      res.json({ success: true, message: msg });
+      const response: any = { success: true, message: msg };
+      
+      if (novoCarne) {
+        response.novo_carne_gerado = {
+          id: novoCarne.id,
+          numero_carne: novoCarne.numero_carne,
+          status: novoCarne.status
+        };
+        response.message += ` Novo carnê ${novoCarne.numero_carne} gerado automaticamente.`;
+      }
+
+      res.json(response);
     } catch (error: any) {
       logger.error('Erro ao marcar parcela como paga', {
         parcela_id: req.params.id,
