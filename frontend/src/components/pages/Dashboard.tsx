@@ -499,7 +499,7 @@ const Dashboard: React.FC = () => {
               <div key={index} className="line-item">
                 <div className="line-bar" style={{
                   height: `${height}%`,
-                  backgroundColor: item.color
+                  backgroundColor: item.valor > 0 ? item.color : 'transparent'
                 }}></div>
                 <div className="line-label">{item.mes}</div>
                 <div className="line-value">{formatValue(item.valor)}</div>
