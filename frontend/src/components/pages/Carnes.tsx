@@ -265,7 +265,12 @@ const Carnes: React.FC = () => {
           },
           {
             label: "Deletar",
-            action: (selectedItems) => handleTopoActions('deletar', selectedItems)
+            action: (selectedItems) => handleTopoActions('deletar', selectedItems),
+            disabled: (selectedItems) => {
+              if (selectedItems.length === 0) return false;
+              const carne = selectedItems[0];
+              return carne.parcelas_pagas && carne.parcelas_pagas > 0;
+            }
           },
           {
             label: "Imprimir",

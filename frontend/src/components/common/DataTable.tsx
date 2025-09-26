@@ -28,6 +28,7 @@ interface TableProps {
     label: string;
     action: (selectedItems: any[]) => void;
     variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
+    disabled?: (selectedItems: any[]) => boolean;
   }[];
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
@@ -130,7 +131,9 @@ const DataTable: React.FC<TableProps> = ({
               {bulkActions.map((bulkAction, index) => {
                 // Novo sempre habilitado, outros só quando há seleção
                 const isNewButton = bulkAction.label.toLowerCase() === 'novo';
-                const isDisabled = !isNewButton && selectedItems.length === 0;
+                const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
+                const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
+                const isDisabled = isDisabledBySelection || isDisabledByCondition;
                 
                 return (
                   <button
