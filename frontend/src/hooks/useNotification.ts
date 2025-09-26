@@ -15,18 +15,24 @@ export const useNotification = () => {
     message: string,
     duration: number = 5000
   ) => {
+    // Debug: log para identificar duplicações
+    console.log('addNotification called:', { type, message, duration });
+    
     // Verificar se já existe uma notificação com a mesma mensagem e tipo
     let notificationId: string | null = null;
     
     setNotifications(prev => {
+      console.log('Current notifications:', prev.length);
       const existingNotification = prev.find(n => n.message === message && n.type === type);
       if (existingNotification) {
+        console.log('Duplicate notification prevented:', message);
         return prev; // Não adicionar duplicata
       }
       
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       notificationId = id;
       const notification: Notification = { id, type, message, duration };
+      console.log('Adding new notification:', notification);
       return [...prev, notification];
     });
 
