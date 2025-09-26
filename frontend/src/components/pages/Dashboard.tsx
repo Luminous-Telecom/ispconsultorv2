@@ -77,12 +77,12 @@ const Dashboard: React.FC = () => {
   const carnesPorCliente = totalClientes > 0 ? totalCarnes / totalClientes : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
-  // Faturamento mensal (últimos 6 meses)
+  // Faturamento mensal (últimos 12 meses)
   const getFaturamentoMensal = () => {
     const meses = [];
     const hoje = new Date();
     
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 11; i >= 0; i--) {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
       
@@ -97,7 +97,7 @@ const Dashboard: React.FC = () => {
       meses.push({
         mes: mesAno,
         valor: faturamentoMes,
-        color: i === 5 ? '#28a745' : '#6c757d'
+        color: i === 11 ? '#28a745' : '#6c757d'
       });
     }
     
@@ -500,7 +500,7 @@ const Dashboard: React.FC = () => {
       <div className="row g-4 mb-4">
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
-            {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal (6 meses)', 'currency')}
+            {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal (12 meses)', 'currency')}
           </div>
         </div>
 
