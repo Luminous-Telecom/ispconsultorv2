@@ -675,27 +675,15 @@ const Dashboard: React.FC = () => {
 
       {/* Novos Gráficos */}
       <div className="row g-2 mb-2">
-        <div className="col-xl-3 col-lg-6">
+        <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderValueChart(ticketMedioChartData, 'Ticket Médio por Boleto', 'currency')}
           </div>
         </div>
 
-        <div className="col-xl-3 col-lg-6">
+        <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento', hiddenTaxaPagamento, toggleTaxaPagamento)}
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart([{ label: 'Carnês/Cliente', value: carnesPorCliente, color: '#17a2b8' }], 'Carnês por Cliente', 'number')}
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart([{ label: 'Receita/Cliente', value: receitaPorCliente, color: '#6f42c1' }], 'Receita por Cliente', 'currency')}
           </div>
         </div>
       </div>
