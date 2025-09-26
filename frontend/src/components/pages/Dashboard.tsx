@@ -161,6 +161,111 @@ const Dashboard: React.FC = () => {
     }));
   };
 
+  // Métricas adicionais
+  const getMetricasAdicionais = () => {
+    const totalParcelas = carnes.reduce((total, carne) => {
+      return total + (carne.quantidade_parcelas || 0);
+    }, 0);
+    
+    const parcelasPagas = carnes.reduce((total, carne) => {
+      if (carne.parcelas) {
+        return total + carne.parcelas.filter((p: any) => p.status === 'pago').length;
+      }
+      return total;
+    }, 0);
+    
+    const parcelasPendentes = totalParcelas - parcelasPagas;
+    
+    return {
+      totalParcelas,
+      parcelasPagas,
+      parcelasPendentes,
+      taxaPagamentoParcelas: totalParcelas > 0 ? (parcelasPagas / totalParcelas) * 100 : 0
+    };
+  };
+
+  // Análise de valores por plano
+  const getValoresPorPlano = () => {
+    const valores = planos.reduce((acc, plano) => {
+      const valor = parseFloat(plano.valor_mensal) || 0;
+      acc[plano.nome_plano] = valor;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8'];
+    return Object.entries(valores).map(([plano, valor], index) => ({
+      label: plano,
+      value: valor,
+      color: cores[index % cores.length]
+    }));
+  };
+
+  // Crescimento de receita (últimos 6 meses)
+  const getCrescimentoReceita = () => {
+    const meses = [];
+    const hoje = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      
+      const receitaMes = carnes.reduce((total, carne) => {
+        const dataCarne = new Date(carne.created_at);
+        if (dataCarne.getMonth() === data.getMonth() && dataCarne.getFullYear() === data.getFullYear()) {
+          return total + (Number(carne.valor_total) || 0);
+        }
+        return total;
+      }, 0);
+      
+      meses.push({
+        mes: mesAno,
+        valor: receitaMes,
+        color: i === 5 ? '#28a745' : '#6c757d'
+      });
+    }
+    
+    return meses;
+  };
+
+  // Análise de clientes por status
+  const getClientesPorStatus = () => {
+    const status = {
+      ativo: clientes.filter(c => c.ativo).length,
+      inativo: clientes.filter(c => !c.ativo).length
+    };
+    
+    return [
+      { label: 'Ativos', value: status.ativo, color: '#28a745' },
+      { label: 'Inativos', value: status.inativo, color: '#dc3545' }
+    ];
+  };
+
+  // Métricas de performance
+  const getMetricasPerformance = () => {
+    const totalBoletos = carnes.reduce((total, carne) => {
+      return total + (carne.quantidade_parcelas || 0);
+    }, 0);
+    
+    const boletosVencidos = carnes.reduce((total, carne) => {
+      if (carne.parcelas) {
+        return total + carne.parcelas.filter((p: any) => {
+          const vencimento = new Date(p.data_vencimento);
+          const hoje = new Date();
+          return vencimento < hoje && p.status !== 'pago';
+        }).length;
+      }
+      return total;
+    }, 0);
+    
+    const taxaInadimplencia = totalBoletos > 0 ? (boletosVencidos / totalBoletos) * 100 : 0;
+    
+    return {
+      totalBoletos,
+      boletosVencidos,
+      taxaInadimplencia
+    };
+  };
+
   // Dados para gráficos
   const clientesChartData = [
     { label: 'Ativos', value: clientesAtivos, color: '#28a745' },
@@ -207,7 +312,7 @@ const Dashboard: React.FC = () => {
         <div className="pie-chart">
           {data.map((item, index) => {
             const percentage = total > 0 ? (item.value / total) * 100 : 0;
-            return (
+  return (
               <div key={index} className="pie-slice" style={{
                 background: `conic-gradient(${item.color} 0deg ${percentage * 3.6}deg, transparent ${percentage * 3.6}deg)`
               }}>
@@ -324,9 +429,9 @@ const Dashboard: React.FC = () => {
         <div className="text-center">
           <div className="spinner-border" role="status">
             <span className="visually-hidden">Carregando...</span>
-          </div>
-        </div>
-      </div>
+                  </div>
+                  </div>
+                </div>
     );
   }
 
@@ -338,7 +443,7 @@ const Dashboard: React.FC = () => {
           <div className="metric-card metric-card-primary">
             <div className="metric-icon">
               <i className="bi bi-people"></i>
-            </div>
+                </div>
             <div className="metric-content">
               <div className="metric-number">{totalClientes}</div>
               <div className="metric-label">Total de Clientes</div>
@@ -364,15 +469,15 @@ const Dashboard: React.FC = () => {
                 <span className="text-muted"> • </span>
                 <span className="text-muted">{planosInativos} inativos</span>
               </div>
-            </div>
-          </div>
-        </div>
+                  </div>
+                  </div>
+                </div>
 
         <div className="col-xl-3 col-md-6">
           <div className="metric-card metric-card-success">
             <div className="metric-icon">
               <i className="bi bi-receipt"></i>
-            </div>
+                </div>
             <div className="metric-content">
               <div className="metric-number">{totalCarnes}</div>
               <div className="metric-label">Total de Carnês</div>
@@ -389,7 +494,7 @@ const Dashboard: React.FC = () => {
           <div className="metric-card metric-card-warning">
             <div className="metric-icon">
               <i className="bi bi-exclamation-triangle"></i>
-            </div>
+                  </div>
             <div className="metric-content">
               <div className="metric-number">{carnesVencidos}</div>
               <div className="metric-label">Carnês Vencidos</div>
@@ -419,7 +524,7 @@ const Dashboard: React.FC = () => {
           <div className="revenue-card revenue-received">
             <div className="revenue-icon">
               <i className="bi bi-check-circle"></i>
-            </div>
+              </div>
             <div className="revenue-content">
               <div className="revenue-number">R$ {receitaPaga.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
               <div className="revenue-label">Receita Recebida</div>
@@ -522,6 +627,69 @@ const Dashboard: React.FC = () => {
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano')}
+          </div>
+        </div>
+      </div>
+
+      {/* Novos Gráficos Adicionais */}
+      <div className="row g-2 mb-2">
+        <div className="col-xl-3 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart([{ label: 'Total Parcelas', value: getMetricasAdicionais().totalParcelas, color: '#17a2b8' }], 'Total de Parcelas', 'number')}
+          </div>
+        </div>
+
+        <div className="col-xl-3 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart([{ label: 'Parcelas Pagas', value: getMetricasAdicionais().parcelasPagas, color: '#28a745' }], 'Parcelas Pagas', 'number')}
+          </div>
+        </div>
+
+        <div className="col-xl-3 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart([{ label: 'Parcelas Pendentes', value: getMetricasAdicionais().parcelasPendentes, color: '#ffc107' }], 'Parcelas Pendentes', 'number')}
+          </div>
+        </div>
+
+        <div className="col-xl-3 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart([{ label: 'Taxa Pagamento', value: getMetricasAdicionais().taxaPagamentoParcelas, color: '#6f42c1' }], 'Taxa de Pagamento Parcelas', 'percentage')}
+          </div>
+        </div>
+      </div>
+
+      {/* Gráficos de Valores e Performance */}
+      <div className="row g-2 mb-2">
+        <div className="col-xl-6 col-lg-6">
+          <div className="chart-card">
+            {renderBarChart(getValoresPorPlano(), 'Valores por Plano')}
+          </div>
+        </div>
+
+        <div className="col-xl-6 col-lg-6">
+          <div className="chart-card">
+            {renderLineChart(getCrescimentoReceita(), 'Crescimento de Receita (6 meses)', 'currency')}
+          </div>
+        </div>
+      </div>
+
+      {/* Gráficos de Performance e Análise */}
+      <div className="row g-2 mb-2">
+        <div className="col-xl-4 col-lg-6">
+          <div className="chart-card">
+            {renderPieChart(getClientesPorStatus(), 'Clientes por Status')}
+          </div>
+        </div>
+
+        <div className="col-xl-4 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart([{ label: 'Total Boletos', value: getMetricasPerformance().totalBoletos, color: '#007bff' }], 'Total de Boletos', 'number')}
+          </div>
+        </div>
+
+        <div className="col-xl-4 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart([{ label: 'Taxa Inadimplência', value: getMetricasPerformance().taxaInadimplencia, color: '#dc3545' }], 'Taxa de Inadimplência', 'percentage')}
           </div>
         </div>
       </div>
