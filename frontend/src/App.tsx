@@ -27,6 +27,7 @@ import CarneParcelas from './components/pages/CarneParcelas';
 import CarneParcelasEdit from './components/pages/CarneParcelasEdit';
 import BoletoView from './components/pages/BoletoView';
 import DadosEmpresa from './components/pages/DadosEmpresa';
+import RotinasAgendadas from './components/pages/RotinasAgendadas';
 import Login from './components/pages/Login';
 
 // Query Client
@@ -70,6 +71,7 @@ function App() {
             <Route path="carne-parcelas/:id/edit" element={<CarneParcelasEdit />} />
             <Route path="boleto/web/:id" element={<BoletoView />} />
             <Route path="dados-empresa" element={<DadosEmpresa />} />
+            <Route path="rotinas-agendadas" element={<RotinasAgendadas />} />
           </Route>
             </Routes>
           </Router>

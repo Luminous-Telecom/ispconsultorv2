@@ -21,6 +21,7 @@ const Layout: React.FC = () => {
     { path: '/bancos', icon: 'bi-bank', label: 'Bancos' },
     { path: '/carnes', icon: 'bi-receipt', label: 'Carnês' },
     { path: '/carne-parcelas', icon: 'bi-calendar-check', label: 'Parcelas' },
+    { path: '/rotinas-agendadas', icon: 'bi-clock', label: 'Rotinas Agendadas' },
     { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa' },
   ];
 

@@ -23,6 +23,7 @@ import dadosEmpresaRoutes from './routes/dadosEmpresaRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import carneAutoRoutes from './routes/carneAutoRoutes';
+import schedulerRoutes from './routes/schedulerRoutes';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -91,6 +92,7 @@ app.use('/api/carne-auto', carneAutoRoutes);
 app.use('/boleto', boletoRoutes);
 app.use('/api/dados-empresa', dadosEmpresaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/scheduler', schedulerRoutes);
 
 // Rotas de webhook
 app.use('/webhook', webhookRoutes);
@@ -164,10 +166,20 @@ const startServer = async () => {
     // }
     
     // Iniciar servidor
-    app.listen(PORT, () => {
+    app.listen(PORT, async () => {
       console.log(`🚀 Servidor rodando na porta ${PORT}`);
       console.log(`📊 Health check: /health`);
       console.log(`🌐 API Base URL: /api`);
+      
+      // Iniciar o agendador de rotinas
+      try {
+        const { SchedulerService } = await import('./services/SchedulerService');
+        const schedulerService = SchedulerService.getInstance();
+        await schedulerService.start();
+        console.log('⏰ Agendador de rotinas iniciado');
+      } catch (error) {
+        console.error('❌ Erro ao iniciar agendador:', error);
+      }
     });
   } catch (error) {
     console.error('❌ Erro ao inicializar servidor:', error);
@@ -178,12 +190,28 @@ const startServer = async () => {
 // Tratamento de sinais para graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM recebido, encerrando servidor...');
+  try {
+    const { SchedulerService } = await import('./services/SchedulerService');
+    const schedulerService = SchedulerService.getInstance();
+    schedulerService.stop();
+    console.log('⏰ Agendador de rotinas parado');
+  } catch (error) {
+    console.error('Erro ao parar agendador:', error);
+  }
   await sequelize.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('SIGINT recebido, encerrando servidor...');
+  try {
+    const { SchedulerService } = await import('./services/SchedulerService');
+    const schedulerService = SchedulerService.getInstance();
+    schedulerService.stop();
+    console.log('⏰ Agendador de rotinas parado');
+  } catch (error) {
+    console.error('Erro ao parar agendador:', error);
+  }
   await sequelize.close();
   process.exit(0);
 });
