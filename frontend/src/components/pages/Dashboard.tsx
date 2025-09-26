@@ -102,12 +102,8 @@ const Dashboard: React.FC = () => {
 
   // Estatísticas de carnês
   const totalCarnes = carnes.length;
-  const carnesAtivos = carnes.filter(c => c.status === 'ativo').length;
+  const carnesAtivos = carnes.filter(c => c.status === 'pendente').length;
   const carnesPagos = carnes.filter(c => c.status === 'pago').length;
-  
-  // Debug: verificar status dos carnês
-  console.log('Carnês:', carnes.map(c => ({ id: c.id, status: c.status })));
-  console.log('Carnês ativos:', carnesAtivos);
   const carnesVencidos = carnes.filter(c => {
     if (!c.parcelas) return false;
     return c.parcelas.some((p: any) => {
@@ -195,14 +191,14 @@ const Dashboard: React.FC = () => {
   const getStatusPagamento = () => {
     const status = {
       pago: carnes.filter(c => c.status === 'pago').length,
-      ativo: carnes.filter(c => c.status === 'ativo').length,
+      pendente: carnes.filter(c => c.status === 'pendente').length,
       cancelado: carnes.filter(c => c.status === 'cancelado').length,
       vencido: carnesVencidos
     };
     
     return [
       { label: 'Pagos', value: status.pago, color: '#28a745' },
-      { label: 'Ativos', value: status.ativo, color: '#17a2b8' },
+      { label: 'Pendentes', value: status.pendente, color: '#17a2b8' },
       { label: 'Vencidos', value: status.vencido, color: '#ffc107' },
       { label: 'Cancelados', value: status.cancelado, color: '#dc3545' }
     ];
@@ -341,7 +337,7 @@ const Dashboard: React.FC = () => {
   ];
 
   const carnesChartData = [
-    { label: 'Ativos', value: carnesAtivos, color: '#17a2b8' },
+    { label: 'Pendentes', value: carnesAtivos, color: '#17a2b8' },
     { label: 'Pagos', value: carnesPagos, color: '#28a745' },
     { label: 'Vencidos', value: carnesVencidos, color: '#ffc107' }
   ];
@@ -574,7 +570,7 @@ const Dashboard: React.FC = () => {
               <div className="metric-number">{totalCarnes}</div>
               <div className="metric-label">Total de Carnês</div>
               <div className="metric-detail">
-                <span className="text-info">{carnesAtivos} ativos</span>
+                <span className="text-info">{carnesAtivos} pendentes</span>
                 <span className="text-muted"> • </span>
                 <span className="text-success">{carnesPagos} pagos</span>
               </div>
