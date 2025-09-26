@@ -190,38 +190,46 @@ const CarneParcelas: React.FC = () => {
     }
   ];
 
-  // Renderizar ações da tabela
-  const renderActions = (parcela: any) => (
-    <div className="btn-group btn-group-sm" role="group">
-      {parcela.status === 'pendente' && (
-        <button 
-          type="button" 
-          className="btn btn-outline-success"
-          title="Marcar como Pago"
-          onClick={() => handleMarcarPago(parcela.id)}
-          disabled={marcarPagoMutation.isPending}
-        >
-          <i className="bi bi-check"></i>
-        </button>
-      )}
-      <button 
-        type="button" 
-        className="btn btn-outline-primary"
-        title="Imprimir Boleto"
-        onClick={() => window.open(getApiUrl(`/boleto/web/${parcela.id}`), '_blank')}
-      >
-        <i className="bi bi-printer"></i>
-      </button>
-      <button 
-        type="button" 
-        className="btn btn-outline-warning"
-        title="Editar Parcela"
-        onClick={() => navigate(`/carne-parcelas/${parcela.id}/edit`)}
-      >
-        <i className="bi bi-pencil"></i>
-      </button>
-    </div>
-  );
+  // Função para cancelar parcela
+  const handleCancelarParcela = async (parcelaId: number) => {
+    if (window.confirm('Tem certeza que deseja cancelar esta parcela?')) {
+      try {
+        await CarneParcelaService.update(parcelaId, { status: 'cancelado' });
+        success('Parcela cancelada com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
+      } catch (err: any) {
+        error(err.response?.data?.message || 'Erro ao cancelar parcela');
+      }
+    }
+  };
+
+  // Funções para os botões do topo
+  const handleTopoActions = (action: string, selectedItems: any[]) => {
+    if (selectedItems.length === 0) return;
+    
+    switch (action) {
+      case 'marcar_pago':
+        if (selectedItems.length === 1) {
+          handleMarcarPago(selectedItems[0].id);
+        }
+        break;
+      case 'cancelar':
+        if (selectedItems.length === 1) {
+          handleCancelarParcela(selectedItems[0].id);
+        }
+        break;
+      case 'imprimir':
+        if (selectedItems.length === 1) {
+          window.open(getApiUrl(`/boleto/web/${selectedItems[0].id}`), '_blank');
+        }
+        break;
+      case 'editar':
+        if (selectedItems.length === 1) {
+          navigate(`/carne-parcelas/${selectedItems[0].id}/edit`);
+        }
+        break;
+    }
+  };
 
   return (
     <>
@@ -431,7 +439,26 @@ const CarneParcelas: React.FC = () => {
         setLimit={setLimit}
         setPage={setPage}
         emptyMessage="Nenhuma parcela encontrada"
-        actions={renderActions}
+        searchPlaceholder="Buscar parcelas..."
+        onSearch={setSearch}
+        bulkActions={[
+          {
+            label: "Marcar como Pago",
+            action: (selectedItems) => handleTopoActions('marcar_pago', selectedItems)
+          },
+          {
+            label: "Cancelar",
+            action: (selectedItems) => handleTopoActions('cancelar', selectedItems)
+          },
+          {
+            label: "Imprimir",
+            action: (selectedItems) => handleTopoActions('imprimir', selectedItems)
+          },
+          {
+            label: "Editar",
+            action: (selectedItems) => handleTopoActions('editar', selectedItems)
+          }
+        ]}
       />
     </>
   );
