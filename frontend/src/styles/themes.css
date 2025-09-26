@@ -807,6 +807,11 @@ body {
   align-items: center;
   gap: 0.25rem;
   font-size: 0.625rem;
+  transition: opacity 0.2s ease, text-decoration 0.2s ease;
+}
+
+.legend-item:hover {
+  opacity: 0.8;
 }
 
 .legend-color {

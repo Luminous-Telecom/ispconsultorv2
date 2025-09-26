@@ -304,7 +304,20 @@ const Dashboard: React.FC = () => {
 
   // Função para renderizar gráfico de pizza simples
   const renderPieChart = (data: any[], title: string) => {
-    const total = data.reduce((sum, item) => sum + item.value, 0);
+    const [hiddenItems, setHiddenItems] = React.useState<Set<number>>(new Set());
+    
+    const toggleItem = (index: number) => {
+      const newHiddenItems = new Set(hiddenItems);
+      if (newHiddenItems.has(index)) {
+        newHiddenItems.delete(index);
+      } else {
+        newHiddenItems.add(index);
+      }
+      setHiddenItems(newHiddenItems);
+    };
+    
+    const visibleData = data.filter((_, index) => !hiddenItems.has(index));
+    const total = visibleData.reduce((sum, item) => sum + item.value, 0);
     
     return (
       <div className="chart-container">
@@ -312,6 +325,8 @@ const Dashboard: React.FC = () => {
         <div className="d-flex align-items-center">
           <div className="pie-chart">
             {data.map((item, index) => {
+              if (hiddenItems.has(index)) return null;
+              
               const percentage = total > 0 ? (item.value / total) * 100 : 0;
               return (
                 <div key={index} className="pie-slice" style={{
@@ -326,7 +341,16 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="chart-legend">
             {data.map((item, index) => (
-              <div key={index} className="legend-item">
+              <div 
+                key={index} 
+                className="legend-item" 
+                style={{ 
+                  cursor: 'pointer',
+                  opacity: hiddenItems.has(index) ? 0.5 : 1,
+                  textDecoration: hiddenItems.has(index) ? 'line-through' : 'none'
+                }}
+                onClick={() => toggleItem(index)}
+              >
                 <div className="legend-color" style={{ backgroundColor: item.color }}></div>
                 <span className="legend-label">{item.label}: {item.value}</span>
               </div>
