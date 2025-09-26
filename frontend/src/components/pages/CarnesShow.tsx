@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CarneService } from '../../services/carneService';
 import { CarneParcelaService } from '../../services/carneParcelaService';
 import { useNotificationContext } from '../../contexts/NotificationContext';
+import DataTable from '../common/DataTable';
 
 const CarnesShow: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,9 @@ const CarnesShow: React.FC = () => {
   const [isConsulting, setIsConsulting] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [search, setSearch] = useState('');
+  const [limit, setLimit] = useState(15);
+  const [page, setPage] = useState(1);
 
   // Buscar carnê
   const { data: carne, isLoading, error: carneError } = useQuery({
@@ -26,8 +30,13 @@ const CarnesShow: React.FC = () => {
 
   // Buscar parcelas
   const { data: parcelasData, isLoading: parcelasLoading } = useQuery({
-    queryKey: ['carne-parcelas', id],
-    queryFn: () => CarneParcelaService.list({ carne_id: Number(id) }),
+    queryKey: ['carne-parcelas', id, page, limit, search],
+    queryFn: () => CarneParcelaService.list({ 
+      carne_id: Number(id),
+      page,
+      limit,
+      search
+    }),
     enabled: !!id,
     staleTime: 30000,
     refetchOnWindowFocus: false
@@ -164,6 +173,78 @@ const CarnesShow: React.FC = () => {
   }
 
   const parcelas = parcelasData?.data || [];
+
+  // Configurar colunas da tabela
+  const columns = [
+    {
+      key: 'numero_parcela',
+      label: 'Parcela',
+      sortable: true,
+      className: 'col-id'
+    },
+    {
+      key: 'valor_parcela',
+      label: 'Valor',
+      sortable: true,
+      className: 'col-medium',
+      render: (value: number) => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
+    },
+    {
+      key: 'data_vencimento',
+      label: 'Vencimento',
+      sortable: true,
+      className: 'col-medium',
+      render: (value: string) => value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : ''
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      className: 'col-small',
+      render: (value: string, row: any) => {
+        if (row.pago) {
+          return <span className="badge bg-success">Pago</span>;
+        }
+        const badgeClass = value === 'pendente' ? 'bg-warning' : 'bg-danger';
+        return <span className={`badge ${badgeClass}`}>{value}</span>;
+      }
+    },
+    {
+      key: 'charge_id',
+      label: 'Carnê',
+      sortable: true,
+      className: 'col-small',
+      render: (value: string) => {
+        if (value) {
+          return <span className="badge bg-info">Gerado</span>;
+        }
+        return <span className="badge bg-secondary">Não gerado</span>;
+      }
+    }
+  ];
+
+  // Funções para ações em lote
+  const handleTopoActions = (action: string, selectedItems: any[]) => {
+    if (selectedItems.length === 0) return;
+    
+    switch (action) {
+      case 'marcar_pago':
+        if (selectedItems.length === 1) {
+          handleMarcarPago(selectedItems[0].id);
+        }
+        break;
+      case 'desmarcar_pago':
+        if (selectedItems.length === 1) {
+          handleDesmarcarPago(selectedItems[0].id);
+        }
+        break;
+      case 'imprimir':
+        if (selectedItems.length === 1) {
+          window.open(`/boleto/web/${selectedItems[0].id}`, '_blank');
+        }
+        break;
+    }
+  };
 
   return (
     <div className="container-fluid">
@@ -306,74 +387,32 @@ const CarnesShow: React.FC = () => {
               </div>
             </div>
             <div className="card-body">
-              {parcelasLoading ? (
-                <div className="text-center">
-                  <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Carregando...</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-striped">
-                    <thead>
-                      <tr>
-                        <th>Parcela</th>
-                        <th>Valor</th>
-                        <th>Vencimento</th>
-                        <th>Status</th>
-                        <th>Carnê</th>
-                        <th>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {parcelas.map((parcela: any) => (
-                        <tr key={parcela.id}>
-                          <td>{parcela.numero_parcela}</td>
-                          <td>R$ {Number(parcela.valor_parcela || 0).toFixed(2).replace('.', ',')}</td>
-                          <td>{parcela.data_vencimento ? new Date(parcela.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
-                          <td>
-                            {parcela.pago ? (
-                              <span className="badge bg-success">Pago</span>
-                            ) : (
-                              <span className={`badge ${parcela.status === 'pendente' ? 'bg-warning' : 'bg-danger'}`}>
-                                {parcela.status}
-                              </span>
-                            )}
-                          </td>
-                          <td>
-                            {parcela.charge_id ? (
-                              <span className="badge bg-info">Gerado</span>
-                            ) : (
-                              <span className="badge bg-secondary">Não gerado</span>
-                            )}
-                          </td>
-                          <td>
-                            <div className="btn-group btn-group-sm" role="group">
-                              {!parcela.pago && (
-                                <button 
-                                  type="button" 
-                                  className="btn btn-success"
-                                  onClick={() => handleMarcarPago(parcela.id)}
-                                  title="Marcar como pago"
-                                >
-                                  <i className="bi bi-check"></i>
-                                </button>
-                              )}
-                              <Link 
-                                to={`/carne-parcelas?carne_id=${carne.id}`}
-                                className="btn btn-info"
-                                title="Ver detalhes"
-                              >
-                                <i className="bi bi-eye"></i>
-                              </Link>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <DataTable
+                columns={columns}
+                data={parcelas}
+                isLoading={parcelasLoading}
+                pagination={parcelasData?.pagination}
+                limit={limit}
+                setLimit={setLimit}
+                setPage={setPage}
+                emptyMessage="Nenhuma parcela encontrada"
+                searchPlaceholder="Buscar parcelas..."
+                onSearch={setSearch}
+                bulkActions={[
+                  {
+                    label: "Marcar como Pago",
+                    action: (selectedItems) => handleTopoActions('marcar_pago', selectedItems)
+                  },
+                  {
+                    label: "Desmarcar Pago",
+                    action: (selectedItems) => handleTopoActions('desmarcar_pago', selectedItems)
+                  },
+                  {
+                    label: "Imprimir",
+                    action: (selectedItems) => handleTopoActions('imprimir', selectedItems)
+                  }
+                ]}
+              />
             </div>
           </div>
         </div>
