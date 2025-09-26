@@ -399,7 +399,9 @@ const Dashboard: React.FC = () => {
                 onClick={() => onToggleItem(index)}
               >
                 <div className="legend-color" style={{ backgroundColor: item.color }}></div>
-                <span className="legend-label">{item.label}: {item.value}</span>
+                <span className="legend-label">
+                  {item.label}: {title === 'Taxa de Pagamento' ? `${item.value.toFixed(1)}%` : item.value}
+                </span>
               </div>
             ))}
           </div>

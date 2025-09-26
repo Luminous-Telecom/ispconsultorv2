@@ -745,6 +745,10 @@ body {
 
 .chart-container {
   text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .chart-title {
@@ -762,6 +766,10 @@ body {
   margin: 0 auto 0.5rem;
   border-radius: 50%;
   background: var(--bg-tertiary);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .pie-slice {
@@ -786,6 +794,10 @@ body {
   align-items: center;
   justify-content: center;
   border: 2px solid var(--border-light);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .pie-total {
@@ -808,6 +820,10 @@ body {
   gap: 0.25rem;
   font-size: 0.625rem;
   transition: opacity 0.2s ease, text-decoration 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .legend-item:hover {
