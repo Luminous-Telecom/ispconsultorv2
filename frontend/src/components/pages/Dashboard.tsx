@@ -68,15 +68,7 @@ const Dashboard: React.FC = () => {
 
   const receitaPendente = receitaTotal - receitaPaga;
 
-  // Carnês em atraso (últimos 10)
-  const carnesAtraso = carnes.filter(carne => {
-    if (!carne.parcelas) return false;
-    return carne.parcelas.some((p: any) => {
-      const vencimento = new Date(p.data_vencimento);
-      const hoje = new Date();
-      return vencimento < hoje && p.status !== 'pago';
-    });
-  }).slice(0, 10);
+  // Carnês em atraso removido
 
   // Dados para gráficos
   const clientesChartData = [
@@ -310,71 +302,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabela de Carnês em Atraso */}
-      <div className="row g-4">
-        <div className="col-12">
-          <div className="table-card">
-            <div className="table-header">
-              <h5 className="table-title">Carnês em Atraso</h5>
-              <span className="badge bg-warning">{carnesAtraso.length} em atraso</span>
-            </div>
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Número</th>
-                    <th>Cliente</th>
-                    <th>Valor Total</th>
-                    <th>Parcelas Vencidas</th>
-                    <th>Último Vencimento</th>
-                    <th>Dias em Atraso</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {carnesAtraso.length > 0 ? (
-                    carnesAtraso.map((carne: any) => {
-                      const parcelasVencidas = carne.parcelas?.filter((p: any) => {
-                        const vencimento = new Date(p.data_vencimento);
-                        const hoje = new Date();
-                        return vencimento < hoje && p.status !== 'pago';
-                      }) || [];
-
-                      const ultimoVencimento = parcelasVencidas.length > 0 
-                        ? new Date(Math.max(...parcelasVencidas.map((p: any) => new Date(p.data_vencimento))))
-                        : null;
-
-                      const diasAtraso = ultimoVencimento 
-                        ? Math.floor((new Date().getTime() - ultimoVencimento.getTime()) / (1000 * 60 * 60 * 24))
-                        : 0;
-
-                      return (
-                        <tr key={carne.id}>
-                          <td><code>#{carne.numero_carne}</code></td>
-                          <td>{carne.cliente?.razao_social || 'N/A'}</td>
-                          <td>R$ {parseFloat(carne.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                          <td><span className="badge bg-danger">{parcelasVencidas.length}</span></td>
-                          <td>{ultimoVencimento ? ultimoVencimento.toLocaleDateString('pt-BR') : 'N/A'}</td>
-                          <td>
-                            <span className={`badge ${diasAtraso > 30 ? 'bg-danger' : diasAtraso > 15 ? 'bg-warning' : 'bg-info'}`}>
-                              {diasAtraso} dias
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="text-center text-muted">
-                        Nenhum carnê em atraso
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
