@@ -104,6 +104,10 @@ const Dashboard: React.FC = () => {
   const totalCarnes = carnes.length;
   const carnesAtivos = carnes.filter(c => c.status === 'ativo').length;
   const carnesPagos = carnes.filter(c => c.status === 'pago').length;
+  
+  // Debug: verificar status dos carnês
+  console.log('Carnês:', carnes.map(c => ({ id: c.id, status: c.status })));
+  console.log('Carnês ativos:', carnesAtivos);
   const carnesVencidos = carnes.filter(c => {
     if (!c.parcelas) return false;
     return c.parcelas.some((p: any) => {
