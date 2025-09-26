@@ -259,235 +259,182 @@ const CarneParcelas: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <div className="btn-group" role="group">
-          <button 
-            type="button" 
-            className={`btn ${carneData?.status === 'registrado' ? 'btn-success' : 'btn-primary'}`}
-            onClick={handleRegistrarNoBanco}
-            disabled={!carneData?.carnet_id || isRegistering || carneData?.status === 'registrado'}
-          >
-            {isRegistering ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                Registrando...
-              </>
-            ) : carneData?.status === 'registrado' ? (
-              <>
-                <i className="bi bi-check-circle"></i> Registrado no Banco
-              </>
-            ) : (
-              <>
-                <i className="bi bi-send"></i> Registrar no Banco
-              </>
-            )}
-          </button>
-          <Link to="/carnes" className="btn btn-secondary">
-            <i className="bi bi-arrow-left"></i> Voltar para Carnês
-          </Link>
-        </div>
-      </div>
-
-      {/* Cards de Estatísticas */}
-      <div className="row mb-4">
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-primary shadow h-100 py-2" style={{ borderLeft: '4px solid #007bff' }}>
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-primary text-uppercase mb-1" style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#007bff', textTransform: 'uppercase' }}>
-                    Total de Parcelas
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#5a5c69' }}>
-                    {totalParcelas}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="bi bi-list-ol fa-2x text-gray-300" style={{ fontSize: '2rem', color: '#dddfeb' }}></i>
-                </div>
-              </div>
+    <div className="container-fluid">
+      <div className="row">
+        <div className="col-12">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h2>Parcelas do Carnê {carneData?.numero_carne}</h2>
+              <nav aria-label="breadcrumb">
+                <ol className="breadcrumb">
+                  <li className="breadcrumb-item">
+                    <Link to="/carnes">Carnês</Link>
+                  </li>
+                  <li className="breadcrumb-item active">Parcelas</li>
+                </ol>
+              </nav>
             </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-success shadow h-100 py-2" style={{ borderLeft: '4px solid #28a745' }}>
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-success text-uppercase mb-1" style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#28a745', textTransform: 'uppercase' }}>
-                    Parcelas Pagas
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#5a5c69' }}>
-                    {parcelasPagas}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="bi bi-check-circle fa-2x text-gray-300" style={{ fontSize: '2rem', color: '#dddfeb' }}></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-danger shadow h-100 py-2" style={{ borderLeft: '4px solid #dc3545' }}>
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-danger text-uppercase mb-1" style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#dc3545', textTransform: 'uppercase' }}>
-                    Parcelas Vencidas
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#5a5c69' }}>
-                    {parcelasVencidas}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="bi bi-exclamation-triangle fa-2x text-gray-300" style={{ fontSize: '2rem', color: '#dddfeb' }}></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-info shadow h-100 py-2" style={{ borderLeft: '4px solid #17a2b8' }}>
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-info text-uppercase mb-1" style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#17a2b8', textTransform: 'uppercase' }}>
-                    Valor Pago
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800" style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#5a5c69' }}>
-                    R$ {parseFloat(valorPago.toString()).toFixed(2).replace('.', ',')}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="bi bi-currency-dollar fa-2x text-gray-300" style={{ fontSize: '2rem', color: '#dddfeb' }}></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Informações do Carnê */}
-      {carneData && (
-        <div className="card mb-4">
-          <div className="card-header">
-            <h5 className="card-title mb-0">Informações do Carnê</h5>
-          </div>
-          <div className="card-body">
-            <div className="row">
-              <div className="col-md-6">
-                <p><strong>ID:</strong> <code className="text-primary">#{carneData.id}</code></p>
-                <p><strong>Número do Carnê:</strong> {carneData.numero_carne}</p>
-                <p><strong>Cliente:</strong> {carneData.cliente?.razao_social}</p>
-                <p><strong>Plano:</strong> {carneData.plano?.nome_plano}</p>
-                <p><strong>Banco:</strong> {carneData.banco?.nome}</p>
-              </div>
-              <div className="col-md-6">
-                <p><strong>Valor Total:</strong> R$ {Number(carneData.valor_total || 0).toFixed(2).replace('.', ',')}</p>
-                <p><strong>Parcelas:</strong> {carneData.quantidade_parcelas}</p>
-                <p><strong>Status:</strong> 
-                  <span className={`badge ms-2 ${getStatusBadgeClass(carneData.status)}`}>
-                    {getStatusLabel(carneData.status)}
-                  </span>
-                </p>
-                {carneData.carnet_id && (
-                  <p><strong>Carnet ID:</strong> <code className="text-info">{carneData.carnet_id}</code></p>
+            <div>
+              <button 
+                type="button" 
+                className={`btn me-2 ${carneData?.status === 'registrado' ? 'btn-success' : 'btn-primary'}`}
+                onClick={handleRegistrarNoBanco}
+                disabled={!carneData?.carnet_id || isRegistering || carneData?.status === 'registrado'}
+              >
+                {isRegistering ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    Registrando...
+                  </>
+                ) : carneData?.status === 'registrado' ? (
+                  <>
+                    <i className="bi bi-check-circle"></i> Registrado no Banco
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-send"></i> Registrar no Banco
+                  </>
                 )}
-              </div>
+              </button>
+              <Link to="/carnes" className="btn btn-secondary">
+                <i className="bi bi-arrow-left"></i> Voltar
+              </Link>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Filtros */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <form onSubmit={handleFilter}>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="search" className="form-label">Buscar</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="search" 
-                    name="search" 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Número da parcela ou cliente"
-                  />
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="mb-3">
-                  <label htmlFor="status" className="form-label">Status</label>
-                  <select 
-                    className="form-select" 
-                    id="status" 
-                    name="status"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    <option value="pendente">Pendente</option>
-                    <option value="pago">Pago</option>
-                    <option value="vencido">Vencido</option>
-                    <option value="cancelado">Cancelado</option>
-                  </select>
-                </div>
-              </div>
-              <div className="col-md-2">
-                <div className="mb-3">
-                  <label className="form-label">&nbsp;</label>
-                  <div className="d-grid">
-                    <button type="submit" className="btn btn-outline-primary">
-                      <i className="bi bi-search"></i> Filtrar
-                    </button>
+          {/* Cards de Estatísticas */}
+          <div className="row mb-4">
+            <div className="col-xl-3 col-md-6 mb-4">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center">
+                    <div className="flex-grow-1">
+                      <div className="text-muted small">Total de Parcelas</div>
+                      <div className="h5 mb-0">{totalParcelas}</div>
+                    </div>
+                    <div className="text-primary">
+                      <i className="bi bi-list-ol fs-4"></i>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </form>
+
+            <div className="col-xl-3 col-md-6 mb-4">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center">
+                    <div className="flex-grow-1">
+                      <div className="text-muted small">Parcelas Pagas</div>
+                      <div className="h5 mb-0 text-success">{parcelasPagas}</div>
+                    </div>
+                    <div className="text-success">
+                      <i className="bi bi-check-circle fs-4"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-xl-3 col-md-6 mb-4">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center">
+                    <div className="flex-grow-1">
+                      <div className="text-muted small">Parcelas Vencidas</div>
+                      <div className="h5 mb-0 text-danger">{parcelasVencidas}</div>
+                    </div>
+                    <div className="text-danger">
+                      <i className="bi bi-exclamation-triangle fs-4"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-xl-3 col-md-6 mb-4">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center">
+                    <div className="flex-grow-1">
+                      <div className="text-muted small">Valor Pago</div>
+                      <div className="h5 mb-0 text-info">R$ {parseFloat(valorPago.toString()).toFixed(2).replace('.', ',')}</div>
+                    </div>
+                    <div className="text-info">
+                      <i className="bi bi-currency-dollar fs-4"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Informações do Carnê */}
+          {carneData && (
+            <div className="card mb-4">
+              <div className="card-header">
+                <h5 className="card-title mb-0">Informações do Carnê</h5>
+              </div>
+              <div className="card-body">
+                <div className="row">
+                  <div className="col-md-6">
+                    <p><strong>ID:</strong> <code className="text-primary">#{carneData.id}</code></p>
+                    <p><strong>Número do Carnê:</strong> {carneData.numero_carne}</p>
+                    <p><strong>Cliente:</strong> {carneData.cliente?.razao_social}</p>
+                    <p><strong>Plano:</strong> {carneData.plano?.nome_plano}</p>
+                    <p><strong>Banco:</strong> {carneData.banco?.nome}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <p><strong>Valor Total:</strong> R$ {Number(carneData.valor_total || 0).toFixed(2).replace('.', ',')}</p>
+                    <p><strong>Parcelas:</strong> {carneData.quantidade_parcelas}</p>
+                    <p><strong>Status:</strong> 
+                      <span className={`badge ms-2 ${getStatusBadgeClass(carneData.status)}`}>
+                        {getStatusLabel(carneData.status)}
+                      </span>
+                    </p>
+                    {carneData.carnet_id && (
+                      <p><strong>Carnet ID:</strong> <code className="text-info">{carneData.carnet_id}</code></p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tabela de Parcelas */}
+          <DataTable
+            columns={columns}
+            data={parcelasData?.data || []}
+            isLoading={isLoading}
+            pagination={parcelasData?.pagination}
+            limit={limit}
+            setLimit={setLimit}
+            setPage={setPage}
+            emptyMessage="Nenhuma parcela encontrada"
+            searchPlaceholder="Buscar parcelas..."
+            onSearch={setSearch}
+            bulkActions={[
+              {
+                label: "Marcar como Pago",
+                action: (selectedItems) => handleTopoActions('marcar_pago', selectedItems)
+              },
+              {
+                label: "Cancelar",
+                action: (selectedItems) => handleTopoActions('cancelar', selectedItems)
+              },
+              {
+                label: "Imprimir",
+                action: (selectedItems) => handleTopoActions('imprimir', selectedItems)
+              },
+              {
+                label: "Editar",
+                action: (selectedItems) => handleTopoActions('editar', selectedItems)
+              }
+            ]}
+          />
         </div>
       </div>
-
-      {/* Tabela de Parcelas */}
-      <DataTable
-        columns={columns}
-        data={parcelasData?.data || []}
-        isLoading={isLoading}
-        pagination={parcelasData?.pagination}
-        limit={limit}
-        setLimit={setLimit}
-        setPage={setPage}
-        emptyMessage="Nenhuma parcela encontrada"
-        searchPlaceholder="Buscar parcelas..."
-        onSearch={setSearch}
-        bulkActions={[
-          {
-            label: "Marcar como Pago",
-            action: (selectedItems) => handleTopoActions('marcar_pago', selectedItems)
-          },
-          {
-            label: "Cancelar",
-            action: (selectedItems) => handleTopoActions('cancelar', selectedItems)
-          },
-          {
-            label: "Imprimir",
-            action: (selectedItems) => handleTopoActions('imprimir', selectedItems)
-          },
-          {
-            label: "Editar",
-            action: (selectedItems) => handleTopoActions('editar', selectedItems)
-          }
-        ]}
-      />
-    </>
+    </div>
   );
 };
 
