@@ -584,14 +584,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Gráfico de Barras - Receitas */}
-      <div className="row g-2 mb-2">
-        <div className="col-12">
-          <div className="chart-card">
-            {renderBarChart(receitasChartData, 'Distribuição de Receitas')}
-          </div>
-        </div>
-      </div>
 
       {/* Novos Gráficos */}
       <div className="row g-2 mb-2">
