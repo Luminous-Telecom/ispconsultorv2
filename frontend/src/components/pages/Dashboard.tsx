@@ -333,7 +333,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       {/* Cards de Métricas Principais */}
-      <div className="row g-4 mb-4">
+      <div className="row g-2 mb-2">
         <div className="col-xl-3 col-md-6">
           <div className="metric-card metric-card-primary">
             <div className="metric-icon">
@@ -402,7 +402,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Cards de Receitas */}
-      <div className="row g-4 mb-4">
+      <div className="row g-2 mb-2">
         <div className="col-xl-4 col-md-6">
           <div className="revenue-card revenue-total">
             <div className="revenue-icon">
@@ -441,7 +441,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Gráficos */}
-      <div className="row g-4 mb-4">
+      <div className="row g-2 mb-2">
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderPieChart(clientesChartData, 'Status dos Clientes')}
@@ -470,7 +470,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Novos Gráficos */}
-      <div className="row g-4 mb-4">
+      <div className="row g-2 mb-2">
         <div className="col-xl-3 col-lg-6">
           <div className="chart-card">
             {renderValueChart(ticketMedioChartData, 'Ticket Médio por Boleto', 'currency')}
@@ -497,7 +497,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Gráficos Temporais */}
-      <div className="row g-4 mb-4">
+      <div className="row g-2 mb-2">
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal (12 meses)', 'currency')}
@@ -512,7 +512,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Gráficos de Análise */}
-      <div className="row g-4 mb-4">
+      <div className="row g-2 mb-2">
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderPieChart(getStatusPagamento(), 'Status dos Pagamentos')}
