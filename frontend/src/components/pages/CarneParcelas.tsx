@@ -443,82 +443,111 @@ const CarneParcelas: React.FC = () => {
             </div>
           </div>
 
-          {/* Informações do Carnê */}
+          {/* Informações do Carnê e Gráficos */}
           {carneData && (
-            <div className="card mb-4">
-              <div className="card-header">
-                <h5 className="card-title mb-0">Informações do Carnê</h5>
-              </div>
-              <div className="card-body">
-                <div className="row">
-                  <div className="col-md-6">
-                    <p><strong>ID:</strong> <code className="text-primary">#{carneData.id}</code></p>
-                    <p><strong>Número do Carnê:</strong> {carneData.numero_carne}</p>
-                    <p><strong>Cliente:</strong> {carneData.cliente?.razao_social}</p>
-                    <p><strong>Plano:</strong> {carneData.plano?.nome_plano}</p>
-                    <p><strong>Banco:</strong> {carneData.banco?.nome}</p>
+            <div className="row g-2 mb-2">
+              <div className="col-xl-8 col-lg-7">
+                <div className="card">
+                  <div className="card-header py-2">
+                    <h6 className="card-title mb-0" style={{ color: 'var(--text-primary)' }}>Informações do Carnê</h6>
                   </div>
-                  <div className="col-md-6">
-                    <p><strong>Valor Total:</strong> R$ {Number(carneData.valor_total || 0).toFixed(2).replace('.', ',')}</p>
-                    <p><strong>Parcelas:</strong> {carneData.quantidade_parcelas}</p>
-                    <p><strong>Status:</strong> 
-                      <span className={`badge ms-2 ${getStatusBadgeClass(carneData.status)}`}>
-                        {getStatusLabel(carneData.status)}
-                      </span>
-                    </p>
-                    {carneData.carnet_id && (
-                      <p><strong>Carnet ID:</strong> <code className="text-info">{carneData.carnet_id}</code></p>
-                    )}
+                  <div className="card-body py-2">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="mb-1">
+                          <span className="small" style={{ color: 'var(--text-secondary)' }}>ID:</span>
+                          <span className="ms-1" style={{ color: 'var(--primary-color)' }}>#{carneData.id}</span>
+                        </div>
+                        <div className="mb-1">
+                          <span className="small" style={{ color: 'var(--text-secondary)' }}>Número do Carnê:</span>
+                          <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.numero_carne}</span>
+                        </div>
+                        <div className="mb-1">
+                          <span className="small" style={{ color: 'var(--text-secondary)' }}>Cliente:</span>
+                          <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.cliente?.razao_social}</span>
+                        </div>
+                        <div className="mb-1">
+                          <span className="small" style={{ color: 'var(--text-secondary)' }}>Plano:</span>
+                          <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.plano?.nome_plano}</span>
+                        </div>
+                        <div className="mb-1">
+                          <span className="small" style={{ color: 'var(--text-secondary)' }}>Banco:</span>
+                          <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.banco?.nome}</span>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-1">
+                          <span className="small" style={{ color: 'var(--text-secondary)' }}>Valor Total:</span>
+                          <span className="ms-1" style={{ color: 'var(--text-primary)' }}>R$ {Number(carneData.valor_total || 0).toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div className="mb-1">
+                          <span className="small" style={{ color: 'var(--text-secondary)' }}>Parcelas:</span>
+                          <span className="ms-1" style={{ color: 'var(--text-primary)' }}>{carneData.quantidade_parcelas}</span>
+                        </div>
+                        <div className="mb-1">
+                          <span className="small" style={{ color: 'var(--text-secondary)' }}>Status:</span>
+                          <span className={`badge ms-1 ${getStatusBadgeClass(carneData.status)}`}>
+                            {getStatusLabel(carneData.status)}
+                          </span>
+                        </div>
+                        {carneData.carnet_id && (
+                          <div className="mb-1">
+                            <span className="small" style={{ color: 'var(--text-secondary)' }}>Carnet ID:</span>
+                            <span className="ms-1" style={{ color: '#17a2b8' }}>{carneData.carnet_id}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-xl-4 col-lg-5">
+                <div className="row g-2">
+                  <div className="col-12">
+                    <div className="chart-card">
+                      {(() => {
+                        const parcelas = parcelasData?.data || [];
+                        const parcelasPagas = parcelas.filter((p: any) => p.status === 'pago').length;
+                        const parcelasPendentes = parcelas.filter((p: any) => p.status === 'pendente').length;
+                        const parcelasVencidas = parcelas.filter((p: any) => p.status === 'vencido').length;
+                        const parcelasCanceladas = parcelas.filter((p: any) => p.status === 'cancelado').length;
+                        
+                        const statusChartData = [
+                          { label: 'Pagas', value: parcelasPagas, color: '#28a745' },
+                          { label: 'Pendentes', value: parcelasPendentes, color: '#ffc107' },
+                          { label: 'Vencidas', value: parcelasVencidas, color: '#dc3545' },
+                          { label: 'Canceladas', value: parcelasCanceladas, color: '#6c757d' }
+                        ].filter(item => item.value > 0);
+                        
+                        return renderPieChart(statusChartData, 'Status das Parcelas', hiddenStatus, toggleStatus);
+                      })()}
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="chart-card">
+                      {(() => {
+                        const parcelas = parcelasData?.data || [];
+                        const valorPago = parcelas.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                        const valorPendente = parcelas.filter((p: any) => p.status === 'pendente').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                        const valorVencido = parcelas.filter((p: any) => p.status === 'vencido').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                        const valorCancelado = parcelas.filter((p: any) => p.status === 'cancelado').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
+                        
+                        const valoresChartData = [
+                          { label: 'Pago', value: valorPago, color: '#28a745' },
+                          { label: 'Pendente', value: valorPendente, color: '#ffc107' },
+                          { label: 'Vencido', value: valorVencido, color: '#dc3545' },
+                          { label: 'Cancelado', value: valorCancelado, color: '#6c757d' }
+                        ].filter(item => item.value > 0);
+                        
+                        return renderPieChart(valoresChartData, 'Valores por Status', hiddenValores, toggleValores);
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
-
-          {/* Gráficos de Estatísticas */}
-          <div className="row g-2 mb-2">
-            <div className="col-xl-6 col-lg-6">
-              <div className="chart-card">
-                {(() => {
-                  const parcelas = parcelasData?.data || [];
-                  const parcelasPagas = parcelas.filter((p: any) => p.status === 'pago').length;
-                  const parcelasPendentes = parcelas.filter((p: any) => p.status === 'pendente').length;
-                  const parcelasVencidas = parcelas.filter((p: any) => p.status === 'vencido').length;
-                  const parcelasCanceladas = parcelas.filter((p: any) => p.status === 'cancelado').length;
-                  
-                  const statusChartData = [
-                    { label: 'Pagas', value: parcelasPagas, color: '#28a745' },
-                    { label: 'Pendentes', value: parcelasPendentes, color: '#ffc107' },
-                    { label: 'Vencidas', value: parcelasVencidas, color: '#dc3545' },
-                    { label: 'Canceladas', value: parcelasCanceladas, color: '#6c757d' }
-                  ].filter(item => item.value > 0);
-                  
-                  return renderPieChart(statusChartData, 'Status das Parcelas', hiddenStatus, toggleStatus);
-                })()}
-              </div>
-            </div>
-
-            <div className="col-xl-6 col-lg-6">
-              <div className="chart-card">
-                {(() => {
-                  const parcelas = parcelasData?.data || [];
-                  const valorPago = parcelas.filter((p: any) => p.status === 'pago').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
-                  const valorPendente = parcelas.filter((p: any) => p.status === 'pendente').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
-                  const valorVencido = parcelas.filter((p: any) => p.status === 'vencido').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
-                  const valorCancelado = parcelas.filter((p: any) => p.status === 'cancelado').reduce((sum: number, p: any) => sum + Number(p.valor_parcela || 0), 0);
-                  
-                  const valoresChartData = [
-                    { label: 'Pago', value: valorPago, color: '#28a745' },
-                    { label: 'Pendente', value: valorPendente, color: '#ffc107' },
-                    { label: 'Vencido', value: valorVencido, color: '#dc3545' },
-                    { label: 'Cancelado', value: valorCancelado, color: '#6c757d' }
-                  ].filter(item => item.value > 0);
-                  
-                  return renderPieChart(valoresChartData, 'Valores por Status', hiddenValores, toggleValores);
-                })()}
-              </div>
-            </div>
-          </div>
 
           {/* Tabela de Parcelas */}
           <DataTable
