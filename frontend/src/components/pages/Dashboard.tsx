@@ -77,6 +77,90 @@ const Dashboard: React.FC = () => {
   const carnesPorCliente = totalClientes > 0 ? totalCarnes / totalClientes : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
+  // Faturamento mensal (últimos 6 meses)
+  const getFaturamentoMensal = () => {
+    const meses = [];
+    const hoje = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      
+      const faturamentoMes = carnes.reduce((total, carne) => {
+        const dataCarne = new Date(carne.created_at);
+        if (dataCarne.getMonth() === data.getMonth() && dataCarne.getFullYear() === data.getFullYear()) {
+          return total + (Number(carne.valor_total) || 0);
+        }
+        return total;
+      }, 0);
+      
+      meses.push({
+        mes: mesAno,
+        valor: faturamentoMes,
+        color: i === 5 ? '#28a745' : '#6c757d'
+      });
+    }
+    
+    return meses;
+  };
+
+  // Crescimento de clientes (últimos 6 meses)
+  const getCrescimentoClientes = () => {
+    const meses = [];
+    const hoje = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      
+      const clientesMes = clientes.filter(cliente => {
+        const dataCliente = new Date(cliente.created_at);
+        return dataCliente.getMonth() === data.getMonth() && dataCliente.getFullYear() === data.getFullYear();
+      }).length;
+      
+      meses.push({
+        mes: mesAno,
+        valor: clientesMes,
+        color: i === 5 ? '#007bff' : '#6c757d'
+      });
+    }
+    
+    return meses;
+  };
+
+  // Status de pagamento dos carnês
+  const getStatusPagamento = () => {
+    const status = {
+      pago: carnes.filter(c => c.status === 'pago').length,
+      ativo: carnes.filter(c => c.status === 'ativo').length,
+      cancelado: carnes.filter(c => c.status === 'cancelado').length,
+      vencido: carnesVencidos
+    };
+    
+    return [
+      { label: 'Pagos', value: status.pago, color: '#28a745' },
+      { label: 'Ativos', value: status.ativo, color: '#17a2b8' },
+      { label: 'Vencidos', value: status.vencido, color: '#ffc107' },
+      { label: 'Cancelados', value: status.cancelado, color: '#dc3545' }
+    ];
+  };
+
+  // Distribuição por tipo de plano
+  const getDistribuicaoPlanos = () => {
+    const tipos = planos.reduce((acc, plano) => {
+      const tipo = plano.tipo_servico || 'Outros';
+      acc[tipo] = (acc[tipo] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1'];
+    return Object.entries(tipos).map(([tipo, quantidade], index) => ({
+      label: tipo,
+      value: quantidade,
+      color: cores[index % cores.length]
+    }));
+  };
+
   // Dados para gráficos
   const clientesChartData = [
     { label: 'Ativos', value: clientesAtivos, color: '#28a745' },
@@ -194,6 +278,41 @@ const Dashboard: React.FC = () => {
           <div className="value-display" style={{ color: data[0]?.color || '#6f42c1' }}>
             {formatValue(value)}
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Função para renderizar gráfico de linha temporal
+  const renderLineChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
+    const maxValue = Math.max(...data.map(item => item.valor));
+    
+    const formatValue = (val: number) => {
+      switch (format) {
+        case 'currency':
+          return `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`;
+        default:
+          return val.toString();
+      }
+    };
+    
+    return (
+      <div className="chart-container">
+        <h6 className="chart-title">{title}</h6>
+        <div className="line-chart">
+          {data.map((item, index) => {
+            const height = maxValue > 0 ? (item.valor / maxValue) * 100 : 0;
+            return (
+              <div key={index} className="line-item">
+                <div className="line-bar" style={{
+                  height: `${height}%`,
+                  backgroundColor: item.color
+                }}></div>
+                <div className="line-label">{item.mes}</div>
+                <div className="line-value">{formatValue(item.valor)}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -373,6 +492,36 @@ const Dashboard: React.FC = () => {
         <div className="col-xl-3 col-lg-6">
           <div className="chart-card">
             {renderValueChart([{ label: 'Receita/Cliente', value: receitaPorCliente, color: '#6f42c1' }], 'Receita por Cliente', 'currency')}
+          </div>
+        </div>
+      </div>
+
+      {/* Gráficos Temporais */}
+      <div className="row g-4 mb-4">
+        <div className="col-xl-6 col-lg-6">
+          <div className="chart-card">
+            {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal (6 meses)', 'currency')}
+          </div>
+        </div>
+
+        <div className="col-xl-6 col-lg-6">
+          <div className="chart-card">
+            {renderLineChart(getCrescimentoClientes(), 'Novos Clientes (6 meses)', 'number')}
+          </div>
+        </div>
+      </div>
+
+      {/* Gráficos de Análise */}
+      <div className="row g-4 mb-4">
+        <div className="col-xl-6 col-lg-6">
+          <div className="chart-card">
+            {renderPieChart(getStatusPagamento(), 'Status dos Pagamentos')}
+          </div>
+        </div>
+
+        <div className="col-xl-6 col-lg-6">
+          <div className="chart-card">
+            {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano')}
           </div>
         </div>
       </div>
