@@ -978,8 +978,9 @@ export class CarneController {
       
       if (resultado.success) {
         // Atualizar carnet_id e status do carnê
+        const carnetId = resultado.data?.carnet_id;
         await carneObj.update({ 
-          carnet_id: resultado.carnet_id,
+          carnet_id: carnetId,
           status: 'registrado'
         });
 
@@ -987,7 +988,7 @@ export class CarneController {
           success: true,
           message: 'Carnê registrado no banco com sucesso!',
           data: {
-            carnet_id: resultado.carnet_id,
+            carnet_id: carnetId,
             status: 'registrado'
           }
         });
