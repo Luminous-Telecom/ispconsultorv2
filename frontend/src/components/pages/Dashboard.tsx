@@ -6,6 +6,65 @@ import { CarneService } from '../../services/carneService';
 
 const Dashboard: React.FC = () => {
   const [chartData, setChartData] = useState<any>(null);
+  
+  // Estados para controlar itens ocultos em cada gráfico
+  const [hiddenClientes, setHiddenClientes] = useState<Set<number>>(new Set());
+  const [hiddenPlanos, setHiddenPlanos] = useState<Set<number>>(new Set());
+  const [hiddenCarnes, setHiddenCarnes] = useState<Set<number>>(new Set());
+  const [hiddenPagamentos, setHiddenPagamentos] = useState<Set<number>>(new Set());
+  const [hiddenDistribuicao, setHiddenDistribuicao] = useState<Set<number>>(new Set());
+  const [hiddenClientesStatus, setHiddenClientesStatus] = useState<Set<number>>(new Set());
+  const [hiddenTaxaPagamento, setHiddenTaxaPagamento] = useState<Set<number>>(new Set());
+
+  // Funções de toggle para cada gráfico
+  const toggleCliente = (index: number) => {
+    const newHidden = new Set(hiddenClientes);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenClientes(newHidden);
+  };
+
+  const togglePlano = (index: number) => {
+    const newHidden = new Set(hiddenPlanos);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenPlanos(newHidden);
+  };
+
+  const toggleCarne = (index: number) => {
+    const newHidden = new Set(hiddenCarnes);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenCarnes(newHidden);
+  };
+
+  const togglePagamento = (index: number) => {
+    const newHidden = new Set(hiddenPagamentos);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenPagamentos(newHidden);
+  };
+
+  const toggleDistribuicao = (index: number) => {
+    const newHidden = new Set(hiddenDistribuicao);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenDistribuicao(newHidden);
+  };
+
+  const toggleClienteStatus = (index: number) => {
+    const newHidden = new Set(hiddenClientesStatus);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenClientesStatus(newHidden);
+  };
+
+  const toggleTaxaPagamento = (index: number) => {
+    const newHidden = new Set(hiddenTaxaPagamento);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenTaxaPagamento(newHidden);
+  };
 
   // Queries para buscar dados
   const { data: clientesData, isLoading: loadingClientes } = useQuery({
@@ -303,19 +362,7 @@ const Dashboard: React.FC = () => {
   ];
 
   // Função para renderizar gráfico de pizza simples
-  const renderPieChart = (data: any[], title: string) => {
-    const [hiddenItems, setHiddenItems] = React.useState<Set<number>>(new Set());
-    
-    const toggleItem = (index: number) => {
-      const newHiddenItems = new Set(hiddenItems);
-      if (newHiddenItems.has(index)) {
-        newHiddenItems.delete(index);
-      } else {
-        newHiddenItems.add(index);
-      }
-      setHiddenItems(newHiddenItems);
-    };
-    
+  const renderPieChart = (data: any[], title: string, hiddenItems: Set<number>, onToggleItem: (index: number) => void) => {
     const visibleData = data.filter((_, index) => !hiddenItems.has(index));
     const total = visibleData.reduce((sum, item) => sum + item.value, 0);
     
@@ -349,7 +396,7 @@ const Dashboard: React.FC = () => {
                   opacity: hiddenItems.has(index) ? 0.5 : 1,
                   textDecoration: hiddenItems.has(index) ? 'line-through' : 'none'
                 }}
-                onClick={() => toggleItem(index)}
+                onClick={() => onToggleItem(index)}
               >
                 <div className="legend-color" style={{ backgroundColor: item.color }}></div>
                 <span className="legend-label">{item.label}: {item.value}</span>
@@ -575,37 +622,37 @@ const Dashboard: React.FC = () => {
       <div className="row g-2 mb-2">
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
-            {renderPieChart(clientesChartData, 'Status dos Clientes')}
+            {renderPieChart(clientesChartData, 'Status dos Clientes', hiddenClientes, toggleCliente)}
           </div>
         </div>
 
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
-            {renderPieChart(planosChartData, 'Status dos Planos')}
+            {renderPieChart(planosChartData, 'Status dos Planos', hiddenPlanos, togglePlano)}
           </div>
         </div>
 
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
-            {renderPieChart(carnesChartData, 'Status dos Carnês')}
+            {renderPieChart(carnesChartData, 'Status dos Carnês', hiddenCarnes, toggleCarne)}
           </div>
         </div>
 
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
-            {renderPieChart(getStatusPagamento(), 'Status dos Pagamentos')}
+            {renderPieChart(getStatusPagamento(), 'Status dos Pagamentos', hiddenPagamentos, togglePagamento)}
           </div>
         </div>
 
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
-            {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano')}
+            {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano', hiddenDistribuicao, toggleDistribuicao)}
           </div>
         </div>
 
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
-            {renderPieChart(getClientesPorStatus(), 'Clientes por Status')}
+            {renderPieChart(getClientesPorStatus(), 'Clientes por Status', hiddenClientesStatus, toggleClienteStatus)}
           </div>
         </div>
       </div>
@@ -621,7 +668,7 @@ const Dashboard: React.FC = () => {
 
         <div className="col-xl-3 col-lg-6">
           <div className="chart-card">
-            {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento')}
+            {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento', hiddenTaxaPagamento, toggleTaxaPagamento)}
           </div>
         </div>
 
