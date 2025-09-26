@@ -69,7 +69,10 @@ const Dashboard: React.FC = () => {
   const receitaPendente = receitaTotal - receitaPaga;
 
   // Métricas adicionais
-  const ticketMedio = totalCarnes > 0 ? receitaTotal / totalCarnes : 0;
+  const totalBoletos = carnes.reduce((total, carne) => {
+    return total + (carne.quantidade_parcelas || 0);
+  }, 0);
+  const ticketMedio = totalBoletos > 0 ? receitaTotal / totalBoletos : 0;
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const carnesPorCliente = totalClientes > 0 ? totalCarnes / totalClientes : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
@@ -97,7 +100,7 @@ const Dashboard: React.FC = () => {
   ];
 
   const ticketMedioChartData = [
-    { label: 'Ticket Médio', value: ticketMedio, color: '#6f42c1' }
+    { label: 'Ticket Médio por Boleto', value: ticketMedio, color: '#6f42c1' }
   ];
 
   const taxaPagamentoChartData = [
@@ -351,7 +354,7 @@ const Dashboard: React.FC = () => {
       <div className="row g-4 mb-4">
         <div className="col-xl-3 col-lg-6">
           <div className="chart-card">
-            {renderValueChart(ticketMedioChartData, 'Ticket Médio', 'currency')}
+            {renderValueChart(ticketMedioChartData, 'Ticket Médio por Boleto', 'currency')}
           </div>
         </div>
 
