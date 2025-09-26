@@ -854,6 +854,22 @@ body {
   color: var(--text-primary);
 }
 
+/* Gráfico de Valor Único */
+.value-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  margin-bottom: 0.75rem;
+}
+
+.value-display {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1;
+}
+
 /* Card de Tabela */
 .table-card {
   background: var(--bg-secondary);

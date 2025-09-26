@@ -68,7 +68,11 @@ const Dashboard: React.FC = () => {
 
   const receitaPendente = receitaTotal - receitaPaga;
 
-  // Carnês em atraso removido
+  // Métricas adicionais
+  const ticketMedio = totalCarnes > 0 ? receitaTotal / totalCarnes : 0;
+  const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
+  const carnesPorCliente = totalClientes > 0 ? totalCarnes / totalClientes : 0;
+  const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
   // Dados para gráficos
   const clientesChartData = [
@@ -90,6 +94,20 @@ const Dashboard: React.FC = () => {
   const receitasChartData = [
     { label: 'Recebido', value: receitaPaga, color: '#28a745' },
     { label: 'Pendente', value: receitaPendente, color: '#ffc107' }
+  ];
+
+  const ticketMedioChartData = [
+    { label: 'Ticket Médio', value: ticketMedio, color: '#6f42c1' }
+  ];
+
+  const taxaPagamentoChartData = [
+    { label: 'Pago', value: taxaPagamento, color: '#28a745' },
+    { label: 'Pendente', value: 100 - taxaPagamento, color: '#ffc107' }
+  ];
+
+  const produtividadeChartData = [
+    { label: 'Carnês/Cliente', value: carnesPorCliente, color: '#17a2b8' },
+    { label: 'Receita/Cliente', value: receitaPorCliente, color: '#6f42c1' }
   ];
 
   // Função para renderizar gráfico de pizza simples
@@ -146,6 +164,33 @@ const Dashboard: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      </div>
+    );
+  };
+
+  // Função para renderizar gráfico de valor único
+  const renderValueChart = (data: any[], title: string, format: 'currency' | 'number' | 'percentage' = 'number') => {
+    const value = data[0]?.value || 0;
+    
+    const formatValue = (val: number) => {
+      switch (format) {
+        case 'currency':
+          return `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        case 'percentage':
+          return `${val.toFixed(1)}%`;
+        default:
+          return val.toFixed(1);
+      }
+    };
+    
+    return (
+      <div className="chart-container">
+        <h6 className="chart-title">{title}</h6>
+        <div className="value-chart">
+          <div className="value-display" style={{ color: data[0]?.color || '#6f42c1' }}>
+            {formatValue(value)}
+          </div>
         </div>
       </div>
     );
@@ -298,6 +343,33 @@ const Dashboard: React.FC = () => {
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderBarChart(receitasChartData, 'Distribuição de Receitas')}
+          </div>
+        </div>
+      </div>
+
+      {/* Novos Gráficos */}
+      <div className="row g-4 mb-4">
+        <div className="col-xl-3 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart(ticketMedioChartData, 'Ticket Médio', 'currency')}
+          </div>
+        </div>
+
+        <div className="col-xl-3 col-lg-6">
+          <div className="chart-card">
+            {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento')}
+          </div>
+        </div>
+
+        <div className="col-xl-3 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart([{ label: 'Carnês/Cliente', value: carnesPorCliente, color: '#17a2b8' }], 'Carnês por Cliente', 'number')}
+          </div>
+        </div>
+
+        <div className="col-xl-3 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart([{ label: 'Receita/Cliente', value: receitaPorCliente, color: '#6f42c1' }], 'Receita por Cliente', 'currency')}
           </div>
         </div>
       </div>
