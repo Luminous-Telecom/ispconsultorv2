@@ -56,12 +56,12 @@ const Dashboard: React.FC = () => {
 
   // Receitas
   const receitaTotal = carnes.reduce((total, carne) => {
-    return total + (parseFloat(carne.valor_total) || 0);
+    return total + (Number(carne.valor_total) || 0);
   }, 0);
 
   const receitaPaga = carnes.reduce((total, carne) => {
     if (carne.status === 'pago') {
-      return total + (parseFloat(carne.valor_total) || 0);
+      return total + (Number(carne.valor_total) || 0);
     }
     return total;
   }, 0);
