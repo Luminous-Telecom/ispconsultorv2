@@ -1136,6 +1136,14 @@ body {
   font-size: 0.875rem;
 }
 
+.notification-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* Estilos específicos para alertas */
 .alert-success {
   background: rgba(16, 185, 129, 0.1);

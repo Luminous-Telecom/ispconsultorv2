@@ -40,7 +40,7 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = tru
 
   return (
     <div 
-      className={`alert ${getAlertClass()} alert-dismissible fade show`} 
+      className={`notification-alert ${getAlertClass()}`} 
       role="alert"
       style={{
         background: 'var(--bg-primary)',
@@ -51,7 +51,8 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = tru
         minWidth: '280px',
         maxWidth: '350px',
         padding: '0.75rem',
-        fontSize: '0.875rem'
+        fontSize: '0.875rem',
+        position: 'relative'
       }}
     >
       <i className={`bi ${getIcon()} me-2`}></i>
