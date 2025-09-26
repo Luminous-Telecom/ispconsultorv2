@@ -22,6 +22,7 @@ import BancosEdit from './components/pages/BancosEdit';
 import Carnes from './components/pages/Carnes';
 import CarnesCreate from './components/pages/CarnesCreate';
 import CarnesEdit from './components/pages/CarnesEdit';
+import CarnesShow from './components/pages/CarnesShow';
 import CarneParcelas from './components/pages/CarneParcelas';
 import CarneParcelasEdit from './components/pages/CarneParcelasEdit';
 import BoletoView from './components/pages/BoletoView';
@@ -60,6 +61,7 @@ function App() {
             <Route path="bancos/:id/edit" element={<BancosEdit />} />
             <Route path="carnes" element={<Carnes />} />
             <Route path="carnes/create" element={<CarnesCreate />} />
+            <Route path="carnes/:id" element={<CarnesShow />} />
             <Route path="carnes/:id/edit" element={<CarnesEdit />} />
             <Route path="carnes/:carneId/imprimir" element={<div>Funcionalidade de impressão será implementada</div>} />
             <Route path="carnes/:carneId/pdf" element={<div>Funcionalidade de PDF será implementada</div>} />
