@@ -446,7 +446,7 @@ const CarneParcelas: React.FC = () => {
           {/* Informações do Carnê e Gráficos */}
           {carneData && (
             <div className="row g-1 mb-2">
-              <div className="col-xl-8 col-lg-7">
+              <div className="col-xl-6 col-lg-5">
                 <div className="card">
                   <div className="card-header py-1">
                     <h6 className="card-title mb-0" style={{ color: 'var(--text-primary)' }}>Informações do Carnê</h6>
@@ -502,9 +502,9 @@ const CarneParcelas: React.FC = () => {
                 </div>
               </div>
 
-              <div className="col-xl-4 col-lg-5">
+              <div className="col-xl-6 col-lg-7">
                 <div className="row g-1">
-                  <div className="col-12">
+                  <div className="col-6">
                     <div className="chart-card">
                       {(() => {
                         const parcelas = parcelasData?.data || [];
@@ -524,7 +524,7 @@ const CarneParcelas: React.FC = () => {
                       })()}
                     </div>
                   </div>
-                  <div className="col-12">
+                  <div className="col-6">
                     <div className="chart-card">
                       {(() => {
                         const parcelas = parcelasData?.data || [];
