@@ -152,19 +152,56 @@ export class PlanoController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedRowsCount = await Plano.destroy({
-        where: { id }
+      
+      const plano = await Plano.findByPk(id, {
+        include: [{ association: 'carnes' }]
       });
-
-      if (deletedRowsCount === 0) {
-        res.status(404).json({ error: 'Plano não encontrado' });
+      
+      if (!plano) {
+        res.status(404).json({ 
+          success: false,
+          error: 'Plano não encontrado' 
+        });
         return;
       }
-
-      res.status(204).send();
+      
+      // Verificar se tem carnês associados
+      const carnesCount = await plano.countCarnes();
+      
+      if (carnesCount > 0) {
+        res.status(409).json({ 
+          success: false,
+          error: 'Não é possível excluir plano',
+          message: `Plano possui ${carnesCount} carnê(s) associado(s). Remova os carnês antes de excluir o plano.`
+        });
+        return;
+      }
+      
+      // Verificar se tem contratos de clientes associados
+      const contratosCount = await plano.countClientes();
+      
+      if (contratosCount > 0) {
+        res.status(409).json({ 
+          success: false,
+          error: 'Não é possível excluir plano',
+          message: `Plano possui ${contratosCount} contrato(s) de cliente(s) associado(s). Remova os contratos antes de excluir o plano.`
+        });
+        return;
+      }
+      
+      await plano.destroy();
+      
+      res.json({
+        success: true,
+        message: 'Plano excluído com sucesso!'
+      });
     } catch (error) {
       console.error('Erro ao deletar plano:', error);
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({ 
+        success: false,
+        error: 'Erro interno do servidor',
+        message: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
     }
   }
 

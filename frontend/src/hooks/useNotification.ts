@@ -15,19 +15,29 @@ export const useNotification = () => {
     message: string,
     duration: number = 5000
   ) => {
-    const id = Date.now().toString();
-    const notification: Notification = { id, type, message, duration };
+    // Verificar se já existe uma notificação com a mesma mensagem e tipo
+    let notificationId: string | null = null;
     
-    setNotifications(prev => [...prev, notification]);
+    setNotifications(prev => {
+      const existingNotification = prev.find(n => n.message === message && n.type === type);
+      if (existingNotification) {
+        return prev; // Não adicionar duplicata
+      }
+      
+      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      notificationId = id;
+      const notification: Notification = { id, type, message, duration };
+      return [...prev, notification];
+    });
 
     // Auto remove notification after duration
-    if (duration > 0) {
+    if (duration > 0 && notificationId) {
       setTimeout(() => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
       }, duration);
     }
 
-    return id;
+    return notificationId;
   }, []);
 
   const removeNotification = useCallback((id: string) => {

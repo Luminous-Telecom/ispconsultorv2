@@ -357,16 +357,26 @@ export class ClienteController {
         return;
       }
 
-      // Verificar se cliente tem carnês ativos
-      const carnesAtivos = await cliente.getCarnes({
-        where: { status: 'ativo' }
-      });
+      // Verificar se cliente tem carnês associados
+      const carnesCount = await cliente.countCarnes();
 
-      if (carnesAtivos.length > 0) {
+      if (carnesCount > 0) {
         res.status(409).json({
           success: false,
           error: 'Não é possível excluir cliente',
-          message: 'Cliente possui carnês ativos'
+          message: `Cliente possui ${carnesCount} carnê(s) associado(s). Remova os carnês antes de excluir o cliente.`
+        });
+        return;
+      }
+
+      // Verificar se cliente tem contratos de planos associados
+      const contratosCount = await cliente.countPlanos();
+
+      if (contratosCount > 0) {
+        res.status(409).json({
+          success: false,
+          error: 'Não é possível excluir cliente',
+          message: `Cliente possui ${contratosCount} contrato(s) de plano(s) associado(s). Remova os contratos antes de excluir o cliente.`
         });
         return;
       }

@@ -337,14 +337,18 @@ export class CarneController {
         return;
       }
 
-      // Verificar se tem parcelas pagas
+      // Verificar se tem parcelas associadas
       const parcelas = await (carne as any).getParcelas();
-      const temParcelasPagas = parcelas.some((p: any) => p.status === 'pago');
+      const parcelasCount = parcelas.length;
       
-      if (temParcelasPagas) {
+      if (parcelasCount > 0) {
+        const parcelasPagas = parcelas.filter((p: any) => p.status === 'pago').length;
+        const parcelasPendentes = parcelas.filter((p: any) => p.status === 'pendente').length;
+        
         res.status(409).json({ 
           success: false,
-          error: 'Não é possível excluir carnê com parcelas pagas.' 
+          error: 'Não é possível excluir carnê com parcelas associadas.',
+          message: `Carnê possui ${parcelasCount} parcela(s): ${parcelasPagas} paga(s) e ${parcelasPendentes} pendente(s). Remova as parcelas antes de excluir o carnê.`
         });
         return;
       }
