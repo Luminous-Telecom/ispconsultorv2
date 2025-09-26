@@ -704,26 +704,6 @@ const Dashboard: React.FC = () => {
       </div>
 
 
-      {/* Novos Gráficos Adicionais */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-4 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart([{ label: 'Parcelas Pagas', value: getMetricasAdicionais().parcelasPagas, color: '#28a745' }], 'Parcelas Pagas', 'number')}
-          </div>
-        </div>
-
-        <div className="col-xl-4 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart([{ label: 'Parcelas Pendentes', value: getMetricasAdicionais().parcelasPendentes, color: '#ffc107' }], 'Parcelas Pendentes', 'number')}
-          </div>
-        </div>
-
-        <div className="col-xl-4 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart([{ label: 'Taxa Pagamento', value: getMetricasAdicionais().taxaPagamentoParcelas, color: '#6f42c1' }], 'Taxa de Pagamento Parcelas', 'percentage')}
-          </div>
-        </div>
-      </div>
 
       {/* Gráficos de Valores e Performance */}
       <div className="row g-2 mb-2">
