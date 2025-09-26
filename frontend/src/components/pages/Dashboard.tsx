@@ -187,7 +187,7 @@ const Dashboard: React.FC = () => {
   // Análise de valores por plano
   const getValoresPorPlano = () => {
     const valores = planos.reduce((acc, plano) => {
-      const valor = parseFloat(plano.valor_mensal) || 0;
+      const valor = parseFloat(String(plano.valor_mensal)) || 0;
       acc[plano.nome_plano] = valor;
       return acc;
     }, {} as Record<string, number>);
