@@ -752,7 +752,7 @@ body {
 }
 
 .chart-title {
-  font-size: 0.625rem;
+  font-size: 0.5rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
@@ -761,8 +761,8 @@ body {
 /* Gráfico de Pizza */
 .pie-chart {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   margin: 0 auto 0.5rem;
   border-radius: 50%;
   background: var(--bg-tertiary);
@@ -786,8 +786,8 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   background: var(--bg-secondary);
   border-radius: 50%;
   display: flex;
@@ -801,9 +801,11 @@ body {
 }
 
 .pie-total {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: var(--text-primary);
+  text-align: center;
+  line-height: 1.1;
 }
 
 .chart-legend {
@@ -818,7 +820,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.625rem;
+  font-size: 0.5rem;
   transition: opacity 0.2s ease, text-decoration 0.2s ease;
   user-select: none;
   -webkit-user-select: none;
