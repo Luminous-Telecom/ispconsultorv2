@@ -43,15 +43,15 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = tru
       className={`notification-alert ${getAlertClass()}`} 
       role="alert"
       style={{
-        background: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '8px',
+        background: type === 'error' ? '#dc3545' : 'var(--bg-primary)',
+        color: type === 'error' ? '#ffffff' : 'var(--text-primary)',
+        border: type === 'error' ? '1px solid #dc3545' : '1px solid var(--border-color)',
+        borderRadius: '6px',
         boxShadow: 'var(--shadow-lg)',
-        minWidth: '280px',
-        maxWidth: '350px',
-        padding: '0.75rem',
-        fontSize: '0.875rem',
+        minWidth: type === 'error' ? '200px' : '280px',
+        maxWidth: type === 'error' ? '300px' : '350px',
+        padding: type === 'error' ? '0.5rem 0.75rem' : '0.75rem',
+        fontSize: type === 'error' ? '0.8rem' : '0.875rem',
         position: 'relative'
       }}
     >
@@ -67,7 +67,7 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = tru
             background: 'none',
             border: 'none',
             fontSize: '1.2rem',
-            color: 'var(--text-muted)',
+            color: type === 'error' ? '#ffffff' : 'var(--text-muted)',
             cursor: 'pointer'
           }}
         ></button>
