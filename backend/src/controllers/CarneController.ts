@@ -937,6 +937,77 @@ export class CarneController {
     }
   }
 
+  static async registrarNoBanco(req: Request, res: Response): Promise<void> {
+    try {
+      const { carne } = req.params as any;
+      const carneObj = await Carne.findByPk(carne, {
+        include: [
+          { association: 'banco' },
+          { association: 'parcelas' }
+        ]
+      });
+      
+      if (!carneObj) {
+        res.status(404).json({ 
+          success: false,
+          error: 'Carnê não encontrado' 
+        });
+        return;
+      }
+
+      const banco = await carneObj.getBanco();
+      
+      if (!banco || banco.tipo_banco !== 'efi') {
+        res.status(400).json({ 
+          success: false,
+          error: 'Apenas carnês EFI podem ser registrados no banco' 
+        });
+        return;
+      }
+
+      if (carneObj.carnet_id) {
+        res.status(400).json({ 
+          success: false,
+          error: 'Carnê já está registrado no banco' 
+        });
+        return;
+      }
+
+      // Registrar carnê via API da EFI
+      const resultado = await BancoApiService.gerarCarne(carneObj);
+      
+      if (resultado.success) {
+        // Atualizar carnet_id e status do carnê
+        await carneObj.update({ 
+          carnet_id: resultado.carnet_id,
+          status: 'registrado'
+        });
+
+        res.json({
+          success: true,
+          message: 'Carnê registrado no banco com sucesso!',
+          data: {
+            carnet_id: resultado.carnet_id,
+            status: 'registrado'
+          }
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: 'Falha ao registrar carnê no banco',
+          message: resultado.message || 'Erro desconhecido'
+        });
+      }
+    } catch (error: any) {
+      console.error('Erro ao registrar carnê no banco:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Erro interno do servidor',
+        message: error.message 
+      });
+    }
+  }
+
   static async cancelarNoBanco(req: Request, res: Response): Promise<void> {
     try {
       const { carne } = req.params as any;

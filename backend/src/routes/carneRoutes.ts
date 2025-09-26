@@ -13,6 +13,7 @@ router.get('/:carne/imprimir', CarneController.imprimir);
 router.get('/:carne/pdf', CarneController.pdf);
 router.post('/:carne/gerar-titulos', CarneController.gerarTitulos);
 router.post('/:carne/consultar-status', CarneController.consultarStatus);
+router.post('/:carne/registrar-banco', CarneController.registrarNoBanco);
 router.post('/:carne/cancelar-banco', CarneController.cancelarNoBanco);
 
 // Rotas com parâmetros genéricos (devem vir por último)

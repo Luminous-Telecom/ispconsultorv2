@@ -99,6 +99,17 @@ export class CarneService {
     }
   }
 
+  // Registrar no banco
+  static async registrarNoBanco(id: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiService.post<{ success: boolean; message: string }>(`/carnes/${id}/registrar-banco`);
+      return response;
+    } catch (error) {
+      console.error('Erro ao registrar no banco:', error);
+      throw error;
+    }
+  }
+
   // Cancelar no banco
   static async cancelarNoBanco(id: number): Promise<{ success: boolean; message: string }> {
     try {

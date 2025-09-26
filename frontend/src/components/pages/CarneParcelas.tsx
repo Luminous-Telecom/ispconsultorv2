@@ -48,8 +48,24 @@ const CarneParcelas: React.FC = () => {
   // Mutação para marcar como pago
   const marcarPagoMutation = useMutation({
     mutationFn: (id: number) => CarneParcelaService.marcarPago(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
+    onSuccess: (response: any) => {
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
+      queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
+      
+      // Mostrar notificação de sucesso com mensagem da API
+      if (response?.message) {
+        success(response.message);
+      } else {
+        success('Parcela marcada como paga com sucesso!');
+      }
+      
+      // Verificar se foi gerado novo carnê automaticamente
+      if (response?.novo_carne_gerado) {
+        success(`Novo carnê ${response.novo_carne_gerado.numero_carne} gerado automaticamente!`);
+      }
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao marcar parcela como paga');
     }
   });
 
@@ -106,13 +122,16 @@ const CarneParcelas: React.FC = () => {
 
     setIsRegistering(true);
     try {
-      // Aqui será chamada a função que envia o carnê para o banco
-      // Por enquanto, vamos simular o processo
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Chamar a API para registrar no banco
+      const response = await CarneService.registrarNoBanco(Number(carneId));
       
-      // Atualizar o status do carnê para 'registrado'
-      // Em uma implementação real, isso seria feito via API
-      success('Carnê registrado no banco com sucesso!');
+      // Mostrar notificação de sucesso com mensagem da API
+      if (response?.message) {
+        success(response.message);
+      } else {
+        success('Carnê registrado no banco com sucesso!');
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
     } catch (err: any) {
@@ -194,9 +213,17 @@ const CarneParcelas: React.FC = () => {
   const handleCancelarParcela = async (parcelaId: number) => {
     if (window.confirm('Tem certeza que deseja cancelar esta parcela?')) {
       try {
-        await CarneParcelaService.update(parcelaId, { status: 'cancelado' });
-        success('Parcela cancelada com sucesso!');
+        const response = await CarneParcelaService.update(parcelaId, { status: 'cancelado' });
+        
+        // Mostrar notificação de sucesso com mensagem da API
+        if (response?.message) {
+          success(response.message);
+        } else {
+          success('Parcela cancelada com sucesso!');
+        }
+        
         queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
+        queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
       } catch (err: any) {
         error(err.response?.data?.message || 'Erro ao cancelar parcela');
       }
