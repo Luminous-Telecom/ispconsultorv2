@@ -163,12 +163,12 @@ const Dashboard: React.FC = () => {
     return meses;
   };
 
-  // Crescimento de clientes (últimos 6 meses)
+  // Crescimento de clientes (últimos 12 meses)
   const getCrescimentoClientes = () => {
     const meses = [];
     const hoje = new Date();
     
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 11; i >= 0; i--) {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
       
@@ -180,7 +180,7 @@ const Dashboard: React.FC = () => {
       meses.push({
         mes: mesAno,
         valor: clientesMes,
-        color: i === 5 ? '#007bff' : '#6c757d'
+        color: i === 11 ? '#007bff' : '#6c757d'
       });
     }
     
@@ -703,7 +703,7 @@ const Dashboard: React.FC = () => {
 
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
-            {renderLineChart(getCrescimentoClientes(), 'Novos Clientes (6 meses)', 'number')}
+            {renderLineChart(getCrescimentoClientes(), 'Novos Clientes (12 meses)', 'number')}
           </div>
         </div>
       </div>
@@ -711,25 +711,19 @@ const Dashboard: React.FC = () => {
 
       {/* Novos Gráficos Adicionais */}
       <div className="row g-2 mb-2">
-        <div className="col-xl-3 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart([{ label: 'Total Parcelas', value: getMetricasAdicionais().totalParcelas, color: '#17a2b8' }], 'Total de Parcelas', 'number')}
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-lg-6">
+        <div className="col-xl-4 col-lg-6">
           <div className="chart-card">
             {renderValueChart([{ label: 'Parcelas Pagas', value: getMetricasAdicionais().parcelasPagas, color: '#28a745' }], 'Parcelas Pagas', 'number')}
           </div>
         </div>
 
-        <div className="col-xl-3 col-lg-6">
+        <div className="col-xl-4 col-lg-6">
           <div className="chart-card">
             {renderValueChart([{ label: 'Parcelas Pendentes', value: getMetricasAdicionais().parcelasPendentes, color: '#ffc107' }], 'Parcelas Pendentes', 'number')}
           </div>
         </div>
 
-        <div className="col-xl-3 col-lg-6">
+        <div className="col-xl-4 col-lg-6">
           <div className="chart-card">
             {renderValueChart([{ label: 'Taxa Pagamento', value: getMetricasAdicionais().taxaPagamentoParcelas, color: '#6f42c1' }], 'Taxa de Pagamento Parcelas', 'percentage')}
           </div>
@@ -738,15 +732,9 @@ const Dashboard: React.FC = () => {
 
       {/* Gráficos de Valores e Performance */}
       <div className="row g-2 mb-2">
-        <div className="col-xl-6 col-lg-6">
+        <div className="col-12">
           <div className="chart-card">
             {renderBarChart(getValoresPorPlano(), 'Valores por Plano')}
-          </div>
-        </div>
-
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderLineChart(getCrescimentoReceita(), 'Crescimento de Receita (6 meses)', 'currency')}
           </div>
         </div>
       </div>
