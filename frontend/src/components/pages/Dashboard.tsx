@@ -417,8 +417,15 @@ const Dashboard: React.FC = () => {
   };
 
   // Função para renderizar gráfico de barras
-  const renderBarChart = (data: any[], title: string) => {
+  const renderBarChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
     const maxValue = Math.max(...data.map(item => item.value));
+    
+    const formatValue = (val: number) => {
+      if (format === 'currency') {
+        return `R$ ${val.toFixed(2).replace('.', ',')}`;
+      }
+      return val.toString();
+    };
     
     return (
       <div className="chart-container">
@@ -433,7 +440,7 @@ const Dashboard: React.FC = () => {
                   backgroundColor: item.color
                 }}></div>
                 <div className="bar-label">{item.label}</div>
-                <div className="bar-value">{item.value}</div>
+                <div className="bar-value">{formatValue(item.value)}</div>
               </div>
             );
           })}
@@ -734,7 +741,7 @@ const Dashboard: React.FC = () => {
       <div className="row g-2 mb-2">
         <div className="col-12">
           <div className="chart-card">
-            {renderBarChart(getValoresPorPlano(), 'Valores por Plano')}
+            {renderBarChart(getValoresPorPlano(), 'Valores por Plano', 'currency')}
           </div>
         </div>
       </div>
