@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
-import Carne from '../../models/Carne';
-import CarneParcela from '../../models/CarneParcela';
-import Cliente from '../../models/Cliente';
+import { Carne } from '../../models/Carne';
+import { CarneParcela } from '../../models/CarneParcela';
+import { Cliente } from '../../models/Cliente';
 
 export interface EnvioBoletosConfig {
   dias_antes_vencimento?: number; // Enviar X dias antes do vencimento (padrão: 5)
@@ -43,7 +43,7 @@ export class EnvioBoletosRoutine {
             resultado.emails_enviados++;
             resultado.detalhes.push({
               parcela_id: parcela.id,
-              cliente_nome: parcela.Carne?.Cliente?.razao_social,
+              cliente_nome: (parcela as any).Carne?.Cliente?.razao_social,
               valor: parcela.valor_parcela,
               vencimento: parcela.data_vencimento,
               status: 'sucesso'
@@ -53,7 +53,7 @@ export class EnvioBoletosRoutine {
           resultado.emails_erro++;
           resultado.detalhes.push({
             parcela_id: parcela.id,
-            cliente_nome: parcela.Carne?.Cliente?.razao_social,
+            cliente_nome: (parcela as any).Carne?.Cliente?.razao_social,
             status: 'erro',
             erro: error.message
           });
@@ -129,7 +129,7 @@ export class EnvioBoletosRoutine {
    * Envia boleto por email para uma parcela específica
    */
   private async enviarBoletoPorEmail(parcela: CarneParcela, config: EnvioBoletosConfig): Promise<boolean> {
-    const cliente = parcela.Carne?.Cliente;
+    const cliente = (parcela as any).Carne?.Cliente;
     if (!cliente || !cliente.email) {
       throw new Error('Cliente não possui email cadastrado');
     }
@@ -148,7 +148,7 @@ export class EnvioBoletosRoutine {
         valor_parcela: parcela.valor_parcela,
         data_vencimento: parcela.data_vencimento,
         boleto_url: boletoUrl,
-        carne_numero: parcela.Carne?.numero_carne
+        carne_numero: (parcela as any).Carne?.numero_carne
       }
     };
 

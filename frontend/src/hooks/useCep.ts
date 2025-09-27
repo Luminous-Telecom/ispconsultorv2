@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
 import { CepService, CepData } from '../services/cepService';
-import { useNotification } from './useNotification';
+import { useNotificationContext } from '../contexts/NotificationContext';
 
 export const useCep = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [cepData, setCepData] = useState<CepData | null>(null);
-  const { success, error } = useNotification();
+  const { success, error } = useNotificationContext();
 
   const buscarCep = useCallback(async (cep: string): Promise<CepData | null> => {
     if (!CepService.validarCep(cep)) {

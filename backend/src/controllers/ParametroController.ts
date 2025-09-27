@@ -1,0 +1,283 @@
+import { Request, Response } from 'express';
+import { Parametro } from '../models/Parametro';
+import { Op } from 'sequelize';
+
+export class ParametroController {
+  
+  // Listar todos os parâmetros
+  public async index(req: Request, res: Response): Promise<void> {
+    try {
+      const { categoria, ativo } = req.query;
+      
+      const whereClause: any = {};
+      
+      if (categoria) {
+        whereClause.categoria = categoria;
+      }
+      
+      if (ativo !== undefined) {
+        whereClause.ativo = ativo === 'true';
+      }
+
+      const parametros = await Parametro.findAll({
+        where: whereClause,
+        order: [['categoria', 'ASC'], ['chave', 'ASC']]
+      });
+
+      res.json({
+        success: true,
+        data: parametros
+      });
+    } catch (error: any) {
+      console.error('Erro ao listar parâmetros:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: error.message
+      });
+    }
+  }
+
+  // Obter parâmetro por chave
+  public async getByChave(req: Request, res: Response): Promise<void> {
+    try {
+      const { chave } = req.params;
+      
+      const parametro = await Parametro.findOne({
+        where: { chave }
+      });
+
+      if (!parametro) {
+        res.status(404).json({
+          success: false,
+          message: 'Parâmetro não encontrado'
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: parametro
+      });
+    } catch (error: any) {
+      console.error('Erro ao obter parâmetro:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: error.message
+      });
+    }
+  }
+
+  // Atualizar parâmetro
+  public async update(req: Request, res: Response): Promise<void> {
+    try {
+      const { chave } = req.params;
+      const { valor, ativo } = req.body;
+
+      const parametro = await Parametro.findOne({
+        where: { chave }
+      });
+
+      if (!parametro) {
+        res.status(404).json({
+          success: false,
+          message: 'Parâmetro não encontrado'
+        });
+        return;
+      }
+
+      // Converter valor baseado no tipo
+      let valorConvertido = valor;
+      if (parametro.tipo === 'boolean') {
+        valorConvertido = valor === 'true' || valor === true;
+      } else if (parametro.tipo === 'number') {
+        valorConvertido = parseFloat(valor);
+      } else if (parametro.tipo === 'json') {
+        try {
+          valorConvertido = JSON.parse(valor);
+        } catch (e) {
+          res.status(400).json({
+            success: false,
+            message: 'Valor JSON inválido'
+          });
+          return;
+        }
+      }
+
+      await parametro.update({
+        valor: valorConvertido.toString(),
+        ativo: ativo !== undefined ? ativo : parametro.ativo
+      });
+
+      res.json({
+        success: true,
+        message: 'Parâmetro atualizado com sucesso',
+        data: parametro
+      });
+    } catch (error: any) {
+      console.error('Erro ao atualizar parâmetro:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: error.message
+      });
+    }
+  }
+
+  // Atualizar múltiplos parâmetros
+  public async updateMultiple(req: Request, res: Response): Promise<void> {
+    try {
+      const { parametros } = req.body;
+
+      if (!Array.isArray(parametros)) {
+        res.status(400).json({
+          success: false,
+          message: 'Parâmetros devem ser um array'
+        });
+        return;
+      }
+
+      const results = [];
+
+      for (const param of parametros) {
+        const { chave, valor, ativo } = param;
+
+        const parametro = await Parametro.findOne({
+          where: { chave }
+        });
+
+        if (parametro) {
+          // Converter valor baseado no tipo
+          let valorConvertido = valor;
+          if (parametro.tipo === 'boolean') {
+            valorConvertido = valor === 'true' || valor === true;
+          } else if (parametro.tipo === 'number') {
+            valorConvertido = parseFloat(valor);
+          } else if (parametro.tipo === 'json') {
+            try {
+              valorConvertido = JSON.parse(valor);
+            } catch (e) {
+              results.push({
+                chave,
+                success: false,
+                error: 'Valor JSON inválido'
+              });
+              continue;
+            }
+          }
+
+          await parametro.update({
+            valor: valorConvertido.toString(),
+            ativo: ativo !== undefined ? ativo : parametro.ativo
+          });
+
+          results.push({
+            chave,
+            success: true
+          });
+        } else {
+          results.push({
+            chave,
+            success: false,
+            error: 'Parâmetro não encontrado'
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'Parâmetros atualizados',
+        data: results
+      });
+    } catch (error: any) {
+      console.error('Erro ao atualizar múltiplos parâmetros:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: error.message
+      });
+    }
+  }
+
+  // Obter parâmetros por categoria
+  public async getByCategoria(req: Request, res: Response): Promise<void> {
+    try {
+      const { categoria } = req.params;
+
+      const parametros = await Parametro.findAll({
+        where: { 
+          categoria,
+          ativo: true
+        },
+        order: [['chave', 'ASC']]
+      });
+
+      res.json({
+        success: true,
+        data: parametros
+      });
+    } catch (error: any) {
+      console.error('Erro ao obter parâmetros por categoria:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: error.message
+      });
+    }
+  }
+
+  // Resetar parâmetros para valores padrão
+  public async resetDefaults(req: Request, res: Response): Promise<void> {
+    try {
+      const parametrosPadrao = [
+        // Validação de documentos
+        { chave: 'validar_cnpj', valor: 'true', tipo: 'boolean' as const, descricao: 'Validar CNPJ automaticamente', categoria: 'validacao', ativo: true },
+        { chave: 'validar_cpf', valor: 'true', tipo: 'boolean' as const, descricao: 'Validar CPF automaticamente', categoria: 'validacao', ativo: true },
+        
+        // Geração automática de títulos
+        { chave: 'geracao_automatica_titulos', valor: 'true', tipo: 'boolean' as const, descricao: 'Geração automática de títulos', categoria: 'titulos', ativo: true },
+        { chave: 'vencimento_sabados_domingos', valor: 'false', tipo: 'boolean' as const, descricao: 'Permitir vencimento aos sábados, domingos e feriados', categoria: 'titulos', ativo: true },
+        { chave: 'autolancamento_titulos', valor: 'true', tipo: 'boolean' as const, descricao: 'Autolançamento de títulos', categoria: 'titulos', ativo: true },
+        { chave: 'manter_numero_minimo_titulos', valor: 'true', tipo: 'boolean' as const, descricao: 'Manter número mínimo de títulos', categoria: 'titulos', ativo: true },
+        { chave: 'numero_minimo_titulos', valor: '3', tipo: 'number' as const, descricao: 'Número mínimo de títulos a manter', categoria: 'titulos', ativo: true },
+        
+        // Geração automática de carnê
+        { chave: 'geracao_automatica_carne', valor: 'false', tipo: 'boolean' as const, descricao: 'Geração automática de carnê', categoria: 'carne', ativo: true },
+        { chave: 'auto_parcelas_carne', valor: 'true', tipo: 'boolean' as const, descricao: 'Auto parcelas de carnê', categoria: 'carne', ativo: true },
+        { chave: 'manter_carnes_cliente', valor: 'true', tipo: 'boolean' as const, descricao: 'Manter sempre um novo carnê para o cliente', categoria: 'carne', ativo: true }
+      ];
+
+      const results = [];
+
+      for (const param of parametrosPadrao) {
+        let [parametro] = await Parametro.findOrCreate({
+          where: { chave: param.chave },
+          defaults: param
+        });
+
+        // Se já existia, atualizar com valores padrão
+        if (parametro.valor !== param.valor) {
+          await parametro.update({ valor: param.valor });
+        }
+
+        results.push(parametro);
+      }
+
+      res.json({
+        success: true,
+        message: 'Parâmetros resetados para valores padrão',
+        data: results
+      });
+    } catch (error: any) {
+      console.error('Erro ao resetar parâmetros:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: error.message
+      });
+    }
+  }
+}
+
+export default ParametroController;

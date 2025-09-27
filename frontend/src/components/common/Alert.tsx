@@ -8,6 +8,7 @@ interface AlertProps {
 }
 
 const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = true }) => {
+  
   const getAlertClass = () => {
     switch (type) {
       case 'success':

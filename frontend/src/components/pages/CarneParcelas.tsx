@@ -583,6 +583,10 @@ const CarneParcelas: React.FC = () => {
                 action: (selectedItems) => handleTopoActions('editar', selectedItems)
               }
             ]}
+            onRefresh={() => {
+              queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
+              queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
+            }}
           />
         </div>
       </div>

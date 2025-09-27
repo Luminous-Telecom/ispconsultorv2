@@ -1,8 +1,8 @@
 import { Op } from 'sequelize';
-import Carne from '../../models/Carne';
-import Cliente from '../../models/Cliente';
-import Plano from '../../models/Plano';
-import Banco from '../../models/Banco';
+import { Carne } from '../../models/Carne';
+import { Cliente } from '../../models/Cliente';
+import { Plano } from '../../models/Plano';
+import { Banco } from '../../models/Banco';
 import { CarneAutoService } from '../CarneAutoService';
 
 export interface GeracaoTitulosConfig {
@@ -231,12 +231,13 @@ export class GeracaoTitulosRoutine {
         numero_parcela: i,
         valor_parcela: valorParcela,
         data_vencimento: dataVencimento,
-        status: 'pendente'
+        status: 'pendente' as const,
+        pago: false
       });
     }
 
     // Inserir parcelas em lote
-    const { CarneParcela } = require('../../models');
+    const { CarneParcela } = await import('../../models');
     await CarneParcela.bulkCreate(parcelas);
   }
 }

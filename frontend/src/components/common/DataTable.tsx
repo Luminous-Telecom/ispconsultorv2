@@ -36,6 +36,7 @@ interface TableProps {
   onSort?: (column: string, direction: 'asc' | 'desc') => void;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
+  onRefresh?: () => void;
 }
 
 const DataTable: React.FC<TableProps> = ({
@@ -53,18 +54,12 @@ const DataTable: React.FC<TableProps> = ({
   onSelectionChange,
   onSort,
   sortColumn,
-  sortDirection = 'asc'
+  sortDirection = 'asc',
+  onRefresh
 }) => {
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleSelectAll = (checked: boolean) => {
-    const newSelection = checked ? data : [];
-    setSelectedItems(newSelection);
-    if (onSelectionChange) {
-      onSelectionChange(newSelection);
-    }
-  };
 
   const handleSelectItem = (item: any, checked: boolean) => {
     // Permitir seleção de apenas uma linha
@@ -125,21 +120,26 @@ const DataTable: React.FC<TableProps> = ({
       {/* Header com botões de ação e filtros */}
       <div className="card-header py-2 border-bottom">
         {/* Botões de ação */}
-        {bulkActions.length > 0 && (
+        {(bulkActions.length > 0 || onRefresh) && (
           <div className="d-flex align-items-center justify-content-between mb-2">
             <div className="d-flex" style={{ gap: '8px' }}>
               {bulkActions.map((bulkAction, index) => {
                 // Novo sempre habilitado, outros só quando há seleção
-                const isNewButton = bulkAction.label.toLowerCase() === 'novo';
+                const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
                 const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
                 const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
                 const isDisabled = isDisabledBySelection || isDisabledByCondition;
+                
                 
                 return (
                   <button
                     key={index}
                     className="btn btn-sm btn-primary"
-                    onClick={() => !isDisabled && handleBulkAction(bulkAction.action)}
+                    onClick={() => {
+                      if (!isDisabled) {
+                        handleBulkAction(bulkAction.action);
+                      }
+                    }}
                     disabled={isDisabled}
                     style={{ flexShrink: 0 }}
                   >
@@ -220,10 +220,16 @@ const DataTable: React.FC<TableProps> = ({
               </button>
             </div>
 
-            {/* Atualizar */}
-            <button className="btn btn-outline-secondary btn-sm">
-              <i className="bi bi-arrow-clockwise"></i>
-            </button>
+            {/* Botão de refresh */}
+            {onRefresh && (
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={onRefresh}
+                title="Recarregar dados"
+              >
+                <i className="bi bi-arrow-clockwise"></i>
+              </button>
+            )}
           </div>
         </div>
       </div>

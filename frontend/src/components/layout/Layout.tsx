@@ -22,6 +22,7 @@ const Layout: React.FC = () => {
     { path: '/carnes', icon: 'bi-receipt', label: 'Carnês' },
     { path: '/carne-parcelas', icon: 'bi-calendar-check', label: 'Parcelas' },
     { path: '/rotinas-agendadas', icon: 'bi-clock', label: 'Rotinas Agendadas' },
+    { path: '/parametros', icon: 'bi-gear', label: 'Parâmetros' },
     { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa' },
   ];
 
@@ -85,11 +86,11 @@ const Layout: React.FC = () => {
         </main>
       </div>
 
-      {/* Notifications */}
-      <NotificationContainer
-        notifications={notifications}
-        onRemove={removeNotification}
-      />
+          {/* Notifications */}
+          <NotificationContainer
+            notifications={notifications}
+            onRemove={removeNotification}
+          />
     </div>
   );
 };

@@ -1,21 +1,25 @@
 import { Router } from 'express';
-import { SchedulerController } from '../controllers/SchedulerController';
+import SchedulerController from '../controllers/SchedulerController';
 
 const router = Router();
+const schedulerController = new SchedulerController();
 
 // Rotas para gerenciar rotinas agendadas
-router.get('/', SchedulerController.list);
-router.get('/stats', SchedulerController.getStats);
-router.get('/:id', SchedulerController.getById);
-router.get('/:id/logs', SchedulerController.getExecutionLogs);
-router.post('/', SchedulerController.create);
-router.put('/:id', SchedulerController.update);
-router.patch('/:id/toggle', SchedulerController.toggle);
-router.post('/:id/execute', SchedulerController.execute);
-router.delete('/:id', SchedulerController.delete);
+router.get('/', schedulerController.index.bind(schedulerController));
+router.get('/:id', schedulerController.show.bind(schedulerController));
+router.post('/', schedulerController.store.bind(schedulerController));
+router.put('/:id', schedulerController.update.bind(schedulerController));
+router.delete('/:id', schedulerController.destroy.bind(schedulerController));
 
-// Rotas para controlar o agendador
-router.post('/start', SchedulerController.start);
-router.post('/stop', SchedulerController.stop);
+// Rotas específicas
+router.patch('/:id/toggle', schedulerController.toggle.bind(schedulerController));
+router.post('/:id/execute', schedulerController.execute.bind(schedulerController));
+
+// Status do scheduler
+router.get('/status', schedulerController.status.bind(schedulerController));
+
+// Logs de execução
+router.get('/logs/:id', schedulerController.getLogs.bind(schedulerController));
+router.get('/logs', schedulerController.getAllLogs.bind(schedulerController));
 
 export default router;

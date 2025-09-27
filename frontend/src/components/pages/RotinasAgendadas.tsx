@@ -1,22 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useNotification } from '../../hooks/useNotification';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 import DataTable from '../common/DataTable';
+import { SchedulerService, RotinaAgendada } from '../../services/schedulerService';
+import RotinaForm from './forms/RotinaForm';
+import LogsModal from '../common/LogsModal';
 
-interface RotinaAgendada {
-  id: number;
-  nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
-  descricao?: string;
-  frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
-  hora_execucao: string;
-  ativo: boolean;
-  ultima_execucao?: string;
-  proxima_execucao?: string;
-  total_execucoes: number;
-  execucoes_com_sucesso: number;
-  execucoes_com_erro: number;
-  created_at: string;
-}
 
 const RotinasAgendadas: React.FC = () => {
   const [rotinas, setRotinas] = useState<RotinaAgendada[]>([]);
@@ -26,24 +14,31 @@ const RotinasAgendadas: React.FC = () => {
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const { addNotification } = useNotification();
+  const [showForm, setShowForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [selectedRoutineId, setSelectedRoutineId] = useState<number | null>(null);
+  const [selectedRoutineName, setSelectedRoutineName] = useState<string>('');
+  const [selectedRoutine, setSelectedRoutine] = useState<RotinaAgendada | null>(null);
+
+  const { addNotification } = useNotificationContext();
+
 
   // Buscar rotinas
-  const fetchRotinas = async () => {
+  const fetchRotinas = useCallback(async () => {
     try {
       setIsLoading(true);
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
+      const params = {
+        page,
+        limit,
         ...(search && { search }),
         ...(sortColumn && { sort: sortColumn, direction: sortDirection })
-      });
+      };
 
-      const response = await fetch(`/api/scheduler?${params}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setRotinas(data.data);
+      const response = await SchedulerService.getRotinas(params);
+      
+      if (response.success) {
+        setRotinas(response.data);
       } else {
         addNotification('error', 'Erro ao carregar rotinas agendadas');
       }
@@ -53,11 +48,35 @@ const RotinasAgendadas: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, limit, search, sortColumn, sortDirection, addNotification]);
+
+  // Função para refresh sem reload completo
+  const refreshRotinas = useCallback(async () => {
+    try {
+      const params = {
+        page,
+        limit,
+        ...(search && { search }),
+        ...(sortColumn && { sort: sortColumn, direction: sortDirection })
+      };
+
+      const response = await SchedulerService.getRotinas(params);
+      
+      if (response.success) {
+        setRotinas(response.data);
+        addNotification('success', 'Dados atualizados com sucesso!');
+      } else {
+        addNotification('error', 'Erro ao atualizar dados');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar rotinas:', error);
+      addNotification('error', 'Erro ao atualizar dados');
+    }
+  }, [page, limit, search, sortColumn, sortDirection, addNotification]);
 
   useEffect(() => {
     fetchRotinas();
-  }, [page, limit, search, sortColumn, sortDirection]);
+  }, [fetchRotinas]);
 
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
     setSortColumn(column);
@@ -111,96 +130,7 @@ const RotinasAgendadas: React.FC = () => {
     }
   };
 
-  const handleToggleAtivo = async (rotina: RotinaAgendada) => {
-    try {
-      const response = await fetch(`/api/scheduler/${rotina.id}/toggle`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ ativo: !rotina.ativo })
-      });
 
-      const data = await response.json();
-
-      if (data.success) {
-        addNotification('success', data.message);
-        fetchRotinas();
-      } else {
-        addNotification('error', data.error || 'Erro ao alterar status da rotina');
-      }
-    } catch (error) {
-      console.error('Erro ao alterar status:', error);
-      addNotification('error', 'Erro ao alterar status da rotina');
-    }
-  };
-
-  const handleExecutar = async (rotina: RotinaAgendada) => {
-    if (!window.confirm(`Tem certeza que deseja executar a rotina "${rotina.nome}" agora?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/scheduler/${rotina.id}/execute`, {
-        method: 'POST'
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        addNotification('success', data.message);
-        fetchRotinas();
-      } else {
-        addNotification('error', data.error || 'Erro ao executar rotina');
-      }
-    } catch (error) {
-      console.error('Erro ao executar rotina:', error);
-      addNotification('error', 'Erro ao executar rotina');
-    }
-  };
-
-  const handleDeletar = async (rotina: RotinaAgendada) => {
-    if (!window.confirm(`Tem certeza que deseja excluir a rotina "${rotina.nome}"?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/scheduler/${rotina.id}`, {
-        method: 'DELETE'
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        addNotification('success', data.message);
-        fetchRotinas();
-      } else {
-        addNotification('error', data.error || 'Erro ao excluir rotina');
-      }
-    } catch (error) {
-      console.error('Erro ao excluir rotina:', error);
-      addNotification('error', 'Erro ao excluir rotina');
-    }
-  };
-
-  const handleTopoActions = (action: string, selectedItems: any[]) => {
-    if (selectedItems.length === 0) return;
-    
-    const rotina = selectedItems[0];
-    
-    switch (action) {
-      case 'editar':
-        // Implementar edição
-        addNotification('info', 'Funcionalidade de edição em desenvolvimento');
-        break;
-      case 'executar':
-        handleExecutar(rotina);
-        break;
-      case 'deletar':
-        handleDeletar(rotina);
-        break;
-    }
-  };
 
   const columns = [
     {
@@ -287,8 +217,83 @@ const RotinasAgendadas: React.FC = () => {
     }
   ];
 
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    fetchRotinas();
+    addNotification('success', 'Rotina criada com sucesso!');
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+  };
+
+  const handleEditFormSuccess = () => {
+    console.log('🎉 Formulário de edição foi salvo com sucesso, recarregando dados...');
+    setShowEditForm(false);
+    setSelectedRoutine(null);
+    fetchRotinas(); // Recarregar dados
+    addNotification('success', 'Rotina atualizada com sucesso!');
+  };
+
+  const handleEditFormCancel = () => {
+    setShowEditForm(false);
+    setSelectedRoutine(null);
+  };
+
+  const handleTopoActions = async (action: string, selectedItems: RotinaAgendada[]) => {
+    if (selectedItems.length === 0) {
+      addNotification('warning', 'Selecione uma rotina para executar esta ação');
+      return;
+    }
+
+    const rotina = selectedItems[0];
+
+    try {
+      switch (action) {
+        case 'executar':
+          await SchedulerService.executeRotina(rotina.id);
+          addNotification('success', `Rotina "${rotina.nome}" executada com sucesso`);
+          break;
+        
+        case 'editar':
+          setSelectedRoutine(rotina);
+          setShowEditForm(true);
+          break;
+        
+        case 'deletar':
+          if (window.confirm(`Tem certeza que deseja deletar a rotina "${rotina.nome}"?`)) {
+            await SchedulerService.deleteRotina(rotina.id);
+            addNotification('success', `Rotina "${rotina.nome}" deletada com sucesso`);
+            fetchRotinas();
+          }
+          break;
+        
+        default:
+          console.log('Ação não implementada:', action);
+      }
+    } catch (error: any) {
+      console.error(`Erro ao ${action} rotina:`, error);
+      addNotification('error', `Erro ao ${action} rotina: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
   return (
     <>
+      <RotinaForm
+        show={showForm}
+        onSuccess={handleFormSuccess}
+        onCancel={handleFormCancel}
+      />
+      
+      {selectedRoutine && (
+        <RotinaForm
+          show={showEditForm}
+          onSuccess={handleEditFormSuccess}
+          onCancel={handleEditFormCancel}
+          editData={selectedRoutine}
+        />
+      )}
+      
       <DataTable
         columns={columns}
         data={getSortedData()}
@@ -302,11 +307,25 @@ const RotinasAgendadas: React.FC = () => {
         bulkActions={[
           {
             label: "Nova Rotina",
-            action: () => addNotification('info', 'Funcionalidade de criação em desenvolvimento')
+            action: (selectedItems) => {
+              setShowForm(true);
+            }
           },
           {
             label: "Executar",
             action: (selectedItems) => handleTopoActions('executar', selectedItems)
+          },
+          {
+            label: "Editar",
+            action: (selectedItems) => handleTopoActions('editar', selectedItems)
+          },
+          {
+            label: "Ver Logs",
+            action: (selectedItems) => {
+              setSelectedRoutineId(selectedItems[0].id);
+              setSelectedRoutineName(selectedItems[0].nome);
+              setShowLogs(true);
+            }
           },
           {
             label: "Deletar",
@@ -316,6 +335,15 @@ const RotinasAgendadas: React.FC = () => {
         onSort={handleSort}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
+        onRefresh={refreshRotinas}
+      />
+
+      {/* Modal de logs reutilizável e arrastável */}
+      <LogsModal
+        show={showLogs}
+        onClose={() => setShowLogs(false)}
+        routineId={selectedRoutineId}
+        routineName={selectedRoutineName}
       />
     </>
   );

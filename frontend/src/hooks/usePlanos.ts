@@ -12,7 +12,8 @@ export const usePlanos = (filters: any = {}) => {
     queryFn: () => PlanoService.list(filters),
     staleTime: DEFAULT_STALE_TIME,
     gcTime: DEFAULT_CACHE_TIME,
-    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 };
 

@@ -553,6 +553,10 @@ const CarnesShow: React.FC = () => {
                     action: (selectedItems) => handleTopoActions('imprimir', selectedItems)
                   }
                 ]}
+                onRefresh={() => {
+                  queryClient.invalidateQueries({ queryKey: ['carne', id] });
+                  queryClient.invalidateQueries({ queryKey: ['carne-parcelas', id] });
+                }}
               />
             </div>
           </div>

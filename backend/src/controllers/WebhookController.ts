@@ -338,20 +338,6 @@ export class WebhookController {
             
             await carne.update({ status: statusLocal });
             
-            // Verificar se deve gerar novo carnê automaticamente
-            if (statusLocal === 'pago') {
-              const { CarneAutoService } = await import('../services/CarneAutoService');
-              const novoCarne = await CarneAutoService.verificarEGerarCarneAutomatico(carne.id);
-              
-              if (novoCarne) {
-                logger.info('Novo carnê gerado automaticamente via webhook', {
-                  carne_original_id: carne.id,
-                  novo_carne_id: novoCarne.id,
-                  numero_carne: novoCarne.numero_carne
-                });
-              }
-            }
-            
             logger.info('Carnê atualizado via webhook', {
               carne_id: carne.id,
               carnet_id: carnetId,

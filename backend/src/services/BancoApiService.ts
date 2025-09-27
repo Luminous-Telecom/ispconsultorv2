@@ -1296,4 +1296,41 @@ export class BancoApiService {
       };
     }
   }
+
+  /**
+   * Envia remessa para o banco
+   */
+  static async enviarRemessa(banco: Banco, arquivoRemessa: any): Promise<any> {
+    try {
+      logger.info('Enviando remessa para banco', { 
+        banco_id: banco.id,
+        banco_nome: banco.nome,
+        arquivo: arquivoRemessa.nome_arquivo
+      });
+
+      // Simular envio de remessa
+      // Em produção, implementar integração real com API do banco
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      return {
+        success: true,
+        message: 'Remessa enviada com sucesso',
+        data: {
+          arquivo: arquivoRemessa.nome_arquivo,
+          tamanho: arquivoRemessa.tamanho,
+          timestamp: new Date().toISOString()
+        }
+      };
+    } catch (error: any) {
+      logger.error('Erro ao enviar remessa', { 
+        banco_id: banco.id,
+        banco_nome: banco.nome,
+        error: error.message 
+      });
+      return {
+        success: false,
+        message: 'Erro ao enviar remessa: ' + error.message
+      };
+    }
+  }
 }

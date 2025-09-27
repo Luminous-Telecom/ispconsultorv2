@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
-import Carne from '../../models/Carne';
-import CarneParcela from '../../models/CarneParcela';
-import Banco from '../../models/Banco';
+import { Carne } from '../../models/Carne';
+import { CarneParcela } from '../../models/CarneParcela';
+import { Banco } from '../../models/Banco';
 import { BancoApiService } from '../BancoApiService';
 
 export interface RemessaBancariaConfig {
@@ -153,7 +153,7 @@ export class RemessaBancariaRoutine {
     // Filtrar carnês baseado nas configurações
     const carnesFiltradas = carnes.filter(carne => {
       // Verificar se tem parcelas dentro do período configurado
-      const parcelasValidas = carne.parcelas?.filter(parcela => {
+      const parcelasValidas = (carne as any).parcelas?.filter((parcela: any) => {
         const diasParaVencimento = Math.ceil((parcela.data_vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
         
         // Verificar dias de vencimento
@@ -194,11 +194,8 @@ export class RemessaBancariaRoutine {
       case 'efi':
         conteudoArquivo = await this.gerarRemessaEFI(carnes);
         break;
-      case 'bradesco':
-        conteudoArquivo = await this.gerarRemessaBradesco(carnes);
-        break;
-      case 'itau':
-        conteudoArquivo = await this.gerarRemessaItau(carnes);
+      case 'bancario':
+        conteudoArquivo = await this.gerarRemessaBancario(carnes);
         break;
       default:
         conteudoArquivo = await this.gerarRemessaGenerica(carnes, config);
@@ -229,32 +226,17 @@ export class RemessaBancariaRoutine {
   }
 
   /**
-   * Gera remessa no formato Bradesco
+   * Gera remessa no formato bancário padrão
    */
-  private async gerarRemessaBradesco(carnes: Carne[]): Promise<string> {
-    // Implementar geração de remessa Bradesco
-    let conteudo = 'HEADER_BRADESCO\n';
+  private async gerarRemessaBancario(carnes: Carne[]): Promise<string> {
+    // Implementar geração de remessa bancária padrão
+    let conteudo = 'HEADER_BANCARIO\n';
     
     for (const carne of carnes) {
       conteudo += `CARNE_${carne.id}_${carne.numero_carne}\n`;
     }
     
-    conteudo += 'TRAILER_BRADESCO\n';
-    return conteudo;
-  }
-
-  /**
-   * Gera remessa no formato Itaú
-   */
-  private async gerarRemessaItau(carnes: Carne[]): Promise<string> {
-    // Implementar geração de remessa Itaú
-    let conteudo = 'HEADER_ITAU\n';
-    
-    for (const carne of carnes) {
-      conteudo += `CARNE_${carne.id}_${carne.numero_carne}\n`;
-    }
-    
-    conteudo += 'TRAILER_ITAU\n';
+    conteudo += 'TRAILER_BANCARIO\n';
     return conteudo;
   }
 

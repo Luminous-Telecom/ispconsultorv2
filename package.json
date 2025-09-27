@@ -5,6 +5,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev:pm2": "pm2 start ecosystem.config.js",
+    "dev:pm2:stop": "pm2 stop ecosystem.config.js",
+    "dev:pm2:restart": "pm2 restart ecosystem.config.js",
+    "dev:pm2:logs": "pm2 logs",
+    "dev:pm2:monit": "pm2 monit",
+    "dev:pm2:delete": "pm2 delete ecosystem.config.js",
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",

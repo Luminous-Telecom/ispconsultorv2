@@ -1,20 +1,20 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
-interface ScheduledRoutineAttributes {
+export interface ScheduledRoutineAttributes {
   id: number;
   nome: string;
   tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
   descricao?: string;
-  configuracao: any; // JSON
+  configuracao: any;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
   dia_execucao?: number;
   hora_execucao: string;
   dia_semana?: number;
   cron_expression?: string;
   ativo: boolean;
+  proxima_execucao: Date;
   ultima_execucao?: Date;
-  proxima_execucao?: Date;
   total_execucoes: number;
   execucoes_com_sucesso: number;
   execucoes_com_erro: number;
@@ -22,9 +22,9 @@ interface ScheduledRoutineAttributes {
   updated_at: Date;
 }
 
-interface ScheduledRoutineCreationAttributes extends Optional<ScheduledRoutineAttributes, 'id' | 'descricao' | 'dia_execucao' | 'dia_semana' | 'cron_expression' | 'ultima_execucao' | 'proxima_execucao' | 'total_execucoes' | 'execucoes_com_sucesso' | 'execucoes_com_erro' | 'created_at' | 'updated_at'> {}
+export interface ScheduledRoutineCreationAttributes extends Optional<ScheduledRoutineAttributes, 'id' | 'created_at' | 'updated_at' | 'ultima_execucao' | 'total_execucoes' | 'execucoes_com_sucesso' | 'execucoes_com_erro'> {}
 
-class ScheduledRoutine extends Model<ScheduledRoutineAttributes, ScheduledRoutineCreationAttributes> implements ScheduledRoutineAttributes {
+export class ScheduledRoutine extends Model<ScheduledRoutineAttributes, ScheduledRoutineCreationAttributes> implements ScheduledRoutineAttributes {
   public id!: number;
   public nome!: string;
   public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
@@ -36,116 +36,108 @@ class ScheduledRoutine extends Model<ScheduledRoutineAttributes, ScheduledRoutin
   public dia_semana?: number;
   public cron_expression?: string;
   public ativo!: boolean;
+  public proxima_execucao!: Date;
   public ultima_execucao?: Date;
-  public proxima_execucao?: Date;
   public total_execucoes!: number;
   public execucoes_com_sucesso!: number;
   public execucoes_com_erro!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 
-  // Associações
-  public getExecutionLogs!: () => Promise<any[]>;
-  public addExecutionLog!: (log: any) => Promise<any>;
-  public countExecutionLogs!: () => Promise<number>;
+  public static associate() {
+    ScheduledRoutine.hasMany(require('./RoutineExecutionLog').RoutineExecutionLog, {
+      foreignKey: 'routine_id',
+      as: 'executionLogs'
+    });
+  }
 }
 
 ScheduledRoutine.init({
   id: {
     type: DataTypes.INTEGER,
-    primaryKey: true,
     autoIncrement: true,
-    allowNull: false
+    primaryKey: true
   },
   nome: {
-    type: DataTypes.STRING(100),
-    allowNull: false,
-    comment: 'Nome da rotina (ex: Geração de Títulos Mensais)'
+    type: DataTypes.STRING(255),
+    allowNull: false
   },
   tipo: {
     type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'outros'),
-    allowNull: false,
-    comment: 'Tipo da rotina'
+    allowNull: false
   },
   descricao: {
     type: DataTypes.TEXT,
-    allowNull: true,
-    comment: 'Descrição detalhada da rotina'
+    allowNull: true
   },
   configuracao: {
     type: DataTypes.JSON,
     allowNull: false,
-    comment: 'Configurações específicas da rotina (JSON)'
+    defaultValue: {}
   },
   frequencia: {
     type: DataTypes.ENUM('diaria', 'semanal', 'mensal', 'anual', 'personalizada'),
-    allowNull: false,
-    comment: 'Frequência de execução'
+    allowNull: false
   },
   dia_execucao: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    comment: 'Dia do mês para execução (1-31)'
+    validate: {
+      min: 1,
+      max: 31
+    }
   },
   hora_execucao: {
     type: DataTypes.TIME,
-    allowNull: false,
-    defaultValue: '00:00:00',
-    comment: 'Hora de execução'
+    allowNull: false
   },
   dia_semana: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    comment: 'Dia da semana (0=domingo, 1=segunda, etc.)'
+    validate: {
+      min: 0,
+      max: 6
+    }
   },
   cron_expression: {
-    type: DataTypes.STRING(100),
-    allowNull: true,
-    comment: 'Expressão cron personalizada'
+    type: DataTypes.STRING(255),
+    allowNull: true
   },
   ativo: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: true,
-    comment: 'Se a rotina está ativa'
-  },
-  ultima_execucao: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    comment: 'Data e hora da última execução'
+    defaultValue: true
   },
   proxima_execucao: {
     type: DataTypes.DATE,
-    allowNull: true,
-    comment: 'Data e hora da próxima execução'
+    allowNull: false
+  },
+  ultima_execucao: {
+    type: DataTypes.DATE,
+    allowNull: true
   },
   total_execucoes: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 0,
-    comment: 'Total de execuções realizadas'
+    defaultValue: 0
   },
   execucoes_com_sucesso: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 0,
-    comment: 'Total de execuções com sucesso'
+    defaultValue: 0
   },
   execucoes_com_erro: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 0,
-    comment: 'Total de execuções com erro'
+    defaultValue: 0
   },
   created_at: {
     type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
+    allowNull: false
   },
   updated_at: {
     type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
+    allowNull: false
   }
 }, {
   sequelize,

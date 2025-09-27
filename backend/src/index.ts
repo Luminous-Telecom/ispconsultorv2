@@ -24,6 +24,8 @@ import dashboardRoutes from './routes/dashboardRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import carneAutoRoutes from './routes/carneAutoRoutes';
 import schedulerRoutes from './routes/schedulerRoutes';
+import workerRoutes from './routes/workerRoutes';
+import parametroRoutes from './routes/parametroRoutes';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -93,6 +95,8 @@ app.use('/boleto', boletoRoutes);
 app.use('/api/dados-empresa', dadosEmpresaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/scheduler', schedulerRoutes);
+app.use('/api/workers', workerRoutes);
+app.use('/api/parametros', parametroRoutes);
 
 // Rotas de webhook
 app.use('/webhook', webhookRoutes);

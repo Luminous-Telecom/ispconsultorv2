@@ -1,6 +1,6 @@
 import React from 'react';
 import Alert from './Alert';
-import { Notification } from '../../hooks/useNotification';
+import { Notification } from '../../contexts/NotificationContext';
 
 interface NotificationContainerProps {
   notifications: Notification[];

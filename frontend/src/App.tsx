@@ -28,6 +28,7 @@ import CarneParcelasEdit from './components/pages/CarneParcelasEdit';
 import BoletoView from './components/pages/BoletoView';
 import DadosEmpresa from './components/pages/DadosEmpresa';
 import RotinasAgendadas from './components/pages/RotinasAgendadas';
+import Parametros from './components/pages/Parametros';
 import Login from './components/pages/Login';
 
 // Query Client
@@ -44,7 +45,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <NotificationProvider>
+        <NotificationProvider key={`notification-provider-${Date.now()}`}>
           <Router>
             <Routes>
           <Route path="/login" element={<Login />} />
@@ -72,6 +73,7 @@ function App() {
             <Route path="boleto/web/:id" element={<BoletoView />} />
             <Route path="dados-empresa" element={<DadosEmpresa />} />
             <Route path="rotinas-agendadas" element={<RotinasAgendadas />} />
+            <Route path="parametros" element={<Parametros />} />
           </Route>
             </Routes>
           </Router>

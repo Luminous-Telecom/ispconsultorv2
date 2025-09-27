@@ -1,41 +1,45 @@
 module.exports = {
   apps: [
     {
-      name: 'ctm-backend',
-      cwd: '/home/lucas/vantora/ctm-telecom/backend',
+      name: 'ctm-backend-dev',
+      cwd: './backend',
       script: 'npm',
       args: 'run dev',
+      watch: false,
       env: {
         NODE_ENV: 'development',
         PORT: 3001
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '1G',
-      error_file: './logs/backend-error.log',
+      log_file: './logs/backend-dev.log',
       out_file: './logs/backend-out.log',
-      log_file: './logs/backend-combined.log',
-      time: true
+      error_file: './logs/backend-error.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true,
+      max_memory_restart: '1G',
+      restart_delay: 1000,
+      max_restarts: 10,
+      min_uptime: '10s'
     },
     {
-      name: 'ctm-frontend',
-      cwd: '/home/lucas/vantora/ctm-telecom/frontend',
+      name: 'ctm-frontend-dev',
+      cwd: './frontend',
       script: 'npm',
       args: 'start',
+      watch: false,
       env: {
         NODE_ENV: 'development',
         PORT: 3000,
         BROWSER: 'none'
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '1G',
-      error_file: './logs/frontend-error.log',
+      log_file: './logs/frontend-dev.log',
       out_file: './logs/frontend-out.log',
-      log_file: './logs/frontend-combined.log',
-      time: true
+      error_file: './logs/frontend-error.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true,
+      max_memory_restart: '1G',
+      restart_delay: 1000,
+      max_restarts: 10,
+      min_uptime: '10s'
     }
   ]
 };

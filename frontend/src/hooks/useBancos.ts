@@ -12,7 +12,8 @@ export const useBancos = (filters: any = {}) => {
     queryFn: () => BancoService.list(filters),
     staleTime: DEFAULT_STALE_TIME,
     gcTime: DEFAULT_CACHE_TIME,
-    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 };
 

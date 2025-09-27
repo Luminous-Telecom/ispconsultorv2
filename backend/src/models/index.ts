@@ -7,6 +7,8 @@ import { Carne } from './Carne';
 import { CarneParcela } from './CarneParcela';
 import { ClientePlano } from './ClientePlano';
 import { DadosEmpresa } from './DadosEmpresa';
+import { ScheduledRoutine } from './ScheduledRoutine';
+import { RoutineExecutionLog } from './RoutineExecutionLog';
 
 // Configurar relacionamentos
 
@@ -116,6 +118,18 @@ BancoConfiguracao.belongsTo(Banco, {
   as: 'banco'
 });
 
+// ScheduledRoutine
+ScheduledRoutine.hasMany(RoutineExecutionLog, {
+  foreignKey: 'routine_id',
+  as: 'executionLogs'
+});
+
+// RoutineExecutionLog
+RoutineExecutionLog.belongsTo(ScheduledRoutine, {
+  foreignKey: 'routine_id',
+  as: 'routine'
+});
+
 // Exportar todos os modelos
 export {
   Cliente,
@@ -125,5 +139,7 @@ export {
   Carne,
   CarneParcela,
   ClientePlano,
-  DadosEmpresa
+  DadosEmpresa,
+  ScheduledRoutine,
+  RoutineExecutionLog
 };

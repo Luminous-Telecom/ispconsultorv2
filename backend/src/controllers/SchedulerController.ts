@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { SchedulerService } from '../services/SchedulerService';
-import ScheduledRoutine from '../models/ScheduledRoutine';
-import RoutineExecutionLog from '../models/RoutineExecutionLog';
+import { ScheduledRoutine } from '../models';
 
 export class SchedulerController {
   private schedulerService: SchedulerService;
@@ -10,61 +9,62 @@ export class SchedulerController {
     this.schedulerService = SchedulerService.getInstance();
   }
 
-  /**
-   * Lista todas as rotinas agendadas
-   */
-  static async list(req: Request, res: Response): Promise<void> {
+  // Listar todas as rotinas
+  public async index(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 15, ativo, tipo } = req.query;
+      const { page = 1, limit = 15, search, sort = 'created_at', direction = 'desc' } = req.query;
+
       const offset = (Number(page) - 1) * Number(limit);
+      const where: any = {};
 
-      const whereClause: any = {};
-      if (ativo !== undefined) {
-        whereClause.ativo = ativo === 'true';
-      }
-      if (tipo) {
-        whereClause.tipo = tipo;
+      // Filtro de busca
+      if (search) {
+        where[require('sequelize').Op.or] = [
+          { nome: { [require('sequelize').Op.like]: `%${search}%` } },
+          { tipo: { [require('sequelize').Op.like]: `%${search}%` } },
+          { descricao: { [require('sequelize').Op.like]: `%${search}%` } }
+        ];
       }
 
-      const { count, rows: routines } = await ScheduledRoutine.findAndCountAll({
-        where: whereClause,
+      const routines = await ScheduledRoutine.findAndCountAll({
+        where,
         limit: Number(limit),
         offset,
-        order: [['created_at', 'DESC']]
+        order: [[sort as string, direction as 'asc' | 'desc']]
       });
+
+      const totalPages = Math.ceil(routines.count / Number(limit));
 
       res.json({
         success: true,
-        data: routines,
+        data: routines.rows,
         pagination: {
-          total: count,
+          total: routines.count,
           page: Number(page),
           limit: Number(limit),
-          pages: Math.ceil(count / Number(limit))
+          pages: totalPages
         }
       });
     } catch (error: any) {
       console.error('Erro ao listar rotinas:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 
-  /**
-   * Obtém uma rotina específica
-   */
-  static async getById(req: Request, res: Response): Promise<void> {
+  // Obter rotina por ID
+  public async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const routine = await ScheduledRoutine.findByPk(id);
+      const routine = await this.schedulerService.getRoutineById(Number(id));
 
       if (!routine) {
         res.status(404).json({
           success: false,
-          error: 'Rotina não encontrada'
+          message: 'Rotina não encontrada'
         });
         return;
       }
@@ -77,50 +77,27 @@ export class SchedulerController {
       console.error('Erro ao obter rotina:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 
-  /**
-   * Cria uma nova rotina agendada
-   */
-  static async create(req: Request, res: Response): Promise<void> {
+  // Criar nova rotina
+  public async store(req: Request, res: Response): Promise<void> {
     try {
-      const {
-        nome,
-        tipo,
-        descricao,
-        configuracao,
-        frequencia,
-        dia_execucao,
-        hora_execucao,
-        dia_semana,
-        cron_expression
-      } = req.body;
+      const routineData = req.body;
 
       // Validações básicas
-      if (!nome || !tipo || !frequencia || !hora_execucao) {
+      if (!routineData.nome || !routineData.tipo || !routineData.frequencia || !routineData.hora_execucao) {
         res.status(400).json({
           success: false,
-          error: 'Campos obrigatórios: nome, tipo, frequencia, hora_execucao'
+          message: 'Campos obrigatórios: nome, tipo, frequencia, hora_execucao'
         });
         return;
       }
 
-      const schedulerService = SchedulerService.getInstance();
-      const routine = await schedulerService.createRoutine({
-        nome,
-        tipo,
-        descricao,
-        configuracao,
-        frequencia,
-        dia_execucao,
-        hora_execucao,
-        dia_semana,
-        cron_expression
-      });
+      const routine = await this.schedulerService.createRoutine(routineData);
 
       res.status(201).json({
         success: true,
@@ -131,38 +108,27 @@ export class SchedulerController {
       console.error('Erro ao criar rotina:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 
-  /**
-   * Atualiza uma rotina existente
-   */
-  static async update(req: Request, res: Response): Promise<void> {
+  // Atualizar rotina
+  public async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const updateData = req.body;
 
-      const routine = await ScheduledRoutine.findByPk(id);
-      if (!routine) {
-        res.status(404).json({
-          success: false,
-          error: 'Rotina não encontrada'
-        });
-        return;
-      }
+      console.log(`🔄 Controller recebeu atualização para rotina ${id}:`, updateData);
 
-      // Remover campos que não devem ser atualizados diretamente
-      delete updateData.id;
-      delete updateData.created_at;
-      delete updateData.updated_at;
-      delete updateData.total_execucoes;
-      delete updateData.execucoes_com_sucesso;
-      delete updateData.execucoes_com_erro;
+      const routine = await this.schedulerService.updateRoutine(Number(id), updateData);
 
-      await routine.update(updateData);
+      console.log(`✅ Controller retornando rotina atualizada:`, {
+        id: routine.id,
+        hora_execucao: routine.hora_execucao,
+        proxima_execucao: routine.proxima_execucao
+      });
 
       res.json({
         success: true,
@@ -173,16 +139,35 @@ export class SchedulerController {
       console.error('Erro ao atualizar rotina:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 
-  /**
-   * Ativa/desativa uma rotina
-   */
-  static async toggle(req: Request, res: Response): Promise<void> {
+  // Deletar rotina
+  public async destroy(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      await this.schedulerService.deleteRoutine(Number(id));
+
+      res.json({
+        success: true,
+        message: 'Rotina deletada com sucesso'
+      });
+    } catch (error: any) {
+      console.error('Erro ao deletar rotina:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: error.message
+      });
+    }
+  }
+
+  // Ativar/Desativar rotina
+  public async toggle(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const { ativo } = req.body;
@@ -190,103 +175,85 @@ export class SchedulerController {
       if (typeof ativo !== 'boolean') {
         res.status(400).json({
           success: false,
-          error: 'Campo "ativo" deve ser um boolean'
+          message: 'Campo "ativo" deve ser um booleano'
         });
         return;
       }
 
-      const schedulerService = SchedulerService.getInstance();
-      await schedulerService.toggleRoutine(Number(id), ativo);
+      const routine = await this.schedulerService.toggleRoutine(Number(id), ativo);
 
       res.json({
         success: true,
-        message: `Rotina ${ativo ? 'ativada' : 'desativada'} com sucesso`
+        message: `Rotina ${ativo ? 'ativada' : 'desativada'} com sucesso`,
+        data: routine
       });
     } catch (error: any) {
       console.error('Erro ao alterar status da rotina:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 
-  /**
-   * Executa uma rotina manualmente
-   */
-  static async execute(req: Request, res: Response): Promise<void> {
+  // Executar rotina manualmente
+  public async execute(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 
-      const schedulerService = SchedulerService.getInstance();
-      await schedulerService.executeRoutineManually(Number(id));
+      const resultado = await this.schedulerService.executeRoutineManually(Number(id));
 
       res.json({
         success: true,
-        message: 'Rotina executada com sucesso'
+        message: 'Rotina executada com sucesso',
+        data: resultado
       });
     } catch (error: any) {
       console.error('Erro ao executar rotina:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 
-  /**
-   * Remove uma rotina
-   */
-  static async delete(req: Request, res: Response): Promise<void> {
+
+  // Status do scheduler
+  public async status(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-
-      const routine = await ScheduledRoutine.findByPk(id);
-      if (!routine) {
-        res.status(404).json({
-          success: false,
-          error: 'Rotina não encontrada'
-        });
-        return;
-      }
-
-      await routine.destroy();
+      const status = this.schedulerService.getStatus();
 
       res.json({
         success: true,
-        message: 'Rotina removida com sucesso'
+        data: status
       });
     } catch (error: any) {
-      console.error('Erro ao remover rotina:', error);
+      console.error('Erro ao obter status do scheduler:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 
-  /**
-   * Obtém logs de execução de uma rotina
-   */
-  static async getExecutionLogs(req: Request, res: Response): Promise<void> {
+  // Obter logs de execução de uma rotina específica
+  public async getLogs(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { limit = 50 } = req.query;
-
-      const routine = await ScheduledRoutine.findByPk(id);
-      if (!routine) {
-        res.status(404).json({
+      const routineId = Number(id);
+      
+      if (isNaN(routineId)) {
+        res.status(400).json({
           success: false,
-          error: 'Rotina não encontrada'
+          message: 'ID da rotina inválido'
         });
         return;
       }
 
-      const schedulerService = SchedulerService.getInstance();
-      const logs = await schedulerService.getExecutionLogs(Number(id), Number(limit));
+      const logs = await this.schedulerService.getExecutionLogs(routineId);
 
       res.json({
         success: true,
@@ -296,108 +263,30 @@ export class SchedulerController {
       console.error('Erro ao obter logs de execução:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 
-  /**
-   * Obtém estatísticas das rotinas
-   */
-  static async getStats(req: Request, res: Response): Promise<void> {
+  // Obter todos os logs de execução
+  public async getAllLogs(req: Request, res: Response): Promise<void> {
     try {
-      const totalRoutines = await ScheduledRoutine.count();
-      const activeRoutines = await ScheduledRoutine.count({ where: { ativo: true } });
-      const inactiveRoutines = await ScheduledRoutine.count({ where: { ativo: false } });
-
-      // Estatísticas por tipo
-      const statsByType = await ScheduledRoutine.findAll({
-        attributes: [
-          'tipo',
-          [ScheduledRoutine.sequelize!.fn('COUNT', ScheduledRoutine.sequelize!.col('id')), 'total'],
-          [ScheduledRoutine.sequelize!.fn('SUM', ScheduledRoutine.sequelize!.col('total_execucoes')), 'total_execucoes'],
-          [ScheduledRoutine.sequelize!.fn('SUM', ScheduledRoutine.sequelize!.col('execucoes_com_sucesso')), 'execucoes_sucesso'],
-          [ScheduledRoutine.sequelize!.fn('SUM', ScheduledRoutine.sequelize!.col('execucoes_com_erro')), 'execucoes_erro']
-        ],
-        group: ['tipo'],
-        raw: true
-      });
-
-      // Últimas execuções
-      const lastExecutions = await RoutineExecutionLog.findAll({
-        include: [
-          {
-            model: ScheduledRoutine,
-            as: 'Routine',
-            attributes: ['nome', 'tipo']
-          }
-        ],
-        order: [['data_inicio', 'DESC']],
-        limit: 10
-      });
+      const logs = await this.schedulerService.getRecentExecutionLogs(50);
 
       res.json({
         success: true,
-        data: {
-          total_routines: totalRoutines,
-          active_routines: activeRoutines,
-          inactive_routines: inactiveRoutines,
-          stats_by_type: statsByType,
-          last_executions: lastExecutions
-        }
+        data: logs
       });
     } catch (error: any) {
-      console.error('Erro ao obter estatísticas:', error);
+      console.error('Erro ao obter logs de execução:', error);
       res.status(500).json({
         success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
-      });
-    }
-  }
-
-  /**
-   * Inicia o agendador
-   */
-  static async start(req: Request, res: Response): Promise<void> {
-    try {
-      const schedulerService = SchedulerService.getInstance();
-      await schedulerService.start();
-
-      res.json({
-        success: true,
-        message: 'Agendador iniciado com sucesso'
-      });
-    } catch (error: any) {
-      console.error('Erro ao iniciar agendador:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
-      });
-    }
-  }
-
-  /**
-   * Para o agendador
-   */
-  static async stop(req: Request, res: Response): Promise<void> {
-    try {
-      const schedulerService = SchedulerService.getInstance();
-      schedulerService.stop();
-
-      res.json({
-        success: true,
-        message: 'Agendador parado com sucesso'
-      });
-    } catch (error: any) {
-      console.error('Erro ao parar agendador:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor',
-        message: error.message
+        message: 'Erro interno do servidor',
+        error: error.message
       });
     }
   }
 }
+
+export default SchedulerController;

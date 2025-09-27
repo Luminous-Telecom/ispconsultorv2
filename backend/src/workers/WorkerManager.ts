@@ -1,0 +1,299 @@
+import { EventEmitter } from 'events';
+import SchedulerWorker from './SchedulerWorker';
+import ScheduledRoutine from '../models/ScheduledRoutine';
+import { Op } from 'sequelize';
+
+export interface WorkerManagerConfig {
+  maxWorkers?: number;
+  checkInterval?: number; // em milissegundos
+  retryAttempts?: number;
+  retryDelay?: number; // em milissegundos
+}
+
+export class WorkerManager extends EventEmitter {
+  private static instance: WorkerManager;
+  private config: Required<WorkerManagerConfig>;
+  private isRunning = false;
+  private checkInterval?: NodeJS.Timeout;
+  private activeExecutions: Map<number, Promise<any>> = new Map();
+
+  private constructor(config: WorkerManagerConfig = {}) {
+    super();
+    this.config = {
+      maxWorkers: config.maxWorkers || 5,
+      checkInterval: config.checkInterval || 60000, // 1 minuto
+      retryAttempts: config.retryAttempts || 3,
+      retryDelay: config.retryDelay || 5000 // 5 segundos
+    };
+  }
+
+  static getInstance(config?: WorkerManagerConfig): WorkerManager {
+    if (!WorkerManager.instance) {
+      WorkerManager.instance = new WorkerManager(config);
+    }
+    return WorkerManager.instance;
+  }
+
+  /**
+   * Inicia o gerenciador de workers
+   */
+  async start(): Promise<void> {
+    if (this.isRunning) {
+      console.log('WorkerManager já está em execução');
+      return;
+    }
+
+    this.isRunning = true;
+    console.log('🚀 Iniciando WorkerManager...');
+
+    // Verificar rotinas pendentes na inicialização
+    await this.processPendingRoutines();
+
+    // Configurar verificação periódica
+    this.checkInterval = setInterval(async () => {
+      try {
+        await this.processScheduledRoutines();
+      } catch (error) {
+        console.error('Erro na verificação periódica de rotinas:', error);
+        this.emit('error', error);
+      }
+    }, this.config.checkInterval);
+
+    this.emit('started');
+    console.log('✅ WorkerManager iniciado com sucesso');
+  }
+
+  /**
+   * Para o gerenciador de workers
+   */
+  async stop(): Promise<void> {
+    if (!this.isRunning) {
+      return;
+    }
+
+    this.isRunning = false;
+    console.log('🛑 Parando WorkerManager...');
+
+    // Parar verificação periódica
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = undefined;
+    }
+
+    // Aguardar execuções ativas terminarem
+    const activePromises = Array.from(this.activeExecutions.values());
+    if (activePromises.length > 0) {
+      console.log(`Aguardando ${activePromises.length} execuções ativas terminarem...`);
+      await Promise.allSettled(activePromises);
+    }
+
+    // Parar todos os workers
+    await SchedulerWorker.stopAllWorkers();
+
+    this.activeExecutions.clear();
+    this.emit('stopped');
+    console.log('✅ WorkerManager parado com sucesso');
+  }
+
+  /**
+   * Processa rotinas agendadas
+   */
+  private async processScheduledRoutines(): Promise<void> {
+    const now = new Date();
+    
+    // Buscar rotinas que devem ser executadas
+    const routines = await ScheduledRoutine.findAll({
+      where: {
+        ativo: true,
+        proxima_execucao: {
+          [Op.lte]: now
+        }
+      },
+      order: [['proxima_execucao', 'ASC']]
+    });
+
+    console.log(`📋 Encontradas ${routines.length} rotinas para execução`);
+
+    for (const routine of routines) {
+      try {
+        await this.executeRoutine(routine);
+      } catch (error) {
+        console.error(`Erro ao executar rotina ${routine.id}:`, error);
+        this.emit('routineError', { routine, error });
+      }
+    }
+  }
+
+  /**
+   * Processa rotinas pendentes (para casos de reinicialização)
+   */
+  private async processPendingRoutines(): Promise<void> {
+    const routines = await ScheduledRoutine.findAll({
+      where: {
+        ativo: true,
+        proxima_execucao: {
+          [Op.lt]: new Date()
+        }
+      },
+      order: [['proxima_execucao', 'ASC']]
+    });
+
+    if (routines.length > 0) {
+      console.log(`🔄 Processando ${routines.length} rotinas pendentes`);
+      for (const routine of routines) {
+        try {
+          await this.executeRoutine(routine);
+        } catch (error) {
+          console.error(`Erro ao processar rotina pendente ${routine.id}:`, error);
+        }
+      }
+    }
+  }
+
+  /**
+   * Executa uma rotina específica
+   */
+  async executeRoutine(routine: ScheduledRoutine): Promise<void> {
+    // Verificar se já está sendo executada
+    if (this.activeExecutions.has(routine.id)) {
+      console.log(`⏳ Rotina ${routine.id} já está sendo executada`);
+      return;
+    }
+
+    // Verificar limite de workers
+    const workersStatus = SchedulerWorker.getWorkersStatus();
+    if (workersStatus.active >= this.config.maxWorkers) {
+      console.log(`⚠️ Limite de workers atingido (${workersStatus.active}/${this.config.maxWorkers})`);
+      return;
+    }
+
+    console.log(`🎯 Executando rotina: ${routine.nome} (ID: ${routine.id})`);
+
+    const executionPromise = this.executeWithRetry(routine);
+    this.activeExecutions.set(routine.id, executionPromise);
+
+    try {
+      await executionPromise;
+      this.emit('routineCompleted', { routine });
+    } catch (error) {
+      this.emit('routineFailed', { routine, error });
+    } finally {
+      this.activeExecutions.delete(routine.id);
+    }
+  }
+
+  /**
+   * Executa rotina com retry automático
+   */
+  private async executeWithRetry(routine: ScheduledRoutine): Promise<void> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
+      try {
+        console.log(`🔄 Tentativa ${attempt}/${this.config.retryAttempts} para rotina ${routine.id}`);
+        
+        await SchedulerWorker.executeRoutine(routine.id, routine.configuracao);
+        
+        // Atualizar próxima execução
+        await this.updateNextExecution(routine);
+        
+        console.log(`✅ Rotina ${routine.id} executada com sucesso`);
+        return;
+
+      } catch (error: any) {
+        lastError = error;
+        console.error(`❌ Tentativa ${attempt} falhou para rotina ${routine.id}:`, error.message);
+
+        if (attempt < this.config.retryAttempts) {
+          console.log(`⏳ Aguardando ${this.config.retryDelay}ms antes da próxima tentativa...`);
+          await this.delay(this.config.retryDelay);
+        }
+      }
+    }
+
+    // Todas as tentativas falharam
+    console.error(`💥 Rotina ${routine.id} falhou após ${this.config.retryAttempts} tentativas`);
+    throw lastError || new Error('Execução falhou sem erro específico');
+  }
+
+  /**
+   * Atualiza a próxima execução da rotina
+   */
+  private async updateNextExecution(routine: ScheduledRoutine): Promise<void> {
+    const [hours, minutes] = routine.hora_execucao.split(':');
+    let nextExecution = new Date();
+    
+    // Definir a hora configurada
+    nextExecution.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    // Calcular próxima execução baseado na frequência
+    switch (routine.frequencia) {
+      case 'diaria':
+        nextExecution.setDate(nextExecution.getDate() + 1);
+        break;
+      case 'semanal':
+        nextExecution.setDate(nextExecution.getDate() + 7);
+        break;
+      case 'mensal':
+        nextExecution.setMonth(nextExecution.getMonth() + 1);
+        break;
+      case 'anual':
+        nextExecution.setFullYear(nextExecution.getFullYear() + 1);
+        break;
+      case 'personalizada':
+        // Para frequência personalizada, usar cron expression ou configurar manualmente
+        nextExecution.setDate(nextExecution.getDate() + 1); // Default: 24h
+        break;
+      default:
+        nextExecution.setDate(nextExecution.getDate() + 1);
+    }
+
+    await routine.update({
+      proxima_execucao: nextExecution
+    });
+
+    console.log(`📅 Próxima execução da rotina ${routine.id}: ${nextExecution.toISOString()}`);
+  }
+
+  /**
+   * Executa rotina manualmente
+   */
+  async executeRoutineManually(routineId: number): Promise<void> {
+    const routine = await ScheduledRoutine.findByPk(routineId);
+    if (!routine) {
+      throw new Error('Rotina não encontrada');
+    }
+
+    if (!routine.ativo) {
+      throw new Error('Rotina está inativa');
+    }
+
+    await this.executeRoutine(routine);
+  }
+
+  /**
+   * Obtém status do gerenciador
+   */
+  getStatus(): {
+    isRunning: boolean;
+    activeExecutions: number;
+    workersStatus: any;
+    config: Required<WorkerManagerConfig>;
+  } {
+    return {
+      isRunning: this.isRunning,
+      activeExecutions: this.activeExecutions.size,
+      workersStatus: SchedulerWorker.getWorkersStatus(),
+      config: this.config
+    };
+  }
+
+  /**
+   * Utilitário para delay
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
+export default WorkerManager;

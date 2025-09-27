@@ -236,6 +236,7 @@ const Planos: React.FC = () => {
         onSort={handleSort}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
+        onRefresh={refetch}
       />
     </>
   );
