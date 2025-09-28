@@ -64,6 +64,11 @@ const ClienteShow: React.FC = () => {
     }
   };
 
+  // Função para verificar se todos os itens selecionados estão pagos
+  const todosItensPagos = (selectedItems: any[]) => {
+    return selectedItems.every(item => item.status === 'pago');
+  };
+
   const handleTopoActionsTitulos = (action: string, selectedItems: any[]) => {
     if (selectedItems.length === 0) return;
     
@@ -79,8 +84,15 @@ const ClienteShow: React.FC = () => {
         }
         break;
       case 'marcar_pago':
-        // TODO: Implementar ação de marcar como pago
-        success('Funcionalidade será implementada em breve');
+        if (selectedItems.length === 1) {
+          const parcela = selectedItems[0];
+          if (parcela.status === 'pago') {
+            error('Esta parcela já está marcada como paga');
+            return;
+          }
+          // TODO: Implementar ação de marcar como pago
+          success('Funcionalidade será implementada em breve');
+        }
         break;
     }
   };
@@ -448,7 +460,8 @@ const ClienteShow: React.FC = () => {
                   bulkActions={[
                     {
                       label: "Marcar como Pago",
-                      action: (selectedItems) => handleTopoActionsTitulos('marcar_pago', selectedItems)
+                      action: (selectedItems) => handleTopoActionsTitulos('marcar_pago', selectedItems),
+                      disabled: (selectedItems) => todosItensPagos(selectedItems)
                     },
                     {
                       label: "Imprimir",

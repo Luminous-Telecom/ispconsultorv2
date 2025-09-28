@@ -216,12 +216,22 @@ const CarnesShow: React.FC = () => {
   ];
 
   // Funções para ações em lote
+  // Função para verificar se todos os itens selecionados estão pagos
+  const todosItensPagos = (selectedItems: any[]) => {
+    return selectedItems.every(item => item.status === 'pago');
+  };
+
   const handleTopoActions = (action: string, selectedItems: any[]) => {
     if (selectedItems.length === 0) return;
     
     switch (action) {
       case 'marcar_pago':
         if (selectedItems.length === 1) {
+          const parcela = selectedItems[0];
+          if (parcela.status === 'pago') {
+            error('Esta parcela já está marcada como paga');
+            return;
+          }
           handleMarcarPago(selectedItems[0].id);
         }
         break;
@@ -530,7 +540,8 @@ const CarnesShow: React.FC = () => {
                 bulkActions={[
                   {
                     label: "Marcar como Pago",
-                    action: (selectedItems) => handleTopoActions('marcar_pago', selectedItems)
+                    action: (selectedItems) => handleTopoActions('marcar_pago', selectedItems),
+                    disabled: (selectedItems) => todosItensPagos(selectedItems)
                   },
                   {
                     label: "Imprimir",
