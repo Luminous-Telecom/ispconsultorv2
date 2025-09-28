@@ -930,10 +930,18 @@ export class CarneController {
 
       const banco = await carneObj.getBanco();
       
-      if (!banco || banco.tipo_banco !== 'efi') {
+      if (!banco) {
         res.status(400).json({ 
           success: false,
-          error: 'Apenas carnês EFI podem ser registrados no banco' 
+          error: 'Banco não encontrado para este carnê' 
+        });
+        return;
+      }
+
+      if (!banco.client_id_producao || !banco.client_secret_producao) {
+        res.status(400).json({ 
+          success: false,
+          error: `Banco '${banco.nome}' não possui credenciais configuradas. Configure Client ID e Client Secret para registrar carnês.` 
         });
         return;
       }
@@ -995,7 +1003,7 @@ export class CarneController {
         ]
       });
       
-      if (!carne) {
+      if (!carneObj) {
         res.status(404).json({ 
           success: false,
           error: 'Carnê não encontrado' 
@@ -1003,34 +1011,50 @@ export class CarneController {
         return;
       }
 
-      const banco = await carne.getBanco();
+      const banco = await carneObj.getBanco();
       
-      if (!banco || banco.tipo_banco !== 'efi' || !carne.carnet_id) {
+      if (!banco) {
         res.status(400).json({ 
           success: false,
-          error: 'Apenas carnês EFI com carnet_id podem ser cancelados' 
+          error: 'Banco não encontrado para este carnê' 
+        });
+        return;
+      }
+
+      if (!banco.client_id_producao || !banco.client_secret_producao) {
+        res.status(400).json({ 
+          success: false,
+          error: `Banco '${banco.nome}' não possui credenciais configuradas. Configure Client ID e Client Secret para cancelar carnês.` 
+        });
+        return;
+      }
+
+      if (!carneObj.carnet_id) {
+        res.status(400).json({ 
+          success: false,
+          error: 'Carnê não está registrado no banco' 
         });
         return;
       }
 
       // Cancelar carnê via API da EFI
-      const resultado = await BancoApiService.cancelarCarne(carne);
+      const resultado = await BancoApiService.cancelarCarne(carneObj);
       
       if (resultado.success) {
         // Marcar todas as parcelas como canceladas
-        const parcelas = await carne.getParcelas();
+        const parcelas = await carneObj.getParcelas();
         for (const parcela of parcelas) {
           await parcela.update({ status: 'cancelado' });
         }
 
         // Atualizar status do carnê
-        await carne.update({ status: 'cancelado' });
+        await carneObj.update({ status: 'cancelado' });
 
         res.json({
           success: true,
           message: 'Carnê cancelado no banco com sucesso!',
           data: {
-            carnet_id: carne.carnet_id,
+            carnet_id: carneObj.carnet_id,
             status: 'cancelado',
             parcelas_canceladas: parcelas.length
           }
