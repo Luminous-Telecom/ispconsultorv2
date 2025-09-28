@@ -67,8 +67,6 @@ function App() {
             <Route path="carnes/create" element={<CarnesCreate />} />
             <Route path="carnes/:id" element={<CarnesShow />} />
             <Route path="carnes/:id/edit" element={<CarnesEdit />} />
-            <Route path="carnes/:carneId/imprimir" element={<div>Funcionalidade de impressão será implementada</div>} />
-            <Route path="carnes/:carneId/pdf" element={<div>Funcionalidade de PDF será implementada</div>} />
             <Route path="carnes/:carneId/parcelas" element={<CarneParcelas />} />
             <Route path="carne-parcelas" element={<CarneParcelas />} />
             <Route path="carne-parcelas/:id/edit" element={<CarneParcelasEdit />} />

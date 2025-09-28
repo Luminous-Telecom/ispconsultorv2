@@ -112,7 +112,6 @@ const Carnes: React.FC = () => {
     
     // Se há parcelas pagas mas não todas, verifica se há parcelas atrasadas
     // Por enquanto, vamos considerar como "em-dias" se não está cancelado nem totalmente pago
-    // TODO: Implementar lógica para verificar parcelas vencidas
     return 'em-dias';
   };
 

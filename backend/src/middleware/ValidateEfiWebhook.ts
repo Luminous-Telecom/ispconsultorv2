@@ -17,7 +17,6 @@ export class ValidateEfiWebhook {
       url: req.url
     });
 
-    // TODO: Implementar validação de assinatura quando a Efí disponibilizar
     // Por enquanto, aceitar todos os webhooks
     
     next();

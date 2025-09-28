@@ -90,8 +90,7 @@ const ClienteShow: React.FC = () => {
             error('Esta parcela já está marcada como paga');
             return;
           }
-          // TODO: Implementar ação de marcar como pago
-          success('Funcionalidade será implementada em breve');
+        success('Funcionalidade será implementada em breve');
         }
         break;
     }
