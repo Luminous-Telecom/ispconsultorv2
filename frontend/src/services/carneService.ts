@@ -77,16 +77,6 @@ export class CarneService {
     }
   }
 
-  // Gerar títulos no banco
-  static async gerarTitulos(id: number): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await apiService.post<{ success: boolean; message: string }>(`/carnes/${id}/gerar-titulos`);
-      return response;
-    } catch (error) {
-      console.error('Erro ao gerar títulos:', error);
-      throw error;
-    }
-  }
 
   // Consultar status no banco
   static async consultarStatus(id: number): Promise<{ status: string; message: string }> {

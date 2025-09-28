@@ -12,7 +12,6 @@ const CarnesShow: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isConsulting, setIsConsulting] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -43,19 +42,6 @@ const CarnesShow: React.FC = () => {
     refetchOnWindowFocus: false
   });
 
-  // Mutation para gerar títulos
-  const gerarTitulosMutation = useMutation({
-    mutationFn: () => CarneService.gerarTitulos(Number(id)),
-    onSuccess: (response: any) => {
-      success('Títulos gerados com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['carne', id] });
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas', id] });
-    },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao gerar títulos');
-    }
-  });
-
   // Mutation para consultar status
   const consultarStatusMutation = useMutation({
     mutationFn: () => CarneService.consultarStatus(Number(id)),
@@ -81,17 +67,6 @@ const CarnesShow: React.FC = () => {
       error(err.response?.data?.message || 'Erro ao cancelar carnê no banco');
     }
   });
-
-  const handleGerarTitulos = async () => {
-    if (window.confirm('Gerar carnês individuais para todas as parcelas?')) {
-      setIsGenerating(true);
-      try {
-        await gerarTitulosMutation.mutateAsync();
-      } finally {
-        setIsGenerating(false);
-      }
-    }
-  };
 
   const handleConsultarStatus = async () => {
     setIsConsulting(true);
@@ -450,24 +425,6 @@ const CarnesShow: React.FC = () => {
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="card-title mb-0">Parcelas</h5>
               <div className="btn-group">
-                <button 
-                  type="button" 
-                  className="btn btn-warning btn-sm"
-                  onClick={handleGerarTitulos}
-                  disabled={isGenerating || gerarTitulosMutation.isPending}
-                >
-                  {isGenerating || gerarTitulosMutation.isPending ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                      Gerando...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-credit-card"></i> Gerar Carnês Individuais
-                    </>
-                  )}
-                </button>
-                
                 <button 
                   type="button" 
                   className="btn btn-primary btn-sm"

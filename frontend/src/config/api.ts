@@ -36,7 +36,6 @@ export const API_ENDPOINTS = {
   // Carnês
   CARNES: '/carnes',
   CARNES_ATIVOS: '/carnes/ativos',
-  CARNE_GERAR_TITULOS: (carneId: number) => `/carnes/${carneId}/gerar-titulos`,
   CARNE_CONSULTAR_STATUS: (carneId: number) => `/carnes/${carneId}/consultar-status`,
   
   // Parcelas

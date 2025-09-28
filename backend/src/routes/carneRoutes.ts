@@ -11,7 +11,6 @@ router.get('/ativos', CarneController.findAtivos);
 // Rotas específicas de carnê (seguindo padrão PHP) - DEVEM VIR ANTES DE /:id
 router.get('/:carne/imprimir', CarneController.imprimir);
 router.get('/:carne/pdf', CarneController.pdf);
-router.post('/:carne/gerar-titulos', CarneController.gerarTitulos);
 router.post('/:carne/consultar-status', CarneController.consultarStatus);
 router.post('/:carne/registrar-banco', CarneController.registrarNoBanco);
 router.post('/:carne/cancelar-banco', CarneController.cancelarNoBanco);
