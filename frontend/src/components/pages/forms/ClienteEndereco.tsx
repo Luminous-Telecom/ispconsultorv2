@@ -9,7 +9,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
   cliente, 
   onDataChange 
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
 
   const handleEdit = () => {
     setIsEditing(!isEditing);
