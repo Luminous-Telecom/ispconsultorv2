@@ -1,0 +1,119 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { CarneParcelaService } from '../services/carneParcelaService';
+import { useNotificationContext } from '../contexts/NotificationContext';
+import { CACHE_CONFIG } from '../config/api';
+
+const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
+
+// Hook para listar parcelas
+export const useCarneParcelas = (filters: any = {}) => {
+  return useQuery({
+    queryKey: ['carne-parcelas', filters],
+    queryFn: () => CarneParcelaService.list(filters),
+    staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual
+    gcTime: DEFAULT_CACHE_TIME,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+  });
+};
+
+// Hook para buscar parcela por ID
+export const useCarneParcela = (id: number) => {
+  return useQuery({
+    queryKey: ['carne-parcela', id],
+    queryFn: () => CarneParcelaService.getById(id),
+    enabled: !!id,
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_CACHE_TIME,
+  });
+};
+
+// Hook para buscar parcelas por carnê
+export const useCarneParcelasByCarne = (carneId: number) => {
+  return useQuery({
+    queryKey: ['carne-parcelas-carne', carneId],
+    queryFn: () => CarneParcelaService.findByCarne(carneId),
+    enabled: !!carneId,
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_CACHE_TIME,
+  });
+};
+
+// Hook para buscar parcelas vencidas
+export const useCarneParcelasVencidas = () => {
+  return useQuery({
+    queryKey: ['carne-parcelas-vencidas'],
+    queryFn: () => CarneParcelaService.findVencidas(),
+    staleTime: DEFAULT_STALE_TIME,
+    gcTime: DEFAULT_CACHE_TIME,
+  });
+};
+
+// Hook para marcar parcela como paga
+export const useMarcarParcelaPago = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+
+  return useMutation({
+    mutationFn: ({ id, dataPagamento }: { id: number; dataPagamento?: string }) =>
+      CarneParcelaService.marcarPago(id, dataPagamento),
+    onSuccess: (response, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas-carne'] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas-vencidas'] });
+      queryClient.invalidateQueries({ queryKey: ['carnes'] });
+      
+      success(response.message);
+      
+      // Se um novo carnê foi gerado, invalidar também as queries de carnês
+      if (response.novo_carne_gerado) {
+        queryClient.invalidateQueries({ queryKey: ['carnes'] });
+        queryClient.invalidateQueries({ queryKey: ['carnes-ativos'] });
+      }
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao marcar parcela como paga');
+    },
+  });
+};
+
+// Hook para desmarcar pagamento da parcela
+export const useDesmarcarParcelaPago = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+
+  return useMutation({
+    mutationFn: (id: number) => CarneParcelaService.desmarcarPago(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas-carne'] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas-vencidas'] });
+      success('Pagamento desmarcado com sucesso!');
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao desmarcar pagamento da parcela');
+    },
+  });
+};
+
+// Hook para atualizar parcela
+export const useUpdateCarneParcela = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      CarneParcelaService.update(id, data),
+    onSuccess: (response, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
+      queryClient.invalidateQueries({ queryKey: ['carne-parcelas-carne'] });
+      success(response.message);
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao atualizar parcela');
+    },
+  });
+};

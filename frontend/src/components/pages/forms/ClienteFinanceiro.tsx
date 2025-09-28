@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import DataTable from '../../common/DataTable';
+import { useCarnes } from '../../../hooks/useCarnes';
+import { useCarneParcelas } from '../../../hooks/useCarneParcelas';
+import { useMarcarParcelaPago } from '../../../hooks/useCarneParcelas';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { getApiUrl } from '../../../config/api';
 
 interface ClienteFinanceiroProps {
   cliente: any;
@@ -11,33 +16,47 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   onDataChange 
 }) => {
   const [activeTab, setActiveTab] = useState(0);
+  const { addNotification } = useNotificationContext();
 
   const handleTabChange = (tabIndex: number) => {
     setActiveTab(tabIndex);
   };
 
-  // Mock data para demonstração
-  const mockCarnes = [
-    {
-      id: 1,
-      numero_carne: 'CAR2024001',
-      status: 'ativo',
-      valor_total: 1500.00,
-      data_vencimento: '2024-12-15',
-      banco: { nome: 'EFI' }
-    }
-  ];
+  // Buscar carnês do cliente
+  const { data: carnesData, isLoading: carnesLoading, refetch: refetchCarnes } = useCarnes({ 
+    cliente_id: cliente?.id 
+  });
+  
+  // Buscar parcelas do cliente
+  const { data: parcelasData, isLoading: parcelasLoading, refetch: refetchParcelas } = useCarneParcelas({ 
+    cliente_id: cliente?.id 
+  });
+  
+  const marcarPagoMutation = useMarcarParcelaPago();
 
-  const mockParcelas = [
-    {
-      id: 1,
-      numero_parcela: 1,
-      status: 'pago',
-      valor_parcela: 125.00,
-      data_vencimento: '2024-01-15',
-      data_pagamento: '2024-01-10'
+  const carnes = carnesData?.data || [];
+  const parcelas = parcelasData?.data || [];
+
+  const handleMarcarPago = async (selectedItems: any[]) => {
+    try {
+      for (const item of selectedItems) {
+        if (item.status !== 'pago') {
+          await marcarPagoMutation.mutateAsync({ id: item.id });
+        }
+      }
+      addNotification('success', 'Parcelas marcadas como pagas com sucesso!');
+      refetchParcelas();
+    } catch (error) {
+      console.error('Erro ao marcar parcelas como pagas:', error);
     }
-  ];
+  };
+
+  const handleImprimirParcela = (selectedItems: any[]) => {
+    if (selectedItems.length > 0) {
+      const url = getApiUrl(`/boleto/web/${selectedItems[0].id}`);
+      window.open(url, '_blank');
+    }
+  };
 
   const carnesColumns = [
     { key: 'id', label: 'ID', sortable: true },
@@ -125,7 +144,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               type="button"
               role="tab"
             >
-              Carnês ({mockCarnes.length})
+              Carnês ({carnes.length})
             </button>
           </li>
           <li className="nav-item" role="presentation">
@@ -135,7 +154,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               type="button"
               role="tab"
             >
-              Títulos Individuais ({mockParcelas.length})
+              Títulos Individuais ({parcelas.length})
             </button>
           </li>
         </ul>
@@ -156,9 +175,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
             </div>
             
             <DataTable
-              data={mockCarnes}
+              data={carnes}
               columns={carnesColumns}
-              isLoading={false}
+              isLoading={carnesLoading}
               limit={10}
               setLimit={() => {}}
               setPage={() => {}}
@@ -194,21 +213,21 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
             </div>
             
             <DataTable
-              data={mockParcelas}
+              data={parcelas}
               columns={parcelasColumns}
-              isLoading={false}
+              isLoading={parcelasLoading}
               limit={10}
               setLimit={() => {}}
               setPage={() => {}}
               bulkActions={[
                 {
                   label: 'Marcar como Pago',
-                  action: (selectedItems) => console.log('Marcar como pago:', selectedItems),
+                  action: handleMarcarPago,
                   disabled: (selectedItems) => selectedItems.every(item => item.status === 'pago')
                 },
                 {
                   label: 'Imprimir',
-                  action: (selectedItems) => console.log('Imprimir parcelas:', selectedItems)
+                  action: handleImprimirParcela
                 }
               ]}
             />

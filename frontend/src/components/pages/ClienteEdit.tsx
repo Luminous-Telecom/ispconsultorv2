@@ -77,7 +77,10 @@ const ClienteEdit: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      await ClienteService.update(Number(id), clienteData);
+      // Remove campos que não devem ser enviados na atualização
+      const { id: _, created_at, updated_at, createdAt, updatedAt, carnes, contratos, bancoBoleto, ...updateData } = clienteData;
+      
+      await ClienteService.update(Number(id), updateData);
       addNotification('success', 'Cliente atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['cliente', id] });
       setHasChanges(false);
