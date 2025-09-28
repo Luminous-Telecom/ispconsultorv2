@@ -27,16 +27,16 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
 
   return (
     <div className="card">
-      <div className="card-body p-3">
-        <div className="mb-2">
-          <h6 className="card-title mb-0">
+      <div className="card-body p-2">
+        <div className="mb-1">
+          <small className="card-title mb-0 fw-bold">
             Contatos do Cliente
-          </h6>
+          </small>
         </div>
 
-        <div className="row g-2">
+        <div className="row g-1">
           <div className="col-md-6">
-            <label className="form-label small">Telefone Residencial</label>
+            <label className="form-label small text-muted">Telefone Residencial</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-telephone"></i>
@@ -52,7 +52,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Telefone Comercial</label>
+            <label className="form-label small text-muted">Telefone Comercial</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-telephone"></i>
@@ -68,7 +68,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Ramal</label>
+            <label className="form-label small text-muted">Ramal</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -79,7 +79,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Operadora Celular</label>
+            <label className="form-label small text-muted">Operadora Celular</label>
             <select
               className="form-select"
               value={cliente.operadora_celular || ''}
@@ -96,7 +96,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Telefone Celular</label>
+            <label className="form-label small text-muted">Telefone Celular</label>
             <div className="input-group">
               <input
                 type="text"
@@ -112,7 +112,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">WhatsApp</label>
+            <label className="form-label small text-muted">WhatsApp</label>
             <div className="input-group">
               <input
                 type="text"
@@ -128,7 +128,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Email Principal</label>
+            <label className="form-label small text-muted">Email Principal</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-envelope"></i>
@@ -147,7 +147,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Contato</label>
+            <label className="form-label small text-muted">Contato</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -158,7 +158,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Website</label>
+            <label className="form-label small text-muted">Website</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -169,7 +169,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Skype</label>
+            <label className="form-label small text-muted">Skype</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -180,7 +180,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Facebook</label>
+            <label className="form-label small text-muted">Facebook</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -195,7 +195,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Login</label>
+            <label className="form-label small text-muted">Login</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-envelope"></i>
@@ -211,7 +211,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Senha</label>
+            <label className="form-label small text-muted">Senha</label>
             <input
               type="password"
               className="form-control form-control-sm"

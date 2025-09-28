@@ -27,16 +27,16 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
 
   return (
     <div className="card">
-      <div className="card-body p-3">
-        <div className="mb-2">
-          <h6 className="card-title mb-0">
+      <div className="card-body p-2">
+        <div className="mb-1">
+          <small className="card-title mb-0 fw-bold">
             Dados Básicos do Cliente
-          </h6>
+          </small>
         </div>
 
-        <div className="row g-2">
+        <div className="row g-1">
           <div className="col-md-6">
-            <label className="form-label small">ID</label>
+            <label className="form-label small text-muted">ID</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -97,7 +97,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Razão Social</label>
+            <label className="form-label small text-muted">Razão Social</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -108,7 +108,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Nome Fantasia</label>
+            <label className="form-label small text-muted">Nome Fantasia</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -119,7 +119,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">
+            <label className="form-label small text-muted">
               {cliente.tipo_pessoa === 'juridica' ? 'CNPJ' : 'CPF'}
             </label>
             <input
@@ -132,7 +132,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">
+            <label className="form-label small text-muted">
               {cliente.tipo_pessoa === 'juridica' ? 'Inscrição Estadual' : 'RG'}
             </label>
             <input
@@ -145,7 +145,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Email</label>
+            <label className="form-label small text-muted">Email</label>
             <input
               type="email"
               className="form-control form-control-sm"
@@ -156,7 +156,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Telefone</label>
+            <label className="form-label small text-muted">Telefone</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -167,7 +167,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">WhatsApp</label>
+            <label className="form-label small text-muted">WhatsApp</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -178,7 +178,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-12">
-            <label className="form-label small">Observações</label>
+            <label className="form-label small text-muted">Observações</label>
             <textarea
               className="form-control form-control-sm"
               rows={3}

@@ -131,10 +131,10 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 
   return (
     <div className="card">
-      <div className="card-body p-3">
-        <h6 className="card-title mb-2">
+      <div className="card-body p-2">
+        <small className="card-title mb-1 fw-bold">
           Financeiro do Cliente
-        </h6>
+        </small>
 
         <ul className="nav nav-tabs" role="tablist">
           <li className="nav-item" role="presentation">
@@ -199,8 +199,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
           </div>
 
           <div className={`tab-pane fade ${activeTab === 1 ? 'show active' : ''}`}>
-            <div className="d-flex justify-content-between align-items-center mb-2 mt-2">
-              <small className="mb-0">Títulos Individuais</small>
+            <div className="d-flex justify-content-between align-items-center mb-1 mt-1">
+              <small className="mb-0 text-muted">Títulos Individuais</small>
               <div className="btn-group">
                 <button className="btn btn-primary btn-sm">
                   <i className="bi bi-plus me-1"></i>

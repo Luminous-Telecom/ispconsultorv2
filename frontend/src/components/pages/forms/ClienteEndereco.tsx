@@ -27,16 +27,16 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
 
   return (
     <div className="card">
-      <div className="card-body p-3">
-        <div className="mb-2">
-          <h6 className="card-title mb-0">
+      <div className="card-body p-2">
+        <div className="mb-1">
+          <small className="card-title mb-0 fw-bold">
             Endereço do Cliente
-          </h6>
+          </small>
         </div>
 
-        <div className="row g-2">
+        <div className="row g-1">
           <div className="col-md-4">
-            <label className="form-label small">Condomínio</label>
+            <label className="form-label small text-muted">Condomínio</label>
             <div className="input-group">
               <input
                 type="text"
@@ -52,7 +52,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label small">Bloco</label>
+            <label className="form-label small text-muted">Bloco</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -63,7 +63,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label small">Apartamento</label>
+            <label className="form-label small text-muted">Apartamento</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -74,7 +74,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label small">CEP</label>
+            <label className="form-label small text-muted">CEP</label>
             <div className="input-group">
               <input
                 type="text"
@@ -90,7 +90,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-8">
-            <label className="form-label small">Referência</label>
+            <label className="form-label small text-muted">Referência</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-geo-alt"></i>
@@ -106,7 +106,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-8">
-            <label className="form-label small">Endereço</label>
+            <label className="form-label small text-muted">Endereço</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-geo-alt"></i>
@@ -128,7 +128,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label small">Número</label>
+            <label className="form-label small text-muted">Número</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -139,7 +139,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Complemento</label>
+            <label className="form-label small text-muted">Complemento</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -150,7 +150,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Bairro</label>
+            <label className="form-label small text-muted">Bairro</label>
             <input
               type="text"
               className="form-control form-control-sm"
@@ -161,7 +161,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Cidade</label>
+            <label className="form-label small text-muted">Cidade</label>
             <div className="input-group">
               <input
                 type="text"
@@ -177,7 +177,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small">Estado</label>
+            <label className="form-label small text-muted">Estado</label>
             <input
               type="text"
               className="form-control form-control-sm"

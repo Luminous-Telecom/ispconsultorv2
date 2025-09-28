@@ -86,11 +86,11 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
   return (
     <div className="card">
-      <div className="card-body p-3">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <h6 className="card-title mb-0">
+      <div className="card-body p-2">
+        <div className="d-flex justify-content-between align-items-center mb-1">
+          <small className="card-title mb-0 fw-bold">
             Contratos do Cliente
-          </h6>
+          </small>
           <button
             className="btn btn-primary"
             onClick={() => handleBulkAction('novo')}

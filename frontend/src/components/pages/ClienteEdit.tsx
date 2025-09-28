@@ -29,7 +29,7 @@ function TabPanel(props: TabPanelProps) {
       {...other}
     >
          {value === index && (
-           <div className="p-2">
+           <div className="p-1">
              {children}
            </div>
          )}
@@ -137,7 +137,7 @@ const ClienteEdit: React.FC = () => {
   }
 
      return (
-       <div className="p-2">
+       <div className="p-1">
          {/* Sistema de abas */}
          <div className="card">
         {/* Botões de ação no cabeçalho do card */}
