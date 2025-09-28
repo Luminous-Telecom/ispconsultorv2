@@ -68,7 +68,6 @@ export class WorkerMonitor extends EventEmitter {
     }
 
     this.isRunning = true;
-    console.log('📊 Iniciando WorkerMonitor...');
 
     // Configurar verificação de saúde
     this.healthCheckInterval = setInterval(async () => {
@@ -94,7 +93,6 @@ export class WorkerMonitor extends EventEmitter {
     });
 
     this.emit('started');
-    console.log('✅ WorkerMonitor iniciado com sucesso');
   }
 
   /**
@@ -114,7 +112,6 @@ export class WorkerMonitor extends EventEmitter {
     }
 
     this.emit('stopped');
-    console.log('✅ WorkerMonitor parado com sucesso');
   }
 
   /**

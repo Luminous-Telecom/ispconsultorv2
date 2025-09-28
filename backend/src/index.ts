@@ -76,7 +76,6 @@ if (process.env.NODE_ENV === 'production') {
   });
   app.use('/api/', limiter);
 } else {
-  console.log('🚀 Rate limiting desabilitado para desenvolvimento');
 }
 
 // Middleware de parsing
@@ -166,7 +165,6 @@ const startServer = async () => {
   try {
     // Conectar ao banco de dados
     await sequelize.authenticate();
-    console.log('✅ Conexão com banco de dados estabelecida com sucesso');
     
     // Sincronizar modelos (apenas em desenvolvimento)
     // Temporariamente desabilitado para evitar erros de foreign key
@@ -177,9 +175,6 @@ const startServer = async () => {
     
     // Iniciar servidor
     app.listen(PORT, async () => {
-      console.log(`🚀 Servidor rodando na porta ${PORT}`);
-      console.log(`📊 Health check: /health`);
-      console.log(`🌐 API Base URL: /api`);
       
       // Iniciar o agendador de rotinas
       try {

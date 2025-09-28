@@ -44,7 +44,6 @@ export class WorkerManager extends EventEmitter {
     }
 
     this.isRunning = true;
-    console.log('🚀 Iniciando WorkerManager...');
 
     // Verificar rotinas pendentes na inicialização
     await this.processPendingRoutines();
@@ -60,7 +59,6 @@ export class WorkerManager extends EventEmitter {
     }, this.config.checkInterval);
 
     this.emit('started');
-    console.log('✅ WorkerManager iniciado com sucesso');
   }
 
   /**
@@ -92,7 +90,6 @@ export class WorkerManager extends EventEmitter {
 
     this.activeExecutions.clear();
     this.emit('stopped');
-    console.log('✅ WorkerManager parado com sucesso');
   }
 
   /**
@@ -197,7 +194,6 @@ export class WorkerManager extends EventEmitter {
         // Atualizar próxima execução
         await this.updateNextExecution(routine);
         
-        console.log(`✅ Rotina ${routine.id} executada com sucesso`);
         return;
 
       } catch (error: any) {

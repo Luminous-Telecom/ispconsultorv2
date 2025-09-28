@@ -358,11 +358,6 @@ export class SchedulerService {
     
     // Recarregar a rotina do banco para verificar se foi salva
     const updatedRoutine = await ScheduledRoutine.findByPk(id);
-    console.log(`🔍 Rotina após atualização:`, {
-      id: updatedRoutine?.id,
-      hora_execucao: updatedRoutine?.hora_execucao,
-      proxima_execucao: updatedRoutine?.proxima_execucao
-    });
     
     // Reagendar se a rotina estiver ativa
     if (routine.ativo) {
@@ -371,7 +366,6 @@ export class SchedulerService {
       this.unscheduleRoutine(id);
     }
 
-    console.log(`✅ Rotina atualizada: ${routine.nome} (ID: ${id})`);
     return routine;
   }
 
@@ -474,7 +468,6 @@ export class SchedulerService {
       });
     }
     
-    console.log('✅ Próxima execução calculada:', nextExecution.toISOString());
     return nextExecution;
   }
 

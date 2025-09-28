@@ -120,15 +120,9 @@ export class SchedulerController {
       const { id } = req.params;
       const updateData = req.body;
 
-      console.log(`🔄 Controller recebeu atualização para rotina ${id}:`, updateData);
 
       const routine = await this.schedulerService.updateRoutine(Number(id), updateData);
 
-      console.log(`✅ Controller retornando rotina atualizada:`, {
-        id: routine.id,
-        hora_execucao: routine.hora_execucao,
-        proxima_execucao: routine.proxima_execucao
-      });
 
       res.json({
         success: true,
