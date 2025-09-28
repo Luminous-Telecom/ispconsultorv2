@@ -1,351 +1,268 @@
-import React, { useState, useEffect } from 'react';
-import { QCard, QCardSection, QInput, QBtn, QIcon, QField, QSeparator, QSelect, QRadio } from 'quasar';
+import React, { useState } from 'react';
 
 interface ClienteContatoProps {
   cliente: any;
-  isEditing: boolean;
-  onEdit: () => void;
-  onDataChange: () => void;
+  onDataChange: (field: string, value: any) => void;
 }
 
-const ClienteContato: React.FC<ClienteContatoProps> = ({
-  cliente,
-  isEditing,
-  onEdit,
-  onDataChange
+const ClienteContato: React.FC<ClienteContatoProps> = ({ 
+  cliente, 
+  onDataChange 
 }) => {
-  const [formData, setFormData] = useState({
-    telefone_residencial: cliente?.telefone || '',
-    telefone_comercial: '',
-    ramal: '',
-    operadora_celular: '',
-    telefone_celular: cliente?.whatsapp || '',
-    whatsapp: cliente?.whatsapp || '',
-    email_principal: cliente?.email || '',
-    contato: '',
-    website: '',
-    skype: '',
-    facebook: '',
-    // Central do assinante
-    login: cliente?.email || '',
-    senha: '•••••••••',
-    permitir_acesso_automatico: 'nao'
-  });
-
-  // Atualizar dados quando cliente mudar
-  useEffect(() => {
-    if (cliente) {
-      setFormData({
-        telefone_residencial: cliente.telefone || '',
-        telefone_comercial: '',
-        ramal: '',
-        operadora_celular: '',
-        telefone_celular: cliente.whatsapp || '',
-        whatsapp: cliente.whatsapp || '',
-        email_principal: cliente.email || '',
-        contato: '',
-        website: '',
-        skype: '',
-        facebook: '',
-        login: cliente.email || '',
-        senha: '•••••••••',
-        permitir_acesso_automatico: 'nao'
-      });
-    }
-  }, [cliente]);
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    onDataChange();
-  };
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleEdit = () => {
-    onEdit();
+    setIsEditing(!isEditing);
   };
 
-  const handleEnviarMensagem = () => {
-    console.log('Enviando mensagem para:', formData.telefone_celular);
+  const handleInputChange = (field: string, value: any) => {
+    onDataChange(field, value);
   };
 
-  const handleChamarWhatsapp = () => {
-    console.log('Chamando WhatsApp:', formData.whatsapp);
-  };
-
-  const handleEnviarEmail = () => {
-    console.log('Enviando email para:', formData.email_principal);
-  };
+  if (!cliente) {
+    return (
+      <div>Carregando dados do cliente...</div>
+    );
+  }
 
   return (
-    <div className="q-gutter-md">
-      {/* Cabeçalho da seção */}
-      <div className="row items-center">
-        <div className="col">
-          <div className="text-h6">Informações de Contato</div>
+    <div className="card">
+      <div className="card-body">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="card-title mb-0">
+            Contatos do Cliente
+          </h5>
+          <button
+            className="btn btn-outline-primary"
+            onClick={handleEdit}
+          >
+            <i className={`bi ${isEditing ? 'bi-check' : 'bi-pencil'} me-1`}></i>
+            {isEditing ? 'Salvar' : 'Editar'}
+          </button>
         </div>
-        <div className="col-auto">
-          {!isEditing && (
-            <QBtn
-              color="primary"
-              icon="edit"
-              label="Editar"
-              @click={handleEdit}
-            />
-          )}
-        </div>
-      </div>
 
-      <QSeparator />
+        <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label">Telefone Residencial</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-telephone"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.telefone_residencial || ''}
+                onChange={(e) => handleInputChange('telefone_residencial', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
 
-      {/* Telefones */}
-      <div className="row q-gutter-md">
-        <div className="col-md-4">
-          <QField label="Telefone residencial" stack-label>
-            <QInput
-              v-model={formData.telefone_residencial}
-              :disable={!isEditing}
-              filled
-              mask="(##) ####-####"
-              @update:model-value={(val) => handleInputChange('telefone_residencial', val)}
-            />
-          </QField>
-        </div>
-        <div className="col-md-4">
-          <QField label="Telefone comercial" stack-label>
-            <QInput
-              v-model={formData.telefone_comercial}
-              :disable={!isEditing}
-              filled
-              mask="(##) ####-####"
-              @update:model-value={(val) => handleInputChange('telefone_comercial', val)}
-            />
-          </QField>
-        </div>
-        <div className="col-md-4">
-          <QField label="Ramal" stack-label>
-            <QInput
-              v-model={formData.ramal}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('ramal', val)}
-            />
-          </QField>
-        </div>
-      </div>
+          <div className="col-md-6">
+            <label className="form-label">Telefone Comercial</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-telephone"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.telefone_comercial || ''}
+                onChange={(e) => handleInputChange('telefone_comercial', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
 
-      {/* Operadora e Celular */}
-      <div className="row q-gutter-md">
-        <div className="col-md-4">
-          <QField label="Operadora celular" stack-label>
-            <QSelect
-              v-model={formData.operadora_celular}
-              :disable={!isEditing}
-              filled
-              :options="['Vivo', 'Claro', 'Tim', 'Oi', 'Outros']"
-              placeholder="Buscar..."
-              @update:model-value={(val) => handleInputChange('operadora_celular', val)}
+          <div className="col-md-6">
+            <label className="form-label">Ramal</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.ramal || ''}
+              onChange={(e) => handleInputChange('ramal', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Operadora Celular</label>
+            <select
+              className="form-select"
+              value={cliente.operadora_celular || ''}
+              onChange={(e) => handleInputChange('operadora_celular', e.target.value)}
+              disabled={!isEditing}
             >
-              <template v-slot:no-option>
-                <div className="text-center q-pa-md">
-                  <div>Nenhuma operadora encontrada</div>
-                </div>
-              </template>
-            </QSelect>
-          </QField>
-        </div>
-        <div className="col-md-8">
-          <QField label="Telefone celular" stack-label>
-            <QInput
-              v-model={formData.telefone_celular}
-              :disable={!isEditing}
-              filled
-              mask="(##) #####-####"
-              @update:model-value={(val) => handleInputChange('telefone_celular', val)}
-            >
-              <template v-slot:append>
-                <QBtn
-                  flat
-                  dense
-                  color="primary"
-                  label="Enviar mensagem"
-                  @click={handleEnviarMensagem}
-                />
-              </template>
-            </QInput>
-          </QField>
-        </div>
-      </div>
+              <option value="">Selecione...</option>
+              <option value="vivo">Vivo</option>
+              <option value="claro">Claro</option>
+              <option value="tim">TIM</option>
+              <option value="oi">OI</option>
+              <option value="nextel">Nextel</option>
+            </select>
+          </div>
 
-      {/* WhatsApp */}
-      <div className="row q-gutter-md">
-        <div className="col-md-6">
-          <QField label="WhatsApp" stack-label>
-            <QInput
-              v-model={formData.whatsapp}
-              :disable={!isEditing}
-              filled
-              mask="(##) #####-####"
-              @update:model-value={(val) => handleInputChange('whatsapp', val)}
-            >
-              <template v-slot:append>
-                <QBtn
-                  flat
-                  dense
-                  color="primary"
-                  label="Chamar no Whatsapp"
-                  @click={handleChamarWhatsapp}
-                />
-              </template>
-            </QInput>
-          </QField>
-        </div>
-      </div>
+          <div className="col-md-6">
+            <label className="form-label">Telefone Celular</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.telefone_celular || ''}
+                onChange={(e) => handleInputChange('telefone_celular', e.target.value)}
+                disabled={!isEditing}
+              />
+              <button className="btn btn-outline-secondary" type="button">
+                <i className="bi bi-send"></i>
+              </button>
+            </div>
+          </div>
 
-      {/* Email principal */}
-      <div className="row q-gutter-md">
-        <div className="col-md-6">
-          <QField label="E-mail principal" stack-label>
-            <QInput
-              v-model={formData.email_principal}
-              type="email"
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('email_principal', val)}
-            >
-              <template v-slot:prepend>
-                <QIcon name="info" color="primary" />
-              </template>
-              <template v-slot:append>
-                <QBtn
-                  flat
-                  dense
-                  color="primary"
-                  label="Enviar e-mail"
-                  @click={handleEnviarEmail}
-                />
-              </template>
-            </QInput>
-          </QField>
-        </div>
-        <div className="col-md-6">
-          <QField label="Contato" stack-label>
-            <QInput
-              v-model={formData.contato}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('contato', val)}
+          <div className="col-md-6">
+            <label className="form-label">WhatsApp</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.whatsapp || ''}
+                onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+                disabled={!isEditing}
+              />
+              <button className="btn btn-outline-success" type="button">
+                <i className="bi bi-whatsapp"></i>
+              </button>
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Email Principal</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-envelope"></i>
+              </span>
+              <input
+                type="email"
+                className="form-control"
+                value={cliente.email_principal || ''}
+                onChange={(e) => handleInputChange('email_principal', e.target.value)}
+                disabled={!isEditing}
+              />
+              <button className="btn btn-outline-secondary" type="button">
+                <i className="bi bi-send"></i>
+              </button>
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Contato</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.contato || ''}
+              onChange={(e) => handleInputChange('contato', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* Redes sociais */}
-      <div className="row q-gutter-md">
-        <div className="col-md-4">
-          <QField label="Website" stack-label>
-            <QInput
-              v-model={formData.website}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('website', val)}
+          <div className="col-md-6">
+            <label className="form-label">Website</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.website || ''}
+              onChange={(e) => handleInputChange('website', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
-        </div>
-        <div className="col-md-4">
-          <QField label="Skype" stack-label>
-            <QInput
-              v-model={formData.skype}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('skype', val)}
-            />
-          </QField>
-        </div>
-        <div className="col-md-4">
-          <QField label="Facebook" stack-label>
-            <QInput
-              v-model={formData.facebook}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('facebook', val)}
-            />
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* Central do assinante */}
-      <QSeparator className="q-my-lg" />
-      
-      <div className="row items-center q-mb-md">
-        <div className="col">
-          <div className="text-h6">Central do assinante</div>
-        </div>
-      </div>
+          <div className="col-md-6">
+            <label className="form-label">Skype</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.skype || ''}
+              onChange={(e) => handleInputChange('skype', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
 
-      <div className="row q-gutter-md">
-        <div className="col-md-6">
-          <QField label="Login" stack-label>
-            <QInput
-              v-model={formData.login}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('login', val)}
-            >
-              <template v-slot:prepend>
-                <QIcon name="info" color="primary" />
-              </template>
-            </QInput>
-          </QField>
-        </div>
-        <div className="col-md-6">
-          <QField label="Senha" stack-label>
-            <QInput
-              v-model={formData.senha}
+          <div className="col-md-6">
+            <label className="form-label">Facebook</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.facebook || ''}
+              onChange={(e) => handleInputChange('facebook', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-12">
+            <h6 className="mb-3">Centro de Assinantes</h6>
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Login</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-envelope"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.login || ''}
+                onChange={(e) => handleInputChange('login', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Senha</label>
+            <input
               type="password"
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('senha', val)}
+              className="form-control"
+              value={cliente.senha || ''}
+              onChange={(e) => handleInputChange('senha', e.target.value)}
+              disabled={!isEditing}
             />
-            <div className="text-negative text-caption q-mt-xs">
-              Esta é uma das 10 principais senhas comuns
-            </div>
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* Permissões de acesso */}
-      <div className="row q-gutter-md">
-        <div className="col-12">
-          <QField label="Permitir acesso automático" stack-label>
-            <div className="q-gutter-sm">
-              <QRadio
-                v-model={formData.permitir_acesso_automatico}
-                val="sim"
-                label="Sim"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('permitir_acesso_automatico', val)}
-              />
-              <QRadio
-                v-model={formData.permitir_acesso_automatico}
-                val="nao"
-                label="Não"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('permitir_acesso_automatico', val)}
-              />
-              <QRadio
-                v-model={formData.permitir_acesso_automatico}
-                val="padrao"
-                label="Padrão"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('permitir_acesso_automatico', val)}
-              />
-            </div>
-            <template v-slot:hint>
-              <QIcon name="info" color="primary" />
-            </template>
-          </QField>
+          <div className="col-12">
+            <fieldset>
+              <legend className="form-label">Permitir Acesso Automático</legend>
+              <div className="d-flex gap-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="permitir_acesso_automatico"
+                    value="true"
+                    checked={cliente.permitir_acesso_automatico === true}
+                    onChange={(e) => handleInputChange('permitir_acesso_automatico', e.target.value === 'true')}
+                    disabled={!isEditing}
+                  />
+                  <label className="form-check-label">
+                    Sim
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="permitir_acesso_automatico"
+                    value="false"
+                    checked={cliente.permitir_acesso_automatico === false}
+                    onChange={(e) => handleInputChange('permitir_acesso_automatico', e.target.value === 'true')}
+                    disabled={!isEditing}
+                  />
+                  <label className="form-check-label">
+                    Não
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
         </div>
       </div>
     </div>

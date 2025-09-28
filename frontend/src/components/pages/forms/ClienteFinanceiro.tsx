@@ -1,457 +1,220 @@
-import React, { useState, useEffect } from 'react';
-import { QCard, QCardSection, QBtn, QIcon, QField, QSeparator, QTable, QCheckbox } from 'quasar';
-import { useQuery } from '@tanstack/react-query';
-import { CarneService } from '../../../services/carneService';
-import { CarneParcelaService } from '../../../services/carneParcelaService';
-import { getApiUrl } from '../../../config/api';
+import React, { useState } from 'react';
+import DataTable from '../../common/DataTable';
 
 interface ClienteFinanceiroProps {
   cliente: any;
-  isEditing: boolean;
-  onEdit: () => void;
-  onDataChange: () => void;
+  onDataChange: (field: string, value: any) => void;
 }
 
-const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
-  cliente,
-  isEditing,
-  onEdit,
-  onDataChange
+const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({ 
+  cliente, 
+  onDataChange 
 }) => {
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
-  const [activeSubTab, setActiveSubTab] = useState<'carnes' | 'titulos'>('carnes');
+  const [activeTab, setActiveTab] = useState(0);
 
-  // Buscar carnês do cliente
-  const { data: carnes, isLoading: carnesLoading } = useQuery({
-    queryKey: ['carnes', 'cliente', cliente?.id],
-    queryFn: () => CarneService.list({ cliente_id: cliente?.id }),
-    enabled: !!cliente?.id,
-  });
+  const handleTabChange = (tabIndex: number) => {
+    setActiveTab(tabIndex);
+  };
 
-  // Buscar títulos (parcelas) do cliente
-  const { data: titulos, isLoading: titulosLoading } = useQuery({
-    queryKey: ['titulos', 'cliente', cliente?.id],
-    queryFn: () => CarneParcelaService.list({ cliente_id: cliente?.id }),
-    enabled: !!cliente?.id,
-  });
+  // Mock data para demonstração
+  const mockCarnes = [
+    {
+      id: 1,
+      numero_carne: 'CAR2024001',
+      status: 'ativo',
+      valor_total: 1500.00,
+      data_vencimento: '2024-12-15',
+      banco: { nome: 'EFI' }
+    }
+  ];
 
-  // Colunas da tabela de carnês
+  const mockParcelas = [
+    {
+      id: 1,
+      numero_parcela: 1,
+      status: 'pago',
+      valor_parcela: 125.00,
+      data_vencimento: '2024-01-15',
+      data_pagamento: '2024-01-10'
+    }
+  ];
+
   const carnesColumns = [
-    {
-      name: 'select',
-      label: '',
-      field: 'select',
-      align: 'left' as const,
-      sortable: false,
+    { key: 'id', label: 'ID', sortable: true },
+    { key: 'numero_carne', label: 'Número', sortable: true },
+    { 
+      key: 'status', 
+      label: 'Status', 
+      render: (item: any) => (
+        <span className={`badge ${item.status === 'ativo' ? 'bg-success' : item.status === 'pago' ? 'bg-info' : 'bg-secondary'}`}>
+          {item.status}
+        </span>
+      )
     },
+    { key: 'valor_total', label: 'Valor Total', render: (item: any) => `R$ ${item.valor_total?.toFixed(2) || '0.00'}` },
+    { key: 'data_vencimento', label: 'Vencimento', sortable: true },
+    { key: 'banco.nome', label: 'Banco' },
     {
-      name: 'id',
-      label: 'ID',
-      field: 'id',
-      align: 'left' as const,
-      sortable: true,
-    },
-    {
-      name: 'numero_carne',
-      label: 'Número Carnê',
-      field: 'numero_carne',
-      align: 'left' as const,
-      sortable: true,
-    },
-    {
-      name: 'valor_total',
-      label: 'Valor Total',
-      field: 'valor_total',
-      align: 'right' as const,
-      sortable: true,
-      format: (val: number) => `R$ ${val.toFixed(2).replace('.', ',')}`,
-    },
-    {
-      name: 'quantidade_parcelas',
-      label: 'Parcelas',
-      field: 'quantidade_parcelas',
-      align: 'center' as const,
-      sortable: true,
-    },
-    {
-      name: 'status',
-      label: 'Status',
-      field: 'status',
-      align: 'center' as const,
-      sortable: true,
-    },
-    {
-      name: 'data_vencimento_primeira',
-      label: 'Primeiro Vencimento',
-      field: 'data_vencimento_primeira',
-      align: 'center' as const,
-      sortable: true,
-      format: (val: string) => new Date(val).toLocaleDateString('pt-BR'),
-    },
-    {
-      name: 'actions',
+      key: 'actions',
       label: 'Ações',
-      field: 'actions',
-      align: 'center' as const,
-      sortable: false,
-    },
+      render: (item: any) => (
+        <div className="btn-group btn-group-sm">
+          <button className="btn btn-outline-primary" title="Visualizar">
+            <i className="bi bi-eye"></i>
+          </button>
+          <button className="btn btn-outline-secondary" title="Editar">
+            <i className="bi bi-pencil"></i>
+          </button>
+          <button className="btn btn-outline-info" title="Imprimir">
+            <i className="bi bi-printer"></i>
+          </button>
+        </div>
+      )
+    }
   ];
 
-  // Colunas da tabela de títulos
-  const titulosColumns = [
-    {
-      name: 'select',
-      label: '',
-      field: 'select',
-      align: 'left' as const,
-      sortable: false,
+  const parcelasColumns = [
+    { key: 'id', label: 'ID', sortable: true },
+    { key: 'numero_parcela', label: 'Parcela', sortable: true },
+    { 
+      key: 'status', 
+      label: 'Status', 
+      render: (item: any) => (
+        <span className={`badge ${item.status === 'pago' ? 'bg-success' : item.status === 'vencido' ? 'bg-danger' : 'bg-secondary'}`}>
+          {item.status}
+        </span>
+      )
     },
+    { key: 'valor_parcela', label: 'Valor', render: (item: any) => `R$ ${item.valor_parcela?.toFixed(2) || '0.00'}` },
+    { key: 'data_vencimento', label: 'Vencimento', sortable: true },
+    { key: 'data_pagamento', label: 'Pagamento', sortable: true },
     {
-      name: 'id',
-      label: 'ID',
-      field: 'id',
-      align: 'left' as const,
-      sortable: true,
-    },
-    {
-      name: 'numero_parcela',
-      label: 'Parcela',
-      field: 'numero_parcela',
-      align: 'center' as const,
-      sortable: true,
-    },
-    {
-      name: 'valor_parcela',
-      label: 'Valor',
-      field: 'valor_parcela',
-      align: 'right' as const,
-      sortable: true,
-      format: (val: number) => `R$ ${val.toFixed(2).replace('.', ',')}`,
-    },
-    {
-      name: 'data_vencimento',
-      label: 'Vencimento',
-      field: 'data_vencimento',
-      align: 'center' as const,
-      sortable: true,
-      format: (val: string) => new Date(val).toLocaleDateString('pt-BR'),
-    },
-    {
-      name: 'status',
-      label: 'Status',
-      field: 'status',
-      align: 'center' as const,
-      sortable: true,
-    },
-    {
-      name: 'data_pagamento',
-      label: 'Data Pagamento',
-      field: 'data_pagamento',
-      align: 'center' as const,
-      sortable: true,
-      format: (val: string) => val ? new Date(val).toLocaleDateString('pt-BR') : '-',
-    },
-    {
-      name: 'actions',
+      key: 'actions',
       label: 'Ações',
-      field: 'actions',
-      align: 'center' as const,
-      sortable: false,
-    },
+      render: (item: any) => (
+        <div className="btn-group btn-group-sm">
+          <button className="btn btn-outline-success" title="Marcar como Pago">
+            <i className="bi bi-check"></i>
+          </button>
+          <button className="btn btn-outline-info" title="Imprimir">
+            <i className="bi bi-printer"></i>
+          </button>
+        </div>
+      )
+    }
   ];
 
-  const handleSelectItems = (items: any[]) => {
-    setSelectedItems(items);
-  };
-
-  const handleBulkAction = (action: string) => {
-    if (selectedItems.length === 0) return;
-
-    switch (action) {
-      case 'visualizar':
-        if (activeSubTab === 'carnes') {
-          // Navegar para visualizar carnê
-          window.open(`/carnes/${selectedItems[0].id}`, '_blank');
-        } else {
-          // Navegar para visualizar parcela
-          window.open(`/carne-parcelas/${selectedItems[0].id}`, '_blank');
-        }
-        break;
-      case 'imprimir':
-        if (activeSubTab === 'carnes') {
-          // Imprimir carnê
-          window.open(getApiUrl(`/boleto/web/${selectedItems[0].id}`), '_blank');
-        } else {
-          // Imprimir parcela
-          window.open(getApiUrl(`/boleto/web/${selectedItems[0].id}`), '_blank');
-        }
-        break;
-      case 'marcar_pago':
-        // Implementar marcação como pago
-        console.log('Marcar como pago:', selectedItems);
-        break;
-      case 'editar':
-        // Implementar edição
-        console.log('Editar:', selectedItems);
-        break;
-      case 'deletar':
-        // Implementar exclusão
-        console.log('Deletar:', selectedItems);
-        break;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pago':
-        return 'positive';
-      case 'pendente':
-        return 'warning';
-      case 'cancelado':
-        return 'negative';
-      case 'parcial':
-        return 'info';
-      default:
-        return 'grey';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pago':
-        return 'Pago';
-      case 'pendente':
-        return 'Pendente';
-      case 'cancelado':
-        return 'Cancelado';
-      case 'parcial':
-        return 'Parcial';
-      default:
-        return status;
-    }
-  };
+  if (!cliente) {
+    return (
+      <div>Carregando dados do cliente...</div>
+    );
+  }
 
   return (
-    <div className="q-gutter-md">
-      {/* Cabeçalho da seção */}
-      <div className="row items-center">
-        <div className="col">
-          <div className="text-h6">Financeiro do Cliente</div>
-        </div>
-        <div className="col-auto">
-          {!isEditing && (
-            <QBtn
-              color="primary"
-              icon="edit"
-              label="Editar"
-              onClick={onEdit}
-            />
-          )}
-        </div>
-      </div>
+    <div className="card">
+      <div className="card-body">
+        <h5 className="card-title mb-3">
+          Financeiro do Cliente
+        </h5>
 
-      <QSeparator />
+        <ul className="nav nav-tabs" role="tablist">
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 0 ? 'active' : ''}`}
+              onClick={() => handleTabChange(0)}
+              type="button"
+              role="tab"
+            >
+              Carnês ({mockCarnes.length})
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 1 ? 'active' : ''}`}
+              onClick={() => handleTabChange(1)}
+              type="button"
+              role="tab"
+            >
+              Títulos Individuais ({mockParcelas.length})
+            </button>
+          </li>
+        </ul>
 
-      {/* Sub-abas para Carnês e Títulos */}
-      <div className="row q-gutter-sm q-mb-md">
-        <QBtn
-          color={activeSubTab === 'carnes' ? 'primary' : 'grey-7'}
-          flat={activeSubTab !== 'carnes'}
-          label="Carnês"
-          icon="account_balance_wallet"
-          onClick={() => setActiveSubTab('carnes')}
-        />
-        <QBtn
-          color={activeSubTab === 'titulos' ? 'primary' : 'grey-7'}
-          flat={activeSubTab !== 'titulos'}
-          label="Títulos"
-          icon="receipt"
-          onClick={() => setActiveSubTab('titulos')}
-        />
-      </div>
-
-      {/* Ações em lote */}
-      <div className="row q-gutter-sm q-mb-md">
-        <QBtn
-          color="primary"
-          icon="visibility"
-          label="Visualizar"
-          disable={selectedItems.length === 0}
-          onClick={() => handleBulkAction('visualizar')}
-        />
-        <QBtn
-          color="primary"
-          icon="print"
-          label="Imprimir"
-          disable={selectedItems.length === 0}
-          onClick={() => handleBulkAction('imprimir')}
-        />
-        <QBtn
-          color="positive"
-          icon="check_circle"
-          label="Marcar como Pago"
-          disable={selectedItems.length === 0}
-          onClick={() => handleBulkAction('marcar_pago')}
-        />
-        <QBtn
-          color="warning"
-          icon="edit"
-          label="Editar"
-          disable={selectedItems.length === 0}
-          onClick={() => handleBulkAction('editar')}
-        />
-        <QBtn
-          color="negative"
-          icon="delete"
-          label="Deletar"
-          disable={selectedItems.length === 0}
-          onClick={() => handleBulkAction('deletar')}
-        />
-      </div>
-
-      {/* Tabela de Carnês */}
-      {activeSubTab === 'carnes' && (
-        <QCard>
-          <QCardSection>
-            <QTable
-              rows={carnes?.data || []}
+        <div className="tab-content">
+          <div className={`tab-pane fade ${activeTab === 0 ? 'show active' : ''}`}>
+            <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
+              <h6 className="mb-0">Carnês</h6>
+              <div className="btn-group">
+                <button className="btn btn-primary btn-sm">
+                  <i className="bi bi-plus me-1"></i>
+                  Novo Carnê
+                </button>
+                <button className="btn btn-outline-secondary btn-sm">
+                  <i className="bi bi-arrow-clockwise"></i>
+                </button>
+              </div>
+            </div>
+            
+            <DataTable
+              data={mockCarnes}
               columns={carnesColumns}
-              row-key="id"
-              selection="multiple"
-              selected={selectedItems}
-              loading={carnesLoading}
-              rows-per-page-options={[10, 25, 50]}
-              pagination={{ rowsPerPage: 15 }}
-            >
-              <template slot="body-cell-select" slot-scope="props">
-                <QCheckbox
-                  v-model={props.selected}
-                  onUpdate:modelValue={handleSelectItems}
-                />
-              </template>
-
-              <template slot="body-cell-status" slot-scope="props">
-                <QBtn
-                  color={getStatusColor(props.value)}
-                  label={getStatusLabel(props.value)}
-                  dense
-                  flat
-                  size="sm"
-                />
-              </template>
-
-              <template slot="body-cell-actions" slot-scope="props">
-                <div className="q-gutter-xs">
-                  <QBtn
-                    color="primary"
-                    icon="visibility"
-                    size="sm"
-                    flat
-                    dense
-                    onClick={() => window.open(`/carnes/${props.row.id}`, '_blank')}
-                  />
-                  <QBtn
-                    color="primary"
-                    icon="print"
-                    size="sm"
-                    flat
-                    dense
-                    onClick={() => window.open(getApiUrl(`/boleto/web/${props.row.id}`), '_blank')}
-                  />
-                  <QBtn
-                    color="warning"
-                    icon="edit"
-                    size="sm"
-                    flat
-                    dense
-                    onClick={() => window.open(`/carnes/${props.row.id}/edit`, '_blank')}
-                  />
-                </div>
-              </template>
-            </QTable>
-          </QCardSection>
-        </QCard>
-      )}
-
-      {/* Tabela de Títulos */}
-      {activeSubTab === 'titulos' && (
-        <QCard>
-          <QCardSection>
-            <QTable
-              rows={titulos?.data || []}
-              columns={titulosColumns}
-              row-key="id"
-              selection="multiple"
-              selected={selectedItems}
-              loading={titulosLoading}
-              rows-per-page-options={[10, 25, 50]}
-              pagination={{ rowsPerPage: 15 }}
-            >
-              <template slot="body-cell-select" slot-scope="props">
-                <QCheckbox
-                  v-model={props.selected}
-                  onUpdate:modelValue={handleSelectItems}
-                />
-              </template>
-
-              <template slot="body-cell-status" slot-scope="props">
-                <QBtn
-                  color={getStatusColor(props.value)}
-                  label={getStatusLabel(props.value)}
-                  dense
-                  flat
-                  size="sm"
-                />
-              </template>
-
-              <template slot="body-cell-actions" slot-scope="props">
-                <div className="q-gutter-xs">
-                  <QBtn
-                    color="primary"
-                    icon="visibility"
-                    size="sm"
-                    flat
-                    dense
-                    onClick={() => window.open(`/carne-parcelas/${props.row.id}`, '_blank')}
-                  />
-                  <QBtn
-                    color="primary"
-                    icon="print"
-                    size="sm"
-                    flat
-                    dense
-                    onClick={() => window.open(getApiUrl(`/boleto/web/${props.row.id}`), '_blank')}
-                  />
-                </div>
-              </template>
-            </QTable>
-          </QCardSection>
-        </QCard>
-      )}
-
-      {/* Resumo financeiro */}
-      <QCard flat bordered>
-        <QCardSection>
-          <div className="row q-gutter-md">
-            <div className="col-md-3">
-              <div className="text-caption text-grey-7">Valor Total</div>
-              <div className="text-h6">R$ 0,00</div>
-            </div>
-            <div className="col-md-3">
-              <div className="text-caption text-grey-7">Valor Pago</div>
-              <div className="text-h6 text-positive">R$ 0,00</div>
-            </div>
-            <div className="col-md-3">
-              <div className="text-caption text-grey-7">Valor Pendente</div>
-              <div className="text-h6 text-warning">R$ 0,00</div>
-            </div>
-            <div className="col-md-3">
-              <div className="text-caption text-grey-7">Valor Cancelado</div>
-              <div className="text-h6 text-negative">R$ 0,00</div>
-            </div>
+              isLoading={false}
+              limit={10}
+              setLimit={() => {}}
+              setPage={() => {}}
+              bulkActions={[
+                {
+                  label: 'Visualizar',
+                  action: (selectedItems) => console.log('Visualizar carnês:', selectedItems)
+                },
+                {
+                  label: 'Editar',
+                  action: (selectedItems) => console.log('Editar carnês:', selectedItems)
+                },
+                {
+                  label: 'Imprimir',
+                  action: (selectedItems) => console.log('Imprimir carnês:', selectedItems)
+                }
+              ]}
+            />
           </div>
-        </QCardSection>
-      </QCard>
+
+          <div className={`tab-pane fade ${activeTab === 1 ? 'show active' : ''}`}>
+            <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
+              <h6 className="mb-0">Títulos Individuais</h6>
+              <div className="btn-group">
+                <button className="btn btn-primary btn-sm">
+                  <i className="bi bi-plus me-1"></i>
+                  Novo Título
+                </button>
+                <button className="btn btn-outline-secondary btn-sm">
+                  <i className="bi bi-arrow-clockwise"></i>
+                </button>
+              </div>
+            </div>
+            
+            <DataTable
+              data={mockParcelas}
+              columns={parcelasColumns}
+              isLoading={false}
+              limit={10}
+              setLimit={() => {}}
+              setPage={() => {}}
+              bulkActions={[
+                {
+                  label: 'Marcar como Pago',
+                  action: (selectedItems) => console.log('Marcar como pago:', selectedItems),
+                  disabled: (selectedItems) => selectedItems.every(item => item.status === 'pago')
+                },
+                {
+                  label: 'Imprimir',
+                  action: (selectedItems) => console.log('Imprimir parcelas:', selectedItems)
+                }
+              ]}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

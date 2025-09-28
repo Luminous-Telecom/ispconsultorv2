@@ -1,418 +1,267 @@
-import React, { useState, useEffect } from 'react';
-import { QCard, QCardSection, QBtn, QIcon, QField, QSeparator, QTable, QCheckbox } from 'quasar';
-import { useQuery } from '@tanstack/react-query';
-import { PlanoService } from '../../../services/planoService';
+import React, { useState } from 'react';
 
 interface ClienteContratosProps {
   cliente: any;
-  isEditing: boolean;
-  onEdit: () => void;
-  onDataChange: () => void;
+  onDataChange: (field: string, value: any) => void;
 }
 
-const ClienteContratos: React.FC<ClienteContratosProps> = ({
-  cliente,
-  isEditing,
-  onEdit,
-  onDataChange
+const ClienteContratos: React.FC<ClienteContratosProps> = ({ 
+  cliente, 
+  onDataChange 
 }) => {
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [showCancelados, setShowCancelados] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Buscar planos do cliente (simulando contratos)
-  const { data: contratos, isLoading: contratosLoading } = useQuery({
-    queryKey: ['contratos', 'cliente', cliente?.id],
-    queryFn: () => PlanoService.list(),
-    enabled: !!cliente?.id,
-  });
-
-  // Colunas da tabela de contratos
-  const contratosColumns = [
+  // Mock data para contratos
+  const mockContratos = [
     {
-      name: 'select',
-      label: '',
-      field: 'select',
-      align: 'left' as const,
-      sortable: false,
+      id: 1,
+      filial: 'Matriz',
+      status_contrato: 'Ativo',
+      status_acesso: 'Liberado',
+      plano_vendas: 'Plano Premium',
+      data_ativacao: '2024-01-15',
+      data_vencimento: '2024-12-15',
+      valor: 150.00,
+      observacoes: 'Contrato principal'
     },
     {
-      name: 'id',
-      label: 'ID',
-      field: 'id',
-      align: 'left' as const,
-      sortable: true,
-    },
-    {
-      name: 'nome_plano',
-      label: 'Plano',
-      field: 'nome_plano',
-      align: 'left' as const,
-      sortable: true,
-    },
-    {
-      name: 'tipo_servico',
-      label: 'Tipo Serviço',
-      field: 'tipo_servico',
-      align: 'left' as const,
-      sortable: true,
-    },
-    {
-      name: 'valor_mensal',
-      label: 'Valor Mensal',
-      field: 'valor_mensal',
-      align: 'right' as const,
-      sortable: true,
-      format: (val: number) => `R$ ${val.toFixed(2).replace('.', ',')}`,
-    },
-    {
-      name: 'quantidade_usuarios',
-      label: 'Usuários',
-      field: 'quantidade_usuarios',
-      align: 'center' as const,
-      sortable: true,
-    },
-    {
-      name: 'periodicidade',
-      label: 'Periodicidade',
-      field: 'periodicidade',
-      align: 'center' as const,
-      sortable: true,
-    },
-    {
-      name: 'status',
-      label: 'Status',
-      field: 'status',
-      align: 'center' as const,
-      sortable: true,
-    },
-    {
-      name: 'data_inicio',
-      label: 'Data Início',
-      field: 'data_inicio',
-      align: 'center' as const,
-      sortable: true,
-      format: (val: string) => val ? new Date(val).toLocaleDateString('pt-BR') : '-',
-    },
-    {
-      name: 'data_fim',
-      label: 'Data Fim',
-      field: 'data_fim',
-      align: 'center' as const,
-      sortable: true,
-      format: (val: string) => val ? new Date(val).toLocaleDateString('pt-BR') : '-',
-    },
-    {
-      name: 'actions',
-      label: 'Ações',
-      field: 'actions',
-      align: 'center' as const,
-      sortable: false,
-    },
+      id: 2,
+      filial: 'Filial 1',
+      status_contrato: 'Suspenso',
+      status_acesso: 'Bloqueado',
+      plano_vendas: 'Plano Básico',
+      data_ativacao: '2024-02-01',
+      data_vencimento: '2024-11-01',
+      valor: 99.90,
+      observacoes: 'Contrato suspenso por inadimplência'
+    }
   ];
 
-  const handleSelectItems = (items: any[]) => {
-    setSelectedItems(items);
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const newSelected = mockContratos.map((contrato) => contrato.id);
+      setSelectedItems(newSelected);
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const handleSelectItem = (id: number) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
   };
 
   const handleBulkAction = (action: string) => {
-    if (selectedItems.length === 0) return;
-
-    switch (action) {
-      case 'novo':
-        // Navegar para novo contrato
-        window.open('/planos/create', '_blank');
-        break;
-      case 'editar':
-        // Navegar para editar contrato
-        window.open(`/planos/${selectedItems[0].id}/edit`, '_blank');
-        break;
-      case 'deletar':
-        // Implementar exclusão
-        console.log('Deletar contratos:', selectedItems);
-        break;
-      case 'alteracao_wizard':
-        // Implementar wizard de alteração
-        console.log('Wizard de alteração:', selectedItems);
-        break;
-      case 'imprimir':
-        // Implementar impressão
-        console.log('Imprimir contratos:', selectedItems);
-        break;
-      case 'detalhamento_financeiro':
-        // Navegar para detalhamento financeiro
-        console.log('Detalhamento financeiro:', selectedItems);
-        break;
-    }
+    console.log(`${action} contratos:`, selectedItems);
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'ativo':
-        return 'positive';
-      case 'inativo':
-        return 'negative';
+        return 'success';
       case 'suspenso':
         return 'warning';
       case 'cancelado':
-        return 'grey';
+        return 'danger';
       default:
-        return 'grey';
+        return 'secondary';
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'ativo':
-        return 'Ativo';
-      case 'inativo':
-        return 'Inativo';
-      case 'suspenso':
-        return 'Suspenso';
-      case 'cancelado':
-        return 'Cancelado';
-      default:
-        return status;
-    }
-  };
+  const filteredContratos = mockContratos.filter(contrato =>
+    contrato.filial.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contrato.plano_vendas.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'ativo':
-        return 'check_circle';
-      case 'inativo':
-        return 'cancel';
-      case 'suspenso':
-        return 'pause_circle';
-      case 'cancelado':
-        return 'block';
-      default:
-        return 'help';
-    }
-  };
+  if (!cliente) {
+    return (
+      <div>Carregando dados do cliente...</div>
+    );
+  }
 
   return (
-    <div className="q-gutter-md">
-      {/* Cabeçalho da seção */}
-      <div className="row items-center">
-        <div className="col">
-          <div className="text-h6">Contratos do Cliente</div>
-        </div>
-        <div className="col-auto">
-          {!isEditing && (
-            <QBtn
-              color="primary"
-              icon="edit"
-              label="Editar"
-              @click={onEdit}
-            />
-          )}
-        </div>
-      </div>
-
-      <QSeparator />
-
-      {/* Ações em lote */}
-      <div className="row q-gutter-sm q-mb-md">
-        <QBtn
-          color="primary"
-          icon="add"
-          label="Novo"
-          @click={() => handleBulkAction('novo')}
-        />
-        <QBtn
-          color="warning"
-          icon="edit"
-          label="Editar"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('editar')}
-        />
-        <QBtn
-          color="negative"
-          icon="delete"
-          label="Deletar"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('deletar')}
-        />
-        <QBtn
-          color="info"
-          icon="wizard"
-          label="Alteração Wizard"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('alteracao_wizard')}
-        />
-        <QBtn
-          color="primary"
-          icon="print"
-          label="Imprimir"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('imprimir')}
-        />
-        <QBtn
-          color="primary"
-          icon="account_balance"
-          label="Detalhamento Financeiro"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('detalhamento_financeiro')}
-        />
-      </div>
-
-      {/* Filtros */}
-      <div className="row q-gutter-sm q-mb-md">
-        <QCheckbox
-          v-model={showCancelados}
-          label="Mostrar cancelados"
-        />
-      </div>
-
-      {/* Navegação de dados */}
-      <div className="row items-center q-mb-md">
-        <div className="col">
-          <div className="text-caption text-grey-7">
-            Mostrando {contratos?.data?.length || 0} contratos
-          </div>
-        </div>
-        <div className="col-auto">
-          <div className="q-gutter-sm">
-            <QBtn
-              color="grey-7"
-              icon="first_page"
-              flat
-              dense
-              @click={() => {/* Primeira página */}}
-            />
-            <QBtn
-              color="grey-7"
-              icon="chevron_left"
-              flat
-              dense
-              @click={() => {/* Página anterior */}}
-            />
-            <QBtn
-              color="grey-7"
-              icon="refresh"
-              flat
-              dense
-              @click={() => {/* Recarregar */}}
-            />
-            <QBtn
-              color="grey-7"
-              icon="chevron_right"
-              flat
-              dense
-              @click={() => {/* Próxima página */}}
-            />
-            <QBtn
-              color="grey-7"
-              icon="last_page"
-              flat
-              dense
-              @click={() => {/* Última página */}}
-            />
-            <QBtn
-              color="grey-7"
-              icon="download"
-              flat
-              dense
-              @click={() => {/* Download */}}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Tabela de contratos */}
-      <QCard>
-        <QCardSection>
-          <QTable
-            :rows="contratos?.data || []"
-            :columns="contratosColumns"
-            row-key="id"
-            selection="multiple"
-            v-model:selected="selectedItems"
-            :loading="contratosLoading"
-            :rows-per-page-options="[10, 25, 50]"
-            :pagination="{ rowsPerPage: 15 }"
+    <div className="card">
+      <div className="card-body">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="card-title mb-0">
+            Contratos do Cliente
+          </h5>
+          <button
+            className="btn btn-primary"
+            onClick={() => handleBulkAction('novo')}
           >
-            <template v-slot:body-cell-select="props">
-              <QCheckbox
-                v-model="props.selected"
-                @update:model-value="handleSelectItems"
+            <i className="bi bi-plus me-1"></i>
+            Novo Contrato
+          </button>
+        </div>
+
+        {/* Filtros e ações */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="d-flex gap-2 align-items-center">
+            <div className="input-group" style={{ width: '300px' }}>
+              <span className="input-group-text">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Buscar contratos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </template>
-
-            <template v-slot:body-cell-status="props">
-              <div className="row items-center q-gutter-xs">
-                <QIcon
-                  :name="getStatusIcon(props.value)"
-                  :color="getStatusColor(props.value)"
-                  size="sm"
-                />
-                <span :class="`text-${getStatusColor(props.value)}`">
-                  {getStatusLabel(props.value)}
-                </span>
-              </div>
-            </template>
-
-            <template v-slot:body-cell-actions="props">
-              <div className="q-gutter-xs">
-                <QBtn
-                  color="primary"
-                  icon="visibility"
-                  size="sm"
-                  flat
-                  dense
-                  @click={() => window.open(`/planos/${props.row.id}`, '_blank')}
-                />
-                <QBtn
-                  color="warning"
-                  icon="edit"
-                  size="sm"
-                  flat
-                  dense
-                  @click={() => window.open(`/planos/${props.row.id}/edit`, '_blank')}
-                />
-                <QBtn
-                  color="primary"
-                  icon="print"
-                  size="sm"
-                  flat
-                  dense
-                  @click={() => console.log('Imprimir contrato:', props.row.id)}
-                />
-              </div>
-            </template>
-          </QTable>
-        </QCardSection>
-      </QCard>
-
-      {/* Resumo dos contratos */}
-      <QCard flat bordered>
-        <QCardSection>
-          <div className="row q-gutter-md">
-            <div className="col-md-3">
-              <div className="text-caption text-grey-7">Total de Contratos</div>
-              <div className="text-h6">{contratos?.data?.length || 0}</div>
             </div>
-            <div className="col-md-3">
-              <div className="text-caption text-grey-7">Contratos Ativos</div>
-              <div className="text-h6 text-positive">
-                {contratos?.data?.filter((c: any) => c.status === 'ativo').length || 0}
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="text-caption text-grey-7">Contratos Inativos</div>
-              <div className="text-h6 text-negative">
-                {contratos?.data?.filter((c: any) => c.status === 'inativo').length || 0}
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="text-caption text-grey-7">Valor Total Mensal</div>
-              <div className="text-h6 text-primary">
-                R$ {contratos?.data?.reduce((total: number, c: any) => total + parseFloat(c.valor_mensal || 0), 0).toFixed(2).replace('.', ',')}
-              </div>
+            
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={showCancelados}
+                onChange={(e) => setShowCancelados(e.target.checked)}
+              />
+              <label className="form-check-label">
+                Mostrar cancelados
+              </label>
             </div>
           </div>
-        </QCardSection>
-      </QCard>
+
+          <div className="btn-group">
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              disabled={selectedItems.length === 0}
+              onClick={() => handleBulkAction('editar')}
+            >
+              <i className="bi bi-pencil me-1"></i>
+              Editar
+            </button>
+            <button
+              className="btn btn-outline-danger btn-sm"
+              disabled={selectedItems.length === 0}
+              onClick={() => handleBulkAction('deletar')}
+            >
+              <i className="bi bi-trash me-1"></i>
+              Deletar
+            </button>
+            <button
+              className="btn btn-outline-info btn-sm"
+              disabled={selectedItems.length === 0}
+              onClick={() => handleBulkAction('alteracao_wizard')}
+            >
+              <i className="bi bi-magic me-1"></i>
+              Alteração Wizard
+            </button>
+            <button
+              className="btn btn-outline-primary btn-sm"
+              disabled={selectedItems.length === 0}
+              onClick={() => handleBulkAction('imprimir')}
+            >
+              <i className="bi bi-printer me-1"></i>
+              Imprimir
+            </button>
+            <button
+              className="btn btn-outline-success btn-sm"
+              disabled={selectedItems.length === 0}
+              onClick={() => handleBulkAction('detalhamento_financeiro')}
+            >
+              <i className="bi bi-graph-up me-1"></i>
+              Detalhamento Financeiro
+            </button>
+          </div>
+        </div>
+
+        {/* Tabela de contratos */}
+        <div className="table-responsive">
+          <table className="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={filteredContratos.length > 0 && selectedItems.length === filteredContratos.length}
+                    onChange={handleSelectAll}
+                  />
+                </th>
+                <th>ID</th>
+                <th>Filial</th>
+                <th>Status Contrato</th>
+                <th>Status Acesso</th>
+                <th>Plano de Vendas</th>
+                <th>Data Ativação</th>
+                <th>Data Vencimento</th>
+                <th>Valor</th>
+                <th>Observações</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredContratos.map((contrato) => (
+                <tr key={contrato.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={selectedItems.includes(contrato.id)}
+                      onChange={() => handleSelectItem(contrato.id)}
+                    />
+                  </td>
+                  <td>{contrato.id}</td>
+                  <td>{contrato.filial}</td>
+                  <td>
+                    <span className={`badge bg-${getStatusColor(contrato.status_contrato)}`}>
+                      {contrato.status_contrato}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${contrato.status_acesso === 'Liberado' ? 'bg-success' : 'bg-danger'}`}>
+                      {contrato.status_acesso}
+                    </span>
+                  </td>
+                  <td>{contrato.plano_vendas}</td>
+                  <td>{contrato.data_ativacao}</td>
+                  <td>{contrato.data_vencimento}</td>
+                  <td>R$ {contrato.valor.toFixed(2)}</td>
+                  <td>{contrato.observacoes}</td>
+                  <td>
+                    <div className="btn-group btn-group-sm">
+                      <button className="btn btn-outline-primary" title="Visualizar">
+                        <i className="bi bi-eye"></i>
+                      </button>
+                      <button className="btn btn-outline-secondary" title="Editar">
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button className="btn btn-outline-info" title="Imprimir">
+                        <i className="bi bi-printer"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Paginação */}
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <div className="btn-group">
+            <button className="btn btn-outline-secondary btn-sm">Primeira</button>
+            <button className="btn btn-outline-secondary btn-sm">Anterior</button>
+            <button className="btn btn-outline-secondary btn-sm">
+              <i className="bi bi-arrow-clockwise"></i>
+            </button>
+            <button className="btn btn-outline-secondary btn-sm">Próxima</button>
+            <button className="btn btn-outline-secondary btn-sm">Última</button>
+          </div>
+          
+          <button className="btn btn-outline-primary btn-sm">
+            <i className="bi bi-download"></i>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

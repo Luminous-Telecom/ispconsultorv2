@@ -1,334 +1,248 @@
-import React, { useState, useEffect } from 'react';
-import { QCard, QCardSection, QInput, QBtn, QIcon, QField, QSeparator, QRadio } from 'quasar';
+import React, { useState } from 'react';
 
 interface ClienteEnderecoProps {
   cliente: any;
-  isEditing: boolean;
-  onEdit: () => void;
-  onDataChange: () => void;
+  onDataChange: (field: string, value: any) => void;
 }
 
-const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
-  cliente,
-  isEditing,
-  onEdit,
-  onDataChange
+const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({ 
+  cliente, 
+  onDataChange 
 }) => {
-  const [formData, setFormData] = useState({
-    cep: cliente?.cep || '',
-    endereco: cliente?.endereco || '',
-    numero: cliente?.numero || '',
-    complemento: cliente?.complemento || '',
-    bairro: cliente?.bairro || '',
-    cidade: cliente?.cidade || '',
-    estado: cliente?.estado || '',
-    condominio: '',
-    bloco: '',
-    apartamento: '',
-    referencia: '',
-    moradia: 'propria'
-  });
-
-  // Atualizar dados quando cliente mudar
-  useEffect(() => {
-    if (cliente) {
-      setFormData({
-        cep: cliente.cep || '',
-        endereco: cliente.endereco || '',
-        numero: cliente.numero || '',
-        complemento: cliente.complemento || '',
-        bairro: cliente.bairro || '',
-        cidade: cliente.cidade || '',
-        estado: cliente.estado || '',
-        condominio: '',
-        bloco: '',
-        apartamento: '',
-        referencia: '',
-        moradia: 'propria'
-      });
-    }
-  }, [cliente]);
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    onDataChange();
-  };
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleEdit = () => {
-    onEdit();
+    setIsEditing(!isEditing);
   };
 
-  const handleValidarCep = () => {
-    // Implementar validação de CEP
-    console.log('Validando CEP:', formData.cep);
+  const handleInputChange = (field: string, value: any) => {
+    onDataChange(field, value);
   };
 
-  const handleMarcarCoordenadas = () => {
-    // Implementar marcação de coordenadas
-    console.log('Marcando coordenadas');
-  };
-
-  const handleVerificarDuplicidade = () => {
-    // Implementar verificação de duplicidade
-    console.log('Verificando duplicidade');
-  };
+  if (!cliente) {
+    return (
+      <div>Carregando dados do cliente...</div>
+    );
+  }
 
   return (
-    <div className="q-gutter-md">
-      {/* Cabeçalho da seção */}
-      <div className="row items-center">
-        <div className="col">
-          <div className="text-h6">Endereço Principal</div>
+    <div className="card">
+      <div className="card-body">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="card-title mb-0">
+            Endereço do Cliente
+          </h5>
+          <button
+            className="btn btn-outline-primary"
+            onClick={handleEdit}
+          >
+            <i className={`bi ${isEditing ? 'bi-check' : 'bi-pencil'} me-1`}></i>
+            {isEditing ? 'Salvar' : 'Editar'}
+          </button>
         </div>
-        <div className="col-auto">
-          {!isEditing && (
-            <QBtn
-              color="primary"
-              icon="edit"
-              label="Editar"
-              @click={handleEdit}
-            />
-          )}
-        </div>
-      </div>
 
-      <QSeparator />
-
-      {/* Dica sobre endereços */}
-      <QCard flat bordered className="bg-grey-2">
-        <QCardSection>
-          <div className="row items-start">
-            <QIcon name="info" color="primary" size="sm" className="q-mr-sm q-mt-xs" />
-            <div className="col">
-              <div className="text-caption text-weight-bold">DICA:</div>
-              <div className="text-caption">
-                A ordem de prioridade para impressão de títulos financeiros é:
-                <br />1. Endereço de cobrança
-                <br />2. Endereço do login
-                <br />3. Endereço do contrato
-                <br />4. Endereço principal (cliente)
-              </div>
+        <div className="row g-3">
+          <div className="col-md-4">
+            <label className="form-label">Condomínio</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.condominio || ''}
+                onChange={(e) => handleInputChange('condominio', e.target.value)}
+                disabled={!isEditing}
+              />
+              <button className="btn btn-outline-secondary" type="button">
+                <i className="bi bi-geo-alt"></i>
+              </button>
             </div>
           </div>
-        </QCardSection>
-      </QCard>
 
-      {/* Campos de endereço */}
-      <div className="row q-gutter-md">
-        {/* Condomínio, Bloco, Apartamento */}
-        <div className="col-md-4">
-          <QField label="Condomínio" stack-label>
-            <QInput
-              v-model={formData.condominio}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('condominio', val)}
-            >
-              <template v-slot:append>
-                <QIcon name="search" />
-              </template>
-            </QInput>
-          </QField>
-        </div>
-        <div className="col-md-4">
-          <QField label="Bloco" stack-label>
-            <QInput
-              v-model={formData.bloco}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('bloco', val)}
+          <div className="col-md-4">
+            <label className="form-label">Bloco</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.bloco || ''}
+              onChange={(e) => handleInputChange('bloco', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
-        </div>
-        <div className="col-md-4">
-          <QField label="Apartamento" stack-label>
-            <QInput
-              v-model={formData.apartamento}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('apartamento', val)}
-            />
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* CEP */}
-      <div className="row q-gutter-md">
-        <div className="col-md-4">
-          <QField label="CEP *" stack-label>
-            <QInput
-              v-model={formData.cep}
-              :disable={!isEditing}
-              filled
-              mask="#####-###"
-              @update:model-value={(val) => handleInputChange('cep', val)}
-            >
-              <template v-slot:append>
-                <QBtn
-                  flat
-                  dense
-                  color="primary"
-                  label="Validar"
-                  @click={handleValidarCep}
-                />
-              </template>
-            </QInput>
-          </QField>
-        </div>
-        <div className="col-md-4">
-          <QField label="CIF" stack-label>
-            <QInput
-              v-model={formData.referencia}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('referencia', val)}
-            >
-              <template v-slot:prepend>
-                <QIcon name="info" color="primary" />
-              </template>
-            </QInput>
-          </QField>
-        </div>
-      </div>
-
-      {/* Endereço principal */}
-      <div className="row q-gutter-md">
-        <div className="col-md-8">
-          <QField label="Endereço *" stack-label>
-            <QInput
-              v-model={formData.endereco}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('endereco', val)}
-            >
-              <template v-slot:prepend>
-                <QIcon name="info" color="primary" />
-              </template>
-              <template v-slot:append>
-                <div className="q-gutter-xs">
-                  <QBtn
-                    flat
-                    dense
-                    color="primary"
-                    label="Marcar coordenadas"
-                    @click={handleMarcarCoordenadas}
-                  />
-                  <QBtn
-                    flat
-                    dense
-                    color="primary"
-                    label="Verif. duplicidade"
-                    @click={handleVerificarDuplicidade}
-                  />
-                </div>
-              </template>
-            </QInput>
-          </QField>
-        </div>
-        <div className="col-md-4">
-          <QField label="Número *" stack-label>
-            <QInput
-              v-model={formData.numero}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('numero', val)}
+          <div className="col-md-4">
+            <label className="form-label">Apartamento</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.apartamento || ''}
+              onChange={(e) => handleInputChange('apartamento', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* Complemento */}
-      <div className="row q-gutter-md">
-        <div className="col-12">
-          <QField label="Complemento" stack-label>
-            <QInput
-              v-model={formData.complemento}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('complemento', val)}
-            />
-          </QField>
-        </div>
-      </div>
-
-      {/* Bairro, Cidade, Estado */}
-      <div className="row q-gutter-md">
-        <div className="col-md-4">
-          <QField label="Bairro *" stack-label>
-            <QInput
-              v-model={formData.bairro}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('bairro', val)}
-            />
-          </QField>
-        </div>
-        <div className="col-md-6">
-          <QField label="Cidade *" stack-label>
-            <QInput
-              v-model={formData.cidade}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('cidade', val)}
-            >
-              <template v-slot:append>
-                <QIcon name="search" />
-                <QIcon name="open_in_new" />
-              </template>
-            </QInput>
-          </QField>
-        </div>
-        <div className="col-md-2">
-          <QField label="Estado *" stack-label>
-            <QInput
-              v-model={formData.estado}
-              :disable={!isEditing}
-              filled
-              maxlength="2"
-              @update:model-value={(val) => handleInputChange('estado', val)}
-            />
-          </QField>
-        </div>
-      </div>
-
-      {/* Referência */}
-      <div className="row q-gutter-md">
-        <div className="col-12">
-          <QField label="Referência" stack-label>
-            <QInput
-              v-model={formData.referencia}
-              disable={!isEditing}
-              filled
-              onUpdate:modelValue={(val) => handleInputChange('referencia', val)}
-            />
-          </QField>
-        </div>
-      </div>
-
-      {/* Opções de moradia */}
-      <div className="row q-gutter-md">
-        <div className="col-12">
-          <QField label="Moradia" stack-label>
-            <div className="q-gutter-sm">
-              <QRadio
-                v-model={formData.moradia}
-                val="propria"
-                label="Própria"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('moradia', val)}
+          <div className="col-md-4">
+            <label className="form-label">CEP</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.cep || ''}
+                onChange={(e) => handleInputChange('cep', e.target.value)}
+                disabled={!isEditing}
               />
-              <QRadio
-                v-model={formData.moradia}
-                val="alugada"
-                label="Alugada"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('moradia', val)}
+              <button className="btn btn-outline-secondary" type="button">
+                <i className="bi bi-search"></i>
+              </button>
+            </div>
+          </div>
+
+          <div className="col-md-8">
+            <label className="form-label">Referência</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-geo-alt"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.referencia || ''}
+                onChange={(e) => handleInputChange('referencia', e.target.value)}
+                disabled={!isEditing}
               />
             </div>
-          </QField>
+          </div>
+
+          <div className="col-md-8">
+            <label className="form-label">Endereço</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-geo-alt"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.endereco || ''}
+                onChange={(e) => handleInputChange('endereco', e.target.value)}
+                disabled={!isEditing}
+              />
+              <button className="btn btn-outline-secondary" type="button">
+                <i className="bi bi-geo-alt"></i>
+              </button>
+              <button className="btn btn-outline-success" type="button">
+                <i className="bi bi-check"></i>
+              </button>
+            </div>
+          </div>
+
+          <div className="col-md-4">
+            <label className="form-label">Número</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.numero || ''}
+              onChange={(e) => handleInputChange('numero', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Complemento</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.complemento || ''}
+              onChange={(e) => handleInputChange('complemento', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Bairro</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.bairro || ''}
+              onChange={(e) => handleInputChange('bairro', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Cidade</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className="form-control"
+                value={cliente.cidade || ''}
+                onChange={(e) => handleInputChange('cidade', e.target.value)}
+                disabled={!isEditing}
+              />
+              <button className="btn btn-outline-success" type="button">
+                <i className="bi bi-check"></i>
+              </button>
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Estado</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.estado || ''}
+              onChange={(e) => handleInputChange('estado', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-12">
+            <fieldset>
+              <legend className="form-label">Tipo de Moradia</legend>
+              <div className="d-flex gap-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="moradia"
+                    value="propria"
+                    checked={cliente.moradia === 'propria'}
+                    onChange={(e) => handleInputChange('moradia', e.target.value)}
+                    disabled={!isEditing}
+                  />
+                  <label className="form-check-label">
+                    Própria
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="moradia"
+                    value="alugada"
+                    checked={cliente.moradia === 'alugada'}
+                    onChange={(e) => handleInputChange('moradia', e.target.value)}
+                    disabled={!isEditing}
+                  />
+                  <label className="form-check-label">
+                    Alugada
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="moradia"
+                    value="cedida"
+                    checked={cliente.moradia === 'cedida'}
+                    onChange={(e) => handleInputChange('moradia', e.target.value)}
+                    disabled={!isEditing}
+                  />
+                  <label className="form-check-label">
+                    Cedida
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
         </div>
       </div>
     </div>

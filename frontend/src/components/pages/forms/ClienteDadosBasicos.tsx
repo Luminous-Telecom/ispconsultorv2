@@ -1,255 +1,199 @@
-import React, { useState, useEffect } from 'react';
-import { QCard, QCardSection, QInput, QSelect, QRadio, QBtn, QIcon, QField } from 'quasar';
+import React, { useState } from 'react';
 
 interface ClienteDadosBasicosProps {
   cliente: any;
-  isEditing: boolean;
-  onEdit: () => void;
-  onDataChange: () => void;
+  onDataChange: (field: string, value: any) => void;
 }
 
-const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
-  cliente,
-  isEditing,
-  onEdit,
-  onDataChange
+const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({ 
+  cliente, 
+  onDataChange 
 }) => {
-  const [formData, setFormData] = useState({
-    id: cliente?.id || '',
-    ativo: cliente?.ativo ?? true,
-    tipo_pessoa: cliente?.tipo_pessoa || 'juridica',
-    razao_social: cliente?.razao_social || '',
-    nome_fantasia: cliente?.nome_fantasia || '',
-    cnpj: cliente?.cnpj || '',
-    inscricao_estadual: cliente?.inscricao_estadual || '',
-    email: cliente?.email || '',
-    telefone: cliente?.telefone || '',
-    whatsapp: cliente?.whatsapp || '',
-    observacoes: cliente?.observacoes || ''
-  });
-
-  // Atualizar dados quando cliente mudar
-  useEffect(() => {
-    if (cliente) {
-      setFormData({
-        id: cliente.id || '',
-        ativo: cliente.ativo ?? true,
-        tipo_pessoa: cliente.tipo_pessoa || 'juridica',
-        razao_social: cliente.razao_social || '',
-        nome_fantasia: cliente.nome_fantasia || '',
-        cnpj: cliente.cnpj || '',
-        inscricao_estadual: cliente.inscricao_estadual || '',
-        email: cliente.email || '',
-        telefone: cliente.telefone || '',
-        whatsapp: cliente.whatsapp || '',
-        observacoes: cliente.observacoes || ''
-      });
-    }
-  }, [cliente]);
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    onDataChange();
-  };
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleEdit = () => {
-    onEdit();
+    setIsEditing(!isEditing);
   };
 
+  const handleInputChange = (field: string, value: any) => {
+    onDataChange(field, value);
+  };
+
+  if (!cliente) {
+    return (
+      <div>Carregando dados do cliente...</div>
+    );
+  }
+
   return (
-    <div className="q-gutter-md">
-      {/* Cabeçalho da seção */}
-      <div className="row items-center">
-        <div className="col">
-          <div className="text-h6">Dados Básicos do Cliente</div>
+    <div className="card">
+      <div className="card-body">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="card-title mb-0">
+            Dados Básicos do Cliente
+          </h5>
+          <button
+            className="btn btn-outline-primary"
+            onClick={handleEdit}
+          >
+            <i className={`bi ${isEditing ? 'bi-check' : 'bi-pencil'} me-1`}></i>
+            {isEditing ? 'Salvar' : 'Editar'}
+          </button>
         </div>
-        <div className="col-auto">
-          {!isEditing && (
-            <QBtn
-              color="primary"
-              icon="edit"
-              label="Editar"
-              @click={handleEdit}
-            />
-          )}
-        </div>
-      </div>
 
-      <QSeparator />
-
-      {/* ID e Status Ativo */}
-      <div className="row q-gutter-md">
-        <div className="col-md-3">
-          <QField label="ID" stack-label>
-            <QInput
-              v-model={formData.id}
-              readonly
-              filled
-              :disable="!isEditing}
+        <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label">ID</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.id || ''}
+              disabled
             />
-          </QField>
-        </div>
-        <div className="col-md-3">
-          <QField label="Status" stack-label>
-            <div className="q-gutter-sm">
-              <QRadio
-                v-model={formData.ativo}
-                val={true}
-                label="Ativo"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('ativo', val)}
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-check form-switch">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={cliente.ativo}
+                onChange={(e) => handleInputChange('ativo', e.target.checked)}
+                disabled={!isEditing}
               />
-              <QRadio
-                v-model={formData.ativo}
-                val={false}
-                label="Inativo"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('ativo', val)}
-              />
+              <label className="form-check-label">
+                {cliente.ativo ? 'Ativo' : 'Inativo'}
+              </label>
             </div>
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* Tipo de Pessoa */}
-      <div className="row q-gutter-md">
-        <div className="col-12">
-          <QField label="Tipo de Pessoa *" stack-label>
-            <div className="q-gutter-sm">
-              <QRadio
-                v-model={formData.tipo_pessoa}
-                val="fisica"
-                label="Pessoa Física"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('tipo_pessoa', val)}
-              />
-              <QRadio
-                v-model={formData.tipo_pessoa}
-                val="juridica"
-                label="Pessoa Jurídica"
-                disable={!isEditing}
-                onUpdate:modelValue={(val) => handleInputChange('tipo_pessoa', val)}
-              />
-            </div>
-          </QField>
-        </div>
-      </div>
+          <div className="col-12">
+            <fieldset>
+              <legend className="form-label">Tipo de Pessoa</legend>
+              <div className="d-flex gap-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="tipo_pessoa"
+                    value="juridica"
+                    checked={cliente.tipo_pessoa === 'juridica'}
+                    onChange={(e) => handleInputChange('tipo_pessoa', e.target.value)}
+                    disabled={!isEditing}
+                  />
+                  <label className="form-check-label">
+                    Pessoa Jurídica
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="tipo_pessoa"
+                    value="fisica"
+                    checked={cliente.tipo_pessoa === 'fisica'}
+                    onChange={(e) => handleInputChange('tipo_pessoa', e.target.value)}
+                    disabled={!isEditing}
+                  />
+                  <label className="form-check-label">
+                    Pessoa Física
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
 
-      {/* Razão Social/Nome e Nome Fantasia */}
-      <div className="row q-gutter-md">
-        <div className="col-md-6">
-          <QField 
-            label={formData.tipo_pessoa === 'juridica' ? 'Razão Social *' : 'Nome *'} 
-            stack-label
-          >
-            <QInput
-              v-model={formData.razao_social}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('razao_social', val)}
+          <div className="col-md-6">
+            <label className="form-label">Razão Social</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.razao_social || ''}
+              onChange={(e) => handleInputChange('razao_social', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
-        </div>
-        <div className="col-md-6">
-          <QField label="Nome Fantasia" stack-label>
-            <QInput
-              v-model={formData.nome_fantasia}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('nome_fantasia', val)}
-            />
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* CNPJ/CPF e Inscrição Estadual */}
-      <div className="row q-gutter-md">
-        <div className="col-md-6">
-          <QField 
-            label={formData.tipo_pessoa === 'juridica' ? 'CNPJ *' : 'CPF *'} 
-            stack-label
-          >
-            <QInput
-              v-model={formData.cnpj}
-              :disable={!isEditing}
-              filled
-              mask={formData.tipo_pessoa === 'juridica' ? '##.###.###/####-##' : '###.###.###-##'}
-              @update:model-value={(val) => handleInputChange('cnpj', val)}
+          <div className="col-md-6">
+            <label className="form-label">Nome Fantasia</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.nome_fantasia || ''}
+              onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
-        </div>
-        <div className="col-md-6">
-          <QField 
-            label={formData.tipo_pessoa === 'juridica' ? 'Inscrição Estadual *' : 'RG *'} 
-            stack-label
-          >
-            <QInput
-              v-model={formData.inscricao_estadual}
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('inscricao_estadual', val)}
-            />
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* Email e Telefone */}
-      <div className="row q-gutter-md">
-        <div className="col-md-6">
-          <QField label="Email" stack-label>
-            <QInput
-              v-model={formData.email}
+          <div className="col-md-6">
+            <label className="form-label">
+              {cliente.tipo_pessoa === 'juridica' ? 'CNPJ' : 'CPF'}
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.cnpj || ''}
+              onChange={(e) => handleInputChange('cnpj', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">
+              {cliente.tipo_pessoa === 'juridica' ? 'Inscrição Estadual' : 'RG'}
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.inscricao_estadual || ''}
+              onChange={(e) => handleInputChange('inscricao_estadual', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Email</label>
+            <input
               type="email"
-              :disable={!isEditing}
-              filled
-              @update:model-value={(val) => handleInputChange('email', val)}
+              className="form-control"
+              value={cliente.email || ''}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
-        </div>
-        <div className="col-md-6">
-          <QField label="Telefone" stack-label>
-            <QInput
-              v-model={formData.telefone}
-              :disable={!isEditing}
-              filled
-              mask="(##) #####-####"
-              @update:model-value={(val) => handleInputChange('telefone', val)}
-            />
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* WhatsApp */}
-      <div className="row q-gutter-md">
-        <div className="col-md-6">
-          <QField label="WhatsApp" stack-label>
-            <QInput
-              v-model={formData.whatsapp}
-              :disable={!isEditing}
-              filled
-              mask="(##) #####-####"
-              @update:model-value={(val) => handleInputChange('whatsapp', val)}
+          <div className="col-md-6">
+            <label className="form-label">Telefone</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.telefone || ''}
+              onChange={(e) => handleInputChange('telefone', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
-        </div>
-      </div>
+          </div>
 
-      {/* Observações */}
-      <div className="row q-gutter-md">
-        <div className="col-12">
-          <QField label="Observações" stack-label>
-            <QInput
-              v-model={formData.observacoes}
-              type="textarea"
-              :disable={!isEditing}
-              filled
+          <div className="col-md-6">
+            <label className="form-label">WhatsApp</label>
+            <input
+              type="text"
+              className="form-control"
+              value={cliente.whatsapp || ''}
+              onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div className="col-12">
+            <label className="form-label">Observações</label>
+            <textarea
+              className="form-control"
               rows={3}
-              @update:model-value={(val) => handleInputChange('observacoes', val)}
+              value={cliente.observacoes || ''}
+              onChange={(e) => handleInputChange('observacoes', e.target.value)}
+              disabled={!isEditing}
             />
-          </QField>
+          </div>
         </div>
       </div>
     </div>
