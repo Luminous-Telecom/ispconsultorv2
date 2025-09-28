@@ -56,7 +56,7 @@ const ClienteShow: React.FC = () => {
         break;
       case 'imprimir':
         if (selectedItems.length === 1) {
-          window.open(`${process.env.REACT_APP_API_URL}/carnes/${selectedItems[0].id}/imprimir`, '_blank');
+          window.open(`/boleto/web/${selectedItems[0].id}`, '_blank');
         }
         break;
     }
