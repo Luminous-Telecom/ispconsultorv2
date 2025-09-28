@@ -63,17 +63,21 @@ app.use(cors({
 // Servir arquivos estáticos de uploads
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
-// Middleware de rate limiting (mais permissivo para desenvolvimento)
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1 minuto
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '5000'), // limite muito alto para desenvolvimento
-  message: {
-    error: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', limiter);
+// Middleware de rate limiting (desabilitado para desenvolvimento)
+if (process.env.NODE_ENV === 'production') {
+  const limiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutos
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'), // limite normal para produção
+    message: {
+      error: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use('/api/', limiter);
+} else {
+  console.log('🚀 Rate limiting desabilitado para desenvolvimento');
+}
 
 // Middleware de parsing
 app.use(express.json({ limit: '10mb' }));
