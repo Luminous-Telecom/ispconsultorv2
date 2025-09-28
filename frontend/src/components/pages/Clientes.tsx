@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useClientes, useDeleteCliente } from '../../hooks/useClientes';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
@@ -15,6 +15,7 @@ interface Cliente {
 }
 
 const Clientes: React.FC = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
@@ -107,12 +108,12 @@ const Clientes: React.FC = () => {
     switch (action) {
       case 'visualizar':
         if (selectedItems.length === 1) {
-          window.location.href = `/clientes/${selectedItems[0].id}#carnes`;
+          navigate(`/clientes/${selectedItems[0].id}#carnes`);
         }
         break;
       case 'editar':
         if (selectedItems.length === 1) {
-          window.location.href = `/clientes/${selectedItems[0].id}/edit`;
+          navigate(`/clientes/${selectedItems[0].id}/edit`);
         }
         break;
       case 'deletar':

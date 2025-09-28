@@ -46,7 +46,7 @@ const ClienteShow: React.FC = () => {
     switch (action) {
       case 'visualizar':
         if (selectedItems.length === 1) {
-          window.open(`/carnes/${selectedItems[0].id}`, '_blank');
+          navigate(`/carnes/${selectedItems[0].id}`);
         }
         break;
       case 'editar':
