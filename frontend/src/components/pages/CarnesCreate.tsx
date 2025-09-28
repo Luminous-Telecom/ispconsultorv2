@@ -4,6 +4,7 @@ import { useCreateCarne } from '../../hooks/useCarnes';
 import { useClientesAtivos } from '../../hooks/useClientes';
 import { usePlanosAtivos } from '../../hooks/usePlanos';
 import { useBancosAtivos } from '../../hooks/useBancos';
+import { ParametroService } from '../../services/parametroService';
 
 interface CarneForm {
   cliente_id: number;
@@ -45,6 +46,26 @@ const CarnesCreate: React.FC = () => {
   const { data: clientes, error: clientesError } = useClientesAtivos();
   const { data: planos, error: planosError } = usePlanosAtivos();
   const { data: bancos, error: bancosError } = useBancosAtivos();
+
+  // Carregar número padrão de parcelas
+  useEffect(() => {
+    const carregarNumeroParcelasPadrao = async () => {
+      try {
+        const parametros = await ParametroService.getParametrosPorCategoria();
+        const numeroParcelasPadrao = parametros.carne?.find(p => p.chave === 'numero_parcelas_padrao')?.valor;
+        if (numeroParcelasPadrao) {
+          setFormData(prev => ({
+            ...prev,
+            quantidade_parcelas: parseInt(numeroParcelasPadrao, 10) || 12
+          }));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar número padrão de parcelas:', error);
+      }
+    };
+
+    carregarNumeroParcelasPadrao();
+  }, []);
 
   // Logs para monitorar carregamento dos dados
   useEffect(() => {

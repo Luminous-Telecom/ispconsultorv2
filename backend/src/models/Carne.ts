@@ -128,13 +128,17 @@ export class Carne extends Model<
       
       let novoStatus: string;
       
+      // Carnê é considerado pago APENAS se todas as parcelas estão pagas
       if (parcelasPagas === totalParcelas && totalParcelas > 0) {
         novoStatus = 'pago';
-      } else if (parcelasCanceladas === totalParcelas) {
+      } else if (parcelasCanceladas === totalParcelas && totalParcelas > 0) {
+        // Carnê é cancelado APENAS se todas as parcelas estão canceladas
         novoStatus = 'cancelado';
-      } else if (parcelasVencidas > 0) {
+      } else if (parcelasPagas > 0 || parcelasCanceladas > 0 || parcelasVencidas > 0) {
+        // Se há parcelas pagas, canceladas ou vencidas = carnê parcial
         novoStatus = 'parcial';
       } else {
+        // Todas as parcelas estão pendentes
         novoStatus = 'pendente';
       }
       
@@ -146,6 +150,8 @@ export class Carne extends Model<
           carne_id: this.id,
           status: `${statusAnterior} -> ${novoStatus}`,
           parcelas_pagas: parcelasPagas,
+          parcelas_canceladas: parcelasCanceladas,
+          parcelas_vencidas: parcelasVencidas,
           total_parcelas: totalParcelas
         });
       }
@@ -161,7 +167,19 @@ export class Carne extends Model<
     const parcelas: CarneParcela[] = [];
     const valor = valorParcela || await this.getValorParcela();
     
-    for (let i = 1; i <= this.quantidade_parcelas; i++) {
+    // Verificar se auto parcelas está habilitado
+    const { ParametroService } = await import('../services/ParametroService');
+    const autoParcelasEnabled = await ParametroService.isAutoParcelasEnabled();
+    
+    // Se auto parcelas está habilitado e não foi especificado número de parcelas, usar o padrão
+    let numeroParcelas = this.quantidade_parcelas;
+    if (autoParcelasEnabled && (!this.quantidade_parcelas || this.quantidade_parcelas <= 0)) {
+      numeroParcelas = await ParametroService.getNumeroParcelasPadrao();
+      // Atualizar o carnê com o número de parcelas padrão
+      await this.update({ quantidade_parcelas: numeroParcelas });
+    }
+    
+    for (let i = 1; i <= numeroParcelas; i++) {
       const dataVencimento = new Date(this.data_vencimento_primeira);
       dataVencimento.setMonth(dataVencimento.getMonth() + (i - 1));
       
@@ -223,6 +241,7 @@ export class Carne extends Model<
     parcelas_pendentes: number;
     parcelas_vencidas: number;
     parcelas_canceladas: number;
+    parcelas_finalizadas: number;
     valor_total: number;
     valor_pago: number;
     valor_pendente: number;
@@ -234,11 +253,12 @@ export class Carne extends Model<
     const parcelasPendentes = parcelas.filter(p => p.status === 'pendente').length;
     const parcelasVencidas = parcelas.filter(p => p.status === 'vencido').length;
     const parcelasCanceladas = parcelas.filter(p => p.status === 'cancelado').length;
+    const parcelasFinalizadas = parcelasPagas + parcelasCanceladas;
     
     const valorTotal = parcelas.reduce((total, p) => total + parseFloat(p.valor_parcela.toString()), 0);
     const valorPago = parcelas.filter(p => p.pago).reduce((total, p) => total + parseFloat(p.valor_parcela.toString()), 0);
     const valorPendente = valorTotal - valorPago;
-    const percentualPago = totalParcelas > 0 ? (parcelasPagas / totalParcelas) * 100 : 0;
+    const percentualPago = totalParcelas > 0 ? (parcelasFinalizadas / totalParcelas) * 100 : 0;
     
     return {
       total_parcelas: totalParcelas,
@@ -246,6 +266,7 @@ export class Carne extends Model<
       parcelas_pendentes: parcelasPendentes,
       parcelas_vencidas: parcelasVencidas,
       parcelas_canceladas: parcelasCanceladas,
+      parcelas_finalizadas: parcelasFinalizadas,
       valor_total: valorTotal,
       valor_pago: valorPago,
       valor_pendente: valorPendente,

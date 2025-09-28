@@ -152,21 +152,55 @@ export class SchedulerService {
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
 
-      // Atualizar log com sucesso
-      console.log('Atualizando log com sucesso:', executionLog.id);
+      // Verificar se houve erros nos resultados da rotina
+      let statusFinal = 'sucesso';
+      let temErros = false;
+
+      if (resultado && typeof resultado === 'object') {
+        // Para rotina de geração de títulos
+        if (resultado.carnês_erro && resultado.carnês_erro > 0) {
+          temErros = true;
+        }
+        if (resultado.títulos_erro && resultado.títulos_erro > 0) {
+          temErros = true;
+        }
+        
+        // Para outras rotinas, verificar se há erros nos detalhes
+        if (resultado.detalhes && Array.isArray(resultado.detalhes)) {
+          const errosDetalhes = resultado.detalhes.filter((d: any) => d.status === 'erro');
+          if (errosDetalhes.length > 0) {
+            temErros = true;
+          }
+        }
+      }
+
+      if (temErros) {
+        statusFinal = 'erro';
+        console.log('Rotina executada com erros:', routine.nome);
+      } else {
+        console.log('Rotina executada com sucesso:', routine.nome);
+      }
+
+      // Atualizar log com status correto
+      console.log('Atualizando log com status:', statusFinal, executionLog.id);
       await executionLog.update({
-        status: 'sucesso',
+        status: statusFinal as 'sucesso' | 'erro',
         data_fim: endTime,
         duracao_ms: duration,
         resultado: resultado
       });
-      console.log('Log atualizado com sucesso');
+      console.log('Log atualizado com status:', statusFinal);
 
       // Atualizar contadores da rotina
-      await routine.increment(['total_execucoes', 'execucoes_com_sucesso']);
+      await routine.increment('total_execucoes');
+      if (statusFinal === 'sucesso') {
+        await routine.increment('execucoes_com_sucesso');
+      } else {
+        await routine.increment('execucoes_com_erro');
+      }
       await routine.update({ ultima_execucao: endTime });
 
-      console.log(`Rotina executada com sucesso: ${routine.nome} (${duration}ms)`);
+      console.log(`Rotina ${statusFinal}: ${routine.nome} (${duration}ms)`);
 
     } catch (error: any) {
       console.error(`Erro ao executar rotina ${routine.nome}:`, error);
@@ -208,17 +242,35 @@ export class SchedulerService {
   }
 
   private async executeGeracaoTitulos(routine: ScheduledRoutine): Promise<any> {
-    // Implementar lógica de geração de títulos
     console.log('Executando geração de títulos...');
     
-    // Aqui você pode implementar a lógica específica
-    // Por exemplo: buscar clientes ativos, gerar carnês, etc.
-    
-    return {
-      titulos_gerados: 0,
-      clientes_processados: 0,
-      message: 'Geração de títulos executada'
-    };
+    try {
+      // Importar a rotina de geração de títulos
+      const { GeracaoTitulosRoutine } = await import('./routines/GeracaoTitulosRoutine');
+      
+      // Parsear configuração da rotina
+      let config = {};
+      try {
+        config = routine.configuracao ? JSON.parse(routine.configuracao) : {};
+      } catch (error) {
+        console.error('Erro ao parsear configuração da rotina:', error);
+        config = {};
+      }
+      
+      // Executar a rotina
+      const geracaoRoutine = new GeracaoTitulosRoutine();
+      const resultado = await geracaoRoutine.execute(config);
+      
+      console.log('Resultado da geração de títulos:', resultado);
+      
+      return {
+        ...resultado,
+        message: 'Geração de títulos executada com sucesso'
+      };
+    } catch (error: any) {
+      console.error('Erro ao executar geração de títulos:', error);
+      throw error;
+    }
   }
 
   private async executeEnvioBoletos(routine: ScheduledRoutine): Promise<any> {
@@ -365,11 +417,11 @@ export class SchedulerService {
 
     console.log(`Executando rotina manualmente: ${routine.nome} (ID: ${id})`);
     
-    // Usar runRoutine para criar logs completos
+    // Usar runRoutine para criar logs completos - isso já executa a rotina
     await this.runRoutine(routine);
     
-    // Retornar resultado da execução
-    return await this.executeRoutineByType(routine);
+    // Não executar novamente - runRoutine já fez isso
+    return { message: 'Rotina executada com sucesso' };
   }
 
 

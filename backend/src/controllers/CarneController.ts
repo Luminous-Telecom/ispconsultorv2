@@ -199,7 +199,14 @@ export class CarneController {
         return;
       }
       
-      if (!data.quantidade_parcelas || data.quantidade_parcelas <= 0) {
+      // Verificar se auto parcelas está habilitado
+      const { ParametroService } = await import('../services/ParametroService');
+      const autoParcelasEnabled = await ParametroService.isAutoParcelasEnabled();
+      
+      // Se auto parcelas está habilitado e não foi especificado número de parcelas, usar o padrão
+      if (autoParcelasEnabled && (!data.quantidade_parcelas || data.quantidade_parcelas <= 0)) {
+        data.quantidade_parcelas = await ParametroService.getNumeroParcelasPadrao();
+      } else if (!data.quantidade_parcelas || data.quantidade_parcelas <= 0) {
         res.status(400).json({ error: 'Quantidade de parcelas deve ser maior que zero' });
         return;
       }

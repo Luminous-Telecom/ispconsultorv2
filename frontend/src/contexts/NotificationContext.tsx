@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback, useMemo } from 'react';
 
 export interface Notification {
   id: string;
@@ -81,7 +81,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     return addNotification('info', message, duration);
   }, [addNotification]);
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     notifications,
     addNotification,
     removeNotification,
@@ -90,7 +90,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     error,
     warning,
     info,
-  };
+  }), [notifications, addNotification, removeNotification, clearAllNotifications, success, error, warning, info]);
 
   return (
     <NotificationContext.Provider value={contextValue}>

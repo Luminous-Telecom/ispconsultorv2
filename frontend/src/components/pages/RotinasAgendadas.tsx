@@ -64,13 +64,13 @@ const RotinasAgendadas: React.FC = () => {
       
       if (response.success) {
         setRotinas(response.data);
-        addNotification('success', 'Dados atualizados com sucesso!');
+        addNotification('success', 'Dados atualizados com sucesso!', 3000); // 3 segundos
       } else {
-        addNotification('error', 'Erro ao atualizar dados');
+        addNotification('error', 'Erro ao atualizar dados', 5000);
       }
     } catch (error) {
       console.error('Erro ao atualizar rotinas:', error);
-      addNotification('error', 'Erro ao atualizar dados');
+      addNotification('error', 'Erro ao atualizar dados', 5000);
     }
   }, [page, limit, search, sortColumn, sortDirection, addNotification]);
 

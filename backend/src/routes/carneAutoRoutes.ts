@@ -3,16 +3,13 @@ import { CarneAutoController } from '../controllers/CarneAutoController';
 
 const router = Router();
 
-// Verificar todos os carnês pagos e gerar novos automaticamente
-router.post('/verificar-todos', CarneAutoController.verificarTodos);
+// Verificar se um cliente precisa de um novo carnê
+router.get('/verificar-necessidade/:clienteId', CarneAutoController.verificarNecessidadeNovoCarne);
 
-// Verificar um carnê específico e gerar novo se necessário
-router.post('/verificar/:id', CarneAutoController.verificarCarne);
+// Obter configurações de auto carnê
+router.get('/configuracoes', CarneAutoController.getConfiguracoes);
 
-// Obter configurações de geração automática
-router.get('/configuracao', CarneAutoController.getConfiguracao);
-
-// Atualizar configurações de geração automática
-router.put('/configuracao', CarneAutoController.setConfiguracao);
+// Forçar verificação e geração de carnê automático
+router.post('/forcar-geracao/:carneId', CarneAutoController.forcarGeracaoCarneAutomatico);
 
 export default router;

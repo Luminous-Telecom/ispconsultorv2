@@ -389,6 +389,25 @@ export class CarneParcelaController {
       // Verificar e atualizar status do carnê
       await carne.verificarEAtualizarStatus();
 
+      // Verificar se deve gerar carnê automático
+      try {
+        const { CarneAutoService } = await import('../services/CarneAutoService');
+        const carnêGerado = await CarneAutoService.verificarEGerarCarneAutomatico(carne.id);
+        
+        if (carnêGerado) {
+          logger.info('Carnê automático gerado após pagamento de parcela', {
+            parcela_id: parcela.id,
+            carne_id: carne.id
+          });
+        }
+      } catch (error) {
+        logger.error('Erro ao verificar geração automática de carnê', {
+          parcela_id: parcela.id,
+          carne_id: carne.id,
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
+      }
+
       const msg = settleOk 
         ? 'Parcela marcada como paga na Efí e no sistema.' 
         : 'Parcela marcada como paga no sistema.';
