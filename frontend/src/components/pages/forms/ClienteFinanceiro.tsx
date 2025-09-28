@@ -70,7 +70,11 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         </span>
       )
     },
-    { key: 'valor_total', label: 'Valor Total', render: (item: any) => `R$ ${item.valor_total?.toFixed(2) || '0.00'}` },
+    { key: 'valor_total', label: 'Valor Total', render: (item: any) => {
+        const valor = parseFloat(item.valor_total) || 0;
+        return `R$ ${valor.toFixed(2)}`;
+      }
+    },
     { key: 'data_vencimento', label: 'Vencimento', sortable: true },
     { key: 'banco.nome', label: 'Banco' },
     {
@@ -104,7 +108,11 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         </span>
       )
     },
-    { key: 'valor_parcela', label: 'Valor', render: (item: any) => `R$ ${item.valor_parcela?.toFixed(2) || '0.00'}` },
+    { key: 'valor_parcela', label: 'Valor', render: (item: any) => {
+        const valor = parseFloat(item.valor_parcela) || 0;
+        return `R$ ${valor.toFixed(2)}`;
+      }
+    },
     { key: 'data_vencimento', label: 'Vencimento', sortable: true },
     { key: 'data_pagamento', label: 'Pagamento', sortable: true },
     {
