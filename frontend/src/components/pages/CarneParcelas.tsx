@@ -204,8 +204,8 @@ const CarneParcelas: React.FC = () => {
       return;
     }
 
-    if (carneData.banco.tipo_banco !== 'efi') {
-      error(`Registro no banco não suportado para tipo '${carneData.banco.tipo_banco}'. Apenas bancos EFI têm suporte completo.`);
+    if (!carneData.banco.client_id_producao || !carneData.banco.client_secret_producao) {
+      error(`Banco '${carneData.banco.nome}' não possui credenciais configuradas. Configure Client ID e Client Secret para registrar carnês.`);
       return;
     }
 
@@ -368,7 +368,7 @@ const CarneParcelas: React.FC = () => {
               </nav>
             </div>
             <div>
-              {!carneData?.carnet_id && carneData?.banco?.tipo_banco === 'efi' ? (
+              {!carneData?.carnet_id && carneData?.banco?.client_id_producao && carneData?.banco?.client_secret_producao ? (
                 <button 
                   type="button" 
                   className="btn btn-primary me-2"
@@ -390,9 +390,9 @@ const CarneParcelas: React.FC = () => {
                 <span className="btn btn-success me-2" style={{ cursor: 'default' }}>
                   <i className="bi bi-check-circle"></i> Registrado no Banco
                 </span>
-              ) : carneData?.banco?.tipo_banco !== 'efi' ? (
-                <span className="btn btn-secondary me-2" style={{ cursor: 'default' }}>
-                  <i className="bi bi-info-circle"></i> Banco {carneData?.banco?.tipo_banco?.toUpperCase()} - Sem suporte
+              ) : !carneData?.banco?.client_id_producao || !carneData?.banco?.client_secret_producao ? (
+                <span className="btn btn-warning me-2" style={{ cursor: 'default' }}>
+                  <i className="bi bi-exclamation-triangle"></i> {carneData?.banco?.nome} - Sem credenciais
                 </span>
               ) : null}
               <Link to="/carnes" className="btn btn-secondary">
