@@ -242,12 +242,16 @@ export class CarneParcelaController {
 
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { carne_id, search, status, page = 1, limit = 15 } = req.query;
+      const { carne_id, cliente_id, search, status, page = 1, limit = 15 } = req.query;
 
       const where: any = {};
       
       if (carne_id) {
         where.carne_id = carne_id;
+      }
+      
+      if (cliente_id) {
+        where['$carne.cliente_id$'] = cliente_id;
       }
       
       if (search) {

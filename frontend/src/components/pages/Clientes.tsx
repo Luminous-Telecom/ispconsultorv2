@@ -105,6 +105,11 @@ const Clientes: React.FC = () => {
     if (selectedItems.length === 0) return;
     
     switch (action) {
+      case 'visualizar':
+        if (selectedItems.length === 1) {
+          window.location.href = `/clientes/${selectedItems[0].id}`;
+        }
+        break;
       case 'editar':
         if (selectedItems.length === 1) {
           window.location.href = `/clientes/${selectedItems[0].id}/edit`;
@@ -186,6 +191,10 @@ const Clientes: React.FC = () => {
           {
             label: "Novo",
             action: () => window.location.href = "/clientes/create"
+          },
+          {
+            label: "Visualizar",
+            action: (selectedItems) => handleTopoActions('visualizar', selectedItems)
           },
           {
             label: "Editar",
