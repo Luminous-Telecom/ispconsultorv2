@@ -41,7 +41,7 @@ const ClienteShow: React.FC = () => {
         break;
       case 'editar':
         if (selectedItems.length === 1) {
-          window.open(`/carnes/${selectedItems[0].id}/edit`, '_blank');
+          navigate(`/carnes/${selectedItems[0].id}/edit`);
         }
         break;
       case 'imprimir':
