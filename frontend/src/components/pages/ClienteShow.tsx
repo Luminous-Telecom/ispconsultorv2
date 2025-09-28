@@ -6,6 +6,7 @@ import { CarneService } from '../../services/carneService';
 import { CarneParcelaService } from '../../services/carneParcelaService';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import DataTable from '../common/DataTable';
+import { getApiUrl } from '../../config/api';
 
 const ClienteShow: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -56,7 +57,8 @@ const ClienteShow: React.FC = () => {
         break;
       case 'imprimir':
         if (selectedItems.length === 1) {
-          window.open(`/boleto/web/${selectedItems[0].id}`, '_blank');
+          const url = getApiUrl(`/boleto/web/${selectedItems[0].id}`);
+          window.open(url, '_blank', 'noopener,noreferrer');
         }
         break;
     }
