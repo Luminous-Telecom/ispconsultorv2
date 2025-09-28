@@ -141,55 +141,51 @@ const ClienteEdit: React.FC = () => {
       {/* Sistema de abas */}
       <div className="card">
         {/* Botões de ação no cabeçalho do card */}
-        <div className="card-header d-flex justify-content-end gap-2">
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => navigate('/clientes/create')}
-          >
-            <i className="bi bi-plus me-1"></i>
-            Novo
-          </button>
-          <button
-            className="btn btn-success btn-sm"
-            disabled={!hasChanges}
-            onClick={handleSave}
-          >
-            <i className="bi bi-check me-1"></i>
-            Salvar
-          </button>
-          <button
-            className="btn btn-outline-secondary btn-sm"
-            onClick={handleCancel}
-          >
-            <i className="bi bi-x me-1"></i>
-            Cancelar
-          </button>
-          <button
-            className="btn btn-outline-primary btn-sm"
-            onClick={() => navigate('/clientes')}
-          >
-            <i className="bi bi-arrow-left me-1"></i>
-            Voltar
-          </button>
-          <button
-            className="btn btn-outline-danger btn-sm"
-            title="Deletar Cliente"
-          >
-            <i className="bi bi-trash"></i>
-          </button>
-          <button
-            className="btn btn-outline-info btn-sm"
-            title="Localização"
-          >
-            <i className="bi bi-geo-alt"></i>
-          </button>
-          <button
-            className="btn btn-outline-warning btn-sm"
-            title="Enviar notificação push"
-          >
-            <i className="bi bi-bell"></i>
-          </button>
-        </div>
+           <div className="card-header d-flex justify-content-end gap-2">
+             <button
+               className="btn btn-sm btn-primary"
+               onClick={() => navigate('/clientes/create')}
+             >
+               Novo
+             </button>
+             <button
+               className="btn btn-sm btn-primary"
+               disabled={!hasChanges}
+               onClick={handleSave}
+             >
+               Salvar
+             </button>
+             <button
+               className="btn btn-outline-secondary btn-sm"
+               onClick={handleCancel}
+             >
+               Cancelar
+             </button>
+             <button
+               className="btn btn-outline-secondary btn-sm"
+               onClick={() => navigate('/clientes')}
+             >
+               Voltar
+             </button>
+             <button
+               className="btn btn-outline-secondary btn-sm"
+               title="Deletar Cliente"
+             >
+               Deletar
+             </button>
+             <button
+               className="btn btn-outline-secondary btn-sm"
+               title="Localização"
+             >
+               Localização
+             </button>
+             <button
+               className="btn btn-outline-secondary btn-sm"
+               title="Enviar notificação push"
+             >
+               Notificação
+             </button>
+           </div>
 
         <div className="card-header">
           <ul className="nav nav-tabs card-header-tabs" role="tablist">
