@@ -97,17 +97,17 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
             <div className="q-gutter-sm">
               <QRadio
                 v-model={formData.ativo}
-                :val={true}
+                val={true}
                 label="Ativo"
-                :disable="!isEditing}
-                @update:model-value={(val) => handleInputChange('ativo', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('ativo', val)}
               />
               <QRadio
                 v-model={formData.ativo}
-                :val={false}
+                val={false}
                 label="Inativo"
-                :disable={!isEditing}
-                @update:model-value={(val) => handleInputChange('ativo', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('ativo', val)}
               />
             </div>
           </QField>
@@ -123,15 +123,15 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
                 v-model={formData.tipo_pessoa}
                 val="fisica"
                 label="Pessoa Física"
-                :disable={!isEditing}
-                @update:model-value={(val) => handleInputChange('tipo_pessoa', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('tipo_pessoa', val)}
               />
               <QRadio
                 v-model={formData.tipo_pessoa}
                 val="juridica"
                 label="Pessoa Jurídica"
-                :disable={!isEditing}
-                @update:model-value={(val) => handleInputChange('tipo_pessoa', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('tipo_pessoa', val)}
               />
             </div>
           </QField>

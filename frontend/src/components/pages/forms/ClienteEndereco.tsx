@@ -300,9 +300,9 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           <QField label="Referência" stack-label>
             <QInput
               v-model={formData.referencia}
-              :disable={!isEditing}
+              disable={!isEditing}
               filled
-              @update:model-value={(val) => handleInputChange('referencia', val)}
+              onUpdate:modelValue={(val) => handleInputChange('referencia', val)}
             />
           </QField>
         </div>
@@ -317,15 +317,15 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 v-model={formData.moradia}
                 val="propria"
                 label="Própria"
-                :disable={!isEditing}
-                @update:model-value={(val) => handleInputChange('moradia', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('moradia', val)}
               />
               <QRadio
                 v-model={formData.moradia}
                 val="alugada"
                 label="Alugada"
-                :disable={!isEditing}
-                @update:model-value={(val) => handleInputChange('moradia', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('moradia', val)}
               />
             </div>
           </QField>

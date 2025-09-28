@@ -324,22 +324,22 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
                 v-model={formData.permitir_acesso_automatico}
                 val="sim"
                 label="Sim"
-                :disable={!isEditing}
-                @update:model-value={(val) => handleInputChange('permitir_acesso_automatico', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('permitir_acesso_automatico', val)}
               />
               <QRadio
                 v-model={formData.permitir_acesso_automatico}
                 val="nao"
                 label="Não"
-                :disable={!isEditing}
-                @update:model-value={(val) => handleInputChange('permitir_acesso_automatico', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('permitir_acesso_automatico', val)}
               />
               <QRadio
                 v-model={formData.permitir_acesso_automatico}
                 val="padrao"
                 label="Padrão"
-                :disable={!isEditing}
-                @update:model-value={(val) => handleInputChange('permitir_acesso_automatico', val)}
+                disable={!isEditing}
+                onUpdate:modelValue={(val) => handleInputChange('permitir_acesso_automatico', val)}
               />
             </div>
             <template v-slot:hint>

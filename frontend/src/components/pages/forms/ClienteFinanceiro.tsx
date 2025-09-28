@@ -244,7 +244,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               color="primary"
               icon="edit"
               label="Editar"
-              @click={onEdit}
+              onClick={onEdit}
             />
           )}
         </div>
@@ -255,18 +255,18 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       {/* Sub-abas para Carnês e Títulos */}
       <div className="row q-gutter-sm q-mb-md">
         <QBtn
-          :color="activeSubTab === 'carnes' ? 'primary' : 'grey-7'"
-          :flat="activeSubTab !== 'carnes'"
+          color={activeSubTab === 'carnes' ? 'primary' : 'grey-7'}
+          flat={activeSubTab !== 'carnes'}
           label="Carnês"
           icon="account_balance_wallet"
-          @click={() => setActiveSubTab('carnes')}
+          onClick={() => setActiveSubTab('carnes')}
         />
         <QBtn
-          :color="activeSubTab === 'titulos' ? 'primary' : 'grey-7'"
-          :flat="activeSubTab !== 'titulos'"
+          color={activeSubTab === 'titulos' ? 'primary' : 'grey-7'}
+          flat={activeSubTab !== 'titulos'}
           label="Títulos"
           icon="receipt"
-          @click={() => setActiveSubTab('titulos')}
+          onClick={() => setActiveSubTab('titulos')}
         />
       </div>
 
@@ -276,36 +276,36 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
           color="primary"
           icon="visibility"
           label="Visualizar"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('visualizar')}
+          disable={selectedItems.length === 0}
+          onClick={() => handleBulkAction('visualizar')}
         />
         <QBtn
           color="primary"
           icon="print"
           label="Imprimir"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('imprimir')}
+          disable={selectedItems.length === 0}
+          onClick={() => handleBulkAction('imprimir')}
         />
         <QBtn
           color="positive"
           icon="check_circle"
           label="Marcar como Pago"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('marcar_pago')}
+          disable={selectedItems.length === 0}
+          onClick={() => handleBulkAction('marcar_pago')}
         />
         <QBtn
           color="warning"
           icon="edit"
           label="Editar"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('editar')}
+          disable={selectedItems.length === 0}
+          onClick={() => handleBulkAction('editar')}
         />
         <QBtn
           color="negative"
           icon="delete"
           label="Deletar"
-          :disable={selectedItems.length === 0}
-          @click={() => handleBulkAction('deletar')}
+          disable={selectedItems.length === 0}
+          onClick={() => handleBulkAction('deletar')}
         />
       </div>
 
@@ -314,33 +314,33 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         <QCard>
           <QCardSection>
             <QTable
-              :rows="carnes?.data || []"
-              :columns="carnesColumns"
+              rows={carnes?.data || []}
+              columns={carnesColumns}
               row-key="id"
               selection="multiple"
-              v-model:selected="selectedItems"
-              :loading="carnesLoading"
-              :rows-per-page-options="[10, 25, 50]"
-              :pagination="{ rowsPerPage: 15 }"
+              selected={selectedItems}
+              loading={carnesLoading}
+              rows-per-page-options={[10, 25, 50]}
+              pagination={{ rowsPerPage: 15 }}
             >
-              <template v-slot:body-cell-select="props">
+              <template slot="body-cell-select" slot-scope="props">
                 <QCheckbox
-                  v-model="props.selected"
-                  @update:model-value="handleSelectItems"
+                  v-model={props.selected}
+                  onUpdate:modelValue={handleSelectItems}
                 />
               </template>
 
-              <template v-slot:body-cell-status="props">
+              <template slot="body-cell-status" slot-scope="props">
                 <QBtn
-                  :color="getStatusColor(props.value)"
-                  :label="getStatusLabel(props.value)"
+                  color={getStatusColor(props.value)}
+                  label={getStatusLabel(props.value)}
                   dense
                   flat
                   size="sm"
                 />
               </template>
 
-              <template v-slot:body-cell-actions="props">
+              <template slot="body-cell-actions" slot-scope="props">
                 <div className="q-gutter-xs">
                   <QBtn
                     color="primary"
@@ -348,7 +348,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     size="sm"
                     flat
                     dense
-                    @click={() => window.open(`/carnes/${props.row.id}`, '_blank')}
+                    onClick={() => window.open(`/carnes/${props.row.id}`, '_blank')}
                   />
                   <QBtn
                     color="primary"
@@ -356,7 +356,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     size="sm"
                     flat
                     dense
-                    @click={() => window.open(getApiUrl(`/boleto/web/${props.row.id}`), '_blank')}
+                    onClick={() => window.open(getApiUrl(`/boleto/web/${props.row.id}`), '_blank')}
                   />
                   <QBtn
                     color="warning"
@@ -364,7 +364,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     size="sm"
                     flat
                     dense
-                    @click={() => window.open(`/carnes/${props.row.id}/edit`, '_blank')}
+                    onClick={() => window.open(`/carnes/${props.row.id}/edit`, '_blank')}
                   />
                 </div>
               </template>
@@ -378,33 +378,33 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         <QCard>
           <QCardSection>
             <QTable
-              :rows="titulos?.data || []"
-              :columns="titulosColumns"
+              rows={titulos?.data || []}
+              columns={titulosColumns}
               row-key="id"
               selection="multiple"
-              v-model:selected="selectedItems"
-              :loading="titulosLoading"
-              :rows-per-page-options="[10, 25, 50]"
-              :pagination="{ rowsPerPage: 15 }"
+              selected={selectedItems}
+              loading={titulosLoading}
+              rows-per-page-options={[10, 25, 50]}
+              pagination={{ rowsPerPage: 15 }}
             >
-              <template v-slot:body-cell-select="props">
+              <template slot="body-cell-select" slot-scope="props">
                 <QCheckbox
-                  v-model="props.selected"
-                  @update:model-value="handleSelectItems"
+                  v-model={props.selected}
+                  onUpdate:modelValue={handleSelectItems}
                 />
               </template>
 
-              <template v-slot:body-cell-status="props">
+              <template slot="body-cell-status" slot-scope="props">
                 <QBtn
-                  :color="getStatusColor(props.value)"
-                  :label="getStatusLabel(props.value)"
+                  color={getStatusColor(props.value)}
+                  label={getStatusLabel(props.value)}
                   dense
                   flat
                   size="sm"
                 />
               </template>
 
-              <template v-slot:body-cell-actions="props">
+              <template slot="body-cell-actions" slot-scope="props">
                 <div className="q-gutter-xs">
                   <QBtn
                     color="primary"
@@ -412,7 +412,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     size="sm"
                     flat
                     dense
-                    @click={() => window.open(`/carne-parcelas/${props.row.id}`, '_blank')}
+                    onClick={() => window.open(`/carne-parcelas/${props.row.id}`, '_blank')}
                   />
                   <QBtn
                     color="primary"
@@ -420,7 +420,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     size="sm"
                     flat
                     dense
-                    @click={() => window.open(getApiUrl(`/boleto/web/${props.row.id}`), '_blank')}
+                    onClick={() => window.open(getApiUrl(`/boleto/web/${props.row.id}`), '_blank')}
                   />
                 </div>
               </template>
