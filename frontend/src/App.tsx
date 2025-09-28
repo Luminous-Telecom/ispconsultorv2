@@ -14,6 +14,7 @@ import Clientes from './components/pages/Clientes';
 import ClientesCreate from './components/pages/ClientesCreate';
 import ClientesEdit from './components/pages/ClientesEdit';
 import ClienteShow from './components/pages/ClienteShow';
+import ClienteEdit from './components/pages/ClienteEdit';
 import Planos from './components/pages/Planos';
 import PlanosCreate from './components/pages/PlanosCreate';
 import PlanosEdit from './components/pages/PlanosEdit';
@@ -56,7 +57,7 @@ function App() {
             <Route path="clientes" element={<Clientes />} />
             <Route path="clientes/create" element={<ClientesCreate />} />
             <Route path="clientes/:id" element={<ClienteShow />} />
-            <Route path="clientes/:id/edit" element={<ClientesEdit />} />
+            <Route path="clientes/:id/edit" element={<ClienteEdit />} />
             <Route path="planos" element={<Planos />} />
             <Route path="planos/create" element={<PlanosCreate />} />
             <Route path="planos/:id/edit" element={<PlanosEdit />} />
