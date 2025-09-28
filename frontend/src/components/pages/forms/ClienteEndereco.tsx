@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { QCard, QCardSection, QInput, QBtn, QIcon, QField, QSeparator } from 'quasar';
+import { QCard, QCardSection, QInput, QBtn, QIcon, QField, QSeparator, QRadio } from 'quasar';
 
 interface ClienteEnderecoProps {
   cliente: any;
@@ -25,7 +25,8 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
     condominio: '',
     bloco: '',
     apartamento: '',
-    referencia: ''
+    referencia: '',
+    moradia: 'propria'
   });
 
   // Atualizar dados quando cliente mudar
@@ -42,7 +43,8 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
         condominio: '',
         bloco: '',
         apartamento: '',
-        referencia: ''
+        referencia: '',
+        moradia: 'propria'
       });
     }
   }, [cliente]);
@@ -312,16 +314,18 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           <QField label="Moradia" stack-label>
             <div className="q-gutter-sm">
               <QRadio
-                v-model="formData.moradia"
+                v-model={formData.moradia}
                 val="propria"
                 label="Própria"
                 :disable={!isEditing}
+                @update:model-value={(val) => handleInputChange('moradia', val)}
               />
               <QRadio
-                v-model="formData.moradia"
+                v-model={formData.moradia}
                 val="alugada"
                 label="Alugada"
                 :disable={!isEditing}
+                @update:model-value={(val) => handleInputChange('moradia', val)}
               />
             </div>
           </QField>

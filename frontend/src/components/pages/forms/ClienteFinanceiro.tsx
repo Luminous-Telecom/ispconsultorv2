@@ -383,7 +383,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               row-key="id"
               selection="multiple"
               v-model:selected="selectedItems"
-              :loading="titulosLoading}
+              :loading="titulosLoading"
               :rows-per-page-options="[10, 25, 50]"
               :pagination="{ rowsPerPage: 15 }"
             >
