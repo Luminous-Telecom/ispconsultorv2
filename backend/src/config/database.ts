@@ -10,7 +10,7 @@ const sequelize = new Sequelize({
   database: process.env.DB_NAME || 'erp_assessoria',
   username: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  logging: false,
   pool: {
     max: 10,
     min: 0,
