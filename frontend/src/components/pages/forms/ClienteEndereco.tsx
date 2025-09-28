@@ -26,15 +26,14 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
   }
 
   return (
-    <div className="card">
-      <div className="card-body p-2">
-        <div className="mb-1">
-          <small className="card-title mb-0 fw-bold">
-            Endereço do Cliente
-          </small>
-        </div>
+    <div>
+      <div className="mb-1">
+        <small className="fw-bold">
+          Endereço do Cliente
+        </small>
+      </div>
 
-        <div className="row g-1">
+      <div className="row g-1">
           <div className="col-md-4">
             <label className="form-label small text-muted">Condomínio</label>
             <div className="input-group">
@@ -238,7 +237,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

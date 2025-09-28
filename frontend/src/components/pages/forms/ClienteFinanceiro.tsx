@@ -130,11 +130,10 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   }
 
   return (
-    <div className="card">
-      <div className="card-body p-2">
-        <small className="card-title mb-1 fw-bold">
-          Financeiro do Cliente
-        </small>
+    <div>
+      <small className="mb-1 fw-bold">
+        Financeiro do Cliente
+      </small>
 
         <ul className="nav nav-tabs" role="tablist">
           <li className="nav-item" role="presentation">
@@ -234,7 +233,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

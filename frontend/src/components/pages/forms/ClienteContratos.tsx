@@ -85,12 +85,11 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   }
 
   return (
-    <div className="card">
-      <div className="card-body p-2">
-        <div className="d-flex justify-content-between align-items-center mb-1">
-          <small className="card-title mb-0 fw-bold">
-            Contratos do Cliente
-          </small>
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <small className="fw-bold">
+          Contratos do Cliente
+        </small>
           <button
             className="btn btn-primary"
             onClick={() => handleBulkAction('novo')}
@@ -262,7 +261,6 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
           </button>
         </div>
       </div>
-    </div>
   );
 };
 

@@ -26,15 +26,14 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
   }
 
   return (
-    <div className="card">
-      <div className="card-body p-2">
-        <div className="mb-1">
-          <small className="card-title mb-0 fw-bold">
-            Dados Básicos do Cliente
-          </small>
-        </div>
+    <div>
+      <div className="mb-1">
+        <small className="fw-bold">
+          Dados Básicos do Cliente
+        </small>
+      </div>
 
-        <div className="row g-1">
+      <div className="row g-1">
           <div className="col-md-6">
             <label className="form-label small text-muted">ID</label>
             <input
@@ -189,7 +188,6 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
