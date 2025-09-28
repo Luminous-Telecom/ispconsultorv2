@@ -29,6 +29,54 @@ const ClienteShow: React.FC = () => {
     success('Dados atualizados com sucesso!', 3000);
   };
 
+  // Funções para ações das tabelas
+  const handleTopoActionsCarnes = (action: string, selectedItems: any[]) => {
+    if (selectedItems.length === 0) return;
+    
+    switch (action) {
+      case 'visualizar':
+        if (selectedItems.length === 1) {
+          window.open(`/carnes/${selectedItems[0].id}`, '_blank');
+        }
+        break;
+      case 'editar':
+        if (selectedItems.length === 1) {
+          window.open(`/carnes/${selectedItems[0].id}/edit`, '_blank');
+        }
+        break;
+      case 'imprimir':
+        if (selectedItems.length === 1) {
+          window.open(`${process.env.REACT_APP_API_URL}/carnes/${selectedItems[0].id}/imprimir`, '_blank');
+        }
+        break;
+    }
+  };
+
+  const handleTopoActionsTitulos = (action: string, selectedItems: any[]) => {
+    if (selectedItems.length === 0) return;
+    
+    switch (action) {
+      case 'imprimir':
+        if (selectedItems.length === 1) {
+          const parcela = selectedItems[0];
+          if (parcela.url_boleto) {
+            window.open(parcela.url_boleto, '_blank');
+          } else {
+            error('URL do boleto não disponível para esta parcela');
+          }
+        }
+        break;
+      case 'marcar_pago':
+        // TODO: Implementar ação de marcar como pago
+        success('Funcionalidade será implementada em breve');
+        break;
+      case 'desmarcar_pago':
+        // TODO: Implementar ação de desmarcar pago
+        success('Funcionalidade será implementada em breve');
+        break;
+    }
+  };
+
   // Buscar cliente
   const { data: cliente, isLoading: clienteLoading, error: clienteError } = useQuery({
     queryKey: ['cliente', id],
@@ -363,6 +411,20 @@ const ClienteShow: React.FC = () => {
                   setPage={setPage}
                   emptyMessage="Nenhum carnê encontrado para este cliente"
                   onRefresh={handleRefreshCarnes}
+                  bulkActions={[
+                    {
+                      label: "Visualizar",
+                      action: (selectedItems) => handleTopoActionsCarnes('visualizar', selectedItems)
+                    },
+                    {
+                      label: "Editar",
+                      action: (selectedItems) => handleTopoActionsCarnes('editar', selectedItems)
+                    },
+                    {
+                      label: "Imprimir",
+                      action: (selectedItems) => handleTopoActionsCarnes('imprimir', selectedItems)
+                    }
+                  ]}
                 />
               ) : (
                 <DataTable
@@ -375,6 +437,20 @@ const ClienteShow: React.FC = () => {
                   setPage={setPage}
                   emptyMessage="Nenhum título encontrado para este cliente"
                   onRefresh={handleRefreshTitulos}
+                  bulkActions={[
+                    {
+                      label: "Marcar como Pago",
+                      action: (selectedItems) => handleTopoActionsTitulos('marcar_pago', selectedItems)
+                    },
+                    {
+                      label: "Desmarcar Pago",
+                      action: (selectedItems) => handleTopoActionsTitulos('desmarcar_pago', selectedItems)
+                    },
+                    {
+                      label: "Imprimir",
+                      action: (selectedItems) => handleTopoActionsTitulos('imprimir', selectedItems)
+                    }
+                  ]}
                 />
               )}
             </div>
