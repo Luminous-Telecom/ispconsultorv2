@@ -12,7 +12,7 @@ const Parametros: React.FC = () => {
 
   const categorias = [
     { key: 'validacao', nome: 'Validação de Documentos', icon: '📋' },
-    { key: 'titulos', nome: 'Geração de Títulos', icon: '📄' },
+    { key: 'titulos', nome: 'Atualizar Cobranças', icon: '📄' },
     { key: 'carne', nome: 'Geração de Carnê', icon: '📚' }
   ];
 

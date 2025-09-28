@@ -36,7 +36,7 @@ const RotinaForm: React.FC<RotinaFormProps> = ({ show, onSuccess, onCancel, edit
     } else {
       // Modo criação - inicializar com valores padrão
       const nomesPorTipo: Record<string, string> = {
-        'geracao_titulos': 'Geração de Títulos',
+        'geracao_titulos': 'Atualizar Cobranças',
         'envio_boletos': 'Envio de Boletos',
         'remessa_bancaria': 'Remessa Bancária',
         'outros': 'Rotina Personalizada'
@@ -56,7 +56,7 @@ const RotinaForm: React.FC<RotinaFormProps> = ({ show, onSuccess, onCancel, edit
     // Se mudou o tipo, atualizar o nome automaticamente
     if (name === 'tipo') {
       const nomesPorTipo: Record<string, string> = {
-        'geracao_titulos': 'Geração de Títulos',
+        'geracao_titulos': 'Atualizar Cobranças',
         'envio_boletos': 'Envio de Boletos',
         'remessa_bancaria': 'Remessa Bancária',
         'outros': 'Rotina Personalizada'
@@ -149,7 +149,7 @@ const RotinaForm: React.FC<RotinaFormProps> = ({ show, onSuccess, onCancel, edit
                 value={formData.tipo}
                 onChange={handleChange}
               >
-                <option value="geracao_titulos">Geração de Títulos</option>
+                <option value="geracao_titulos">Atualizar Cobranças</option>
                 <option value="envio_boletos">Envio de Boletos</option>
                 <option value="remessa_bancaria">Remessa Bancária</option>
                 <option value="outros">Outros</option>
@@ -210,7 +210,7 @@ const RotinaForm: React.FC<RotinaFormProps> = ({ show, onSuccess, onCancel, edit
         {/* Configurações específicas por tipo */}
         {formData.tipo === 'geracao_titulos' && (
           <div className="mb-3">
-            <label className="form-label">Configurações para Geração de Títulos</label>
+            <label className="form-label">Configurações para Atualizar Cobranças</label>
             <div className="form-text">
               Esta rotina irá gerar títulos automaticamente para clientes ativos.
               Configure os parâmetros específicos conforme necessário.

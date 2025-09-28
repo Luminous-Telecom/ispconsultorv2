@@ -112,7 +112,7 @@ const RotinasAgendadas: React.FC = () => {
 
   const getTipoLabel = (tipo: string) => {
     switch (tipo) {
-      case 'geracao_titulos': return 'Geração de Títulos';
+      case 'geracao_titulos': return 'Atualizar Cobranças';
       case 'envio_boletos': return 'Envio de Boletos';
       case 'remessa_bancaria': return 'Remessa Bancária';
       default: return tipo;

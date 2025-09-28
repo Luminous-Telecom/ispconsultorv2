@@ -13,7 +13,7 @@ module.exports = {
       nome: {
         type: Sequelize.STRING(100),
         allowNull: false,
-        comment: 'Nome da rotina (ex: Geração de Títulos Mensais)'
+        comment: 'Nome da rotina (ex: Atualizar Cobranças Mensais)'
       },
       tipo: {
         type: Sequelize.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'outros'),
