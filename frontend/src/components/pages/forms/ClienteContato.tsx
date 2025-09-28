@@ -28,17 +28,10 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
   return (
     <div className="card">
       <div className="card-body">
-        <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="mb-3">
           <h5 className="card-title mb-0">
             Contatos do Cliente
           </h5>
-          <button
-            className="btn btn-outline-primary"
-            onClick={handleEdit}
-          >
-            <i className={`bi ${isEditing ? 'bi-check' : 'bi-pencil'} me-1`}></i>
-            {isEditing ? 'Salvar' : 'Editar'}
-          </button>
         </div>
 
         <div className="row g-3">
