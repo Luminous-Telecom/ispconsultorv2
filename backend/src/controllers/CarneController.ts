@@ -883,6 +883,8 @@ export class CarneController {
   static async consultarStatus(req: Request, res: Response): Promise<void> {
     try {
       const { carne } = req.params as any;
+      console.log('Consultando status do carnê:', carne);
+      
       const carneObj = await Carne.findByPk(carne, {
         include: [
           { association: 'banco' },
@@ -890,7 +892,8 @@ export class CarneController {
         ]
       });
       
-      if (!carne) {
+      if (!carneObj) {
+        console.log('Carnê não encontrado:', carne);
         res.status(404).json({ 
           success: false,
           error: 'Carnê não encontrado' 
@@ -898,9 +901,25 @@ export class CarneController {
         return;
       }
 
-      const banco = await carne.getBanco();
+      console.log('Carnê encontrado:', {
+        id: carneObj.id,
+        carnet_id: carneObj.carnet_id,
+        status: carneObj.status
+      });
+
+      const banco = await carneObj.getBanco();
+      console.log('Banco encontrado:', {
+        id: banco?.id,
+        tipo_banco: banco?.tipo_banco,
+        nome: banco?.nome
+      });
       
-      if (!banco || banco.tipo_banco !== 'efi' || !carne.carnet_id) {
+      if (!banco || banco.tipo_banco !== 'efi' || !carneObj.carnet_id) {
+        console.log('Validação falhou:', {
+          banco_exists: !!banco,
+          tipo_banco: banco?.tipo_banco,
+          carnet_id: carneObj.carnet_id
+        });
         res.status(400).json({ 
           success: false,
           error: 'Apenas carnês EFI com carnet_id podem ter status consultado' 
@@ -908,24 +927,26 @@ export class CarneController {
         return;
       }
 
+      console.log('Iniciando consulta de status via API da EFI...');
       // Consultar status via API da EFI
-      const resultado = await BancoApiService.consultarStatusCarne(carne);
+      const resultado = await BancoApiService.consultarStatusCarne(carneObj);
+      console.log('Resultado da consulta:', resultado);
       
       if (resultado.success) {
         // Atualizar status local se necessário
-        if (resultado.data?.status && resultado.data.status !== carne.status) {
-          await carne.update({ status: resultado.data.status });
+        if (resultado.data?.status && resultado.data.status !== carneObj.status) {
+          await carneObj.update({ status: resultado.data.status });
         }
 
         res.json({
           success: true,
           message: 'Status consultado com sucesso!',
           data: {
-            status_atual: carne.status,
+            status_atual: carneObj.status,
             status_banco: resultado.data?.status,
-            carnet_id: carne.carnet_id,
-            parcelas_total: (await carne.getParcelas()).length,
-            parcelas_pagas: (await carne.getParcelas()).filter((p: any) => p.status === 'pago').length
+            carnet_id: carneObj.carnet_id,
+            parcelas_total: (await carneObj.getParcelas()).length,
+            parcelas_pagas: (await carneObj.getParcelas()).filter((p: any) => p.status === 'pago').length
           }
         });
       } else {
