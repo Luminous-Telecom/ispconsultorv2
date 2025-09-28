@@ -645,16 +645,6 @@ export class CarneController {
             return instrucaoProcessada;
           };
 
-          // Debug: verificar dados do banco para impressão
-          console.log('🔍 [DEBUG] Dados do banco para impressão do carnê:', {
-            parcela_id: parcela.id,
-            carne_id: parcela.carne?.id,
-            banco_id: parcela.carne?.banco?.id,
-            banco_nome: parcela.carne?.banco?.nome,
-            banco_tipo: parcela.carne?.banco?.tipo_banco,
-            banco_codigo: parcela.carne?.banco?.codigo
-          });
-
           // Gerar variáveis básicas
           const variables: Record<string, string> = {
             LOGOBANCO: parcela.carne?.banco?.tipo_banco ? `${process.env.BASE_URL}/images/bancos/${parcela.carne.banco.tipo_banco}.png` : `${process.env.BASE_URL}/images/bancos/boletoproprio.png`,
