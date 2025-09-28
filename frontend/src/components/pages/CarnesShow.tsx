@@ -100,16 +100,24 @@ const CarnesShow: React.FC = () => {
 
 
   const handleRegistrarCarne = async () => {
-    if (!carne?.carnet_id) {
-      error('Carnê deve ser gerado antes de registrar no banco');
+    if (!carne) {
+      error('Carnê não encontrado');
+      return;
+    }
+
+    if (carne.carnet_id) {
+      error('Carnê já está registrado no banco');
+      return;
+    }
+
+    if (!carne.banco || carne.banco.tipo_banco !== 'efi') {
+      error('Apenas carnês EFI podem ser registrados no banco');
       return;
     }
 
     setIsRegistering(true);
     try {
-      // Aqui será chamada a função que envia o carnê para o banco
-      // Por enquanto, vamos simular o processo
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await CarneService.registrarNoBanco(Number(id));
       success('Carnê registrado no banco com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['carne', id] });
     } catch (err: any) {

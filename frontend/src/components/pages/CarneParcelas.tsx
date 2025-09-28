@@ -189,8 +189,18 @@ const CarneParcelas: React.FC = () => {
 
 
   const handleRegistrarNoBanco = async () => {
-    if (!carneData?.carnet_id) {
-      error('Carnê deve ser gerado antes de registrar no banco');
+    if (!carneData) {
+      error('Carnê não encontrado');
+      return;
+    }
+
+    if (carneData.carnet_id) {
+      error('Carnê já está registrado no banco');
+      return;
+    }
+
+    if (!carneData.banco || carneData.banco.tipo_banco !== 'efi') {
+      error('Apenas carnês EFI podem ser registrados no banco');
       return;
     }
 
