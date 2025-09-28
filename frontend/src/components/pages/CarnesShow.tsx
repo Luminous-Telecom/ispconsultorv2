@@ -425,23 +425,25 @@ const CarnesShow: React.FC = () => {
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="card-title mb-0">Parcelas</h5>
               <div className="btn-group">
-                <button 
-                  type="button" 
-                  className="btn btn-primary btn-sm"
-                  onClick={handleRegistrarCarne}
-                  disabled={!carne.carnet_id || isRegistering}
-                >
-                  {isRegistering ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                      Registrando...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-send"></i> Registrar no Banco
-                    </>
-                  )}
-                </button>
+                {!carne.carnet_id && (
+                  <button 
+                    type="button" 
+                    className="btn btn-primary btn-sm"
+                    onClick={handleRegistrarCarne}
+                    disabled={isRegistering}
+                  >
+                    {isRegistering ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        Registrando...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-send"></i> Registrar no Banco
+                      </>
+                    )}
+                  </button>
+                )}
                 
                 <button 
                   type="button" 

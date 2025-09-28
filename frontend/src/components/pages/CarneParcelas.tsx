@@ -353,27 +353,29 @@ const CarneParcelas: React.FC = () => {
               </nav>
             </div>
             <div>
-              <button 
-                type="button" 
-                className={`btn me-2 ${carneData?.status === 'registrado' ? 'btn-success' : 'btn-primary'}`}
-                onClick={handleRegistrarNoBanco}
-                disabled={!carneData?.carnet_id || isRegistering || carneData?.status === 'registrado'}
-              >
-                {isRegistering ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                    Registrando...
-                  </>
-                ) : carneData?.status === 'registrado' ? (
-                  <>
-                    <i className="bi bi-check-circle"></i> Registrado no Banco
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-send"></i> Registrar no Banco
-                  </>
-                )}
-              </button>
+              {!carneData?.carnet_id ? (
+                <button 
+                  type="button" 
+                  className="btn btn-primary me-2"
+                  onClick={handleRegistrarNoBanco}
+                  disabled={isRegistering}
+                >
+                  {isRegistering ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                      Registrando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-send"></i> Registrar no Banco
+                    </>
+                  )}
+                </button>
+              ) : (
+                <span className="btn btn-success me-2" style={{ cursor: 'default' }}>
+                  <i className="bi bi-check-circle"></i> Registrado no Banco
+                </span>
+              )}
               <Link to="/carnes" className="btn btn-secondary">
                 <i className="bi bi-arrow-left"></i> Voltar
               </Link>
