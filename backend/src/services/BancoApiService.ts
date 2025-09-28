@@ -673,6 +673,19 @@ export class BancoApiService {
       const headers = this.prepareHeaders(banco.tipo_banco, token);
       headers['Content-Type'] = 'application/json';
       
+      console.log('🌐 [DEBUG] Fazendo requisição para criar carnê:', {
+        endpoint,
+        baseUrlCobranca,
+        sandbox: banco.sandbox,
+        sandbox_url: config.sandbox_url,
+        cobranca_base_url: config.cobranca_base_url,
+        headers: {
+          'Authorization': headers['Authorization'] ? 'Bearer ***' : 'não definido',
+          'Content-Type': headers['Content-Type']
+        },
+        dadosCarne
+      });
+      
       const response = await axios.post(endpoint, dadosCarne, { headers });
       
       if (response.status >= 200 && response.status < 300) {
@@ -726,9 +739,24 @@ export class BancoApiService {
         message: 'Erro ao gerar carnê'
       };
     } catch (error: any) {
+      console.log('❌ [DEBUG] Erro detalhado ao gerar carnê:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
       logger.error('Erro ao gerar carnê', { 
         carne_id: carne.id,
-        error: error.message 
+        error: error.message,
+        status: error.response?.status,
+        data: error.response?.data
       });
       return {
         success: false,
