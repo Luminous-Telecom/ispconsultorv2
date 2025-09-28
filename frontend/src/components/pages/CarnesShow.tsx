@@ -122,15 +122,6 @@ const CarnesShow: React.FC = () => {
     }
   };
 
-  const handleDesmarcarPago = async (parcelaId: number) => {
-    try {
-      await CarneParcelaService.desmarcarPago(parcelaId);
-      success('Parcela desmarcada como paga!');
-      queryClient.invalidateQueries({ queryKey: ['carne-parcelas', id] });
-    } catch (err: any) {
-      error(err.response?.data?.message || 'Erro ao desmarcar parcela como paga');
-    }
-  };
 
   const handleRegistrarCarne = async () => {
     if (!carne?.carnet_id) {
@@ -231,11 +222,6 @@ const CarnesShow: React.FC = () => {
       case 'marcar_pago':
         if (selectedItems.length === 1) {
           handleMarcarPago(selectedItems[0].id);
-        }
-        break;
-      case 'desmarcar_pago':
-        if (selectedItems.length === 1) {
-          handleDesmarcarPago(selectedItems[0].id);
         }
         break;
       case 'imprimir':
@@ -543,10 +529,6 @@ const CarnesShow: React.FC = () => {
                   {
                     label: "Marcar como Pago",
                     action: (selectedItems) => handleTopoActions('marcar_pago', selectedItems)
-                  },
-                  {
-                    label: "Desmarcar Pago",
-                    action: (selectedItems) => handleTopoActions('desmarcar_pago', selectedItems)
                   },
                   {
                     label: "Imprimir",
