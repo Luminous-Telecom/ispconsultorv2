@@ -107,7 +107,7 @@ const Clientes: React.FC = () => {
     switch (action) {
       case 'visualizar':
         if (selectedItems.length === 1) {
-          window.location.href = `/clientes/${selectedItems[0].id}`;
+          window.location.href = `/clientes/${selectedItems[0].id}#carnes`;
         }
         break;
       case 'editar':

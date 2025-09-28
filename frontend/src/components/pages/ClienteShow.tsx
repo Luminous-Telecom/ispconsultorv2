@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
@@ -15,6 +15,16 @@ const ClienteShow: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'carnes' | 'titulos'>('carnes');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
+
+  // Detectar hash na URL para definir aba inicial
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#carnes') {
+      setActiveTab('carnes');
+    } else if (hash === '#titulos') {
+      setActiveTab('titulos');
+    }
+  }, []);
 
   // Funções para refresh das tabelas
   const handleRefreshCarnes = () => {
