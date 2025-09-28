@@ -146,7 +146,14 @@ export class BancoApiService {
   private static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
     try {
       const endpoint = config.cobranca_base_url + config.token;
-      
+      console.log('🔑 [DEBUG] Tentando obter token:', {
+        endpoint,
+        banco_id: banco.id,
+        banco_nome: banco.nome,
+        sandbox: banco.sandbox,
+        client_id_producao: banco.client_id_producao ? '***' : 'não definido',
+        client_secret_producao: banco.client_secret_producao ? '***' : 'não definido'
+      });
       
       let authData: any = {};
       
@@ -158,10 +165,24 @@ export class BancoApiService {
         };
       }
 
+      console.log('📤 [DEBUG] Dados de autenticação:', {
+        auth_type: config.auth_type,
+        client_id_field: config.client_id_field,
+        client_secret_field: config.client_secret_field,
+        grant_type: authData.grant_type
+      });
+
       const response = await axios.post(endpoint, authData, {
         headers: {
           'Content-Type': 'application/json'
         }
+      });
+
+      console.log('📥 [DEBUG] Resposta do token:', {
+        status: response.status,
+        statusText: response.statusText,
+        response_keys: Object.keys(response.data || {}),
+        access_token: response.data?.access_token ? 'ENCONTRADO' : 'NÃO ENCONTRADO'
       });
 
       if (response.data && response.data.access_token) {
@@ -173,6 +194,13 @@ export class BancoApiService {
       });
       return null;
     } catch (error: any) {
+      console.log('❌ [DEBUG] Erro ao obter token:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        endpoint: config.cobranca_base_url + config.token
+      });
       logger.error('Erro ao obter token', { 
         error: error.message,
         status: error.response?.status,
