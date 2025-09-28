@@ -797,7 +797,7 @@ export class BancoApiService {
       customer: {
         name: cliente.nome_fantasia || cliente.razao_social,
         email: cliente.email,
-        phone_number: cliente.telefone,
+        phone_number: cliente.telefone ? cliente.telefone.replace(/[^\d]/g, '') : '', // Remover formatação do telefone
         juridical_person: {
           corporate_name: cliente.nome_fantasia || cliente.razao_social,
           cnpj: cliente.cnpj.replace(/[^\d]/g, '') // Remover formatação do CNPJ
