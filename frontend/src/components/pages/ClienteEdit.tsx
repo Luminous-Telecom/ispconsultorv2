@@ -138,22 +138,19 @@ const ClienteEdit: React.FC = () => {
 
   return (
     <div className="p-3">
-      {/* Cabeçalho com ações globais */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h1 className="h4 fw-bold mb-0">
-          Editar Cliente - {cliente.razao_social || cliente.nome_fantasia}
-        </h1>
-        
-        <div className="d-flex gap-2">
+      {/* Sistema de abas */}
+      <div className="card">
+        {/* Botões de ação no cabeçalho do card */}
+        <div className="card-header d-flex justify-content-end gap-2">
           <button
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
             onClick={() => navigate('/clientes/create')}
           >
             <i className="bi bi-plus me-1"></i>
             Novo
           </button>
           <button
-            className="btn btn-success"
+            className="btn btn-success btn-sm"
             disabled={!hasChanges}
             onClick={handleSave}
           >
@@ -161,44 +158,39 @@ const ClienteEdit: React.FC = () => {
             Salvar
           </button>
           <button
-            className="btn btn-outline-secondary"
+            className="btn btn-outline-secondary btn-sm"
             onClick={handleCancel}
           >
             <i className="bi bi-x me-1"></i>
             Cancelar
           </button>
           <button
-            className="btn btn-outline-primary"
+            className="btn btn-outline-primary btn-sm"
             onClick={() => navigate('/clientes')}
           >
             <i className="bi bi-arrow-left me-1"></i>
             Voltar
           </button>
           <button
-            className="btn btn-outline-danger"
+            className="btn btn-outline-danger btn-sm"
             title="Deletar Cliente"
           >
             <i className="bi bi-trash"></i>
           </button>
           <button
-            className="btn btn-outline-info"
+            className="btn btn-outline-info btn-sm"
             title="Localização"
           >
             <i className="bi bi-geo-alt"></i>
           </button>
           <button
-            className="btn btn-outline-warning"
+            className="btn btn-outline-warning btn-sm"
             title="Enviar notificação push"
           >
             <i className="bi bi-bell"></i>
           </button>
         </div>
-      </div>
 
-      <hr className="mb-3" />
-
-      {/* Sistema de abas */}
-      <div className="card">
         <div className="card-header">
           <ul className="nav nav-tabs card-header-tabs" role="tablist">
             <li className="nav-item" role="presentation">
