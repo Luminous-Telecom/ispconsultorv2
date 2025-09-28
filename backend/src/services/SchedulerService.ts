@@ -354,7 +354,6 @@ export class SchedulerService {
       });
     }
 
-    console.log(`💾 Salvando dados no banco:`, data);
     await routine.update(data);
     
     // Recarregar a rotina do banco para verificar se foi salva

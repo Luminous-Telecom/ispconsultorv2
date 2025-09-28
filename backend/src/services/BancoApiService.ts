@@ -146,14 +146,6 @@ export class BancoApiService {
   private static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
     try {
       const endpoint = config.cobranca_base_url + config.token;
-      console.log('🔑 [DEBUG] Tentando obter token:', {
-        endpoint,
-        banco_id: banco.id,
-        banco_nome: banco.nome,
-        sandbox: banco.sandbox,
-        client_id_producao: banco.client_id_producao ? '***' : 'não definido',
-        client_secret_producao: banco.client_secret_producao ? '***' : 'não definido'
-      });
       
       let authData: any = {};
       
@@ -165,12 +157,6 @@ export class BancoApiService {
         };
       }
 
-      console.log('📤 [DEBUG] Dados de autenticação:', {
-        auth_type: config.auth_type,
-        client_id_field: config.client_id_field,
-        client_secret_field: config.client_secret_field,
-        grant_type: authData.grant_type
-      });
 
       const response = await axios.post(endpoint, authData, {
         headers: {
@@ -178,12 +164,6 @@ export class BancoApiService {
         }
       });
 
-      console.log('📥 [DEBUG] Resposta do token:', {
-        status: response.status,
-        statusText: response.statusText,
-        response_keys: Object.keys(response.data || {}),
-        access_token: response.data?.access_token ? 'ENCONTRADO' : 'NÃO ENCONTRADO'
-      });
 
       if (response.data && response.data.access_token) {
         return response.data.access_token;
@@ -194,13 +174,6 @@ export class BancoApiService {
       });
       return null;
     } catch (error: any) {
-      console.log('❌ [DEBUG] Erro ao obter token:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        endpoint: config.cobranca_base_url + config.token
-      });
       logger.error('Erro ao obter token', { 
         error: error.message,
         status: error.response?.status,
@@ -673,18 +646,6 @@ export class BancoApiService {
       const headers = this.prepareHeaders(banco.tipo_banco, token);
       headers['Content-Type'] = 'application/json';
       
-      console.log('🌐 [DEBUG] Fazendo requisição para criar carnê:', {
-        endpoint,
-        baseUrlCobranca,
-        sandbox: banco.sandbox,
-        sandbox_url: config.sandbox_url,
-        cobranca_base_url: config.cobranca_base_url,
-        headers: {
-          'Authorization': headers['Authorization'] ? 'Bearer ***' : 'não definido',
-          'Content-Type': headers['Content-Type']
-        },
-        dadosCarne
-      });
       
       const response = await axios.post(endpoint, dadosCarne, { headers });
       
@@ -739,18 +700,6 @@ export class BancoApiService {
         message: 'Erro ao gerar carnê'
       };
     } catch (error: any) {
-      console.log('❌ [DEBUG] Erro detalhado ao gerar carnê:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          data: error.config?.data
-        }
-      });
       
       logger.error('Erro ao gerar carnê', { 
         carne_id: carne.id,

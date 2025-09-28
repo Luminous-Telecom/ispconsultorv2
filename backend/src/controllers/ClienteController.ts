@@ -281,7 +281,6 @@ export class ClienteController {
       console.log('CLIENTE UPDATE - BODY:', JSON.stringify(req.body));
 
       // Validar dados
-      console.log('CLIENTE UPDATE - VALIDANDO DADOS');
       const { error, value } = ClienteController.updateSchema.validate(req.body);
       
       if (error) {
@@ -294,7 +293,6 @@ export class ClienteController {
         return;
       }
       
-      console.log('CLIENTE UPDATE - DADOS VALIDADOS:', JSON.stringify(value));
 
       // Buscar cliente
       const cliente = await Cliente.findByPk(id);

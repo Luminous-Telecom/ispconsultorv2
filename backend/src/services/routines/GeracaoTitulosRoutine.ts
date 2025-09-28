@@ -449,7 +449,6 @@ export class GeracaoTitulosRoutine {
             }
           }
           
-          console.log('Carnê e parcelas atualizados com dados da EFI');
         } else {
           console.error(`Falha ao registrar carnê no banco EFI: ${resultadoBanco.message}`);
           // Manter status como pendente se falhou no banco

@@ -651,13 +651,6 @@ export class CarneParcelaController {
         return;
       }
 
-      console.log('=== DEBUG COMPLETO DA PARCELA ===');
-      console.log('Parcela ID:', parcela.id);
-      console.log('Carne ID:', parcela.carne_id);
-      console.log('Carne carregado:', !!(parcela as any).carne);
-      console.log('Plano carregado:', !!(parcela as any).carne?.plano);
-      console.log('Dados completos do plano:', JSON.stringify((parcela as any).carne?.plano, null, 2));
-      console.log('================================');
 
       const dadosEmpresa = await DadosEmpresa.findOne();
       
@@ -810,24 +803,6 @@ export class CarneParcelaController {
       templateTopo = templateTopo.replace(/\{\{DATA_DOCUMENTO\}\}/g, variables.DATA_DOCUMENTO);
       
       // Substituir especificamente as variáveis do plano no template do topo PRIMEIRO
-      console.log('Variáveis do plano:', {
-        NOME_PLANO: variables.NOME_PLANO,
-        DESCRICAO_PLANO: variables.DESCRICAO_PLANO,
-        TIPO_SERVICO: variables.TIPO_SERVICO,
-        QUANTIDADE_USUARIOS: variables.QUANTIDADE_USUARIOS,
-        VALOR_PLANO: variables.VALOR_PLANO,
-        PERIODICIDADE: variables.PERIODICIDADE
-      });
-      
-      console.log('Dados da parcela:', {
-        carne_id: parcela.carne_id,
-        plano_nome: (parcela as any).carne?.plano?.nome_plano,
-        plano_descricao: (parcela as any).carne?.plano?.descricao,
-        plano_tipo_servico: (parcela as any).carne?.plano?.tipo_servico,
-        plano_quantidade_usuarios: (parcela as any).carne?.plano?.quantidade_usuarios,
-        plano_valor_mensal: (parcela as any).carne?.plano?.valor_mensal,
-        plano_periodicidade: (parcela as any).carne?.plano?.periodicidade
-      });
       
       templateTopo = templateTopo.replace(/\{\{NOME_PLANO\}\}/g, variables.NOME_PLANO);
       templateTopo = templateTopo.replace(/\{\{DESCRICAO_PLANO\}\}/g, variables.DESCRICAO_PLANO);
@@ -902,7 +877,6 @@ export class CarneParcelaController {
       res.send(htmlContent);
 
     } catch (error) {
-      console.log('DEBUG: Erro ao gerar boleto:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
