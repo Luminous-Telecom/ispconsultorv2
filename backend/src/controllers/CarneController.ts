@@ -245,13 +245,22 @@ export class CarneController {
       let resultadoGeracao = null;
       if (carneComRelacionamentos) {
         const banco = await carneComRelacionamentos.getBanco();
+        console.log('Banco encontrado:', {
+          id: banco?.id,
+          nome: banco?.nome,
+          tipo_banco: banco?.tipo_banco,
+          sandbox: banco?.sandbox
+        });
+        
         if (banco && banco.tipo_banco === 'efi') {
           logger.info('Gerando títulos automaticamente para carnê EFI', {
             carne_id: carne.id,
             banco_id: banco.id
           });
           
+          console.log('Iniciando geração de títulos via BancoApiService...');
           resultadoGeracao = await BancoApiService.gerarCarne(carneComRelacionamentos);
+          console.log('Resultado da geração de títulos:', resultadoGeracao);
           
           if (resultadoGeracao.success) {
             // Atualizar carnê com dados retornados
