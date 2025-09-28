@@ -110,8 +110,13 @@ const CarnesShow: React.FC = () => {
       return;
     }
 
-    if (!carne.banco || carne.banco.tipo_banco !== 'efi') {
-      error('Apenas carnês EFI podem ser registrados no banco');
+    if (!carne.banco) {
+      error('Banco não encontrado para este carnê');
+      return;
+    }
+
+    if (carne.banco.tipo_banco !== 'efi') {
+      error(`Registro no banco não suportado para tipo '${carne.banco.tipo_banco}'. Apenas bancos EFI têm suporte completo.`);
       return;
     }
 
@@ -433,7 +438,7 @@ const CarnesShow: React.FC = () => {
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="card-title mb-0">Parcelas</h5>
               <div className="btn-group">
-                {!carne.carnet_id && (
+                {!carne.carnet_id && carne.banco?.tipo_banco === 'efi' && (
                   <button 
                     type="button" 
                     className="btn btn-primary btn-sm"

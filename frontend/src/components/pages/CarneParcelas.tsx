@@ -199,8 +199,13 @@ const CarneParcelas: React.FC = () => {
       return;
     }
 
-    if (!carneData.banco || carneData.banco.tipo_banco !== 'efi') {
-      error('Apenas carnês EFI podem ser registrados no banco');
+    if (!carneData.banco) {
+      error('Banco não encontrado para este carnê');
+      return;
+    }
+
+    if (carneData.banco.tipo_banco !== 'efi') {
+      error(`Registro no banco não suportado para tipo '${carneData.banco.tipo_banco}'. Apenas bancos EFI têm suporte completo.`);
       return;
     }
 
@@ -363,7 +368,7 @@ const CarneParcelas: React.FC = () => {
               </nav>
             </div>
             <div>
-              {!carneData?.carnet_id ? (
+              {!carneData?.carnet_id && carneData?.banco?.tipo_banco === 'efi' ? (
                 <button 
                   type="button" 
                   className="btn btn-primary me-2"
@@ -381,11 +386,15 @@ const CarneParcelas: React.FC = () => {
                     </>
                   )}
                 </button>
-              ) : (
+              ) : carneData?.carnet_id ? (
                 <span className="btn btn-success me-2" style={{ cursor: 'default' }}>
                   <i className="bi bi-check-circle"></i> Registrado no Banco
                 </span>
-              )}
+              ) : carneData?.banco?.tipo_banco !== 'efi' ? (
+                <span className="btn btn-secondary me-2" style={{ cursor: 'default' }}>
+                  <i className="bi bi-info-circle"></i> Banco {carneData?.banco?.tipo_banco?.toUpperCase()} - Sem suporte
+                </span>
+              ) : null}
               <Link to="/carnes" className="btn btn-secondary">
                 <i className="bi bi-arrow-left"></i> Voltar
               </Link>
