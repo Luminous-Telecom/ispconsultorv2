@@ -285,7 +285,7 @@ export class CarneParcelaController {
               { association: 'plano' },
               { 
                 association: 'banco',
-                attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+                attributes: ['id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
               }
             ]
           }
@@ -324,7 +324,7 @@ export class CarneParcelaController {
               { association: 'plano' },
               { 
                 association: 'banco',
-                attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+                attributes: ['id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
               }
             ]
           }
