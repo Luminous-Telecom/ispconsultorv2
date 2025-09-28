@@ -80,10 +80,6 @@ const ClienteShow: React.FC = () => {
         // TODO: Implementar ação de marcar como pago
         success('Funcionalidade será implementada em breve');
         break;
-      case 'desmarcar_pago':
-        // TODO: Implementar ação de desmarcar pago
-        success('Funcionalidade será implementada em breve');
-        break;
     }
   };
 
@@ -451,10 +447,6 @@ const ClienteShow: React.FC = () => {
                     {
                       label: "Marcar como Pago",
                       action: (selectedItems) => handleTopoActionsTitulos('marcar_pago', selectedItems)
-                    },
-                    {
-                      label: "Desmarcar Pago",
-                      action: (selectedItems) => handleTopoActionsTitulos('desmarcar_pago', selectedItems)
                     },
                     {
                       label: "Imprimir",
