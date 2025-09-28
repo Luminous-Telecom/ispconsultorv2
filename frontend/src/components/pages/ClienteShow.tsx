@@ -129,16 +129,19 @@ const ClienteShow: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (carne: any) => {
-        const statusClass = {
-          'ativo': 'bg-primary',
-          'pago': 'bg-success',
-          'cancelado': 'bg-danger',
-          'parcial': 'bg-warning',
-          'pendente': 'bg-secondary'
-        }[carne.status] || 'bg-secondary';
+        const getStatusClass = (status: string) => {
+          const statusClasses: Record<string, string> = {
+            'ativo': 'bg-primary',
+            'pago': 'bg-success',
+            'cancelado': 'bg-danger',
+            'parcial': 'bg-warning',
+            'pendente': 'bg-secondary'
+          };
+          return statusClasses[status] || 'bg-secondary';
+        };
         
         return (
-          <span className={`badge ${statusClass}`}>
+          <span className={`badge ${getStatusClass(carne.status)}`}>
             {carne.status?.charAt(0).toUpperCase() + carne.status?.slice(1) || 'Desconhecido'}
           </span>
         );
