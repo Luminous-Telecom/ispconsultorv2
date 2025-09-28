@@ -181,7 +181,6 @@ const startServer = async () => {
         const { SchedulerService } = await import('./services/SchedulerService');
         const schedulerService = SchedulerService.getInstance();
         await schedulerService.start();
-        console.log('⏰ Agendador de rotinas iniciado');
       } catch (error) {
         console.error('❌ Erro ao iniciar agendador:', error);
       }

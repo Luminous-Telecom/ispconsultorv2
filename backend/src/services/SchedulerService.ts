@@ -18,17 +18,14 @@ export class SchedulerService {
 
   public async start(): Promise<void> {
     if (this.isRunning) {
-      console.log('SchedulerService já está rodando');
       return;
     }
 
-    console.log('Iniciando SchedulerService...');
     this.isRunning = true;
 
     // Carregar rotinas ativas do banco de dados
     await this.loadRoutinesFromDatabase();
 
-    console.log('SchedulerService iniciado com sucesso');
   }
 
   public async stop(): Promise<void> {
@@ -56,7 +53,6 @@ export class SchedulerService {
         where: { ativo: true }
       });
 
-      console.log(`Carregando ${routines.length} rotinas ativas...`);
 
       for (const routine of routines) {
         await this.scheduleRoutine(routine);
@@ -90,7 +86,6 @@ export class SchedulerService {
     job.start();
     this.cronJobs.set(routine.id, job);
 
-    console.log(`Rotina agendada: ${routine.nome} (ID: ${routine.id}) - ${cronExpression}`);
   }
 
   public unscheduleRoutine(routineId: number): void {
