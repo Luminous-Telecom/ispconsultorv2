@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { CarneService } from '../../services/carneService';
 import { CarneParcelaService } from '../../services/carneParcelaService';
@@ -10,10 +10,24 @@ import DataTable from '../common/DataTable';
 const ClienteShow: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
   const [activeTab, setActiveTab] = useState<'carnes' | 'titulos'>('carnes');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
+
+  // Funções para refresh das tabelas
+  const handleRefreshCarnes = () => {
+    queryClient.invalidateQueries({ queryKey: ['carnes-cliente', id] });
+    queryClient.invalidateQueries({ queryKey: ['cliente', id] });
+    success('Dados atualizados com sucesso!', 3000);
+  };
+
+  const handleRefreshTitulos = () => {
+    queryClient.invalidateQueries({ queryKey: ['titulos-cliente', id] });
+    queryClient.invalidateQueries({ queryKey: ['cliente', id] });
+    success('Dados atualizados com sucesso!', 3000);
+  };
 
   // Buscar cliente
   const { data: cliente, isLoading: clienteLoading, error: clienteError } = useQuery({
@@ -348,7 +362,7 @@ const ClienteShow: React.FC = () => {
                   setLimit={setLimit}
                   setPage={setPage}
                   emptyMessage="Nenhum carnê encontrado para este cliente"
-                  onRefresh={() => window.location.reload()}
+                  onRefresh={handleRefreshCarnes}
                 />
               ) : (
                 <DataTable
@@ -360,7 +374,7 @@ const ClienteShow: React.FC = () => {
                   setLimit={setLimit}
                   setPage={setPage}
                   emptyMessage="Nenhum título encontrado para este cliente"
-                  onRefresh={() => window.location.reload()}
+                  onRefresh={handleRefreshTitulos}
                 />
               )}
             </div>
