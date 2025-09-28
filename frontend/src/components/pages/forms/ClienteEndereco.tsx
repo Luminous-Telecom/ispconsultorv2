@@ -27,20 +27,20 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
 
   return (
     <div className="card">
-      <div className="card-body">
-        <div className="mb-3">
-          <h5 className="card-title mb-0">
+      <div className="card-body p-3">
+        <div className="mb-2">
+          <h6 className="card-title mb-0">
             Endereço do Cliente
-          </h5>
+          </h6>
         </div>
 
-        <div className="row g-3">
+        <div className="row g-2">
           <div className="col-md-4">
-            <label className="form-label">Condomínio</label>
+            <label className="form-label small">Condomínio</label>
             <div className="input-group">
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.condominio || ''}
                 onChange={(e) => handleInputChange('condominio', e.target.value)}
                 disabled={!isEditing}
@@ -52,10 +52,10 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label">Bloco</label>
+            <label className="form-label small">Bloco</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.bloco || ''}
               onChange={(e) => handleInputChange('bloco', e.target.value)}
               disabled={!isEditing}
@@ -63,10 +63,10 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label">Apartamento</label>
+            <label className="form-label small">Apartamento</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.apartamento || ''}
               onChange={(e) => handleInputChange('apartamento', e.target.value)}
               disabled={!isEditing}
@@ -74,11 +74,11 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label">CEP</label>
+            <label className="form-label small">CEP</label>
             <div className="input-group">
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.cep || ''}
                 onChange={(e) => handleInputChange('cep', e.target.value)}
                 disabled={!isEditing}
@@ -90,14 +90,14 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-8">
-            <label className="form-label">Referência</label>
+            <label className="form-label small">Referência</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-geo-alt"></i>
               </span>
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.referencia || ''}
                 onChange={(e) => handleInputChange('referencia', e.target.value)}
                 disabled={!isEditing}
@@ -106,14 +106,14 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-8">
-            <label className="form-label">Endereço</label>
+            <label className="form-label small">Endereço</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-geo-alt"></i>
               </span>
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.endereco || ''}
                 onChange={(e) => handleInputChange('endereco', e.target.value)}
                 disabled={!isEditing}
@@ -128,10 +128,10 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label">Número</label>
+            <label className="form-label small">Número</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.numero || ''}
               onChange={(e) => handleInputChange('numero', e.target.value)}
               disabled={!isEditing}
@@ -139,10 +139,10 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Complemento</label>
+            <label className="form-label small">Complemento</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.complemento || ''}
               onChange={(e) => handleInputChange('complemento', e.target.value)}
               disabled={!isEditing}
@@ -150,10 +150,10 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Bairro</label>
+            <label className="form-label small">Bairro</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.bairro || ''}
               onChange={(e) => handleInputChange('bairro', e.target.value)}
               disabled={!isEditing}
@@ -161,11 +161,11 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Cidade</label>
+            <label className="form-label small">Cidade</label>
             <div className="input-group">
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.cidade || ''}
                 onChange={(e) => handleInputChange('cidade', e.target.value)}
                 disabled={!isEditing}
@@ -177,10 +177,10 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Estado</label>
+            <label className="form-label small">Estado</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.estado || ''}
               onChange={(e) => handleInputChange('estado', e.target.value)}
               disabled={!isEditing}

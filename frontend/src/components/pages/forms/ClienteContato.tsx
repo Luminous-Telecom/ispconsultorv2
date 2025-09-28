@@ -27,23 +27,23 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
 
   return (
     <div className="card">
-      <div className="card-body">
-        <div className="mb-3">
-          <h5 className="card-title mb-0">
+      <div className="card-body p-3">
+        <div className="mb-2">
+          <h6 className="card-title mb-0">
             Contatos do Cliente
-          </h5>
+          </h6>
         </div>
 
-        <div className="row g-3">
+        <div className="row g-2">
           <div className="col-md-6">
-            <label className="form-label">Telefone Residencial</label>
+            <label className="form-label small">Telefone Residencial</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-telephone"></i>
               </span>
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.telefone_residencial || ''}
                 onChange={(e) => handleInputChange('telefone_residencial', e.target.value)}
                 disabled={!isEditing}
@@ -52,14 +52,14 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Telefone Comercial</label>
+            <label className="form-label small">Telefone Comercial</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-telephone"></i>
               </span>
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.telefone_comercial || ''}
                 onChange={(e) => handleInputChange('telefone_comercial', e.target.value)}
                 disabled={!isEditing}
@@ -68,10 +68,10 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Ramal</label>
+            <label className="form-label small">Ramal</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.ramal || ''}
               onChange={(e) => handleInputChange('ramal', e.target.value)}
               disabled={!isEditing}
@@ -79,7 +79,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Operadora Celular</label>
+            <label className="form-label small">Operadora Celular</label>
             <select
               className="form-select"
               value={cliente.operadora_celular || ''}
@@ -96,11 +96,11 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Telefone Celular</label>
+            <label className="form-label small">Telefone Celular</label>
             <div className="input-group">
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.telefone_celular || ''}
                 onChange={(e) => handleInputChange('telefone_celular', e.target.value)}
                 disabled={!isEditing}
@@ -112,11 +112,11 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">WhatsApp</label>
+            <label className="form-label small">WhatsApp</label>
             <div className="input-group">
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.whatsapp || ''}
                 onChange={(e) => handleInputChange('whatsapp', e.target.value)}
                 disabled={!isEditing}
@@ -128,14 +128,14 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Email Principal</label>
+            <label className="form-label small">Email Principal</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-envelope"></i>
               </span>
               <input
                 type="email"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.email_principal || ''}
                 onChange={(e) => handleInputChange('email_principal', e.target.value)}
                 disabled={!isEditing}
@@ -147,10 +147,10 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Contato</label>
+            <label className="form-label small">Contato</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.contato || ''}
               onChange={(e) => handleInputChange('contato', e.target.value)}
               disabled={!isEditing}
@@ -158,10 +158,10 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Website</label>
+            <label className="form-label small">Website</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.website || ''}
               onChange={(e) => handleInputChange('website', e.target.value)}
               disabled={!isEditing}
@@ -169,10 +169,10 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Skype</label>
+            <label className="form-label small">Skype</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.skype || ''}
               onChange={(e) => handleInputChange('skype', e.target.value)}
               disabled={!isEditing}
@@ -180,10 +180,10 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Facebook</label>
+            <label className="form-label small">Facebook</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.facebook || ''}
               onChange={(e) => handleInputChange('facebook', e.target.value)}
               disabled={!isEditing}
@@ -195,14 +195,14 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Login</label>
+            <label className="form-label small">Login</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-envelope"></i>
               </span>
               <input
                 type="text"
-                className="form-control"
+                className="form-control form-control-sm"
                 value={cliente.login || ''}
                 onChange={(e) => handleInputChange('login', e.target.value)}
                 disabled={!isEditing}
@@ -211,10 +211,10 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Senha</label>
+            <label className="form-label small">Senha</label>
             <input
               type="password"
-              className="form-control"
+              className="form-control form-control-sm"
               value={cliente.senha || ''}
               onChange={(e) => handleInputChange('senha', e.target.value)}
               disabled={!isEditing}

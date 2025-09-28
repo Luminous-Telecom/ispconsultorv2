@@ -28,11 +28,11 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`cliente-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <div className="p-3">
-          {children}
-        </div>
-      )}
+         {value === index && (
+           <div className="p-2">
+             {children}
+           </div>
+         )}
     </div>
   );
 }
@@ -136,10 +136,10 @@ const ClienteEdit: React.FC = () => {
     );
   }
 
-  return (
-    <div className="p-3">
-      {/* Sistema de abas */}
-      <div className="card">
+     return (
+       <div className="p-2">
+         {/* Sistema de abas */}
+         <div className="card">
         {/* Botões de ação no cabeçalho do card */}
            <div className="card-header d-flex justify-content-end gap-2">
              <button
