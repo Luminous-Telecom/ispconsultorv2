@@ -910,6 +910,8 @@ export class CarneController {
   static async registrarNoBanco(req: Request, res: Response): Promise<void> {
     try {
       const { carne } = req.params as any;
+      console.log('🔍 [DEBUG] Iniciando registro de carnê:', carne);
+      
       const carneObj = await Carne.findByPk(carne, {
         include: [
           { 
@@ -921,6 +923,7 @@ export class CarneController {
       });
       
       if (!carneObj) {
+        console.log('❌ [DEBUG] Carnê não encontrado:', carne);
         res.status(404).json({ 
           success: false,
           error: 'Carnê não encontrado' 
@@ -929,8 +932,16 @@ export class CarneController {
       }
 
       const banco = await carneObj.getBanco();
+      console.log('🏦 [DEBUG] Banco encontrado:', {
+        id: banco?.id,
+        nome: banco?.nome,
+        tipo_banco: banco?.tipo_banco,
+        client_id_producao: banco?.client_id_producao ? 'CONFIGURADO' : 'NÃO CONFIGURADO',
+        client_secret_producao: banco?.client_secret_producao ? 'CONFIGURADO' : 'NÃO CONFIGURADO'
+      });
       
       if (!banco) {
+        console.log('❌ [DEBUG] Banco não encontrado para carnê:', carne);
         res.status(400).json({ 
           success: false,
           error: 'Banco não encontrado para este carnê' 
@@ -939,6 +950,11 @@ export class CarneController {
       }
 
       if (!banco.client_id_producao || !banco.client_secret_producao) {
+        console.log('❌ [DEBUG] Banco sem credenciais:', {
+          nome: banco.nome,
+          client_id_producao: banco.client_id_producao,
+          client_secret_producao: banco.client_secret_producao
+        });
         res.status(400).json({ 
           success: false,
           error: `Banco '${banco.nome}' não possui credenciais configuradas. Configure Client ID e Client Secret para registrar carnês.` 
@@ -947,6 +963,10 @@ export class CarneController {
       }
 
       if (carneObj.carnet_id) {
+        console.log('❌ [DEBUG] Carnê já registrado:', {
+          carne_id: carne,
+          carnet_id: carneObj.carnet_id
+        });
         res.status(400).json({ 
           success: false,
           error: 'Carnê já está registrado no banco' 
@@ -955,16 +975,20 @@ export class CarneController {
       }
 
       // Registrar carnê via API da EFI
+      console.log('🚀 [DEBUG] Chamando BancoApiService.gerarCarne para carnê:', carne);
       const resultado = await BancoApiService.gerarCarne(carneObj);
+      console.log('📋 [DEBUG] Resultado do BancoApiService:', resultado);
       
       if (resultado.success) {
         // Atualizar carnet_id e status do carnê
         const carnetId = resultado.data?.carnet_id;
+        console.log('✅ [DEBUG] Atualizando carnê com carnet_id:', carnetId);
         await carneObj.update({ 
           carnet_id: carnetId,
           status: 'registrado'
         });
 
+        console.log('🎉 [DEBUG] Carnê registrado com sucesso!');
         res.json({
           success: true,
           message: 'Carnê registrado no banco com sucesso!',
@@ -974,6 +998,7 @@ export class CarneController {
           }
         });
       } else {
+        console.log('❌ [DEBUG] Falha ao registrar carnê:', resultado);
         res.status(400).json({
           success: false,
           error: 'Falha ao registrar carnê no banco',
