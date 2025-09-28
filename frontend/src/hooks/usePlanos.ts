@@ -10,7 +10,7 @@ export const usePlanos = (filters: any = {}) => {
   return useQuery({
     queryKey: ['planos', filters],
     queryFn: () => PlanoService.list(filters),
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual
     gcTime: DEFAULT_CACHE_TIME,
     refetchOnWindowFocus: false,
     refetchOnMount: true,

@@ -10,7 +10,7 @@ export const useCarnes = (filters: any = {}) => {
   return useQuery({
     queryKey: ['carnes', filters],
     queryFn: () => CarneService.list(filters),
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual
     gcTime: DEFAULT_CACHE_TIME,
     refetchOnWindowFocus: false,
     refetchOnMount: true,

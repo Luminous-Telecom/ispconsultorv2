@@ -129,6 +129,10 @@ const Carnes: React.FC = () => {
     refetch();
   };
 
+  const handleRefresh = () => {
+    refetch();
+  };
+
   const handleDelete = async (carneId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este carnê?')) {
       deleteCarneMutation.mutate(carneId);
@@ -298,7 +302,7 @@ const Carnes: React.FC = () => {
         onSort={handleSort}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
       />
     </>
   );
