@@ -78,7 +78,7 @@ export class CarneController {
           },
           { 
             association: 'banco', 
-            attributes: ['id', 'nome', 'codigo']
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
           }
         ],
         order: [['created_at', 'DESC']],
@@ -154,7 +154,7 @@ export class CarneController {
           },
           { 
             association: 'banco', 
-            attributes: ['id', 'nome', 'codigo']
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
           },
           { 
             association: 'parcelas'
@@ -344,7 +344,10 @@ export class CarneController {
       const carne = await Carne.findByPk(id, { 
         include: [
           { association: 'parcelas' },
-          { association: 'banco' }
+          { 
+            association: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+          }
         ]
       });
 
@@ -455,7 +458,10 @@ export class CarneController {
         include: [
           { association: 'cliente' },
           { association: 'plano' },
-          { association: 'banco' },
+          { 
+            association: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+          },
           { 
             association: 'parcelas', 
             order: [['numero_parcela', 'ASC']],
@@ -465,7 +471,10 @@ export class CarneController {
                 include: [
                   { association: 'cliente' },
                   { association: 'plano' },
-                  { association: 'banco' }
+                  { 
+                    association: 'banco',
+                    attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+                  }
                 ]
               }
             ]
@@ -817,7 +826,10 @@ export class CarneController {
       
       const carneObj = await Carne.findByPk(carne, {
         include: [
-          { association: 'banco' },
+          { 
+            association: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+          },
           { association: 'parcelas' }
         ]
       });
@@ -900,7 +912,10 @@ export class CarneController {
       const { carne } = req.params as any;
       const carneObj = await Carne.findByPk(carne, {
         include: [
-          { association: 'banco' },
+          { 
+            association: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+          },
           { association: 'parcelas' }
         ]
       });
@@ -972,7 +987,10 @@ export class CarneController {
       const { carne } = req.params as any;
       const carneObj = await Carne.findByPk(carne, {
         include: [
-          { association: 'banco' },
+          { 
+            association: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+          },
           { association: 'parcelas' }
         ]
       });

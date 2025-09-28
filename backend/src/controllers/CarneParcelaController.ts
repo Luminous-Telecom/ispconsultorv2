@@ -283,7 +283,10 @@ export class CarneParcelaController {
             include: [
               { association: 'cliente' },
               { association: 'plano' },
-              { association: 'banco' }
+              { 
+                association: 'banco',
+                attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+              }
             ]
           }
         ],
@@ -319,7 +322,10 @@ export class CarneParcelaController {
             include: [
               { association: 'cliente' },
               { association: 'plano' },
-              { association: 'banco' }
+              { 
+                association: 'banco',
+                attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+              }
             ]
           }
         ]
@@ -343,7 +349,13 @@ export class CarneParcelaController {
       const { data_pagamento, valor_pago, observacoes } = req.body;
 
       const parcela = await CarneParcela.findByPk(id, {
-        include: [{ association: 'carne', include: [{ association: 'banco' }] }]
+        include: [{ 
+          association: 'carne', 
+          include: [{ 
+            association: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+          }] 
+        }]
       });
       
       if (!parcela) {
@@ -468,7 +480,13 @@ export class CarneParcelaController {
       const { id } = req.params;
 
       const parcela = await CarneParcela.findByPk(id, {
-        include: [{ association: 'carne', include: [{ association: 'banco' }] }]
+        include: [{ 
+          association: 'carne', 
+          include: [{ 
+            association: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+          }] 
+        }]
       });
 
       if (!parcela) {
@@ -530,7 +548,13 @@ export class CarneParcelaController {
       });
 
       const parcela = await CarneParcela.findByPk(id, {
-        include: [{ association: 'carne', include: [{ association: 'banco' }] }]
+        include: [{ 
+          association: 'carne', 
+          include: [{ 
+            association: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+          }] 
+        }]
       });
 
       if (!parcela) {
@@ -614,7 +638,10 @@ export class CarneParcelaController {
           include: [
             { association: 'cliente' }, 
             { association: 'plano' }, 
-            { association: 'banco' }
+            { 
+              association: 'banco',
+              attributes: ['id', 'nome', 'codigo', 'client_id_producao', 'client_secret_producao']
+            }
           ] 
         }],
       });

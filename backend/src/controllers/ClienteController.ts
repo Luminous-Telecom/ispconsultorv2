@@ -126,7 +126,10 @@ export class ClienteController {
         include: [
           { association: 'planos', attributes: ['id', 'nome_plano', 'valor_mensal', 'status'] },
           { association: 'carnes', attributes: ['id', 'numero_carne', 'status', 'valor_total'] },
-          { association: 'bancoBoleto', attributes: ['id', 'nome', 'tipo_banco'] }
+          { 
+            association: 'bancoBoleto', 
+            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao'] 
+          }
         ],
         order: [['razao_social', 'ASC']],
         limit,
@@ -173,10 +176,16 @@ export class ClienteController {
             include: [
               { association: 'parcelas' },
               { association: 'plano', attributes: ['id', 'nome_plano'] },
-              { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
+              { 
+                association: 'banco', 
+                attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao'] 
+              }
             ]
           },
-          { association: 'bancoBoleto' },
+          { 
+            association: 'bancoBoleto',
+            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
+          },
           { association: 'contratos' }
         ]
       });
@@ -240,7 +249,10 @@ export class ClienteController {
         include: [
           { association: 'planos' },
           { association: 'carnes' },
-          { association: 'bancoBoleto' }
+          { 
+            association: 'bancoBoleto',
+            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
+          }
         ]
       });
 
@@ -322,7 +334,10 @@ export class ClienteController {
         include: [
           { association: 'planos' },
           { association: 'carnes' },
-          { association: 'bancoBoleto' }
+          { 
+            association: 'bancoBoleto',
+            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
+          }
         ]
       });
 
