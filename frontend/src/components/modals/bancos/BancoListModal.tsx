@@ -3,6 +3,7 @@ import { useBancos, useDeleteBanco } from '../../../hooks/useBancos';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
+import { BancoCreateModal } from './index';
 
 interface Banco {
   id: number;
@@ -32,6 +33,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Query para buscar bancos
   const { data: bancosData, isLoading, refetch } = useBancos({
@@ -145,7 +147,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     {
       label: 'Novo Banco',
       action: () => {
-        console.log('Abrir modal de novo banco');
+        setShowCreateModal(true);
       }
     },
     {
@@ -253,6 +255,16 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
           />
         </div>
       </div>
+
+      {/* Modal de Criação */}
+      <BancoCreateModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          refetch();
+          setShowCreateModal(false);
+        }}
+      />
     </DraggableModal>
   );
 };

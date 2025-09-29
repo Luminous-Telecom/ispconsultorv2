@@ -3,6 +3,7 @@ import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
+import { PlanoCreateModal } from './index';
 
 interface Plano {
   id: number;
@@ -35,6 +36,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Query para buscar planos
   const { data: planosData, isLoading, refetch } = usePlanos({
@@ -165,7 +167,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     {
       label: 'Novo Plano',
       action: () => {
-        console.log('Abrir modal de novo plano');
+        setShowCreateModal(true);
       }
     },
     {
@@ -265,6 +267,16 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
           />
         </div>
       </div>
+
+      {/* Modal de Criação */}
+      <PlanoCreateModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          refetch();
+          setShowCreateModal(false);
+        }}
+      />
     </DraggableModal>
   );
 };

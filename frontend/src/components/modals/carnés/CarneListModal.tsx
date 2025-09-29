@@ -4,6 +4,7 @@ import { API_CONFIG } from '../../../config/api';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
+import { CarneCreateModal } from './index';
 
 interface Carne {
   id: number;
@@ -46,6 +47,7 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: carnesData, isLoading, refetch } = useCarnes({
     search: search || undefined,
@@ -188,7 +190,7 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
     {
       label: 'Novo Carnê',
       action: () => {
-        console.log('Abrir modal de novo carnê');
+        setShowCreateModal(true);
       }
     },
     {
@@ -299,6 +301,16 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
           />
         </div>
       </div>
+
+      {/* Modal de Criação */}
+      <CarneCreateModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          refetch();
+          setShowCreateModal(false);
+        }}
+      />
     </DraggableModal>
   );
 };

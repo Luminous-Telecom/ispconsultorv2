@@ -3,6 +3,7 @@ import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
+import { ClienteCreateModal } from './index';
 
 interface Cliente {
   id: number;
@@ -33,6 +34,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Hooks para gerenciar clientes
   const { data: clientesData, isLoading, refetch } = useClientes({
@@ -129,8 +131,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     {
       label: 'Novo Cliente',
       action: () => {
-        // Aqui você pode abrir um modal de criação ou navegar
-        console.log('Abrir modal de novo cliente');
+        setShowCreateModal(true);
       }
     },
     {
@@ -229,6 +230,16 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
           />
         </div>
       </div>
+
+      {/* Modal de Criação */}
+      <ClienteCreateModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          refetch();
+          setShowCreateModal(false);
+        }}
+      />
     </DraggableModal>
   );
 };
