@@ -295,11 +295,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
-              onClick={() => setActiveTab('financeiro')}
+              className={`nav-link ${activeTab === 'configuracoes' ? 'active' : ''}`}
+              onClick={() => setActiveTab('configuracoes')}
               type="button"
             >
-              Financeiro
+              Configurações
             </button>
           </li>
           <li className="nav-item" role="presentation">
@@ -309,6 +309,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               type="button"
             >
               Contratos
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
+              onClick={() => setActiveTab('financeiro')}
+              type="button"
+            >
+              Financeiro
             </button>
           </li>
           <li className="nav-item" role="presentation">
@@ -590,11 +599,127 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               </div>
             )}
 
-            {/* Aba Financeiro */}
-            {activeTab === 'financeiro' && (
+            {/* Aba Configurações */}
+            {activeTab === 'configuracoes' && (
               <div className="row">
                 <div className="col-md-6">
-                  <h6 className="text-primary mb-3">Configurações de Cobrança</h6>
+                  <h6 className="text-primary mb-3">Configurações Gerais</h6>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="valor_primeiro_titulo" className="form-label">Valor do Primeiro Título</label>
+                    <select
+                      className="form-select"
+                      id="valor_primeiro_titulo"
+                      value={formData.valor_primeiro_titulo}
+                      onChange={(e) => handleInputChange('valor_primeiro_titulo', e.target.value as 'total' | 'proporcional')}
+                    >
+                      <option value="total">Valor Total</option>
+                      <option value="proporcional">Valor Proporcional</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="isento_mensalidade"
+                        checked={formData.isento_mensalidade}
+                        onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="isento_mensalidade">
+                        Isento de Mensalidade
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <h6 className="text-primary mb-3">Preferências de Comunicação</h6>
+                  
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="recebe_email"
+                        checked={formData.recebe_email}
+                        onChange={(e) => handleInputChange('recebe_email', e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="recebe_email">
+                        Recebe E-mail
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="recebe_sms"
+                        checked={formData.recebe_sms}
+                        onChange={(e) => handleInputChange('recebe_sms', e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="recebe_sms">
+                        Recebe SMS
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="recebe_whatsapp"
+                        checked={formData.recebe_whatsapp}
+                        onChange={(e) => handleInputChange('recebe_whatsapp', e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="recebe_whatsapp">
+                        Recebe WhatsApp
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Aba Contratos */}
+            {activeTab === 'contratos' && (
+              <div className="row">
+                <div className="col-md-6">
+                  <h6 className="text-primary mb-3">Plano Atual</h6>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="plano_id" className="form-label">Plano</label>
+                    <select
+                      className="form-select"
+                      id="plano_id"
+                      value={formData.plano_id}
+                      onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
+                    >
+                      <option value={0}>Selecione um plano</option>
+                      {planosData?.data?.map((plano: any) => (
+                        <option key={plano.id} value={plano.id}>
+                          {plano.nome} - R$ {Number(plano.valor_mensal || 0).toFixed(2)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="data_inicio_plano" className="form-label">Data de Início do Plano</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      id="data_inicio_plano"
+                      value={formData.data_inicio_plano}
+                      onChange={(e) => handleInputChange('data_inicio_plano', e.target.value)}
+                    />
+                  </div>
+
+                  <h6 className="text-primary mb-3">Configurações de Carnê</h6>
                   
                   <div className="mb-3">
                     <label htmlFor="tipo_cobranca" className="form-label">Tipo de Cobrança</label>
@@ -642,6 +767,33 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 </div>
 
                 <div className="col-md-6">
+                  <h6 className="text-primary mb-3">Informações do Contrato</h6>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Status do Contrato</label>
+                    <div className="form-control-plaintext">
+                      <span className={`badge ${formData.ativo ? 'bg-success' : 'bg-secondary'}`}>
+                        {formData.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Tipo de Cobrança Atual</label>
+                    <div className="form-control-plaintext">
+                      <span className="badge bg-info">
+                        {formData.tipo_cobranca === 'titulo' ? 'Título' : 'Carnê'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Vencimento</label>
+                    <div className="form-control-plaintext">
+                      Dia {formData.dia_vencimento} de cada mês
+                    </div>
+                  </div>
+
                   <h6 className="text-primary mb-3">Descontos</h6>
                   
                   <div className="mb-3">
@@ -705,66 +857,28 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               </div>
             )}
 
-            {/* Aba Contratos */}
-            {activeTab === 'contratos' && (
+            {/* Aba Financeiro */}
+            {activeTab === 'financeiro' && (
               <div className="row">
-                <div className="col-md-6">
-                  <h6 className="text-primary mb-3">Plano Atual</h6>
+                <div className="col-12">
+                  <h6 className="text-primary mb-3">Títulos e Carnês</h6>
                   
-                  <div className="mb-3">
-                    <label htmlFor="plano_id" className="form-label">Plano</label>
-                    <select
-                      className="form-select"
-                      id="plano_id"
-                      value={formData.plano_id}
-                      onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
-                    >
-                      <option value={0}>Selecione um plano</option>
-                      {planosData?.data?.map((plano: any) => (
-                        <option key={plano.id} value={plano.id}>
-                          {plano.nome} - R$ {Number(plano.valor_mensal || 0).toFixed(2)}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="alert alert-info">
+                    <strong>Em Desenvolvimento:</strong> Esta aba mostrará a listagem de títulos e carnês do cliente.
+                    <br />
+                    <small>Funcionalidade será implementada em breve.</small>
                   </div>
 
-                  <div className="mb-3">
-                    <label htmlFor="data_inicio_plano" className="form-label">Data de Início do Plano</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      id="data_inicio_plano"
-                      value={formData.data_inicio_plano}
-                      onChange={(e) => handleInputChange('data_inicio_plano', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <h6 className="text-primary mb-3">Informações do Contrato</h6>
-                  
-                  <div className="mb-3">
-                    <label className="form-label">Status do Contrato</label>
-                    <div className="form-control-plaintext">
-                      <span className={`badge ${formData.ativo ? 'bg-success' : 'bg-secondary'}`}>
-                        {formData.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
+                  {/* Placeholder para futura implementação */}
+                  <div className="card">
+                    <div className="card-header">
+                      <h6 className="mb-0">Histórico Financeiro</h6>
                     </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Tipo de Cobrança</label>
-                    <div className="form-control-plaintext">
-                      <span className="badge bg-info">
-                        {formData.tipo_cobranca === 'titulo' ? 'Título' : 'Carnê'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Vencimento</label>
-                    <div className="form-control-plaintext">
-                      Dia {formData.dia_vencimento} de cada mês
+                    <div className="card-body">
+                      <p className="text-muted mb-0">
+                        Aqui será exibida a lista de títulos e carnês do cliente, 
+                        incluindo status de pagamento, valores e datas de vencimento.
+                      </p>
                     </div>
                   </div>
                 </div>
