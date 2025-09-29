@@ -1204,8 +1204,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             {activeTab === 'financeiro' && (
               <div className="row">
                 <div className="col-12">
-                  <h6 className="text-primary mb-3">Financeiro do Cliente</h6>
-                  
                   {/* Botões de Ação - Linha 1 */}
                   <div className="d-flex justify-content-start mb-3">
                     <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
@@ -1231,9 +1229,43 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Busca e Paginação - Linha 2 */}
+                  {/* Filtros, Busca e Paginação - Linha 2 */}
                   <div className="d-flex mb-3">
-                    {/* Busca à esquerda */}
+                    {/* Filtros à esquerda */}
+                    <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
+                      <div className="form-check">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="showCarnes"
+                          checked={showCarnes}
+                          onChange={(e) => setShowCarnes(e.target.checked)}
+                        />
+                        <label className="form-check-label small" htmlFor="showCarnes">
+                          Carnês
+                        </label>
+                      </div>
+                      <div className="form-check">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="showTitulos"
+                          checked={showTitulos}
+                          onChange={(e) => setShowTitulos(e.target.checked)}
+                        />
+                        <label className="form-check-label small" htmlFor="showTitulos">
+                          Títulos
+                        </label>
+                      </div>
+                      <div className="form-check">
+                        <input className="form-check-input" type="checkbox" id="showCanceled" />
+                        <label className="form-check-label small" htmlFor="showCanceled">
+                          Mostrar cancelados
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Busca */}
                     <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
                       <input
                         type="text"
@@ -1305,40 +1337,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       >
                         <i className="bi bi-arrow-clockwise"></i>
                       </button>
-                    </div>
-                  </div>
-
-                  {/* Filtros de Tipo */}
-                  <div className="d-flex gap-3 mb-3">
-                    <div className="form-check">
-                      <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        id="showCarnes"
-                        checked={showCarnes}
-                        onChange={(e) => setShowCarnes(e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="showCarnes">
-                        Carnês
-                      </label>
-                    </div>
-                    <div className="form-check">
-                      <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        id="showTitulos"
-                        checked={showTitulos}
-                        onChange={(e) => setShowTitulos(e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="showTitulos">
-                        Títulos
-                      </label>
-                    </div>
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="showCanceled" />
-                      <label className="form-check-label" htmlFor="showCanceled">
-                        Mostrar cancelados
-                      </label>
                     </div>
                   </div>
 
