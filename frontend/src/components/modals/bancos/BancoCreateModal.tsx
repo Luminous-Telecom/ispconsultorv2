@@ -220,7 +220,6 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Novo Banco"
-      size="xl"
     >
       <form onSubmit={handleSubmit}>
         {/* Informações Básicas */}

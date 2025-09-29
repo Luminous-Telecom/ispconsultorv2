@@ -31,7 +31,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       case 'md': return { width: 800 };
       case 'lg': return { width: 1000 };
       case 'xl': return { width: 1200 };
-      default: return { width: 1000 };
+      default: return { width: 1000 }; // Tamanho padrão bom para todos
     }
   };
 

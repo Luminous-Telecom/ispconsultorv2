@@ -190,7 +190,6 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Novo Carnê"
-      size="lg"
     >
       <form onSubmit={handleSubmit}>
         <div className="row">

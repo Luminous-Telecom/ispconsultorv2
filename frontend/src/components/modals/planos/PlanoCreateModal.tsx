@@ -155,7 +155,6 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Novo Plano"
-      size="lg"
     >
         <form onSubmit={handleSubmit}>
           <div className="row g-2">

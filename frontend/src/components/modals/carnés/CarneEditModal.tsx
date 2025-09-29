@@ -186,7 +186,6 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Editar Carnê"
-      size="lg"
     >
             {carneLoading ? (
               <div className="text-center py-4">

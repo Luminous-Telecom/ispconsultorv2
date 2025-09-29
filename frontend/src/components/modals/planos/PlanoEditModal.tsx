@@ -195,7 +195,6 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Editar Plano"
-      size="lg"
     >
       {planoLoading ? (
         <div className="text-center py-4">
