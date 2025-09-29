@@ -53,21 +53,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
             </div>
           </div>
 
-          <div className="col-md-8">
-            <label className="form-label small text-muted">Referência</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-geo-alt"></i>
-              </span>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                value={cliente.referencia || ''}
-                onChange={(e) => handleInputChange('referencia', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
 
           <div className="col-md-8">
             <label className="form-label small text-muted">Endereço</label>
