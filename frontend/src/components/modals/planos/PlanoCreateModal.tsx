@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlanoService } from '../../services/planoService';
-import { useNotificationContext } from '../../contexts/NotificationContext';
-import DraggableModal from '../common/DraggableModal';
+import { PlanoService } from '../../../services/planoService';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
+import DraggableModal from '../../common/DraggableModal';
 
 interface PlanoForm {
   nome_plano: string;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BancoService } from '../../services/bancoService';
-import { useNotificationContext } from '../../contexts/NotificationContext';
-import DraggableModal from '../common/DraggableModal';
+import { BancoService } from '../../../services/bancoService';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
+import DraggableModal from '../../common/DraggableModal';
 
 interface BancoForm {
   nome: string;

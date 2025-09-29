@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CarneService } from '../../services/carneService';
-import { ClienteService } from '../../services/clienteService';
-import { PlanoService } from '../../services/planoService';
-import { BancoService } from '../../services/bancoService';
-import { useNotificationContext } from '../../contexts/NotificationContext';
-import DraggableModal from '../common/DraggableModal';
+import { CarneService } from '../../../services/carneService';
+import { ClienteService } from '../../../services/clienteService';
+import { PlanoService } from '../../../services/planoService';
+import { BancoService } from '../../../services/bancoService';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
+import DraggableModal from '../../common/DraggableModal';
 
 interface CarneForm {
   cliente_id: number;

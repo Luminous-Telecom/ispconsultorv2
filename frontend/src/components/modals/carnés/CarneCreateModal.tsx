@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { CarneService } from '../../services/carneService';
-import { ClienteService } from '../../services/clienteService';
-import { PlanoService } from '../../services/planoService';
-import { BancoService } from '../../services/bancoService';
-import { ParametroService } from '../../services/parametroService';
-import { useNotificationContext } from '../../contexts/NotificationContext';
-import DraggableModal from '../common/DraggableModal';
+import { CarneService } from '../../../services/carneService';
+import { ClienteService } from '../../../services/clienteService';
+import { PlanoService } from '../../../services/planoService';
+import { BancoService } from '../../../services/bancoService';
+import { ParametroService } from '../../../services/parametroService';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
+import DraggableModal from '../../common/DraggableModal';
 
 interface CarneForm {
   cliente_id: number;
@@ -74,7 +74,7 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
       const carregarNumeroParcelasPadrao = async () => {
         try {
           const parametros = await ParametroService.getParametrosPorCategoria();
-          const numeroParcelasPadrao = parametros.carne?.find(p => p.chave === 'numero_parcelas_padrao')?.valor;
+          const numeroParcelasPadrao = parametros.carne?.find((p: any) => p.chave === 'numero_parcelas_padrao')?.valor;
           if (numeroParcelasPadrao) {
             setFormData(prev => ({
               ...prev,

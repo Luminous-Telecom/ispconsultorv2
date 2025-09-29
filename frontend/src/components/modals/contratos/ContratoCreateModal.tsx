@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNotificationContext } from '../../contexts/NotificationContext';
-import DraggableModal from '../common/DraggableModal';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
+import DraggableModal from '../../common/DraggableModal';
 
 interface ContratoForm {
   cliente_id: number;
