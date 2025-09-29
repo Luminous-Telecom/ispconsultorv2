@@ -269,7 +269,7 @@ export class TituloController {
           { model: Cliente, as: 'cliente' },
           { model: Banco, as: 'banco' }
         ]
-      });
+      }) as any;
 
       if (!titulo) {
         res.status(404).json({
@@ -284,7 +284,7 @@ export class TituloController {
         // Cancelar na API do banco se tiver charge_id
         if (titulo.charge_id && titulo.banco.tipo_banco === 'efi') {
           try {
-            await BancoApiService.cancelarTitulo(titulo.charge_id, titulo.banco);
+            await BancoApiService.cancelarTitulo(titulo as any);
             logger.info('Título cancelado na EFI', { 
               titulo_id: titulo.id, 
               charge_id: titulo.charge_id 
@@ -337,7 +337,7 @@ export class TituloController {
 
       const titulo = await Titulo.findByPk(id, {
         include: [{ model: Banco, as: 'banco' }]
-      });
+      }) as any;
 
       if (!titulo) {
         res.status(404).json({
@@ -350,7 +350,7 @@ export class TituloController {
       // Cancelar na API do banco se tiver charge_id
       if (titulo.charge_id && titulo.banco.tipo_banco === 'efi') {
         try {
-          await BancoApiService.cancelarTitulo(titulo.charge_id, titulo.banco);
+          await BancoApiService.cancelarTitulo(titulo as any);
           logger.info('Título cancelado na EFI antes da exclusão', { 
             titulo_id: titulo.id, 
             charge_id: titulo.charge_id 
@@ -390,7 +390,7 @@ export class TituloController {
           { model: Plano, as: 'plano' },
           { model: Banco, as: 'banco' }
         ]
-      });
+      }) as any;
 
       if (!titulo) {
         res.status(404).json({
@@ -410,22 +410,22 @@ export class TituloController {
 
         try {
           // Registrar no banco
-          const resultado = await BancoApiService.gerarTitulo(titulo, titulo.banco);
+          const resultado = await BancoApiService.gerarTitulo(titulo as any);
           
           // Atualizar título com dados do banco
           await titulo.update({
-            charge_id: resultado.charge_id,
-            url_boleto: resultado.url_boleto,
-            qrcode: resultado.qrcode,
-            qrcode_image: resultado.qrcode_image,
-            codigo_barras: resultado.codigo_barras,
-            linha_digitavel: resultado.linha_digitavel,
-            nosso_numero: resultado.nosso_numero
+            charge_id: (resultado as any).charge_id,
+            url_boleto: (resultado as any).url_boleto,
+            qrcode: (resultado as any).qrcode,
+            qrcode_image: (resultado as any).qrcode_image,
+            codigo_barras: (resultado as any).codigo_barras,
+            linha_digitavel: (resultado as any).linha_digitavel,
+            nosso_numero: (resultado as any).nosso_numero
           });
 
           logger.info('Título registrado no banco com sucesso', {
             titulo_id: titulo.id,
-            charge_id: resultado.charge_id
+            charge_id: (resultado as any).charge_id
           });
         } catch (error: any) {
           logger.error('Erro ao registrar título no banco', { 
