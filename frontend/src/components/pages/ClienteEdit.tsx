@@ -175,12 +175,6 @@ const ClienteEdit: React.FC = () => {
              </button>
              <button
                className="btn btn-outline-secondary btn-sm"
-               title="Localização"
-             >
-               Localização
-             </button>
-             <button
-               className="btn btn-outline-secondary btn-sm"
                title="Enviar notificação push"
              >
                Notificação

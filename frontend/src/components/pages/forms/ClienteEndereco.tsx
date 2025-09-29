@@ -117,12 +117,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 onChange={(e) => handleInputChange('endereco', e.target.value)}
                 disabled={!isEditing}
               />
-              <button className="btn btn-outline-secondary" type="button">
-                <i className="bi bi-geo-alt"></i>
-              </button>
-              <button className="btn btn-outline-success" type="button">
-                <i className="bi bi-check"></i>
-              </button>
             </div>
           </div>
 
@@ -169,9 +163,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 onChange={(e) => handleInputChange('cidade', e.target.value)}
                 disabled={!isEditing}
               />
-              <button className="btn btn-outline-success" type="button">
-                <i className="bi bi-check"></i>
-              </button>
             </div>
           </div>
 
