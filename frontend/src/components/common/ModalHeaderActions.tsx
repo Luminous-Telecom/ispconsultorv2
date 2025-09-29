@@ -74,7 +74,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
       </div>
 
       {/* Linha 2: Busca à esquerda, paginação à direita */}
-      <div className="d-flex align-items-center justify-content-between">
+      <div className="d-flex align-items-center">
         {/* Busca à esquerda */}
         <div className="d-flex align-items-center gap-2" style={{ paddingLeft: '12px' }}>
           <input
@@ -88,7 +88,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
         </div>
 
         {/* Paginação à direita */}
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2" style={{ marginLeft: 'auto' }}>
           {/* Seletor de linhas por página */}
           <select 
             className="form-select form-select-sm" 
