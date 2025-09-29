@@ -24,32 +24,49 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
-  // Definir tamanhos padrão
+  // Definir larguras padrão (altura será automática)
   const getSizeClasses = () => {
     switch (size) {
-      case 'sm': return { width: 600, height: 450 };
-      case 'md': return { width: 800, height: 600 };
-      case 'lg': return { width: 1000, height: 700 };
-      case 'xl': return { width: 1200, height: 800 };
-      default: return { width: 1000, height: 700 };
+      case 'sm': return { width: 600 };
+      case 'md': return { width: 800 };
+      case 'lg': return { width: 1000 };
+      case 'xl': return { width: 1200 };
+      default: return { width: 1000 };
     }
   };
 
-  // Centralizar modal na tela
+  // Centralizar modal na tela e ajustar altura automaticamente
   useEffect(() => {
     if (show && modalRef.current) {
-      const { width, height } = getSizeClasses();
+      const { width } = getSizeClasses();
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       
+      // Posição centralizada
       setPosition({
         x: (screenWidth - width) / 2,
-        y: (screenHeight - height) / 2
+        y: Math.max(50, (screenHeight - 400) / 2) // Mínimo de 50px do topo
       });
       
-      setModalSize({ width, height });
+      // Largura fixa, altura será automática
+      setModalSize({ width, height: 0 });
     }
   }, [show, size]);
+
+  // Ajustar altura baseada no conteúdo
+  useEffect(() => {
+    if (show && modalRef.current) {
+      const modal = modalRef.current;
+      const contentHeight = modal.scrollHeight;
+      const maxHeight = window.innerHeight - 100; // Deixar 100px de margem
+      const finalHeight = Math.min(contentHeight, maxHeight);
+      
+      setModalSize(prev => ({
+        ...prev,
+        height: finalHeight
+      }));
+    }
+  }, [show, children]);
 
   // Funções de drag
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -187,7 +204,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           left: `${position.x}px`,
           top: `${position.y}px`,
           width: `${modalSize.width}px`,
-          height: `${modalSize.height}px`,
+          height: modalSize.height > 0 ? `${modalSize.height}px` : 'auto',
+          maxHeight: `${window.innerHeight - 100}px`,
           backgroundColor: 'var(--bg-primary)',
           color: 'var(--text-primary)',
           border: '1px solid var(--border-color)',
@@ -253,7 +271,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           style={{
             flex: 1,
             overflow: 'auto',
-            padding: '16px'
+            padding: '16px',
+            minHeight: 0
           }}
         >
           {children}
