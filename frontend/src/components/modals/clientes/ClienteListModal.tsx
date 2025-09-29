@@ -233,6 +233,15 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
             <i className="bi bi-chevron-double-right"></i>
           </button>
         </div>
+
+        {/* Botão de refresh */}
+        <button 
+          className="btn btn-outline-secondary btn-sm"
+          onClick={() => refetch()}
+          title="Recarregar dados"
+        >
+          <i className="bi bi-arrow-clockwise"></i>
+        </button>
       </div>
     </>
   );
