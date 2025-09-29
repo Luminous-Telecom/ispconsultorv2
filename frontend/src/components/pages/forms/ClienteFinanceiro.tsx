@@ -74,7 +74,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 
   const handleImprimirCarne = (selectedItems: any[]) => {
     if (selectedItems.length > 0) {
-      const url = getApiUrl(`/boleto/web/${selectedItems[0].id}`);
+      const url = getApiUrl(`/carnes/${selectedItems[0].id}/imprimir`);
       window.open(url, '_blank');
     }
   };
