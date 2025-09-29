@@ -347,6 +347,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         onClose={handleCloseCarneEditModal}
         carneId={selectedCarneId}
         onSuccess={handleCarneEditSuccess}
+        clienteId={cliente.id}
       />
 
       {/* Modal de criação de carnê */}

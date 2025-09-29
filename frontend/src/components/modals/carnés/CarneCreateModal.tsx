@@ -202,7 +202,7 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
                 id="cliente_id"
                 value={formData.cliente_id}
                 onChange={(e) => handleInputChange('cliente_id', parseInt(e.target.value))}
-                disabled={createCarneMutation.isPending}
+                disabled={createCarneMutation.isPending || !!clienteId}
               >
                 <option value={0}>Selecione um cliente</option>
                 {clientes?.map((cliente: any) => (
@@ -211,6 +211,7 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
                   </option>
                 ))}
               </select>
+              {clienteId && <small className="form-text text-muted">Cliente pré-selecionado automaticamente</small>}
               {errors.cliente_id && <div className="invalid-feedback">{errors.cliente_id}</div>}
             </div>
           </div>

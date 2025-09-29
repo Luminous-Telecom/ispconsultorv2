@@ -27,13 +27,15 @@ interface CarneEditModalProps {
   onClose: () => void;
   carneId: number | null;
   onSuccess?: () => void;
+  clienteId?: number;
 }
 
 const CarneEditModal: React.FC<CarneEditModalProps> = ({ 
   show, 
   onClose, 
   carneId, 
-  onSuccess 
+  onSuccess,
+  clienteId
 }) => {
   const [formData, setFormData] = useState<CarneForm>({
     cliente_id: 0,
@@ -203,7 +205,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                         id="cliente_id"
                         value={formData.cliente_id}
                         onChange={(e) => handleInputChange('cliente_id', parseInt(e.target.value))}
-                        disabled={updateCarneMutation.isPending}
+                        disabled={updateCarneMutation.isPending || !!clienteId}
                       >
                         <option value={0}>Selecione um cliente</option>
                         {clientes?.map((cliente: any) => (
@@ -212,6 +214,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                           </option>
                         ))}
                       </select>
+                      {clienteId && <small className="form-text text-muted">Cliente não pode ser alterado</small>}
                       {errors.cliente_id && <div className="invalid-feedback">{errors.cliente_id}</div>}
                     </div>
                   </div>
