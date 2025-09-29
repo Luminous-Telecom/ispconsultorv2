@@ -45,7 +45,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-      {/* Linha 1: Botões à esquerda */}
+      {/* Linha 1: Botões alinhados à esquerda */}
       <div className="d-flex justify-content-start">
         <div className="d-flex" style={{ gap: '8px' }}>
           {bulkActions.map((bulkAction, index) => {
