@@ -146,12 +146,30 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     });
 
     // Filtrar cancelados se não estiver marcado para mostrar
-    const filteredData = allData.filter((parcela: CarneParcela) => {
+    let filteredData = allData.filter((parcela: CarneParcela) => {
       if (parcela.status === 'cancelado' && !showCancelados) {
         return false;
       }
       return true;
     });
+
+    // Aplicar filtro de busca
+    if (search.trim()) {
+      const searchTerm = search.toLowerCase().trim();
+      filteredData = filteredData.filter((parcela: CarneParcela) => {
+        const id = parcela.id?.toString() || '';
+        const numeroCarne = parcela.carne?.numero_carne || '';
+        const valor = parcela.valor_parcela?.toString() || '';
+        const status = parcela.status || '';
+        
+        return (
+          id.includes(searchTerm) ||
+          numeroCarne.toLowerCase().includes(searchTerm) ||
+          valor.includes(searchTerm) ||
+          status.toLowerCase().includes(searchTerm)
+        );
+      });
+    }
 
     return filteredData;
   };
