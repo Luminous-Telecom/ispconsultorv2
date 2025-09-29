@@ -59,41 +59,6 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
             </div>
           </div>
 
-          <div className="col-12">
-            <fieldset>
-              <legend className="form-label">Tipo de Pessoa</legend>
-              <div className="d-flex gap-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="tipo_pessoa"
-                    value="juridica"
-                    checked={cliente.tipo_pessoa === 'juridica'}
-                    onChange={(e) => handleInputChange('tipo_pessoa', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                  <label className="form-check-label">
-                    Pessoa Jurídica
-                  </label>
-                </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="tipo_pessoa"
-                    value="fisica"
-                    checked={cliente.tipo_pessoa === 'fisica'}
-                    onChange={(e) => handleInputChange('tipo_pessoa', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                  <label className="form-check-label">
-                    Pessoa Física
-                  </label>
-                </div>
-              </div>
-            </fieldset>
-          </div>
 
           <div className="col-md-6">
             <label className="form-label small text-muted">Razão Social</label>
@@ -154,27 +119,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
             />
           </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Telefone</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.telefone || ''}
-              onChange={(e) => handleInputChange('telefone', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">WhatsApp</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.whatsapp || ''}
-              onChange={(e) => handleInputChange('whatsapp', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
           <div className="col-12">
             <label className="form-label small text-muted">Observações</label>
