@@ -44,8 +44,8 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
               <input
                 type="text"
                 className="form-control form-control-sm"
-                value={cliente.telefone_celular || ''}
-                onChange={(e) => handleInputChange('telefone_celular', e.target.value)}
+                value={cliente.telefone || ''}
+                onChange={(e) => handleInputChange('telefone', e.target.value)}
                 disabled={!isEditing}
               />
               <button className="btn btn-outline-secondary" type="button">
