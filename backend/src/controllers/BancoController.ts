@@ -13,7 +13,7 @@ export class BancoController {
       const bancos = await Banco.findAll({
         where: { ativo: true },
         include: [
-          { association: 'carnes' },
+          { association: 'titulos' },
           { association: 'clientes' }
         ],
         order: [['nome', 'ASC']]
@@ -98,7 +98,7 @@ export class BancoController {
       
       const banco = await Banco.findByPk(id, {
         include: [
-          { association: 'carnes' },
+          { association: 'titulos' },
           { association: 'clientes' }
         ]
       });
