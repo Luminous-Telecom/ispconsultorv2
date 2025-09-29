@@ -252,8 +252,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             className="modal-title mb-0" 
             style={{ 
               color: 'var(--text-primary)',
-              fontSize: '1.1rem',
-              fontWeight: '500'
+              fontSize: '0.95rem',
+              fontWeight: '500',
+              textAlign: 'center',
+              flex: 1
             }}
           >
             {title}
