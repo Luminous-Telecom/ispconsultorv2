@@ -278,82 +278,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const paginatedData = getPaginatedData();
 
-  // Ações para o header do modal usando componente reutilizável
-  const headerActions = (
-    <ModalHeaderActions
-      bulkActions={[
-        {
-          label: 'Imprimir Carnê',
-          action: (selectedItems: any[]) => {
-            selectedItems.forEach(item => {
-              if (item.parcelas) {
-                // É um carnê completo
-                console.log('Imprimir carnê:', item.id);
-              } else {
-                // É uma parcela individual
-                console.log('Imprimir parcela:', item.id);
-              }
-            });
-          }
-        },
-        {
-          label: 'Imprimir Parcela',
-          action: (selectedItems: any[]) => {
-            selectedItems.forEach(item => {
-              if (!item.parcelas) {
-                // Só funciona para parcelas individuais
-                console.log('Imprimir parcela individual:', item.id);
-              }
-            });
-          }
-        },
-        {
-          label: 'Editar',
-          action: (selectedItems: any[]) => {
-            if (selectedItems.length > 0) {
-              console.log('Editar item:', selectedItems[0].id);
-            }
-          }
-        },
-        {
-          label: 'Receber',
-          action: (selectedItems: any[]) => {
-            selectedItems.forEach(item => {
-              console.log('Receber pagamento:', item.id);
-            });
-          }
-        },
-        {
-          label: 'Excluir',
-          action: (selectedItems: any[]) => {
-            if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} item(s)?`)) {
-              selectedItems.forEach(item => {
-                console.log('Excluir item:', item.id);
-              });
-            }
-          }
-        }
-      ]}
-      selectedItems={selectedItems}
-      search={search}
-      onSearchChange={setSearch}
-      searchPlaceholder="Buscar por ID, carnê, valor..."
-      limit={limit}
-      onLimitChange={setLimit}
-      pagination={{
-        from: sortedData.length > 0 ? (page - 1) * limit + 1 : 0,
-        to: Math.min(page * limit, sortedData.length),
-        total: sortedData.length,
-        current_page: page,
-        last_page: Math.ceil(sortedData.length / limit)
-      }}
-      onPageChange={setPage}
-      onRefresh={() => {
-        // Recarregar dados se necessário
-        console.log('Recarregar dados');
-      }}
-    />
-  );
 
   // Colunas para o DataTable
   const columns = [
@@ -642,7 +566,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           onClose={onClose}
           title="Editar Cliente"
           size="xl"
-          headerActions={activeTab === 'financeiro' ? headerActions : undefined}
         >
       <div style={{ 
         height: '100%',
@@ -1231,37 +1154,175 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 <div className="col-12">
                   <h6 className="text-primary mb-3">Financeiro do Cliente</h6>
                   
-                  {/* Filtros de Tipo */}
-                  <div className="d-flex gap-3 mb-3">
-                    <div className="form-check">
-                      <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        id="showCarnes"
-                        checked={showCarnes}
-                        onChange={(e) => setShowCarnes(e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="showCarnes">
-                        Carnês
-                      </label>
+                  {/* Filtros de Tipo e Botões de Ação */}
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="d-flex gap-3">
+                      <div className="form-check">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="showCarnes"
+                          checked={showCarnes}
+                          onChange={(e) => setShowCarnes(e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="showCarnes">
+                          Carnês
+                        </label>
+                      </div>
+                      <div className="form-check">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="showTitulos"
+                          checked={showTitulos}
+                          onChange={(e) => setShowTitulos(e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="showTitulos">
+                          Títulos
+                        </label>
+                      </div>
+                      <div className="form-check">
+                        <input className="form-check-input" type="checkbox" id="showCanceled" />
+                        <label className="form-check-label" htmlFor="showCanceled">
+                          Mostrar cancelados
+                        </label>
+                      </div>
                     </div>
-                    <div className="form-check">
-                      <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        id="showTitulos"
-                        checked={showTitulos}
-                        onChange={(e) => setShowTitulos(e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="showTitulos">
-                        Títulos
-                      </label>
+                    
+                    {/* Botões de Ação */}
+                    <div className="d-flex gap-2">
+                      <button 
+                        className="btn btn-sm btn-primary"
+                        disabled={selectedItems.length === 0}
+                        onClick={() => {
+                          selectedItems.forEach(item => {
+                            if (item.parcelas) {
+                              console.log('Imprimir carnê:', item.id);
+                            } else {
+                              console.log('Imprimir parcela:', item.id);
+                            }
+                          });
+                        }}
+                      >
+                        Imprimir Carnê
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-primary"
+                        disabled={selectedItems.length === 0}
+                        onClick={() => {
+                          selectedItems.forEach(item => {
+                            if (!item.parcelas) {
+                              console.log('Imprimir parcela individual:', item.id);
+                            }
+                          });
+                        }}
+                      >
+                        Imprimir Parcela
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-secondary"
+                        disabled={selectedItems.length === 0}
+                        onClick={() => {
+                          if (selectedItems.length > 0) {
+                            console.log('Editar item:', selectedItems[0].id);
+                          }
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-success"
+                        disabled={selectedItems.length === 0}
+                        onClick={() => {
+                          selectedItems.forEach(item => {
+                            console.log('Receber pagamento:', item.id);
+                          });
+                        }}
+                      >
+                        Receber
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-danger"
+                        disabled={selectedItems.length === 0}
+                        onClick={() => {
+                          if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} item(s)?`)) {
+                            selectedItems.forEach(item => {
+                              console.log('Excluir item:', item.id);
+                            });
+                          }
+                        }}
+                      >
+                        Excluir
+                      </button>
                     </div>
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="showCanceled" />
-                      <label className="form-check-label" htmlFor="showCanceled">
-                        Mostrar cancelados
-                      </label>
+                  </div>
+
+                  {/* Busca e Paginação */}
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="d-flex align-items-center gap-2">
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder="Buscar por ID, carnê, valor..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        style={{ width: '300px', height: '32px' }}
+                      />
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                      <select
+                        className="form-select form-select-sm"
+                        value={limit}
+                        onChange={(e) => setLimit(Number(e.target.value))}
+                        style={{ width: '80px', height: '32px', cursor: 'pointer' }}
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={15}>15</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                      <div className="d-flex align-items-center gap-1">
+                        <button
+                          className="btn btn-outline-secondary btn-sm"
+                          disabled={page === 1}
+                          onClick={() => setPage(1)}
+                        >
+                          ◀◀
+                        </button>
+                        <button
+                          className="btn btn-outline-secondary btn-sm"
+                          disabled={page === 1}
+                          onClick={() => setPage(page - 1)}
+                        >
+                          ◀
+                        </button>
+                        <span className="small text-muted mx-2">
+                          {sortedData.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, sortedData.length)} / {sortedData.length}
+                        </span>
+                        <button
+                          className="btn btn-outline-secondary btn-sm"
+                          disabled={page >= Math.ceil(sortedData.length / limit)}
+                          onClick={() => setPage(page + 1)}
+                        >
+                          ▶
+                        </button>
+                        <button
+                          className="btn btn-outline-secondary btn-sm"
+                          disabled={page >= Math.ceil(sortedData.length / limit)}
+                          onClick={() => setPage(Math.ceil(sortedData.length / limit))}
+                        >
+                          ▶▶
+                        </button>
+                      </div>
+                      <button
+                        className="btn btn-outline-secondary btn-sm"
+                        title="Recarregar dados"
+                        onClick={() => console.log('Recarregar dados')}
+                      >
+                        🔄
+                      </button>
                     </div>
                   </div>
 
