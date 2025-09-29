@@ -97,6 +97,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
@@ -178,6 +180,94 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   };
 
   const filteredData = getFilteredData();
+
+  // Função para ordenar os dados
+  const getSortedData = () => {
+    if (!sortColumn) return filteredData;
+    
+    return [...filteredData].sort((a, b) => {
+      let valueA: any;
+      let valueB: any;
+      
+      switch (sortColumn) {
+        case 'id':
+          valueA = a.id;
+          valueB = b.id;
+          break;
+        case 'status':
+          // Para status, usar a lógica de prioridade
+          if (a.parcelas) {
+            const isCompletamentePagoA = a.parcelas_pagas === a.parcelas.length;
+            const temParcelasVencidasA = a.parcelas.some((p: any) => p.status === 'vencido');
+            valueA = isCompletamentePagoA ? 0 : temParcelasVencidasA ? 1 : a.parcelas_pagas > 0 ? 2 : 3;
+          } else {
+            valueA = a.status === 'pago' ? 0 : a.status === 'vencido' ? 1 : a.status === 'pendente' ? 2 : 3;
+          }
+          if (b.parcelas) {
+            const isCompletamentePagoB = b.parcelas_pagas === b.parcelas.length;
+            const temParcelasVencidasB = b.parcelas.some((p: any) => p.status === 'vencido');
+            valueB = isCompletamentePagoB ? 0 : temParcelasVencidasB ? 1 : b.parcelas_pagas > 0 ? 2 : 3;
+          } else {
+            valueB = b.status === 'pago' ? 0 : b.status === 'vencido' ? 1 : b.status === 'pendente' ? 2 : 3;
+          }
+          break;
+        case 'numero_carne':
+          valueA = a.parcelas ? a.numero_carne : a.carne?.numero_carne || '';
+          valueB = b.parcelas ? b.numero_carne : b.carne?.numero_carne || '';
+          break;
+        case 'quantidade_parcelas':
+          valueA = a.parcelas ? a.quantidade_parcelas : a.numero_parcela;
+          valueB = b.parcelas ? b.quantidade_parcelas : b.numero_parcela;
+          break;
+        case 'data_vencimento':
+          valueA = a.parcelas ? new Date(a.data_vencimento_primeira) : new Date(a.data_vencimento);
+          valueB = b.parcelas ? new Date(b.data_vencimento_primeira) : new Date(b.data_vencimento);
+          break;
+        case 'valor':
+          valueA = a.parcelas ? a.valor_total_real : Number(a.valor_parcela || 0);
+          valueB = b.parcelas ? b.valor_total_real : Number(b.valor_parcela || 0);
+          break;
+        case 'valor_pago':
+          if (a.parcelas) {
+            const isCompletamentePagoA = a.parcelas_pagas === a.parcelas.length;
+            valueA = isCompletamentePagoA ? a.valor_pago_total : 0;
+          } else {
+            valueA = a.pago ? Number(a.valor_pago || a.valor_parcela || 0) : 0;
+          }
+          if (b.parcelas) {
+            const isCompletamentePagoB = b.parcelas_pagas === b.parcelas.length;
+            valueB = isCompletamentePagoB ? b.valor_pago_total : 0;
+          } else {
+            valueB = b.pago ? Number(b.valor_pago || b.valor_parcela || 0) : 0;
+          }
+          break;
+        case 'valor_aberto':
+          if (a.parcelas) {
+            const isCompletamentePagoA = a.parcelas_pagas === a.parcelas.length;
+            valueA = isCompletamentePagoA ? 0 : a.valor_total_real - a.valor_pago_total;
+          } else {
+            valueA = a.pago ? 0 : Number(a.valor_parcela || 0);
+          }
+          if (b.parcelas) {
+            const isCompletamentePagoB = b.parcelas_pagas === b.parcelas.length;
+            valueB = isCompletamentePagoB ? 0 : b.valor_total_real - b.valor_pago_total;
+          } else {
+            valueB = b.pago ? 0 : Number(b.valor_parcela || 0);
+          }
+          break;
+        default:
+          valueA = a[sortColumn] || '';
+          valueB = b[sortColumn] || '';
+      }
+      
+      // Comparação
+      if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+      if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedData = getSortedData();
 
   // Colunas para o DataTable
   const columns = [
@@ -1091,18 +1181,24 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   {/* DataTable usando componente separado */}
                   <div style={{ paddingLeft: '0.5rem' }}>
                     <DataTable
-                      data={filteredData}
+                      data={sortedData}
                       columns={columns}
                       isLoading={isLoadingParcelas}
                       showHeader={false}
                       onSelectionChange={setSelectedItems}
                       onSearch={setSearch}
+                      onSort={(column: string, direction: 'asc' | 'desc') => {
+                        setSortColumn(column);
+                        setSortDirection(direction);
+                      }}
+                      sortColumn={sortColumn}
+                      sortDirection={sortDirection}
                       pagination={{
                         from: (page - 1) * limit + 1,
-                        to: Math.min(page * limit, filteredData.length),
-                        total: filteredData.length,
+                        to: Math.min(page * limit, sortedData.length),
+                        total: sortedData.length,
                         current_page: page,
-                        last_page: Math.ceil(filteredData.length / limit)
+                        last_page: Math.ceil(sortedData.length / limit)
                       }}
                       limit={limit}
                       setLimit={setLimit}
@@ -1126,7 +1222,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   </div>
 
                   {/* Resumo Financeiro */}
-                  {filteredData.length > 0 && (
+                  {sortedData.length > 0 && (
                     <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
                       <div className="d-flex align-items-center">
                         <i className="bi bi-info-circle text-muted me-2"></i>
@@ -1135,7 +1231,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       <div className="d-flex gap-4">
                         <div className="text-end">
                           <div className="small text-muted">Valor:</div>
-                          <strong>R$ {filteredData.reduce((sum, item) => {
+                          <strong>R$ {sortedData.reduce((sum, item) => {
                             if (item.parcelas) {
                               return sum + item.valor_total_real;
                             } else {
@@ -1145,7 +1241,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor baixado:</div>
-                          <strong>R$ {filteredData.reduce((sum, item) => {
+                          <strong>R$ {sortedData.reduce((sum, item) => {
                             if (item.parcelas) {
                               return sum + item.valor_pago_total;
                             } else {
@@ -1155,7 +1251,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor aberto:</div>
-                          <strong>R$ {filteredData.reduce((sum, item) => {
+                          <strong>R$ {sortedData.reduce((sum, item) => {
                             if (item.parcelas) {
                               return sum + (item.valor_total_real - item.valor_pago_total);
                             } else {
@@ -1165,7 +1261,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor cancelado:</div>
-                          <strong>R$ {filteredData.reduce((sum, item) => {
+                          <strong>R$ {sortedData.reduce((sum, item) => {
                             if (item.parcelas) {
                               const todasCanceladas = item.parcelas.every((p: any) => p.status === 'cancelado');
                               return sum + (todasCanceladas ? item.valor_total_real : 0);
