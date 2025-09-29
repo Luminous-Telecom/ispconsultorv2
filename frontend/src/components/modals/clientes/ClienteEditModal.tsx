@@ -410,61 +410,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           );
         }
       }
-    },
-    {
-      key: 'acoes',
-      label: 'Ações',
-      sortable: false,
-      render: (item: any) => (
-        <div className="d-flex gap-1">
-          <button 
-            className="btn btn-sm btn-outline-primary"
-            title="Imprimir"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (item.parcelas) {
-                console.log('Imprimir carnê:', item.id);
-              } else {
-                console.log('Imprimir parcela:', item.id);
-              }
-            }}
-          >
-            <i className="bi bi-printer"></i>
-          </button>
-          <button 
-            className="btn btn-sm btn-outline-secondary"
-            title="Editar"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log('Editar item:', item.id);
-            }}
-          >
-            <i className="bi bi-pencil"></i>
-          </button>
-          <button 
-            className="btn btn-sm btn-outline-success"
-            title="Receber"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log('Receber pagamento:', item.id);
-            }}
-          >
-            <i className="bi bi-check-circle"></i>
-          </button>
-          <button 
-            className="btn btn-sm btn-outline-danger"
-            title="Excluir"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm('Tem certeza que deseja excluir este item?')) {
-                console.log('Excluir item:', item.id);
-              }
-            }}
-          >
-            <i className="bi bi-trash"></i>
-          </button>
-        </div>
-      )
     }
   ];
 
