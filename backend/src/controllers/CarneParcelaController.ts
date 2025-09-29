@@ -769,38 +769,42 @@ export class CarneParcelaController {
     try {
       const { id } = req.params;
       
-      const parcela = await CarneParcela.findByPk(id, {
-        include: [{ 
-          association: 'carne', 
-          include: [
-            { association: 'cliente' }, 
-            { association: 'plano' }, 
-            { 
-              association: 'banco',
-              attributes: ['id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
-            }
-          ] 
-        }],
+      // Importar o modelo Titulo
+      const { Titulo } = await import('../models/Titulo');
+      const { Cliente } = await import('../models/Cliente');
+      const { Plano } = await import('../models/Plano');
+      const { Banco } = await import('../models/Banco');
+      
+      const titulo = await Titulo.findByPk(id, {
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { 
+            model: Banco, 
+            as: 'banco',
+            attributes: ['id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
+          }
+        ],
       });
 
-      if (!parcela) {
-        res.status(404).json({ error: 'Parcela não encontrada' });
+      if (!titulo) {
+        res.status(404).json({ error: 'Título não encontrado' });
         return;
       }
 
       // Verificar se o boleto já foi registrado no banco
-      if (!parcela.charge_id) {
+      if (!(titulo as any).charge_id) {
         console.log('Boleto não registrado no banco, registrando agora...');
         
         // Registrar boleto no banco via API
         const { BancoApiService } = await import('../services/BancoApiService');
-        const resultado = await BancoApiService.gerarTitulo(parcela);
+        const resultado = await BancoApiService.gerarTitulo(titulo as any);
         
         if (resultado.success) {
           console.log('Boleto registrado no banco com sucesso:', resultado.data);
           
-          // Atualizar parcela com dados do banco
-          await parcela.update({
+          // Atualizar título com dados do banco
+          await titulo.update({
             charge_id: resultado.data?.charge_id || null,
             codigo_barras: resultado.data?.codigo_barras || null,
             linha_digitavel: resultado.data?.linha_digitavel || null,
@@ -809,8 +813,8 @@ export class CarneParcelaController {
             qrcode_image: resultado.data?.qrcode_image || null
           });
           
-          // Recarregar parcela com dados atualizados
-          await parcela.reload();
+          // Recarregar título com dados atualizados
+          await titulo.reload();
         } else {
           console.error('Erro ao registrar boleto no banco:', resultado.message);
           // Continuar mesmo se falhar no banco
@@ -845,8 +849,8 @@ export class CarneParcelaController {
         }
       };
 
-      const qrCodeData = parcela.qrcode_image || '';
-      const barcodeData = generateBarcodeBase64(parcela.codigo_barras || parcela.id.toString());
+      const qrCodeData = (titulo as any).qrcode_image || '';
+      const barcodeData = generateBarcodeBase64((titulo as any).codigo_barras || titulo.id.toString());
 
       // Função para processar variáveis nas instruções
       const processarInstrucoes = (instrucao: string): string => {
@@ -855,26 +859,26 @@ export class CarneParcelaController {
         let instrucaoProcessada = instrucao;
         
         // Substituir variáveis específicas do plano e cliente
-        instrucaoProcessada = instrucaoProcessada.replace(/%nome_plano%/g, (parcela as any).carne?.plano?.nome_plano || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%tipo_servico%/g, (parcela as any).carne?.plano?.tipo_servico || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%quantidade_usuarios%/g, (parcela as any).carne?.plano?.quantidade_usuarios?.toString() || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%valor_mensal%/g, (parcela as any).carne?.plano?.valor_mensal?.toString() || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%periodicidade%/g, (parcela as any).carne?.plano?.periodicidade || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%descricao%/g, (parcela as any).carne?.plano?.descricao || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%razao_social%/g, (parcela as any).carne?.cliente?.razao_social || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%nome_fantasia%/g, (parcela as any).carne?.cliente?.nome_fantasia || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%cnpj%/g, (parcela as any).carne?.cliente?.cnpj || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%email%/g, (parcela as any).carne?.cliente?.email || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%telefone%/g, (parcela as any).carne?.cliente?.telefone || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%whatsapp%/g, (parcela as any).carne?.cliente?.whatsapp || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%endereco%/g, (parcela as any).carne?.cliente?.endereco || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%numero%/g, (parcela as any).carne?.cliente?.numero || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%complemento%/g, (parcela as any).carne?.cliente?.complemento || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%bairro%/g, (parcela as any).carne?.cliente?.bairro || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%cidade%/g, (parcela as any).carne?.cliente?.cidade || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%estado%/g, (parcela as any).carne?.cliente?.estado || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%cep%/g, (parcela as any).carne?.cliente?.cep || '');
-        instrucaoProcessada = instrucaoProcessada.replace(/%observacoes%/g, (parcela as any).carne?.cliente?.observacoes || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%nome_plano%/g, (titulo as any).plano?.nome_plano || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%tipo_servico%/g, (titulo as any).plano?.tipo_servico || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%quantidade_usuarios%/g, (titulo as any).plano?.quantidade_usuarios?.toString() || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%valor_mensal%/g, (titulo as any).plano?.valor_mensal?.toString() || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%periodicidade%/g, (titulo as any).plano?.periodicidade || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%descricao%/g, (titulo as any).plano?.descricao || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%razao_social%/g, (titulo as any).cliente?.razao_social || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%nome_fantasia%/g, (titulo as any).cliente?.nome_fantasia || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%cnpj%/g, (titulo as any).cliente?.cnpj || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%email%/g, (titulo as any).cliente?.email || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%telefone%/g, (titulo as any).cliente?.telefone || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%whatsapp%/g, (titulo as any).cliente?.whatsapp || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%endereco%/g, (titulo as any).cliente?.endereco || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%numero%/g, (titulo as any).cliente?.numero || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%complemento%/g, (titulo as any).cliente?.complemento || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%bairro%/g, (titulo as any).cliente?.bairro || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%cidade%/g, (titulo as any).cliente?.cidade || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%estado%/g, (titulo as any).cliente?.estado || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%cep%/g, (titulo as any).cliente?.cep || '');
+        instrucaoProcessada = instrucaoProcessada.replace(/%observacoes%/g, (titulo as any).observacoes || '');
         
         return instrucaoProcessada;
       };
@@ -882,7 +886,7 @@ export class CarneParcelaController {
       // Gerar variáveis básicas
       const variables = {
         LOGOMARCA: dadosEmpresa?.logo ? dadosEmpresa.logo : `${process.env.BASE_URL}/images/bancos/boletoproprio.png`,
-        LOGOBANCO: (parcela as any).carne?.banco?.tipo_banco ? `${process.env.BASE_URL}/images/bancos/${(parcela as any).carne.banco.tipo_banco}.png` : `${process.env.BASE_URL}/images/bancos/boletoproprio.png`,
+        LOGOBANCO: (titulo as any).banco?.tipo_banco ? `${process.env.BASE_URL}/images/bancos/${(titulo as any).banco.tipo_banco}.png` : `${process.env.BASE_URL}/images/bancos/boletoproprio.png`,
         CEDENTE: dadosEmpresa?.razao_social || '',
         EMPRESACPF: dadosEmpresa?.cnpj || '',
         EMPRESAENDERECO: dadosEmpresa?.endereco || '',
@@ -892,74 +896,74 @@ export class CarneParcelaController {
         EMPRESAESTADO: dadosEmpresa?.estado || '',
         LOGOSVA: '',
         QUANTIDADE: '1',
-        VALOR_UNITARIO: `R$ ${parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ',')}`,
-        NUMERO_DOCUMENTO: parcela.numero_parcela || '',
-        CODIGO_BANCO_COM_DV: (parcela as any).carne?.banco?.codigo_banco || (parcela as any).carne?.banco?.codigo || '237',
-        LINHA_DIGITAVEL: parcela.linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
-        LOCAL_PAGAMENTO: (parcela as any).carne?.banco?.local_pagamento || '',
+        VALOR_UNITARIO: `R$ ${parseFloat((titulo as any).valor.toString()).toFixed(2).replace('.', ',')}`,
+        NUMERO_DOCUMENTO: (titulo as any).numero_titulo || '',
+        CODIGO_BANCO_COM_DV: (titulo as any).banco?.codigo_banco || (titulo as any).banco?.codigo || '237',
+        LINHA_DIGITAVEL: (titulo as any).linha_digitavel || '12345.67890.12345.678901.23456.789012.3.45678901234567',
+        LOCAL_PAGAMENTO: (titulo as any).banco?.local_pagamento || '',
         DATA_VENC: (() => {
-          if (!parcela.data_vencimento) return '';
-          const dateStr = parcela.data_vencimento instanceof Date 
-            ? parcela.data_vencimento.toISOString()
-            : (parcela.data_vencimento as any).toString();
+          if (!(titulo as any).data_vencimento) return '';
+          const dateStr = (titulo as any).data_vencimento instanceof Date 
+            ? (titulo as any).data_vencimento.toISOString()
+            : ((titulo as any).data_vencimento as any).toString();
           return dateStr.split('T')[0].split('-').reverse().join('/');
         })(),
-        AGENCIA_CODIGO: (parcela as any).carne?.banco?.agencia_codigo || '',
+        AGENCIA_CODIGO: (titulo as any).banco?.agencia_codigo || '',
         DATA_DOCUMENTO: (() => {
-          if (!parcela.created_at) return '';
-          const dateStr = parcela.created_at instanceof Date 
-            ? parcela.created_at.toISOString()
-            : (parcela.created_at as any).toString();
+          if (!(titulo as any).created_at) return '';
+          const dateStr = (titulo as any).created_at instanceof Date 
+            ? (titulo as any).created_at.toISOString()
+            : ((titulo as any).created_at as any).toString();
           return dateStr.split('T')[0].split('-').reverse().join('/');
         })(),
-        ESPECIE_DOC: (parcela as any).carne?.banco?.especie_doc || '',
+        ESPECIE_DOC: (titulo as any).banco?.especie_doc || '',
         DATA_PROC: (() => {
-          if (!parcela.created_at) return '';
-          const dateStr = parcela.created_at instanceof Date 
-            ? parcela.created_at.toISOString()
-            : (parcela.created_at as any).toString();
+          if (!(titulo as any).created_at) return '';
+          const dateStr = (titulo as any).created_at instanceof Date 
+            ? (titulo as any).created_at.toISOString()
+            : ((titulo as any).created_at as any).toString();
           return dateStr.split('T')[0].split('-').reverse().join('/');
         })(),
-        NOSSO_NUMERO: parcela.id.toString(),
-        CARTEIRA: (parcela as any).carne?.banco?.carteira || '',
+        NOSSO_NUMERO: titulo.id.toString(),
+        CARTEIRA: (titulo as any).banco?.carteira || '',
         VAR_CARTEIRA: '',
-        ESPECIE: (parcela as any).carne?.banco?.especie || '',
-        VALOR_BOLETO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
-        TEXTO_MULTAMORA: (parcela as any).carne?.banco?.texto_multamora || '',
-        INSTRUCOES1: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_1 || ''),
-        INSTRUCOES2: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_2 || ''),
-        INSTRUCOES3: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_3 || ''),
-        INSTRUCOES4: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_4 || ''),
-        INSTRUCOES5: processarInstrucoes((parcela as any).carne?.banco?.instrucao_linha_5 || ''),
+        ESPECIE: (titulo as any).banco?.especie || '',
+        VALOR_BOLETO: parseFloat((titulo as any).valor.toString()).toFixed(2).replace('.', ','),
+        TEXTO_MULTAMORA: (titulo as any).banco?.texto_multamora || '',
+        INSTRUCOES1: processarInstrucoes((titulo as any).banco?.instrucao_linha_1 || ''),
+        INSTRUCOES2: processarInstrucoes((titulo as any).banco?.instrucao_linha_2 || ''),
+        INSTRUCOES3: processarInstrucoes((titulo as any).banco?.instrucao_linha_3 || ''),
+        INSTRUCOES4: processarInstrucoes((titulo as any).banco?.instrucao_linha_4 || ''),
+        INSTRUCOES5: processarInstrucoes((titulo as any).banco?.instrucao_linha_5 || ''),
         QRCODE: qrCodeData,
         BOLETO_BARCODE2: `<div class="barcode-container" style="text-align: center; margin: 10px 0; padding: 5px;">
           <img src="${barcodeData}" 
                alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
         </div>`,
-        SACADO_IDNOME: (parcela as any).carne?.cliente?.razao_social || '',
-        SACADO_ENDERECO: (parcela as any).carne?.cliente?.endereco || '',
-        SACADO_COMPLEMENTO: (parcela as any).carne?.cliente?.complemento || '',
-        SACADO_BAIRRO: (parcela as any).carne?.cliente?.bairro || '',
-        SACADO_CEP: (parcela as any).carne?.cliente?.cep || '',
-        SACADO_CIDADE: (parcela as any).carne?.cliente?.cidade || '',
-        SACADO_ESTADO: (parcela as any).carne?.cliente?.estado || '',
-        SACADO_CPF: (parcela as any).carne?.cliente?.cnpj || (parcela as any).carne?.cliente?.cpf || '',
-        NOME_PLANO: (parcela as any).carne?.plano?.nome_plano || '',
-        DESCRICAO_PLANO: (parcela as any).carne?.plano?.descricao || '',
-        TIPO_SERVICO: (parcela as any).carne?.plano?.tipo_servico || '',
-        QUANTIDADE_USUARIOS: (parcela as any).carne?.plano?.quantidade_usuarios?.toString() || '0',
-        VALOR_PLANO: (parcela as any).carne?.plano?.valor_mensal ? parseFloat((parcela as any).carne.plano.valor_mensal.toString()).toFixed(2).replace('.', ',') : '0,00',
-        PERIODICIDADE: (parcela as any).carne?.plano?.periodicidade || '',
+        SACADO_IDNOME: (titulo as any).cliente?.razao_social || '',
+        SACADO_ENDERECO: (titulo as any).cliente?.endereco || '',
+        SACADO_COMPLEMENTO: (titulo as any).cliente?.complemento || '',
+        SACADO_BAIRRO: (titulo as any).cliente?.bairro || '',
+        SACADO_CEP: (titulo as any).cliente?.cep || '',
+        SACADO_CIDADE: (titulo as any).cliente?.cidade || '',
+        SACADO_ESTADO: (titulo as any).cliente?.estado || '',
+        SACADO_CPF: (titulo as any).cliente?.cnpj || (titulo as any).cliente?.cpf || '',
+        NOME_PLANO: (titulo as any).plano?.nome_plano || '',
+        DESCRICAO_PLANO: (titulo as any).plano?.descricao || '',
+        TIPO_SERVICO: (titulo as any).plano?.tipo_servico || '',
+        QUANTIDADE_USUARIOS: (titulo as any).plano?.quantidade_usuarios?.toString() || '0',
+        VALOR_PLANO: (titulo as any).plano?.valor_mensal ? parseFloat((titulo as any).plano.valor_mensal.toString()).toFixed(2).replace('.', ',') : '0,00',
+        PERIODICIDADE: (titulo as any).plano?.periodicidade || '',
         MOVIMENTO: 'Valor do título',
-        VALOR_COBRADO: parseFloat(parcela.valor_parcela.toString()).toFixed(2).replace('.', ','),
+        VALOR_COBRADO: parseFloat((titulo as any).valor.toString()).toFixed(2).replace('.', ','),
         TAXA_BOLETO: '0,00',
         MULTA_MORA: '0,00',
-        DEMONSTRATIVO1: (parcela as any).carne?.banco?.demonstrativo1 || '',
-        DEMONSTRATIVO2: (parcela as any).carne?.banco?.demonstrativo2 || '',
-        DEMONSTRATIVO3: (parcela as any).carne?.banco?.demonstrativo3 || '',
-        DEMONSTRATIVO4: (parcela as any).carne?.banco?.demonstrativo4 || '',
-        SACADO_NOME: (parcela as any).carne?.cliente?.razao_social || '',
-        TIPO_PSACADO: (parcela as any).carne?.cliente?.cnpj ? 'CNPJ' : 'CPF'
+        DEMONSTRATIVO1: (titulo as any).banco?.demonstrativo1 || '',
+        DEMONSTRATIVO2: (titulo as any).banco?.demonstrativo2 || '',
+        DEMONSTRATIVO3: (titulo as any).banco?.demonstrativo3 || '',
+        DEMONSTRATIVO4: (titulo as any).banco?.demonstrativo4 || '',
+        SACADO_NOME: (titulo as any).cliente?.razao_social || '',
+        TIPO_PSACADO: (titulo as any).cliente?.cnpj ? 'CNPJ' : 'CPF'
       };
 
       // Substituir variáveis nos templates - abordagem mais simples
