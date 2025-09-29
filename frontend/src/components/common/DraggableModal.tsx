@@ -210,7 +210,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         {/* Header arrastável */}
         <div
           ref={headerRef}
-          className="modal-header"
           style={{
             backgroundColor: 'var(--bg-secondary)',
             borderBottom: '1px solid var(--border-color)',
@@ -220,9 +219,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             display: 'flex',
             flexDirection: 'column',
             minHeight: '48px',
-            position: 'relative',
-            alignItems: 'stretch !important',
-            justifyContent: 'flex-start !important'
+            position: 'relative'
           }}
           onMouseDown={handleMouseDown}
         >
