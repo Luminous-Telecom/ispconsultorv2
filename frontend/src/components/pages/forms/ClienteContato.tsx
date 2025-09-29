@@ -34,37 +34,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
       </div>
 
       <div className="row g-1">
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Telefone Residencial</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-telephone"></i>
-              </span>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                value={cliente.telefone_residencial || ''}
-                onChange={(e) => handleInputChange('telefone_residencial', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Telefone Comercial</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-telephone"></i>
-              </span>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                value={cliente.telefone_comercial || ''}
-                onChange={(e) => handleInputChange('telefone_comercial', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
 
 
 
