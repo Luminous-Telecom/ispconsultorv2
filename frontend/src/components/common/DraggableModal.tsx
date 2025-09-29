@@ -56,15 +56,24 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   // Ajustar altura baseada no conteúdo
   useEffect(() => {
     if (show && modalRef.current) {
-      const modal = modalRef.current;
-      const contentHeight = modal.scrollHeight;
-      const maxHeight = window.innerHeight - 100; // Deixar 100px de margem
-      const finalHeight = Math.min(contentHeight, maxHeight);
-      
-      setModalSize(prev => ({
-        ...prev,
-        height: finalHeight
-      }));
+      // Aguardar um tick para o conteúdo ser renderizado
+      setTimeout(() => {
+        const modal = modalRef.current;
+        if (modal) {
+          const headerHeight = 48; // Altura do header
+          const bodyPadding = 32; // Padding do body (16px top + 16px bottom)
+          const contentHeight = modal.querySelector('.modal-body')?.scrollHeight || 0;
+          const totalContentHeight = headerHeight + bodyPadding + contentHeight;
+          
+          const maxHeight = window.innerHeight - 100; // Deixar 100px de margem
+          const finalHeight = Math.min(Math.max(totalContentHeight, 200), maxHeight); // Mínimo 200px, máximo até a tela
+          
+          setModalSize(prev => ({
+            ...prev,
+            height: finalHeight
+          }));
+        }
+      }, 50);
     }
   }, [show, children]);
 
@@ -270,9 +279,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           className="modal-body"
           style={{
             flex: 1,
-            overflow: 'auto',
+            overflow: modalSize.height >= window.innerHeight - 100 ? 'auto' : 'visible',
             padding: '16px',
-            minHeight: 0
+            minHeight: 0,
+            maxHeight: modalSize.height >= window.innerHeight - 100 ? `${window.innerHeight - 164}px` : 'none'
           }}
         >
           {children}
