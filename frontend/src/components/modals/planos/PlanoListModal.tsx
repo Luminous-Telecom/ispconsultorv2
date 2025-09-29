@@ -195,35 +195,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       size="lg"
     >
       <div className="d-flex flex-column h-100">
-        {/* Filtros */}
-        <div className="mb-3">
-          <TableFilters
-            fields={[
-              {
-                name: 'search',
-                label: 'Buscar',
-                type: 'text',
-                placeholder: 'Buscar por nome do plano...',
-                value: search,
-                onChange: setSearch
-              },
-              {
-                name: 'status',
-                label: 'Status',
-                type: 'select',
-                value: status,
-                onChange: setStatus,
-                options: [
-                  { value: '', label: 'Todos' },
-                  { value: 'ativo', label: 'Ativos' },
-                  { value: 'inativo', label: 'Inativos' },
-                  { value: 'suspenso', label: 'Suspensos' }
-                ]
-              }
-            ]}
-          />
-        </div>
-
         {/* Tabela */}
         <div className="flex-grow-1">
           <DataTable
@@ -250,6 +221,9 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             onSelectionChange={(selectedItems) => {
               // Implementar lógica de seleção se necessário
             }}
+            searchPlaceholder="Buscar por nome do plano..."
+            onSearch={setSearch}
+            emptyMessage="Nenhum plano encontrado"
           />
         </div>
       </div>

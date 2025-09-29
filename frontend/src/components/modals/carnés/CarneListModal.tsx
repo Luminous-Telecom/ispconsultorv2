@@ -226,38 +226,6 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
       size="lg"
     >
       <div className="d-flex flex-column h-100">
-        {/* Filtros */}
-        <div className="mb-3">
-          <TableFilters
-            fields={[
-              {
-                name: 'search',
-                label: 'Buscar',
-                type: 'text',
-                placeholder: 'Buscar por número, cliente...',
-                value: search,
-                onChange: setSearch
-              },
-              {
-                name: 'status',
-                label: 'Status',
-                type: 'select',
-                value: status,
-                onChange: setStatus,
-                options: [
-                  { value: '', label: 'Todos' },
-                  { value: 'ativo', label: 'Ativos' },
-                  { value: 'pago', label: 'Pagos' },
-                  { value: 'cancelado', label: 'Cancelados' },
-                  { value: 'parcial', label: 'Parciais' },
-                  { value: 'pendente', label: 'Pendentes' },
-                  { value: 'registrado', label: 'Registrados' }
-                ]
-              }
-            ]}
-          />
-        </div>
-
         {/* Tabela */}
         <div className="flex-grow-1">
           <DataTable
@@ -284,6 +252,9 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
             onSelectionChange={(selectedItems) => {
               // Implementar lógica de seleção se necessário
             }}
+            searchPlaceholder="Buscar por número, cliente..."
+            onSearch={setSearch}
+            emptyMessage="Nenhum carnê encontrado"
           />
         </div>
       </div>

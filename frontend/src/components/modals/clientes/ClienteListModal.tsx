@@ -159,34 +159,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       size="lg"
     >
       <div className="d-flex flex-column h-100">
-        {/* Filtros */}
-        <div className="mb-3">
-          <TableFilters
-            fields={[
-              {
-                name: 'search',
-                label: 'Buscar',
-                type: 'text',
-                placeholder: 'Buscar por CNPJ, razão social...',
-                value: search,
-                onChange: setSearch
-              },
-              {
-                name: 'status',
-                label: 'Status',
-                type: 'select',
-                value: status,
-                onChange: setStatus,
-                options: [
-                  { value: '', label: 'Todos' },
-                  { value: 'ativo', label: 'Ativos' },
-                  { value: 'inativo', label: 'Inativos' }
-                ]
-              }
-            ]}
-          />
-        </div>
-
         {/* Tabela */}
         <div className="flex-grow-1">
           <DataTable
@@ -213,6 +185,9 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
             onSelectionChange={(selectedItems) => {
               // Implementar lógica de seleção se necessário
             }}
+            searchPlaceholder="Buscar por CNPJ, razão social..."
+            onSearch={setSearch}
+            emptyMessage="Nenhum cliente encontrado"
           />
         </div>
       </div>

@@ -183,35 +183,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       size="lg"
     >
       <div className="d-flex flex-column h-100">
-        {/* Filtros */}
-        <div className="mb-3">
-          <TableFilters
-            fields={[
-              {
-                name: 'search',
-                label: 'Buscar',
-                type: 'text',
-                placeholder: 'Buscar por nome...',
-                value: search,
-                onChange: setSearch
-              },
-              {
-                name: 'tipo',
-                label: 'Tipo',
-                type: 'select',
-                value: tipo,
-                onChange: setTipo,
-                options: [
-                  { value: '', label: 'Todos' },
-                  { value: 'efi', label: 'EFI' },
-                  { value: 'asaas', label: 'ASAAS' },
-                  { value: 'tradicional', label: 'Tradicional' }
-                ]
-              }
-            ]}
-          />
-        </div>
-
         {/* Tabela */}
         <div className="flex-grow-1">
           <DataTable
@@ -238,6 +209,9 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             onSelectionChange={(selectedItems) => {
               // Implementar lógica de seleção se necessário
             }}
+            searchPlaceholder="Buscar por nome do banco..."
+            onSearch={setSearch}
+            emptyMessage="Nenhum banco encontrado"
           />
         </div>
       </div>
