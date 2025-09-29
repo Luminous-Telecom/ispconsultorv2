@@ -96,7 +96,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         return `R$ ${valor.toFixed(2)}`;
       }
     },
-    { key: 'data_vencimento', label: 'Vencimento', sortable: true },
+    { key: 'data_vencimento_primeira', label: 'Vencimento', sortable: true },
     { key: 'banco.nome', label: 'Banco' }
   ];
 
