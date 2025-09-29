@@ -45,7 +45,7 @@
 [data-theme="dark"] {
   /* Cores de fundo - Tons harmonizados */
   --bg-primary: #1b272c;
-  --bg-secondary: #1b272c;
+  --bg-secondary: #45545a;
   --bg-tertiary: #263237;
   --border-color: #505050;
   --btn-close-filter: invert(1);
