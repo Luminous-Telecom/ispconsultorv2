@@ -192,14 +192,43 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     
     if (!validateForm()) return;
 
-    // Filtrar campos vazios antes de enviar
-    const dataToSend = Object.fromEntries(
-      Object.entries(formData).filter(([_, value]) => {
-        if (typeof value === 'string') return value.trim() !== '';
-        return value !== null && value !== undefined;
-      })
-    );
+    // Preparar dados para envio
+    const dataToSend: any = {
+      cnpj: formData.cnpj,
+      razao_social: formData.razao_social,
+      nome_fantasia: formData.nome_fantasia,
+      email: formData.email,
+      telefone: formData.telefone,
+      whatsapp: formData.whatsapp,
+      cep: formData.cep,
+      endereco: formData.endereco,
+      numero: formData.numero,
+      complemento: formData.complemento,
+      bairro: formData.bairro,
+      cidade: formData.cidade,
+      estado: formData.estado,
+      ativo: formData.ativo,
+      tipo_cobranca: formData.tipo_cobranca,
+      valor_primeiro_titulo: formData.valor_primeiro_titulo,
+      dia_vencimento: formData.dia_vencimento,
+      conta_boleto: formData.conta_boleto,
+      isento_mensalidade: formData.isento_mensalidade,
+      recebe_email: formData.recebe_email,
+      recebe_sms: formData.recebe_sms,
+      recebe_whatsapp: formData.recebe_whatsapp,
+      observacoes: formData.observacoes
+    };
 
+    // Remover campos vazios
+    Object.keys(dataToSend).forEach(key => {
+      if (dataToSend[key] === '' || dataToSend[key] === null || dataToSend[key] === undefined) {
+        delete dataToSend[key];
+      }
+    });
+
+    console.log('Dados a serem enviados:', dataToSend);
+    console.log('Cliente ID:', clienteId);
+    
     updateClienteMutation.mutate(dataToSend);
   };
 
