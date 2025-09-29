@@ -225,7 +225,8 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <DataTable
+      <div style={{ paddingLeft: '0.5rem' }}>
+        <DataTable
             data={carnesData?.data || []}
             columns={columns}
             isLoading={isLoading}
@@ -252,6 +253,7 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
             emptyMessage="Nenhum carnê encontrado"
             showHeader={false}
           />
+        </div>
 
       {/* Modal de Criação */}
       <CarneCreateModal

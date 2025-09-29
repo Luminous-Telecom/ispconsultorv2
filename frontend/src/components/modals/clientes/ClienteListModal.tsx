@@ -170,7 +170,8 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <DataTable
+      <div style={{ paddingLeft: '0.5rem' }}>
+        <DataTable
             data={clientesData?.data || []}
             columns={columns}
             isLoading={isLoading}
@@ -197,6 +198,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
             emptyMessage="Nenhum cliente encontrado"
             showHeader={false}
           />
+        </div>
 
       {/* Modal de Criação */}
       <ClienteCreateModal

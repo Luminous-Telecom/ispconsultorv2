@@ -182,7 +182,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <DataTable
+      <div style={{ paddingLeft: '0.5rem' }}>
+        <DataTable
             data={bancosData?.data || []}
             columns={columns}
             isLoading={isLoading}
@@ -209,6 +210,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             emptyMessage="Nenhum banco encontrado"
             showHeader={false}
           />
+        </div>
 
       {/* Modal de Criação */}
       <BancoCreateModal

@@ -205,7 +205,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <DataTable
+      <div style={{ paddingLeft: '0.5rem' }}>
+        <DataTable
             data={planosData?.data || []}
             columns={columns}
             isLoading={isLoading}
@@ -232,6 +233,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             emptyMessage="Nenhum plano encontrado"
             showHeader={false}
           />
+        </div>
 
       {/* Modal de Criação */}
       <PlanoCreateModal
