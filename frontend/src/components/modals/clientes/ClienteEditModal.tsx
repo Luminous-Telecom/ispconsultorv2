@@ -1088,7 +1088,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-                  {/* DataTable com ações personalizadas */}
+                  {/* DataTable usando componente separado */}
                   <div style={{ paddingLeft: '0.5rem' }}>
                     <DataTable
                       data={filteredData}
@@ -1110,13 +1110,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       bulkActions={[
                         {
                           label: 'Editar',
-                          action: () => console.log('Editar selecionados'),
-                          disabled: (selectedItems: any[]) => selectedItems.length === 0
+                          action: () => console.log('Editar selecionados')
                         },
                         {
                           label: 'Receber',
-                          action: () => console.log('Receber selecionados'),
-                          disabled: (selectedItems: any[]) => selectedItems.length === 0
+                          action: () => console.log('Receber selecionados')
                         }
                       ]}
                       emptyMessage={
