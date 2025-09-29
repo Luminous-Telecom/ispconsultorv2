@@ -782,7 +782,7 @@ export class CarneParcelaController {
           { 
             model: Banco, 
             as: 'banco',
-            attributes: ['id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
+            attributes: ['id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox']
           }
         ],
       });
