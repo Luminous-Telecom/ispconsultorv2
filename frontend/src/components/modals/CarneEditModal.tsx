@@ -5,6 +5,7 @@ import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
 import { BancoService } from '../../services/bancoService';
 import { useNotificationContext } from '../../contexts/NotificationContext';
+import DraggableModal from '../common/DraggableModal';
 
 interface CarneForm {
   cliente_id: number;
@@ -179,23 +180,13 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
     onClose();
   };
 
-  if (!show) return null;
-
   return (
-    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-lg">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Editar Carnê</h5>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={handleCancel}
-              disabled={updateCarneMutation.isPending}
-            ></button>
-          </div>
-          
-          <div className="modal-body">
+    <DraggableModal
+      show={show}
+      onClose={handleCancel}
+      title="Editar Carnê"
+      size="lg"
+    >
             {carneLoading ? (
               <div className="text-center py-4">
                 <div className="spinner-border" role="status">
@@ -417,10 +408,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                 </div>
               </form>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+    </DraggableModal>
   );
 };
 
