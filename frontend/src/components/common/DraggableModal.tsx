@@ -245,55 +245,53 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             userSelect: 'none',
             display: 'flex',
             flexDirection: 'column',
-            minHeight: '48px'
+            minHeight: '48px',
+            position: 'relative'
           }}
           onMouseDown={handleMouseDown}
         >
-          {/* Linha do título e botão fechar */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: headerActions ? '8px' : '0', position: 'relative' }}>
-            {/* Título centralizado */}
-            <h5 
-              className="modal-title mb-0" 
-              style={{ 
-                color: 'var(--text-primary)',
-                fontSize: '0.85rem',
-                fontWeight: '500',
-                textAlign: 'center',
-                margin: 0,
-                paddingRight: '80px', // Ainda mais espaço para o botão X
-                paddingLeft: '80px'   // Espaço simétrico
-              }}
-            >
-              {title}
-            </h5>
-            
-            {/* Botão fechar à extrema direita */}
-            <button
-              type="button"
-              className="btn-close"
-              onClick={onClose}
-              style={{ 
-                filter: 'var(--btn-close-filter)',
-                background: 'none',
-                border: 'none',
-                fontSize: '1.5rem',
-                cursor: 'pointer',
-                padding: '0',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'absolute',
-                right: '8px', // Mais próximo da borda
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 10
-              }}
-            >
-              ×
-            </button>
-          </div>
+          {/* Título centralizado */}
+          <h5 
+            className="modal-title mb-0" 
+            style={{ 
+              color: 'var(--text-primary)',
+              fontSize: '0.85rem',
+              fontWeight: '500',
+              textAlign: 'center',
+              margin: 0,
+              paddingRight: '40px', // Espaço para o botão X
+              paddingLeft: '40px',  // Espaço simétrico
+              marginBottom: headerActions ? '8px' : '0'
+            }}
+          >
+            {title}
+          </h5>
+          
+          {/* Botão fechar à extrema direita */}
+          <button
+            type="button"
+            className="btn-close"
+            onClick={onClose}
+            style={{ 
+              filter: 'var(--btn-close-filter)',
+              background: 'none',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              padding: '0',
+              width: '24px',
+              height: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'absolute',
+              right: '12px',
+              top: '12px',
+              zIndex: 10
+            }}
+          >
+            ×
+          </button>
 
           {/* Ações do header (botões e filtros) */}
           {headerActions && (
