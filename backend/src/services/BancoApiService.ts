@@ -738,8 +738,7 @@ export class BancoApiService {
       };
     } catch (error: any) {
       logger.error('Erro ao liquidar parcela do carnê', {
-        parcela_id: parcela.id,
-        carnet_id: carne.carnet_id,
+        titulo_id: titulo.id,
         error: error.message
       });
       return {
@@ -779,11 +778,10 @@ export class BancoApiService {
       }
 
       // Para títulos individuais, usar cancelarTitulo
-      return this.cancelarTitulo(parcela);
+      return this.cancelarTitulo(titulo);
     } catch (error: any) {
       logger.error('Erro ao cancelar parcela do carnê', {
-        parcela_id: parcela.id,
-        carnet_id: carne.carnet_id,
+        titulo_id: titulo.id,
         error: error.message
       });
       return {
@@ -905,8 +903,7 @@ export class BancoApiService {
       };
     } catch (error: any) {
       logger.error('Erro ao alterar vencimento da parcela do carnê', {
-        parcela_id: parcela.id,
-        carnet_id: carne.carnet_id,
+        titulo_id: titulo.id,
         expire_at: expireAt,
         error: error.message
       });
