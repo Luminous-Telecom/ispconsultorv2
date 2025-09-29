@@ -87,7 +87,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-12">
-            <h6 className="mb-3">Centro de Assinantes</h6>
+            <h6 className="mb-3">Central do Assinante</h6>
           </div>
 
           <div className="col-md-6">
