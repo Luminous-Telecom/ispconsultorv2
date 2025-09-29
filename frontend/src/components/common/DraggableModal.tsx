@@ -27,11 +27,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   // Definir tamanhos padrão
   const getSizeClasses = () => {
     switch (size) {
-      case 'sm': return { width: 400, height: 300 };
-      case 'md': return { width: 600, height: 400 };
-      case 'lg': return { width: 800, height: 500 };
-      case 'xl': return { width: 1000, height: 600 };
-      default: return { width: 800, height: 500 };
+      case 'sm': return { width: 600, height: 450 };
+      case 'md': return { width: 800, height: 600 };
+      case 'lg': return { width: 1000, height: 700 };
+      case 'xl': return { width: 1200, height: 800 };
+      default: return { width: 1000, height: 700 };
     }
   };
 
