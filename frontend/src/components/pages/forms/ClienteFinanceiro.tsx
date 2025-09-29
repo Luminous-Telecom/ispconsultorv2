@@ -66,6 +66,11 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const { data: parcelasData, isLoading: parcelasLoading, refetch: refetchParcelas } = useTitulos({ 
     cliente_id: cliente?.id 
   });
+
+  // Debug: verificar se os dados estão chegando
+  console.log('ClienteFinanceiro - cliente:', cliente);
+  console.log('ClienteFinanceiro - parcelasData:', parcelasData);
+  console.log('ClienteFinanceiro - parcelasLoading:', parcelasLoading);
   
   const marcarPagoMutation = useMarcarTituloPago();
 
