@@ -9,7 +9,7 @@ interface BancoForm {
   codigo: string;
   descricao: string;
   ativo: boolean;
-  tipo_banco: string;
+  tipo_banco: 'efi' | 'asaas' | 'bancario' | 'outros';
   api_url: string;
   api_key: string;
   api_secret: string;
@@ -271,10 +271,10 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                   onChange={(e) => handleInputChange('tipo_banco', e.target.value)}
                   disabled={createBancoMutation.isPending}
                 >
-                  <option value="efi">EFI</option>
-                  <option value="bradesco">Bradesco</option>
-                  <option value="itau">Itaú</option>
-                  <option value="santander">Santander</option>
+                <option value="efi">EFI</option>
+                <option value="asaas">Asaas</option>
+                <option value="bancario">Bancário</option>
+                <option value="outros">Outros</option>
                 </select>
                 {errors.tipo_banco && <div className="invalid-feedback">{errors.tipo_banco}</div>}
               </div>

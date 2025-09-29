@@ -6,7 +6,7 @@ import DraggableModal from '../common/DraggableModal';
 
 interface PlanoForm {
   nome_plano: string;
-  tipo_servico: string;
+  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
   descricao: string;
   valor_mensal: number;
   desconto_percentual: number;
@@ -185,10 +185,13 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                 onChange={(e) => handleInputChange('tipo_servico', e.target.value)}
                 disabled={createPlanoMutation.isPending}
               >
-                <option value="internet">Internet</option>
-                <option value="telefone">Telefone</option>
-                <option value="tv">TV por Assinatura</option>
-                <option value="combo">Combo</option>
+              <option value="internet">Internet</option>
+              <option value="telefonia">Telefonia</option>
+              <option value="tv">TV por Assinatura</option>
+              <option value="suporte">Suporte</option>
+              <option value="infraestrutura">Infraestrutura</option>
+              <option value="consultoria">Consultoria</option>
+              <option value="outros">Outros</option>
               </select>
               {errors.tipo_servico && <div className="invalid-feedback">{errors.tipo_servico}</div>}
             </div>

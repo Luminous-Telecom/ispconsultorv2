@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { CarneService } from '../../services/carneService';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
@@ -12,10 +12,12 @@ interface CarneForm {
   cliente_id: number;
   plano_id: number;
   banco_id: number;
+  numero_carne: string;
   valor_parcela: number;
   valor_total: number;
   quantidade_parcelas: number;
   data_vencimento_primeira: string;
+  status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
   observacoes?: string;
 }
 
@@ -34,10 +36,12 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
     cliente_id: 0,
     plano_id: 0,
     banco_id: 0,
+    numero_carne: '',
     valor_parcela: 0,
     valor_total: 0,
     quantidade_parcelas: 1,
     data_vencimento_primeira: '',
+    status: 'ativo',
     observacoes: '',
   });
 
@@ -107,10 +111,12 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
         cliente_id: 0,
         plano_id: 0,
         banco_id: 0,
+        numero_carne: '',
         valor_parcela: 0,
         valor_total: 0,
         quantidade_parcelas: 1,
         data_vencimento_primeira: '',
+        status: 'ativo',
         observacoes: '',
       });
       setErrors({});
