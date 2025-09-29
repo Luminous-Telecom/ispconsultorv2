@@ -192,7 +192,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     
     if (!validateForm()) return;
 
-    // Preparar dados para envio
+    // Preparar dados para envio com conversão de tipos correta
     const dataToSend: any = {
       cnpj: formData.cnpj,
       razao_social: formData.razao_social,
@@ -210,8 +210,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       ativo: formData.ativo,
       tipo_cobranca: formData.tipo_cobranca,
       valor_primeiro_titulo: formData.valor_primeiro_titulo,
-      dia_vencimento: formData.dia_vencimento,
-      conta_boleto: formData.conta_boleto,
+      dia_vencimento: Number(formData.dia_vencimento),
+      conta_boleto: Number(formData.conta_boleto),
       isento_mensalidade: formData.isento_mensalidade,
       recebe_email: formData.recebe_email,
       recebe_sms: formData.recebe_sms,
@@ -219,9 +219,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       observacoes: formData.observacoes
     };
 
-    // Remover campos vazios
+    // Remover apenas campos realmente vazios (não remover 0 ou false)
     Object.keys(dataToSend).forEach(key => {
-      if (dataToSend[key] === '' || dataToSend[key] === null || dataToSend[key] === undefined) {
+      const value = dataToSend[key];
+      if (value === '' || value === null || value === undefined) {
         delete dataToSend[key];
       }
     });
