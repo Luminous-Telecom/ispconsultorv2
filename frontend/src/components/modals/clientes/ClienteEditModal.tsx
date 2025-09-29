@@ -138,16 +138,16 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const getFilteredData = () => {
     if (!parcelasData?.data) return [];
     
-    const allData = parcelasData.data.filter((parcela: CarneParcela) => {
-      if (!parcela.carne) return false;
-      
-      // Sempre mostrar apenas títulos (quantidade_parcelas === 1)
-      return parcela.carne.quantidade_parcelas === 1;
-    });
+    // Debug: verificar dados recebidos
+    console.log('ClienteEditModal - parcelasData:', parcelasData);
+    console.log('ClienteEditModal - parcelasData.data:', parcelasData.data);
+    
+    // Agora os dados são títulos diretos, não parcelas de carnê
+    const allData = parcelasData.data;
 
     // Filtrar cancelados se não estiver marcado para mostrar
-    let filteredData = allData.filter((parcela: CarneParcela) => {
-      if (parcela.status === 'cancelado' && !showCancelados) {
+    let filteredData = allData.filter((titulo: any) => {
+      if (titulo.status === 'cancelado' && !showCancelados) {
         return false;
       }
       return true;
@@ -156,15 +156,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     // Aplicar filtro de busca
     if (search.trim()) {
       const searchTerm = search.toLowerCase().trim();
-      filteredData = filteredData.filter((parcela: CarneParcela) => {
-        const id = parcela.id?.toString() || '';
-        const numeroCarne = parcela.carne?.numero_carne || '';
-        const valor = parcela.valor_parcela?.toString() || '';
-        const status = parcela.status || '';
+      filteredData = filteredData.filter((titulo: any) => {
+        const id = titulo.id?.toString() || '';
+        const numeroTitulo = titulo.numero_titulo || '';
+        const valor = titulo.valor?.toString() || '';
+        const status = titulo.status || '';
         
         return (
           id.includes(searchTerm) ||
-          numeroCarne.toLowerCase().includes(searchTerm) ||
+          numeroTitulo.toLowerCase().includes(searchTerm) ||
           valor.includes(searchTerm) ||
           status.toLowerCase().includes(searchTerm)
         );
@@ -346,17 +346,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     },
     {
-      key: 'numero_carne',
-      label: 'Cart. cob.',
+      key: 'numero_titulo',
+      label: 'Título',
       render: (item: any) => {
-        return item.carne?.numero_carne || '-';
+        return item.numero_titulo || '-';
       }
     },
     {
-      key: 'quantidade_parcelas',
-      label: 'Parcel.',
+      key: 'plano',
+      label: 'Plano',
       render: (item: any) => {
-        return item.numero_parcela;
+        return item.plano?.nome_plano || '-';
       }
     },
     {
@@ -370,21 +370,21 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'valor',
       label: 'Valor',
       render: (item: any) => {
-        return `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
+        return `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
     },
     {
       key: 'valor_pago',
       label: 'Valor baixado',
       render: (item: any) => {
-        return item.pago ? `R$ ${Number(item.valor_pago || item.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00';
+        return item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00';
       }
     },
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
       render: (item: any) => {
-        return (item.pago || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
+        return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
     },
     {
