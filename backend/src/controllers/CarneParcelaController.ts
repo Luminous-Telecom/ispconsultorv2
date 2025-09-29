@@ -1045,8 +1045,14 @@ export class CarneParcelaController {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.send(htmlContent);
 
-    } catch (error) {
-      res.status(500).json({ error: 'Erro interno do servidor' });
+    } catch (error: any) {
+      console.error('Erro ao imprimir boleto:', error);
+      logger.error('Erro ao imprimir boleto', { 
+        titulo_id: req.params.id, 
+        error: error.message,
+        stack: error.stack 
+      });
+      res.status(500).json({ error: 'Erro interno do servidor', message: error.message });
     }
   }
 
