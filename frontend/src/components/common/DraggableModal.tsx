@@ -111,7 +111,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   return (
     <>
       {/* Estilos CSS para diferenciação de campos */}
-      <style jsx>{`
+      <style>{`
         .modal-content .form-control:not(:disabled) {
           background-color: #2d3748 !important;
           border-color: #4a5568 !important;
