@@ -39,6 +39,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const carnes = carnesData?.data || [];
   const parcelas = parcelasData?.data || [];
 
+  // Debug: verificar dados dos carnês
+  console.log('Dados dos carnês:', carnes);
+
   const handleMarcarPago = async (selectedItems: any[]) => {
     try {
       for (const item of selectedItems) {
