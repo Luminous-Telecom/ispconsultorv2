@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DataTable from '../../common/DataTable';
+import ContratoCreateModal from '../../modals/ContratoCreateModal';
 
 interface ClienteContratosProps {
   cliente: any;
@@ -12,6 +13,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 }) => {
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
 
   // Mock data para contratos
   const mockContratos = [
@@ -151,10 +153,10 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
         searchPlaceholder="Buscar contratos..."
         onSearch={() => {}}
         bulkActions={[
-          {
-            label: 'Novo Contrato',
-            action: () => handleBulkAction('novo')
-          },
+             {
+               label: 'Novo Contrato',
+               action: () => setShowContratoCreateModal(true)
+             },
           {
             label: 'Editar',
             action: (selectedItems) => handleBulkAction('editar')
@@ -179,10 +181,21 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
         onSort={handleSort}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
-        onRefresh={() => {}}
-      />
-    </div>
-  );
-};
+           onRefresh={() => {}}
+         />
 
-export default ClienteContratos;
+         {/* Modal de criação de contrato */}
+         <ContratoCreateModal
+           show={showContratoCreateModal}
+           onClose={() => setShowContratoCreateModal(false)}
+           onSuccess={() => {
+             // Atualizar lista de contratos
+             console.log('Contrato criado com sucesso');
+           }}
+           clienteId={cliente?.id}
+         />
+       </div>
+     );
+   };
+   
+   export default ClienteContratos;

@@ -7,6 +7,7 @@ import { useMarcarParcelaPago } from '../../../hooks/useCarneParcelas';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { getApiUrl } from '../../../config/api';
 import CarneEditModal from '../../modals/CarneEditModal';
+import CarneCreateModal from '../../modals/CarneCreateModal';
 
 interface ClienteFinanceiroProps {
   cliente: any;
@@ -24,6 +25,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const [sortDirectionParcelas, setSortDirectionParcelas] = useState<'asc' | 'desc'>('asc');
   const [showCarneEditModal, setShowCarneEditModal] = useState(false);
   const [selectedCarneId, setSelectedCarneId] = useState<number | null>(null);
+  const [showCarneCreateModal, setShowCarneCreateModal] = useState(false);
   const { addNotification } = useNotificationContext();
   const navigate = useNavigate();
 
@@ -168,6 +170,14 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     refetchCarnes();
   };
 
+  const handleCloseCarneCreateModal = () => {
+    setShowCarneCreateModal(false);
+  };
+
+  const handleCarneCreateSuccess = () => {
+    refetchCarnes();
+  };
+
   const carnesColumns = [
     { key: 'id', label: 'ID', sortable: true },
     { key: 'numero_carne', label: 'Número', sortable: true },
@@ -275,7 +285,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               bulkActions={[
                 {
                   label: 'Novo Carnê',
-                  action: () => navigate('/carnes/create')
+                  action: () => setShowCarneCreateModal(true)
                 },
                 {
                   label: 'Visualizar',
@@ -338,6 +348,13 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         onClose={handleCloseCarneEditModal}
         carneId={selectedCarneId}
         onSuccess={handleCarneEditSuccess}
+      />
+
+      {/* Modal de criação de carnê */}
+      <CarneCreateModal
+        show={showCarneCreateModal}
+        onClose={handleCloseCarneCreateModal}
+        onSuccess={handleCarneCreateSuccess}
       />
     </div>
   );
