@@ -277,11 +277,11 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
             columns={columns}
             isLoading={isLoading}
             pagination={{
-              from: (page - 1) * limit + 1,
-              to: Math.min(page * limit, carnesData?.total || 0),
-              total: carnesData?.total || 0,
-              current_page: page,
-              last_page: carnesData?.last_page || 1
+              from: carnesData?.pagination?.from || (page - 1) * limit + 1,
+              to: carnesData?.pagination?.to || Math.min(page * limit, carnesData?.pagination?.total || 0),
+              total: carnesData?.pagination?.total || 0,
+              current_page: carnesData?.pagination?.current_page || page,
+              last_page: carnesData?.pagination?.last_page || 1
             }}
             limit={limit}
             setLimit={setLimit}

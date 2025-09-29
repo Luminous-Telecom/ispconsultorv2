@@ -207,11 +207,11 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
             columns={columns}
             isLoading={isLoading}
             pagination={{
-              from: (page - 1) * limit + 1,
-              to: Math.min(page * limit, clientesData?.total || 0),
-              total: clientesData?.total || 0,
-              current_page: page,
-              last_page: clientesData?.last_page || 1
+              from: clientesData?.pagination?.from || (page - 1) * limit + 1,
+              to: clientesData?.pagination?.to || Math.min(page * limit, clientesData?.pagination?.total || 0),
+              total: clientesData?.pagination?.total || 0,
+              current_page: clientesData?.pagination?.current_page || page,
+              last_page: clientesData?.pagination?.last_page || 1
             }}
             limit={limit}
             setLimit={setLimit}

@@ -243,11 +243,11 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             columns={columns}
             isLoading={isLoading}
             pagination={{
-              from: (page - 1) * limit + 1,
-              to: Math.min(page * limit, planosData?.total || 0),
-              total: planosData?.total || 0,
-              current_page: page,
-              last_page: planosData?.last_page || 1
+              from: planosData?.pagination?.from || (page - 1) * limit + 1,
+              to: planosData?.pagination?.to || Math.min(page * limit, planosData?.pagination?.total || 0),
+              total: planosData?.pagination?.total || 0,
+              current_page: planosData?.pagination?.current_page || page,
+              last_page: planosData?.pagination?.last_page || 1
             }}
             limit={limit}
             setLimit={setLimit}

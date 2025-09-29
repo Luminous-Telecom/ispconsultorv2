@@ -231,11 +231,11 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             columns={columns}
             isLoading={isLoading}
             pagination={{
-              from: (page - 1) * limit + 1,
-              to: Math.min(page * limit, bancosData?.total || 0),
-              total: bancosData?.total || 0,
-              current_page: page,
-              last_page: bancosData?.last_page || 1
+              from: bancosData?.pagination?.from || (page - 1) * limit + 1,
+              to: bancosData?.pagination?.to || Math.min(page * limit, bancosData?.pagination?.total || 0),
+              total: bancosData?.pagination?.total || 0,
+              current_page: bancosData?.pagination?.current_page || page,
+              last_page: bancosData?.pagination?.last_page || 1
             }}
             limit={limit}
             setLimit={setLimit}
