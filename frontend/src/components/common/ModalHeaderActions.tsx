@@ -74,9 +74,9 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
       </div>
 
       {/* Linha 2: Busca à esquerda, paginação à direita */}
-      <div className="d-flex align-items-center">
+      <div className="d-flex">
         {/* Busca à esquerda */}
-        <div className="d-flex align-items-center gap-2" style={{ paddingLeft: '1rem' }}>
+        <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
           <input
             type="text"
             className="form-control form-control-sm"
@@ -88,7 +88,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
         </div>
 
         {/* Paginação à direita */}
-        <div className="d-flex align-items-center gap-2" style={{ marginLeft: 'auto' }}>
+        <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
           {/* Seletor de linhas por página */}
           <select 
             className="form-select form-select-sm" 
@@ -105,7 +105,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
           </select>
 
           {/* Paginação compacta */}
-          <div className="d-flex align-items-center gap-1">
+          <div className="d-flex gap-1">
             <button 
               className="btn btn-outline-secondary btn-sm" 
               onClick={goToFirstPage}
