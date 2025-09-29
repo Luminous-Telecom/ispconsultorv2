@@ -1229,9 +1229,21 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Filtros, Busca e Paginação - Linha 2 */}
+                  {/* Busca, Filtros e Paginação - Linha 2 */}
                   <div className="d-flex mb-3">
-                    {/* Filtros à esquerda */}
+                    {/* Busca à esquerda */}
+                    <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder="Buscar por ID, carnê, valor..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        style={{ width: '300px', height: '32px' }}
+                      />
+                    </div>
+
+                    {/* Filtros após a busca */}
                     <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
                       <div className="form-check">
                         <input 
@@ -1263,18 +1275,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           Mostrar cancelados
                         </label>
                       </div>
-                    </div>
-
-                    {/* Busca */}
-                    <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        placeholder="Buscar por ID, carnê, valor..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{ width: '300px', height: '32px' }}
-                      />
                     </div>
 
                     {/* Paginação à direita */}
