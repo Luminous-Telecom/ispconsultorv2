@@ -131,7 +131,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       sortable: true,
       render: (item: Plano) => (
         <span className="fw-bold text-success">
-          R$ {item.valor_mensal.toFixed(2).replace('.', ',')}
+          R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
         </span>
       )
     },

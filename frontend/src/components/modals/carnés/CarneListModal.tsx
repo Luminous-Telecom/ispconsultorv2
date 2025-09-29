@@ -154,7 +154,7 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
       sortable: true,
       render: (item: Carne) => (
         <span className="fw-bold text-success">
-          R$ {item.valor_total.toFixed(2).replace('.', ',')}
+          R$ {Number(item.valor_total || 0).toFixed(2).replace('.', ',')}
         </span>
       )
     },
@@ -163,7 +163,7 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
       label: 'Parcelas',
       sortable: true,
       render: (item: Carne) => (
-        <span className="badge bg-info">{item.quantidade_parcelas}</span>
+        <span className="badge bg-info">{item.quantidade_parcelas || 0}</span>
       )
     },
     {
