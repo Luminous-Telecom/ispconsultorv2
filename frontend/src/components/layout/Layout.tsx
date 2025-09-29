@@ -49,25 +49,19 @@ const Layout: React.FC = () => {
         <nav className="sidebar-nav">
           {menuItems.map((item) => (
             <div key={item.path} className="sidebar-nav-item">
-              {item.isModal ? (
-                <button
-                  className={`sidebar-nav-link ${isActive(item.path) ? 'active' : ''}`}
-                  onClick={() => {
+              <Link 
+                to={item.path}
+                className={`sidebar-nav-link ${isActive(item.path) ? 'active' : ''}`}
+                onClick={(e) => {
+                  if (item.isModal) {
+                    e.preventDefault();
                     item.modalHandler?.();
-                    setSidebarOpen(false);
-                  }}
-                >
-                  {item.label}
-                </button>
-              ) : (
-                <Link 
-                  to={item.path}
-                  className={`sidebar-nav-link ${isActive(item.path) ? 'active' : ''}`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              )}
+                  }
+                  setSidebarOpen(false);
+                }}
+              >
+                {item.label}
+              </Link>
             </div>
           ))}
         </nav>
