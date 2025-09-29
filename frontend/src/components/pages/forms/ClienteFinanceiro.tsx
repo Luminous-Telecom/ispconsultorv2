@@ -6,6 +6,7 @@ import { useCarneParcelas } from '../../../hooks/useCarneParcelas';
 import { useMarcarParcelaPago } from '../../../hooks/useCarneParcelas';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { getApiUrl } from '../../../config/api';
+import CarneEditModal from '../../modals/CarneEditModal';
 
 interface ClienteFinanceiroProps {
   cliente: any;
@@ -21,6 +22,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const [sortDirectionCarnes, setSortDirectionCarnes] = useState<'asc' | 'desc'>('asc');
   const [sortColumnParcelas, setSortColumnParcelas] = useState<string>('');
   const [sortDirectionParcelas, setSortDirectionParcelas] = useState<'asc' | 'desc'>('asc');
+  const [showCarneEditModal, setShowCarneEditModal] = useState(false);
+  const [selectedCarneId, setSelectedCarneId] = useState<number | null>(null);
   const { addNotification } = useNotificationContext();
   const navigate = useNavigate();
 
@@ -144,7 +147,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 
   const handleEditarCarne = (selectedItems: any[]) => {
     if (selectedItems.length > 0) {
-      navigate(`/carnes/${selectedItems[0].id}/edit`);
+      setSelectedCarneId(selectedItems[0].id);
+      setShowCarneEditModal(true);
     }
   };
 
@@ -153,6 +157,15 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       const url = `${process.env.REACT_APP_API_URL}/carnes/${selectedItems[0].id}/imprimir`;
       window.open(url, '_blank');
     }
+  };
+
+  const handleCloseCarneEditModal = () => {
+    setShowCarneEditModal(false);
+    setSelectedCarneId(null);
+  };
+
+  const handleCarneEditSuccess = () => {
+    refetchCarnes();
   };
 
   const carnesColumns = [
@@ -318,7 +331,15 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
             />
           </div>
         </div>
-      </div>
+
+      {/* Modal de edição de carnê */}
+      <CarneEditModal
+        show={showCarneEditModal}
+        onClose={handleCloseCarneEditModal}
+        carneId={selectedCarneId}
+        onSuccess={handleCarneEditSuccess}
+      />
+    </div>
   );
 };
 
