@@ -97,7 +97,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
 
           <div className="col-md-6">
             <label className="form-label small text-muted">
-              {cliente.tipo_pessoa === 'juridica' ? 'Inscrição Estadual' : 'RG'}
+              {cliente.tipo_pessoa === 'juridica' ? 'Inscrição Estadual' : 'CPF'}
             </label>
             <input
               type="text"
