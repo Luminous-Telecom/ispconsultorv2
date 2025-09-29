@@ -44,7 +44,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
   const goToNextPage = () => onPageChange(Math.min(pagination?.last_page || 1, (pagination?.current_page || 1) + 1));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', padding: '0 16px' }}>
       {/* Linha 1: Botões alinhados à esquerda */}
       <div className="d-flex justify-content-start">
         <div className="d-flex" style={{ gap: '8px' }}>
