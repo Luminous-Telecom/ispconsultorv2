@@ -220,7 +220,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             display: 'flex',
             flexDirection: 'column',
             minHeight: '48px',
-            position: 'relative'
+            position: 'relative',
+            alignItems: 'stretch !important',
+            justifyContent: 'flex-start !important'
           }}
           onMouseDown={handleMouseDown}
         >
