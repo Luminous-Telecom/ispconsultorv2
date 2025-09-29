@@ -15,7 +15,7 @@ interface CarneForm {
   valor_total: number;
   quantidade_parcelas: number;
   data_vencimento_primeira: string;
-  status: string;
+  status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
   observacoes?: string;
   codigo_barras?: string;
   linha_digitavel?: string;
@@ -216,7 +216,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                         disabled={updateCarneMutation.isPending}
                       >
                         <option value={0}>Selecione um cliente</option>
-                        {clientes?.data?.map((cliente: any) => (
+                        {clientes?.map((cliente: any) => (
                           <option key={cliente.id} value={cliente.id}>
                             {cliente.razao_social || cliente.nome_fantasia}
                           </option>
@@ -237,7 +237,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                         disabled={updateCarneMutation.isPending}
                       >
                         <option value={0}>Selecione um plano</option>
-                        {planos?.data?.map((plano: any) => (
+                        {planos?.map((plano: any) => (
                           <option key={plano.id} value={plano.id}>
                             {plano.nome_plano} - R$ {plano.valor_mensal}
                           </option>
@@ -260,7 +260,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                         disabled={updateCarneMutation.isPending}
                       >
                         <option value={0}>Selecione um banco</option>
-                        {bancos?.data?.map((banco: any) => (
+                        {bancos?.map((banco: any) => (
                           <option key={banco.id} value={banco.id}>
                             {banco.nome}
                           </option>
