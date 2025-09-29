@@ -119,40 +119,37 @@ const DataTable: React.FC<TableProps> = ({
     <div className="card">
       {/* Header com botões de ação e filtros */}
       <div className="card-header py-2 border-bottom">
-        {/* Botões de ação */}
-        {(bulkActions.length > 0 || onRefresh) && (
-          <div className="d-flex align-items-center justify-content-between mb-2">
-            <div className="d-flex" style={{ gap: '8px' }}>
-              {bulkActions.map((bulkAction, index) => {
-                // Novo sempre habilitado, outros só quando há seleção
-                const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-                const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
-                const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
-                const isDisabled = isDisabledBySelection || isDisabledByCondition;
-                
-                
-                return (
-                  <button
-                    key={index}
-                    className="btn btn-sm btn-primary"
-                    onClick={() => {
-                      if (!isDisabled) {
-                        handleBulkAction(bulkAction.action);
-                      }
-                    }}
-                    disabled={isDisabled}
-                    style={{ flexShrink: 0 }}
-                  >
-                    {bulkAction.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Controles compactos */}
+        {/* Botões, filtros e controles em uma linha */}
         <div className="d-flex align-items-center justify-content-between">
+          {/* Botões de ação */}
+          <div className="d-flex" style={{ gap: '8px' }}>
+            {bulkActions.map((bulkAction, index) => {
+              // Novo sempre habilitado, outros só quando há seleção
+              const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
+              const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
+              const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
+              const isDisabled = isDisabledBySelection || isDisabledByCondition;
+              
+              
+              return (
+                <button
+                  key={index}
+                  className="btn btn-sm btn-primary"
+                  onClick={() => {
+                    if (!isDisabled) {
+                      handleBulkAction(bulkAction.action);
+                    }
+                  }}
+                  disabled={isDisabled}
+                  style={{ flexShrink: 0 }}
+                >
+                  {bulkAction.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Filtros e controles */}
           <div className="d-flex align-items-center gap-2">
             {/* Busca */}
             {onSearch && (
@@ -180,9 +177,7 @@ const DataTable: React.FC<TableProps> = ({
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-              </div>
 
-          <div className="d-flex align-items-center gap-2">
             {/* Paginação compacta */}
             <div className="d-flex align-items-center gap-1">
               <button 
