@@ -251,9 +251,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         >
           {/* Linha do título e botão fechar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: headerActions ? '8px' : '0', position: 'relative' }}>
-            {/* Espaçador à esquerda para centralizar */}
-            <div style={{ width: '24px' }}></div>
-            
             {/* Título centralizado */}
             <h5 
               className="modal-title mb-0" 
@@ -262,13 +259,16 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
                 fontSize: '0.85rem',
                 fontWeight: '500',
                 textAlign: 'center',
-                flex: 1
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                margin: 0
               }}
             >
               {title}
             </h5>
             
-            {/* Botão fechar à direita */}
+            {/* Botão fechar à extrema direita */}
             <button
               type="button"
               className="btn-close"
@@ -285,7 +285,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0
+                marginLeft: 'auto'
               }}
             >
               ×
