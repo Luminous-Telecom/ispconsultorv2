@@ -159,8 +159,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
 
   // Ações para o header do modal
   const headerActions = (
-    <>
-      {/* Botões de ação */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+      {/* Linha 1: Botões de ação */}
       <div className="d-flex" style={{ gap: '8px' }}>
         {bulkActions.map((bulkAction, index) => {
           const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
@@ -184,24 +184,26 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         })}
       </div>
 
-      {/* Filtros e controles */}
-      <div className="d-flex align-items-center gap-2">
-        {/* Busca */}
+      {/* Linha 2: Busca centralizada */}
+      <div className="d-flex justify-content-center">
         <input
           type="text"
           className="form-control form-control-sm"
           placeholder="Buscar por nome do banco..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ width: '200px', height: '32px' }}
+          style={{ width: '400px', height: '32px' }}
         />
-        
+      </div>
+
+      {/* Linha 3: Controles centralizados */}
+      <div className="d-flex align-items-center justify-content-center gap-2">
         {/* Seletor de linhas por página */}
         <select 
           className="form-select form-select-sm" 
           value={limit}
           onChange={(e) => setLimit(parseInt(e.target.value))}
-          style={{ width: '100px', height: '32px', cursor: 'pointer' }}
+          style={{ width: '80px', height: '32px', cursor: 'pointer' }}
         >
           <option value={5}>5</option>
           <option value={10}>10</option>
@@ -255,7 +257,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
           <i className="bi bi-arrow-clockwise"></i>
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (

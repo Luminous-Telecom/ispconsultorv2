@@ -147,103 +147,110 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
   // Ações para o header do modal
   const headerActions = (
-    <>
-      {/* Botões de ação */}
-      <div className="d-flex" style={{ gap: '8px' }}>
-        {bulkActions.map((bulkAction, index) => {
-          const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-          const isDisabled = !isNewButton && selectedItems.length === 0;
-          
-          return (
-            <button
-              key={index}
-              className="btn btn-sm btn-primary"
-              onClick={() => {
-                if (!isDisabled) {
-                  bulkAction.action(selectedItems);
-                }
-              }}
-              disabled={isDisabled}
-              style={{ flexShrink: 0 }}
-            >
-              {bulkAction.label}
-            </button>
-          );
-        })}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+      {/* Linha 1: Botões à esquerda */}
+      <div className="d-flex justify-content-start">
+        <div className="d-flex" style={{ gap: '8px' }}>
+          {bulkActions.map((bulkAction, index) => {
+            const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
+            const isDisabled = !isNewButton && selectedItems.length === 0;
+            
+            return (
+              <button
+                key={index}
+                className="btn btn-sm btn-primary"
+                onClick={() => {
+                  if (!isDisabled) {
+                    bulkAction.action(selectedItems);
+                  }
+                }}
+                disabled={isDisabled}
+                style={{ flexShrink: 0 }}
+              >
+                {bulkAction.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Filtros e controles */}
-      <div className="d-flex align-items-center gap-2">
-        {/* Busca */}
-        <input
-          type="text"
-          className="form-control form-control-sm"
-          placeholder="Buscar por CNPJ, razão social..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: '200px', height: '32px' }}
-        />
-        
-        {/* Seletor de linhas por página */}
-        <select 
-          className="form-select form-select-sm" 
-          value={limit}
-          onChange={(e) => setLimit(parseInt(e.target.value))}
-          style={{ width: '100px', height: '32px', cursor: 'pointer' }}
-        >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={15}>15</option>
-          <option value={25}>25</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-        </select>
-
-        {/* Paginação compacta */}
-        <div className="d-flex align-items-center gap-1">
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(1)}
-            disabled={!clientesData?.pagination || clientesData.pagination.current_page <= 1}
-          >
-            <i className="bi bi-chevron-double-left"></i>
-          </button>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(page - 1)}
-            disabled={!clientesData?.pagination || clientesData.pagination.current_page <= 1}
-          >
-            <i className="bi bi-chevron-left"></i>
-          </button>
-          <span className="small text-muted mx-2">
-            {clientesData?.pagination ? `${clientesData.pagination.from} - ${clientesData.pagination.to} / ${clientesData.pagination.total}` : '0 - 0 / 0'}
-          </span>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(page + 1)}
-            disabled={!clientesData?.pagination || clientesData.pagination.current_page >= clientesData.pagination.last_page}
-          >
-            <i className="bi bi-chevron-right"></i>
-          </button>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(clientesData?.pagination?.last_page || 1)}
-            disabled={!clientesData?.pagination || clientesData.pagination.current_page >= clientesData.pagination.last_page}
-          >
-            <i className="bi bi-chevron-double-right"></i>
-          </button>
+      {/* Linha 2: Busca à esquerda, paginação à direita */}
+      <div className="d-flex align-items-center justify-content-between">
+        {/* Busca à esquerda */}
+        <div className="d-flex align-items-center gap-2">
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Buscar por CNPJ, razão social..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: '300px', height: '32px' }}
+          />
         </div>
 
-        {/* Botão de refresh */}
-        <button 
-          className="btn btn-outline-secondary btn-sm"
-          onClick={() => refetch()}
-          title="Recarregar dados"
-        >
-          <i className="bi bi-arrow-clockwise"></i>
-        </button>
+        {/* Paginação à direita */}
+        <div className="d-flex align-items-center gap-2">
+          {/* Seletor de linhas por página */}
+          <select 
+            className="form-select form-select-sm" 
+            value={limit}
+            onChange={(e) => setLimit(parseInt(e.target.value))}
+            style={{ width: '80px', height: '32px', cursor: 'pointer' }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={15}>15</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+
+          {/* Paginação compacta */}
+          <div className="d-flex align-items-center gap-1">
+            <button 
+              className="btn btn-outline-secondary btn-sm" 
+              onClick={() => setPage(1)}
+              disabled={!clientesData?.pagination || clientesData.pagination.current_page <= 1}
+            >
+              <i className="bi bi-chevron-double-left"></i>
+            </button>
+            <button 
+              className="btn btn-outline-secondary btn-sm" 
+              onClick={() => setPage(page - 1)}
+              disabled={!clientesData?.pagination || clientesData.pagination.current_page <= 1}
+            >
+              <i className="bi bi-chevron-left"></i>
+            </button>
+            <span className="small text-muted mx-2">
+              {clientesData?.pagination ? `${clientesData.pagination.from} - ${clientesData.pagination.to} / ${clientesData.pagination.total}` : '0 - 0 / 0'}
+            </span>
+            <button 
+              className="btn btn-outline-secondary btn-sm" 
+              onClick={() => setPage(page + 1)}
+              disabled={!clientesData?.pagination || clientesData.pagination.current_page >= clientesData.pagination.last_page}
+            >
+              <i className="bi bi-chevron-right"></i>
+            </button>
+            <button 
+              className="btn btn-outline-secondary btn-sm" 
+              onClick={() => setPage(clientesData?.pagination?.last_page || 1)}
+              disabled={!clientesData?.pagination || clientesData.pagination.current_page >= clientesData.pagination.last_page}
+            >
+              <i className="bi bi-chevron-double-right"></i>
+            </button>
+          </div>
+
+          {/* Botão de refresh */}
+          <button 
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => refetch()}
+            title="Recarregar dados"
+          >
+            <i className="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 
   return (
