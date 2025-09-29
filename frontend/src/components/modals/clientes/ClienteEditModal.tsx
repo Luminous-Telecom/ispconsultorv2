@@ -330,26 +330,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }
   ];
 
-  const headerActions = (
-    <ModalHeaderActions
-      bulkActions={bulkActions}
-      selectedItems={selectedItems}
-      search={search}
-      onSearchChange={setSearch}
-      searchPlaceholder="Buscar por ID, carnê, valor..."
-      limit={limit}
-      onLimitChange={setLimit}
-      pagination={{
-        from: sortedData.length > 0 ? (page - 1) * limit + 1 : 0,
-        to: Math.min(page * limit, sortedData.length),
-        total: sortedData.length,
-        current_page: page,
-        last_page: Math.ceil(sortedData.length / limit)
-      }}
-      onPageChange={setPage}
-      onRefresh={() => console.log('Recarregar dados')}
-    />
-  );
 
   // Colunas para o DataTable
   const columns = [
@@ -638,7 +618,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           onClose={onClose}
           title="Editar Cliente"
           size="xl"
-          headerActions={activeTab === 'financeiro' ? headerActions : undefined}
         >
       <div style={{ 
         height: '100%',
@@ -1227,6 +1206,108 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 <div className="col-12">
                   <h6 className="text-primary mb-3">Financeiro do Cliente</h6>
                   
+                  {/* Botões de Ação - Linha 1 */}
+                  <div className="d-flex justify-content-start mb-3">
+                    <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
+                      {bulkActions.map((bulkAction, index) => {
+                        const isDisabled = selectedItems.length === 0;
+                        
+                        return (
+                          <button
+                            key={index}
+                            className={`btn btn-sm btn-${index === 0 || index === 1 ? 'primary' : index === 2 ? 'secondary' : index === 3 ? 'success' : 'danger'}`}
+                            onClick={() => {
+                              if (!isDisabled) {
+                                bulkAction.action(selectedItems);
+                              }
+                            }}
+                            disabled={isDisabled}
+                            style={{ flexShrink: 0 }}
+                          >
+                            {bulkAction.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Busca e Paginação - Linha 2 */}
+                  <div className="d-flex mb-3">
+                    {/* Busca à esquerda */}
+                    <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder="Buscar por ID, carnê, valor..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        style={{ width: '300px', height: '32px' }}
+                      />
+                    </div>
+
+                    {/* Paginação à direita */}
+                    <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
+                      {/* Seletor de linhas por página */}
+                      <select 
+                        className="form-select form-select-sm" 
+                        value={limit}
+                        onChange={(e) => setLimit(parseInt(e.target.value))}
+                        style={{ width: '80px', height: '32px', cursor: 'pointer' }}
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={15}>15</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+
+                      {/* Paginação compacta */}
+                      <div className="d-flex gap-1">
+                        <button 
+                          className="btn btn-outline-secondary btn-sm" 
+                          onClick={() => setPage(1)}
+                          disabled={page <= 1}
+                        >
+                          <i className="bi bi-chevron-double-left"></i>
+                        </button>
+                        <button 
+                          className="btn btn-outline-secondary btn-sm" 
+                          onClick={() => setPage(page - 1)}
+                          disabled={page <= 1}
+                        >
+                          <i className="bi bi-chevron-left"></i>
+                        </button>
+                        <span className="small text-muted mx-2">
+                          {sortedData.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, sortedData.length)} / {sortedData.length}
+                        </span>
+                        <button 
+                          className="btn btn-outline-secondary btn-sm" 
+                          onClick={() => setPage(page + 1)}
+                          disabled={page >= Math.ceil(sortedData.length / limit)}
+                        >
+                          <i className="bi bi-chevron-right"></i>
+                        </button>
+                        <button 
+                          className="btn btn-outline-secondary btn-sm" 
+                          onClick={() => setPage(Math.ceil(sortedData.length / limit))}
+                          disabled={page >= Math.ceil(sortedData.length / limit)}
+                        >
+                          <i className="bi bi-chevron-double-right"></i>
+                        </button>
+                      </div>
+
+                      {/* Botão de refresh */}
+                      <button 
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => console.log('Recarregar dados')}
+                        title="Recarregar dados"
+                      >
+                        <i className="bi bi-arrow-clockwise"></i>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Filtros de Tipo */}
                   <div className="d-flex gap-3 mb-3">
                     <div className="form-check">
