@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DataTable from '../../common/DataTable';
 import { useCarnes } from '../../../hooks/useCarnes';
 import { useCarneParcelas } from '../../../hooks/useCarneParcelas';
@@ -17,6 +18,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const { addNotification } = useNotificationContext();
+  const navigate = useNavigate();
 
   const handleTabChange = (tabIndex: number) => {
     setActiveTab(tabIndex);
@@ -168,17 +170,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 
         <div className="tab-content">
           <div className={`tab-pane fade ${activeTab === 0 ? 'show active' : ''}`}>
-            <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
-              <h6 className="mb-0">Carnês</h6>
-              <div className="btn-group">
-                <button className="btn btn-primary btn-sm">
-                  <i className="bi bi-plus me-1"></i>
-                  Novo Carnê
-                </button>
-                <button className="btn btn-outline-secondary btn-sm">
-                  <i className="bi bi-arrow-clockwise"></i>
-                </button>
-              </div>
+            <div className="d-flex justify-content-between align-items-center mb-2 mt-2">
+              <small className="mb-0">Carnês</small>
             </div>
             
             <DataTable
@@ -189,6 +182,10 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               setLimit={() => {}}
               setPage={() => {}}
               bulkActions={[
+                {
+                  label: 'Novo Carnê',
+                  action: () => navigate('/carnes/create')
+                },
                 {
                   label: 'Visualizar',
                   action: (selectedItems) => console.log('Visualizar carnês:', selectedItems)
