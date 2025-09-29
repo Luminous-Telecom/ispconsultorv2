@@ -37,7 +37,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   };
 
-  // Centralizar modal na tela e ajustar altura automaticamente
+  // Centralizar modal na tela
   useEffect(() => {
     if (show) {
       const { width } = getSizeClasses();
@@ -46,43 +46,17 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       
       // Centralização simples - sempre no centro da tela
       const centerX = Math.max(0, Math.floor((screenWidth - width) / 2));
-      const centerY = Math.max(20, (screenHeight - 800) / 2); // Altura maior para centralizar melhor
+      const centerY = Math.max(20, (screenHeight - 600) / 2);
       
       setPosition({
         x: centerX,
         y: centerY
       });
       
-      // Largura fixa, altura será automática
-      setModalSize({ width, height: 0 });
+      // Largura fixa, altura automática
+      setModalSize({ width, height: 600 });
     }
   }, [show, size]);
-
-  // Ajustar altura baseada no conteúdo (sem mover a posição)
-  useEffect(() => {
-    if (show && modalRef.current) {
-      // Aguardar um tick para o conteúdo ser renderizado
-      setTimeout(() => {
-        const modal = modalRef.current;
-        if (modal) {
-          const headerHeight = 48; // Altura do header
-          const bodyPadding = 32; // Padding do body (16px top + 16px bottom)
-          const contentHeight = modal.querySelector('.modal-body')?.scrollHeight || 0;
-          const totalContentHeight = headerHeight + bodyPadding + contentHeight;
-          
-          const maxHeight = window.innerHeight - 100; // Deixar 100px de margem
-          const finalHeight = Math.min(Math.max(totalContentHeight, 200), maxHeight); // Mínimo 200px, máximo até a tela
-          
-          setModalSize(prev => ({
-            ...prev,
-            height: finalHeight
-          }));
-          
-          // NÃO re-centralizar - manter posição original
-        }
-      }, 50);
-    }
-  }, [show, children]);
 
   // Funções de drag
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -240,7 +214,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           style={{
             backgroundColor: 'var(--bg-secondary)',
             borderBottom: '1px solid var(--border-color)',
-            padding: '12px 16px',
+            padding: '16px',
             cursor: isDragging ? 'grabbing' : 'grab',
             userSelect: 'none',
             display: 'flex',
@@ -306,10 +280,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           className="modal-body"
           style={{
             flex: 1,
-            overflow: modalSize.height >= window.innerHeight - 100 ? 'auto' : 'visible',
+            overflow: 'auto',
             padding: '16px',
             minHeight: 0,
-            maxHeight: modalSize.height >= window.innerHeight - 100 ? `${window.innerHeight - 164}px` : 'none'
+            height: 'calc(100% - 48px)' // Altura total menos header
           }}
         >
           {children}
