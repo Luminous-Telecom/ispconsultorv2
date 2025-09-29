@@ -122,114 +122,117 @@ const DataTable: React.FC<TableProps> = ({
       {/* Header com botões de ação e filtros */}
       {showHeader && (
         <div className="card-header py-2 border-bottom">
-        {/* Botões, filtros e controles em uma linha */}
-        <div className="d-flex align-items-center justify-content-between">
-          {/* Botões de ação */}
-          <div className="d-flex" style={{ gap: '8px' }}>
-            {bulkActions.map((bulkAction, index) => {
-              // Novo sempre habilitado, outros só quando há seleção
-              const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-              const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
-              const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
-              const isDisabled = isDisabledBySelection || isDisabledByCondition;
-              
-              
-              return (
-                <button
-                  key={index}
-                  className="btn btn-sm btn-primary"
-                  onClick={() => {
-                    if (!isDisabled) {
-                      handleBulkAction(bulkAction.action);
-                    }
-                  }}
-                  disabled={isDisabled}
-                  style={{ flexShrink: 0 }}
-                >
-                  {bulkAction.label}
-                </button>
-              );
-            })}
+          {/* Primeira linha: Botões de ação */}
+          <div className="d-flex align-items-center mb-2">
+            <div className="d-flex" style={{ gap: '8px' }}>
+              {bulkActions.map((bulkAction, index) => {
+                // Novo sempre habilitado, outros só quando há seleção
+                const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
+                const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
+                const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
+                const isDisabled = isDisabledBySelection || isDisabledByCondition;
+                
+                return (
+                  <button
+                    key={index}
+                    className="btn btn-sm btn-primary"
+                    onClick={() => {
+                      if (!isDisabled) {
+                        handleBulkAction(bulkAction.action);
+                      }
+                    }}
+                    disabled={isDisabled}
+                    style={{ flexShrink: 0 }}
+                  >
+                    {bulkAction.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Filtros e controles */}
-          <div className="d-flex align-items-center gap-2">
+          {/* Segunda linha: Busca, paginação e controles */}
+          <div className="d-flex align-items-center justify-content-between">
             {/* Busca */}
-            {onSearch && (
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                placeholder={searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: '200px', height: '32px' }}
-              />
-            )}
-            
-            {/* Seletor de linhas por página */}
-                <select 
-                  className="form-select form-select-sm" 
-                  value={limit}
-              onChange={(e) => setLimit(parseInt(e.target.value))}
-              style={{ width: '100px', height: '32px', cursor: 'pointer' }}
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={15}>15</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-
-            {/* Paginação compacta */}
-            <div className="d-flex align-items-center gap-1">
-              <button 
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={goToFirstPage}
-                disabled={!pagination || pagination.current_page <= 1}
-              >
-                <i className="bi bi-chevron-double-left"></i>
-              </button>
-              <button 
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={goToPrevPage}
-                disabled={!pagination || pagination.current_page <= 1}
-              >
-                <i className="bi bi-chevron-left"></i>
-              </button>
-              
-              <span className="small text-muted mx-2">
-                {pagination?.from || 0} - {pagination?.to || 0} / {pagination?.total || 0}
-              </span>
-              
-              <button 
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={goToNextPage}
-                disabled={!pagination || pagination.current_page >= (pagination?.last_page || 1)}
-              >
-                <i className="bi bi-chevron-right"></i>
-              </button>
-              <button 
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={goToLastPage}
-                disabled={!pagination || pagination.current_page >= (pagination?.last_page || 1)}
-              >
-                <i className="bi bi-chevron-double-right"></i>
-              </button>
+            <div className="d-flex align-items-center">
+              {onSearch && (
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder={searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  style={{ width: '250px', height: '32px' }}
+                />
+              )}
             </div>
 
-            {/* Botão de refresh */}
-            {onRefresh && (
-              <button 
-                className="btn btn-outline-secondary btn-sm"
-                onClick={onRefresh}
-                title="Recarregar dados"
+            {/* Controles à direita */}
+            <div className="d-flex align-items-center gap-2">
+              {/* Seletor de linhas por página */}
+              <select 
+                className="form-select form-select-sm" 
+                value={limit}
+                onChange={(e) => setLimit(parseInt(e.target.value))}
+                style={{ width: '80px', height: '32px', cursor: 'pointer' }}
               >
-                <i className="bi bi-arrow-clockwise"></i>
-              </button>
-            )}
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+
+              {/* Paginação compacta */}
+              <div className="d-flex align-items-center gap-1">
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={goToFirstPage}
+                  disabled={!pagination || pagination.current_page <= 1}
+                >
+                  <i className="bi bi-chevron-double-left"></i>
+                </button>
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={goToPrevPage}
+                  disabled={!pagination || pagination.current_page <= 1}
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+                
+                <span className="small text-muted mx-2">
+                  {pagination?.from || 0} - {pagination?.to || 0} / {pagination?.total || 0}
+                </span>
+                
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={goToNextPage}
+                  disabled={!pagination || pagination.current_page >= (pagination?.last_page || 1)}
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={goToLastPage}
+                  disabled={!pagination || pagination.current_page >= (pagination?.last_page || 1)}
+                >
+                  <i className="bi bi-chevron-double-right"></i>
+                </button>
+              </div>
+
+              {/* Botão de refresh */}
+              {onRefresh && (
+                <button 
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={onRefresh}
+                  title="Recarregar dados"
+                >
+                  <i className="bi bi-arrow-clockwise"></i>
+                </button>
+              )}
+            </div>
           </div>
-        </div>
         </div>
       )}
 
