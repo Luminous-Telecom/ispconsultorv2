@@ -42,8 +42,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       
-      // Usar altura estimada baseada no tamanho do modal
-      const estimatedHeight = size === 'sm' ? 400 : size === 'md' ? 500 : size === 'lg' ? 600 : 700;
+      // Usar altura estimada baseada no tamanho do modal (mais conservadora)
+      const estimatedHeight = size === 'sm' ? 300 : size === 'md' ? 350 : size === 'lg' ? 400 : 450;
       
       // Posição centralizada - sempre recalcular quando abrir
       setPosition({
@@ -144,7 +144,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     const { width } = getSizeClasses();
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
-    const estimatedHeight = size === 'sm' ? 400 : size === 'md' ? 500 : size === 'lg' ? 600 : 700;
+    const estimatedHeight = size === 'sm' ? 300 : size === 'md' ? 350 : size === 'lg' ? 400 : 450;
     
     setPosition({
       x: Math.max(0, (screenWidth - width) / 2),

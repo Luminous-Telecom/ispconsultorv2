@@ -235,7 +235,7 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
       show={show}
       onClose={onClose}
       title={title}
-      size="xl"
+      size="lg"
     >
       <div className="d-flex flex-column h-100">
         {/* Filtros */}
