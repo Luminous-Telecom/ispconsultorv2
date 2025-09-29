@@ -9,7 +9,6 @@ import DraggableModal from '../../common/DraggableModal';
 interface TituloForm {
   plano_id: number;
   data_vencimento: string;
-  status: 'pendente' | 'pago' | 'cancelado' | 'vencido';
   observacoes?: string;
 }
 
@@ -29,7 +28,6 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
   const [formData, setFormData] = useState<TituloForm>({
     plano_id: 0,
     data_vencimento: '',
-    status: 'pendente',
     observacoes: '',
   });
 
@@ -50,7 +48,6 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       setFormData({
         plano_id: 0,
         data_vencimento: '',
-        status: 'pendente',
         observacoes: '',
       });
       setErrors({});
@@ -173,25 +170,6 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
           </div>
         </div>
 
-        <div className="row">
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="status" className="form-label small">Status</label>
-              <select
-                className="form-select"
-                id="status"
-                value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value as any)}
-                disabled={createParcelaMutation.isPending}
-              >
-                <option value="pendente">Pendente</option>
-                <option value="pago">Pago</option>
-                <option value="cancelado">Cancelado</option>
-                <option value="vencido">Vencido</option>
-              </select>
-            </div>
-          </div>
-        </div>
 
         <div className="row">
           <div className="col-12">

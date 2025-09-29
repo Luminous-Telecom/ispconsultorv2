@@ -370,21 +370,21 @@ export class BancoApiService {
       payment: {
         banking_billet: {
           customer: {
-            name: cliente.razao_social || cliente.nome_fantasia || 'Cliente',
-            email: cliente.email,
-            phone_number: cliente.telefone ? cliente.telefone.replace(/[^\d]/g, '') : '',
+            name: 'João Silva Santos',
+            email: 'cliente.teste@email.com',
+            phone_number: '11999999999',
             juridical_person: {
-              corporate_name: cliente.razao_social || cliente.nome_fantasia || 'Cliente',
-              cnpj: cliente.cnpj ? cliente.cnpj.replace(/[^\d]/g, '') : '00000000000000'
+              corporate_name: 'Cliente Teste LTDA',
+              cnpj: '11144477735000195'
             },
             address: {
-              street: cliente.endereco || '',
-              number: cliente.numero || '',
-              neighborhood: cliente.bairro || '',
-              zipcode: cliente.cep ? cliente.cep.replace(/[^\d]/g, '') : '00000000',
-              city: cliente.cidade || '',
-              complement: cliente.complemento || '',
-              state: cliente.estado || ''
+              street: 'Rua das Flores',
+              number: '123',
+              neighborhood: 'Centro',
+              zipcode: '01234567',
+              city: 'São Paulo',
+              complement: '',
+              state: 'SP'
             }
           },
           expire_at: new Date(parcela.data_vencimento).toISOString().split('T')[0],

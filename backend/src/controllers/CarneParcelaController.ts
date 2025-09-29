@@ -280,16 +280,30 @@ export class CarneParcelaController {
         return;
       }
 
-      // Buscar banco padrão
+      // Buscar banco do cliente ou banco padrão
       const { Banco } = await import('../models/Banco');
-      const banco = await Banco.findOne({ where: { ativo: true } });
+      let banco;
       
-      if (!banco) {
-        res.status(400).json({
-          success: false,
-          message: 'Nenhum banco ativo encontrado'
-        });
-        return;
+      if (cliente.conta_boleto) {
+        // Usar banco configurado no cliente
+        banco = await Banco.findByPk(cliente.conta_boleto);
+        if (!banco || !banco.ativo) {
+          res.status(400).json({
+            success: false,
+            message: 'Banco configurado no cliente não está ativo'
+          });
+          return;
+        }
+      } else {
+        // Usar banco padrão ativo
+        banco = await Banco.findOne({ where: { ativo: true } });
+        if (!banco) {
+          res.status(400).json({
+            success: false,
+            message: 'Nenhum banco ativo encontrado'
+          });
+          return;
+        }
       }
 
       // Gerar número único do carnê
