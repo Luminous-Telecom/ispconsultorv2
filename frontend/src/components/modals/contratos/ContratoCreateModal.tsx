@@ -130,7 +130,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="filial" className="form-label">Filial *</label>
+              <label htmlFor="filial" className="form-label small">Filial *</label>
               <input
                 type="text"
                 className={`form-control ${errors.filial ? 'is-invalid' : ''}`}
@@ -146,9 +146,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="status_contrato" className="form-label">Status do Contrato</label>
+              <label htmlFor="status_contrato" className="form-label small">Status do Contrato</label>
               <select
-                className="form-select"
+                className="form-select form-select-sm"
                 id="status_contrato"
                 value={formData.status_contrato}
                 onChange={(e) => handleInputChange('status_contrato', e.target.value)}
@@ -166,9 +166,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="status_acesso" className="form-label">Status de Acesso</label>
+              <label htmlFor="status_acesso" className="form-label small">Status de Acesso</label>
               <select
-                className="form-select"
+                className="form-select form-select-sm"
                 id="status_acesso"
                 value={formData.status_acesso}
                 onChange={(e) => handleInputChange('status_acesso', e.target.value)}
@@ -183,7 +183,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="plano_id" className="form-label">Plano de Vendas *</label>
+              <label htmlFor="plano_id" className="form-label small">Plano de Vendas *</label>
               <select
                 className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
                 id="plano_id"
@@ -204,7 +204,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="data_ativacao" className="form-label">Data de Ativação *</label>
+              <label htmlFor="data_ativacao" className="form-label small">Data de Ativação *</label>
               <input
                 type="date"
                 className={`form-control ${errors.data_ativacao ? 'is-invalid' : ''}`}
@@ -219,10 +219,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="data_vencimento" className="form-label">Data de Vencimento</label>
+              <label htmlFor="data_vencimento" className="form-label small">Data de Vencimento</label>
               <input
                 type="date"
-                className="form-control"
+                className="form-control form-control-sm"
                 id="data_vencimento"
                 value={formData.data_vencimento}
                 onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
@@ -235,7 +235,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="valor" className="form-label">Valor *</label>
+              <label htmlFor="valor" className="form-label small">Valor *</label>
               <input
                 type="number"
                 step="0.01"
@@ -252,9 +252,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         </div>
 
         <div className="mb-3">
-          <label htmlFor="observacoes" className="form-label">Observações</label>
+          <label htmlFor="observacoes" className="form-label small">Observações</label>
           <textarea
-            className="form-control"
+            className="form-control form-control-sm"
             id="observacoes"
             rows={3}
             value={formData.observacoes}
@@ -264,10 +264,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           ></textarea>
         </div>
 
-        <div className="d-flex justify-content-end gap-2 mt-4">
+          <div className="d-flex justify-content-end gap-2 mt-2">
           <button
             type="button"
-            className="btn btn-secondary"
+              className="btn btn-secondary btn-sm"
             onClick={handleCancel}
             disabled={createContratoMutation.isPending}
           >
@@ -275,7 +275,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           </button>
           <button
             type="submit"
-            className="btn btn-primary"
+              className="btn btn-primary btn-sm"
             disabled={createContratoMutation.isPending}
           >
             {createContratoMutation.isPending ? (

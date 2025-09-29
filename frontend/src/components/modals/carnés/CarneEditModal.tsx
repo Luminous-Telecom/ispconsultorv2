@@ -197,7 +197,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                 <div className="row">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label htmlFor="cliente_id" className="form-label">Cliente *</label>
+                      <label htmlFor="cliente_id" className="form-label small">Cliente *</label>
                       <select
                         className={`form-select ${errors.cliente_id ? 'is-invalid' : ''}`}
                         id="cliente_id"
@@ -218,7 +218,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
 
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label htmlFor="plano_id" className="form-label">Plano *</label>
+                      <label htmlFor="plano_id" className="form-label small">Plano *</label>
                       <select
                         className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
                         id="plano_id"
@@ -241,7 +241,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                 <div className="row">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label htmlFor="banco_id" className="form-label">Banco *</label>
+                      <label htmlFor="banco_id" className="form-label small">Banco *</label>
                       <select
                         className={`form-select ${errors.banco_id ? 'is-invalid' : ''}`}
                         id="banco_id"
@@ -262,10 +262,10 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
 
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label htmlFor="numero_carne" className="form-label">Número do Carnê</label>
+                      <label htmlFor="numero_carne" className="form-label small">Número do Carnê</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control form-control-sm"
                         id="numero_carne"
                         value={formData.numero_carne}
                         disabled={true}
@@ -279,7 +279,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                 <div className="row">
                   <div className="col-md-4">
                     <div className="mb-3">
-                      <label htmlFor="valor_total" className="form-label">Valor Total *</label>
+                      <label htmlFor="valor_total" className="form-label small">Valor Total *</label>
                       <input
                         type="number"
                         step="0.01"
@@ -296,7 +296,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
 
                   <div className="col-md-4">
                     <div className="mb-3">
-                      <label htmlFor="quantidade_parcelas" className="form-label">Quantidade de Parcelas *</label>
+                      <label htmlFor="quantidade_parcelas" className="form-label small">Quantidade de Parcelas *</label>
                       <input
                         type="number"
                         min="1"
@@ -313,7 +313,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
 
                   <div className="col-md-4">
                     <div className="mb-3">
-                      <label htmlFor="data_vencimento_primeira" className="form-label">Data de Vencimento *</label>
+                      <label htmlFor="data_vencimento_primeira" className="form-label small">Data de Vencimento *</label>
                       <input
                         type="date"
                         className={`form-control ${errors.data_vencimento_primeira ? 'is-invalid' : ''}`}
@@ -330,10 +330,10 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                 <div className="row">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label htmlFor="status" className="form-label">Status</label>
+                      <label htmlFor="status" className="form-label small">Status</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control form-control-sm"
                         id="status"
                         value={formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
                         disabled={true}
@@ -344,10 +344,10 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
 
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label htmlFor="carnet_id" className="form-label">ID do Carnet (Banco)</label>
+                      <label htmlFor="carnet_id" className="form-label small">ID do Carnet (Banco)</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="form-control form-control-sm"
                         id="carnet_id"
                         value={formData.carnet_id || 'Não registrado'}
                         disabled={true}
@@ -359,7 +359,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="observacoes" className="form-label">Observações</label>
+                  <label htmlFor="observacoes" className="form-label small">Observações</label>
                   <textarea
                     className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
                     id="observacoes"
@@ -372,10 +372,10 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                   {errors.observacoes && <div className="invalid-feedback">{errors.observacoes}</div>}
                 </div>
 
-                <div className="d-flex justify-content-end gap-2 mt-4">
+                <div className="d-flex justify-content-end gap-2 mt-2">
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="btn btn-secondary btn-sm"
                     onClick={handleCancel}
                     disabled={updateCarneMutation.isPending}
                   >
@@ -383,7 +383,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="btn btn-primary btn-sm"
                     disabled={updateCarneMutation.isPending}
                   >
                     {updateCarneMutation.isPending ? (

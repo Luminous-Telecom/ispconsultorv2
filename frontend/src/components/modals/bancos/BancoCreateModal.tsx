@@ -229,7 +229,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="nome" className="form-label">Nome *</label>
+                <label htmlFor="nome" className="form-label small">Nome *</label>
                 <input
                   type="text"
                   className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
@@ -245,7 +245,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
 
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="codigo" className="form-label">Código *</label>
+                <label htmlFor="codigo" className="form-label small">Código *</label>
                 <input
                   type="text"
                   className={`form-control ${errors.codigo ? 'is-invalid' : ''}`}
@@ -263,7 +263,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="tipo_banco" className="form-label">Tipo de Banco *</label>
+                <label htmlFor="tipo_banco" className="form-label small">Tipo de Banco *</label>
                 <select
                   className={`form-select ${errors.tipo_banco ? 'is-invalid' : ''}`}
                   id="tipo_banco"
@@ -300,9 +300,9 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           </div>
 
           <div className="mb-3">
-            <label htmlFor="descricao" className="form-label">Descrição</label>
+            <label htmlFor="descricao" className="form-label small">Descrição</label>
             <textarea
-              className="form-control"
+              className="form-control form-control-sm"
               id="descricao"
               rows={2}
               value={formData.descricao}
@@ -319,10 +319,10 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="client_id_producao" className="form-label">Client ID Produção</label>
+                <label htmlFor="client_id_producao" className="form-label small">Client ID Produção</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   id="client_id_producao"
                   value={formData.client_id_producao}
                   onChange={(e) => handleInputChange('client_id_producao', e.target.value)}
@@ -334,10 +334,10 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
 
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="client_secret_producao" className="form-label">Client Secret Produção</label>
+                <label htmlFor="client_secret_producao" className="form-label small">Client Secret Produção</label>
                 <input
                   type="password"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   id="client_secret_producao"
                   value={formData.client_secret_producao}
                   onChange={(e) => handleInputChange('client_secret_producao', e.target.value)}
@@ -349,10 +349,10 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           </div>
 
           <div className="mb-3">
-            <label htmlFor="url_retorno" className="form-label">URL de Retorno</label>
+            <label htmlFor="url_retorno" className="form-label small">URL de Retorno</label>
             <input
               type="url"
-              className="form-control"
+              className="form-control form-control-sm"
               id="url_retorno"
               value={formData.url_retorno}
               onChange={(e) => handleInputChange('url_retorno', e.target.value)}
@@ -416,10 +416,10 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           </div>
         </div>
 
-        <div className="d-flex justify-content-end gap-2 mt-4">
+          <div className="d-flex justify-content-end gap-2 mt-2">
           <button
             type="button"
-            className="btn btn-secondary"
+              className="btn btn-secondary btn-sm"
             onClick={handleCancel}
             disabled={createBancoMutation.isPending}
           >
@@ -427,7 +427,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           </button>
           <button
             type="submit"
-            className="btn btn-primary"
+              className="btn btn-primary btn-sm"
             disabled={createBancoMutation.isPending}
           >
             {createBancoMutation.isPending ? (

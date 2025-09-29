@@ -157,14 +157,14 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
       title="Novo Plano"
       size="lg"
     >
-      <form onSubmit={handleSubmit}>
-        <div className="row">
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="nome_plano" className="form-label">Nome do Plano *</label>
+        <form onSubmit={handleSubmit}>
+          <div className="row g-2">
+            <div className="col-md-6">
+              <div className="mb-2">
+                <label htmlFor="nome_plano" className="form-label small">Nome do Plano *</label>
               <input
                 type="text"
-                className={`form-control ${errors.nome_plano ? 'is-invalid' : ''}`}
+                className={`form-control form-control-sm ${errors.nome_plano ? 'is-invalid' : ''}`}
                 id="nome_plano"
                 value={formData.nome_plano}
                 onChange={(e) => handleInputChange('nome_plano', e.target.value)}
@@ -176,10 +176,10 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           </div>
 
           <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="tipo_servico" className="form-label">Tipo de Serviço *</label>
-              <select
-                className={`form-select ${errors.tipo_servico ? 'is-invalid' : ''}`}
+              <div className="mb-2">
+                <label htmlFor="tipo_servico" className="form-label small">Tipo de Serviço *</label>
+                <select
+                  className={`form-select form-select-sm ${errors.tipo_servico ? 'is-invalid' : ''}`}
                 id="tipo_servico"
                 value={formData.tipo_servico}
                 onChange={(e) => handleInputChange('tipo_servico', e.target.value)}
@@ -198,12 +198,12 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           </div>
         </div>
 
-        <div className="mb-3">
-          <label htmlFor="descricao" className="form-label">Descrição</label>
+              <div className="mb-2">
+          <label htmlFor="descricao" className="form-label small">Descrição</label>
           <textarea
-            className="form-control"
+            className="form-control form-control-sm"
             id="descricao"
-            rows={3}
+            rows={2}
             value={formData.descricao}
             onChange={(e) => handleInputChange('descricao', e.target.value)}
             disabled={createPlanoMutation.isPending}
@@ -213,8 +213,8 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
 
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="valor_mensal" className="form-label">Valor Mensal *</label>
+              <div className="mb-2">
+              <label htmlFor="valor_mensal" className="form-label small">Valor Mensal *</label>
               <input
                 type="number"
                 step="0.01"
@@ -230,12 +230,12 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           </div>
 
           <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="quantidade_usuarios" className="form-label">Quantidade de Usuários</label>
+              <div className="mb-2">
+              <label htmlFor="quantidade_usuarios" className="form-label small">Quantidade de Usuários</label>
               <input
                 type="number"
                 min="1"
-                className="form-control"
+                className="form-control form-control-sm"
                 id="quantidade_usuarios"
                 value={formData.quantidade_usuarios}
                 onChange={(e) => handleInputChange('quantidade_usuarios', parseInt(e.target.value) || 1)}
@@ -247,8 +247,8 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
 
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="data_inicio" className="form-label">Data de Início *</label>
+              <div className="mb-2">
+              <label htmlFor="data_inicio" className="form-label small">Data de Início *</label>
               <input
                 type="date"
                 className={`form-control ${errors.data_inicio ? 'is-invalid' : ''}`}
@@ -262,11 +262,11 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           </div>
 
           <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="data_fim" className="form-label">Data de Fim</label>
+              <div className="mb-2">
+              <label htmlFor="data_fim" className="form-label small">Data de Fim</label>
               <input
                 type="date"
-                className="form-control"
+                className="form-control form-control-sm"
                 id="data_fim"
                 value={formData.data_fim}
                 onChange={(e) => handleInputChange('data_fim', e.target.value)}
@@ -276,8 +276,8 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           </div>
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Serviços Inclusos</label>
+              <div className="mb-2">
+          <label className="form-label small">Serviços Inclusos</label>
           <div className="row">
             {servicosDisponiveis.map((servico) => (
               <div key={servico} className="col-md-4 mb-2">
@@ -299,10 +299,10 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           </div>
         </div>
 
-        <div className="mb-3">
-          <label htmlFor="observacoes" className="form-label">Observações</label>
+              <div className="mb-2">
+          <label htmlFor="observacoes" className="form-label small">Observações</label>
           <textarea
-            className="form-control"
+            className="form-control form-control-sm"
             id="observacoes"
             rows={2}
             value={formData.observacoes}
@@ -312,10 +312,10 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           ></textarea>
         </div>
 
-        <div className="d-flex justify-content-end gap-2 mt-4">
+          <div className="d-flex justify-content-end gap-2 mt-2">
           <button
             type="button"
-            className="btn btn-secondary"
+              className="btn btn-secondary btn-sm"
             onClick={handleCancel}
             disabled={createPlanoMutation.isPending}
           >
@@ -323,7 +323,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           </button>
           <button
             type="submit"
-            className="btn btn-primary"
+              className="btn btn-primary btn-sm"
             disabled={createPlanoMutation.isPending}
           >
             {createPlanoMutation.isPending ? (
