@@ -208,18 +208,31 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         {/* Filtros */}
         <div className="mb-3">
           <TableFilters
-            search={search}
-            onSearchChange={setSearch}
-            status={status}
-            onStatusChange={setStatus}
+            fields={[
+              {
+                name: 'search',
+                label: 'Buscar',
+                type: 'text',
+                placeholder: 'Buscar por nome do plano...',
+                value: search,
+                onChange: setSearch
+              },
+              {
+                name: 'status',
+                label: 'Status',
+                type: 'select',
+                value: status,
+                onChange: setStatus,
+                options: [
+                  { value: '', label: 'Todos' },
+                  { value: 'ativo', label: 'Ativos' },
+                  { value: 'inativo', label: 'Inativos' },
+                  { value: 'suspenso', label: 'Suspensos' }
+                ]
+              }
+            ]}
             onFilter={handleFilter}
             onReset={handleReset}
-            statusOptions={[
-              { value: '', label: 'Todos' },
-              { value: 'ativo', label: 'Ativos' },
-              { value: 'inativo', label: 'Inativos' },
-              { value: 'suspenso', label: 'Suspensos' }
-            ]}
           />
         </div>
 
@@ -230,26 +243,25 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             columns={columns}
             isLoading={isLoading}
             pagination={{
-              currentPage: page,
-              totalPages: planosData?.totalPages || 1,
-              totalItems: planosData?.total || 0,
-              itemsPerPage: limit,
-              onPageChange: setPage,
-              onItemsPerPageChange: setLimit
+              from: (page - 1) * limit + 1,
+              to: Math.min(page * limit, planosData?.total || 0),
+              total: planosData?.total || 0,
+              current_page: page,
+              last_page: planosData?.last_page || 1
             }}
-            sorting={{
-              column: sortColumn,
-              direction: sortDirection,
-              onSort: (column: string, direction: 'asc' | 'desc') => {
-                setSortColumn(column);
-                setSortDirection(direction);
-              }
+            limit={limit}
+            setLimit={setLimit}
+            setPage={setPage}
+            onSort={(column: string, direction: 'asc' | 'desc') => {
+              setSortColumn(column);
+              setSortDirection(direction);
             }}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
             bulkActions={bulkActions}
-            topActions={topActions}
-            onRowClick={handleRowClick}
-            selectable={!onSelectPlano}
-            searchable={false}
+            onSelectionChange={(selectedItems) => {
+              // Implementar lógica de seleção se necessário
+            }}
           />
         </div>
       </div>

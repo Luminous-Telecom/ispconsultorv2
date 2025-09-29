@@ -196,18 +196,31 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         {/* Filtros */}
         <div className="mb-3">
           <TableFilters
-            search={search}
-            onSearchChange={setSearch}
-            status={tipo}
-            onStatusChange={setTipo}
+            fields={[
+              {
+                name: 'search',
+                label: 'Buscar',
+                type: 'text',
+                placeholder: 'Buscar por nome...',
+                value: search,
+                onChange: setSearch
+              },
+              {
+                name: 'tipo',
+                label: 'Tipo',
+                type: 'select',
+                value: tipo,
+                onChange: setTipo,
+                options: [
+                  { value: '', label: 'Todos' },
+                  { value: 'efi', label: 'EFI' },
+                  { value: 'asaas', label: 'ASAAS' },
+                  { value: 'tradicional', label: 'Tradicional' }
+                ]
+              }
+            ]}
             onFilter={handleFilter}
             onReset={handleReset}
-            statusOptions={[
-              { value: '', label: 'Todos' },
-              { value: 'efi', label: 'EFI' },
-              { value: 'asaas', label: 'ASAAS' },
-              { value: 'tradicional', label: 'Tradicional' }
-            ]}
           />
         </div>
 
@@ -218,26 +231,25 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             columns={columns}
             isLoading={isLoading}
             pagination={{
-              currentPage: page,
-              totalPages: bancosData?.totalPages || 1,
-              totalItems: bancosData?.total || 0,
-              itemsPerPage: limit,
-              onPageChange: setPage,
-              onItemsPerPageChange: setLimit
+              from: (page - 1) * limit + 1,
+              to: Math.min(page * limit, bancosData?.total || 0),
+              total: bancosData?.total || 0,
+              current_page: page,
+              last_page: bancosData?.last_page || 1
             }}
-            sorting={{
-              column: sortColumn,
-              direction: sortDirection,
-              onSort: (column: string, direction: 'asc' | 'desc') => {
-                setSortColumn(column);
-                setSortDirection(direction);
-              }
+            limit={limit}
+            setLimit={setLimit}
+            setPage={setPage}
+            onSort={(column: string, direction: 'asc' | 'desc') => {
+              setSortColumn(column);
+              setSortDirection(direction);
             }}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
             bulkActions={bulkActions}
-            topActions={topActions}
-            onRowClick={handleRowClick}
-            selectable={!onSelectBanco}
-            searchable={false}
+            onSelectionChange={(selectedItems) => {
+              // Implementar lógica de seleção se necessário
+            }}
           />
         </div>
       </div>

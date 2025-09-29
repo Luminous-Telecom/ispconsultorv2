@@ -112,7 +112,7 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
   };
 
   const handleImprimir = (carne: Carne) => {
-    const url = `${API_CONFIG.baseURL}/carnes/${carne.id}/imprimir`;
+    const url = `${API_CONFIG.BASE_URL_WITHOUT_API}/carnes/${carne.id}/imprimir`;
     window.open(url, '_blank');
   };
 
@@ -239,21 +239,34 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
         {/* Filtros */}
         <div className="mb-3">
           <TableFilters
-            search={search}
-            onSearchChange={setSearch}
-            status={status}
-            onStatusChange={setStatus}
+            fields={[
+              {
+                name: 'search',
+                label: 'Buscar',
+                type: 'text',
+                placeholder: 'Buscar por número, cliente...',
+                value: search,
+                onChange: setSearch
+              },
+              {
+                name: 'status',
+                label: 'Status',
+                type: 'select',
+                value: status,
+                onChange: setStatus,
+                options: [
+                  { value: '', label: 'Todos' },
+                  { value: 'ativo', label: 'Ativos' },
+                  { value: 'pago', label: 'Pagos' },
+                  { value: 'cancelado', label: 'Cancelados' },
+                  { value: 'parcial', label: 'Parciais' },
+                  { value: 'pendente', label: 'Pendentes' },
+                  { value: 'registrado', label: 'Registrados' }
+                ]
+              }
+            ]}
             onFilter={handleFilter}
             onReset={handleReset}
-            statusOptions={[
-              { value: '', label: 'Todos' },
-              { value: 'ativo', label: 'Ativos' },
-              { value: 'pago', label: 'Pagos' },
-              { value: 'cancelado', label: 'Cancelados' },
-              { value: 'parcial', label: 'Parciais' },
-              { value: 'pendente', label: 'Pendentes' },
-              { value: 'registrado', label: 'Registrados' }
-            ]}
           />
         </div>
 
@@ -264,26 +277,25 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
             columns={columns}
             isLoading={isLoading}
             pagination={{
-              currentPage: page,
-              totalPages: carnesData?.totalPages || 1,
-              totalItems: carnesData?.total || 0,
-              itemsPerPage: limit,
-              onPageChange: setPage,
-              onItemsPerPageChange: setLimit
+              from: (page - 1) * limit + 1,
+              to: Math.min(page * limit, carnesData?.total || 0),
+              total: carnesData?.total || 0,
+              current_page: page,
+              last_page: carnesData?.last_page || 1
             }}
-            sorting={{
-              column: sortColumn,
-              direction: sortDirection,
-              onSort: (column: string, direction: 'asc' | 'desc') => {
-                setSortColumn(column);
-                setSortDirection(direction);
-              }
+            limit={limit}
+            setLimit={setLimit}
+            setPage={setPage}
+            onSort={(column: string, direction: 'asc' | 'desc') => {
+              setSortColumn(column);
+              setSortDirection(direction);
             }}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
             bulkActions={bulkActions}
-            topActions={topActions}
-            onRowClick={handleRowClick}
-            selectable={!onSelectCarne}
-            searchable={false}
+            onSelectionChange={(selectedItems) => {
+              // Implementar lógica de seleção se necessário
+            }}
           />
         </div>
       </div>
