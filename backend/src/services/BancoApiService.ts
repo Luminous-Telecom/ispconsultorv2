@@ -139,7 +139,7 @@ export class BancoApiService {
     try {
       // Usar URL correta baseada no ambiente (sandbox vs produção)
       const baseUrl = banco.sandbox 
-        ? (config.sandbox_url || config.cobranca_base_url)
+        ? config.sandbox_url
         : config.cobranca_base_url;
       const endpoint = baseUrl + config.token;
       
@@ -263,7 +263,7 @@ export class BancoApiService {
       // Criar boleto individual
       // Usar URL correta baseada no ambiente (sandbox vs produção)
       const baseUrlCobranca = banco.sandbox 
-        ? (config.sandbox_url || config.cobranca_base_url)
+        ? config.sandbox_url
         : config.cobranca_base_url;
       const endpoint = baseUrlCobranca + config.api_endpoints.boleto;
       const headers = this.prepareHeaders(banco.tipo_banco, token);
