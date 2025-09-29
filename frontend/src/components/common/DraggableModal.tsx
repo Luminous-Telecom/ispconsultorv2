@@ -17,7 +17,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   size = 'lg',
   className = ''
 }) => {
-  const [position, setPosition] = useState({ x: -1, y: -1 }); // -1 indica que ainda não foi centralizado
+  const [position, setPosition] = useState({ x: 0, y: 0 }); // Inicializar com posição válida
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
@@ -43,8 +43,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       const screenHeight = window.innerHeight;
       
       // Centralização simples - sempre no centro da tela
-      const centerX = Math.max(0, (screenWidth - width) / 2);
-      const centerY = Math.max(100, (screenHeight - 600) / 2); // Altura fixa de 600px para centralização
+      const centerX = Math.max(0, Math.floor((screenWidth - width) / 2));
+      const centerY = Math.max(20, (screenHeight - 800) / 2); // Altura maior para centralizar melhor
       
       setPosition({
         x: centerX,
@@ -139,20 +139,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
   if (!show) return null;
   
-  // Garantir que o modal sempre tenha uma posição válida
-  if (position.x === -1 || position.y === -1) {
-    const { width } = getSizeClasses();
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    const centerX = Math.max(0, (screenWidth - width) / 2);
-    const centerY = Math.max(100, (screenHeight - 600) / 2);
-    
-    setPosition({
-      x: centerX,
-      y: centerY
-    });
-    return null; // Não renderizar até ter posição válida
-  }
 
   return (
     <>
