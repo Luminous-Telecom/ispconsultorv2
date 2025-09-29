@@ -108,16 +108,6 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
             />
           </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Email</label>
-            <input
-              type="email"
-              className="form-control form-control-sm"
-              value={cliente.email || ''}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
 
 
