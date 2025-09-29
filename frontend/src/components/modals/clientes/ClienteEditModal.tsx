@@ -56,6 +56,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   onSuccess 
 }) => {
   const { success, error } = useNotificationContext();
+  const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
+    if (type === 'success') success(message);
+    else if (type === 'error') error(message);
+    else success(message); // Para info, usar success
+  };
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState<ClienteForm>({
@@ -120,7 +125,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   });
 
   // Buscar parcelas do cliente (dados reais do banco)
-  const { data: parcelasData, isLoading: isLoadingParcelas } = useQuery({
+  const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
     queryKey: ['parcelas', 'cliente', clienteId],
     queryFn: () => CarneParcelaService.list({ cliente_id: clienteId!, limit: 100 }),
     enabled: !!clienteId,
@@ -289,40 +294,71 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }] : []),
     {
       label: 'Imprimir Carnê',
-      action: (selectedItems: any[]) => {
-        selectedItems.forEach(item => {
-          if (item.parcelas) {
-            console.log('Imprimir carnê:', item.id);
-          } else {
-            console.log('Imprimir parcela:', item.id);
+      action: async (selectedItems: any[]) => {
+        try {
+          for (const item of selectedItems) {
+            if (item.parcelas) {
+              // É um carnê completo
+              const url = CarneService.getImprimirUrl(Number(item.id));
+              window.open(url, '_blank');
+            } else {
+              // É uma parcela individual
+              const url = CarneParcelaService.getBoletoUrl(Number(item.id));
+              window.open(url, '_blank');
+            }
           }
-        });
+          showNotification('Carnês/Boletos abertos para impressão', 'success');
+        } catch (error) {
+          console.error('Erro ao imprimir:', error);
+          showNotification('Erro ao abrir impressão', 'error');
+        }
       }
     },
     {
       label: 'Imprimir Parcela',
-      action: (selectedItems: any[]) => {
-        selectedItems.forEach(item => {
-          if (!item.parcelas) {
-            console.log('Imprimir parcela individual:', item.id);
+      action: async (selectedItems: any[]) => {
+        try {
+          for (const item of selectedItems) {
+            if (!item.parcelas) {
+              // Só funciona para parcelas individuais
+              const url = CarneParcelaService.getBoletoUrl(Number(item.id));
+              window.open(url, '_blank');
+            }
           }
-        });
+          showNotification('Boletos abertos para impressão', 'success');
+        } catch (error) {
+          console.error('Erro ao imprimir parcelas:', error);
+          showNotification('Erro ao abrir impressão', 'error');
+        }
       }
     },
     {
       label: 'Editar',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
+          // Por enquanto, apenas log - pode ser implementado modal de edição
           console.log('Editar item:', selectedItems[0].id);
+          showNotification('Funcionalidade de edição será implementada em breve', 'info');
         }
       }
     },
     {
       label: 'Receber',
-      action: (selectedItems: any[]) => {
-        selectedItems.forEach(item => {
-          console.log('Receber pagamento:', item.id);
-        });
+      action: async (selectedItems: any[]) => {
+        try {
+          for (const item of selectedItems) {
+            if (!item.parcelas) {
+              // Só funciona para parcelas individuais
+              await CarneParcelaService.marcarPago(Number(item.id));
+            }
+          }
+          showNotification('Pagamentos marcados como recebidos', 'success');
+          // Recarregar dados
+          refetchParcelas();
+        } catch (error) {
+          console.error('Erro ao marcar pagamentos:', error);
+          showNotification('Erro ao marcar pagamentos', 'error');
+        }
       }
     },
     {
