@@ -261,11 +261,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       size="xl"
     >
       <div style={{ 
-        maxHeight: '80vh',
-        overflow: 'auto'
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        {/* Navegação por Abas */}
-        <ul className="nav nav-tabs" id="clienteTabs" role="tablist">
+        {/* Navegação por Abas - Fixa */}
+        <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0 }}>
           <li className="nav-item" role="presentation">
             <button
               className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
@@ -322,8 +323,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           </li>
         </ul>
 
-        {/* Conteúdo das Abas */}
-        <div className="tab-content p-3" id="clienteTabContent">
+        {/* Conteúdo das Abas - Com Scroll */}
+        <div className="tab-content" id="clienteTabContent" style={{ flex: 1, overflow: 'auto', padding: '16px', minHeight: 0 }}>
           <form onSubmit={handleSubmit}>
             {/* Aba Dados Básicos */}
             {activeTab === 'dados-basicos' && (
