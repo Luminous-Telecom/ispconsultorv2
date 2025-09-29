@@ -4,6 +4,7 @@ import { ClienteService } from '../../../services/clienteService';
 import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { Cliente } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 
 interface ClienteForm {
@@ -29,11 +30,6 @@ interface ClienteForm {
   recebe_email: boolean;
   recebe_sms: boolean;
   recebe_whatsapp: boolean;
-  plano_id: number;
-  desconto_percentual: number;
-  desconto_valor: number;
-  data_validade_desconto: string;
-  data_inicio_plano: string;
   observacoes: string;
 }
 
@@ -73,11 +69,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     recebe_email: true,
     recebe_sms: false,
     recebe_whatsapp: true,
-    plano_id: 0,
-    desconto_percentual: 0,
-    desconto_valor: 0,
-    data_validade_desconto: '',
-    data_inicio_plano: '',
     observacoes: ''
   });
 
@@ -146,11 +137,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         recebe_email: cliente.recebe_email ?? true,
         recebe_sms: cliente.recebe_sms ?? false,
         recebe_whatsapp: cliente.recebe_whatsapp ?? true,
-        plano_id: cliente.plano_id || 0,
-        desconto_percentual: cliente.desconto_percentual || 0,
-        desconto_valor: cliente.desconto_valor || 0,
-        data_validade_desconto: cliente.data_validade_desconto || '',
-        data_inicio_plano: cliente.data_inicio_plano || '',
         observacoes: cliente.observacoes || ''
       });
     }
@@ -173,7 +159,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     if (!formData.cnpj.trim()) newErrors.cnpj = 'CNPJ é obrigatório';
     if (!formData.razao_social.trim()) newErrors.razao_social = 'Razão social é obrigatória';
     if (!formData.email.trim()) newErrors.email = 'E-mail é obrigatório';
-    if (!formData.plano_id) newErrors.plano_id = 'Plano é obrigatório';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -379,23 +364,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               <h6 className="text-primary mb-3">Configurações</h6>
             </div>
 
-            <div className="col-md-6">
-              <label htmlFor="plano_id" className="form-label">Plano *</label>
-              <select
-                className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
-                id="plano_id"
-                value={formData.plano_id}
-                onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
-              >
-                <option value={0}>Selecione um plano</option>
-                {planos?.map((plano: any) => (
-                  <option key={plano.id} value={plano.id}>
-                    {plano.nome_plano}
-                  </option>
-                ))}
-              </select>
-              {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
-            </div>
 
             <div className="col-md-6">
               <label htmlFor="tipo_cobranca" className="form-label">Tipo de Cobrança</label>
