@@ -116,6 +116,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
+          height: 30px !important;
+          padding: 4px 8px !important;
+          font-size: 13px !important;
         }
         
         .modal-content .form-control:disabled {
@@ -123,12 +126,18 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           border-color: #2d3748 !important;
           color: #718096 !important;
           cursor: not-allowed !important;
+          height: 30px !important;
+          padding: 4px 8px !important;
+          font-size: 13px !important;
         }
         
         .modal-content .form-select:not(:disabled) {
           background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
+          height: 30px !important;
+          padding: 4px 8px !important;
+          font-size: 13px !important;
         }
         
         .modal-content .form-select:disabled {
@@ -136,12 +145,20 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           border-color: #2d3748 !important;
           color: #718096 !important;
           cursor: not-allowed !important;
+          height: 30px !important;
+          padding: 4px 8px !important;
+          font-size: 13px !important;
         }
         
         .modal-content .form-control:focus:not(:disabled) {
           background-color: #2d3748 !important;
           border-color: #3182ce !important;
           box-shadow: 0 0 0 0.2rem rgba(49, 130, 206, 0.25) !important;
+        }
+        
+        .modal-content textarea.form-control {
+          height: auto !important;
+          min-height: 30px !important;
         }
       `}</style>
       
