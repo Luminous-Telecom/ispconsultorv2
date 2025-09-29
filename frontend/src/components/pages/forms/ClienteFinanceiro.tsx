@@ -17,11 +17,87 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   onDataChange 
 }) => {
   const [activeTab, setActiveTab] = useState(0);
+  const [sortColumnCarnes, setSortColumnCarnes] = useState<string>('');
+  const [sortDirectionCarnes, setSortDirectionCarnes] = useState<'asc' | 'desc'>('asc');
+  const [sortColumnParcelas, setSortColumnParcelas] = useState<string>('');
+  const [sortDirectionParcelas, setSortDirectionParcelas] = useState<'asc' | 'desc'>('asc');
   const { addNotification } = useNotificationContext();
   const navigate = useNavigate();
 
   const handleTabChange = (tabIndex: number) => {
     setActiveTab(tabIndex);
+  };
+
+  // Funções de ordenação
+  const handleSortCarnes = (column: string, direction: 'asc' | 'desc') => {
+    setSortColumnCarnes(column);
+    setSortDirectionCarnes(direction);
+  };
+
+  const handleSortParcelas = (column: string, direction: 'asc' | 'desc') => {
+    setSortColumnParcelas(column);
+    setSortDirectionParcelas(direction);
+  };
+
+  // Funções para ordenar os dados localmente
+  const getSortedCarnes = () => {
+    if (!carnes || !sortColumnCarnes) {
+      return carnes;
+    }
+
+    return [...carnes].sort((a, b) => {
+      let aValue = (a as any)[sortColumnCarnes];
+      let bValue = (b as any)[sortColumnCarnes];
+
+      // Tratar campos aninhados
+      if (sortColumnCarnes === 'banco') {
+        aValue = a.banco?.nome || '';
+        bValue = b.banco?.nome || '';
+      }
+
+      // Converter para string se necessário para comparação
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+      }
+      if (typeof bValue === 'string') {
+        bValue = bValue.toLowerCase();
+      }
+
+      // Tratar valores null/undefined
+      if (aValue == null) aValue = '';
+      if (bValue == null) bValue = '';
+
+      if (aValue < bValue) return sortDirectionCarnes === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirectionCarnes === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const getSortedParcelas = () => {
+    if (!parcelas || !sortColumnParcelas) {
+      return parcelas;
+    }
+
+    return [...parcelas].sort((a, b) => {
+      let aValue = (a as any)[sortColumnParcelas];
+      let bValue = (b as any)[sortColumnParcelas];
+
+      // Converter para string se necessário para comparação
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+      }
+      if (typeof bValue === 'string') {
+        bValue = bValue.toLowerCase();
+      }
+
+      // Tratar valores null/undefined
+      if (aValue == null) aValue = '';
+      if (bValue == null) bValue = '';
+
+      if (aValue < bValue) return sortDirectionParcelas === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirectionParcelas === 'asc' ? 1 : -1;
+      return 0;
+    });
   };
 
   // Buscar carnês do cliente
@@ -173,7 +249,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
             </div>
             
             <DataTable
-              data={carnes}
+              data={getSortedCarnes()}
               columns={carnesColumns}
               isLoading={carnesLoading}
               pagination={carnesData?.pagination}
@@ -201,9 +277,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                   action: handleImprimirCarne
                 }
               ]}
-              onSort={() => {}}
-              sortColumn=""
-              sortDirection="asc"
+              onSort={handleSortCarnes}
+              sortColumn={sortColumnCarnes}
+              sortDirection={sortDirectionCarnes}
               onRefresh={refetchCarnes}
             />
           </div>
@@ -214,7 +290,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
             </div>
             
             <DataTable
-              data={parcelas}
+              data={getSortedParcelas()}
               columns={parcelasColumns}
               isLoading={parcelasLoading}
               pagination={parcelasData?.pagination}
@@ -235,9 +311,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                   action: handleImprimirParcela
                 }
               ]}
-              onSort={() => {}}
-              sortColumn=""
-              sortDirection="asc"
+              onSort={handleSortParcelas}
+              sortColumn={sortColumnParcelas}
+              sortDirection={sortDirectionParcelas}
               onRefresh={refetchParcelas}
             />
           </div>
