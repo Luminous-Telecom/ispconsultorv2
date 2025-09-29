@@ -10,6 +10,8 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   cliente, 
   onDataChange 
 }) => {
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Mock data para contratos
   const mockContratos = [
@@ -40,6 +42,45 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
   const handleBulkAction = (action: string) => {
     console.log(`${action} contratos`);
+  };
+
+  // Funções de ordenação
+  const handleSort = (column: string, direction: 'asc' | 'desc') => {
+    setSortColumn(column);
+    setSortDirection(direction);
+  };
+
+  const getSortedContratos = () => {
+    if (!mockContratos || !sortColumn) {
+      return mockContratos;
+    }
+
+    return [...mockContratos].sort((a, b) => {
+      let aValue = (a as any)[sortColumn];
+      let bValue = (b as any)[sortColumn];
+
+      // Tratar campos especiais
+      if (sortColumn === 'valor') {
+        aValue = parseFloat(aValue) || 0;
+        bValue = parseFloat(bValue) || 0;
+      }
+
+      // Converter para string se necessário para comparação
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase();
+      }
+      if (typeof bValue === 'string') {
+        bValue = bValue.toLowerCase();
+      }
+
+      // Tratar valores null/undefined
+      if (aValue == null) aValue = '';
+      if (bValue == null) bValue = '';
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -100,7 +141,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
       </div>
       
       <DataTable
-        data={mockContratos}
+        data={getSortedContratos()}
         columns={contratosColumns}
         isLoading={false}
         limit={10}
@@ -135,9 +176,9 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
             action: (selectedItems) => handleBulkAction('detalhamento_financeiro')
           }
         ]}
-        onSort={() => {}}
-        sortColumn=""
-        sortDirection="asc"
+        onSort={handleSort}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
         onRefresh={() => {}}
       />
     </div>
