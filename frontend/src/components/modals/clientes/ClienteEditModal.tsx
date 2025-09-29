@@ -89,7 +89,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ClienteForm>>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
-  const [selectedCarne, setSelectedCarne] = useState<Carne | null>(null);
 
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
@@ -110,18 +109,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     queryFn: () => BancoService.list({ page: 1, limit: 100 }),
   });
 
-  // Buscar carnês do cliente
-  const { data: carnesData, isLoading: isLoadingCarnes } = useQuery({
-    queryKey: ['carnes', 'cliente', clienteId],
-    queryFn: () => CarneService.list({ cliente_id: clienteId!, limit: 100 }),
-    enabled: !!clienteId,
-  });
-
-  // Buscar parcelas do carnê selecionado
+  // Buscar parcelas do cliente (dados reais do banco)
   const { data: parcelasData, isLoading: isLoadingParcelas } = useQuery({
-    queryKey: ['parcelas', selectedCarne?.id],
-    queryFn: () => CarneParcelaService.findByCarne(selectedCarne!.id),
-    enabled: !!selectedCarne?.id,
+    queryKey: ['parcelas', 'cliente', clienteId],
+    queryFn: () => CarneParcelaService.list({ cliente_id: clienteId!, limit: 100 }),
+    enabled: !!clienteId,
   });
 
   // Mutation para atualizar cliente
@@ -890,7 +882,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                     <div className="d-flex gap-2 align-items-center">
                       <span className="small text-muted">
-                        1 - {carnesData?.data?.length || 0} / {carnesData?.data?.length || 0}
+                        1 - {parcelasData?.data?.length || 0} / {parcelasData?.data?.length || 0}
                       </span>
                       <button className="btn btn-sm btn-outline-secondary">
                         <i className="bi bi-download"></i>
@@ -898,13 +890,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-                  {isLoadingCarnes ? (
+                  {isLoadingParcelas ? (
                     <div className="text-center py-4">
                       <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
                     </div>
-                  ) : carnesData?.data && carnesData.data.length > 0 ? (
+                  ) : parcelasData?.data && parcelasData.data.length > 0 ? (
                     <>
                       {/* Tabela de Carnês/Parcelas */}
                       <div className="table-responsive">
@@ -933,48 +925,48 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             </tr>
                           </thead>
                           <tbody>
-                            {carnesData.data.map((carne: Carne) => (
-                              <tr key={carne.id} className={selectedCarne?.id === carne.id ? 'table-primary' : ''}>
+                            {parcelasData.data.map((parcela: CarneParcela) => (
+                              <tr key={parcela.id}>
                                 <td><input type="checkbox" /></td>
-                                <td>{carne.id}</td>
+                                <td>{parcela.id}</td>
                                 <td>
                                   <span className={`badge ${
-                                    carne.status === 'ativo' ? 'bg-success' :
-                                    carne.status === 'pago' ? 'bg-success' :
-                                    carne.status === 'cancelado' ? 'bg-danger' :
-                                    carne.status === 'parcial' ? 'bg-warning' :
+                                    parcela.status === 'pago' ? 'bg-success' :
+                                    parcela.status === 'vencido' ? 'bg-danger' :
+                                    parcela.status === 'pendente' ? 'bg-warning' :
                                     'bg-secondary'
                                   }`}>
-                                    {carne.status === 'pago' ? '✔ Recebimento em dia' :
-                                     carne.status === 'ativo' ? '✔ Recebimento em atraso' :
-                                     carne.status}
+                                    {parcela.status === 'pago' ? '✔ Recebimento em dia' :
+                                     parcela.status === 'vencido' ? '✔ Recebimento em atraso' :
+                                     parcela.status === 'pendente' ? 'Pendente' :
+                                     parcela.status}
                                   </span>
                                 </td>
-                                <td>{carne.numero_carne}</td>
+                                <td>{parcela.carne?.numero_carne || '-'}</td>
                                 <td>-</td>
-                                <td>{carne.quantidade_parcelas}</td>
+                                <td>{parcela.numero_parcela}</td>
                                 <td>-</td>
                                 <td>-</td>
-                                <td>{new Date(carne.created_at).toLocaleDateString('pt-BR')}</td>
-                                <td>{new Date(carne.data_vencimento_primeira).toLocaleDateString('pt-BR')}</td>
-                                <td>R$ {Number(carne.valor_total || 0).toFixed(2)}</td>
+                                <td>{new Date(parcela.created_at).toLocaleDateString('pt-BR')}</td>
+                                <td>{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                                <td>R$ {Number(parcela.valor_parcela || 0).toFixed(2)}</td>
                                 <td>
-                                  {carne.status === 'pago' ? `R$ ${Number(carne.valor_total || 0).toFixed(2)}` : 'R$ 0,00'}
+                                  {parcela.pago ? `R$ ${Number(parcela.valor_pago || parcela.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00'}
                                 </td>
                                 <td>
-                                  {carne.status === 'pago' ? 'R$ 0,00' : `R$ ${Number(carne.valor_total || 0).toFixed(2)}`}
+                                  {parcela.pago ? 'R$ 0,00' : `R$ ${Number(parcela.valor_parcela || 0).toFixed(2)}`}
                                 </td>
                                 <td>
-                                  {carne.status === 'pago' ? `R$ ${Number(carne.valor_total || 0).toFixed(2)}` : 'R$ 0,00'}
+                                  {parcela.pago ? `R$ ${Number(parcela.valor_pago || parcela.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00'}
                                 </td>
                                 <td>
-                                  {carne.status === 'pago' ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                  {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
                                 </td>
                                 <td>
-                                  {carne.status === 'pago' ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                  {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
                                 </td>
                                 <td>
-                                  {carne.status === 'pago' ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                  {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
                                 </td>
                                 <td>Boleto</td>
                                 <td>Não</td>
@@ -993,19 +985,19 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <div className="d-flex gap-4">
                           <div className="text-end">
                             <div className="small text-muted">Valor:</div>
-                            <strong>R$ {carnesData.data.reduce((sum, carne) => sum + Number(carne.valor_total || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {parcelasData.data.reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor baixado:</div>
-                            <strong>R$ {carnesData.data.filter(c => c.status === 'pago').reduce((sum, carne) => sum + Number(carne.valor_total || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {parcelasData.data.filter(p => p.pago).reduce((sum, parcela) => sum + Number(parcela.valor_pago || parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor aberto:</div>
-                            <strong>R$ {carnesData.data.filter(c => c.status !== 'pago').reduce((sum, carne) => sum + Number(carne.valor_total || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {parcelasData.data.filter(p => !p.pago).reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor cancelado:</div>
-                            <strong>R$ {carnesData.data.filter(c => c.status === 'cancelado').reduce((sum, carne) => sum + Number(carne.valor_total || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {parcelasData.data.filter(p => p.status === 'cancelado').reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
                           </div>
                         </div>
                       </div>
@@ -1014,9 +1006,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     <div className="card">
                       <div className="card-body text-center py-5">
                         <i className="bi bi-receipt text-muted" style={{ fontSize: '3rem' }}></i>
-                        <h6 className="text-muted mt-3">Nenhum carnê encontrado</h6>
+                        <h6 className="text-muted mt-3">Nenhuma parcela encontrada</h6>
                         <p className="text-muted mb-0">
-                          Este cliente ainda não possui carnês cadastrados.
+                          Este cliente ainda não possui parcelas cadastradas.
                         </p>
                       </div>
                     </div>
