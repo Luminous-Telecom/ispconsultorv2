@@ -156,7 +156,6 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
     if (!formData.cliente_id) newErrors.cliente_id = 'Cliente é obrigatório';
     if (!formData.plano_id) newErrors.plano_id = 'Plano é obrigatório';
     if (!formData.banco_id) newErrors.banco_id = 'Banco é obrigatório';
-    if (!formData.numero_carne) newErrors.numero_carne = 'Número do carnê é obrigatório';
     if (!formData.valor_total || formData.valor_total <= 0) newErrors.valor_total = 'Valor total deve ser maior que zero';
     if (!formData.quantidade_parcelas || formData.quantidade_parcelas <= 0) newErrors.quantidade_parcelas = 'Quantidade de parcelas deve ser maior que zero';
     if (!formData.data_vencimento_primeira) newErrors.data_vencimento_primeira = 'Data de vencimento é obrigatória';
@@ -263,17 +262,16 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
 
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label htmlFor="numero_carne" className="form-label">Número do Carnê *</label>
+                      <label htmlFor="numero_carne" className="form-label">Número do Carnê</label>
                       <input
                         type="text"
-                        className={`form-control ${errors.numero_carne ? 'is-invalid' : ''}`}
+                        className="form-control"
                         id="numero_carne"
                         value={formData.numero_carne}
-                        onChange={(e) => handleInputChange('numero_carne', e.target.value)}
-                        disabled={updateCarneMutation.isPending}
+                        disabled={true}
                         placeholder="Ex: CAR2024001"
                       />
-                      {errors.numero_carne && <div className="invalid-feedback">{errors.numero_carne}</div>}
+                      <small className="form-text text-muted">Número gerado automaticamente</small>
                     </div>
                   </div>
                 </div>
@@ -333,20 +331,14 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                   <div className="col-md-6">
                     <div className="mb-3">
                       <label htmlFor="status" className="form-label">Status</label>
-                      <select
-                        className="form-select"
+                      <input
+                        type="text"
+                        className="form-control"
                         id="status"
-                        value={formData.status}
-                        onChange={(e) => handleInputChange('status', e.target.value)}
-                        disabled={updateCarneMutation.isPending}
-                      >
-                        <option value="ativo">Ativo</option>
-                        <option value="pago">Pago</option>
-                        <option value="cancelado">Cancelado</option>
-                        <option value="parcial">Parcial</option>
-                        <option value="pendente">Pendente</option>
-                        <option value="registrado">Registrado</option>
-                      </select>
+                        value={formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
+                        disabled={true}
+                      />
+                      <small className="form-text text-muted">Status atualizado automaticamente</small>
                     </div>
                   </div>
 
@@ -357,11 +349,11 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                         type="text"
                         className="form-control"
                         id="carnet_id"
-                        value={formData.carnet_id}
-                        onChange={(e) => handleInputChange('carnet_id', e.target.value)}
-                        disabled={updateCarneMutation.isPending}
+                        value={formData.carnet_id || 'Não registrado'}
+                        disabled={true}
                         placeholder="ID fornecido pelo banco"
                       />
+                      <small className="form-text text-muted">ID gerado automaticamente pelo banco</small>
                     </div>
                   </div>
                 </div>
