@@ -295,15 +295,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className={`nav-link ${activeTab === 'configuracoes' ? 'active' : ''}`}
-              onClick={() => setActiveTab('configuracoes')}
-              type="button"
-            >
-              Configurações
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
               className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
               onClick={() => setActiveTab('contratos')}
               type="button"
@@ -599,91 +590,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               </div>
             )}
 
-            {/* Aba Configurações */}
-            {activeTab === 'configuracoes' && (
-              <div className="row">
-                <div className="col-md-6">
-                  <h6 className="text-primary mb-3">Configurações Gerais</h6>
-                  
-                  <div className="mb-3">
-                    <label htmlFor="valor_primeiro_titulo" className="form-label">Valor do Primeiro Título</label>
-                    <select
-                      className="form-select"
-                      id="valor_primeiro_titulo"
-                      value={formData.valor_primeiro_titulo}
-                      onChange={(e) => handleInputChange('valor_primeiro_titulo', e.target.value as 'total' | 'proporcional')}
-                    >
-                      <option value="total">Valor Total</option>
-                      <option value="proporcional">Valor Proporcional</option>
-                    </select>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="isento_mensalidade"
-                        checked={formData.isento_mensalidade}
-                        onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="isento_mensalidade">
-                        Isento de Mensalidade
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <h6 className="text-primary mb-3">Preferências de Comunicação</h6>
-                  
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_email"
-                        checked={formData.recebe_email}
-                        onChange={(e) => handleInputChange('recebe_email', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_email">
-                        Recebe E-mail
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_sms"
-                        checked={formData.recebe_sms}
-                        onChange={(e) => handleInputChange('recebe_sms', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_sms">
-                        Recebe SMS
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_whatsapp"
-                        checked={formData.recebe_whatsapp}
-                        onChange={(e) => handleInputChange('recebe_whatsapp', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_whatsapp">
-                        Recebe WhatsApp
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Aba Contratos */}
             {activeTab === 'contratos' && (
@@ -717,6 +623,36 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       value={formData.data_inicio_plano}
                       onChange={(e) => handleInputChange('data_inicio_plano', e.target.value)}
                     />
+                  </div>
+
+                  <h6 className="text-primary mb-3">Configurações Gerais</h6>
+                  
+                  <div className="mb-3">
+                    <label htmlFor="valor_primeiro_titulo" className="form-label">Valor do Primeiro Título</label>
+                    <select
+                      className="form-select"
+                      id="valor_primeiro_titulo"
+                      value={formData.valor_primeiro_titulo}
+                      onChange={(e) => handleInputChange('valor_primeiro_titulo', e.target.value as 'total' | 'proporcional')}
+                    >
+                      <option value="total">Valor Total</option>
+                      <option value="proporcional">Valor Proporcional</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="isento_mensalidade"
+                        checked={formData.isento_mensalidade}
+                        onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="isento_mensalidade">
+                        Isento de Mensalidade
+                      </label>
+                    </div>
                   </div>
 
                   <h6 className="text-primary mb-3">Configurações de Carnê</h6>
@@ -852,6 +788,53 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       value={formData.data_validade_desconto}
                       onChange={(e) => handleInputChange('data_validade_desconto', e.target.value)}
                     />
+                  </div>
+
+                  <h6 className="text-primary mb-3">Preferências de Comunicação</h6>
+                  
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="recebe_email"
+                        checked={formData.recebe_email}
+                        onChange={(e) => handleInputChange('recebe_email', e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="recebe_email">
+                        Recebe E-mail
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="recebe_sms"
+                        checked={formData.recebe_sms}
+                        onChange={(e) => handleInputChange('recebe_sms', e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="recebe_sms">
+                        Recebe SMS
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="recebe_whatsapp"
+                        checked={formData.recebe_whatsapp}
+                        onChange={(e) => handleInputChange('recebe_whatsapp', e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="recebe_whatsapp">
+                        Recebe WhatsApp
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
