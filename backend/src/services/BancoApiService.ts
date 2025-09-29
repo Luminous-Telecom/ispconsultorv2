@@ -199,11 +199,10 @@ export class BancoApiService {
   /**
    * Gerar título/boleto via API do banco
    */
-  static async gerarTitulo(parcela: CarneParcela): Promise<ApiResponse> {
-    const carne = await parcela.getCarne();
-    const banco = await carne.getBanco();
-    const cliente = await carne.getCliente();
-    const plano = await carne.getPlano();
+  static async gerarTitulo(titulo: any): Promise<ApiResponse> {
+    const banco = titulo.banco;
+    const cliente = titulo.cliente;
+    const plano = titulo.plano;
     
     try {
       // Carregar configurações do banco
@@ -216,18 +215,18 @@ export class BancoApiService {
       }
 
       logger.info('Iniciando geração de título', {
-        parcela_id: parcela.id,
+        titulo_id: titulo.id,
         banco_id: banco.id,
         cliente_id: cliente.id,
         tipo_banco: banco.tipo_banco
       });
 
       // Verificar se já foi gerado
-      if (parcela.charge_id) {
+      if (titulo.charge_id) {
         return {
           success: true,
           message: 'Título já foi gerado anteriormente',
-          data: { charge_id: parcela.charge_id }
+          data: { charge_id: titulo.charge_id }
         };
       }
 
@@ -249,11 +248,11 @@ export class BancoApiService {
       }
 
       // Preparar dados do boleto
-      const dadosBoleto = await this.prepararDadosBoleto(banco, parcela, cliente, plano, config);
+      const dadosBoleto = await this.prepararDadosBoleto(banco, titulo, cliente, plano, config);
 
       // Log detalhado do payload
       logger.info('Payload enviado para EFI:', {
-        parcela_id: parcela.id,
+        titulo_id: titulo.id,
         dadosBoleto: JSON.stringify(dadosBoleto, null, 2)
       });
 
@@ -284,8 +283,8 @@ export class BancoApiService {
         const pixQrcode = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode);
         const pixQrcodeImage = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode_image);
 
-        // Atualizar parcela
-        await parcela.update({
+        // Atualizar título
+        await titulo.update({
           charge_id: chargeId,
           codigo_barras: barcode,
           url_boleto: url,
@@ -296,7 +295,7 @@ export class BancoApiService {
         });
 
         logger.info('Título gerado com sucesso', {
-          parcela_id: parcela.id,
+          titulo_id: titulo.id,
           charge_id: chargeId
         });
 
@@ -321,7 +320,7 @@ export class BancoApiService {
       };
     } catch (error: any) {
       logger.error('Erro ao gerar título', { 
-        parcela_id: parcela.id,
+        titulo_id: titulo.id,
         error: error.message,
         status: error.response?.status,
         data: error.response?.data,
@@ -339,7 +338,7 @@ export class BancoApiService {
    */
   private static async prepararDadosBoleto(
     banco: Banco, 
-    parcela: CarneParcela, 
+    titulo: any, 
     cliente: any, 
     plano: any, 
     config: BancoConfig
@@ -355,7 +354,7 @@ export class BancoApiService {
     }
     
     // Converter valor para centavos
-    const valorCentavos = Math.round(Number(parcela.valor_parcela) * 100);
+    const valorCentavos = Math.round(Number(titulo.valor) * 100);
     
     // Multa/Juros em basis points (ex.: 2.00% => 200)
     const fineBp = Math.round(Number(banco.percentual_multa || 0) * 100);
@@ -387,12 +386,12 @@ export class BancoApiService {
               state: 'SP'
             }
           },
-          expire_at: new Date(parcela.data_vencimento).toISOString().split('T')[0],
+          expire_at: new Date(titulo.data_vencimento).toISOString().split('T')[0],
           configurations: {
             fine: fineBp,
             interest: interestBp
           },
-          message: `Cobrança referente ao serviço ${plano.nome_plano || 'Internet'} - Parcela ${parcela.numero_parcela}`
+          message: `Cobrança referente ao serviço ${plano.nome_plano || 'Internet'} - Título ${titulo.numero_titulo}`
         }
       }
     };
@@ -401,9 +400,8 @@ export class BancoApiService {
   /**
    * Consultar status de um título
    */
-  static async consultarStatus(parcela: CarneParcela): Promise<ApiResponse> {
-    const carne = await parcela.getCarne();
-    const banco = await carne.getBanco();
+  static async consultarStatus(titulo: any): Promise<ApiResponse> {
+    const banco = titulo.banco;
     
     try {
       const config = this.getBancoConfig(banco.tipo_banco);
@@ -422,7 +420,7 @@ export class BancoApiService {
         };
       }
       
-      if (!parcela.charge_id) {
+      if (!titulo.charge_id) {
         return {
           success: false,
           message: 'Charge ID não encontrado'
@@ -434,12 +432,12 @@ export class BancoApiService {
         ? (config.sandbox_url || config.cobranca_base_url)
         : config.cobranca_base_url;
       
-      const endpoint = baseUrlCobranca + config.api_endpoints.consultar.replace(':id', parcela.charge_id);
+      const endpoint = baseUrlCobranca + config.api_endpoints.consultar.replace(':id', titulo.charge_id);
       
-      logger.info('Consultando status da parcela', {
+      logger.info('Consultando status do título', {
         endpoint,
-        charge_id: parcela.charge_id,
-        parcela_id: parcela.id,
+        charge_id: titulo.charge_id,
+        titulo_id: titulo.id,
         token_length: token ? token.length : 0
       });
       
@@ -467,7 +465,7 @@ export class BancoApiService {
       };
     } catch (error: any) {
       logger.error('Erro ao consultar status', { 
-        parcela_id: parcela.id,
+        titulo_id: titulo.id,
         error: error.message 
       });
       return {
@@ -715,9 +713,8 @@ export class BancoApiService {
    * Marcar como paga (baixa manual) uma parcela específica do carnê no banco
    * PUT /v1/carnet/:id/parcel/:parcel/settle
    */
-  static async liquidarParcelaCarne(parcela: CarneParcela): Promise<ApiResponse> {
-    const carne = await parcela.getCarne();
-    const banco = await carne.getBanco();
+  static async liquidarParcelaCarne(titulo: any): Promise<ApiResponse> {
+    const banco = titulo.banco;
     
     try {
       const config = this.getBancoConfig(banco.tipo_banco);
@@ -729,7 +726,7 @@ export class BancoApiService {
       }
 
       // Para títulos individuais, apenas atualizar o status localmente
-      await parcela.update({
+      await titulo.update({
         status: 'pago',
         pago: true,
         data_pagamento: new Date()
@@ -755,9 +752,8 @@ export class BancoApiService {
   /**
    * Cancelar parcela específica de carnê
    */
-  static async cancelarParcelaCarne(parcela: CarneParcela): Promise<ApiResponse> {
-    const carne = await parcela.getCarne();
-    const banco = await carne.getBanco();
+  static async cancelarParcelaCarne(titulo: any): Promise<ApiResponse> {
+    const banco = titulo.banco;
     
     try {
       const config = this.getBancoConfig(banco.tipo_banco);
@@ -771,7 +767,7 @@ export class BancoApiService {
       // Verificar se o banco suporta operações de carnê
       if (!config.operacoes_suportadas.cancelar_parcela_carne) {
         // Para outros bancos, usar método individual
-        return this.cancelarTitulo(parcela);
+        return this.cancelarTitulo(titulo);
       }
 
       const token = await this.obterToken(banco, config);
@@ -800,9 +796,8 @@ export class BancoApiService {
   /**
    * Cancelar título individual
    */
-  static async cancelarTitulo(parcela: CarneParcela): Promise<ApiResponse> {
-    const carne = await parcela.getCarne();
-    const banco = await carne.getBanco();
+  static async cancelarTitulo(titulo: any): Promise<ApiResponse> {
+    const banco = titulo.banco;
     
     try {
       const config = this.getBancoConfig(banco.tipo_banco);
@@ -813,7 +808,7 @@ export class BancoApiService {
         };
       }
 
-      if (!parcela.charge_id) {
+      if (!titulo.charge_id) {
         return {
           success: false,
           message: 'Charge ID não encontrado'
@@ -832,12 +827,12 @@ export class BancoApiService {
         ? (config.sandbox_url || config.cobranca_base_url)
         : config.cobranca_base_url;
       
-      const endpoint = `${baseUrlCobranca}/v1/charge/${parcela.charge_id}/cancel`;
+      const endpoint = `${baseUrlCobranca}/v1/charge/${titulo.charge_id}/cancel`;
 
       logger.info('Enviando requisição para cancelar título individual', {
         endpoint,
-        charge_id: parcela.charge_id,
-        parcela_id: parcela.id
+        charge_id: titulo.charge_id,
+        titulo_id: titulo.id
       });
 
       const response = await axios.put(endpoint, {}, {
@@ -865,8 +860,8 @@ export class BancoApiService {
       };
     } catch (error: any) {
       logger.error('Erro ao cancelar título individual', {
-        parcela_id: parcela.id,
-        charge_id: parcela.charge_id,
+        titulo_id: titulo.id,
+        charge_id: titulo.charge_id,
         error: error.message
       });
       return {
@@ -880,9 +875,8 @@ export class BancoApiService {
    * Alterar vencimento de uma parcela específica do carnê
    * PUT /v1/carnet/:id/parcel/:parcel { expire_at }
    */
-  static async alterarVencimentoParcelaCarne(parcela: CarneParcela, expireAt: string): Promise<ApiResponse> {
-    const carne = await parcela.getCarne();
-    const banco = await carne.getBanco();
+  static async alterarVencimentoParcelaCarne(titulo: any, expireAt: string): Promise<ApiResponse> {
+    const banco = titulo.banco;
     
     try {
       const config = this.getBancoConfig(banco.tipo_banco);
@@ -901,7 +895,7 @@ export class BancoApiService {
       }
 
       // Para títulos individuais, apenas atualizar a data localmente
-      await parcela.update({
+      await titulo.update({
         data_vencimento: new Date(expireAt)
       });
 
