@@ -227,9 +227,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     });
 
-    console.log('Dados a serem enviados:', dataToSend);
-    console.log('Cliente ID:', clienteId);
-    
     updateClienteMutation.mutate(dataToSend);
   };
 
