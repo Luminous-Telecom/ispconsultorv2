@@ -100,6 +100,12 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       }
     },
     { key: 'data_vencimento_primeira', label: 'Vencimento', sortable: true },
+    { key: 'quantidade_parcelas', label: 'Total Parcelas', sortable: true },
+    { 
+      key: 'parcelas_pagas', 
+      label: 'Pagas',
+      render: (item: any) => item.parcelas_pagas || 0
+    },
     { 
       key: 'banco', 
       label: 'Banco',
