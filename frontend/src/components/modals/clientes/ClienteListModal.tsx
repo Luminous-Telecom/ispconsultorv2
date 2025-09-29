@@ -152,9 +152,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       <div className="d-flex" style={{ gap: '8px' }}>
         {bulkActions.map((bulkAction, index) => {
           const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-          const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
-          const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
-          const isDisabled = isDisabledBySelection || isDisabledByCondition;
+          const isDisabled = !isNewButton && selectedItems.length === 0;
           
           return (
             <button
