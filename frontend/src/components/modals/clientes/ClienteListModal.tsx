@@ -3,7 +3,7 @@ import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
-import { ClienteCreateModal } from './index';
+import { ClienteCreateModal, ClienteEditModal } from './index';
 
 interface Cliente {
   id: number;
@@ -35,6 +35,8 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
 
   // Hooks para gerenciar clientes
   const { data: clientesData, isLoading, refetch } = useClientes({
@@ -145,7 +147,8 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       label: 'Editar',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
-          console.log('Editar cliente:', selectedItems[0]);
+          setSelectedClienteId(selectedItems[0].id);
+          setShowEditModal(true);
         }
       }
     }
@@ -199,6 +202,21 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         onSuccess={() => {
           refetch();
           setShowCreateModal(false);
+        }}
+      />
+
+      {/* Modal de Edição */}
+      <ClienteEditModal
+        show={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedClienteId(null);
+        }}
+        clienteId={selectedClienteId}
+        onSuccess={() => {
+          refetch();
+          setShowEditModal(false);
+          setSelectedClienteId(null);
         }}
       />
     </DraggableModal>

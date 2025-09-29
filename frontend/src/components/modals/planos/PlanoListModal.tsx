@@ -3,7 +3,7 @@ import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
-import { PlanoCreateModal } from './index';
+import { PlanoCreateModal, PlanoEditModal } from './index';
 
 interface Plano {
   id: number;
@@ -37,6 +37,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
 
   // Query para buscar planos
   const { data: planosData, isLoading, refetch } = usePlanos({
@@ -181,7 +183,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       label: 'Editar',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
-          console.log('Editar plano:', selectedItems[0]);
+          setSelectedPlanoId(selectedItems[0].id);
+          setShowEditModal(true);
         }
       }
     }
@@ -235,6 +238,21 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         onSuccess={() => {
           refetch();
           setShowCreateModal(false);
+        }}
+      />
+
+      {/* Modal de Edição */}
+      <PlanoEditModal
+        show={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedPlanoId(null);
+        }}
+        planoId={selectedPlanoId}
+        onSuccess={() => {
+          refetch();
+          setShowEditModal(false);
+          setSelectedPlanoId(null);
         }}
       />
     </DraggableModal>
