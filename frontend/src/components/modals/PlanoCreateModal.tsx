@@ -13,7 +13,7 @@ interface PlanoForm {
   desconto_valor: number;
   desconto_ativo: boolean;
   quantidade_usuarios: number;
-  periodicidade: string;
+  periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   servicos_inclusos: string[];
   renovacao_automatica: boolean;
   status: string;
