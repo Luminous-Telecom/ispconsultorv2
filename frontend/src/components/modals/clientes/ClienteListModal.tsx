@@ -3,6 +3,7 @@ import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
+import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { ClienteCreateModal, ClienteEditModal } from './index';
 
 interface Cliente {
@@ -145,112 +146,20 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   ];
 
 
-  // Ações para o header do modal
+  // Ações para o header do modal usando componente reutilizável
   const headerActions = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-      {/* Linha 1: Botões à esquerda */}
-      <div className="d-flex justify-content-start">
-        <div className="d-flex" style={{ gap: '8px' }}>
-          {bulkActions.map((bulkAction, index) => {
-            const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-            const isDisabled = !isNewButton && selectedItems.length === 0;
-            
-            return (
-              <button
-                key={index}
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  if (!isDisabled) {
-                    bulkAction.action(selectedItems);
-                  }
-                }}
-                disabled={isDisabled}
-                style={{ flexShrink: 0 }}
-              >
-                {bulkAction.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Linha 2: Busca à esquerda, paginação à direita */}
-      <div className="d-flex align-items-center justify-content-between">
-        {/* Busca à esquerda */}
-        <div className="d-flex align-items-center gap-2">
-          <input
-            type="text"
-            className="form-control form-control-sm"
-            placeholder="Buscar por CNPJ, razão social..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: '300px', height: '32px' }}
-          />
-        </div>
-
-        {/* Paginação à direita */}
-        <div className="d-flex align-items-center gap-2">
-          {/* Seletor de linhas por página */}
-          <select 
-            className="form-select form-select-sm" 
-            value={limit}
-            onChange={(e) => setLimit(parseInt(e.target.value))}
-            style={{ width: '80px', height: '32px', cursor: 'pointer' }}
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={15}>15</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-
-          {/* Paginação compacta */}
-          <div className="d-flex align-items-center gap-1">
-            <button 
-              className="btn btn-outline-secondary btn-sm" 
-              onClick={() => setPage(1)}
-              disabled={!clientesData?.pagination || clientesData.pagination.current_page <= 1}
-            >
-              <i className="bi bi-chevron-double-left"></i>
-            </button>
-            <button 
-              className="btn btn-outline-secondary btn-sm" 
-              onClick={() => setPage(page - 1)}
-              disabled={!clientesData?.pagination || clientesData.pagination.current_page <= 1}
-            >
-              <i className="bi bi-chevron-left"></i>
-            </button>
-            <span className="small text-muted mx-2">
-              {clientesData?.pagination ? `${clientesData.pagination.from} - ${clientesData.pagination.to} / ${clientesData.pagination.total}` : '0 - 0 / 0'}
-            </span>
-            <button 
-              className="btn btn-outline-secondary btn-sm" 
-              onClick={() => setPage(page + 1)}
-              disabled={!clientesData?.pagination || clientesData.pagination.current_page >= clientesData.pagination.last_page}
-            >
-              <i className="bi bi-chevron-right"></i>
-            </button>
-            <button 
-              className="btn btn-outline-secondary btn-sm" 
-              onClick={() => setPage(clientesData?.pagination?.last_page || 1)}
-              disabled={!clientesData?.pagination || clientesData.pagination.current_page >= clientesData.pagination.last_page}
-            >
-              <i className="bi bi-chevron-double-right"></i>
-            </button>
-          </div>
-
-          {/* Botão de refresh */}
-          <button 
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => refetch()}
-            title="Recarregar dados"
-          >
-            <i className="bi bi-arrow-clockwise"></i>
-          </button>
-        </div>
-      </div>
-    </div>
+    <ModalHeaderActions
+      bulkActions={bulkActions}
+      selectedItems={selectedItems}
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Buscar por CNPJ, razão social..."
+      limit={limit}
+      onLimitChange={setLimit}
+      pagination={clientesData?.pagination}
+      onPageChange={setPage}
+      onRefresh={() => refetch()}
+    />
   );
 
   return (
