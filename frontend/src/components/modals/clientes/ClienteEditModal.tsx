@@ -862,8 +862,42 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             {activeTab === 'financeiro' && (
               <div className="row">
                 <div className="col-12">
-                  <h6 className="text-primary mb-3">Títulos e Carnês</h6>
+                  <h6 className="text-primary mb-3">Financeiro do Cliente</h6>
                   
+                  {/* Botões de Ação */}
+                  <div className="d-flex gap-2 mb-3">
+                    <button className="btn btn-sm btn-primary">Editar</button>
+                    <button className="btn btn-sm btn-primary">Receber</button>
+                    <div className="dropdown">
+                      <button className="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Outras ações
+                      </button>
+                      <ul className="dropdown-menu">
+                        <li><a className="dropdown-item" href="#">Imprimir Boletos</a></li>
+                        <li><a className="dropdown-item" href="#">Gerar NF base financeiro</a></li>
+                        <li><a className="dropdown-item" href="#">Copiar código Pix</a></li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Filtros e Paginação */}
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="form-check">
+                      <input className="form-check-input" type="checkbox" id="showCanceled" />
+                      <label className="form-check-label" htmlFor="showCanceled">
+                        Mostrar cancelados
+                      </label>
+                    </div>
+                    <div className="d-flex gap-2 align-items-center">
+                      <span className="small text-muted">
+                        1 - {carnesData?.data?.length || 0} / {carnesData?.data?.length || 0}
+                      </span>
+                      <button className="btn btn-sm btn-outline-secondary">
+                        <i className="bi bi-download"></i>
+                      </button>
+                    </div>
+                  </div>
+
                   {isLoadingCarnes ? (
                     <div className="text-center py-4">
                       <div className="spinner-border text-primary" role="status">
@@ -871,132 +905,111 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       </div>
                     </div>
                   ) : carnesData?.data && carnesData.data.length > 0 ? (
-                    <div className="row">
-                      {/* Lista de Carnês */}
-                      <div className="col-md-6">
-                        <div className="card">
-                          <div className="card-header">
-                            <h6 className="mb-0">Carnês ({carnesData.data.length})</h6>
-                          </div>
-                          <div className="card-body p-0" style={{ maxHeight: '400px', overflow: 'auto' }}>
+                    <>
+                      {/* Tabela de Carnês/Parcelas */}
+                      <div className="table-responsive">
+                        <table className="table table-hover table-sm">
+                          <thead className="table-dark">
+                            <tr>
+                              <th><input type="checkbox" /></th>
+                              <th>ID</th>
+                              <th>Status</th>
+                              <th>Cart. cob.</th>
+                              <th>Contrat.</th>
+                              <th>Parcel.</th>
+                              <th>Contrat.</th>
+                              <th>ID Venda</th>
+                              <th>Emissão</th>
+                              <th>Vencimento</th>
+                              <th>Valor</th>
+                              <th>Valor baixado</th>
+                              <th>Valor aberto</th>
+                              <th>Valor receb.</th>
+                              <th>Data pagam.</th>
+                              <th>Data crédito</th>
+                              <th>Data baixa</th>
+                              <th>Tipo</th>
+                              <th>Título registrado</th>
+                            </tr>
+                          </thead>
+                          <tbody>
                             {carnesData.data.map((carne: Carne) => (
-                              <div 
-                                key={carne.id}
-                                className={`p-3 border-bottom cursor-pointer ${selectedCarne?.id === carne.id ? 'bg-primary text-white' : 'bg-light'}`}
-                                onClick={() => setSelectedCarne(carne)}
-                                style={{ cursor: 'pointer' }}
-                              >
-                                <div className="d-flex justify-content-between align-items-start">
-                                  <div>
-                                    <strong>#{carne.numero_carne}</strong>
-                                    <br />
-                                    <small className={selectedCarne?.id === carne.id ? 'text-white-50' : 'text-muted'}>
-                                      {carne.quantidade_parcelas} parcelas
-                                    </small>
-                                  </div>
-                                  <div className="text-end">
-                                    <span className={`badge ${
-                                      carne.status === 'ativo' ? 'bg-success' :
-                                      carne.status === 'pago' ? 'bg-primary' :
-                                      carne.status === 'cancelado' ? 'bg-danger' :
-                                      carne.status === 'parcial' ? 'bg-warning' :
-                                      'bg-secondary'
-                                    }`}>
-                                      {carne.status}
-                                    </span>
-                                    <br />
-                                    <small className={selectedCarne?.id === carne.id ? 'text-white-50' : 'text-muted'}>
-                                      R$ {Number(carne.valor_total || 0).toFixed(2)}
-                                    </small>
-                                  </div>
-                                </div>
-                                <div className="mt-2">
-                                  <small className={selectedCarne?.id === carne.id ? 'text-white-50' : 'text-muted'}>
-                                    Vencimento: {new Date(carne.data_vencimento_primeira).toLocaleDateString('pt-BR')}
-                                  </small>
-                                </div>
-                              </div>
+                              <tr key={carne.id} className={selectedCarne?.id === carne.id ? 'table-primary' : ''}>
+                                <td><input type="checkbox" /></td>
+                                <td>{carne.id}</td>
+                                <td>
+                                  <span className={`badge ${
+                                    carne.status === 'ativo' ? 'bg-success' :
+                                    carne.status === 'pago' ? 'bg-success' :
+                                    carne.status === 'cancelado' ? 'bg-danger' :
+                                    carne.status === 'parcial' ? 'bg-warning' :
+                                    'bg-secondary'
+                                  }`}>
+                                    {carne.status === 'pago' ? '✔ Recebimento em dia' :
+                                     carne.status === 'ativo' ? '✔ Recebimento em atraso' :
+                                     carne.status}
+                                  </span>
+                                </td>
+                                <td>{carne.numero_carne}</td>
+                                <td>-</td>
+                                <td>{carne.quantidade_parcelas}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>{new Date(carne.created_at).toLocaleDateString('pt-BR')}</td>
+                                <td>{new Date(carne.data_vencimento_primeira).toLocaleDateString('pt-BR')}</td>
+                                <td>R$ {Number(carne.valor_total || 0).toFixed(2)}</td>
+                                <td>
+                                  {carne.status === 'pago' ? `R$ ${Number(carne.valor_total || 0).toFixed(2)}` : 'R$ 0,00'}
+                                </td>
+                                <td>
+                                  {carne.status === 'pago' ? 'R$ 0,00' : `R$ ${Number(carne.valor_total || 0).toFixed(2)}`}
+                                </td>
+                                <td>
+                                  {carne.status === 'pago' ? `R$ ${Number(carne.valor_total || 0).toFixed(2)}` : 'R$ 0,00'}
+                                </td>
+                                <td>
+                                  {carne.status === 'pago' ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                </td>
+                                <td>
+                                  {carne.status === 'pago' ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                </td>
+                                <td>
+                                  {carne.status === 'pago' ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                </td>
+                                <td>Boleto</td>
+                                <td>Não</td>
+                              </tr>
                             ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Resumo Financeiro */}
+                      <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                        <div className="d-flex align-items-center">
+                          <i className="bi bi-info-circle text-muted me-2"></i>
+                          <span className="small text-muted">Legenda de cores</span>
+                        </div>
+                        <div className="d-flex gap-4">
+                          <div className="text-end">
+                            <div className="small text-muted">Valor:</div>
+                            <strong>R$ {carnesData.data.reduce((sum, carne) => sum + Number(carne.valor_total || 0), 0).toFixed(2)}</strong>
+                          </div>
+                          <div className="text-end">
+                            <div className="small text-muted">Valor baixado:</div>
+                            <strong>R$ {carnesData.data.filter(c => c.status === 'pago').reduce((sum, carne) => sum + Number(carne.valor_total || 0), 0).toFixed(2)}</strong>
+                          </div>
+                          <div className="text-end">
+                            <div className="small text-muted">Valor aberto:</div>
+                            <strong>R$ {carnesData.data.filter(c => c.status !== 'pago').reduce((sum, carne) => sum + Number(carne.valor_total || 0), 0).toFixed(2)}</strong>
+                          </div>
+                          <div className="text-end">
+                            <div className="small text-muted">Valor cancelado:</div>
+                            <strong>R$ {carnesData.data.filter(c => c.status === 'cancelado').reduce((sum, carne) => sum + Number(carne.valor_total || 0), 0).toFixed(2)}</strong>
                           </div>
                         </div>
                       </div>
-
-                      {/* Detalhes das Parcelas */}
-                      <div className="col-md-6">
-                        {selectedCarne ? (
-                          <div className="card">
-                            <div className="card-header">
-                              <h6 className="mb-0">
-                                Parcelas - #{selectedCarne.numero_carne}
-                                <button 
-                                  className="btn btn-sm btn-outline-secondary float-end"
-                                  onClick={() => setSelectedCarne(null)}
-                                >
-                                  ×
-                                </button>
-                              </h6>
-                            </div>
-                            <div className="card-body p-0" style={{ maxHeight: '400px', overflow: 'auto' }}>
-                              {isLoadingParcelas ? (
-                                <div className="text-center py-4">
-                                  <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span className="visually-hidden">Carregando...</span>
-                                  </div>
-                                </div>
-                              ) : parcelasData && parcelasData.length > 0 ? (
-                                parcelasData.map((parcela: CarneParcela) => (
-                                  <div key={parcela.id} className="p-3 border-bottom">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                      <div>
-                                        <strong>Parcela {parcela.numero_parcela}</strong>
-                                        <br />
-                                        <small className="text-muted">
-                                          Vencimento: {new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}
-                                        </small>
-                                      </div>
-                                      <div className="text-end">
-                                        <span className={`badge ${
-                                          parcela.status === 'pago' ? 'bg-success' :
-                                          parcela.status === 'vencido' ? 'bg-danger' :
-                                          parcela.status === 'pendente' ? 'bg-warning' :
-                                          'bg-secondary'
-                                        }`}>
-                                          {parcela.status}
-                                        </span>
-                                        <br />
-                                        <small className="text-muted">
-                                          R$ {Number(parcela.valor_parcela || 0).toFixed(2)}
-                                        </small>
-                                      </div>
-                                    </div>
-                                    {parcela.data_pagamento && (
-                                      <div className="mt-2">
-                                        <small className="text-success">
-                                          Pago em: {new Date(parcela.data_pagamento).toLocaleDateString('pt-BR')}
-                                        </small>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="text-center py-4">
-                                  <p className="text-muted mb-0">Nenhuma parcela encontrada</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="card">
-                            <div className="card-body text-center py-5">
-                              <i className="bi bi-receipt text-muted" style={{ fontSize: '3rem' }}></i>
-                              <p className="text-muted mt-3 mb-0">
-                                Selecione um carnê para visualizar as parcelas
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    </>
                   ) : (
                     <div className="card">
                       <div className="card-body text-center py-5">
