@@ -262,7 +262,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
                 position: 'absolute',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                margin: 0
+                margin: 0,
+                width: '100%'
               }}
             >
               {title}
@@ -285,7 +286,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginLeft: 'auto'
+                position: 'relative',
+                zIndex: 1
               }}
             >
               ×
