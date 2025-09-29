@@ -100,10 +100,21 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
             </div>
           </div>
 
-
-
-
-
+          <div className="col-md-6">
+            <label className="form-label small text-muted">Email</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="bi bi-envelope"></i>
+              </span>
+              <input
+                type="email"
+                className="form-control form-control-sm"
+                value={cliente.email || ''}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
 
           <div className="col-12">
             <h6 className="mb-3">Centro de Assinantes</h6>
