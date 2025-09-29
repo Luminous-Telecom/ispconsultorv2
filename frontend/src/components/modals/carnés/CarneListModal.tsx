@@ -182,6 +182,14 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
       }
     },
     {
+      label: 'Editar',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          console.log('Editar carnê:', selectedItems[0]);
+        }
+      }
+    },
+    {
       label: 'Excluir',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} carnê(s)?`)) {
@@ -191,32 +199,6 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
     }
   ];
 
-  const topActions = [
-    {
-      label: 'Visualizar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          console.log('Visualizar carnê:', selectedItems[0]);
-        }
-      }
-    },
-    {
-      label: 'Editar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          console.log('Editar carnê:', selectedItems[0]);
-        }
-      }
-    },
-    {
-      label: 'Imprimir',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          handleImprimir(selectedItems[0]);
-        }
-      }
-    }
-  ];
 
   return (
     <DraggableModal

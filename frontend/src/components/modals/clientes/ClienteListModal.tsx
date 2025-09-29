@@ -125,6 +125,15 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       }
     },
     {
+      label: 'Editar',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          setSelectedClienteId(selectedItems[0].id);
+          setShowEditModal(true);
+        }
+      }
+    },
+    {
       label: 'Excluir',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} cliente(s)?`)) {
@@ -134,25 +143,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     }
   ];
 
-  const topActions = [
-    {
-      label: 'Visualizar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          console.log('Visualizar cliente:', selectedItems[0]);
-        }
-      }
-    },
-    {
-      label: 'Editar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          setSelectedClienteId(selectedItems[0].id);
-          setShowEditModal(true);
-        }
-      }
-    }
-  ];
 
   return (
     <DraggableModal

@@ -139,6 +139,14 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       }
     },
     {
+      label: 'Editar',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          console.log('Editar banco:', selectedItems[0]);
+        }
+      }
+    },
+    {
       label: 'Excluir',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} banco(s)?`)) {
@@ -148,32 +156,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     }
   ];
 
-  const topActions = [
-    {
-      label: 'Visualizar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          console.log('Visualizar banco:', selectedItems[0]);
-        }
-      }
-    },
-    {
-      label: 'Editar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          console.log('Editar banco:', selectedItems[0]);
-        }
-      }
-    },
-    {
-      label: 'Testar Conexão',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          console.log('Testar conexão do banco:', selectedItems[0]);
-        }
-      }
-    }
-  ];
 
   return (
     <DraggableModal

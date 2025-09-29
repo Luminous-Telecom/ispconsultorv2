@@ -161,6 +161,15 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       }
     },
     {
+      label: 'Editar',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          setSelectedPlanoId(selectedItems[0].id);
+          setShowEditModal(true);
+        }
+      }
+    },
+    {
       label: 'Excluir',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} plano(s)?`)) {
@@ -170,25 +179,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
   ];
 
-  const topActions = [
-    {
-      label: 'Visualizar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          console.log('Visualizar plano:', selectedItems[0]);
-        }
-      }
-    },
-    {
-      label: 'Editar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          setSelectedPlanoId(selectedItems[0].id);
-          setShowEditModal(true);
-        }
-      }
-    }
-  ];
 
   return (
     <DraggableModal
