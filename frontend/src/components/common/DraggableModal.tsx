@@ -45,7 +45,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       // Posição centralizada
       setPosition({
         x: (screenWidth - width) / 2,
-        y: Math.max(50, (screenHeight - 400) / 2) // Mínimo de 50px do topo
+        y: (screenHeight - 400) / 2 // Centralizado verticalmente
       });
       
       // Largura fixa, altura será automática
@@ -53,7 +53,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [show, size]);
 
-  // Ajustar altura baseada no conteúdo
+  // Ajustar altura baseada no conteúdo e centralizar
   useEffect(() => {
     if (show && modalRef.current) {
       // Aguardar um tick para o conteúdo ser renderizado
@@ -72,6 +72,16 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             ...prev,
             height: finalHeight
           }));
+          
+          // Re-centralizar baseado na altura real
+          const screenWidth = window.innerWidth;
+          const screenHeight = window.innerHeight;
+          const modalWidth = getSizeClasses().width;
+          
+          setPosition({
+            x: (screenWidth - modalWidth) / 2,
+            y: (screenHeight - finalHeight) / 2
+          });
         }
       }, 50);
     }
