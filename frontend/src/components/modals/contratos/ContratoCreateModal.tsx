@@ -285,7 +285,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               </>
             ) : (
               <>
-                <i className="bi bi-check"></i> Criar Contrato
+                Criar Contrato
               </>
             )}
           </button>

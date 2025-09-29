@@ -393,7 +393,7 @@ const CarneEditModal: React.FC<CarneEditModalProps> = ({
                       </>
                     ) : (
                       <>
-                        <i className="bi bi-check"></i> Salvar Alterações
+                        Salvar Alterações
                       </>
                     )}
                   </button>

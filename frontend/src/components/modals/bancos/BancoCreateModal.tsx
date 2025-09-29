@@ -406,7 +406,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
               onClick={handleTestConnection}
               disabled={createBancoMutation.isPending}
             >
-              <i className="bi bi-wifi"></i> Testar Conexão
+              Testar Conexão
             </button>
             {testResult && (
               <span className={`badge ${testResult.includes('sucesso') ? 'bg-success' : 'bg-danger'}`}>
@@ -437,7 +437,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
               </>
             ) : (
               <>
-                <i className="bi bi-check"></i> Criar Banco
+                Criar Banco
               </>
             )}
           </button>

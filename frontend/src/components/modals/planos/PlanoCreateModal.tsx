@@ -333,7 +333,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
               </>
             ) : (
               <>
-                <i className="bi bi-check"></i> Criar Plano
+                Criar Plano
               </>
             )}
           </button>

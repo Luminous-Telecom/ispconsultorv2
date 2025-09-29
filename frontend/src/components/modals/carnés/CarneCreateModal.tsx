@@ -350,7 +350,7 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
               </>
             ) : (
               <>
-                <i className="bi bi-check"></i> Criar Carnê
+                Criar Carnê
               </>
             )}
           </button>

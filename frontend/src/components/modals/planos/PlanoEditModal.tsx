@@ -380,7 +380,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                 </>
               ) : (
                 <>
-                  <i className="bi bi-check"></i> Salvar Alterações
+                  Salvar Alterações
                 </>
               )}
             </button>
