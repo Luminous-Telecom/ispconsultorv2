@@ -119,7 +119,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 
   const parcelasColumns = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'numero_parcela', label: 'Parcela', sortable: true },
+    { key: 'numero_titulo', label: 'Título', sortable: true },
     { 
       key: 'status', 
       label: 'Status', 
@@ -129,8 +129,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         </span>
       )
     },
-    { key: 'valor_parcela', label: 'Valor', render: (item: any) => {
-        const valor = parseFloat(item.valor_parcela) || 0;
+    { key: 'valor', label: 'Valor', render: (item: any) => {
+        const valor = parseFloat(item.valor) || 0;
         return `R$ ${valor.toFixed(2)}`;
       }
     },

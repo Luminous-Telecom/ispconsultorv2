@@ -243,26 +243,26 @@ const ClienteShow: React.FC = () => {
   // Colunas para tabela de títulos
   const titulosColumns = [
     {
-      key: 'numero_parcela',
-      label: 'Parcela',
-      sortable: true,
-      render: (titulo: any) => `#${titulo.numero_parcela}`
-    },
-    {
-      key: 'carne.numero_carne',
-      label: 'Carnê',
+      key: 'numero_titulo',
+      label: 'Título',
       sortable: true,
       render: (titulo: any) => (
-        <code className="text-primary">#{titulo.carne?.numero_carne}</code>
+        <code className="text-primary">#{titulo.numero_titulo}</code>
       )
     },
     {
-      key: 'valor_parcela',
+      key: 'plano.nome_plano',
+      label: 'Plano',
+      sortable: true,
+      render: (titulo: any) => titulo.plano?.nome_plano || '-'
+    },
+    {
+      key: 'valor',
       label: 'Valor',
       sortable: true,
       render: (titulo: any) => (
         <span className="fw-bold">
-          R$ {parseFloat(titulo.valor_parcela || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          R$ {parseFloat(titulo.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
         </span>
       )
     },
@@ -273,11 +273,11 @@ const ClienteShow: React.FC = () => {
       render: (titulo: any) => new Date(titulo.data_vencimento).toLocaleDateString('pt-BR')
     },
     {
-      key: 'pago',
+      key: 'status',
       label: 'Status',
       sortable: true,
       render: (titulo: any) => {
-        if (titulo.pago) {
+        if (titulo.status === 'pago') {
           return (
             <span className="badge bg-success">
               Pago
