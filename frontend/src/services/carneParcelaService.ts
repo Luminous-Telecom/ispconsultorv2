@@ -1,5 +1,5 @@
 import { apiService } from './api';
-import { CarneParcela, CarneParcelaFilters, PaginatedResponse } from '../types';
+import { CarneParcela, CarneParcelaFilters, PaginatedResponse, CreateCarneParcela } from '../types';
 import { API_CONFIG } from '../config/api';
 
 export class CarneParcelaService {
@@ -111,6 +111,17 @@ export class CarneParcelaService {
       return response;
     } catch (error) {
       console.error('Erro ao gerar PDF do boleto:', error);
+      throw error;
+    }
+  }
+
+  // Criar nova parcela
+  static async create(data: CreateCarneParcela): Promise<CarneParcela> {
+    try {
+      const response = await apiService.post<CarneParcela>('/carne-parcelas', data);
+      return response;
+    } catch (error) {
+      console.error('Erro ao criar parcela:', error);
       throw error;
     }
   }

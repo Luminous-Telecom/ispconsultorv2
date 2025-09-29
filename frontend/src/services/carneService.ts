@@ -136,7 +136,7 @@ export class CarneService {
 
   // Obter URL para impressão do carnê
   static getImprimirUrl(id: number): string {
-    return `${API_CONFIG.BASE_URL_WITHOUT_API}/carnes/${id}/imprimir`;
+    return `${API_CONFIG.BASE_URL}/carnes/${id}/imprimir`;
   }
 }
 

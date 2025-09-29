@@ -102,6 +102,19 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
     }
   }, [show, clienteId]);
 
+  // Auto-preenchimento do valor da parcela quando plano for selecionado
+  useEffect(() => {
+    if (formData.plano_id && planos) {
+      const planoSelecionado = planos.find((plano: any) => plano.id === formData.plano_id);
+      if (planoSelecionado && formData.valor_parcela === 0) {
+        setFormData(prev => ({
+          ...prev,
+          valor_parcela: Number(planoSelecionado.valor_mensal) || 0
+        }));
+      }
+    }
+  }, [formData.plano_id, planos]);
+
   // Mutation para criar carnê
   const createCarneMutation = useMutation({
     mutationFn: (data: CarneForm) => CarneService.create(data),
@@ -177,12 +190,14 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
 
   // Calcular valor total quando valor da parcela ou quantidade mudar
   useEffect(() => {
-    if (formData.valor_parcela > 0 && formData.quantidade_parcelas > 0) {
-      setFormData(prev => ({
-        ...prev,
-        valor_total: prev.valor_parcela * prev.quantidade_parcelas
-      }));
-    }
+    const valorParcela = Number(formData.valor_parcela) || 0;
+    const quantidadeParcelas = Number(formData.quantidade_parcelas) || 1;
+    const valorTotal = valorParcela * quantidadeParcelas;
+    
+    setFormData(prev => ({
+      ...prev,
+      valor_total: valorTotal
+    }));
   }, [formData.valor_parcela, formData.quantidade_parcelas]);
 
   return (
@@ -282,10 +297,14 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
               <input
                 type="number"
                 step="0.01"
+                min="0"
                 className={`form-control ${errors.valor_parcela ? 'is-invalid' : ''}`}
                 id="valor_parcela"
-                value={formData.valor_parcela}
-                onChange={(e) => handleInputChange('valor_parcela', parseFloat(e.target.value) || 0)}
+                value={formData.valor_parcela || ''}
+                onChange={(e) => {
+                  const valor = parseFloat(e.target.value) || 0;
+                  handleInputChange('valor_parcela', valor);
+                }}
                 disabled={createCarneMutation.isPending}
                 placeholder="0.00"
               />
@@ -303,7 +322,10 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
                 className={`form-control ${errors.quantidade_parcelas ? 'is-invalid' : ''}`}
                 id="quantidade_parcelas"
                 value={formData.quantidade_parcelas}
-                onChange={(e) => handleInputChange('quantidade_parcelas', parseInt(e.target.value) || 1)}
+                onChange={(e) => {
+                  const quantidade = parseInt(e.target.value) || 1;
+                  handleInputChange('quantidade_parcelas', quantidade);
+                }}
                 disabled={createCarneMutation.isPending}
               />
               {errors.quantidade_parcelas && <div className="invalid-feedback">{errors.quantidade_parcelas}</div>}
@@ -318,7 +340,7 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
                 step="0.01"
                 className="form-control form-control-sm"
                 id="valor_total"
-                value={formData.valor_total}
+                value={formData.valor_total || ''}
                 disabled={true}
                 placeholder="0.00"
               />

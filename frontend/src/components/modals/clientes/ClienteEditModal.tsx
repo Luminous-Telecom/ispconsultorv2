@@ -10,6 +10,8 @@ import { Cliente, Carne, CarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
+import CarneCreateModal from '../carnés/CarneCreateModal';
+import CarneParcelaCreateModal from '../carnés/CarneParcelaCreateModal';
 
 interface ClienteForm {
   cnpj: string;
@@ -98,6 +100,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [activeTab, setActiveTab] = useState('dados-basicos');
   const [showCarnes, setShowCarnes] = useState(true);
   const [showTitulos, setShowTitulos] = useState(true);
+  const [showCarneCreateModal, setShowCarneCreateModal] = useState(false);
+  const [showParcelaCreateModal, setShowParcelaCreateModal] = useState(false);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -285,89 +289,56 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   // Ações para o header do modal (apenas na aba Financeiro)
   const bulkActions = [
-    // Botão Novo Carnê (apenas quando Carnês está selecionado)
-    ...(showCarnes ? [{
+    // Botão Novo (baseado nos checkboxes selecionados)
+    ...(showCarnes || showTitulos ? [{
       label: 'Novo',
       action: () => {
-        console.log('Criar novo carnê para cliente:', clienteId);
+        if (showCarnes && !showTitulos) {
+          // Apenas carnês selecionado - abrir modal de carnê
+          setShowCarneCreateModal(true);
+        } else if (showTitulos && !showCarnes) {
+          // Apenas títulos selecionado - abrir modal de parcela
+          setShowParcelaCreateModal(true);
+        } else if (showCarnes && showTitulos) {
+          // Ambos selecionados - abrir modal de carnê por padrão
+          setShowCarneCreateModal(true);
+        }
       }
     }] : []),
     {
-      label: 'Imprimir Carnê',
+      label: 'Imprimir',
       action: async (selectedItems: any[]) => {
         try {
           for (const item of selectedItems) {
-            if (item.parcelas) {
-              // É um carnê completo
-              const url = CarneService.getImprimirUrl(Number(item.id));
-              window.open(url, '_blank');
-            } else {
-              // É uma parcela individual
+            // Se títulos está selecionado e o item é uma parcela individual
+            if (showTitulos && !showCarnes && !item.parcelas) {
+              // Imprimir título individual
               const url = CarneParcelaService.getBoletoUrl(Number(item.id));
               window.open(url, '_blank');
             }
+            // Se carnês está selecionado e o item é um carnê completo
+            else if (showCarnes && !showTitulos && item.parcelas) {
+              // Imprimir carnê completo
+              const url = CarneService.getImprimirUrl(Number(item.id));
+              window.open(url, '_blank');
+            }
+            // Se ambos estão selecionados, verificar o tipo do item
+            else if (showCarnes && showTitulos) {
+              if (item.parcelas) {
+                // É um carnê completo
+                const url = CarneService.getImprimirUrl(Number(item.id));
+                window.open(url, '_blank');
+              } else {
+                // É uma parcela individual
+                const url = CarneParcelaService.getBoletoUrl(Number(item.id));
+                window.open(url, '_blank');
+              }
+            }
           }
-          showNotification('Carnês/Boletos abertos para impressão', 'success');
+          showNotification('Documentos abertos para impressão', 'success');
         } catch (error) {
           console.error('Erro ao imprimir:', error);
           showNotification('Erro ao abrir impressão', 'error');
-        }
-      }
-    },
-    {
-      label: 'Imprimir Parcela',
-      action: async (selectedItems: any[]) => {
-        try {
-          for (const item of selectedItems) {
-            if (!item.parcelas) {
-              // Só funciona para parcelas individuais
-              const url = CarneParcelaService.getBoletoUrl(Number(item.id));
-              window.open(url, '_blank');
-            }
-          }
-          showNotification('Boletos abertos para impressão', 'success');
-        } catch (error) {
-          console.error('Erro ao imprimir parcelas:', error);
-          showNotification('Erro ao abrir impressão', 'error');
-        }
-      }
-    },
-    {
-      label: 'Editar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          // Por enquanto, apenas log - pode ser implementado modal de edição
-          console.log('Editar item:', selectedItems[0].id);
-          showNotification('Funcionalidade de edição será implementada em breve', 'info');
-        }
-      }
-    },
-    {
-      label: 'Receber',
-      action: async (selectedItems: any[]) => {
-        try {
-          for (const item of selectedItems) {
-            if (!item.parcelas) {
-              // Só funciona para parcelas individuais
-              await CarneParcelaService.marcarPago(Number(item.id));
-            }
-          }
-          showNotification('Pagamentos marcados como recebidos', 'success');
-          // Recarregar dados
-          refetchParcelas();
-        } catch (error) {
-          console.error('Erro ao marcar pagamentos:', error);
-          showNotification('Erro ao marcar pagamentos', 'error');
-        }
-      }
-    },
-    {
-      label: 'Excluir',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} item(s)?`)) {
-          selectedItems.forEach(item => {
-            console.log('Excluir item:', item.id);
-          });
         }
       }
     }
@@ -1562,6 +1533,28 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           </form>
         </div>
       </div>
+
+      {/* Modal de criação de carnê */}
+      <CarneCreateModal
+        show={showCarneCreateModal}
+        onClose={() => setShowCarneCreateModal(false)}
+        onSuccess={() => {
+          setShowCarneCreateModal(false);
+          refetchParcelas();
+        }}
+        clienteId={clienteId || undefined}
+      />
+
+      {/* Modal de criação de parcela/título */}
+      <CarneParcelaCreateModal
+        show={showParcelaCreateModal}
+        onClose={() => setShowParcelaCreateModal(false)}
+        onSuccess={() => {
+          setShowParcelaCreateModal(false);
+          refetchParcelas();
+        }}
+        clienteId={clienteId || undefined}
+      />
     </DraggableModal>
   );
 };
