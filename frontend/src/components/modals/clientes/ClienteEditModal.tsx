@@ -8,6 +8,8 @@ import { CarneParcelaService } from '../../../services/carneParcelaService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { Cliente, Carne, CarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
+import DataTable from '../../common/DataTable';
+import ModalHeaderActions from '../../common/ModalHeaderActions';
 
 interface ClienteForm {
   cnpj: string;
@@ -91,6 +93,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [activeTab, setActiveTab] = useState('dados-basicos');
   const [showCarnes, setShowCarnes] = useState(true);
   const [showTitulos, setShowTitulos] = useState(true);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
@@ -172,6 +178,141 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   };
 
   const filteredData = getFilteredData();
+
+  // Colunas para o DataTable
+  const columns = [
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      render: (item: any) => item.id
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (item: any) => {
+        if (item.parcelas) {
+          // Carnê agrupado
+          const isCompletamentePago = item.parcelas_pagas === item.parcelas.length;
+          const temParcelasVencidas = item.parcelas.some((p: any) => p.status === 'vencido');
+          
+          return (
+            <span className={`badge ${
+              isCompletamentePago ? 'bg-success' :
+              temParcelasVencidas ? 'bg-danger' :
+              item.parcelas_pagas > 0 ? 'bg-warning' :
+              'bg-secondary'
+            }`}>
+              {isCompletamentePago ? '✔ Recebimento em dia' :
+               temParcelasVencidas ? '✔ Recebimento em atraso' :
+               item.parcelas_pagas > 0 ? 'Parcialmente pago' :
+               'Pendente'}
+            </span>
+          );
+        } else {
+          // Parcela individual
+          return (
+            <span className={`badge ${
+              item.status === 'pago' ? 'bg-success' :
+              item.status === 'vencido' ? 'bg-danger' :
+              item.status === 'pendente' ? 'bg-warning' :
+              'bg-secondary'
+            }`}>
+              {item.status === 'pago' ? '✔ Recebimento em dia' :
+               item.status === 'vencido' ? '✔ Recebimento em atraso' :
+               item.status === 'pendente' ? 'Pendente' :
+               item.status}
+            </span>
+          );
+        }
+      }
+    },
+    {
+      key: 'numero_carne',
+      label: 'Cart. cob.',
+      render: (item: any) => {
+        if (item.parcelas) {
+          return item.numero_carne;
+        } else {
+          return item.carne?.numero_carne || '-';
+        }
+      }
+    },
+    {
+      key: 'quantidade_parcelas',
+      label: 'Parcel.',
+      render: (item: any) => {
+        if (item.parcelas) {
+          return item.quantidade_parcelas;
+        } else {
+          return item.numero_parcela;
+        }
+      }
+    },
+    {
+      key: 'data_vencimento',
+      label: 'Vencimento',
+      render: (item: any) => {
+        if (item.parcelas) {
+          return new Date(item.data_vencimento_primeira).toLocaleDateString('pt-BR');
+        } else {
+          return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
+        }
+      }
+    },
+    {
+      key: 'valor',
+      label: 'Valor',
+      render: (item: any) => {
+        if (item.parcelas) {
+          return `R$ ${item.valor_total_real.toFixed(2)}`;
+        } else {
+          return `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
+        }
+      }
+    },
+    {
+      key: 'valor_pago',
+      label: 'Valor baixado',
+      render: (item: any) => {
+        if (item.parcelas) {
+          const isCompletamentePago = item.parcelas_pagas === item.parcelas.length;
+          return isCompletamentePago ? `R$ ${item.valor_pago_total.toFixed(2)}` : 'R$ 0,00';
+        } else {
+          return item.pago ? `R$ ${Number(item.valor_pago || item.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00';
+        }
+      }
+    },
+    {
+      key: 'valor_aberto',
+      label: 'Valor aberto',
+      render: (item: any) => {
+        if (item.parcelas) {
+          const isCompletamentePago = item.parcelas_pagas === item.parcelas.length;
+          return isCompletamentePago ? 'R$ 0,00' : `R$ ${(item.valor_total_real - item.valor_pago_total).toFixed(2)}`;
+        } else {
+          return item.pago ? 'R$ 0,00' : `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
+        }
+      }
+    },
+    {
+      key: 'tipo',
+      label: 'Carnê/Título',
+      render: (item: any) => {
+        if (item.parcelas) {
+          return <span className="badge bg-primary">Carnê</span>;
+        } else {
+          return (
+            <span className={`badge ${
+              item.carne?.quantidade_parcelas === 1 ? 'bg-info' : 'bg-primary'
+            }`}>
+              {item.carne?.quantidade_parcelas === 1 ? 'Título' : 'Carnê'}
+            </span>
+          );
+        }
+      }
+    }
+  ];
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
@@ -913,292 +1054,128 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 <div className="col-12">
                   <h6 className="text-primary mb-3">Financeiro do Cliente</h6>
                   
-                  {/* Botões de Ação */}
-                  <div className="d-flex gap-2 mb-3">
-                    <button className="btn btn-sm btn-primary">Editar</button>
-                    <button className="btn btn-sm btn-primary">Receber</button>
-                    <div className="dropdown">
-                      <button className="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        Outras ações
-                      </button>
-                      <ul className="dropdown-menu">
-                        <li><a className="dropdown-item" href="#">Imprimir Boletos</a></li>
-                        <li><a className="dropdown-item" href="#">Gerar NF base financeiro</a></li>
-                        <li><a className="dropdown-item" href="#">Copiar código Pix</a></li>
-                      </ul>
+                  {/* Filtros de Tipo */}
+                  <div className="d-flex gap-3 mb-3">
+                    <div className="form-check">
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        id="showCarnes"
+                        checked={showCarnes}
+                        onChange={(e) => setShowCarnes(e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="showCarnes">
+                        Carnês
+                      </label>
+                    </div>
+                    <div className="form-check">
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        id="showTitulos"
+                        checked={showTitulos}
+                        onChange={(e) => setShowTitulos(e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="showTitulos">
+                        Títulos
+                      </label>
+                    </div>
+                    <div className="form-check">
+                      <input className="form-check-input" type="checkbox" id="showCanceled" />
+                      <label className="form-check-label" htmlFor="showCanceled">
+                        Mostrar cancelados
+                      </label>
                     </div>
                   </div>
 
-                  {/* Filtros e Paginação */}
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div className="d-flex gap-3">
-                      <div className="form-check">
-                        <input 
-                          className="form-check-input" 
-                          type="checkbox" 
-                          id="showCarnes"
-                          checked={showCarnes}
-                          onChange={(e) => setShowCarnes(e.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="showCarnes">
-                          Carnês
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input 
-                          className="form-check-input" 
-                          type="checkbox" 
-                          id="showTitulos"
-                          checked={showTitulos}
-                          onChange={(e) => setShowTitulos(e.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="showTitulos">
-                          Títulos
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input className="form-check-input" type="checkbox" id="showCanceled" />
-                        <label className="form-check-label" htmlFor="showCanceled">
-                          Mostrar cancelados
-                        </label>
-                      </div>
-                    </div>
-                    <div className="d-flex gap-2 align-items-center">
-                      <span className="small text-muted">
-                        1 - {filteredData.length} / {filteredData.length}
-                      </span>
-                      <button className="btn btn-sm btn-outline-secondary">
-                        <i className="bi bi-download"></i>
-                      </button>
-                    </div>
+                  {/* DataTable com ações personalizadas */}
+                  <div style={{ paddingLeft: '0.5rem' }}>
+                    <DataTable
+                      data={filteredData}
+                      columns={columns}
+                      isLoading={isLoadingParcelas}
+                      showHeader={false}
+                      onSelectionChange={setSelectedItems}
+                      onSearch={setSearch}
+                      pagination={{
+                        from: (page - 1) * limit + 1,
+                        to: Math.min(page * limit, filteredData.length),
+                        total: filteredData.length,
+                        current_page: page,
+                        last_page: Math.ceil(filteredData.length / limit)
+                      }}
+                      limit={limit}
+                      setLimit={setLimit}
+                      setPage={setPage}
+                      bulkActions={[
+                        {
+                          label: 'Editar',
+                          action: () => console.log('Editar selecionados'),
+                          disabled: (selectedItems: any[]) => selectedItems.length === 0
+                        },
+                        {
+                          label: 'Receber',
+                          action: () => console.log('Receber selecionados'),
+                          disabled: (selectedItems: any[]) => selectedItems.length === 0
+                        }
+                      ]}
+                      emptyMessage={
+                        !showCarnes && !showTitulos 
+                          ? 'Selecione pelo menos um tipo para visualizar os dados.'
+                          : 'Este cliente ainda não possui registros cadastrados com os filtros selecionados.'
+                      }
+                    />
                   </div>
 
-                  {isLoadingParcelas ? (
-                    <div className="text-center py-4">
-                      <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Carregando...</span>
+                  {/* Resumo Financeiro */}
+                  {filteredData.length > 0 && (
+                    <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                      <div className="d-flex align-items-center">
+                        <i className="bi bi-info-circle text-muted me-2"></i>
+                        <span className="small text-muted">Legenda de cores</span>
                       </div>
-                    </div>
-                  ) : filteredData.length > 0 ? (
-                    <>
-                      {/* Tabela de Carnês/Parcelas */}
-                      <div className="table-responsive">
-                        <table className="table table-hover table-sm">
-                          <thead className="table-dark">
-                            <tr>
-                              <th><input type="checkbox" /></th>
-                              <th>ID</th>
-                              <th>Status</th>
-                              <th>Cart. cob.</th>
-                              <th>Contrat.</th>
-                              <th>Parcel.</th>
-                              <th>Contrat.</th>
-                              <th>ID Venda</th>
-                              <th>Emissão</th>
-                              <th>Vencimento</th>
-                              <th>Valor</th>
-                              <th>Valor baixado</th>
-                              <th>Valor aberto</th>
-                              <th>Valor receb.</th>
-                              <th>Data pagam.</th>
-                              <th>Data crédito</th>
-                              <th>Data baixa</th>
-                              <th>Tipo</th>
-                              <th>Carnê/Título</th>
-                              <th>Título registrado</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredData.map((item: any, index: number) => {
-                              // Se é um carnê agrupado (mostrando apenas carnês)
-                              if (showCarnes && !showTitulos && item.parcelas) {
-                                const carne = item;
-                                const isCompletamentePago = carne.parcelas_pagas === carne.parcelas.length;
-                                const temParcelasVencidas = carne.parcelas.some((p: any) => p.status === 'vencido');
-                                
-                                return (
-                                  <tr key={`carne-${carne.id}`}>
-                                    <td><input type="checkbox" /></td>
-                                    <td>{carne.id}</td>
-                                    <td>
-                                      <span className={`badge ${
-                                        isCompletamentePago ? 'bg-success' :
-                                        temParcelasVencidas ? 'bg-danger' :
-                                        carne.parcelas_pagas > 0 ? 'bg-warning' :
-                                        'bg-secondary'
-                                      }`}>
-                                        {isCompletamentePago ? '✔ Recebimento em dia' :
-                                         temParcelasVencidas ? '✔ Recebimento em atraso' :
-                                         carne.parcelas_pagas > 0 ? 'Parcialmente pago' :
-                                         'Pendente'}
-                                      </span>
-                                    </td>
-                                    <td>{carne.numero_carne}</td>
-                                    <td>-</td>
-                                    <td>{carne.quantidade_parcelas}</td>
-                                    <td>-</td>
-                                    <td>-</td>
-                                    <td>{new Date(carne.created_at).toLocaleDateString('pt-BR')}</td>
-                                    <td>{new Date(carne.data_vencimento_primeira).toLocaleDateString('pt-BR')}</td>
-                                    <td>R$ {carne.valor_total_real.toFixed(2)}</td>
-                                    <td>
-                                      {isCompletamentePago ? `R$ ${carne.valor_pago_total.toFixed(2)}` : 'R$ 0,00'}
-                                    </td>
-                                    <td>
-                                      {isCompletamentePago ? 'R$ 0,00' : `R$ ${(carne.valor_total_real - carne.valor_pago_total).toFixed(2)}`}
-                                    </td>
-                                    <td>
-                                      {isCompletamentePago ? `R$ ${carne.valor_pago_total.toFixed(2)}` : 'R$ 0,00'}
-                                    </td>
-                                    <td>
-                                      {isCompletamentePago ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
-                                    </td>
-                                    <td>
-                                      {isCompletamentePago ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
-                                    </td>
-                                    <td>
-                                      {isCompletamentePago ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
-                                    </td>
-                                    <td>Boleto</td>
-                                    <td>
-                                      <span className="badge bg-primary">Carnê</span>
-                                    </td>
-                                    <td>Não</td>
-                                  </tr>
-                                );
-                              }
-                              
-                              // Se é uma parcela individual (títulos ou ambos)
-                              const parcela = item;
-                              return (
-                                <tr key={parcela.id}>
-                                  <td><input type="checkbox" /></td>
-                                  <td>{parcela.id}</td>
-                                  <td>
-                                    <span className={`badge ${
-                                      parcela.status === 'pago' ? 'bg-success' :
-                                      parcela.status === 'vencido' ? 'bg-danger' :
-                                      parcela.status === 'pendente' ? 'bg-warning' :
-                                      'bg-secondary'
-                                    }`}>
-                                      {parcela.status === 'pago' ? '✔ Recebimento em dia' :
-                                       parcela.status === 'vencido' ? '✔ Recebimento em atraso' :
-                                       parcela.status === 'pendente' ? 'Pendente' :
-                                       parcela.status}
-                                    </span>
-                                  </td>
-                                  <td>{parcela.carne?.numero_carne || '-'}</td>
-                                  <td>-</td>
-                                  <td>{parcela.numero_parcela}</td>
-                                  <td>-</td>
-                                  <td>-</td>
-                                  <td>{new Date(parcela.created_at).toLocaleDateString('pt-BR')}</td>
-                                  <td>{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
-                                  <td>R$ {Number(parcela.valor_parcela || 0).toFixed(2)}</td>
-                                  <td>
-                                    {parcela.pago ? `R$ ${Number(parcela.valor_pago || parcela.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00'}
-                                  </td>
-                                  <td>
-                                    {parcela.pago ? 'R$ 0,00' : `R$ ${Number(parcela.valor_parcela || 0).toFixed(2)}`}
-                                  </td>
-                                  <td>
-                                    {parcela.pago ? `R$ ${Number(parcela.valor_pago || parcela.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00'}
-                                  </td>
-                                  <td>
-                                    {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
-                                  </td>
-                                  <td>
-                                    {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
-                                  </td>
-                                  <td>
-                                    {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
-                                  </td>
-                                  <td>Boleto</td>
-                                  <td>
-                                    <span className={`badge ${
-                                      parcela.carne?.quantidade_parcelas === 1 ? 'bg-info' : 'bg-primary'
-                                    }`}>
-                                      {parcela.carne?.quantidade_parcelas === 1 ? 'Título' : 'Carnê'}
-                                    </span>
-                                  </td>
-                                  <td>Não</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Resumo Financeiro */}
-                      <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
-                        <div className="d-flex align-items-center">
-                          <i className="bi bi-info-circle text-muted me-2"></i>
-                          <span className="small text-muted">Legenda de cores</span>
+                      <div className="d-flex gap-4">
+                        <div className="text-end">
+                          <div className="small text-muted">Valor:</div>
+                          <strong>R$ {filteredData.reduce((sum, item) => {
+                            if (item.parcelas) {
+                              return sum + item.valor_total_real;
+                            } else {
+                              return sum + Number(item.valor_parcela || 0);
+                            }
+                          }, 0).toFixed(2)}</strong>
                         </div>
-                        <div className="d-flex gap-4">
-                          <div className="text-end">
-                            <div className="small text-muted">Valor:</div>
-                            <strong>R$ {filteredData.reduce((sum, item) => {
-                              if (item.parcelas) {
-                                // Carnê agrupado
-                                return sum + item.valor_total_real;
-                              } else {
-                                // Parcela individual
-                                return sum + Number(item.valor_parcela || 0);
-                              }
-                            }, 0).toFixed(2)}</strong>
-                          </div>
-                          <div className="text-end">
-                            <div className="small text-muted">Valor baixado:</div>
-                            <strong>R$ {filteredData.reduce((sum, item) => {
-                              if (item.parcelas) {
-                                // Carnê agrupado
-                                return sum + item.valor_pago_total;
-                              } else {
-                                // Parcela individual
-                                return sum + (item.pago ? Number(item.valor_pago || item.valor_parcela || 0) : 0);
-                              }
-                            }, 0).toFixed(2)}</strong>
-                          </div>
-                          <div className="text-end">
-                            <div className="small text-muted">Valor aberto:</div>
-                            <strong>R$ {filteredData.reduce((sum, item) => {
-                              if (item.parcelas) {
-                                // Carnê agrupado
-                                return sum + (item.valor_total_real - item.valor_pago_total);
-                              } else {
-                                // Parcela individual
-                                return sum + (item.pago ? 0 : Number(item.valor_parcela || 0));
-                              }
-                            }, 0).toFixed(2)}</strong>
-                          </div>
-                          <div className="text-end">
-                            <div className="small text-muted">Valor cancelado:</div>
-                            <strong>R$ {filteredData.reduce((sum, item) => {
-                              if (item.parcelas) {
-                                // Carnê agrupado - verificar se todas as parcelas estão canceladas
-                                const todasCanceladas = item.parcelas.every((p: any) => p.status === 'cancelado');
-                                return sum + (todasCanceladas ? item.valor_total_real : 0);
-                              } else {
-                                // Parcela individual
-                                return sum + (item.status === 'cancelado' ? Number(item.valor_parcela || 0) : 0);
-                              }
-                            }, 0).toFixed(2)}</strong>
-                          </div>
+                        <div className="text-end">
+                          <div className="small text-muted">Valor baixado:</div>
+                          <strong>R$ {filteredData.reduce((sum, item) => {
+                            if (item.parcelas) {
+                              return sum + item.valor_pago_total;
+                            } else {
+                              return sum + (item.pago ? Number(item.valor_pago || item.valor_parcela || 0) : 0);
+                            }
+                          }, 0).toFixed(2)}</strong>
                         </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="card">
-                      <div className="card-body text-center py-5">
-                        <i className="bi bi-receipt text-muted" style={{ fontSize: '3rem' }}></i>
-                        <h6 className="text-muted mt-3">Nenhum registro encontrado</h6>
-                        <p className="text-muted mb-0">
-                          {!showCarnes && !showTitulos 
-                            ? 'Selecione pelo menos um tipo para visualizar os dados.'
-                            : 'Este cliente ainda não possui registros cadastrados com os filtros selecionados.'
-                          }
-                        </p>
+                        <div className="text-end">
+                          <div className="small text-muted">Valor aberto:</div>
+                          <strong>R$ {filteredData.reduce((sum, item) => {
+                            if (item.parcelas) {
+                              return sum + (item.valor_total_real - item.valor_pago_total);
+                            } else {
+                              return sum + (item.pago ? 0 : Number(item.valor_parcela || 0));
+                            }
+                          }, 0).toFixed(2)}</strong>
+                        </div>
+                        <div className="text-end">
+                          <div className="small text-muted">Valor cancelado:</div>
+                          <strong>R$ {filteredData.reduce((sum, item) => {
+                            if (item.parcelas) {
+                              const todasCanceladas = item.parcelas.every((p: any) => p.status === 'cancelado');
+                              return sum + (todasCanceladas ? item.valor_total_real : 0);
+                            } else {
+                              return sum + (item.status === 'cancelado' ? Number(item.valor_parcela || 0) : 0);
+                            }
+                          }, 0).toFixed(2)}</strong>
+                        </div>
                       </div>
                     </div>
                   )}
