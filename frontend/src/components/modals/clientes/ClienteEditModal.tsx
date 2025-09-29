@@ -3,8 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../../../services/clienteService';
 import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
+import { CarneService } from '../../../services/carneService';
+import { CarneParcelaService } from '../../../services/carneParcelaService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { Cliente } from '../../../types';
+import { Cliente, Carne, CarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 
 interface ClienteForm {
@@ -87,6 +89,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ClienteForm>>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
+  const [selectedCarne, setSelectedCarne] = useState<Carne | null>(null);
 
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
@@ -105,6 +108,20 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const { data: bancosData } = useQuery({
     queryKey: ['bancos'],
     queryFn: () => BancoService.list({ page: 1, limit: 100 }),
+  });
+
+  // Buscar carnês do cliente
+  const { data: carnesData, isLoading: isLoadingCarnes } = useQuery({
+    queryKey: ['carnes', 'cliente', clienteId],
+    queryFn: () => CarneService.list({ cliente_id: clienteId!, limit: 100 }),
+    enabled: !!clienteId,
+  });
+
+  // Buscar parcelas do carnê selecionado
+  const { data: parcelasData, isLoading: isLoadingParcelas } = useQuery({
+    queryKey: ['parcelas', selectedCarne?.id],
+    queryFn: () => CarneParcelaService.findByCarne(selectedCarne!.id),
+    enabled: !!selectedCarne?.id,
   });
 
   // Mutation para atualizar cliente
@@ -847,24 +864,150 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 <div className="col-12">
                   <h6 className="text-primary mb-3">Títulos e Carnês</h6>
                   
-                  <div className="alert alert-info">
-                    <strong>Em Desenvolvimento:</strong> Esta aba mostrará a listagem de títulos e carnês do cliente.
-                    <br />
-                    <small>Funcionalidade será implementada em breve.</small>
-                  </div>
+                  {isLoadingCarnes ? (
+                    <div className="text-center py-4">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Carregando...</span>
+                      </div>
+                    </div>
+                  ) : carnesData?.data && carnesData.data.length > 0 ? (
+                    <div className="row">
+                      {/* Lista de Carnês */}
+                      <div className="col-md-6">
+                        <div className="card">
+                          <div className="card-header">
+                            <h6 className="mb-0">Carnês ({carnesData.data.length})</h6>
+                          </div>
+                          <div className="card-body p-0" style={{ maxHeight: '400px', overflow: 'auto' }}>
+                            {carnesData.data.map((carne: Carne) => (
+                              <div 
+                                key={carne.id}
+                                className={`p-3 border-bottom cursor-pointer ${selectedCarne?.id === carne.id ? 'bg-primary text-white' : 'bg-light'}`}
+                                onClick={() => setSelectedCarne(carne)}
+                                style={{ cursor: 'pointer' }}
+                              >
+                                <div className="d-flex justify-content-between align-items-start">
+                                  <div>
+                                    <strong>#{carne.numero_carne}</strong>
+                                    <br />
+                                    <small className={selectedCarne?.id === carne.id ? 'text-white-50' : 'text-muted'}>
+                                      {carne.quantidade_parcelas} parcelas
+                                    </small>
+                                  </div>
+                                  <div className="text-end">
+                                    <span className={`badge ${
+                                      carne.status === 'ativo' ? 'bg-success' :
+                                      carne.status === 'pago' ? 'bg-primary' :
+                                      carne.status === 'cancelado' ? 'bg-danger' :
+                                      carne.status === 'parcial' ? 'bg-warning' :
+                                      'bg-secondary'
+                                    }`}>
+                                      {carne.status}
+                                    </span>
+                                    <br />
+                                    <small className={selectedCarne?.id === carne.id ? 'text-white-50' : 'text-muted'}>
+                                      R$ {Number(carne.valor_total || 0).toFixed(2)}
+                                    </small>
+                                  </div>
+                                </div>
+                                <div className="mt-2">
+                                  <small className={selectedCarne?.id === carne.id ? 'text-white-50' : 'text-muted'}>
+                                    Vencimento: {new Date(carne.data_vencimento_primeira).toLocaleDateString('pt-BR')}
+                                  </small>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
 
-                  {/* Placeholder para futura implementação */}
-                  <div className="card">
-                    <div className="card-header">
-                      <h6 className="mb-0">Histórico Financeiro</h6>
+                      {/* Detalhes das Parcelas */}
+                      <div className="col-md-6">
+                        {selectedCarne ? (
+                          <div className="card">
+                            <div className="card-header">
+                              <h6 className="mb-0">
+                                Parcelas - #{selectedCarne.numero_carne}
+                                <button 
+                                  className="btn btn-sm btn-outline-secondary float-end"
+                                  onClick={() => setSelectedCarne(null)}
+                                >
+                                  ×
+                                </button>
+                              </h6>
+                            </div>
+                            <div className="card-body p-0" style={{ maxHeight: '400px', overflow: 'auto' }}>
+                              {isLoadingParcelas ? (
+                                <div className="text-center py-4">
+                                  <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span className="visually-hidden">Carregando...</span>
+                                  </div>
+                                </div>
+                              ) : parcelasData && parcelasData.length > 0 ? (
+                                parcelasData.map((parcela: CarneParcela) => (
+                                  <div key={parcela.id} className="p-3 border-bottom">
+                                    <div className="d-flex justify-content-between align-items-center">
+                                      <div>
+                                        <strong>Parcela {parcela.numero_parcela}</strong>
+                                        <br />
+                                        <small className="text-muted">
+                                          Vencimento: {new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}
+                                        </small>
+                                      </div>
+                                      <div className="text-end">
+                                        <span className={`badge ${
+                                          parcela.status === 'pago' ? 'bg-success' :
+                                          parcela.status === 'vencido' ? 'bg-danger' :
+                                          parcela.status === 'pendente' ? 'bg-warning' :
+                                          'bg-secondary'
+                                        }`}>
+                                          {parcela.status}
+                                        </span>
+                                        <br />
+                                        <small className="text-muted">
+                                          R$ {Number(parcela.valor_parcela || 0).toFixed(2)}
+                                        </small>
+                                      </div>
+                                    </div>
+                                    {parcela.data_pagamento && (
+                                      <div className="mt-2">
+                                        <small className="text-success">
+                                          Pago em: {new Date(parcela.data_pagamento).toLocaleDateString('pt-BR')}
+                                        </small>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-center py-4">
+                                  <p className="text-muted mb-0">Nenhuma parcela encontrada</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="card">
+                            <div className="card-body text-center py-5">
+                              <i className="bi bi-receipt text-muted" style={{ fontSize: '3rem' }}></i>
+                              <p className="text-muted mt-3 mb-0">
+                                Selecione um carnê para visualizar as parcelas
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="card-body">
-                      <p className="text-muted mb-0">
-                        Aqui será exibida a lista de títulos e carnês do cliente, 
-                        incluindo status de pagamento, valores e datas de vencimento.
-                      </p>
+                  ) : (
+                    <div className="card">
+                      <div className="card-body text-center py-5">
+                        <i className="bi bi-receipt text-muted" style={{ fontSize: '3rem' }}></i>
+                        <h6 className="text-muted mt-3">Nenhum carnê encontrado</h6>
+                        <p className="text-muted mb-0">
+                          Este cliente ainda não possui carnês cadastrados.
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
