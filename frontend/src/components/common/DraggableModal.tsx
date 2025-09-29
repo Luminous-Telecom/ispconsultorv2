@@ -137,6 +137,18 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           min-height: 30px !important;
           padding: 4px 8px !important;
           font-size: 13px !important;
+          resize: vertical !important;
+          overflow: auto !important;
+          max-height: none !important;
+          width: 100% !important;
+        }
+        
+        /* Sobrescrever qualquer CSS do Bootstrap */
+        .modal-content textarea {
+          resize: vertical !important;
+          height: auto !important;
+          min-height: 30px !important;
+          overflow: auto !important;
         }
         
         .modal-content .form-control:disabled:not(textarea) {
@@ -158,6 +170,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           min-height: 30px !important;
           padding: 4px 8px !important;
           font-size: 13px !important;
+          resize: vertical !important;
+          overflow: auto !important;
         }
         
         .modal-content .form-select:not(:disabled) {
