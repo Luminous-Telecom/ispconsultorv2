@@ -100,7 +100,11 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       }
     },
     { key: 'data_vencimento_primeira', label: 'Vencimento', sortable: true },
-    { key: 'banco.nome', label: 'Banco' }
+    { 
+      key: 'banco', 
+      label: 'Banco',
+      render: (item: any) => item.banco?.nome || 'N/A'
+    }
   ];
 
   const parcelasColumns = [
