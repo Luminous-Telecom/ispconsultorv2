@@ -97,24 +97,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       }
     },
     { key: 'data_vencimento', label: 'Vencimento', sortable: true },
-    { key: 'banco.nome', label: 'Banco' },
-    {
-      key: 'actions',
-      label: 'Ações',
-      render: (item: any) => (
-        <div className="btn-group btn-group-sm">
-          <button className="btn btn-outline-primary" title="Visualizar">
-            <i className="bi bi-eye"></i>
-          </button>
-          <button className="btn btn-outline-secondary" title="Editar">
-            <i className="bi bi-pencil"></i>
-          </button>
-          <button className="btn btn-outline-info" title="Imprimir">
-            <i className="bi bi-printer"></i>
-          </button>
-        </div>
-      )
-    }
+    { key: 'banco.nome', label: 'Banco' }
   ];
 
   const parcelasColumns = [
@@ -135,21 +118,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       }
     },
     { key: 'data_vencimento', label: 'Vencimento', sortable: true },
-    { key: 'data_pagamento', label: 'Pagamento', sortable: true },
-    {
-      key: 'actions',
-      label: 'Ações',
-      render: (item: any) => (
-        <div className="btn-group btn-group-sm">
-          <button className="btn btn-outline-success" title="Marcar como Pago">
-            <i className="bi bi-check"></i>
-          </button>
-          <button className="btn btn-outline-info" title="Imprimir">
-            <i className="bi bi-printer"></i>
-          </button>
-        </div>
-      )
-    }
+    { key: 'data_pagamento', label: 'Pagamento', sortable: true }
   ];
 
   if (!cliente) {
