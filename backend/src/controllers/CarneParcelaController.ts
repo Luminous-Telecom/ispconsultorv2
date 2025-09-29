@@ -1000,7 +1000,7 @@ export class CarneParcelaController {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Boleto - Parcela ${parcela.id}</title>
+            <title>Boleto - Título ${titulo.id}</title>
             <style>
                 @page {
                     size: A4;
