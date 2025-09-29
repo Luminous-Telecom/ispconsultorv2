@@ -89,6 +89,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ClienteForm>>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
+  const [showCarnes, setShowCarnes] = useState(true);
+  const [showTitulos, setShowTitulos] = useState(true);
 
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
@@ -115,6 +117,20 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     queryFn: () => CarneParcelaService.list({ cliente_id: clienteId!, limit: 100 }),
     enabled: !!clienteId,
   });
+
+  // Filtrar dados baseado nos checkboxes
+  const filteredData = parcelasData?.data?.filter((parcela: CarneParcela) => {
+    if (!parcela.carne) return false;
+    
+    const isCarne = parcela.carne.quantidade_parcelas > 1;
+    const isTitulo = parcela.carne.quantidade_parcelas === 1;
+    
+    if (showCarnes && showTitulos) return true;
+    if (showCarnes && !showTitulos) return isCarne;
+    if (!showCarnes && showTitulos) return isTitulo;
+    
+    return false;
+  }) || [];
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
@@ -874,15 +890,41 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   {/* Filtros e Paginação */}
                   <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="showCanceled" />
-                      <label className="form-check-label" htmlFor="showCanceled">
-                        Mostrar cancelados
-                      </label>
+                    <div className="d-flex gap-3">
+                      <div className="form-check">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="showCarnes"
+                          checked={showCarnes}
+                          onChange={(e) => setShowCarnes(e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="showCarnes">
+                          Carnês
+                        </label>
+                      </div>
+                      <div className="form-check">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="showTitulos"
+                          checked={showTitulos}
+                          onChange={(e) => setShowTitulos(e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="showTitulos">
+                          Títulos
+                        </label>
+                      </div>
+                      <div className="form-check">
+                        <input className="form-check-input" type="checkbox" id="showCanceled" />
+                        <label className="form-check-label" htmlFor="showCanceled">
+                          Mostrar cancelados
+                        </label>
+                      </div>
                     </div>
                     <div className="d-flex gap-2 align-items-center">
                       <span className="small text-muted">
-                        1 - {parcelasData?.data?.length || 0} / {parcelasData?.data?.length || 0}
+                        1 - {filteredData.length} / {filteredData.length}
                       </span>
                       <button className="btn btn-sm btn-outline-secondary">
                         <i className="bi bi-download"></i>
@@ -896,7 +938,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <span className="visually-hidden">Carregando...</span>
                       </div>
                     </div>
-                  ) : parcelasData?.data && parcelasData.data.length > 0 ? (
+                  ) : filteredData.length > 0 ? (
                     <>
                       {/* Tabela de Carnês/Parcelas */}
                       <div className="table-responsive">
@@ -921,11 +963,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                               <th>Data crédito</th>
                               <th>Data baixa</th>
                               <th>Tipo</th>
+                              <th>Carnê/Título</th>
                               <th>Título registrado</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {parcelasData.data.map((parcela: CarneParcela) => (
+                            {filteredData.map((parcela: CarneParcela) => (
                               <tr key={parcela.id}>
                                 <td><input type="checkbox" /></td>
                                 <td>{parcela.id}</td>
@@ -969,6 +1012,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
                                 </td>
                                 <td>Boleto</td>
+                                <td>
+                                  <span className={`badge ${
+                                    parcela.carne?.quantidade_parcelas === 1 ? 'bg-info' : 'bg-primary'
+                                  }`}>
+                                    {parcela.carne?.quantidade_parcelas === 1 ? 'Título' : 'Carnê'}
+                                  </span>
+                                </td>
                                 <td>Não</td>
                               </tr>
                             ))}
@@ -985,19 +1035,19 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <div className="d-flex gap-4">
                           <div className="text-end">
                             <div className="small text-muted">Valor:</div>
-                            <strong>R$ {parcelasData.data.reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {filteredData.reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor baixado:</div>
-                            <strong>R$ {parcelasData.data.filter(p => p.pago).reduce((sum, parcela) => sum + Number(parcela.valor_pago || parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {filteredData.filter(p => p.pago).reduce((sum, parcela) => sum + Number(parcela.valor_pago || parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor aberto:</div>
-                            <strong>R$ {parcelasData.data.filter(p => !p.pago).reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {filteredData.filter(p => !p.pago).reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor cancelado:</div>
-                            <strong>R$ {parcelasData.data.filter(p => p.status === 'cancelado').reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {filteredData.filter(p => p.status === 'cancelado').reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
                           </div>
                         </div>
                       </div>
@@ -1006,9 +1056,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     <div className="card">
                       <div className="card-body text-center py-5">
                         <i className="bi bi-receipt text-muted" style={{ fontSize: '3rem' }}></i>
-                        <h6 className="text-muted mt-3">Nenhuma parcela encontrada</h6>
+                        <h6 className="text-muted mt-3">Nenhum registro encontrado</h6>
                         <p className="text-muted mb-0">
-                          Este cliente ainda não possui parcelas cadastradas.
+                          {!showCarnes && !showTitulos 
+                            ? 'Selecione pelo menos um tipo para visualizar os dados.'
+                            : 'Este cliente ainda não possui registros cadastrados com os filtros selecionados.'
+                          }
                         </p>
                       </div>
                     </div>
