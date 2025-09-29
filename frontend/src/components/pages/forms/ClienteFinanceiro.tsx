@@ -39,9 +39,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const carnes = carnesData?.data || [];
   const parcelas = parcelasData?.data || [];
 
-  // Debug: verificar dados dos carnês
-  console.log('Dados dos carnês:', carnes);
-
   const handleMarcarPago = async (selectedItems: any[]) => {
     try {
       for (const item of selectedItems) {
@@ -179,9 +176,13 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               data={carnes}
               columns={carnesColumns}
               isLoading={carnesLoading}
+              pagination={carnesData?.pagination}
               limit={10}
               setLimit={() => {}}
               setPage={() => {}}
+              emptyMessage="Nenhum carnê encontrado"
+              searchPlaceholder="Número do carnê"
+              onSearch={() => {}}
               bulkActions={[
                 {
                   label: 'Novo Carnê',
@@ -200,30 +201,29 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                   action: handleImprimirCarne
                 }
               ]}
+              onSort={() => {}}
+              sortColumn=""
+              sortDirection="asc"
+              onRefresh={refetchCarnes}
             />
           </div>
 
           <div className={`tab-pane fade ${activeTab === 1 ? 'show active' : ''}`}>
-            <div className="d-flex justify-content-between align-items-center mb-1 mt-1">
-              <small className="mb-0 text-muted">Títulos Individuais</small>
-              <div className="btn-group">
-                <button className="btn btn-primary btn-sm">
-                  <i className="bi bi-plus me-1"></i>
-                  Novo Título
-                </button>
-                <button className="btn btn-outline-secondary btn-sm">
-                  <i className="bi bi-arrow-clockwise"></i>
-                </button>
-              </div>
+            <div className="d-flex justify-content-between align-items-center mb-2 mt-2">
+              <small className="mb-0">Títulos Individuais</small>
             </div>
             
             <DataTable
               data={parcelas}
               columns={parcelasColumns}
               isLoading={parcelasLoading}
+              pagination={parcelasData?.pagination}
               limit={10}
               setLimit={() => {}}
               setPage={() => {}}
+              emptyMessage="Nenhuma parcela encontrada"
+              searchPlaceholder="Número da parcela"
+              onSearch={() => {}}
               bulkActions={[
                 {
                   label: 'Marcar como Pago',
@@ -235,6 +235,10 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                   action: handleImprimirParcela
                 }
               ]}
+              onSort={() => {}}
+              sortColumn=""
+              sortDirection="asc"
+              onRefresh={refetchParcelas}
             />
           </div>
         </div>
