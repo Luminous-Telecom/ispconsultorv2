@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { usePlanos, useDeletePlano } from '../../hooks/usePlanos';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
+import PlanoCreateModal from '../modals/PlanoCreateModal';
+import PlanoEditModal from '../modals/PlanoEditModal';
 
 interface Plano {
   id: number;
@@ -23,6 +25,9 @@ const Planos: React.FC = () => {
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showPlanoCreateModal, setShowPlanoCreateModal] = useState(false);
+  const [showPlanoEditModal, setShowPlanoEditModal] = useState(false);
+  const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
 
   // Query para buscar planos
   const { data: planosData, isLoading, refetch } = usePlanos({
@@ -118,7 +123,8 @@ const Planos: React.FC = () => {
     switch (action) {
       case 'editar':
         if (selectedItems.length === 1) {
-          window.location.href = `/planos/${selectedItems[0].id}/edit`;
+          setSelectedPlanoId(selectedItems[0].id);
+          setShowPlanoEditModal(true);
         }
         break;
       case 'deletar':
@@ -127,6 +133,23 @@ const Planos: React.FC = () => {
         }
         break;
     }
+  };
+
+  const handleClosePlanoCreateModal = () => {
+    setShowPlanoCreateModal(false);
+  };
+
+  const handleClosePlanoEditModal = () => {
+    setShowPlanoEditModal(false);
+    setSelectedPlanoId(null);
+  };
+
+  const handlePlanoCreateSuccess = () => {
+    refetch();
+  };
+
+  const handlePlanoEditSuccess = () => {
+    refetch();
   };
 
   // Definição das colunas da tabela
@@ -222,7 +245,7 @@ const Planos: React.FC = () => {
         bulkActions={[
           {
             label: "Novo",
-            action: () => window.location.href = "/planos/create"
+            action: () => setShowPlanoCreateModal(true)
           },
           {
             label: "Editar",
@@ -237,6 +260,21 @@ const Planos: React.FC = () => {
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onRefresh={refetch}
+      />
+
+      {/* Modal de criação de plano */}
+      <PlanoCreateModal
+        show={showPlanoCreateModal}
+        onClose={handleClosePlanoCreateModal}
+        onSuccess={handlePlanoCreateSuccess}
+      />
+
+      {/* Modal de edição de plano */}
+      <PlanoEditModal
+        show={showPlanoEditModal}
+        onClose={handleClosePlanoEditModal}
+        planoId={selectedPlanoId}
+        onSuccess={handlePlanoEditSuccess}
       />
     </>
   );
