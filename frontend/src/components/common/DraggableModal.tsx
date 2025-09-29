@@ -120,7 +120,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     <>
       {/* Estilos CSS para diferenciação de campos */}
       <style>{`
-        .modal-content .form-control:not(:disabled) {
+        .modal-content .form-control:not(:disabled):not(textarea) {
           background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
@@ -129,12 +129,33 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           font-size: 13px !important;
         }
         
-        .modal-content .form-control:disabled {
+        .modal-content textarea.form-control:not(:disabled) {
+          background-color: #2d3748 !important;
+          border-color: #4a5568 !important;
+          color: #ffffff !important;
+          height: auto !important;
+          min-height: 30px !important;
+          padding: 4px 8px !important;
+          font-size: 13px !important;
+        }
+        
+        .modal-content .form-control:disabled:not(textarea) {
           background-color: #1a202c !important;
           border-color: #2d3748 !important;
           color: #718096 !important;
           cursor: not-allowed !important;
           height: 30px !important;
+          padding: 4px 8px !important;
+          font-size: 13px !important;
+        }
+        
+        .modal-content textarea.form-control:disabled {
+          background-color: #1a202c !important;
+          border-color: #2d3748 !important;
+          color: #718096 !important;
+          cursor: not-allowed !important;
+          height: auto !important;
+          min-height: 30px !important;
           padding: 4px 8px !important;
           font-size: 13px !important;
         }
