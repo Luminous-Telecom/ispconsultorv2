@@ -269,6 +269,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const sortedData = getSortedData();
 
+  // Aplicar paginação aos dados ordenados
+  const getPaginatedData = () => {
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    return sortedData.slice(startIndex, endIndex);
+  };
+
+  const paginatedData = getPaginatedData();
+
   // Colunas para o DataTable
   const columns = [
     {
@@ -401,6 +410,61 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           );
         }
       }
+    },
+    {
+      key: 'acoes',
+      label: 'Ações',
+      sortable: false,
+      render: (item: any) => (
+        <div className="d-flex gap-1">
+          <button 
+            className="btn btn-sm btn-outline-primary"
+            title="Imprimir"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (item.parcelas) {
+                console.log('Imprimir carnê:', item.id);
+              } else {
+                console.log('Imprimir parcela:', item.id);
+              }
+            }}
+          >
+            <i className="bi bi-printer"></i>
+          </button>
+          <button 
+            className="btn btn-sm btn-outline-secondary"
+            title="Editar"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('Editar item:', item.id);
+            }}
+          >
+            <i className="bi bi-pencil"></i>
+          </button>
+          <button 
+            className="btn btn-sm btn-outline-success"
+            title="Receber"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('Receber pagamento:', item.id);
+            }}
+          >
+            <i className="bi bi-check-circle"></i>
+          </button>
+          <button 
+            className="btn btn-sm btn-outline-danger"
+            title="Excluir"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm('Tem certeza que deseja excluir este item?')) {
+                console.log('Excluir item:', item.id);
+              }
+            }}
+          >
+            <i className="bi bi-trash"></i>
+          </button>
+        </div>
+      )
     }
   ];
 
@@ -1181,7 +1245,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   {/* DataTable usando componente separado */}
                   <div style={{ paddingLeft: '0.5rem' }}>
                     <DataTable
-                      data={sortedData}
+                      data={paginatedData}
                       columns={columns}
                       isLoading={isLoadingParcelas}
                       showHeader={false}
@@ -1194,7 +1258,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       sortColumn={sortColumn}
                       sortDirection={sortDirection}
                       pagination={{
-                        from: (page - 1) * limit + 1,
+                        from: sortedData.length > 0 ? (page - 1) * limit + 1 : 0,
                         to: Math.min(page * limit, sortedData.length),
                         total: sortedData.length,
                         current_page: page,
@@ -1205,12 +1269,55 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       setPage={setPage}
                       bulkActions={[
                         {
+                          label: 'Imprimir Carnê',
+                          action: (selectedItems: any[]) => {
+                            selectedItems.forEach(item => {
+                              if (item.parcelas) {
+                                // É um carnê completo
+                                console.log('Imprimir carnê:', item.id);
+                              } else {
+                                // É uma parcela individual
+                                console.log('Imprimir parcela:', item.id);
+                              }
+                            });
+                          }
+                        },
+                        {
+                          label: 'Imprimir Parcela',
+                          action: (selectedItems: any[]) => {
+                            selectedItems.forEach(item => {
+                              if (!item.parcelas) {
+                                // Só funciona para parcelas individuais
+                                console.log('Imprimir parcela individual:', item.id);
+                              }
+                            });
+                          }
+                        },
+                        {
                           label: 'Editar',
-                          action: () => console.log('Editar selecionados')
+                          action: (selectedItems: any[]) => {
+                            if (selectedItems.length > 0) {
+                              console.log('Editar item:', selectedItems[0].id);
+                            }
+                          }
                         },
                         {
                           label: 'Receber',
-                          action: () => console.log('Receber selecionados')
+                          action: (selectedItems: any[]) => {
+                            selectedItems.forEach(item => {
+                              console.log('Receber pagamento:', item.id);
+                            });
+                          }
+                        },
+                        {
+                          label: 'Excluir',
+                          action: (selectedItems: any[]) => {
+                            if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} item(s)?`)) {
+                              selectedItems.forEach(item => {
+                                console.log('Excluir item:', item.id);
+                              });
+                            }
+                          }
                         }
                       ]}
                       emptyMessage={
