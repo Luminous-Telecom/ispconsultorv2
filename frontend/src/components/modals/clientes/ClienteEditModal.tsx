@@ -118,19 +118,60 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     enabled: !!clienteId,
   });
 
-  // Filtrar dados baseado nos checkboxes
-  const filteredData = parcelasData?.data?.filter((parcela: CarneParcela) => {
-    if (!parcela.carne) return false;
+  // Filtrar e agrupar dados baseado nos checkboxes
+  const getFilteredData = () => {
+    if (!parcelasData?.data) return [];
     
-    const isCarne = parcela.carne.quantidade_parcelas > 1;
-    const isTitulo = parcela.carne.quantidade_parcelas === 1;
+    const allData = parcelasData.data.filter((parcela: CarneParcela) => {
+      if (!parcela.carne) return false;
+      
+      const isCarne = parcela.carne.quantidade_parcelas > 1;
+      const isTitulo = parcela.carne.quantidade_parcelas === 1;
+      
+      if (showCarnes && showTitulos) return true;
+      if (showCarnes && !showTitulos) return isCarne;
+      if (!showCarnes && showTitulos) return isTitulo;
+      
+      return false;
+    });
+
+    // Se mostrando carnês, agrupar por carnê (mostrar carnê completo)
+    if (showCarnes && !showTitulos) {
+      const carnesAgrupados = new Map();
+      
+      allData.forEach((parcela: CarneParcela) => {
+        if (parcela.carne && parcela.carne.quantidade_parcelas > 1) {
+          const carneId = parcela.carne.id;
+          
+          if (!carnesAgrupados.has(carneId)) {
+            carnesAgrupados.set(carneId, {
+              ...parcela.carne,
+              parcelas: [],
+              valor_total_real: 0,
+              parcelas_pagas: 0,
+              valor_pago_total: 0
+            });
+          }
+          
+          const carneAgrupado = carnesAgrupados.get(carneId);
+          carneAgrupado.parcelas.push(parcela);
+          carneAgrupado.valor_total_real += Number(parcela.valor_parcela || 0);
+          
+          if (parcela.pago) {
+            carneAgrupado.parcelas_pagas++;
+            carneAgrupado.valor_pago_total += Number(parcela.valor_pago || parcela.valor_parcela || 0);
+          }
+        }
+      });
+      
+      return Array.from(carnesAgrupados.values());
+    }
     
-    if (showCarnes && showTitulos) return true;
-    if (showCarnes && !showTitulos) return isCarne;
-    if (!showCarnes && showTitulos) return isTitulo;
-    
-    return false;
-  }) || [];
+    // Para títulos ou ambos, mostrar parcelas individuais
+    return allData;
+  };
+
+  const filteredData = getFilteredData();
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
@@ -968,60 +1009,122 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             </tr>
                           </thead>
                           <tbody>
-                            {filteredData.map((parcela: CarneParcela) => (
-                              <tr key={parcela.id}>
-                                <td><input type="checkbox" /></td>
-                                <td>{parcela.id}</td>
-                                <td>
-                                  <span className={`badge ${
-                                    parcela.status === 'pago' ? 'bg-success' :
-                                    parcela.status === 'vencido' ? 'bg-danger' :
-                                    parcela.status === 'pendente' ? 'bg-warning' :
-                                    'bg-secondary'
-                                  }`}>
-                                    {parcela.status === 'pago' ? '✔ Recebimento em dia' :
-                                     parcela.status === 'vencido' ? '✔ Recebimento em atraso' :
-                                     parcela.status === 'pendente' ? 'Pendente' :
-                                     parcela.status}
-                                  </span>
-                                </td>
-                                <td>{parcela.carne?.numero_carne || '-'}</td>
-                                <td>-</td>
-                                <td>{parcela.numero_parcela}</td>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>{new Date(parcela.created_at).toLocaleDateString('pt-BR')}</td>
-                                <td>{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
-                                <td>R$ {Number(parcela.valor_parcela || 0).toFixed(2)}</td>
-                                <td>
-                                  {parcela.pago ? `R$ ${Number(parcela.valor_pago || parcela.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00'}
-                                </td>
-                                <td>
-                                  {parcela.pago ? 'R$ 0,00' : `R$ ${Number(parcela.valor_parcela || 0).toFixed(2)}`}
-                                </td>
-                                <td>
-                                  {parcela.pago ? `R$ ${Number(parcela.valor_pago || parcela.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00'}
-                                </td>
-                                <td>
-                                  {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
-                                </td>
-                                <td>
-                                  {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
-                                </td>
-                                <td>
-                                  {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
-                                </td>
-                                <td>Boleto</td>
-                                <td>
-                                  <span className={`badge ${
-                                    parcela.carne?.quantidade_parcelas === 1 ? 'bg-info' : 'bg-primary'
-                                  }`}>
-                                    {parcela.carne?.quantidade_parcelas === 1 ? 'Título' : 'Carnê'}
-                                  </span>
-                                </td>
-                                <td>Não</td>
-                              </tr>
-                            ))}
+                            {filteredData.map((item: any, index: number) => {
+                              // Se é um carnê agrupado (mostrando apenas carnês)
+                              if (showCarnes && !showTitulos && item.parcelas) {
+                                const carne = item;
+                                const isCompletamentePago = carne.parcelas_pagas === carne.parcelas.length;
+                                const temParcelasVencidas = carne.parcelas.some((p: any) => p.status === 'vencido');
+                                
+                                return (
+                                  <tr key={`carne-${carne.id}`}>
+                                    <td><input type="checkbox" /></td>
+                                    <td>{carne.id}</td>
+                                    <td>
+                                      <span className={`badge ${
+                                        isCompletamentePago ? 'bg-success' :
+                                        temParcelasVencidas ? 'bg-danger' :
+                                        carne.parcelas_pagas > 0 ? 'bg-warning' :
+                                        'bg-secondary'
+                                      }`}>
+                                        {isCompletamentePago ? '✔ Recebimento em dia' :
+                                         temParcelasVencidas ? '✔ Recebimento em atraso' :
+                                         carne.parcelas_pagas > 0 ? 'Parcialmente pago' :
+                                         'Pendente'}
+                                      </span>
+                                    </td>
+                                    <td>{carne.numero_carne}</td>
+                                    <td>-</td>
+                                    <td>{carne.quantidade_parcelas}</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>{new Date(carne.created_at).toLocaleDateString('pt-BR')}</td>
+                                    <td>{new Date(carne.data_vencimento_primeira).toLocaleDateString('pt-BR')}</td>
+                                    <td>R$ {carne.valor_total_real.toFixed(2)}</td>
+                                    <td>
+                                      {isCompletamentePago ? `R$ ${carne.valor_pago_total.toFixed(2)}` : 'R$ 0,00'}
+                                    </td>
+                                    <td>
+                                      {isCompletamentePago ? 'R$ 0,00' : `R$ ${(carne.valor_total_real - carne.valor_pago_total).toFixed(2)}`}
+                                    </td>
+                                    <td>
+                                      {isCompletamentePago ? `R$ ${carne.valor_pago_total.toFixed(2)}` : 'R$ 0,00'}
+                                    </td>
+                                    <td>
+                                      {isCompletamentePago ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                    </td>
+                                    <td>
+                                      {isCompletamentePago ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                    </td>
+                                    <td>
+                                      {isCompletamentePago ? new Date(carne.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                    </td>
+                                    <td>Boleto</td>
+                                    <td>
+                                      <span className="badge bg-primary">Carnê</span>
+                                    </td>
+                                    <td>Não</td>
+                                  </tr>
+                                );
+                              }
+                              
+                              // Se é uma parcela individual (títulos ou ambos)
+                              const parcela = item;
+                              return (
+                                <tr key={parcela.id}>
+                                  <td><input type="checkbox" /></td>
+                                  <td>{parcela.id}</td>
+                                  <td>
+                                    <span className={`badge ${
+                                      parcela.status === 'pago' ? 'bg-success' :
+                                      parcela.status === 'vencido' ? 'bg-danger' :
+                                      parcela.status === 'pendente' ? 'bg-warning' :
+                                      'bg-secondary'
+                                    }`}>
+                                      {parcela.status === 'pago' ? '✔ Recebimento em dia' :
+                                       parcela.status === 'vencido' ? '✔ Recebimento em atraso' :
+                                       parcela.status === 'pendente' ? 'Pendente' :
+                                       parcela.status}
+                                    </span>
+                                  </td>
+                                  <td>{parcela.carne?.numero_carne || '-'}</td>
+                                  <td>-</td>
+                                  <td>{parcela.numero_parcela}</td>
+                                  <td>-</td>
+                                  <td>-</td>
+                                  <td>{new Date(parcela.created_at).toLocaleDateString('pt-BR')}</td>
+                                  <td>{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                                  <td>R$ {Number(parcela.valor_parcela || 0).toFixed(2)}</td>
+                                  <td>
+                                    {parcela.pago ? `R$ ${Number(parcela.valor_pago || parcela.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00'}
+                                  </td>
+                                  <td>
+                                    {parcela.pago ? 'R$ 0,00' : `R$ ${Number(parcela.valor_parcela || 0).toFixed(2)}`}
+                                  </td>
+                                  <td>
+                                    {parcela.pago ? `R$ ${Number(parcela.valor_pago || parcela.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00'}
+                                  </td>
+                                  <td>
+                                    {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
+                                  </td>
+                                  <td>
+                                    {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
+                                  </td>
+                                  <td>
+                                    {parcela.data_pagamento ? new Date(parcela.data_pagamento).toLocaleDateString('pt-BR') : '-'}
+                                  </td>
+                                  <td>Boleto</td>
+                                  <td>
+                                    <span className={`badge ${
+                                      parcela.carne?.quantidade_parcelas === 1 ? 'bg-info' : 'bg-primary'
+                                    }`}>
+                                      {parcela.carne?.quantidade_parcelas === 1 ? 'Título' : 'Carnê'}
+                                    </span>
+                                  </td>
+                                  <td>Não</td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -1035,19 +1138,52 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <div className="d-flex gap-4">
                           <div className="text-end">
                             <div className="small text-muted">Valor:</div>
-                            <strong>R$ {filteredData.reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {filteredData.reduce((sum, item) => {
+                              if (item.parcelas) {
+                                // Carnê agrupado
+                                return sum + item.valor_total_real;
+                              } else {
+                                // Parcela individual
+                                return sum + Number(item.valor_parcela || 0);
+                              }
+                            }, 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor baixado:</div>
-                            <strong>R$ {filteredData.filter(p => p.pago).reduce((sum, parcela) => sum + Number(parcela.valor_pago || parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {filteredData.reduce((sum, item) => {
+                              if (item.parcelas) {
+                                // Carnê agrupado
+                                return sum + item.valor_pago_total;
+                              } else {
+                                // Parcela individual
+                                return sum + (item.pago ? Number(item.valor_pago || item.valor_parcela || 0) : 0);
+                              }
+                            }, 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor aberto:</div>
-                            <strong>R$ {filteredData.filter(p => !p.pago).reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {filteredData.reduce((sum, item) => {
+                              if (item.parcelas) {
+                                // Carnê agrupado
+                                return sum + (item.valor_total_real - item.valor_pago_total);
+                              } else {
+                                // Parcela individual
+                                return sum + (item.pago ? 0 : Number(item.valor_parcela || 0));
+                              }
+                            }, 0).toFixed(2)}</strong>
                           </div>
                           <div className="text-end">
                             <div className="small text-muted">Valor cancelado:</div>
-                            <strong>R$ {filteredData.filter(p => p.status === 'cancelado').reduce((sum, parcela) => sum + Number(parcela.valor_parcela || 0), 0).toFixed(2)}</strong>
+                            <strong>R$ {filteredData.reduce((sum, item) => {
+                              if (item.parcelas) {
+                                // Carnê agrupado - verificar se todas as parcelas estão canceladas
+                                const todasCanceladas = item.parcelas.every((p: any) => p.status === 'cancelado');
+                                return sum + (todasCanceladas ? item.valor_total_real : 0);
+                              } else {
+                                // Parcela individual
+                                return sum + (item.status === 'cancelado' ? Number(item.valor_parcela || 0) : 0);
+                              }
+                            }, 0).toFixed(2)}</strong>
                           </div>
                         </div>
                       </div>
