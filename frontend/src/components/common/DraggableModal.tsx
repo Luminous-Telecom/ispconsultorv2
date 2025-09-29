@@ -269,7 +269,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
           {/* Ações do header (botões e filtros) */}
           {headerActions && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
               {headerActions}
             </div>
           )}
