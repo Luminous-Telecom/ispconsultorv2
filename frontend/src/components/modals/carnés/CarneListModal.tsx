@@ -82,18 +82,6 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
     }
   };
 
-  const handleFilter = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    refetch();
-  };
-
-  const handleReset = () => {
-    setSearch('');
-    setStatus('');
-    setPage(1);
-    refetch();
-  };
 
   const handleDelete = async (carneId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este carnê?')) {
@@ -267,8 +255,6 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
                 ]
               }
             ]}
-            onFilter={handleFilter}
-            onReset={handleReset}
           />
         </div>
 

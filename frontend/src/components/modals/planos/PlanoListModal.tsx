@@ -70,18 +70,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     return tipos[tipo] || tipo;
   };
 
-  const handleFilter = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    refetch();
-  };
-
-  const handleReset = () => {
-    setSearch('');
-    setStatus('');
-    setPage(1);
-    refetch();
-  };
 
   const handleDelete = async (planoId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este plano?')) {
@@ -233,8 +221,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
                 ]
               }
             ]}
-            onFilter={handleFilter}
-            onReset={handleReset}
           />
         </div>
 

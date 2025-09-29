@@ -46,18 +46,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
   const deleteClienteMutation = useDeleteCliente();
 
-  const handleFilter = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    refetch();
-  };
-
-  const handleReset = () => {
-    setSearch('');
-    setStatus('');
-    setPage(1);
-    refetch();
-  };
 
   const handleDelete = async (clienteId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
@@ -196,8 +184,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
                 ]
               }
             ]}
-            onFilter={handleFilter}
-            onReset={handleReset}
           />
         </div>
 

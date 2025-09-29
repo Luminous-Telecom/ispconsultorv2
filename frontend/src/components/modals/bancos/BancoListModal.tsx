@@ -63,18 +63,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     }
   };
 
-  const handleFilter = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    refetch();
-  };
-
-  const handleReset = () => {
-    setSearch('');
-    setTipo('');
-    setPage(1);
-    refetch();
-  };
 
   const handleDelete = async (bancoId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este banco?')) {
@@ -221,8 +209,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
                 ]
               }
             ]}
-            onFilter={handleFilter}
-            onReset={handleReset}
           />
         </div>
 
