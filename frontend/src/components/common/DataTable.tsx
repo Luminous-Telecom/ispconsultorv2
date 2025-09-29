@@ -151,87 +151,84 @@ const DataTable: React.FC<TableProps> = ({
             </div>
           </div>
 
-          {/* Segunda linha: Busca, paginação e controles */}
-          <div className="d-flex align-items-center justify-content-between">
-            {/* Busca */}
-            <div className="d-flex align-items-center">
-              {onSearch && (
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  placeholder={searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  style={{ width: '250px', height: '32px' }}
-                />
-              )}
+          {/* Segunda linha: Busca centralizada */}
+          {onSearch && (
+            <div className="d-flex justify-content-center mb-2">
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                placeholder={searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                style={{ width: '400px', height: '32px' }}
+              />
             </div>
+          )}
 
-            {/* Controles à direita */}
-            <div className="d-flex align-items-center gap-2">
-              {/* Seletor de linhas por página */}
-              <select 
-                className="form-select form-select-sm" 
-                value={limit}
-                onChange={(e) => setLimit(parseInt(e.target.value))}
-                style={{ width: '80px', height: '32px', cursor: 'pointer' }}
+          {/* Terceira linha: Paginação e controles */}
+          <div className="d-flex align-items-center justify-content-center gap-2">
+            {/* Seletor de linhas por página */}
+            <select 
+              className="form-select form-select-sm" 
+              value={limit}
+              onChange={(e) => setLimit(parseInt(e.target.value))}
+              style={{ width: '80px', height: '32px', cursor: 'pointer' }}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={15}>15</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+
+            {/* Paginação compacta */}
+            <div className="d-flex align-items-center gap-1">
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={goToFirstPage}
+                disabled={!pagination || pagination.current_page <= 1}
               >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-
-              {/* Paginação compacta */}
-              <div className="d-flex align-items-center gap-1">
-                <button 
-                  className="btn btn-outline-secondary btn-sm" 
-                  onClick={goToFirstPage}
-                  disabled={!pagination || pagination.current_page <= 1}
-                >
-                  <i className="bi bi-chevron-double-left"></i>
-                </button>
-                <button 
-                  className="btn btn-outline-secondary btn-sm" 
-                  onClick={goToPrevPage}
-                  disabled={!pagination || pagination.current_page <= 1}
-                >
-                  <i className="bi bi-chevron-left"></i>
-                </button>
-                
-                <span className="small text-muted mx-2">
-                  {pagination?.from || 0} - {pagination?.to || 0} / {pagination?.total || 0}
-                </span>
-                
-                <button 
-                  className="btn btn-outline-secondary btn-sm" 
-                  onClick={goToNextPage}
-                  disabled={!pagination || pagination.current_page >= (pagination?.last_page || 1)}
-                >
-                  <i className="bi bi-chevron-right"></i>
-                </button>
-                <button 
-                  className="btn btn-outline-secondary btn-sm" 
-                  onClick={goToLastPage}
-                  disabled={!pagination || pagination.current_page >= (pagination?.last_page || 1)}
-                >
-                  <i className="bi bi-chevron-double-right"></i>
-                </button>
-              </div>
-
-              {/* Botão de refresh */}
-              {onRefresh && (
-                <button 
-                  className="btn btn-outline-secondary btn-sm"
-                  onClick={onRefresh}
-                  title="Recarregar dados"
-                >
-                  <i className="bi bi-arrow-clockwise"></i>
-                </button>
-              )}
+                <i className="bi bi-chevron-double-left"></i>
+              </button>
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={goToPrevPage}
+                disabled={!pagination || pagination.current_page <= 1}
+              >
+                <i className="bi bi-chevron-left"></i>
+              </button>
+              
+              <span className="small text-muted mx-2">
+                {pagination?.from || 0} - {pagination?.to || 0} / {pagination?.total || 0}
+              </span>
+              
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={goToNextPage}
+                disabled={!pagination || pagination.current_page >= (pagination?.last_page || 1)}
+              >
+                <i className="bi bi-chevron-right"></i>
+              </button>
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={goToLastPage}
+                disabled={!pagination || pagination.current_page >= (pagination?.last_page || 1)}
+              >
+                <i className="bi bi-chevron-double-right"></i>
+              </button>
             </div>
+
+            {/* Botão de refresh */}
+            {onRefresh && (
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={onRefresh}
+                title="Recarregar dados"
+              >
+                <i className="bi bi-arrow-clockwise"></i>
+              </button>
+            )}
           </div>
         </div>
       )}
