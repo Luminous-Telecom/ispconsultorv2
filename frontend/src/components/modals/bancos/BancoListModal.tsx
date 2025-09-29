@@ -3,6 +3,7 @@ import { useBancos, useDeleteBanco } from '../../../hooks/useBancos';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
+import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { BancoCreateModal } from './index';
 
 interface Banco {
@@ -157,107 +158,20 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     }
   ];
 
-  // Ações para o header do modal
+  // Ações para o header do modal usando componente reutilizável
   const headerActions = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-      {/* Linha 1: Botões de ação */}
-      <div className="d-flex" style={{ gap: '8px' }}>
-        {bulkActions.map((bulkAction, index) => {
-          const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-          const isDisabled = !isNewButton && selectedItems.length === 0;
-          
-          return (
-            <button
-              key={index}
-              className="btn btn-sm btn-primary"
-              onClick={() => {
-                if (!isDisabled) {
-                  bulkAction.action(selectedItems);
-                }
-              }}
-              disabled={isDisabled}
-              style={{ flexShrink: 0 }}
-            >
-              {bulkAction.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Linha 2: Busca centralizada */}
-      <div className="d-flex justify-content-center">
-        <input
-          type="text"
-          className="form-control form-control-sm"
-          placeholder="Buscar por nome do banco..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: '400px', height: '32px' }}
-        />
-      </div>
-
-      {/* Linha 3: Controles centralizados */}
-      <div className="d-flex align-items-center justify-content-center gap-2">
-        {/* Seletor de linhas por página */}
-        <select 
-          className="form-select form-select-sm" 
-          value={limit}
-          onChange={(e) => setLimit(parseInt(e.target.value))}
-          style={{ width: '80px', height: '32px', cursor: 'pointer' }}
-        >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={15}>15</option>
-          <option value={25}>25</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-        </select>
-
-        {/* Paginação compacta */}
-        <div className="d-flex align-items-center gap-1">
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(1)}
-            disabled={!bancosData?.pagination || bancosData.pagination.current_page <= 1}
-          >
-            <i className="bi bi-chevron-double-left"></i>
-          </button>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(page - 1)}
-            disabled={!bancosData?.pagination || bancosData.pagination.current_page <= 1}
-          >
-            <i className="bi bi-chevron-left"></i>
-          </button>
-          <span className="small text-muted mx-2">
-            {bancosData?.pagination ? `${bancosData.pagination.from} - ${bancosData.pagination.to} / ${bancosData.pagination.total}` : '0 - 0 / 0'}
-          </span>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(page + 1)}
-            disabled={!bancosData?.pagination || bancosData.pagination.current_page >= bancosData.pagination.last_page}
-          >
-            <i className="bi bi-chevron-right"></i>
-          </button>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(bancosData?.pagination?.last_page || 1)}
-            disabled={!bancosData?.pagination || bancosData.pagination.current_page >= bancosData.pagination.last_page}
-          >
-            <i className="bi bi-chevron-double-right"></i>
-          </button>
-        </div>
-
-        {/* Botão de refresh */}
-        <button 
-          className="btn btn-outline-secondary btn-sm"
-          onClick={() => refetch()}
-          title="Recarregar dados"
-        >
-          <i className="bi bi-arrow-clockwise"></i>
-        </button>
-      </div>
-    </div>
+    <ModalHeaderActions
+      bulkActions={bulkActions}
+      selectedItems={selectedItems}
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Buscar por nome do banco..."
+      limit={limit}
+      onLimitChange={setLimit}
+      pagination={bancosData?.pagination}
+      onPageChange={setPage}
+      onRefresh={() => refetch()}
+    />
   );
 
   return (
