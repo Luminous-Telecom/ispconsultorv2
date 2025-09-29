@@ -280,6 +280,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   // Ações para o header do modal (apenas na aba Financeiro)
   const bulkActions = [
+    // Botão Novo Carnê (apenas quando Carnês está selecionado)
+    ...(showCarnes ? [{
+      label: 'Novo',
+      action: () => {
+        console.log('Criar novo carnê para cliente:', clienteId);
+      }
+    }] : []),
     {
       label: 'Imprimir Carnê',
       action: (selectedItems: any[]) => {
@@ -1208,12 +1215,14 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   <div className="d-flex justify-content-start mb-3">
                     <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
                       {bulkActions.map((bulkAction, index) => {
-                        const isDisabled = selectedItems.length === 0;
+                        // Botão "Novo" sempre habilitado, outros apenas quando há seleção
+                        const isNewButton = bulkAction.label === 'Novo';
+                        const isDisabled = !isNewButton && selectedItems.length === 0;
                         
                         return (
                           <button
                             key={index}
-                            className={`btn btn-sm btn-${index === 0 || index === 1 ? 'primary' : index === 2 ? 'secondary' : index === 3 ? 'success' : 'danger'}`}
+                            className="btn btn-sm btn-primary"
                             onClick={() => {
                               if (!isDisabled) {
                                 bulkAction.action(selectedItems);
