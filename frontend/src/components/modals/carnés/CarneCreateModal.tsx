@@ -25,12 +25,14 @@ interface CarneCreateModalProps {
   show: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  clienteId?: number;
 }
 
 const CarneCreateModal: React.FC<CarneCreateModalProps> = ({ 
   show, 
   onClose, 
-  onSuccess 
+  onSuccess,
+  clienteId
 }) => {
   const [formData, setFormData] = useState<CarneForm>({
     cliente_id: 0,
@@ -89,6 +91,16 @@ const CarneCreateModal: React.FC<CarneCreateModalProps> = ({
       carregarNumeroParcelasPadrao();
     }
   }, [show]);
+
+  // Definir cliente_id quando clienteId for fornecido
+  useEffect(() => {
+    if (show && clienteId) {
+      setFormData(prev => ({
+        ...prev,
+        cliente_id: clienteId
+      }));
+    }
+  }, [show, clienteId]);
 
   // Mutation para criar carnê
   const createCarneMutation = useMutation({

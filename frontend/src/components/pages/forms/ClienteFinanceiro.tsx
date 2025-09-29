@@ -354,6 +354,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         show={showCarneCreateModal}
         onClose={handleCloseCarneCreateModal}
         onSuccess={handleCarneCreateSuccess}
+        clienteId={cliente.id}
       />
     </div>
   );
