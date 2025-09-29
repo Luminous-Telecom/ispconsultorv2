@@ -17,7 +17,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   size = 'lg',
   className = ''
 }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: -1, y: -1 }); // -1 indica que ainda não foi centralizado
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
@@ -37,15 +37,18 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
   // Centralizar modal na tela e ajustar altura automaticamente
   useEffect(() => {
-    if (show && modalRef.current) {
+    if (show) {
       const { width } = getSizeClasses();
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       
-      // Posição centralizada
+      // Usar altura estimada baseada no tamanho do modal
+      const estimatedHeight = size === 'sm' ? 400 : size === 'md' ? 500 : size === 'lg' ? 600 : 700;
+      
+      // Posição centralizada - sempre recalcular quando abrir
       setPosition({
-        x: (screenWidth - width) / 2,
-        y: (screenHeight - 400) / 2 // Centralizado verticalmente
+        x: Math.max(0, (screenWidth - width) / 2), // Evitar posição negativa
+        y: Math.max(0, (screenHeight - estimatedHeight) / 2) // Evitar posição negativa
       });
       
       // Largura fixa, altura será automática
@@ -135,6 +138,20 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   }, [show, onClose]);
 
   if (!show) return null;
+  
+  // Garantir que o modal sempre tenha uma posição válida
+  if (position.x === -1 || position.y === -1) {
+    const { width } = getSizeClasses();
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    const estimatedHeight = size === 'sm' ? 400 : size === 'md' ? 500 : size === 'lg' ? 600 : 700;
+    
+    setPosition({
+      x: Math.max(0, (screenWidth - width) / 2),
+      y: Math.max(0, (screenHeight - estimatedHeight) / 2)
+    });
+    return null; // Não renderizar até ter posição válida
+  }
 
   return (
     <>
