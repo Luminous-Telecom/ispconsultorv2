@@ -25,7 +25,6 @@ const Layout: React.FC = () => {
   };
 
   const menuItems = [
-    { path: '/dashboard', icon: 'bi-house', label: 'Dashboard', isModal: false },
     { path: '/clientes', icon: 'bi-people', label: 'Clientes', isModal: true, modalHandler: () => setShowClienteModal(true) },
     { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => setShowPlanoModal(true) },
     { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => setShowBancoModal(true) },
@@ -87,7 +86,7 @@ const Layout: React.FC = () => {
               <i className="bi bi-list"></i>
             </button>
             <h2 className="h4 mb-0">
-              {menuItems.find(item => isActive(item.path))?.label || 'Dashboard'}
+              Dashboard
             </h2>
           </div>
           
