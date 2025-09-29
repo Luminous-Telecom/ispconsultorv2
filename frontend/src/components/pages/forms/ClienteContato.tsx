@@ -66,33 +66,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
             </div>
           </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Ramal</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.ramal || ''}
-              onChange={(e) => handleInputChange('ramal', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Operadora Celular</label>
-            <select
-              className="form-select"
-              value={cliente.operadora_celular || ''}
-              onChange={(e) => handleInputChange('operadora_celular', e.target.value)}
-              disabled={!isEditing}
-            >
-              <option value="">Selecione...</option>
-              <option value="vivo">Vivo</option>
-              <option value="claro">Claro</option>
-              <option value="tim">TIM</option>
-              <option value="oi">OI</option>
-              <option value="nextel">Nextel</option>
-            </select>
-          </div>
 
           <div className="col-md-6">
             <label className="form-label small text-muted">Telefone Celular</label>
@@ -126,68 +100,10 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
             </div>
           </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Email Principal</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-envelope"></i>
-              </span>
-              <input
-                type="email"
-                className="form-control form-control-sm"
-                value={cliente.email_principal || ''}
-                onChange={(e) => handleInputChange('email_principal', e.target.value)}
-                disabled={!isEditing}
-              />
-              <button className="btn btn-outline-secondary" type="button">
-                <i className="bi bi-send"></i>
-              </button>
-            </div>
-          </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Contato</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.contato || ''}
-              onChange={(e) => handleInputChange('contato', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Website</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.website || ''}
-              onChange={(e) => handleInputChange('website', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Skype</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.skype || ''}
-              onChange={(e) => handleInputChange('skype', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">Facebook</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.facebook || ''}
-              onChange={(e) => handleInputChange('facebook', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
           <div className="col-12">
             <h6 className="mb-3">Centro de Assinantes</h6>
@@ -220,41 +136,6 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
             />
           </div>
 
-          <div className="col-12">
-            <fieldset>
-              <legend className="form-label">Permitir Acesso Automático</legend>
-              <div className="d-flex gap-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="permitir_acesso_automatico"
-                    value="true"
-                    checked={cliente.permitir_acesso_automatico === true}
-                    onChange={(e) => handleInputChange('permitir_acesso_automatico', e.target.value === 'true')}
-                    disabled={!isEditing}
-                  />
-                  <label className="form-check-label">
-                    Sim
-                  </label>
-                </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="permitir_acesso_automatico"
-                    value="false"
-                    checked={cliente.permitir_acesso_automatico === false}
-                    onChange={(e) => handleInputChange('permitir_acesso_automatico', e.target.value === 'true')}
-                    disabled={!isEditing}
-                  />
-                  <label className="form-check-label">
-                    Não
-                  </label>
-                </div>
-              </div>
-            </fieldset>
-          </div>
         </div>
       </div>
   );

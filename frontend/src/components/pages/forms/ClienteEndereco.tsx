@@ -34,43 +34,8 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
       </div>
 
       <div className="row g-1">
-          <div className="col-md-4">
-            <label className="form-label small text-muted">Condomínio</label>
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                value={cliente.condominio || ''}
-                onChange={(e) => handleInputChange('condominio', e.target.value)}
-                disabled={!isEditing}
-              />
-              <button className="btn btn-outline-secondary" type="button">
-                <i className="bi bi-geo-alt"></i>
-              </button>
-            </div>
-          </div>
 
-          <div className="col-md-4">
-            <label className="form-label small text-muted">Bloco</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.bloco || ''}
-              onChange={(e) => handleInputChange('bloco', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
-          <div className="col-md-4">
-            <label className="form-label small text-muted">Apartamento</label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.apartamento || ''}
-              onChange={(e) => handleInputChange('apartamento', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
           <div className="col-md-4">
             <label className="form-label small text-muted">CEP</label>
@@ -177,55 +142,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
             />
           </div>
 
-          <div className="col-12">
-            <fieldset>
-              <legend className="form-label">Tipo de Moradia</legend>
-              <div className="d-flex gap-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="moradia"
-                    value="propria"
-                    checked={cliente.moradia === 'propria'}
-                    onChange={(e) => handleInputChange('moradia', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                  <label className="form-check-label">
-                    Própria
-                  </label>
-                </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="moradia"
-                    value="alugada"
-                    checked={cliente.moradia === 'alugada'}
-                    onChange={(e) => handleInputChange('moradia', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                  <label className="form-check-label">
-                    Alugada
-                  </label>
-                </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="moradia"
-                    value="cedida"
-                    checked={cliente.moradia === 'cedida'}
-                    onChange={(e) => handleInputChange('moradia', e.target.value)}
-                    disabled={!isEditing}
-                  />
-                  <label className="form-check-label">
-                    Cedida
-                  </label>
-                </div>
-              </div>
-            </fieldset>
-          </div>
         </div>
       </div>
   );
