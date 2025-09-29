@@ -138,10 +138,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const getFilteredData = () => {
     if (!parcelasData?.data) return [];
     
-    // Debug: verificar dados recebidos
-    console.log('ClienteEditModal - parcelasData:', parcelasData);
-    console.log('ClienteEditModal - parcelasData.data:', parcelasData.data);
-    
     // Agora os dados são títulos diretos, não parcelas de carnê
     const allData = parcelasData.data;
 

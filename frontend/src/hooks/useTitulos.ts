@@ -7,13 +7,9 @@ const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar parcelas
 export const useTitulos = (filters: any = {}) => {
-  console.log('useTitulos - filters:', filters);
   return useQuery({
     queryKey: ['titulos', filters],
-    queryFn: () => {
-      console.log('useTitulos - queryFn called with filters:', filters);
-      return TituloService.list(filters);
-    },
+    queryFn: () => TituloService.list(filters),
     staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual
     gcTime: DEFAULT_CACHE_TIME,
     refetchOnWindowFocus: false,

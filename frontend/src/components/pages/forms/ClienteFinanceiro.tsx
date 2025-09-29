@@ -67,10 +67,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     cliente_id: cliente?.id 
   });
 
-  // Debug: verificar se os dados estão chegando
-  console.log('ClienteFinanceiro - cliente:', cliente);
-  console.log('ClienteFinanceiro - parcelasData:', parcelasData);
-  console.log('ClienteFinanceiro - parcelasLoading:', parcelasLoading);
   
   const marcarPagoMutation = useMarcarTituloPago();
 
