@@ -67,13 +67,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
-      // Limitar dentro da tela
-      const maxX = window.innerWidth - modalSize.width;
-      const maxY = window.innerHeight - modalSize.height;
-      
+      // Permitir arrastar para fora da tela
       setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY))
+        x: newX,
+        y: newY
       });
     }
   };
