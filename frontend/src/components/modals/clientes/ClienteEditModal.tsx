@@ -97,7 +97,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ClienteForm>>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
-  const [showTitulos, setShowTitulos] = useState(true);
+  const [showCancelados, setShowCancelados] = useState(false);
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
@@ -141,15 +141,19 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     const allData = parcelasData.data.filter((parcela: CarneParcela) => {
       if (!parcela.carne) return false;
       
-      const isTitulo = parcela.carne.quantidade_parcelas === 1;
-      
-      if (showTitulos) return isTitulo;
-      
-      return false;
+      // Sempre mostrar apenas títulos (quantidade_parcelas === 1)
+      return parcela.carne.quantidade_parcelas === 1;
     });
 
-    // Retornar títulos individuais
-    return allData;
+    // Filtrar cancelados se não estiver marcado para mostrar
+    const filteredData = allData.filter((parcela: CarneParcela) => {
+      if (parcela.status === 'cancelado' && !showCancelados) {
+        return false;
+      }
+      return true;
+    });
+
+    return filteredData;
   };
 
   const filteredData = getFilteredData();
@@ -192,8 +196,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           valueB = b.pago ? Number(b.valor_pago || b.valor_parcela || 0) : 0;
           break;
         case 'valor_aberto':
-          valueA = a.pago ? 0 : Number(a.valor_parcela || 0);
-          valueB = b.pago ? 0 : Number(b.valor_parcela || 0);
+          valueA = (a.pago || a.status === 'cancelado') ? 0 : Number(a.valor_parcela || 0);
+          valueB = (b.pago || b.status === 'cancelado') ? 0 : Number(b.valor_parcela || 0);
           break;
         default:
           valueA = (a as any)[sortColumn] || '';
@@ -362,7 +366,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'valor_aberto',
       label: 'Valor aberto',
       render: (item: any) => {
-        return item.pago ? 'R$ 0,00' : `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
+        return (item.pago || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
       }
     },
     {
@@ -1168,23 +1172,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           <input 
                             className="form-check-input" 
                             type="checkbox" 
-                            id="showTitulos"
-                            checked={showTitulos}
+                            id="showCanceled"
+                            checked={showCancelados}
                             onChange={(e) => {
                               e.stopPropagation();
-                              setShowTitulos(e.target.checked);
+                              setShowCancelados(e.target.checked);
                             }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <label className="form-check-label small" htmlFor="showTitulos">
-                            Títulos
-                          </label>
-                        </div>
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            id="showCanceled"
                             onClick={(e) => e.stopPropagation()}
                           />
                           <label className="form-check-label small" htmlFor="showCanceled">
@@ -1280,7 +1273,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('Recarregar dados');
+                            refetchParcelas();
                           }}
                           onMouseDown={(e) => e.stopPropagation()}
                           title="Recarregar dados"
@@ -1308,11 +1301,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       limit={limit}
                       setLimit={setLimit}
                       setPage={setPage}
-                      emptyMessage={
-                        !showTitulos 
-                          ? 'Selecione pelo menos um tipo para visualizar os dados.'
-                          : 'Este cliente ainda não possui registros cadastrados com os filtros selecionados.'
-                      }
+                      emptyMessage="Este cliente ainda não possui títulos cadastrados."
                     />
                   </div>
 
@@ -1339,7 +1328,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <div className="text-end">
                           <div className="small text-muted">Valor aberto:</div>
                           <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                            return sum + (item.pago ? 0 : Number(item.valor_parcela || 0));
+                            return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor_parcela || 0));
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">

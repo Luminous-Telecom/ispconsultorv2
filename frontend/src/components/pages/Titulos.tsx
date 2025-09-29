@@ -554,9 +554,13 @@ const CarneParcelas: React.FC = () => {
                         const statusChartData = [
                           { label: 'Pagas', value: parcelasPagas, color: '#28a745' },
                           { label: 'Pendentes', value: parcelasPendentes, color: '#ffc107' },
-                          { label: 'Vencidas', value: parcelasVencidas, color: '#dc3545' },
-                          { label: 'Canceladas', value: parcelasCanceladas, color: '#6c757d' }
+                          { label: 'Vencidas', value: parcelasVencidas, color: '#dc3545' }
                         ].filter(item => item.value > 0);
+                        
+                        // Adicionar canceladas apenas se houver quantidade
+                        if (parcelasCanceladas > 0) {
+                          statusChartData.push({ label: 'Canceladas', value: parcelasCanceladas, color: '#6c757d' });
+                        }
                         
                         return renderPieChart(statusChartData, 'Status das Parcelas', hiddenStatus, toggleStatus);
                       })()}
@@ -574,9 +578,13 @@ const CarneParcelas: React.FC = () => {
                         const valoresChartData = [
                           { label: 'Pago', value: valorPago, color: '#28a745' },
                           { label: 'Pendente', value: valorPendente, color: '#ffc107' },
-                          { label: 'Vencido', value: valorVencido, color: '#dc3545' },
-                          { label: 'Cancelado', value: valorCancelado, color: '#6c757d' }
+                          { label: 'Vencido', value: valorVencido, color: '#dc3545' }
                         ].filter(item => item.value > 0);
+                        
+                        // Adicionar cancelados apenas se houver valor
+                        if (valorCancelado > 0) {
+                          valoresChartData.push({ label: 'Cancelado', value: valorCancelado, color: '#6c757d' });
+                        }
                         
                         return renderPieChart(valoresChartData, 'Valores por Status (R$)', hiddenValores, toggleValores);
                       })()}
