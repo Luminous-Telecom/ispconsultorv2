@@ -259,7 +259,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
                 fontSize: '0.85rem',
                 fontWeight: '500',
                 textAlign: 'center',
-                margin: 0
+                margin: 0,
+                paddingRight: '40px', // Espaço para o botão X
+                paddingLeft: '40px'  // Espaço simétrico
               }}
             >
               {title}
@@ -285,7 +287,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
                 position: 'absolute',
                 right: '16px',
                 top: '50%',
-                transform: 'translateY(-50%)'
+                transform: 'translateY(-50%)',
+                zIndex: 10
               }}
             >
               ×
