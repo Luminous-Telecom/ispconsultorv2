@@ -47,7 +47,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
       {/* Linha 1: Botões alinhados com a primeira coluna da tabela */}
       <div className="d-flex justify-content-start">
-        <div className="d-flex" style={{ gap: '8px', paddingLeft: '0.5rem' }}>
+        <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
           {bulkActions.map((bulkAction, index) => {
             const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
             const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
@@ -76,7 +76,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
       {/* Linha 2: Busca à esquerda, paginação à direita */}
       <div className="d-flex align-items-center">
         {/* Busca à esquerda */}
-        <div className="d-flex align-items-center gap-2" style={{ paddingLeft: '0.5rem' }}>
+        <div className="d-flex align-items-center gap-2" style={{ paddingLeft: '1rem' }}>
           <input
             type="text"
             className="form-control form-control-sm"
