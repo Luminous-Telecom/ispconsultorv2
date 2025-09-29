@@ -1,8 +1,8 @@
 import { apiService } from './api';
 import { CarneParcela, CarneParcelaFilters, PaginatedResponse, CreateCarneParcela } from '../types';
-import { API_CONFIG } from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
 
-export class CarneParcelaService {
+export class TituloService {
   // Listar parcelas com filtros e paginação
   static async list(filters: CarneParcelaFilters = {}): Promise<PaginatedResponse<CarneParcela>> {
     const params = new URLSearchParams();
@@ -17,7 +17,7 @@ export class CarneParcelaService {
     if (filters.limit) params.append('limit', filters.limit.toString());
 
     try {
-      const response = await apiService.get<PaginatedResponse<CarneParcela>>(`/carne-parcelas?${params.toString()}`);
+      const response = await apiService.get<PaginatedResponse<CarneParcela>>(`${API_ENDPOINTS.TITULOS}?${params.toString()}`);
       return response;
     } catch (error) {
       console.error('Erro ao listar parcelas:', error);
@@ -28,7 +28,7 @@ export class CarneParcelaService {
   // Buscar parcela por ID
   static async getById(id: number): Promise<CarneParcela> {
     try {
-      const response = await apiService.get<CarneParcela>(`/carne-parcelas/${id}`);
+      const response = await apiService.get<CarneParcela>(`${API_ENDPOINTS.TITULOS}/${id}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar parcela:', error);
@@ -39,7 +39,7 @@ export class CarneParcelaService {
   // Buscar parcelas por carnê
   static async findByCarne(carneId: number): Promise<CarneParcela[]> {
     try {
-      const response = await apiService.get<CarneParcela[]>(`/carne-parcelas/carne/${carneId}`);
+      const response = await apiService.get<CarneParcela[]>(`${API_ENDPOINTS.TITULOS}/carne/${carneId}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar parcelas por carnê:', error);
@@ -50,7 +50,7 @@ export class CarneParcelaService {
   // Buscar parcelas vencidas
   static async findVencidas(): Promise<CarneParcela[]> {
     try {
-      const response = await apiService.get<CarneParcela[]>('/carne-parcelas/vencidas');
+      const response = await apiService.get<CarneParcela[]>(API_ENDPOINTS.TITULOS_VENCIDOS);
       return response;
     } catch (error) {
       console.error('Erro ao buscar parcelas vencidas:', error);
@@ -61,7 +61,7 @@ export class CarneParcelaService {
   // Buscar parcelas vencidas hoje
   static async findVencidasHoje(): Promise<CarneParcela[]> {
     try {
-      const response = await apiService.get<CarneParcela[]>('/carne-parcelas/vencidas-hoje');
+      const response = await apiService.get<CarneParcela[]>(API_ENDPOINTS.TITULOS_VENCIDOS_HOJE);
       return response;
     } catch (error) {
       console.error('Erro ao buscar parcelas vencidas hoje:', error);
@@ -72,7 +72,7 @@ export class CarneParcelaService {
   // Marcar parcela como paga
   static async marcarPago(id: number, dataPagamento?: string): Promise<{ success: boolean; message: string; novo_carne_gerado?: any }> {
     try {
-      const response = await apiService.post<{ success: boolean; message: string; novo_carne_gerado?: any }>(`/carne-parcelas/${id}/pagar`, {
+      const response = await apiService.post<{ success: boolean; message: string; novo_carne_gerado?: any }>(`${API_ENDPOINTS.TITULOS}/${id}/pagar`, {
         data_pagamento: dataPagamento || new Date().toISOString().split('T')[0]
       });
       return response;
@@ -85,7 +85,7 @@ export class CarneParcelaService {
   // Desmarcar pagamento da parcela
   static async desmarcarPago(id: number): Promise<CarneParcela> {
     try {
-      const response = await apiService.post<CarneParcela>(`/carne-parcelas/${id}/desmarcar-pago`);
+      const response = await apiService.post<CarneParcela>(`${API_ENDPOINTS.TITULOS}/${id}/desmarcar-pago`);
       return response;
     } catch (error) {
       console.error('Erro ao desmarcar pagamento da parcela:', error);
@@ -96,7 +96,7 @@ export class CarneParcelaService {
   // Imprimir boleto da parcela
   static async imprimirBoleto(id: number): Promise<string> {
     try {
-      const response = await apiService.get<string>(`/carne-parcelas/${id}/imprimir`);
+      const response = await apiService.get<string>(`${API_ENDPOINTS.TITULOS}/${id}/imprimir`);
       return response;
     } catch (error) {
       console.error('Erro ao imprimir boleto:', error);
@@ -107,7 +107,7 @@ export class CarneParcelaService {
   // Gerar PDF do boleto
   static async gerarPdfBoleto(id: number): Promise<string> {
     try {
-      const response = await apiService.get<string>(`/carne-parcelas/${id}/pdf`);
+      const response = await apiService.get<string>(`${API_ENDPOINTS.TITULOS}/${id}/pdf`);
       return response;
     } catch (error) {
       console.error('Erro ao gerar PDF do boleto:', error);
@@ -118,7 +118,7 @@ export class CarneParcelaService {
   // Criar nova parcela
   static async create(data: CreateCarneParcela): Promise<CarneParcela> {
     try {
-      const response = await apiService.post<CarneParcela>('/carne-parcelas', data);
+      const response = await apiService.post<CarneParcela>(API_ENDPOINTS.TITULOS, data);
       return response;
     } catch (error) {
       console.error('Erro ao criar parcela:', error);
@@ -129,7 +129,7 @@ export class CarneParcelaService {
   // Atualizar parcela
   static async update(id: number, data: Partial<CarneParcela>): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiService.put<{ success: boolean; message: string }>(`/carne-parcelas/${id}`, data);
+      const response = await apiService.put<{ success: boolean; message: string }>(`${API_ENDPOINTS.TITULOS}/${id}`, data);
       return response;
     } catch (error) {
       console.error('Erro ao atualizar parcela:', error);
@@ -139,8 +139,8 @@ export class CarneParcelaService {
 
   // Visualizar boleto na web
   static getBoletoUrl(id: number): string {
-    return `${API_CONFIG.BASE_URL_WITHOUT_API}/boleto/web/${id}`;
+    return `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/${id}`;
   }
 }
 
-export const carneParcelaService = new CarneParcelaService();
+export const tituloService = new TituloService();

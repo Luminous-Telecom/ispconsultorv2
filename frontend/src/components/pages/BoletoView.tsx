@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { CarneParcelaService } from '../../services/carneParcelaService';
+import { TituloService } from '../../services/tituloService';
 
 const BoletoView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,7 +10,7 @@ const BoletoView: React.FC = () => {
     const carregarBoleto = async () => {
       if (id) {
         try {
-          const html = await CarneParcelaService.imprimirBoleto(parseInt(id));
+          const html = await TituloService.imprimirBoleto(parseInt(id));
           setBoletoHtml(html);
         } catch (error) {
           console.error('Erro ao carregar boleto:', error);

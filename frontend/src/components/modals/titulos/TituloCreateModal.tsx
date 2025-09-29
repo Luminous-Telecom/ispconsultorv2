@@ -1,40 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { CarneParcelaService } from '../../../services/carneParcelaService';
-import { CarneService } from '../../../services/carneService';
+import { TituloService } from '../../../services/tituloService';
+import { PlanoService } from '../../../services/planoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { CreateCarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 
-interface CarneParcelaForm {
-  carne_id: number;
-  numero_parcela: number;
-  valor_parcela: number;
+interface TituloForm {
+  plano_id: number;
   data_vencimento: string;
-  pago: boolean;
-  status: 'pendente' | 'pago' | 'cancelado' | 'atrasado';
+  status: 'pendente' | 'pago' | 'cancelado' | 'vencido';
   observacoes?: string;
 }
 
-interface CarneParcelaCreateModalProps {
+interface TituloCreateModalProps {
   show: boolean;
   onClose: () => void;
   onSuccess?: () => void;
   clienteId?: number;
 }
 
-const CarneParcelaCreateModal: React.FC<CarneParcelaCreateModalProps> = ({ 
+const TituloCreateModal: React.FC<TituloCreateModalProps> = ({ 
   show, 
   onClose, 
   onSuccess,
   clienteId
 }) => {
-  const [formData, setFormData] = useState<CarneParcelaForm>({
-    carne_id: 0,
-    numero_parcela: 1,
-    valor_parcela: 0,
+  const [formData, setFormData] = useState<TituloForm>({
+    plano_id: 0,
     data_vencimento: '',
-    pago: false,
     status: 'pendente',
     observacoes: '',
   });
@@ -44,28 +38,28 @@ const CarneParcelaCreateModal: React.FC<CarneParcelaCreateModalProps> = ({
   const queryClient = useQueryClient();
 
   // Queries para buscar dados
-  const { data: carnes } = useQuery({
-    queryKey: ['carnes-ativos'],
-    queryFn: () => CarneService.findAtivos(),
+  const { data: planos } = useQuery({
+    queryKey: ['planos-ativos'],
+    queryFn: () => PlanoService.list({ status: 'ativo', limit: 100 }),
     enabled: show,
   });
 
-  // Definir carne_id quando clienteId for fornecido (buscar carnê do cliente)
+  // Limpar formulário quando modal fechar
   useEffect(() => {
-    if (show && clienteId && carnes) {
-      const carneDoCliente = carnes.find((carne: any) => carne.cliente_id === clienteId);
-      if (carneDoCliente) {
-        setFormData(prev => ({
-          ...prev,
-          carne_id: carneDoCliente.id
-        }));
-      }
+    if (!show) {
+      setFormData({
+        plano_id: 0,
+        data_vencimento: '',
+        status: 'pendente',
+        observacoes: '',
+      });
+      setErrors({});
     }
-  }, [show, clienteId, carnes]);
+  }, [show]);
 
   // Mutation para criar parcela
   const createParcelaMutation = useMutation({
-    mutationFn: (data: CreateCarneParcela) => CarneParcelaService.create(data),
+    mutationFn: (data: CreateCarneParcela) => TituloService.create(data),
     onSuccess: () => {
       success('Parcela criada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
@@ -79,9 +73,9 @@ const CarneParcelaCreateModal: React.FC<CarneParcelaCreateModalProps> = ({
     }
   });
 
-  const handleInputChange = <K extends keyof CarneParcelaForm>(
+  const handleInputChange = <K extends keyof TituloForm>(
     field: K,
-    value: CarneParcelaForm[K]
+    value: TituloForm[K]
   ) => {
     setFormData(prev => ({
       ...prev,
@@ -100,8 +94,7 @@ const CarneParcelaCreateModal: React.FC<CarneParcelaCreateModalProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string | undefined> = {};
 
-    if (!formData.carne_id) newErrors.carne_id = 'Carnê é obrigatório';
-    if (!formData.valor_parcela || formData.valor_parcela <= 0) newErrors.valor_parcela = 'Valor da parcela deve ser maior que zero';
+    if (!formData.plano_id) newErrors.plano_id = 'Plano é obrigatório';
     if (!formData.data_vencimento) newErrors.data_vencimento = 'Data de vencimento é obrigatória';
 
     setErrors(newErrors);
@@ -113,7 +106,20 @@ const CarneParcelaCreateModal: React.FC<CarneParcelaCreateModalProps> = ({
     
     if (!validateForm()) return;
 
-    createParcelaMutation.mutate(formData as unknown as CreateCarneParcela);
+    if (!clienteId) {
+      error('ID do cliente é obrigatório para criar título');
+      return;
+    }
+
+    const payload = {
+      plano_id: formData.plano_id,
+      data_vencimento: formData.data_vencimento,
+      observacoes: formData.observacoes || '',
+      cliente_id: clienteId
+    };
+
+    console.log('Payload sendo enviado:', payload);
+    createParcelaMutation.mutate(payload as any);
   };
 
   const handleCancel = () => {
@@ -130,59 +136,27 @@ const CarneParcelaCreateModal: React.FC<CarneParcelaCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="carne_id" className="form-label small">Carnê *</label>
+              <label htmlFor="plano_id" className="form-label small">Plano *</label>
               <select
-                className={`form-select ${errors.carne_id ? 'is-invalid' : ''}`}
-                id="carne_id"
-                value={formData.carne_id}
-                onChange={(e) => handleInputChange('carne_id', parseInt(e.target.value))}
+                className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
+                id="plano_id"
+                value={formData.plano_id}
+                onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
                 disabled={createParcelaMutation.isPending}
               >
-                <option value={0}>Selecione um carnê</option>
-                {carnes?.map((carne: any) => (
-                  <option key={carne.id} value={carne.id}>
-                    {carne.numero_carne} - {carne.cliente?.razao_social || carne.cliente?.nome_fantasia}
+                <option value={0}>Selecione um plano</option>
+                {planos?.data?.map((plano: any) => (
+                  <option key={plano.id} value={plano.id}>
+                    {plano.nome_plano} - R$ {plano.valor_mensal}
                   </option>
                 ))}
               </select>
-              {errors.carne_id && <div className="invalid-feedback">{errors.carne_id}</div>}
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="numero_parcela" className="form-label small">Número da Parcela</label>
-              <input
-                type="number"
-                min="1"
-                className="form-control"
-                id="numero_parcela"
-                value={formData.numero_parcela}
-                onChange={(e) => handleInputChange('numero_parcela', parseInt(e.target.value) || 1)}
-                disabled={createParcelaMutation.isPending}
-              />
+              {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
             </div>
           </div>
         </div>
 
         <div className="row">
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="valor_parcela" className="form-label small">Valor da Parcela *</label>
-              <input
-                type="number"
-                step="0.01"
-                className={`form-control ${errors.valor_parcela ? 'is-invalid' : ''}`}
-                id="valor_parcela"
-                value={formData.valor_parcela}
-                onChange={(e) => handleInputChange('valor_parcela', parseFloat(e.target.value) || 0)}
-                disabled={createParcelaMutation.isPending}
-                placeholder="0.00"
-              />
-              {errors.valor_parcela && <div className="invalid-feedback">{errors.valor_parcela}</div>}
-            </div>
-          </div>
-
           <div className="col-md-6">
             <div className="mb-3">
               <label htmlFor="data_vencimento" className="form-label small">Data de Vencimento *</label>
@@ -213,26 +187,8 @@ const CarneParcelaCreateModal: React.FC<CarneParcelaCreateModalProps> = ({
                 <option value="pendente">Pendente</option>
                 <option value="pago">Pago</option>
                 <option value="cancelado">Cancelado</option>
-                <option value="atrasado">Atrasado</option>
+                <option value="vencido">Vencido</option>
               </select>
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="pago"
-                  checked={formData.pago}
-                  onChange={(e) => handleInputChange('pago', e.target.checked)}
-                  disabled={createParcelaMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="pago">
-                  Marcar como pago
-                </label>
-              </div>
             </div>
           </div>
         </div>
@@ -277,4 +233,4 @@ const CarneParcelaCreateModal: React.FC<CarneParcelaCreateModalProps> = ({
   );
 };
 
-export default CarneParcelaCreateModal;
+export default TituloCreateModal;

@@ -21,12 +21,8 @@ import PlanosEdit from './components/pages/PlanosEdit';
 import Bancos from './components/pages/Bancos';
 import BancosCreate from './components/pages/BancosCreate';
 import BancosEdit from './components/pages/BancosEdit';
-import Carnes from './components/pages/Carnes';
-import CarnesCreate from './components/pages/CarnesCreate';
-import CarnesEdit from './components/pages/CarnesEdit';
-import CarnesShow from './components/pages/CarnesShow';
-import CarneParcelas from './components/pages/CarneParcelas';
-import CarneParcelasEdit from './components/pages/CarneParcelasEdit';
+import Titulos from './components/pages/Titulos';
+import TitulosEdit from './components/pages/TitulosEdit';
 import BoletoView from './components/pages/BoletoView';
 import DadosEmpresa from './components/pages/DadosEmpresa';
 import RotinasAgendadas from './components/pages/RotinasAgendadas';
@@ -64,13 +60,8 @@ function App() {
             <Route path="bancos" element={<Bancos />} />
             <Route path="bancos/create" element={<BancosCreate />} />
             <Route path="bancos/:id/edit" element={<BancosEdit />} />
-            <Route path="carnes" element={<Carnes />} />
-            <Route path="carnes/create" element={<CarnesCreate />} />
-            <Route path="carnes/:id" element={<CarnesShow />} />
-            <Route path="carnes/:id/edit" element={<CarnesEdit />} />
-            <Route path="carnes/:carneId/parcelas" element={<CarneParcelas />} />
-            <Route path="carne-parcelas" element={<CarneParcelas />} />
-            <Route path="carne-parcelas/:id/edit" element={<CarneParcelasEdit />} />
+            <Route path="titulos" element={<Titulos />} />
+            <Route path="titulos/:id/edit" element={<TitulosEdit />} />
             <Route path="boleto/web/:id" element={<BoletoView />} />
             <Route path="dados-empresa" element={<DadosEmpresa />} />
             <Route path="rotinas-agendadas" element={<RotinasAgendadas />} />

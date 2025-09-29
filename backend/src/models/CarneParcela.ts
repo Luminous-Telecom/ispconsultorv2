@@ -18,6 +18,7 @@ export class CarneParcela extends Model<
 > {
   declare id: CreationOptional<number>;
   declare carne_id: number;
+  declare plano_id: number;
   declare numero_parcela: number;
   declare valor_parcela: number;
   declare tipo: string | null;
@@ -318,6 +319,14 @@ CarneParcela.init(
       allowNull: false,
       references: {
         model: 'carnes',
+        key: 'id'
+      }
+    },
+    plano_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'planos',
         key: 'id'
       }
     },

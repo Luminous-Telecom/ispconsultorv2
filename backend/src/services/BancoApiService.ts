@@ -14,13 +14,6 @@ export interface BancoConfig {
   api_base_url: string;
   api_endpoints: {
     auth: string;
-    carnet: string;
-    carnet_consultar: string;
-    carnet_cancelar: string;
-    carnet_metadata: string;
-    carnet_alterar_vencimento: string;
-    carnet_parcela_alterar_vencimento: string;
-    carnet_parcela_cancelar: string;
     boleto: string;
     consultar: string;
     cancelar: string;
@@ -28,15 +21,14 @@ export interface BancoConfig {
     notification: string;
   };
   api_response_mapping: {
-    carnet: {
-      id: string;
-      charges: string;
-    };
     boleto: {
       id: string;
       url: string;
       barcode: string;
       linha_digitavel: string;
+      pdf: string;
+      pix_qrcode: string;
+      pix_qrcode_image: string;
     };
     status: {
       status: string;
@@ -257,14 +249,30 @@ export class BancoApiService {
       }
 
       // Preparar dados do boleto
-      const dadosBoleto = this.prepararDadosBoleto(banco, parcela, cliente, plano, config);
+      const dadosBoleto = await this.prepararDadosBoleto(banco, parcela, cliente, plano, config);
+
+      // Log detalhado do payload
+      logger.info('Payload enviado para EFI:', {
+        parcela_id: parcela.id,
+        dadosBoleto: JSON.stringify(dadosBoleto, null, 2)
+      });
 
       // Criar boleto individual
       const endpoint = config.cobranca_base_url + config.api_endpoints.boleto;
       const headers = this.prepareHeaders(banco.tipo_banco, token);
       headers['Content-Type'] = 'application/json';
       
+      logger.info('Endpoint e headers EFI:', {
+        endpoint,
+        headers: { ...headers, Authorization: headers.Authorization ? '***' : undefined }
+      });
+      
       const response = await axios.post(endpoint, dadosBoleto, { headers });
+      
+      logger.info('Resposta da EFI:', {
+        status: response.status,
+        data: response.data
+      });
       
       if (response.status >= 200 && response.status < 300) {
         const dados = response.data;
@@ -272,6 +280,9 @@ export class BancoApiService {
         const barcode = this.getNestedValue(dados, config.api_response_mapping.boleto.barcode);
         const url = this.getNestedValue(dados, config.api_response_mapping.boleto.url);
         const linhaDigitavel = this.getNestedValue(dados, config.api_response_mapping.boleto.linha_digitavel || '') || null;
+        const pdfUrl = this.getNestedValue(dados, config.api_response_mapping.boleto.pdf);
+        const pixQrcode = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode);
+        const pixQrcodeImage = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode_image);
 
         // Atualizar parcela
         await parcela.update({
@@ -279,6 +290,8 @@ export class BancoApiService {
           codigo_barras: barcode,
           url_boleto: url,
           linha_digitavel: linhaDigitavel,
+          qrcode: pixQrcode,
+          qrcode_image: pixQrcodeImage,
           status: 'pendente'
         });
 
@@ -292,9 +305,12 @@ export class BancoApiService {
           message: 'Título gerado com sucesso',
           data: {
             charge_id: chargeId,
-            barcode,
-            url,
-            linhaDigitavel
+            codigo_barras: barcode,
+            url_boleto: url,
+            linha_digitavel: linhaDigitavel,
+            pdf_url: pdfUrl,
+            qrcode: pixQrcode,
+            qrcode_image: pixQrcodeImage
           }
         };
       }
@@ -306,7 +322,10 @@ export class BancoApiService {
     } catch (error: any) {
       logger.error('Erro ao gerar título', { 
         parcela_id: parcela.id,
-        error: error.message 
+        error: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config
       });
       return {
         success: false,
@@ -318,57 +337,63 @@ export class BancoApiService {
   /**
    * Preparar dados do boleto para API
    */
-  private static prepararDadosBoleto(
+  private static async prepararDadosBoleto(
     banco: Banco, 
     parcela: CarneParcela, 
     cliente: any, 
     plano: any, 
     config: BancoConfig
-  ): any {
+  ): Promise<any> {
     const baseUrl = banco.url_retorno || process.env.APP_URL;
+    
+    // Buscar dados da empresa (recebedor)
+    const { DadosEmpresa } = await import('../models/DadosEmpresa');
+    const dadosEmpresa = await DadosEmpresa.findOne();
+    
+    if (!dadosEmpresa) {
+      throw new Error('Dados da empresa não configurados');
+    }
+    
+    // Converter valor para centavos
+    const valorCentavos = Math.round(Number(parcela.valor_parcela) * 100);
+    
+    // Multa/Juros em basis points (ex.: 2.00% => 200)
+    const fineBp = Math.round(Number(banco.percentual_multa || 0) * 100);
+    const interestBp = Math.round(Number(banco.percentual_juros || 0) * 100);
     
     return {
       items: [{
-        name: plano.nome || 'Serviço de Internet',
-        value: parcela.valor_parcela,
+        name: plano.nome_plano || 'Serviço de Internet',
+        value: valorCentavos,
         amount: 1
       }],
-      customer: {
-        name: cliente.nome_fantasia || cliente.razao_social,
-        email: cliente.email,
-        phone: cliente.telefone,
-        document: cliente.cnpj,
-        address: {
-          street: cliente.endereco,
-          number: cliente.numero,
-          neighborhood: cliente.bairro,
-          city: cliente.cidade,
-          state: cliente.estado,
-          zipcode: cliente.cep
-        }
-      },
       payment: {
         banking_billet: {
-          expire_at: parcela.data_vencimento,
           customer: {
-            name: cliente.nome_fantasia || cliente.razao_social,
+            name: cliente.razao_social || cliente.nome_fantasia || 'Cliente',
             email: cliente.email,
-            phone: cliente.telefone,
-            document: cliente.cnpj,
+            phone_number: cliente.telefone ? cliente.telefone.replace(/[^\d]/g, '') : '',
+            juridical_person: {
+              corporate_name: cliente.razao_social || cliente.nome_fantasia || 'Cliente',
+              cnpj: cliente.cnpj ? cliente.cnpj.replace(/[^\d]/g, '') : '00000000000000'
+            },
             address: {
-              street: cliente.endereco,
-              number: cliente.numero,
-              neighborhood: cliente.bairro,
-              city: cliente.cidade,
-              state: cliente.estado,
-              zipcode: cliente.cep
+              street: cliente.endereco || '',
+              number: cliente.numero || '',
+              neighborhood: cliente.bairro || '',
+              zipcode: cliente.cep ? cliente.cep.replace(/[^\d]/g, '') : '00000000',
+              city: cliente.cidade || '',
+              complement: cliente.complemento || '',
+              state: cliente.estado || ''
             }
-          }
+          },
+          expire_at: new Date(parcela.data_vencimento).toISOString().split('T')[0],
+          configurations: {
+            fine: fineBp,
+            interest: interestBp
+          },
+          message: `Cobrança referente ao serviço ${plano.nome_plano || 'Internet'} - Parcela ${parcela.numero_parcela}`
         }
-      },
-      metadata: {
-        custom_id: parcela.id.toString(),
-        notification_url: `${baseUrl}/webhook/efi`
       }
     };
   }
@@ -409,7 +434,7 @@ export class BancoApiService {
         ? (config.sandbox_url || config.cobranca_base_url)
         : config.cobranca_base_url;
       
-      const endpoint = baseUrlCobranca + config.api_endpoints.consultar + '/' + parcela.charge_id;
+      const endpoint = baseUrlCobranca + config.api_endpoints.consultar.replace(':id', parcela.charge_id);
       
       logger.info('Consultando status da parcela', {
         endpoint,
@@ -617,88 +642,8 @@ export class BancoApiService {
         };
       }
 
-      // Verificar se o banco suporta carnê
-      if (!config.suporta_carne) {
-        return this.gerarTitulosIndividuais(carne);
-      }
-
-      const token = await this.obterToken(banco, config);
-      if (!token) {
-        return {
-          success: false,
-          message: 'Falha ao obter token de acesso'
-        };
-      }
-
-      // Preparar dados do carnê
-      const dadosCarne = await this.prepararDadosCarne(banco, carne, cliente, config);
-      
-      logger.info('🔍 BancoApiService.gerarCarne - Dados preparados:', {
-        dadosCarne: dadosCarne
-      });
-
-      // Usar URL sandbox se estiver configurado
-      const baseUrlCobranca = banco.sandbox 
-        ? (config.sandbox_url || config.cobranca_base_url)
-        : config.cobranca_base_url;
-      
-      const endpoint = baseUrlCobranca + config.carnets;
-      const headers = this.prepareHeaders(banco.tipo_banco, token);
-      headers['Content-Type'] = 'application/json';
-      
-      
-      const response = await axios.post(endpoint, dadosCarne, { headers });
-      
-      if (response.status >= 200 && response.status < 300) {
-        const dados = response.data;
-        const carnetId = this.getNestedValue(dados, config.api_response_mapping.carnet.id);
-        const charges = this.getNestedValue(dados, config.api_response_mapping.carnet.charges) || [];
-
-        // Atualizar carnê
-        await carne.update({
-          carnet_id: carnetId,
-          status: 'pendente'
-        });
-
-        // Atualizar parcelas com os charge_ids
-        if (Array.isArray(charges)) {
-          for (let i = 0; i < charges.length; i++) {
-            const charge = charges[i];
-            const parcela = await CarneParcela.findOne({
-              where: { carne_id: carne.id, numero_parcela: i + 1 }
-            });
-            
-            if (parcela) {
-              await parcela.update({
-                charge_id: charge.charge_id,
-                codigo_barras: charge.barcode,
-                url_boleto: charge.url,
-                linha_digitavel: charge.line,
-                status: 'pendente'
-              });
-            }
-          }
-        }
-
-        logger.info('Carnê gerado com sucesso', {
-          carne_id: carne.id,
-          carnet_id: carnetId
-        });
-
-        return {
-          success: true,
-          message: 'Carnê gerado com sucesso',
-          data: {
-            carnet_id: carnetId,
-            charges
-          }
-        };
-      }
-      
-      return {
-        success: false,
-        message: 'Erro ao gerar carnê'
-      };
+      // Sempre usar títulos individuais
+      return this.gerarTitulosIndividuais(carne);
     } catch (error: any) {
       
       logger.error('Erro ao gerar carnê', { 
@@ -783,45 +728,16 @@ export class BancoApiService {
         };
       }
 
-      if (!config.operacoes_suportadas.liquidar_parcela_carne || !carne.carnet_id || !parcela.numero_parcela) {
-        return {
-          success: false,
-          message: 'Operação não suportada ou identificadores ausentes'
-        };
-      }
-
-      const token = await this.obterToken(banco, config);
-      if (!token) {
-        return {
-          success: false,
-          message: 'Falha ao obter token de acesso'
-        };
-      }
-
-      const baseUrlCobranca = banco.sandbox 
-        ? (config.sandbox_url || config.cobranca_base_url)
-        : config.cobranca_base_url;
-      
-      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_parcela_cancelar}/${carne.carnet_id}/parcel/${parcela.numero_parcela}/settle`;
-
-
-      const response = await axios.put(endpoint, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Para títulos individuais, apenas atualizar o status localmente
+      await parcela.update({
+        status: 'pago',
+        pago: true,
+        data_pagamento: new Date()
       });
 
-
-      if (response.status >= 200 && response.status < 300) {
-        return {
-          success: true,
-          message: 'Parcela marcada como paga (settled) com sucesso'
-        };
-      }
-
       return {
-        success: false,
-        message: 'Erro ao liquidar parcela: ' + response.status
+        success: true,
+        message: 'Parcela marcada como paga com sucesso'
       };
     } catch (error: any) {
       logger.error('Erro ao liquidar parcela do carnê', {
@@ -866,49 +782,8 @@ export class BancoApiService {
         };
       }
 
-      // Verificar se o carnê tem carnet_id e a parcela tem número
-      if (!carne.carnet_id || !parcela.numero_parcela) {
-        return this.cancelarTitulo(parcela);
-      }
-      
-      // Endpoint para cancelar parcela do carnê
-      const baseUrlCobranca = banco.sandbox 
-        ? (config.sandbox_url || config.cobranca_base_url)
-        : config.cobranca_base_url;
-      
-      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_parcela_cancelar}/${carne.carnet_id}/parcel/${parcela.numero_parcela}/cancel`;
-      
-      logger.info('Enviando requisição para cancelar parcela do carnê', {
-        endpoint,
-        carnet_id: carne.carnet_id,
-        numero_parcela: parcela.numero_parcela,
-        parcela_id: parcela.id
-      });
-
-      const response = await axios.put(endpoint, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      logger.info('Resposta do cancelamento de parcela de carnê', {
-        endpoint,
-        status: response.status,
-        data: response.data
-      });
-
-      if (response.status >= 200 && response.status < 300) {
-        return {
-          success: true,
-          message: 'Parcela cancelada com sucesso'
-        };
-      }
-
-      return {
-        success: false,
-        message: 'Erro ao cancelar parcela: ' + response.status
-      };
+      // Para títulos individuais, usar cancelarTitulo
+      return this.cancelarTitulo(parcela);
     } catch (error: any) {
       logger.error('Erro ao cancelar parcela do carnê', {
         parcela_id: parcela.id,
@@ -957,7 +832,7 @@ export class BancoApiService {
         ? (config.sandbox_url || config.cobranca_base_url)
         : config.cobranca_base_url;
       
-      const endpoint = `${baseUrlCobranca}${config.api_endpoints.cancelar}/${parcela.charge_id}/cancel`;
+      const endpoint = `${baseUrlCobranca}/v1/charge/${parcela.charge_id}/cancel`;
 
       logger.info('Enviando requisição para cancelar título individual', {
         endpoint,
@@ -1018,13 +893,6 @@ export class BancoApiService {
         };
       }
 
-      if (!config.operacoes_suportadas.alterar_vencimento_parcela_carne || !carne.carnet_id || !parcela.numero_parcela) {
-        return {
-          success: false,
-          message: 'Operação não suportada ou identificadores ausentes'
-        };
-      }
-
       if (!/^\d{4}-\d{2}-\d{2}$/.test(expireAt)) {
         return {
           success: false,
@@ -1032,53 +900,14 @@ export class BancoApiService {
         };
       }
 
-      const token = await this.obterToken(banco, config);
-      if (!token) {
-        return {
-          success: false,
-          message: 'Falha ao obter token de acesso'
-        };
-      }
-
-      const baseUrlCobranca = banco.sandbox 
-        ? (config.sandbox_url || config.cobranca_base_url)
-        : config.cobranca_base_url;
-      
-      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_parcela_alterar_vencimento.replace(':id', carne.carnet_id.toString()).replace(':parcel', parcela.numero_parcela.toString())}`;
-
-      const payload = { expire_at: expireAt };
-
-      logger.info('Enviando requisição para alterar vencimento da parcela do carnê', {
-        endpoint,
-        carnet_id: carne.carnet_id,
-        numero_parcela: parcela.numero_parcela,
-        expire_at: expireAt,
-        parcela_id: parcela.id
+      // Para títulos individuais, apenas atualizar a data localmente
+      await parcela.update({
+        data_vencimento: new Date(expireAt)
       });
-
-      const response = await axios.put(endpoint, payload, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      logger.info('Resposta da alteração de vencimento', {
-        endpoint,
-        status: response.status,
-        data: response.data
-      });
-
-      if (response.status >= 200 && response.status < 300) {
-        return {
-          success: true,
-          message: 'Vencimento alterado com sucesso'
-        };
-      }
 
       return {
-        success: false,
-        message: 'Erro ao alterar vencimento: ' + response.status
+        success: true,
+        message: 'Vencimento alterado com sucesso'
       };
     } catch (error: any) {
       logger.error('Erro ao alterar vencimento da parcela do carnê', {
@@ -1144,56 +973,14 @@ export class BancoApiService {
         };
       }
 
-      if (!carne.carnet_id) {
-        return {
-          success: false,
-          message: 'Carnet ID ausente'
-        };
-      }
-
-      const token = await this.obterToken(banco, config);
-      if (!token) {
-        return {
-          success: false,
-          message: 'Falha ao obter token de acesso'
-        };
-      }
-
-      const baseUrlCobranca = banco.sandbox 
-        ? (config.sandbox_url || config.cobranca_base_url)
-        : config.cobranca_base_url;
-      
-      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_consultar}/${carne.carnet_id}`;
-
-      logger.info('Consultando status do carnê', {
-        endpoint,
-        carnet_id: carne.carnet_id,
-        carne_id: carne.id
-      });
-
-      const response = await axios.get(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status >= 200 && response.status < 300) {
-        logger.info('Status do carnê consultado com sucesso', {
-          carnet_id: carne.carnet_id,
-          carne_id: carne.id
-        });
-
-        return {
-          success: true,
-          message: 'Status consultado com sucesso',
-          data: response.data
-        };
-      }
-
+      // Para títulos individuais, retornar status local
       return {
-        success: false,
-        message: 'Erro ao consultar status'
+        success: true,
+        message: 'Status consultado com sucesso',
+        data: {
+          status: carne.status,
+          parcelas: await carne.getParcelas()
+        }
       };
     } catch (error: any) {
       logger.error('Erro ao consultar status do carnê', { 
@@ -1223,13 +1010,6 @@ export class BancoApiService {
         };
       }
 
-      if (!config.operacoes_suportadas.cancelar_carne || !carne.carnet_id) {
-        return {
-          success: false,
-          message: 'Operação não suportada ou carnet_id ausente'
-        };
-      }
-
       // Verificar se tem parcelas pagas
       const parcelasPagas = await CarneParcela.count({
         where: { 
@@ -1245,49 +1025,23 @@ export class BancoApiService {
         };
       }
 
-      const token = await this.obterToken(banco, config);
-      if (!token) {
-        return {
-          success: false,
-          message: 'Falha ao obter token de acesso'
-        };
-      }
-
-      const baseUrlCobranca = banco.sandbox 
-        ? (config.sandbox_url || config.cobranca_base_url)
-        : config.cobranca_base_url;
-      
-      const endpoint = `${baseUrlCobranca}${config.api_endpoints.carnet_cancelar}/${carne.carnet_id}/cancel`;
-
-      logger.info('Cancelando carnê', {
-        endpoint,
-        carnet_id: carne.carnet_id,
-        carne_id: carne.id
+      // Para títulos individuais, cancelar todas as parcelas
+      const parcelas = await CarneParcela.findAll({
+        where: { carne_id: carne.id }
       });
 
-      const response = await axios.put(endpoint, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status >= 200 && response.status < 300) {
-        logger.info('Carnê cancelado com sucesso', {
-          carnet_id: carne.carnet_id,
-          carne_id: carne.id
-        });
-
-        return {
-          success: true,
-          message: 'Carnê cancelado com sucesso',
-          data: response.data
-        };
+      for (const parcela of parcelas) {
+        await this.cancelarTitulo(parcela);
       }
+
+      // Atualizar status do carnê
+      await carne.update({
+        status: 'cancelado'
+      });
 
       return {
-        success: false,
-        message: 'Erro ao cancelar carnê'
+        success: true,
+        message: 'Carnê cancelado com sucesso'
       };
     } catch (error: any) {
       logger.error('Erro ao cancelar carnê', { 

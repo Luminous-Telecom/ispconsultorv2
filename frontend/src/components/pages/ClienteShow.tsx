@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
-import { CarneService } from '../../services/carneService';
-import { CarneParcelaService } from '../../services/carneParcelaService';
+import { TituloService } from '../../services/tituloService';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import DataTable from '../common/DataTable';
 import { getApiUrl } from '../../config/api';
@@ -105,13 +104,18 @@ const ClienteShow: React.FC = () => {
     refetchOnWindowFocus: false
   });
 
-  // Buscar carnês do cliente
+  // Buscar carnês do cliente (simulado)
   const { data: carnesData, isLoading: carnesLoading } = useQuery({
     queryKey: ['carnes-cliente', id, page, limit],
-    queryFn: () => CarneService.list({ 
-      cliente_id: Number(id),
-      page,
-      limit
+    queryFn: () => Promise.resolve({ 
+      data: [], 
+      pagination: { 
+        from: 0,
+        to: 0,
+        total: 0, 
+        current_page: 1, 
+        last_page: 1 
+      } 
     }),
     enabled: !!id,
     staleTime: 0,
@@ -121,7 +125,7 @@ const ClienteShow: React.FC = () => {
   // Buscar títulos (parcelas) do cliente
   const { data: titulosData, isLoading: titulosLoading } = useQuery({
     queryKey: ['titulos-cliente', id, page, limit],
-    queryFn: () => CarneParcelaService.list({ 
+    queryFn: () => TituloService.list({ 
       cliente_id: Number(id),
       page,
       limit

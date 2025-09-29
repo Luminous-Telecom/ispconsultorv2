@@ -150,6 +150,7 @@ export interface Carne extends BaseEntity {
 
 export interface CarneParcela extends BaseEntity {
   carne_id: number;
+  plano_id: number;
   numero_parcela: number;
   valor_parcela: number;
   tipo?: string;
@@ -169,6 +170,7 @@ export interface CarneParcela extends BaseEntity {
   
   // Relacionamentos
   carne?: Carne;
+  plano?: Plano;
 }
 
 export interface ClientePlano extends BaseEntity {

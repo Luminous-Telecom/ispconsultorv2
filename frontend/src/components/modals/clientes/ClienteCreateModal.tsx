@@ -87,7 +87,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
   // Queries para buscar dados
   const { data: planos } = useQuery({
     queryKey: ['planos-ativos'],
-    queryFn: () => PlanoService.findAtivos(),
+    queryFn: () => PlanoService.list({ status: 'ativo', limit: 100 }),
     enabled: show,
   });
 
@@ -372,7 +372,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
                 >
                   <option value={0}>Selecione um plano</option>
-                  {planos?.map((plano: any) => (
+                  {planos?.data?.map((plano: any) => (
                     <option key={plano.id} value={plano.id}>
                       {plano.nome_plano} - R$ {plano.valor_mensal}
                     </option>

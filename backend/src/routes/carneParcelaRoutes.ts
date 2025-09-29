@@ -6,6 +6,9 @@ const router = express.Router();
 // Listar parcelas com filtros
 router.get('/', CarneParcelaController.list);
 
+// Criar nova parcela
+router.post('/', CarneParcelaController.create);
+
 // Buscar parcela por ID
 router.get('/:id', CarneParcelaController.getById);
 

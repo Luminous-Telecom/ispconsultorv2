@@ -3,15 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../../../services/clienteService';
 import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
-import { CarneService } from '../../../services/carneService';
-import { CarneParcelaService } from '../../../services/carneParcelaService';
+import { TituloService } from '../../../services/tituloService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { Cliente, Carne, CarneParcela } from '../../../types';
+import { Cliente, CarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
-import CarneCreateModal from '../carnés/CarneCreateModal';
-import CarneParcelaCreateModal from '../carnés/CarneParcelaCreateModal';
+import TituloCreateModal from '../titulos/TituloCreateModal';
+import TituloEditModal from '../titulos/TituloEditModal';
 
 interface ClienteForm {
   cnpj: string;
@@ -28,7 +27,7 @@ interface ClienteForm {
   cidade: string;
   estado: string;
   ativo: boolean;
-  tipo_cobranca: 'titulo' | 'carne';
+  tipo_cobranca: 'titulo';
   valor_primeiro_titulo: 'total' | 'proporcional';
   dia_vencimento: number;
   conta_boleto: number;
@@ -80,7 +79,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     cidade: '',
     estado: '',
     ativo: true,
-    tipo_cobranca: 'carne',
+    tipo_cobranca: 'titulo',
     valor_primeiro_titulo: 'total',
     dia_vencimento: 10,
     conta_boleto: 0,
@@ -98,10 +97,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ClienteForm>>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
-  const [showCarnes, setShowCarnes] = useState(true);
   const [showTitulos, setShowTitulos] = useState(true);
-  const [showCarneCreateModal, setShowCarneCreateModal] = useState(false);
-  const [showParcelaCreateModal, setShowParcelaCreateModal] = useState(false);
+  const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
+  const [showTituloEditModal, setShowTituloEditModal] = useState(false);
+  const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -131,7 +130,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   // Buscar parcelas do cliente (dados reais do banco)
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
     queryKey: ['parcelas', 'cliente', clienteId],
-    queryFn: () => CarneParcelaService.list({ cliente_id: clienteId!, limit: 100 }),
+    queryFn: () => TituloService.list({ cliente_id: clienteId!, limit: 100 }),
     enabled: !!clienteId,
   });
 
@@ -142,49 +141,14 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     const allData = parcelasData.data.filter((parcela: CarneParcela) => {
       if (!parcela.carne) return false;
       
-      const isCarne = parcela.carne.quantidade_parcelas > 1;
       const isTitulo = parcela.carne.quantidade_parcelas === 1;
       
-      if (showCarnes && showTitulos) return true;
-      if (showCarnes && !showTitulos) return isCarne;
-      if (!showCarnes && showTitulos) return isTitulo;
+      if (showTitulos) return isTitulo;
       
       return false;
     });
 
-    // Se mostrando carnês, agrupar por carnê (mostrar carnê completo)
-    if (showCarnes && !showTitulos) {
-      const carnesAgrupados = new Map();
-      
-      allData.forEach((parcela: CarneParcela) => {
-        if (parcela.carne && parcela.carne.quantidade_parcelas > 1) {
-          const carneId = parcela.carne.id;
-          
-          if (!carnesAgrupados.has(carneId)) {
-            carnesAgrupados.set(carneId, {
-              ...parcela.carne,
-              parcelas: [],
-              valor_total_real: 0,
-              parcelas_pagas: 0,
-              valor_pago_total: 0
-            });
-          }
-          
-          const carneAgrupado = carnesAgrupados.get(carneId);
-          carneAgrupado.parcelas.push(parcela);
-          carneAgrupado.valor_total_real += Number(parcela.valor_parcela || 0);
-          
-          if (parcela.pago) {
-            carneAgrupado.parcelas_pagas++;
-            carneAgrupado.valor_pago_total += Number(parcela.valor_pago || parcela.valor_parcela || 0);
-          }
-        }
-      });
-      
-      return Array.from(carnesAgrupados.values());
-    }
-    
-    // Para títulos ou ambos, mostrar parcelas individuais
+    // Retornar títulos individuais
     return allData;
   };
 
@@ -204,69 +168,36 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           valueB = b.id;
           break;
         case 'status':
-          // Para status, usar a lógica de prioridade
-          if (a.parcelas) {
-            const isCompletamentePagoA = a.parcelas_pagas === a.parcelas.length;
-            const temParcelasVencidasA = a.parcelas.some((p: any) => p.status === 'vencido');
-            valueA = isCompletamentePagoA ? 0 : temParcelasVencidasA ? 1 : a.parcelas_pagas > 0 ? 2 : 3;
-          } else {
-            valueA = a.status === 'pago' ? 0 : a.status === 'vencido' ? 1 : a.status === 'pendente' ? 2 : 3;
-          }
-          if (b.parcelas) {
-            const isCompletamentePagoB = b.parcelas_pagas === b.parcelas.length;
-            const temParcelasVencidasB = b.parcelas.some((p: any) => p.status === 'vencido');
-            valueB = isCompletamentePagoB ? 0 : temParcelasVencidasB ? 1 : b.parcelas_pagas > 0 ? 2 : 3;
-          } else {
-            valueB = b.status === 'pago' ? 0 : b.status === 'vencido' ? 1 : b.status === 'pendente' ? 2 : 3;
-          }
+          valueA = a.status === 'pago' ? 0 : a.status === 'vencido' ? 1 : a.status === 'pendente' ? 2 : 3;
+          valueB = b.status === 'pago' ? 0 : b.status === 'vencido' ? 1 : b.status === 'pendente' ? 2 : 3;
           break;
         case 'numero_carne':
-          valueA = a.parcelas ? a.numero_carne : a.carne?.numero_carne || '';
-          valueB = b.parcelas ? b.numero_carne : b.carne?.numero_carne || '';
+          valueA = a.carne?.numero_carne || '';
+          valueB = b.carne?.numero_carne || '';
           break;
         case 'quantidade_parcelas':
-          valueA = a.parcelas ? a.quantidade_parcelas : a.numero_parcela;
-          valueB = b.parcelas ? b.quantidade_parcelas : b.numero_parcela;
+          valueA = a.numero_parcela;
+          valueB = b.numero_parcela;
           break;
         case 'data_vencimento':
-          valueA = a.parcelas ? new Date(a.data_vencimento_primeira) : new Date(a.data_vencimento);
-          valueB = b.parcelas ? new Date(b.data_vencimento_primeira) : new Date(b.data_vencimento);
+          valueA = new Date(a.data_vencimento);
+          valueB = new Date(b.data_vencimento);
           break;
         case 'valor':
-          valueA = a.parcelas ? a.valor_total_real : Number(a.valor_parcela || 0);
-          valueB = b.parcelas ? b.valor_total_real : Number(b.valor_parcela || 0);
+          valueA = Number(a.valor_parcela || 0);
+          valueB = Number(b.valor_parcela || 0);
           break;
         case 'valor_pago':
-          if (a.parcelas) {
-            const isCompletamentePagoA = a.parcelas_pagas === a.parcelas.length;
-            valueA = isCompletamentePagoA ? a.valor_pago_total : 0;
-          } else {
-            valueA = a.pago ? Number(a.valor_pago || a.valor_parcela || 0) : 0;
-          }
-          if (b.parcelas) {
-            const isCompletamentePagoB = b.parcelas_pagas === b.parcelas.length;
-            valueB = isCompletamentePagoB ? b.valor_pago_total : 0;
-          } else {
-            valueB = b.pago ? Number(b.valor_pago || b.valor_parcela || 0) : 0;
-          }
+          valueA = a.pago ? Number(a.valor_pago || a.valor_parcela || 0) : 0;
+          valueB = b.pago ? Number(b.valor_pago || b.valor_parcela || 0) : 0;
           break;
         case 'valor_aberto':
-          if (a.parcelas) {
-            const isCompletamentePagoA = a.parcelas_pagas === a.parcelas.length;
-            valueA = isCompletamentePagoA ? 0 : a.valor_total_real - a.valor_pago_total;
-          } else {
-            valueA = a.pago ? 0 : Number(a.valor_parcela || 0);
-          }
-          if (b.parcelas) {
-            const isCompletamentePagoB = b.parcelas_pagas === b.parcelas.length;
-            valueB = isCompletamentePagoB ? 0 : b.valor_total_real - b.valor_pago_total;
-          } else {
-            valueB = b.pago ? 0 : Number(b.valor_parcela || 0);
-          }
+          valueA = a.pago ? 0 : Number(a.valor_parcela || 0);
+          valueB = b.pago ? 0 : Number(b.valor_parcela || 0);
           break;
         default:
-          valueA = a[sortColumn] || '';
-          valueB = b[sortColumn] || '';
+          valueA = (a as any)[sortColumn] || '';
+          valueB = (b as any)[sortColumn] || '';
       }
       
       // Comparação
@@ -289,51 +220,71 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   // Ações para o header do modal (apenas na aba Financeiro)
   const bulkActions = [
-    // Botão Novo (baseado nos checkboxes selecionados)
-    ...(showCarnes || showTitulos ? [{
-      label: 'Novo',
+    {
+      label: 'Novo Título',
       action: () => {
-        if (showCarnes && !showTitulos) {
-          // Apenas carnês selecionado - abrir modal de carnê
-          setShowCarneCreateModal(true);
-        } else if (showTitulos && !showCarnes) {
-          // Apenas títulos selecionado - abrir modal de parcela
-          setShowParcelaCreateModal(true);
-        } else if (showCarnes && showTitulos) {
-          // Ambos selecionados - abrir modal de carnê por padrão
-          setShowCarneCreateModal(true);
+        setShowTituloCreateModal(true);
+      }
+    },
+    {
+      label: 'Editar',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          setSelectedTituloId(item.id);
+          setShowTituloEditModal(true);
         }
       }
-    }] : []),
+    },
+    {
+      label: 'Alterar Vencimento',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          showNotification('Funcionalidade de alterar vencimento em desenvolvimento', 'info');
+        }
+      }
+    },
+    {
+      label: 'Marcar como Pago',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          showNotification('Funcionalidade de marcar como pago em desenvolvimento', 'info');
+        }
+      }
+    },
+    {
+      label: 'Cancelar',
+      action: async (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          if (window.confirm('Tem certeza que deseja cancelar este título?')) {
+            try {
+              const response = await TituloService.update(item.id, { status: 'cancelado' });
+              
+              if (response?.message) {
+                showNotification(response.message, 'success');
+              } else {
+                showNotification('Título cancelado com sucesso!', 'success');
+              }
+              
+              // Recarregar dados
+              queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
+            } catch (err: any) {
+              showNotification(err.response?.data?.message || 'Erro ao cancelar título', 'error');
+            }
+          }
+        }
+      }
+    },
     {
       label: 'Imprimir',
       action: async (selectedItems: any[]) => {
         try {
           for (const item of selectedItems) {
-            // Se títulos está selecionado e o item é uma parcela individual
-            if (showTitulos && !showCarnes && !item.parcelas) {
-              // Imprimir título individual
-              const url = CarneParcelaService.getBoletoUrl(Number(item.id));
-              window.open(url, '_blank');
-            }
-            // Se carnês está selecionado e o item é um carnê completo
-            else if (showCarnes && !showTitulos && item.parcelas) {
-              // Imprimir carnê completo
-              const url = CarneService.getImprimirUrl(Number(item.id));
-              window.open(url, '_blank');
-            }
-            // Se ambos estão selecionados, verificar o tipo do item
-            else if (showCarnes && showTitulos) {
-              if (item.parcelas) {
-                // É um carnê completo
-                const url = CarneService.getImprimirUrl(Number(item.id));
-                window.open(url, '_blank');
-              } else {
-                // É uma parcela individual
-                const url = CarneParcelaService.getBoletoUrl(Number(item.id));
-                window.open(url, '_blank');
-              }
-            }
+            const url = TituloService.getBoletoUrl(Number(item.id));
+            window.open(url, '_blank');
           }
           showNotification('Documentos abertos para impressão', 'success');
         } catch (error) {
@@ -357,125 +308,68 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'status',
       label: 'Status',
       render: (item: any) => {
-        if (item.parcelas) {
-          // Carnê agrupado
-          const isCompletamentePago = item.parcelas_pagas === item.parcelas.length;
-          const temParcelasVencidas = item.parcelas.some((p: any) => p.status === 'vencido');
-          
-          return (
-            <span className={`badge ${
-              isCompletamentePago ? 'bg-success' :
-              temParcelasVencidas ? 'bg-danger' :
-              item.parcelas_pagas > 0 ? 'bg-warning' :
-              'bg-secondary'
-            }`}>
-              {isCompletamentePago ? '✔ Recebimento em dia' :
-               temParcelasVencidas ? '✔ Recebimento em atraso' :
-               item.parcelas_pagas > 0 ? 'Parcialmente pago' :
-               'Pendente'}
-            </span>
-          );
-        } else {
-          // Parcela individual
-          return (
-            <span className={`badge ${
-              item.status === 'pago' ? 'bg-success' :
-              item.status === 'vencido' ? 'bg-danger' :
-              item.status === 'pendente' ? 'bg-warning' :
-              'bg-secondary'
-            }`}>
-              {item.status === 'pago' ? '✔ Recebimento em dia' :
-               item.status === 'vencido' ? '✔ Recebimento em atraso' :
-               item.status === 'pendente' ? 'Pendente' :
-               item.status}
-            </span>
-          );
-        }
+        return (
+          <span className={`badge ${
+            item.status === 'pago' ? 'bg-success' :
+            item.status === 'vencido' ? 'bg-danger' :
+            item.status === 'pendente' ? 'bg-warning' :
+            'bg-secondary'
+          }`}>
+            {item.status === 'pago' ? '✔ Recebimento em dia' :
+             item.status === 'vencido' ? '✔ Recebimento em atraso' :
+             item.status === 'pendente' ? 'Pendente' :
+             item.status}
+          </span>
+        );
       }
     },
     {
       key: 'numero_carne',
       label: 'Cart. cob.',
       render: (item: any) => {
-        if (item.parcelas) {
-          return item.numero_carne;
-        } else {
-          return item.carne?.numero_carne || '-';
-        }
+        return item.carne?.numero_carne || '-';
       }
     },
     {
       key: 'quantidade_parcelas',
       label: 'Parcel.',
       render: (item: any) => {
-        if (item.parcelas) {
-          return item.quantidade_parcelas;
-        } else {
-          return item.numero_parcela;
-        }
+        return item.numero_parcela;
       }
     },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
       render: (item: any) => {
-        if (item.parcelas) {
-          return new Date(item.data_vencimento_primeira).toLocaleDateString('pt-BR');
-        } else {
-          return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
-        }
+        return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
       }
     },
     {
       key: 'valor',
       label: 'Valor',
       render: (item: any) => {
-        if (item.parcelas) {
-          return `R$ ${item.valor_total_real.toFixed(2)}`;
-        } else {
-          return `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
-        }
+        return `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
       }
     },
     {
       key: 'valor_pago',
       label: 'Valor baixado',
       render: (item: any) => {
-        if (item.parcelas) {
-          const isCompletamentePago = item.parcelas_pagas === item.parcelas.length;
-          return isCompletamentePago ? `R$ ${item.valor_pago_total.toFixed(2)}` : 'R$ 0,00';
-        } else {
-          return item.pago ? `R$ ${Number(item.valor_pago || item.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00';
-        }
+        return item.pago ? `R$ ${Number(item.valor_pago || item.valor_parcela || 0).toFixed(2)}` : 'R$ 0,00';
       }
     },
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
       render: (item: any) => {
-        if (item.parcelas) {
-          const isCompletamentePago = item.parcelas_pagas === item.parcelas.length;
-          return isCompletamentePago ? 'R$ 0,00' : `R$ ${(item.valor_total_real - item.valor_pago_total).toFixed(2)}`;
-        } else {
-          return item.pago ? 'R$ 0,00' : `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
-        }
+        return item.pago ? 'R$ 0,00' : `R$ ${Number(item.valor_parcela || 0).toFixed(2)}`;
       }
     },
     {
       key: 'tipo',
       label: 'Carnê/Título',
       render: (item: any) => {
-        if (item.parcelas) {
-          return <span className="badge bg-primary">Carnê</span>;
-        } else {
-          return (
-            <span className={`badge ${
-              item.carne?.quantidade_parcelas === 1 ? 'bg-info' : 'bg-primary'
-            }`}>
-              {item.carne?.quantidade_parcelas === 1 ? 'Título' : 'Carnê'}
-            </span>
-          );
-        }
+        return <span className="badge bg-info">Título</span>;
       }
     }
   ];
@@ -513,7 +407,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         cidade: cliente.cidade || '',
         estado: cliente.estado || '',
         ativo: cliente.ativo ?? true,
-        tipo_cobranca: cliente.tipo_cobranca || 'carne',
+        tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
         valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
         dia_vencimento: cliente.dia_vencimento || 10,
         conta_boleto: cliente.conta_boleto || 0,
@@ -1224,8 +1118,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     <div className="d-flex justify-content-start mb-3">
                       <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
                         {bulkActions.map((bulkAction, index) => {
-                          // Botão "Novo" sempre habilitado, outros apenas quando há seleção
-                          const isNewButton = bulkAction.label === 'Novo';
+                          // Botão "Novo Título" sempre habilitado, outros apenas quando há seleção
+                          const isNewButton = bulkAction.label === 'Novo Título';
                           const isDisabled = !isNewButton && selectedItems.length === 0;
                           
                           return (
@@ -1270,22 +1164,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                       {/* Filtros após a busca */}
                       <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            id="showCarnes"
-                            checked={showCarnes}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              setShowCarnes(e.target.checked);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <label className="form-check-label small" htmlFor="showCarnes">
-                            Carnês
-                          </label>
-                        </div>
                         <div className="form-check">
                           <input 
                             className="form-check-input" 
@@ -1431,7 +1309,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       setLimit={setLimit}
                       setPage={setPage}
                       emptyMessage={
-                        !showCarnes && !showTitulos 
+                        !showTitulos 
                           ? 'Selecione pelo menos um tipo para visualizar os dados.'
                           : 'Este cliente ainda não possui registros cadastrados com os filtros selecionados.'
                       }
@@ -1448,43 +1326,26 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       <div className="d-flex gap-4">
                         <div className="text-end">
                           <div className="small text-muted">Valor:</div>
-                          <strong>R$ {sortedData.reduce((sum, item) => {
-                            if (item.parcelas) {
-                              return sum + item.valor_total_real;
-                            } else {
-                              return sum + Number(item.valor_parcela || 0);
-                            }
+                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                            return sum + Number(item.valor_parcela || 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor baixado:</div>
-                          <strong>R$ {sortedData.reduce((sum, item) => {
-                            if (item.parcelas) {
-                              return sum + item.valor_pago_total;
-                            } else {
-                              return sum + (item.pago ? Number(item.valor_pago || item.valor_parcela || 0) : 0);
-                            }
+                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                            return sum + (item.pago ? Number(item.valor_pago || item.valor_parcela || 0) : 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor aberto:</div>
-                          <strong>R$ {sortedData.reduce((sum, item) => {
-                            if (item.parcelas) {
-                              return sum + (item.valor_total_real - item.valor_pago_total);
-                            } else {
-                              return sum + (item.pago ? 0 : Number(item.valor_parcela || 0));
-                            }
+                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                            return sum + (item.pago ? 0 : Number(item.valor_parcela || 0));
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor cancelado:</div>
-                          <strong>R$ {sortedData.reduce((sum, item) => {
-                            if (item.parcelas) {
-                              const todasCanceladas = item.parcelas.every((p: any) => p.status === 'cancelado');
-                              return sum + (todasCanceladas ? item.valor_total_real : 0);
-                            } else {
-                              return sum + (item.status === 'cancelado' ? Number(item.valor_parcela || 0) : 0);
-                            }
+                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                            return sum + (item.status === 'cancelado' ? Number(item.valor_parcela || 0) : 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
                       </div>
@@ -1534,26 +1395,30 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         </div>
       </div>
 
-      {/* Modal de criação de carnê */}
-      <CarneCreateModal
-        show={showCarneCreateModal}
-        onClose={() => setShowCarneCreateModal(false)}
+      {/* Modal de criação de título */}
+      <TituloCreateModal
+        show={showTituloCreateModal}
+        onClose={() => setShowTituloCreateModal(false)}
         onSuccess={() => {
-          setShowCarneCreateModal(false);
+          setShowTituloCreateModal(false);
           refetchParcelas();
         }}
         clienteId={clienteId || undefined}
       />
 
-      {/* Modal de criação de parcela/título */}
-      <CarneParcelaCreateModal
-        show={showParcelaCreateModal}
-        onClose={() => setShowParcelaCreateModal(false)}
+      {/* Modal de edição de título */}
+      <TituloEditModal
+        show={showTituloEditModal}
+        onClose={() => {
+          setShowTituloEditModal(false);
+          setSelectedTituloId(null);
+        }}
         onSuccess={() => {
-          setShowParcelaCreateModal(false);
+          setShowTituloEditModal(false);
+          setSelectedTituloId(null);
           refetchParcelas();
         }}
-        clienteId={clienteId || undefined}
+        parcelaId={selectedTituloId || 0}
       />
     </DraggableModal>
   );

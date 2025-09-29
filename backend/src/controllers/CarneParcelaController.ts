@@ -240,6 +240,105 @@ export class CarneParcelaController {
     };
   }
 
+  static async create(req: Request, res: Response): Promise<void> {
+    try {
+      const { plano_id, data_vencimento, observacoes, cliente_id } = req.body;
+
+      console.log('Dados recebidos no backend:', { plano_id, data_vencimento, observacoes, cliente_id });
+
+      // Validações básicas
+      if (!plano_id || !data_vencimento || !cliente_id) {
+        console.log('Validação falhou:', { plano_id, data_vencimento, cliente_id });
+        res.status(400).json({
+          success: false,
+          message: 'Plano, data de vencimento e cliente são obrigatórios'
+        });
+        return;
+      }
+
+      // Buscar o plano para obter o valor
+      const { Plano } = await import('../models/Plano');
+      const plano = await Plano.findByPk(plano_id);
+      
+      if (!plano) {
+        res.status(400).json({
+          success: false,
+          message: 'Plano não encontrado'
+        });
+        return;
+      }
+
+      // Buscar banco padrão para o cliente
+      const { Cliente } = await import('../models/Cliente');
+      const cliente = await Cliente.findByPk(cliente_id);
+      
+      if (!cliente) {
+        res.status(400).json({
+          success: false,
+          message: 'Cliente não encontrado'
+        });
+        return;
+      }
+
+      // Buscar banco padrão
+      const { Banco } = await import('../models/Banco');
+      const banco = await Banco.findOne({ where: { ativo: true } });
+      
+      if (!banco) {
+        res.status(400).json({
+          success: false,
+          message: 'Nenhum banco ativo encontrado'
+        });
+        return;
+      }
+
+      // Gerar número único do carnê
+      const gerarNumeroCarne = () => {
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 1000);
+        return `TIT-${timestamp}-${random}`;
+      };
+
+      // Criar carnê individual (1 parcela apenas)
+      const { Carne } = await import('../models/Carne');
+      const carne = await Carne.create({
+        numero_carne: gerarNumeroCarne(),
+        cliente_id: cliente_id,
+        plano_id: plano_id,
+        banco_id: banco.id,
+        valor_total: plano.valor_mensal,
+        quantidade_parcelas: 1,
+        data_vencimento_primeira: data_vencimento,
+        observacoes: observacoes || '',
+        status: 'pendente'
+      });
+
+      // Criar nova parcela/título
+      const parcela = await CarneParcela.create({
+        carne_id: carne.id,
+        plano_id,
+        numero_parcela: 1,
+        valor_parcela: plano.valor_mensal,
+        data_vencimento,
+        observacoes: observacoes || '',
+        status: 'pendente',
+        pago: false
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Título criado com sucesso',
+        data: parcela
+      });
+    } catch (error: any) {
+      logger.error('Erro ao criar título', { error: error.message });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
   static async list(req: Request, res: Response): Promise<void> {
     try {
       const { carne_id, cliente_id, search, status, page = 1, limit = 15 } = req.query;
@@ -511,9 +610,9 @@ export class CarneParcelaController {
           banco_tipo: banco.tipo_banco
         });
 
-        const resultado = await BancoApiService.cancelarParcelaCarne(parcela);
+        const resultado = await BancoApiService.cancelarTitulo(parcela);
         if (!resultado.success) {
-          logger.warning('Erro ao cancelar parcela de carnê', {
+          logger.warning('Erro ao cancelar título no banco', {
             parcela_id: parcela.id,
             erro: resultado.message
           });
@@ -570,7 +669,7 @@ export class CarneParcelaController {
 
       // Verificar se mudou a data de vencimento e se for Efí com carnê, alterar via API
       const novaDataVencimento = data_vencimento ? new Date(data_vencimento).toISOString().split('T')[0] : null;
-      const dataVencimentoOriginal = parcela.data_vencimento.toISOString().split('T')[0];
+      const dataVencimentoOriginal = new Date(parcela.data_vencimento).toISOString().split('T')[0];
       
       logger.info('Verificando alteração de vencimento', {
         parcela_id: parcela.id,
@@ -606,16 +705,40 @@ export class CarneParcelaController {
       }
 
       // Atualizar dados locais
-      await parcela.update({
+      const updateData: any = {
         data_vencimento: novaDataVencimento ? new Date(novaDataVencimento) : parcela.data_vencimento,
         valor_parcela: novoValorParcela,
         observacoes: observacoes || parcela.observacoes
-      });
+      };
+
+      // Se status foi enviado, atualizar
+      if (req.body.status) {
+        updateData.status = req.body.status;
+        
+        // Se for cancelado, cancelar na EFI também
+        if (req.body.status === 'cancelado' && parcela.charge_id) {
+          logger.info('Cancelando título na EFI', {
+            parcela_id: parcela.id,
+            charge_id: parcela.charge_id
+          });
+          
+          const resultado = await BancoApiService.cancelarTitulo(parcela);
+          if (!resultado.success) {
+            logger.warn('Erro ao cancelar título na EFI', {
+              parcela_id: parcela.id,
+              erro: resultado.message
+            });
+          }
+        }
+      }
+
+      await parcela.update(updateData);
 
       logger.info('Parcela atualizada com sucesso', {
         parcela_id: parcela.id,
         nova_data_vencimento: novaDataVencimento,
-        novo_valor: novoValorParcela
+        novo_valor: novoValorParcela,
+        novo_status: req.body.status
       });
 
       res.json({ success: true, message: 'Parcela atualizada com sucesso!' });
@@ -651,6 +774,34 @@ export class CarneParcelaController {
         return;
       }
 
+      // Verificar se o boleto já foi registrado no banco
+      if (!parcela.charge_id) {
+        console.log('Boleto não registrado no banco, registrando agora...');
+        
+        // Registrar boleto no banco via API
+        const { BancoApiService } = await import('../services/BancoApiService');
+        const resultado = await BancoApiService.gerarTitulo(parcela);
+        
+        if (resultado.success) {
+          console.log('Boleto registrado no banco com sucesso:', resultado.data);
+          
+          // Atualizar parcela com dados do banco
+          await parcela.update({
+            charge_id: resultado.data?.charge_id || null,
+            codigo_barras: resultado.data?.codigo_barras || null,
+            linha_digitavel: resultado.data?.linha_digitavel || null,
+            url_boleto: resultado.data?.url_boleto || null,
+            qrcode: resultado.data?.qrcode || null,
+            qrcode_image: resultado.data?.qrcode_image || null
+          });
+          
+          // Recarregar parcela com dados atualizados
+          await parcela.reload();
+        } else {
+          console.error('Erro ao registrar boleto no banco:', resultado.message);
+          // Continuar mesmo se falhar no banco
+        }
+      }
 
       const dadosEmpresa = await DadosEmpresa.findOne();
       

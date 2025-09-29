@@ -66,19 +66,10 @@ export const efiConfig = {
   api_endpoints: {
     auth: '/v1/authorize',
     
-    // Carnês
-    carnet: '/v1/carnet',
-    carnet_consultar: '/v1/carnet',
-    carnet_cancelar: '/v1/carnet',
-    carnet_metadata: '/v1/carnet',
-    carnet_alterar_vencimento: '/v1/carnet',
-    carnet_parcela_alterar_vencimento: '/v1/carnet/:id/parcel/:parcel',
-    carnet_parcela_cancelar: '/v1/carnet',
-    
-    // Cobranças individuais (fallback)
+    // Títulos individuais (nova API)
     boleto: '/v1/charge/one-step',
-    consultar: '/v1/charge',
-    cancelar: '/v1/charge',
+    consultar: '/v1/charge/:id',
+    cancelar: '/v1/charge/:id',
     
     // Listagem
     listar_cobrancas: '/v1/charges',
@@ -91,15 +82,14 @@ export const efiConfig = {
   cobranca_base_url: 'https://cobrancas.api.efipay.com.br',
   
   api_response_mapping: {
-    carnet: {
-      id: 'data.carnet_id',
-      charges: 'data.charges',
-    },
     boleto: {
       id: 'data.charge_id',
-      url: 'data.payment_url',
+      url: 'data.link',
       barcode: 'data.barcode',
-      linha_digitavel: 'data.line',
+      linha_digitavel: 'data.barcode',
+      pdf: 'data.pdf.charge',
+      pix_qrcode: 'data.pix.qrcode',
+      pix_qrcode_image: 'data.pix.qrcode_image',
     },
     status: {
       status: 'data.status',
@@ -116,7 +106,7 @@ export const efiConfig = {
   /**
    * Verificar se o banco suporta operações de carnê
    */
-  suporta_carne: true,
+  suporta_carne: false,
   
   /**
    * Verificar se o banco suporta operações específicas

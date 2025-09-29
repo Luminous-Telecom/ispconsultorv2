@@ -6,7 +6,6 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { ClienteListModal } from '../modals/clientes';
 import { PlanoListModal } from '../modals/planos';
 import { BancoListModal } from '../modals/bancos';
-import { CarneListModal } from '../modals/carnés';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -18,7 +17,6 @@ const Layout: React.FC = () => {
   const [showClienteModal, setShowClienteModal] = useState(false);
   const [showPlanoModal, setShowPlanoModal] = useState(false);
   const [showBancoModal, setShowBancoModal] = useState(false);
-  const [showCarneModal, setShowCarneModal] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -28,7 +26,6 @@ const Layout: React.FC = () => {
     { path: '/clientes', icon: 'bi-people', label: 'Clientes', isModal: true, modalHandler: () => setShowClienteModal(true) },
     { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => setShowPlanoModal(true) },
     { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => setShowBancoModal(true) },
-    { path: '/carnes', icon: 'bi-receipt', label: 'Carnês', isModal: true, modalHandler: () => setShowCarneModal(true) },
     { path: '/carne-parcelas', icon: 'bi-calendar-check', label: 'Parcelas', isModal: false },
     { path: '/rotinas-agendadas', icon: 'bi-clock', label: 'Rotinas Agendadas', isModal: false },
     { path: '/parametros', icon: 'bi-gear', label: 'Parâmetros', isModal: false },
@@ -126,11 +123,6 @@ const Layout: React.FC = () => {
         title="Lista de Bancos"
       />
 
-      <CarneListModal
-        show={showCarneModal}
-        onClose={() => setShowCarneModal(false)}
-        title="Lista de Carnês"
-      />
     </div>
   );
 };

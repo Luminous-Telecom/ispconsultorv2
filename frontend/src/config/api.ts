@@ -33,15 +33,11 @@ export const API_ENDPOINTS = {
   BANCOS_ATIVOS: '/bancos/ativos',
   BANCO_TESTAR_CONEXAO: (bancoId: number) => `/bancos/${bancoId}/testar-conexao`,
   
-  // Carnês
-  CARNES: '/carnes',
-  CARNES_ATIVOS: '/carnes/ativos',
-  CARNE_CONSULTAR_STATUS: (carneId: number) => `/carnes/${carneId}/consultar-status`,
   
-  // Parcelas
-  CARNE_PARCELAS: '/carne-parcelas',
-  PARCELAS_VENCIDAS: '/carne-parcelas/vencidas',
-  PARCELAS_VENCIDAS_HOJE: '/carne-parcelas/vencidas-hoje',
+  // Títulos
+  TITULOS: '/titulos',
+  TITULOS_VENCIDOS: '/titulos/vencidos',
+  TITULOS_VENCIDOS_HOJE: '/titulos/vencidos-hoje',
   
   // Dashboard
   DASHBOARD: '/dashboard',

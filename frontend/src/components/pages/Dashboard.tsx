@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
-import { CarneService } from '../../services/carneService';
 
 const Dashboard: React.FC = () => {
   const [chartData, setChartData] = useState<any>(null);
@@ -10,7 +9,6 @@ const Dashboard: React.FC = () => {
   // Estados para controlar itens ocultos em cada gráfico
   const [hiddenClientes, setHiddenClientes] = useState<Set<number>>(new Set());
   const [hiddenPlanos, setHiddenPlanos] = useState<Set<number>>(new Set());
-  const [hiddenCarnes, setHiddenCarnes] = useState<Set<number>>(new Set());
   const [hiddenPagamentos, setHiddenPagamentos] = useState<Set<number>>(new Set());
   const [hiddenDistribuicao, setHiddenDistribuicao] = useState<Set<number>>(new Set());
   const [hiddenClientesStatus, setHiddenClientesStatus] = useState<Set<number>>(new Set());
@@ -31,12 +29,6 @@ const Dashboard: React.FC = () => {
     setHiddenPlanos(newHidden);
   };
 
-  const toggleCarne = (index: number) => {
-    const newHidden = new Set(hiddenCarnes);
-    if (newHidden.has(index)) newHidden.delete(index);
-    else newHidden.add(index);
-    setHiddenCarnes(newHidden);
-  };
 
   const togglePagamento = (index: number) => {
     const newHidden = new Set(hiddenPagamentos);
@@ -79,16 +71,10 @@ const Dashboard: React.FC = () => {
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: carnesData, isLoading: loadingCarnes } = useQuery({
-    queryKey: ['carnes-dashboard'],
-    queryFn: () => CarneService.list({ limit: 1000 }),
-    placeholderData: (previousData) => previousData,
-  });
 
   // Processar dados
   const clientes = clientesData?.data || [];
   const planos = planosData?.data || [];
-  const carnes = carnesData?.data || [];
 
   // Estatísticas de clientes
   const totalClientes = clientes.length;
@@ -100,41 +86,17 @@ const Dashboard: React.FC = () => {
   const planosAtivos = planos.filter(p => p.status === 'ativo').length;
   const planosInativos = totalPlanos - planosAtivos;
 
-  // Estatísticas de carnês
-  const totalCarnes = carnes.length;
-  const carnesAtivos = carnes.filter(c => c.status === 'pendente').length;
-  const carnesPagos = carnes.filter(c => c.status === 'pago').length;
-  const carnesVencidos = carnes.filter(c => {
-    if (!c.parcelas) return false;
-    return c.parcelas.some((p: any) => {
-      const vencimento = new Date(p.data_vencimento);
-      const hoje = new Date();
-      return vencimento < hoje && p.status !== 'pago';
-    });
-  }).length;
 
-  // Receitas
-  const receitaTotal = carnes.reduce((total, carne) => {
-    return total + (Number(carne.valor_total) || 0);
-  }, 0);
+  // Receitas (simuladas para demonstração)
+  const receitaTotal = 0;
+  const receitaPaga = 0;
+  const receitaPendente = 0;
 
-  const receitaPaga = carnes.reduce((total, carne) => {
-    if (carne.status === 'pago') {
-      return total + (Number(carne.valor_total) || 0);
-    }
-    return total;
-  }, 0);
-
-  const receitaPendente = receitaTotal - receitaPaga;
-
-  // Métricas adicionais
-  const totalBoletos = carnes.reduce((total, carne) => {
-    return total + (carne.quantidade_parcelas || 0);
-  }, 0);
-  const ticketMedio = totalBoletos > 0 ? receitaTotal / totalBoletos : 0;
-  const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
-  const carnesPorCliente = totalClientes > 0 ? totalCarnes / totalClientes : 0;
-  const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
+  // Métricas adicionais (simuladas)
+  const totalBoletos = 0;
+  const ticketMedio = 0;
+  const taxaPagamento = 0;
+  const receitaPorCliente = 0;
 
   // Faturamento mensal (últimos 12 meses)
   const getFaturamentoMensal = () => {
@@ -145,13 +107,7 @@ const Dashboard: React.FC = () => {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
       
-      const faturamentoMes = carnes.reduce((total, carne) => {
-        const dataCarne = new Date(carne.created_at);
-        if (dataCarne.getMonth() === data.getMonth() && dataCarne.getFullYear() === data.getFullYear()) {
-          return total + (Number(carne.valor_total) || 0);
-        }
-        return total;
-      }, 0);
+      const faturamentoMes = 0; // Simulado
       
       meses.push({
         mes: mesAno,
@@ -189,18 +145,11 @@ const Dashboard: React.FC = () => {
 
   // Status de pagamento dos carnês
   const getStatusPagamento = () => {
-    const status = {
-      pago: carnes.filter(c => c.status === 'pago').length,
-      pendente: carnes.filter(c => c.status === 'pendente').length,
-      cancelado: carnes.filter(c => c.status === 'cancelado').length,
-      vencido: carnesVencidos
-    };
-    
     return [
-      { label: 'Pagos', value: status.pago, color: '#28a745' },
-      { label: 'Pendentes', value: status.pendente, color: '#17a2b8' },
-      { label: 'Vencidos', value: status.vencido, color: '#ffc107' },
-      { label: 'Cancelados', value: status.cancelado, color: '#dc3545' }
+      { label: 'Pagos', value: 0, color: '#28a745' },
+      { label: 'Pendentes', value: 0, color: '#17a2b8' },
+      { label: 'Vencidos', value: 0, color: '#ffc107' },
+      { label: 'Cancelados', value: 0, color: '#dc3545' }
     ];
   };
 
@@ -220,26 +169,13 @@ const Dashboard: React.FC = () => {
     }));
   };
 
-  // Métricas adicionais
+  // Métricas adicionais (simuladas)
   const getMetricasAdicionais = () => {
-    const totalParcelas = carnes.reduce((total, carne) => {
-      return total + (carne.quantidade_parcelas || 0);
-    }, 0);
-    
-    const parcelasPagas = carnes.reduce((total, carne) => {
-      if (carne.parcelas) {
-        return total + carne.parcelas.filter((p: any) => p.status === 'pago').length;
-      }
-      return total;
-    }, 0);
-    
-    const parcelasPendentes = totalParcelas - parcelasPagas;
-    
     return {
-      totalParcelas,
-      parcelasPagas,
-      parcelasPendentes,
-      taxaPagamentoParcelas: totalParcelas > 0 ? (parcelasPagas / totalParcelas) * 100 : 0
+      totalParcelas: 0,
+      parcelasPagas: 0,
+      parcelasPendentes: 0,
+      taxaPagamentoParcelas: 0
     };
   };
 
@@ -268,13 +204,7 @@ const Dashboard: React.FC = () => {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
       
-      const receitaMes = carnes.reduce((total, carne) => {
-        const dataCarne = new Date(carne.created_at);
-        if (dataCarne.getMonth() === data.getMonth() && dataCarne.getFullYear() === data.getFullYear()) {
-          return total + (Number(carne.valor_total) || 0);
-        }
-        return total;
-      }, 0);
+      const receitaMes = 0; // Simulado
       
       meses.push({
         mes: mesAno,
@@ -299,22 +229,10 @@ const Dashboard: React.FC = () => {
     ];
   };
 
-  // Métricas de performance
+  // Métricas de performance (simuladas)
   const getMetricasPerformance = () => {
-    const totalBoletos = carnes.reduce((total, carne) => {
-      return total + (carne.quantidade_parcelas || 0);
-    }, 0);
-    
-    const boletosVencidos = carnes.reduce((total, carne) => {
-      if (carne.parcelas) {
-        return total + carne.parcelas.filter((p: any) => {
-          const vencimento = new Date(p.data_vencimento);
-          const hoje = new Date();
-          return vencimento < hoje && p.status !== 'pago';
-        }).length;
-      }
-      return total;
-    }, 0);
+    const totalBoletos = 0;
+    const boletosVencidos = 0;
     
     const taxaInadimplencia = totalBoletos > 0 ? (boletosVencidos / totalBoletos) * 100 : 0;
     
@@ -336,11 +254,6 @@ const Dashboard: React.FC = () => {
     { label: 'Inativos', value: planosInativos, color: '#6c757d' }
   ];
 
-  const carnesChartData = [
-    { label: 'Pendentes', value: carnesAtivos, color: '#17a2b8' },
-    { label: 'Pagos', value: carnesPagos, color: '#28a745' },
-    { label: 'Vencidos', value: carnesVencidos, color: '#ffc107' }
-  ];
 
   const receitasChartData = [
     { label: 'Recebido', value: receitaPaga, color: '#28a745' },
@@ -357,7 +270,6 @@ const Dashboard: React.FC = () => {
   ];
 
   const produtividadeChartData = [
-    { label: 'Carnês/Cliente', value: carnesPorCliente, color: '#17a2b8' },
     { label: 'Receita/Cliente', value: receitaPorCliente, color: '#6f42c1' }
   ];
 
@@ -511,7 +423,7 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  if (loadingClientes || loadingPlanos || loadingCarnes) {
+  if (loadingClientes || loadingPlanos) {
     return (
       <div className="dashboard-container">
         <div className="text-center">
@@ -564,15 +476,15 @@ const Dashboard: React.FC = () => {
         <div className="col-xl-3 col-md-6">
           <div className="metric-card metric-card-success">
             <div className="metric-icon">
-              <i className="bi bi-receipt"></i>
+              <i className="bi bi-currency-dollar"></i>
                 </div>
             <div className="metric-content">
-              <div className="metric-number">{totalCarnes}</div>
-              <div className="metric-label">Total de Carnês</div>
+              <div className="metric-number">{totalBoletos}</div>
+              <div className="metric-label">Total de Boletos</div>
               <div className="metric-detail">
-                <span className="text-info">{carnesAtivos} pendentes</span>
+                <span className="text-info">0 pendentes</span>
                 <span className="text-muted"> • </span>
-                <span className="text-success">{carnesPagos} pagos</span>
+                <span className="text-success">0 pagos</span>
               </div>
             </div>
           </div>
@@ -584,8 +496,8 @@ const Dashboard: React.FC = () => {
               <i className="bi bi-exclamation-triangle"></i>
                   </div>
             <div className="metric-content">
-              <div className="metric-number">{carnesVencidos}</div>
-              <div className="metric-label">Carnês Vencidos</div>
+              <div className="metric-number">0</div>
+              <div className="metric-label">Boletos Vencidos</div>
               <div className="metric-detail">
                 <span className="text-warning">Em atraso</span>
               </div>
@@ -647,11 +559,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="col-xl-2 col-lg-4 col-md-6">
-          <div className="chart-card">
-            {renderPieChart(carnesChartData, 'Status dos Carnês', hiddenCarnes, toggleCarne)}
-          </div>
-        </div>
 
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">

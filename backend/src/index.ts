@@ -94,7 +94,7 @@ app.use('/api/clientes', clienteRoutes);
 app.use('/api/planos', planoRoutes);
 app.use('/api/bancos', bancoRoutes);
 app.use('/api/carnes', carneRoutes);
-app.use('/api/carne-parcelas', carneParcelaRoutes);
+app.use('/api/titulos', carneParcelaRoutes);
 app.use('/api/carne-auto', carneAutoRoutes);
 app.use('/boleto', boletoRoutes);
 app.use('/api/dados-empresa', dadosEmpresaRoutes);

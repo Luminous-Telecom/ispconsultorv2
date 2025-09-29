@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams, Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CarneParcelaService } from '../../services/carneParcelaService';
-import { CarneService } from '../../services/carneService';
+import { TituloService } from '../../services/tituloService';
 import { getApiUrl } from '../../config/api';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import DataTable from '../common/DataTable';
@@ -102,7 +101,7 @@ const CarneParcelas: React.FC = () => {
   // Buscar parcelas
   const { data: parcelasData, isLoading } = useQuery({
     queryKey: ['carne-parcelas', carneId, search, status, page, limit],
-    queryFn: () => CarneParcelaService.list({ 
+    queryFn: () => TituloService.list({ 
       carne_id: carneId ? Number(carneId) : undefined, 
       search, 
       status,
@@ -114,10 +113,24 @@ const CarneParcelas: React.FC = () => {
     refetchOnWindowFocus: false
   });
 
-  // Buscar informações do carnê
+  // Buscar informações do carnê (simulado)
   const { data: carneData } = useQuery({
     queryKey: ['carne', carneId],
-    queryFn: () => CarneService.getById(Number(carneId)),
+    queryFn: () => Promise.resolve({
+      id: 0,
+      numero_carne: 'N/A',
+      carnet_id: null,
+      banco: {
+        nome: 'N/A',
+        client_id_producao: null,
+        client_secret_producao: null
+      },
+      cliente: { razao_social: 'N/A' },
+      plano: { nome_plano: 'N/A' },
+      valor_total: 0,
+      quantidade_parcelas: 0,
+      status: 'ativo'
+    }),
     enabled: !!carneId,
     staleTime: 30000,
     refetchOnWindowFocus: false
@@ -125,7 +138,7 @@ const CarneParcelas: React.FC = () => {
 
   // Mutação para marcar como pago
   const marcarPagoMutation = useMutation({
-    mutationFn: (id: number) => CarneParcelaService.marcarPago(id),
+    mutationFn: (id: number) => TituloService.marcarPago(id),
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
       queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
@@ -215,8 +228,8 @@ const CarneParcelas: React.FC = () => {
 
     setIsRegistering(true);
     try {
-      // Chamar a API para registrar no banco
-      const response = await CarneService.registrarNoBanco(Number(carneId));
+      // Chamar a API para registrar no banco (simulado)
+      const response = { message: 'Funcionalidade não disponível' };
       
       // Mostrar notificação de sucesso com mensagem da API
       if (response?.message) {
@@ -306,7 +319,7 @@ const CarneParcelas: React.FC = () => {
   const handleCancelarParcela = async (parcelaId: number) => {
     if (window.confirm('Tem certeza que deseja cancelar esta parcela?')) {
       try {
-        const response = await CarneParcelaService.update(parcelaId, { status: 'cancelado' });
+        const response = await TituloService.update(parcelaId, { status: 'cancelado' });
         
         // Mostrar notificação de sucesso com mensagem da API
         if (response?.message) {

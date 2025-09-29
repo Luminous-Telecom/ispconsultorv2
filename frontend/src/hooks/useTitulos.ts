@@ -1,15 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CarneParcelaService } from '../services/carneParcelaService';
+import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../contexts/NotificationContext';
 import { CACHE_CONFIG } from '../config/api';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar parcelas
-export const useCarneParcelas = (filters: any = {}) => {
+export const useTitulos = (filters: any = {}) => {
   return useQuery({
     queryKey: ['carne-parcelas', filters],
-    queryFn: () => CarneParcelaService.list(filters),
+    queryFn: () => TituloService.list(filters),
     staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual
     gcTime: DEFAULT_CACHE_TIME,
     refetchOnWindowFocus: false,
@@ -21,7 +21,7 @@ export const useCarneParcelas = (filters: any = {}) => {
 export const useCarneParcela = (id: number) => {
   return useQuery({
     queryKey: ['carne-parcela', id],
-    queryFn: () => CarneParcelaService.getById(id),
+    queryFn: () => TituloService.getById(id),
     enabled: !!id,
     staleTime: DEFAULT_STALE_TIME,
     gcTime: DEFAULT_CACHE_TIME,
@@ -32,7 +32,7 @@ export const useCarneParcela = (id: number) => {
 export const useCarneParcelasByCarne = (carneId: number) => {
   return useQuery({
     queryKey: ['carne-parcelas-carne', carneId],
-    queryFn: () => CarneParcelaService.findByCarne(carneId),
+    queryFn: () => TituloService.findByCarne(carneId),
     enabled: !!carneId,
     staleTime: DEFAULT_STALE_TIME,
     gcTime: DEFAULT_CACHE_TIME,
@@ -43,20 +43,20 @@ export const useCarneParcelasByCarne = (carneId: number) => {
 export const useCarneParcelasVencidas = () => {
   return useQuery({
     queryKey: ['carne-parcelas-vencidas'],
-    queryFn: () => CarneParcelaService.findVencidas(),
+    queryFn: () => TituloService.findVencidas(),
     staleTime: DEFAULT_STALE_TIME,
     gcTime: DEFAULT_CACHE_TIME,
   });
 };
 
 // Hook para marcar parcela como paga
-export const useMarcarParcelaPago = () => {
+export const useMarcarTituloPago = () => {
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: ({ id, dataPagamento }: { id: number; dataPagamento?: string }) =>
-      CarneParcelaService.marcarPago(id, dataPagamento),
+      TituloService.marcarPago(id, dataPagamento),
     onSuccess: (response, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
@@ -84,7 +84,7 @@ export const useDesmarcarParcelaPago = () => {
   const { success, error } = useNotificationContext();
 
   return useMutation({
-    mutationFn: (id: number) => CarneParcelaService.desmarcarPago(id),
+    mutationFn: (id: number) => TituloService.desmarcarPago(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
@@ -105,12 +105,12 @@ export const useUpdateCarneParcela = () => {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) =>
-      CarneParcelaService.update(id, data),
+      TituloService.update(id, data),
     onSuccess: (response, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas-carne'] });
-      success(response.message);
+      success((response as any).message);
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao atualizar parcela');

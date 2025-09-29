@@ -190,6 +190,7 @@ export class Carne extends Model<
       
       const parcela = await this.createParcela({
         carne_id: this.id,
+        plano_id: this.plano_id,
         numero_parcela: i,
         valor_parcela: valor,
         data_vencimento: dataVencimento,

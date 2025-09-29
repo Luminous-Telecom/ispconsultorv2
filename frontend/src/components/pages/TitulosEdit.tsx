@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CarneParcelaService } from '../../services/carneParcelaService';
+import { TituloService } from '../../services/tituloService';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import { getApiUrl } from '../../config/api';
 
@@ -22,14 +22,14 @@ const CarneParcelasEdit: React.FC = () => {
   // Buscar parcela
   const { data: parcela, isLoading } = useQuery({
     queryKey: ['carne-parcela', id],
-    queryFn: () => CarneParcelaService.getById(Number(id)),
+    queryFn: () => TituloService.getById(Number(id)),
     enabled: !!id,
     placeholderData: (prev) => prev
   });
 
   // Mutação para atualizar parcela
   const updateMutation = useMutation({
-    mutationFn: (data: any) => CarneParcelaService.update(Number(id), data),
+    mutationFn: (data: any) => TituloService.update(Number(id), data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcela'] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
