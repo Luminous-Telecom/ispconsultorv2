@@ -182,10 +182,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <div className="d-flex flex-column h-100">
-        {/* Tabela */}
-        <div className="flex-grow-1">
-          <DataTable
+      <DataTable
             data={bancosData?.data || []}
             columns={columns}
             isLoading={isLoading}
@@ -212,8 +209,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             emptyMessage="Nenhum banco encontrado"
             showHeader={false}
           />
-        </div>
-      </div>
 
       {/* Modal de Criação */}
       <BancoCreateModal
