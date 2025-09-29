@@ -95,18 +95,6 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
             />
           </div>
 
-          <div className="col-md-6">
-            <label className="form-label small text-muted">
-              Inscrição Estadual
-            </label>
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              value={cliente.inscricao_estadual || ''}
-              onChange={(e) => handleInputChange('inscricao_estadual', e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
 
 
 
