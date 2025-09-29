@@ -250,7 +250,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           onMouseDown={handleMouseDown}
         >
           {/* Linha do título e botão fechar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: headerActions ? '8px' : '0', position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: headerActions ? '8px' : '0', position: 'relative' }}>
             {/* Título centralizado */}
             <h5 
               className="modal-title mb-0" 
@@ -259,11 +259,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
                 fontSize: '0.85rem',
                 fontWeight: '500',
                 textAlign: 'center',
-                position: 'absolute',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                margin: 0,
-                width: '100%'
+                margin: 0
               }}
             >
               {title}
@@ -286,8 +282,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                position: 'relative',
-                zIndex: 1
+                position: 'absolute',
+                right: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)'
               }}
             >
               ×
