@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import { Carne, CreateCarne, UpdateCarne, CarneFilters, PaginatedResponse } from '../types';
+import { API_CONFIG } from '../config/api';
 
 export class CarneService {
   // Listar carnês com filtros e paginação
