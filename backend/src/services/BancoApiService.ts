@@ -137,7 +137,11 @@ export class BancoApiService {
    */
   private static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
     try {
-      const endpoint = config.cobranca_base_url + config.token;
+      // Usar URL correta baseada no ambiente (sandbox vs produção)
+      const baseUrl = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      const endpoint = baseUrl + config.token;
       
       let authData: any = {};
       
@@ -257,7 +261,11 @@ export class BancoApiService {
       });
 
       // Criar boleto individual
-      const endpoint = config.cobranca_base_url + config.api_endpoints.boleto;
+      // Usar URL correta baseada no ambiente (sandbox vs produção)
+      const baseUrlCobranca = banco.sandbox 
+        ? (config.sandbox_url || config.cobranca_base_url)
+        : config.cobranca_base_url;
+      const endpoint = baseUrlCobranca + config.api_endpoints.boleto;
       const headers = this.prepareHeaders(banco.tipo_banco, token);
       headers['Content-Type'] = 'application/json';
       
