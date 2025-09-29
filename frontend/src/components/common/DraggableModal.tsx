@@ -109,23 +109,59 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   if (!show) return null;
 
   return (
-    <div 
-      className="modal show d-block" 
-      style={{ 
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 1050
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
+    <>
+      {/* Estilos CSS para diferenciação de campos */}
+      <style jsx>{`
+        .modal-content .form-control:not(:disabled) {
+          background-color: #2d3748 !important;
+          border-color: #4a5568 !important;
+          color: #ffffff !important;
         }
-      }}
-    >
+        
+        .modal-content .form-control:disabled {
+          background-color: #1a202c !important;
+          border-color: #2d3748 !important;
+          color: #718096 !important;
+          cursor: not-allowed !important;
+        }
+        
+        .modal-content .form-select:not(:disabled) {
+          background-color: #2d3748 !important;
+          border-color: #4a5568 !important;
+          color: #ffffff !important;
+        }
+        
+        .modal-content .form-select:disabled {
+          background-color: #1a202c !important;
+          border-color: #2d3748 !important;
+          color: #718096 !important;
+          cursor: not-allowed !important;
+        }
+        
+        .modal-content .form-control:focus:not(:disabled) {
+          background-color: #2d3748 !important;
+          border-color: #3182ce !important;
+          box-shadow: 0 0 0 0.2rem rgba(49, 130, 206, 0.25) !important;
+        }
+      `}</style>
+      
+      <div 
+        className="modal show d-block" 
+        style={{ 
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1050
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
       <div
         ref={modalRef}
         className={`modal-content ${className}`}
@@ -207,6 +243,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 
