@@ -39,7 +39,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
 
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Telefone Celular</label>
+            <label className="form-label small text-muted">Telefone</label>
             <div className="input-group">
               <input
                 type="text"
