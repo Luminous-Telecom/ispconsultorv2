@@ -4,6 +4,7 @@ import { API_CONFIG } from '../../../config/api';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
+import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { CarneCreateModal } from './index';
 
 interface Carne {
@@ -200,105 +201,20 @@ const CarneListModal: React.FC<CarneListModalProps> = ({
     }
   ];
 
-  // Ações para o header do modal
+  // Ações para o header do modal usando componente reutilizável
   const headerActions = (
-    <>
-      {/* Botões de ação */}
-      <div className="d-flex" style={{ gap: '8px' }}>
-        {bulkActions.map((bulkAction, index) => {
-          const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-          const isDisabled = !isNewButton && selectedItems.length === 0;
-          
-          return (
-            <button
-              key={index}
-              className="btn btn-sm btn-primary"
-              onClick={() => {
-                if (!isDisabled) {
-                  bulkAction.action(selectedItems);
-                }
-              }}
-              disabled={isDisabled}
-              style={{ flexShrink: 0 }}
-            >
-              {bulkAction.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Filtros e controles */}
-      <div className="d-flex align-items-center gap-2">
-        {/* Busca */}
-        <input
-          type="text"
-          className="form-control form-control-sm"
-          placeholder="Buscar por número do carnê..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: '200px', height: '32px' }}
-        />
-        
-        {/* Seletor de linhas por página */}
-        <select 
-          className="form-select form-select-sm" 
-          value={limit}
-          onChange={(e) => setLimit(parseInt(e.target.value))}
-          style={{ width: '100px', height: '32px', cursor: 'pointer' }}
-        >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={15}>15</option>
-          <option value={25}>25</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-        </select>
-
-        {/* Paginação compacta */}
-        <div className="d-flex align-items-center gap-1">
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(1)}
-            disabled={!carnesData?.pagination || carnesData.pagination.current_page <= 1}
-          >
-            <i className="bi bi-chevron-double-left"></i>
-          </button>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(page - 1)}
-            disabled={!carnesData?.pagination || carnesData.pagination.current_page <= 1}
-          >
-            <i className="bi bi-chevron-left"></i>
-          </button>
-          <span className="small text-muted mx-2">
-            {carnesData?.pagination ? `${carnesData.pagination.from} - ${carnesData.pagination.to} / ${carnesData.pagination.total}` : '0 - 0 / 0'}
-          </span>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(page + 1)}
-            disabled={!carnesData?.pagination || carnesData.pagination.current_page >= carnesData.pagination.last_page}
-          >
-            <i className="bi bi-chevron-right"></i>
-          </button>
-          <button 
-            className="btn btn-outline-secondary btn-sm" 
-            onClick={() => setPage(carnesData?.pagination?.last_page || 1)}
-            disabled={!carnesData?.pagination || carnesData.pagination.current_page >= carnesData.pagination.last_page}
-          >
-            <i className="bi bi-chevron-double-right"></i>
-          </button>
-        </div>
-
-        {/* Botão de refresh */}
-        <button 
-          className="btn btn-outline-secondary btn-sm"
-          onClick={() => refetch()}
-          title="Recarregar dados"
-        >
-          <i className="bi bi-arrow-clockwise"></i>
-        </button>
-      </div>
-    </>
+    <ModalHeaderActions
+      bulkActions={bulkActions}
+      selectedItems={selectedItems}
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Buscar por número do carnê..."
+      limit={limit}
+      onLimitChange={setLimit}
+      pagination={carnesData?.pagination}
+      onPageChange={setPage}
+      onRefresh={() => refetch()}
+    />
   );
 
   return (
