@@ -278,6 +278,83 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const paginatedData = getPaginatedData();
 
+  // Ações para o header do modal usando componente reutilizável
+  const headerActions = (
+    <ModalHeaderActions
+      bulkActions={[
+        {
+          label: 'Imprimir Carnê',
+          action: (selectedItems: any[]) => {
+            selectedItems.forEach(item => {
+              if (item.parcelas) {
+                // É um carnê completo
+                console.log('Imprimir carnê:', item.id);
+              } else {
+                // É uma parcela individual
+                console.log('Imprimir parcela:', item.id);
+              }
+            });
+          }
+        },
+        {
+          label: 'Imprimir Parcela',
+          action: (selectedItems: any[]) => {
+            selectedItems.forEach(item => {
+              if (!item.parcelas) {
+                // Só funciona para parcelas individuais
+                console.log('Imprimir parcela individual:', item.id);
+              }
+            });
+          }
+        },
+        {
+          label: 'Editar',
+          action: (selectedItems: any[]) => {
+            if (selectedItems.length > 0) {
+              console.log('Editar item:', selectedItems[0].id);
+            }
+          }
+        },
+        {
+          label: 'Receber',
+          action: (selectedItems: any[]) => {
+            selectedItems.forEach(item => {
+              console.log('Receber pagamento:', item.id);
+            });
+          }
+        },
+        {
+          label: 'Excluir',
+          action: (selectedItems: any[]) => {
+            if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} item(s)?`)) {
+              selectedItems.forEach(item => {
+                console.log('Excluir item:', item.id);
+              });
+            }
+          }
+        }
+      ]}
+      selectedItems={selectedItems}
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Buscar por ID, carnê, valor..."
+      limit={limit}
+      onLimitChange={setLimit}
+      pagination={{
+        from: sortedData.length > 0 ? (page - 1) * limit + 1 : 0,
+        to: Math.min(page * limit, sortedData.length),
+        total: sortedData.length,
+        current_page: page,
+        last_page: Math.ceil(sortedData.length / limit)
+      }}
+      onPageChange={setPage}
+      onRefresh={() => {
+        // Recarregar dados se necessário
+        console.log('Recarregar dados');
+      }}
+    />
+  );
+
   // Colunas para o DataTable
   const columns = [
     {
@@ -560,12 +637,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   }
 
   return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title="Editar Cliente"
-      size="xl"
-    >
+        <DraggableModal
+          show={show}
+          onClose={onClose}
+          title="Editar Cliente"
+          size="xl"
+          headerActions={activeTab === 'financeiro' ? headerActions : undefined}
+        >
       <div style={{ 
         height: '100%',
         display: 'flex',
@@ -1195,76 +1273,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       isLoading={isLoadingParcelas}
                       showHeader={false}
                       onSelectionChange={setSelectedItems}
-                      onSearch={setSearch}
                       onSort={(column: string, direction: 'asc' | 'desc') => {
                         setSortColumn(column);
                         setSortDirection(direction);
                       }}
                       sortColumn={sortColumn}
                       sortDirection={sortDirection}
-                      pagination={{
-                        from: sortedData.length > 0 ? (page - 1) * limit + 1 : 0,
-                        to: Math.min(page * limit, sortedData.length),
-                        total: sortedData.length,
-                        current_page: page,
-                        last_page: Math.ceil(sortedData.length / limit)
-                      }}
                       limit={limit}
                       setLimit={setLimit}
                       setPage={setPage}
-                      bulkActions={[
-                        {
-                          label: 'Imprimir Carnê',
-                          action: (selectedItems: any[]) => {
-                            selectedItems.forEach(item => {
-                              if (item.parcelas) {
-                                // É um carnê completo
-                                console.log('Imprimir carnê:', item.id);
-                              } else {
-                                // É uma parcela individual
-                                console.log('Imprimir parcela:', item.id);
-                              }
-                            });
-                          }
-                        },
-                        {
-                          label: 'Imprimir Parcela',
-                          action: (selectedItems: any[]) => {
-                            selectedItems.forEach(item => {
-                              if (!item.parcelas) {
-                                // Só funciona para parcelas individuais
-                                console.log('Imprimir parcela individual:', item.id);
-                              }
-                            });
-                          }
-                        },
-                        {
-                          label: 'Editar',
-                          action: (selectedItems: any[]) => {
-                            if (selectedItems.length > 0) {
-                              console.log('Editar item:', selectedItems[0].id);
-                            }
-                          }
-                        },
-                        {
-                          label: 'Receber',
-                          action: (selectedItems: any[]) => {
-                            selectedItems.forEach(item => {
-                              console.log('Receber pagamento:', item.id);
-                            });
-                          }
-                        },
-                        {
-                          label: 'Excluir',
-                          action: (selectedItems: any[]) => {
-                            if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} item(s)?`)) {
-                              selectedItems.forEach(item => {
-                                console.log('Excluir item:', item.id);
-                              });
-                            }
-                          }
-                        }
-                      ]}
                       emptyMessage={
                         !showCarnes && !showTitulos 
                           ? 'Selecione pelo menos um tipo para visualizar os dados.'
