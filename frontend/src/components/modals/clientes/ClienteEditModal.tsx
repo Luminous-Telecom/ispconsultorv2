@@ -1259,7 +1259,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           <button
                             key={index}
                             className="btn btn-sm btn-primary"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               if (!isDisabled) {
                                 bulkAction.action(selectedItems);
                               }
@@ -1328,7 +1329,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       <select 
                         className="form-select form-select-sm" 
                         value={limit}
-                        onChange={(e) => setLimit(parseInt(e.target.value))}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setLimit(parseInt(e.target.value));
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                         style={{ width: '80px', height: '32px', cursor: 'pointer' }}
                       >
                         <option value={5}>5</option>
@@ -1343,14 +1348,20 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       <div className="d-flex gap-1">
                         <button 
                           className="btn btn-outline-secondary btn-sm" 
-                          onClick={() => setPage(1)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPage(1);
+                          }}
                           disabled={page <= 1}
                         >
                           <i className="bi bi-chevron-double-left"></i>
                         </button>
                         <button 
                           className="btn btn-outline-secondary btn-sm" 
-                          onClick={() => setPage(page - 1)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPage(page - 1);
+                          }}
                           disabled={page <= 1}
                         >
                           <i className="bi bi-chevron-left"></i>
@@ -1360,14 +1371,20 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         </span>
                         <button 
                           className="btn btn-outline-secondary btn-sm" 
-                          onClick={() => setPage(page + 1)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPage(page + 1);
+                          }}
                           disabled={page >= Math.ceil(sortedData.length / limit)}
                         >
                           <i className="bi bi-chevron-right"></i>
                         </button>
                         <button 
                           className="btn btn-outline-secondary btn-sm" 
-                          onClick={() => setPage(Math.ceil(sortedData.length / limit))}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPage(Math.ceil(sortedData.length / limit));
+                          }}
                           disabled={page >= Math.ceil(sortedData.length / limit)}
                         >
                           <i className="bi bi-chevron-double-right"></i>
@@ -1377,7 +1394,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       {/* Botão de refresh */}
                       <button 
                         className="btn btn-outline-secondary btn-sm"
-                        onClick={() => console.log('Recarregar dados')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Recarregar dados');
+                        }}
                         title="Recarregar dados"
                       >
                         <i className="bi bi-arrow-clockwise"></i>
