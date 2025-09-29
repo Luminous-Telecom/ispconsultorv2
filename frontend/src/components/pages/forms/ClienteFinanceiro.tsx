@@ -60,6 +60,25 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     }
   };
 
+  const handleVisualizarCarne = (selectedItems: any[]) => {
+    if (selectedItems.length > 0) {
+      navigate(`/carnes/${selectedItems[0].id}`);
+    }
+  };
+
+  const handleEditarCarne = (selectedItems: any[]) => {
+    if (selectedItems.length > 0) {
+      navigate(`/carnes/${selectedItems[0].id}/edit`);
+    }
+  };
+
+  const handleImprimirCarne = (selectedItems: any[]) => {
+    if (selectedItems.length > 0) {
+      const url = getApiUrl(`/boleto/web/${selectedItems[0].id}`);
+      window.open(url, '_blank');
+    }
+  };
+
   const carnesColumns = [
     { key: 'id', label: 'ID', sortable: true },
     { key: 'numero_carne', label: 'Número', sortable: true },
@@ -188,15 +207,15 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                 },
                 {
                   label: 'Visualizar',
-                  action: (selectedItems) => console.log('Visualizar carnês:', selectedItems)
+                  action: handleVisualizarCarne
                 },
                 {
                   label: 'Editar',
-                  action: (selectedItems) => console.log('Editar carnês:', selectedItems)
+                  action: handleEditarCarne
                 },
                 {
                   label: 'Imprimir',
-                  action: (selectedItems) => console.log('Imprimir carnês:', selectedItems)
+                  action: handleImprimirCarne
                 }
               ]}
             />
