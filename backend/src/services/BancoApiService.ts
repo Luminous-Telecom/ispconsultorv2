@@ -398,7 +398,7 @@ export class BancoApiService {
             phone_number: '11999999999',
             juridical_person: {
               corporate_name: 'Cliente Teste LTDA',
-              cnpj: '11144477735000195'
+              cnpj: '11144477735000'
             },
             address: {
               street: 'Rua das Flores',
