@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DataTable from '../../common/DataTable';
-import ContratoCreateModal from '../../modals/ContratoCreateModal';
+import { ContratoCreateModal } from '../../modals/contratos';
 
 interface ClienteContratosProps {
   cliente: any;

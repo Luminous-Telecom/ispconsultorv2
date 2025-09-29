@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { usePlanos, useDeletePlano } from '../../hooks/usePlanos';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
-import PlanoCreateModal from '../modals/PlanoCreateModal';
-import PlanoEditModal from '../modals/PlanoEditModal';
+import { PlanoCreateModal, PlanoEditModal } from '../modals/planos';
 
 interface Plano {
   id: number;

@@ -6,8 +6,7 @@ import { useCarneParcelas } from '../../../hooks/useCarneParcelas';
 import { useMarcarParcelaPago } from '../../../hooks/useCarneParcelas';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { getApiUrl } from '../../../config/api';
-import CarneEditModal from '../../modals/CarneEditModal';
-import CarneCreateModal from '../../modals/CarneCreateModal';
+import { CarneEditModal, CarneCreateModal } from '../../modals/carnés';
 
 interface ClienteFinanceiroProps {
   cliente: any;
