@@ -7,6 +7,7 @@ interface DraggableModalProps {
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
+  headerActions?: React.ReactNode;
 }
 
 const DraggableModal: React.FC<DraggableModalProps> = ({
@@ -15,7 +16,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   title,
   children,
   size = 'lg',
-  className = ''
+  className = '',
+  headerActions
 }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 }); // Inicializar com posição válida
   const [isDragging, setIsDragging] = useState(false);
@@ -242,44 +244,53 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             cursor: isDragging ? 'grabbing' : 'grab',
             userSelect: 'none',
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            flexDirection: 'column',
             minHeight: '48px'
           }}
           onMouseDown={handleMouseDown}
         >
-          <h5 
-            className="modal-title mb-0" 
-            style={{ 
-              color: 'var(--text-primary)',
-              fontSize: '0.85rem',
-              fontWeight: '500',
-              textAlign: 'center',
-              flex: 1
-            }}
-          >
-            {title}
-          </h5>
-          <button
-            type="button"
-            className="btn-close"
-            onClick={onClose}
-            style={{ 
-              filter: 'var(--btn-close-filter)',
-              background: 'none',
-              border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              padding: '0',
-              width: '24px',
-              height: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            ×
-          </button>
+          {/* Linha do título e botão fechar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: headerActions ? '8px' : '0' }}>
+            <h5 
+              className="modal-title mb-0" 
+              style={{ 
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                fontWeight: '500',
+                textAlign: 'center',
+                flex: 1
+              }}
+            >
+              {title}
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={onClose}
+              style={{ 
+                filter: 'var(--btn-close-filter)',
+                background: 'none',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                padding: '0',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Ações do header (botões e filtros) */}
+          {headerActions && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {headerActions}
+            </div>
+          )}
         </div>
 
         {/* Body com scroll */}

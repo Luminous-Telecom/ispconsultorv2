@@ -37,6 +37,7 @@ interface TableProps {
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
   onRefresh?: () => void;
+  showHeader?: boolean;
 }
 
 const DataTable: React.FC<TableProps> = ({
@@ -55,7 +56,8 @@ const DataTable: React.FC<TableProps> = ({
   onSort,
   sortColumn,
   sortDirection = 'asc',
-  onRefresh
+  onRefresh,
+  showHeader = true
 }) => {
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -118,7 +120,8 @@ const DataTable: React.FC<TableProps> = ({
   return (
     <div className="card">
       {/* Header com botões de ação e filtros */}
-      <div className="card-header py-2 border-bottom">
+      {showHeader && (
+        <div className="card-header py-2 border-bottom">
         {/* Botões, filtros e controles em uma linha */}
         <div className="d-flex align-items-center justify-content-between">
           {/* Botões de ação */}
@@ -227,7 +230,8 @@ const DataTable: React.FC<TableProps> = ({
             )}
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Tabela */}
           <div className="table-responsive">
