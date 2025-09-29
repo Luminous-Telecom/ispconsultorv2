@@ -118,7 +118,7 @@ const DataTable: React.FC<TableProps> = ({
   };
 
   return (
-    <div className="card">
+    <div>
       {/* Header com botões de ação e filtros */}
       {showHeader && (
         <div className="card-header py-2 border-bottom">
