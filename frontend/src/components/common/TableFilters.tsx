@@ -92,9 +92,11 @@ const TableFilters: React.FC<TableFiltersProps> = ({
           </div>
         ))}
         
-        <button type="submit" className="btn btn-sm btn-primary" style={{ height: '32px' }}>
-          Filtrar
-        </button>
+        {onFilter && (
+          <button type="submit" className="btn btn-sm btn-primary" style={{ height: '32px' }}>
+            Filtrar
+          </button>
+        )}
         
         {(showReset || showResetButton) && onReset && (
           <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onReset} style={{ height: '32px' }}>
