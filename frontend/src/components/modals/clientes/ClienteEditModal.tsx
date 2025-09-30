@@ -11,7 +11,7 @@ import DataTable from '../../common/DataTable';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
-import MarcarPagoModal from '../MarcarPagoModal';
+import MarcarPagoModal from '../pagamentos/MarcarPagoModal';
 
 interface ClienteForm {
   cnpj: string;
