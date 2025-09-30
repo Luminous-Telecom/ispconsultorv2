@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useMarcarTituloPago } from '../../hooks/useTitulos';
-import DraggableModal from '../common/DraggableModal';
+import { useMarcarTituloPago } from '../../../hooks/useTitulos';
+import DraggableModal from '../../common/DraggableModal';
 
 interface MarcarPagoModalProps {
   isOpen: boolean;
