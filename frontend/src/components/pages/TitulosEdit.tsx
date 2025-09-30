@@ -42,13 +42,14 @@ const CarneParcelasEdit: React.FC = () => {
   });
 
   useEffect(() => {
-    if (parcela) {
+    if (parcela && parcela.success && parcela.data) {
+      const tituloData = parcela.data;
       setFormData({
-        valor_parcela: parcela.valor_parcela?.toString() || '',
-        data_vencimento: parcela.data_vencimento ? new Date(parcela.data_vencimento).toISOString().split('T')[0] : '',
-        status: parcela.status || 'pendente',
-        data_pagamento: parcela.data_pagamento ? new Date(parcela.data_pagamento).toISOString().split('T')[0] : '',
-        valor_pago: parcela.valor_pago?.toString() || ''
+        valor_parcela: (tituloData as any).valor_parcela?.toString() || tituloData.valor?.toString() || '',
+        data_vencimento: tituloData.data_vencimento ? new Date(tituloData.data_vencimento).toISOString().split('T')[0] : '',
+        status: tituloData.status || 'pendente',
+        data_pagamento: tituloData.data_pagamento ? new Date(tituloData.data_pagamento).toISOString().split('T')[0] : '',
+        valor_pago: tituloData.valor_pago?.toString() || ''
       });
     }
   }, [parcela]);
@@ -88,7 +89,7 @@ const CarneParcelasEdit: React.FC = () => {
   return (
     <>
       <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 className="h2">Editar Parcela #{parcela?.numero_parcela}</h1>
+        <h1 className="h2">Editar Parcela #{parcela?.data?.numero_parcela || parcela?.data?.id}</h1>
         <div className="btn-group" role="group">
           <button 
             type="button" 
