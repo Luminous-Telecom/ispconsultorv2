@@ -1387,6 +1387,39 @@ p, span, div, label {
   font-weight: 500 !important;
 }
 
+/* Estilos para modo claro */
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-control:focus,
+[data-theme="light"] .form-control:active {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ced4da !important;
+}
+
+[data-theme="light"] .form-control:focus {
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25) !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-theme="light"] .form-control::placeholder {
+  color: #6c757d !important;
+}
+
+[data-theme="light"] .form-control-sm {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ced4da !important;
+}
+
+[data-theme="light"] .form-control-sm:focus {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25) !important;
+}
+
 /* Corrigir cores do campo de busca no tema escuro */
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .form-control:focus,
