@@ -1,7 +1,6 @@
 import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
 import ScheduledRoutine from '../models/ScheduledRoutine';
 import RoutineExecutionLog from '../models/RoutineExecutionLog';
-import { GeracaoTitulosRoutine } from '../services/routines/GeracaoTitulosRoutine';
 import { EnvioBoletosRoutine } from '../services/routines/EnvioBoletosRoutine';
 import { RemessaBancariaRoutine } from '../services/routines/RemessaBancariaRoutine';
 import { IRoutine } from '../interfaces/IRoutine';
@@ -245,8 +244,8 @@ if (!isMainThread && workerData) {
       let routineInstance: IRoutine;
       switch (routine.tipo) {
         case 'geracao_titulos':
-          routineInstance = new GeracaoTitulosRoutine();
-          break;
+          // Funcionalidade de carnê foi removida
+          throw new Error('Geração de títulos não está mais disponível - funcionalidade de carnê foi removida');
         case 'envio_boletos':
           routineInstance = new EnvioBoletosRoutine();
           break;

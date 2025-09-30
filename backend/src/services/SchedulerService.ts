@@ -237,35 +237,12 @@ export class SchedulerService {
   }
 
   private async executeGeracaoTitulos(routine: ScheduledRoutine): Promise<any> {
-    console.log('Executando geração de títulos...');
+    console.log('Geração de títulos não está mais disponível - funcionalidade de carnê foi removida');
     
-    try {
-      // Importar a rotina de geração de títulos
-      const { GeracaoTitulosRoutine } = await import('./routines/GeracaoTitulosRoutine');
-      
-      // Parsear configuração da rotina
-      let config = {};
-      try {
-        config = routine.configuracao ? JSON.parse(routine.configuracao) : {};
-      } catch (error) {
-        console.error('Erro ao parsear configuração da rotina:', error);
-        config = {};
-      }
-      
-      // Executar a rotina
-      const geracaoRoutine = new GeracaoTitulosRoutine();
-      const resultado = await geracaoRoutine.execute(config);
-      
-      console.log('Resultado da geração de títulos:', resultado);
-      
-      return {
-        ...resultado,
-        message: 'Geração de títulos executada com sucesso'
-      };
-    } catch (error: any) {
-      console.error('Erro ao executar geração de títulos:', error);
-      throw error;
-    }
+    return {
+      success: false,
+      message: 'Geração de títulos não está mais disponível - funcionalidade de carnê foi removida'
+    };
   }
 
   private async executeEnvioBoletos(routine: ScheduledRoutine): Promise<any> {
