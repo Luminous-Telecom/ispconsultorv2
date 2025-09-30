@@ -1437,10 +1437,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         }}
         parcela={selectedParcela ? {
           id: selectedParcela.id,
-          numero_titulo: `Parcela ${selectedParcela.numero_parcela}`,
-          valor_parcela: selectedParcela.valor_parcela,
+          numero_titulo: selectedParcela.numero_titulo || `Parcela ${selectedParcela.numero_parcela}`,
+          valor_parcela: selectedParcela.valor || selectedParcela.valor_parcela,
           data_vencimento: selectedParcela.data_vencimento,
-          cliente: selectedParcela.carne?.cliente
+          cliente: selectedParcela.cliente || selectedParcela.carne?.cliente
         } : null}
         onSuccess={() => {
           setShowMarcarPagoModal(false);
