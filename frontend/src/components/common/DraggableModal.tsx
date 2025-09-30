@@ -130,6 +130,15 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           font-size: 13px !important;
         }
         
+        [data-theme="light"] .modal-content .form-select:not(:disabled) {
+          background-color: #ffffff !important;
+          border-color: #ced4da !important;
+          color: #000000 !important;
+          height: 30px !important;
+          padding: 4px 8px !important;
+          font-size: 13px !important;
+        }
+        
         [data-theme="light"] .modal-content textarea.form-control:not(:disabled) {
           background-color: #ffffff !important;
           border-color: #ced4da !important;
@@ -146,6 +155,15 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         
         /* Estilos para modo escuro */
         [data-theme="dark"] .modal-content .form-control:not(:disabled):not(textarea) {
+          background-color: #2d3748 !important;
+          border-color: #4a5568 !important;
+          color: #ffffff !important;
+          height: 30px !important;
+          padding: 4px 8px !important;
+          font-size: 13px !important;
+        }
+        
+        [data-theme="dark"] .modal-content .form-select:not(:disabled) {
           background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
