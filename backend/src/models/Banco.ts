@@ -21,6 +21,7 @@ import {
 import { sequelize } from '../config/database';
 import { Cliente } from './Cliente';
 import { BancoConfiguracao } from './BancoConfiguracao';
+import { Titulo } from './Titulo';
 
 export class Banco extends Model<
   InferAttributes<Banco>,
@@ -81,6 +82,17 @@ export class Banco extends Model<
   declare hasClientes: HasManyHasAssociationsMixin<Cliente, number>;
   declare countClientes: HasManyCountAssociationsMixin;
   declare createCliente: HasManyCreateAssociationMixin<Cliente>;
+
+  declare getTitulos: HasManyGetAssociationsMixin<Titulo>;
+  declare addTitulo: HasManyAddAssociationMixin<Titulo, number>;
+  declare addTitulos: HasManyAddAssociationsMixin<Titulo, number>;
+  declare setTitulos: HasManySetAssociationsMixin<Titulo, number>;
+  declare removeTitulo: HasManyRemoveAssociationMixin<Titulo, number>;
+  declare removeTitulos: HasManyRemoveAssociationsMixin<Titulo, number>;
+  declare hasTitulo: HasManyHasAssociationMixin<Titulo, number>;
+  declare hasTitulos: HasManyHasAssociationsMixin<Titulo, number>;
+  declare countTitulos: HasManyCountAssociationsMixin;
+  declare createTitulo: HasManyCreateAssociationMixin<Titulo>;
 
 
   declare getConfiguracoes: HasManyGetAssociationsMixin<BancoConfiguracao>;

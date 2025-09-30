@@ -22,6 +22,7 @@ import { sequelize } from '../config/database';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
 import { ClientePlano } from './ClientePlano';
+import { Titulo } from './Titulo';
 
 export class Cliente extends Model<
   InferAttributes<Cliente>,
@@ -67,6 +68,17 @@ export class Cliente extends Model<
   declare hasPlanos: HasManyHasAssociationsMixin<Plano, number>;
   declare countPlanos: HasManyCountAssociationsMixin;
   declare createPlano: HasManyCreateAssociationMixin<Plano>;
+
+  declare getTitulos: HasManyGetAssociationsMixin<Titulo>;
+  declare addTitulo: HasManyAddAssociationMixin<Titulo, number>;
+  declare addTitulos: HasManyAddAssociationsMixin<Titulo, number>;
+  declare setTitulos: HasManySetAssociationsMixin<Titulo, number>;
+  declare removeTitulo: HasManyRemoveAssociationMixin<Titulo, number>;
+  declare removeTitulos: HasManyRemoveAssociationsMixin<Titulo, number>;
+  declare hasTitulo: HasManyHasAssociationMixin<Titulo, number>;
+  declare hasTitulos: HasManyHasAssociationsMixin<Titulo, number>;
+  declare countTitulos: HasManyCountAssociationsMixin;
+  declare createTitulo: HasManyCreateAssociationMixin<Titulo>;
 
   declare getContratos: HasManyGetAssociationsMixin<ClientePlano>;
   declare addContrato: HasManyAddAssociationMixin<ClientePlano, number>;
