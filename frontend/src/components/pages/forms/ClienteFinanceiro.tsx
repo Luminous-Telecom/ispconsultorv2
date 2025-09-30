@@ -187,37 +187,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                   disabled: (selectedItems) => selectedItems.every(item => item.status === 'pago')
                 },
                 {
-                  label: 'Estornar',
-                  action: async (selectedItems) => {
-                    if (selectedItems.length > 0) {
-                      const item = selectedItems[0];
-                      if (item.status === 'pago') {
-                        const confirmar = window.confirm(
-                          `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-                          `Valor: R$ ${item.valor_pago || item.valor}\n` +
-                          `Esta ação é irreversível.`
-                        );
-                        
-                        if (confirmar) {
-                          try {
-                            await TituloService.estornar(item.id, Number(item.valor_pago || item.valor), 'Estorno via interface');
-                            showNotification('Título estornado com sucesso!', 'success');
-                            refetchParcelas();
-                          } catch (err: any) {
-                            showNotification(err.message || 'Erro ao estornar título.', 'error');
-                          }
-                        }
-                      } else {
-                        showNotification('Só é possível estornar títulos que estão pagos', 'info');
-                      }
-                    }
-                  },
-                  disabled: (selectedItems) => {
-                    if (selectedItems.length === 0) return true;
-                    return selectedItems.every(item => item.status !== 'pago');
-                  }
-                },
-                {
                   label: 'Imprimir',
                   action: handleImprimirParcela
                 }

@@ -6,7 +6,6 @@ import { TituloService } from '../../services/tituloService';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import DataTable from '../common/DataTable';
 import { getApiUrl } from '../../config/api';
-import EstornoModal from '../modals/EstornoModal';
 
 const ClienteShow: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,10 +15,6 @@ const ClienteShow: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'carnes' | 'titulos'>('carnes');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [estornoModal, setEstornoModal] = useState<{ isOpen: boolean; titulo: any }>({
-    isOpen: false,
-    titulo: null
-  });
 
   // Detectar hash na URL para definir aba inicial
   useEffect(() => {
@@ -44,24 +39,6 @@ const ClienteShow: React.FC = () => {
     success('Dados atualizados com sucesso!', 3000);
   };
 
-  const handleEstornarTitulo = (titulo: any) => {
-    setEstornoModal({
-      isOpen: true,
-      titulo
-    });
-  };
-
-  const handleEstornoSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['titulos-cliente', id] });
-    queryClient.invalidateQueries({ queryKey: ['cliente', id] });
-  };
-
-  const closeEstornoModal = () => {
-    setEstornoModal({
-      isOpen: false,
-      titulo: null
-    });
-  };
 
   // Funções para ações das tabelas
   const handleTopoActionsCarnes = (action: string, selectedItems: any[]) => {
@@ -301,16 +278,6 @@ const ClienteShow: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (titulo: any) => {
-        // Se estiver estornado, mostrar apenas "Estornado"
-        if (titulo.estornado) {
-          return (
-            <span className="badge bg-dark">
-              Estornado
-            </span>
-          );
-        }
-        
-        // Caso contrário, mostrar o status normal
         if (titulo.status === 'pago') {
           return (
             <span className="badge bg-success">
@@ -327,12 +294,6 @@ const ClienteShow: React.FC = () => {
           return (
             <span className="badge bg-warning">
               Vencido
-            </span>
-          );
-        } else if (titulo.status === 'estornado') {
-          return (
-            <span className="badge bg-dark">
-              Estornado
             </span>
           );
         } else {
@@ -357,15 +318,6 @@ const ClienteShow: React.FC = () => {
       sortable: false,
       render: (titulo: any) => (
         <div className="btn-group" role="group">
-          {titulo.status === 'pago' && !titulo.estornado && (
-            <button
-              className="btn btn-outline-danger btn-sm"
-              onClick={() => handleEstornarTitulo(titulo)}
-              title="Estornar título"
-            >
-              Estornar
-            </button>
-          )}
           <a
             href={getApiUrl(`/boleto/web/${titulo.id}`)}
             target="_blank"
@@ -545,13 +497,6 @@ const ClienteShow: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal de Estorno */}
-      <EstornoModal
-        isOpen={estornoModal.isOpen}
-        onClose={closeEstornoModal}
-        titulo={estornoModal.titulo}
-        onSuccess={handleEstornoSuccess}
-      />
     </div>
   );
 };

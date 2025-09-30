@@ -305,37 +305,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           showNotification('Erro ao abrir impressão', 'error');
         }
       }
-    },
-    {
-      label: 'Estornar',
-      action: async (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          const item = selectedItems[0];
-          if (item.status === 'pago') {
-            const confirmar = window.confirm(
-              `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-              `Valor: R$ ${item.valor_pago || item.valor}\n` +
-              `Esta ação é irreversível.`
-            );
-            
-            if (confirmar) {
-              try {
-                await TituloService.estornar(item.id, Number(item.valor_pago || item.valor), 'Estorno via interface');
-                showNotification('Título estornado com sucesso!', 'success');
-                refetchParcelas();
-              } catch (err: any) {
-                showNotification(err.message || 'Erro ao estornar título.', 'error');
-              }
-            }
-          } else {
-            showNotification('Só é possível estornar títulos que estão pagos', 'info');
-          }
-        }
-      },
-      disabled: (selectedItems: any[]) => {
-        if (selectedItems.length === 0) return true;
-        return selectedItems.every(item => item.status !== 'pago');
-      }
     }
   ];
 
@@ -352,16 +321,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'status',
       label: 'Status',
       render: (item: any) => {
-        // Se estiver estornado, mostrar apenas "Estornado"
-        if (item.estornado) {
-          return (
-            <span className="badge bg-dark">
-              Estornado
-            </span>
-          );
-        }
-        
-        // Caso contrário, mostrar o status normal
         return (
           <span className={`badge ${
             item.status === 'pago' ? 'bg-success' :
