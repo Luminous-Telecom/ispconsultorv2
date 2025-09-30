@@ -125,15 +125,19 @@ export class Titulo extends Model<
     // Integrar com banco externo se tiver charge_id
     if (this.charge_id) {
       try {
-        const BancoApiService = require('../services/BancoApiService').BancoApiService;
-        // Para títulos individuais, apenas atualizar o status localmente
-        const resultado = {
-          success: true,
-          message: 'Título marcado como pago com sucesso'
-        };
+        const { BancoApiService } = await import('../services/BancoApiService');
+        
+        // Carregar dados do banco para a liquidação
+        const banco = await this.getBanco();
+        const tituloComBanco = { ...this.toJSON(), banco };
+        
+        // Liquidar título no banco externo
+        const resultado = await BancoApiService.liquidarTitulo(tituloComBanco);
         
         if (!resultado.success) {
-          console.warn('Falha ao liquidar parcela no banco externo:', resultado.message);
+          console.warn('Falha ao liquidar título no banco externo:', resultado.message);
+        } else {
+          console.log('Título liquidado com sucesso no banco externo');
         }
       } catch (error) {
         console.error('Erro ao integrar com banco externo:', error);
