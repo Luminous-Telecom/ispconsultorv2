@@ -70,9 +70,11 @@ export const efiConfig = {
     boleto: '/v1/charge/one-step',
     consultar: '/v1/charge/:id',
     cancelar: '/v1/charge/:id',
+    liquidar: '/v1/charge/:id/settle',
     
     // Listagem
     listar_cobrancas: '/v1/charges',
+    
     
     // Notificações
     notification: '/v1/notification',
@@ -112,13 +114,13 @@ export const efiConfig = {
    * Verificar se o banco suporta operações específicas
    */
   operacoes_suportadas: {
-    gerar_carne: true,
-    cancelar_carne: true,
-    cancelar_parcela_carne: true,
-    alterar_vencimento_carne: true,
-    alterar_vencimento_parcela_carne: true,
-    liquidar_carne: true,
-    liquidar_parcela_carne: true,
+    gerar_carne: false,
+    cancelar_carne: false,
+    cancelar_parcela_carne: false,
+    alterar_vencimento_carne: false,
+    alterar_vencimento_parcela_carne: false,
+    liquidar_carne: false,
+    liquidar_parcela_carne: false,
   },
   
   // Configurações para compatibilidade com BancoApiService
@@ -127,7 +129,6 @@ export const efiConfig = {
   client_secret_field: 'client_secret',
   
   // Endpoints para BancoApiService
-  carnets: '/v1/carnet',
   token: '/v1/authorize',
   notification: '/v1/notification',
 };

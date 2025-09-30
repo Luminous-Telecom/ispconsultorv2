@@ -359,22 +359,11 @@ export class CarneParcelaController {
           numero_parcela: parcela.numero_parcela
         });
 
-        const resultado = await BancoApiService.liquidarParcelaCarne(parcela);
-        if (resultado.success) {
-          settleOk = true;
-          logger.info('Parcela liquidada com sucesso na EFI', {
-            parcela_id: parcela.id
-          });
-        } else {
-          logger.error('Falha ao liquidar parcela na EFI', {
-            parcela_id: parcela.id,
-            error: resultado.message
-          });
-          res.status(400).json({ 
-            error: 'Falha ao marcar como paga na Efí: ' + (resultado.message || 'Erro')
-          });
-          return;
-        }
+        // Carne não será mais usado - apenas marcar como pago localmente
+        settleOk = true;
+        logger.info('Parcela marcada como paga (carne desabilitado)', {
+          parcela_id: parcela.id
+        });
       }
 
       // Atualização local

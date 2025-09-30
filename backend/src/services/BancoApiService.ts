@@ -15,6 +15,7 @@ export interface BancoConfig {
     boleto: string;
     consultar: string;
     cancelar: string;
+    liquidar: string;
     listar_cobrancas: string;
     notification: string;
   };
@@ -49,7 +50,6 @@ export interface BancoConfig {
   auth_type: 'basic' | 'bearer';
   client_id_field: string;
   client_secret_field: string;
-  carnets: string;
   token: string;
   notification: string;
 }
@@ -899,100 +899,6 @@ export class BancoApiService {
 
 
 
-  /**
-   * Liquidar parcela de carne no banco externo
-   */
-  static async liquidarParcelaCarne(parcela: any): Promise<ApiResponse> {
-    try {
-      const banco = parcela.carne?.banco;
-      if (!banco) {
-        return {
-          success: false,
-          message: 'Banco não encontrado para a parcela'
-        };
-      }
-
-      const config = this.getBancoConfig(banco.tipo_banco);
-      if (!config) {
-        return {
-          success: false,
-          message: 'Configurações do banco não encontradas'
-        };
-      }
-
-      // Verificar se o banco suporta liquidação de parcela
-      if (!config.operacoes_suportadas.liquidar_parcela_carne) {
-        return {
-          success: false,
-          message: 'Banco não suporta liquidação de parcela'
-        };
-      }
-
-      // Obter token
-      const token = await this.obterToken(banco, config);
-      if (!token) {
-        return {
-          success: false,
-          message: 'Falha ao obter token de acesso'
-        };
-      }
-
-      // Preparar dados para liquidação
-      const dadosLiquidacao = {
-        carnet_id: parcela.carne.carnet_id,
-        parcel_id: parcela.charge_id,
-        settle: true
-      };
-
-      logger.info('Liquidando parcela no banco', {
-        parcela_id: parcela.id,
-        carnet_id: parcela.carne.carnet_id,
-        charge_id: parcela.charge_id
-      });
-
-      // Fazer requisição para liquidar parcela
-      const baseUrlCobranca = banco.sandbox 
-        ? config.sandbox_url
-        : config.cobranca_base_url;
-      const endpoint = `${baseUrlCobranca}/carnet/${parcela.carne.carnet_id}/parcel/${parcela.charge_id}/settle`;
-
-      const response = await axios.put(endpoint, dadosLiquidacao, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 200) {
-        logger.info('Parcela liquidada com sucesso', {
-          parcela_id: parcela.id,
-          carnet_id: parcela.carne.carnet_id
-        });
-
-        return {
-          success: true,
-          message: 'Parcela liquidada com sucesso',
-          data: response.data
-        };
-      } else {
-        return {
-          success: false,
-          message: 'Falha ao liquidar parcela no banco'
-        };
-      }
-
-    } catch (error: any) {
-      logger.error('Erro ao liquidar parcela', {
-        parcela_id: parcela.id,
-        error: error.message
-      });
-
-      return {
-        success: false,
-        message: 'Erro ao liquidar parcela: ' + error.message
-      };
-    }
-  }
 
   /**
    * Liquidar título individual no banco externo
@@ -1038,7 +944,8 @@ export class BancoApiService {
       const baseUrlCobranca = banco.sandbox 
         ? config.sandbox_url
         : config.cobranca_base_url;
-      const endpoint = `${baseUrlCobranca}/charge/${titulo.charge_id}/settle`;
+      const endpoint = baseUrlCobranca + config.api_endpoints.liquidar
+        .replace(':id', titulo.charge_id);
 
       const response = await axios.put(endpoint, dadosLiquidacao, {
         headers: {
