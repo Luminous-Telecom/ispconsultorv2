@@ -393,21 +393,21 @@ export class BancoApiService {
       payment: {
         banking_billet: {
           customer: {
-            name: 'João Silva Santos',
-            email: 'cliente.teste@email.com',
-            phone_number: '11999999999',
+            name: cliente.razao_social || cliente.nome || 'Cliente',
+            email: cliente.email || 'cliente@email.com',
+            phone_number: cliente.telefone || cliente.celular || '11999999999',
             juridical_person: {
-              corporate_name: 'Cliente Teste LTDA',
-              cnpj: '11222333000181'
+              corporate_name: cliente.razao_social || cliente.nome || 'Cliente',
+              cnpj: cliente.cnpj || '11222333000181'
             },
             address: {
-              street: 'Rua das Flores',
-              number: '123',
-              neighborhood: 'Centro',
-              zipcode: '01234567',
-              city: 'São Paulo',
-              complement: '',
-              state: 'SP'
+              street: cliente.endereco || 'Rua das Flores',
+              number: cliente.numero || '123',
+              neighborhood: cliente.bairro || 'Centro',
+              zipcode: cliente.cep || '01234567',
+              city: cliente.cidade || 'São Paulo',
+              complement: cliente.complemento || '',
+              state: cliente.estado || 'SP'
             }
           },
           expire_at: new Date(titulo.data_vencimento).toISOString().split('T')[0],
