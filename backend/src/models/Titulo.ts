@@ -25,14 +25,10 @@ export class Titulo extends Model<
   declare numero_titulo: string;
   declare valor: number;
   declare data_vencimento: Date;
-  declare status: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'estornado';
+  declare status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
   declare pago: boolean;
   declare data_pagamento: Date | null;
   declare valor_pago: number | null;
-  declare estornado: boolean;
-  declare data_estorno: Date | null;
-  declare valor_estorno: number | null;
-  declare motivo_estorno: string | null;
   declare codigo_barras: string | null;
   declare linha_digitavel: string | null;
   declare qrcode: string | null;
@@ -173,31 +169,6 @@ export class Titulo extends Model<
     });
   }
 
-  async estornar(valorEstorno?: number, motivoEstorno?: string): Promise<void> {
-    const valor = valorEstorno || this.valor_pago || this.valor;
-    const data = new Date();
-    
-    await this.update({
-      estornado: true,
-      data_estorno: data,
-      valor_estorno: valor,
-      motivo_estorno: motivoEstorno,
-      status: 'estornado',
-      pago: false,
-      data_pagamento: null,
-      valor_pago: null
-    });
-  }
-
-  async desmarcarEstorno(): Promise<void> {
-    await this.update({
-      estornado: false,
-      data_estorno: null,
-      valor_estorno: null,
-      motivo_estorno: null,
-      status: 'pendente'
-    });
-  }
 
   async isVencida(): Promise<boolean> {
     const hoje = new Date();
@@ -395,7 +366,7 @@ Titulo.init(
       allowNull: false
     },
     status: {
-      type: DataTypes.ENUM('pendente', 'pago', 'vencido', 'cancelado', 'estornado'),
+      type: DataTypes.ENUM('pendente', 'pago', 'vencido', 'cancelado'),
       allowNull: false,
       defaultValue: 'pendente'
     },
@@ -410,23 +381,6 @@ Titulo.init(
     },
     valor_pago: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: true
-    },
-    estornado: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
-    data_estorno: {
-      type: DataTypes.DATE,
-      allowNull: true
-    },
-    valor_estorno: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: true
-    },
-    motivo_estorno: {
-      type: DataTypes.TEXT,
       allowNull: true
     },
     codigo_barras: {

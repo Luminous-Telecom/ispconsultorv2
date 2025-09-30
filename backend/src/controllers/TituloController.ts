@@ -274,8 +274,7 @@ export class TituloController {
         data_vencimento,
         observacoes: observacoes || '',
         status: 'pendente',
-        pago: false,
-        estornado: false
+        pago: false
       });
 
       res.status(201).json({
@@ -756,93 +755,6 @@ export class TituloController {
     }
   }
 
-  // Estornar título
-  static async estornar(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const { valor_estorno, motivo_estorno } = req.body;
-
-      const titulo = await Titulo.findByPk(id);
-      if (!titulo) {
-        res.status(404).json({
-          success: false,
-          message: 'Título não encontrado'
-        });
-        return;
-      }
-
-      // Validação: só pode estornar se estiver pago
-      if (titulo.status !== 'pago') {
-        res.status(400).json({
-          success: false,
-          message: 'Só é possível estornar títulos que estão pagos'
-        });
-        return;
-      }
-
-      // Validação: não pode estornar se já estiver estornado
-      if (titulo.estornado) {
-        res.status(400).json({
-          success: false,
-          message: 'Este título já foi estornado'
-        });
-        return;
-      }
-
-      await titulo.estornar(valor_estorno, motivo_estorno);
-
-      res.json({
-        success: true,
-        message: 'Título estornado com sucesso',
-        data: titulo
-      });
-    } catch (error: any) {
-      logger.error('Erro ao estornar título', { error: error.message });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
-    }
-  }
-
-  // Desmarcar estorno
-  static async desmarcarEstorno(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-
-      const titulo = await Titulo.findByPk(id);
-      if (!titulo) {
-        res.status(404).json({
-          success: false,
-          message: 'Título não encontrado'
-        });
-        return;
-      }
-
-      // Validação: só pode desmarcar estorno se estiver estornado
-      if (!titulo.estornado) {
-        res.status(400).json({
-          success: false,
-          message: 'Este título não está estornado'
-        });
-        return;
-      }
-
-      await titulo.desmarcarEstorno();
-
-      res.json({
-        success: true,
-        message: 'Estorno desmarcado com sucesso',
-        data: titulo
-      });
-    } catch (error: any) {
-      logger.error('Erro ao desmarcar estorno', { error: error.message });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
-    }
-  }
 
   // Estatísticas dos títulos
   static async getStats(req: Request, res: Response): Promise<void> {
@@ -859,15 +771,13 @@ export class TituloController {
         titulosPendentes,
         titulosPagos,
         titulosVencidos,
-        titulosCancelados,
-        titulosEstornados
+        titulosCancelados
       ] = await Promise.all([
         Titulo.count({ where }),
         Titulo.count({ where: { ...where, status: 'pendente' } }),
         Titulo.count({ where: { ...where, status: 'pago' } }),
         Titulo.count({ where: { ...where, status: 'vencido' } }),
-        Titulo.count({ where: { ...where, status: 'cancelado' } }),
-        Titulo.count({ where: { ...where, status: 'estornado' } })
+        Titulo.count({ where: { ...where, status: 'cancelado' } })
       ]);
 
       // Calcular valores
@@ -876,15 +786,13 @@ export class TituloController {
         valorPendente,
         valorPago,
         valorVencido,
-        valorCancelado,
-        valorEstornado
+        valorCancelado
       ] = await Promise.all([
         Titulo.sum('valor', { where }),
         Titulo.sum('valor', { where: { ...where, status: 'pendente' } }),
         Titulo.sum('valor', { where: { ...where, status: 'pago' } }),
         Titulo.sum('valor', { where: { ...where, status: 'vencido' } }),
-        Titulo.sum('valor', { where: { ...where, status: 'cancelado' } }),
-        Titulo.sum('valor_estorno', { where: { ...where, status: 'estornado' } })
+        Titulo.sum('valor', { where: { ...where, status: 'cancelado' } })
       ]);
 
       res.json({
@@ -895,16 +803,14 @@ export class TituloController {
             pendentes: titulosPendentes,
             pagos: titulosPagos,
             vencidos: titulosVencidos,
-            cancelados: titulosCancelados,
-            estornados: titulosEstornados
+            cancelados: titulosCancelados
           },
           valores: {
             total: valorTotal || 0,
             pendente: valorPendente || 0,
             pago: valorPago || 0,
             vencido: valorVencido || 0,
-            cancelado: valorCancelado || 0,
-            estornado: valorEstornado || 0
+            cancelado: valorCancelado || 0
           }
         }
       });

@@ -27,12 +27,6 @@ router.post('/:id/pagar', TituloController.marcarComoPago);
 // Desmarcar como pago
 router.post('/:id/desmarcar-pago', TituloController.desmarcarPago);
 
-// Estornar título
-router.post('/:id/estornar', TituloController.estornar);
-
-// Desmarcar estorno
-router.post('/:id/desmarcar-estorno', TituloController.desmarcarEstorno);
-
 // Estatísticas
 router.get('/stats/geral', TituloController.getStats);
 

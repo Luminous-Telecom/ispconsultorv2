@@ -155,6 +155,47 @@ export class TituloService {
     }
   }
 
+  // Estornar título
+  static async estornar(
+    id: number, 
+    valorEstorno?: number, 
+    motivoEstorno?: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const payload: any = {};
+      
+      if (valorEstorno !== undefined) {
+        payload.valor_estorno = valorEstorno;
+      }
+      
+      if (motivoEstorno) {
+        payload.motivo_estorno = motivoEstorno;
+      }
+
+      const response = await apiService.post<{ success: boolean; message: string }>(
+        `${API_ENDPOINTS.TITULOS}/${id}/estornar`, 
+        payload
+      );
+      return response;
+    } catch (error) {
+      console.error('Erro ao estornar título:', error);
+      throw error;
+    }
+  }
+
+  // Desmarcar estorno
+  static async desmarcarEstorno(id: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiService.post<{ success: boolean; message: string }>(
+        `${API_ENDPOINTS.TITULOS}/${id}/desmarcar-estorno`
+      );
+      return response;
+    } catch (error) {
+      console.error('Erro ao desmarcar estorno:', error);
+      throw error;
+    }
+  }
+
   // Visualizar boleto na web
   static getBoletoUrl(id: number): string {
     return `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/${id}`;
