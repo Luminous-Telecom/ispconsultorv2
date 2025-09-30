@@ -379,13 +379,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       render: (item: any) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
-    },
-    {
-      key: 'tipo',
-      label: 'Carnê/Título',
-      render: (item: any) => {
-        return <span className="badge bg-info">Título</span>;
-      }
     }
   ];
 
