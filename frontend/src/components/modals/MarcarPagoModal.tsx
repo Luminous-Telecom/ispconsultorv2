@@ -215,15 +215,6 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
           </div>
         </div>
 
-        {/* Resumo */}
-        <div className="alert alert-info">
-          <strong>Resumo:</strong><br />
-          • Título: {parcela.numero_titulo}<br />
-          • Valor original: R$ {(parcela.valor_parcela || 0).toFixed(2)}<br />
-          • Valor pago: R$ {formData.valor_pago || '0,00'}<br />
-          • Data de pagamento: {formData.data_pagamento ? new Date(formData.data_pagamento).toLocaleDateString('pt-BR') : 'Não informada'}
-        </div>
-
         {/* Botões */}
         <div className="d-flex justify-content-end gap-2 mt-3">
           <button
