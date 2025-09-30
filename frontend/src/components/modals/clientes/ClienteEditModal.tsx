@@ -346,13 +346,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     },
     {
-      key: 'numero_titulo',
-      label: 'Título',
-      render: (item: any) => {
-        return item.numero_titulo || '-';
-      }
-    },
-    {
       key: 'plano',
       label: 'Plano',
       render: (item: any) => {
