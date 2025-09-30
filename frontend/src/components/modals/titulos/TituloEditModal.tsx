@@ -60,23 +60,20 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
 
   // Carregar dados da parcela quando disponível
   useEffect(() => {
-    if (parcela) {
-      console.log('Dados da parcela recebidos:', parcela);
+    if (parcela && parcela.success && parcela.data) {
+      const tituloData = parcela.data;
       
       // Formatar data de vencimento para o input date
-      const dataVencimento = parcela.data_vencimento 
-        ? new Date(parcela.data_vencimento).toISOString().split('T')[0]
+      const dataVencimento = tituloData.data_vencimento 
+        ? new Date(tituloData.data_vencimento).toISOString().split('T')[0]
         : '';
 
-      const formDataToSet = {
-        cliente_id: parcela.carne?.cliente_id || 0,
-        plano_id: parcela.plano_id || 0,
+      setFormData({
+        cliente_id: tituloData.cliente_id || 0,
+        plano_id: tituloData.plano_id || 0,
         data_vencimento: dataVencimento,
-        observacoes: parcela.observacoes || '',
-      };
-
-      console.log('Dados do formulário a serem definidos:', formDataToSet);
-      setFormData(formDataToSet);
+        observacoes: tituloData.observacoes || '',
+      });
     }
   }, [parcela]);
 
