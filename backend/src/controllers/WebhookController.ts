@@ -416,14 +416,14 @@ export class WebhookController {
           if (dados.qrcode_image) updateData.qrcode_image = dados.qrcode_image;
           
         } else {
-          // Se não conseguir consultar da EFI, gerar dados fictícios como fallback
+          // Se não conseguir consultar da EFI, gerar dados válidos como fallback
           const codigoBarras = await titulo.gerarCodigoBarras();
           const linhaDigitavel = await titulo.gerarLinhaDigitavel();
           
           updateData.codigo_barras = codigoBarras;
           updateData.linha_digitavel = linhaDigitavel;
           
-          logger.warn('Usando dados fictícios como fallback', {
+          logger.warn('Usando dados gerados como fallback', {
             titulo_id: titulo.id,
             charge_id: chargeId,
             codigo_barras: codigoBarras,
@@ -432,7 +432,7 @@ export class WebhookController {
           });
         }
       } catch (error) {
-        // Em caso de erro, gerar dados fictícios como fallback
+        // Em caso de erro, gerar dados válidos como fallback
         try {
           const codigoBarras = await titulo.gerarCodigoBarras();
           const linhaDigitavel = await titulo.gerarLinhaDigitavel();

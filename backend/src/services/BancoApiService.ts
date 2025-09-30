@@ -131,59 +131,94 @@ export class BancoApiService {
   }
 
   /**
-   * Obter token de acesso
+   * Obter token de acesso com retry para timeouts
    */
   private static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
-    try {
-      // Usar URL correta baseada no ambiente (sandbox vs produção)
-      const baseUrl = banco.sandbox 
-        ? config.sandbox_url
-        : config.cobranca_base_url;
-      const endpoint = baseUrl + config.token;
-      
-      logger.info('Debug URL selection (token):', {
-        banco_sandbox: banco.sandbox,
-        sandbox_url: config.sandbox_url,
-        cobranca_base_url: config.cobranca_base_url,
-        selected_url: baseUrl,
-        final_endpoint: endpoint
-      });
-      
-      let authData: any = {};
-      
-      if (config.auth_type === 'basic') {
-        authData = {
-          [config.client_id_field]: banco.client_id_producao,
-          [config.client_secret_field]: banco.client_secret_producao,
-          grant_type: 'client_credentials'
-        };
-      }
-
-
-      const response = await axios.post(endpoint, authData, {
-        headers: {
-          'Content-Type': 'application/json'
+    const maxTentativas = 3;
+    let delay = 2000; // 2 segundos inicial
+    
+    for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+      try {
+        // Usar URL correta baseada no ambiente (sandbox vs produção)
+        const baseUrl = banco.sandbox 
+          ? config.sandbox_url
+          : config.cobranca_base_url;
+        const endpoint = baseUrl + config.token;
+        
+        if (tentativa === 1) {
+          logger.info('Debug URL selection (token):', {
+            banco_sandbox: banco.sandbox,
+            sandbox_url: config.sandbox_url,
+            cobranca_base_url: config.cobranca_base_url,
+            selected_url: baseUrl,
+            final_endpoint: endpoint
+          });
         }
-      });
+        
+        let authData: any = {};
+        
+        if (config.auth_type === 'basic') {
+          authData = {
+            [config.client_id_field]: banco.client_id_producao,
+            [config.client_secret_field]: banco.client_secret_producao,
+            grant_type: 'client_credentials'
+          };
+        }
 
+        const response = await axios.post(endpoint, authData, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000 // 30 segundos de timeout
+        });
 
-      if (response.data && response.data.access_token) {
-        return response.data.access_token;
+        if (response.data && response.data.access_token) {
+          if (tentativa > 1) {
+            logger.info('Token obtido com sucesso após retry', {
+              tentativa,
+              banco_id: banco.id
+            });
+          }
+          return response.data.access_token;
+        }
+
+        logger.warn('Token não encontrado na resposta', {
+          response_keys: Object.keys(response.data || {}),
+          tentativa
+        });
+        return null;
+      } catch (error: any) {
+        const isTimeout = error.code === 'ECONNABORTED' || 
+                         error.response?.status === 504 || 
+                         error.response?.status === 502 || 
+                         error.response?.status === 503;
+        
+        if (tentativa < maxTentativas && isTimeout) {
+          logger.warn(`Tentativa ${tentativa} falhou por timeout, tentando novamente em ${delay}ms`, {
+            banco_id: banco.id,
+            error: error.message,
+            status: error.response?.status,
+            tentativa
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2; // Exponential backoff
+          continue;
+        }
+        
+        logger.error('Erro ao obter token', { 
+          banco_id: banco.id,
+          error: error.message,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          tentativa,
+          isTimeout
+        });
+        return null;
       }
-
-      logger.warn('Token não encontrado na resposta', {
-        response_keys: Object.keys(response.data || {})
-      });
-      return null;
-    } catch (error: any) {
-      logger.error('Erro ao obter token', { 
-        error: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data
-      });
-      return null;
     }
+    
+    return null;
   }
 
   /**
@@ -288,7 +323,39 @@ export class BancoApiService {
         headers: { ...headers, Authorization: headers.Authorization ? '***' : undefined }
       });
       
-      const response = await axios.post(endpoint, dadosBoleto, { headers });
+      // Implementar retry para criação de boleto
+      const maxTentativas = 3;
+      let delay = 2000;
+      let response: any = null;
+      
+      for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+        try {
+          response = await axios.post(endpoint, dadosBoleto, { 
+            headers,
+            timeout: 30000
+          });
+          break; // Sucesso, sair do loop
+        } catch (error: any) {
+          const isTimeout = error.code === 'ECONNABORTED' || 
+                           error.response?.status === 504 || 
+                           error.response?.status === 502 || 
+                           error.response?.status === 503;
+          
+          if (tentativa < maxTentativas && isTimeout) {
+            logger.warn(`Tentativa ${tentativa} falhou por timeout na criação do boleto, tentando novamente em ${delay}ms`, {
+              titulo_id: titulo.id,
+              status: error.response?.status,
+              tentativa
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2;
+            continue;
+          } else {
+            throw error; // Re-throw se não é erro temporário ou é última tentativa
+          }
+        }
+      }
       
       logger.info('Resposta da EFI:', {
         status: response.status,
@@ -522,11 +589,41 @@ export class BancoApiService {
         token_length: token ? token.length : 0
       });
       
-      const response = await axios.get(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // Implementar retry para consulta de status
+      const maxTentativas = 3;
+      let delay = 2000;
+      let response: any = null;
+      
+      for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+        try {
+          response = await axios.get(endpoint, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            timeout: 30000
+          });
+          break; // Sucesso, sair do loop
+        } catch (error: any) {
+          const isTimeout = error.code === 'ECONNABORTED' || 
+                           error.response?.status === 504 || 
+                           error.response?.status === 502 || 
+                           error.response?.status === 503;
+          
+          if (tentativa < maxTentativas && isTimeout) {
+            logger.warn(`Tentativa ${tentativa} falhou por timeout na consulta de status, tentando novamente em ${delay}ms`, {
+              titulo_id: titulo.id,
+              status: error.response?.status,
+              tentativa
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2;
+            continue;
+          } else {
+            throw error; // Re-throw se não é erro temporário ou é última tentativa
+          }
         }
-      });
+      }
       
       if (response.status >= 200 && response.status < 300) {
         const dados = response.data;
@@ -717,11 +814,41 @@ export class BancoApiService {
         titulo_id: titulo.id
       });
 
-      const response = await axios.put(endpoint, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // Implementar retry para cancelamento de título
+      const maxTentativas = 3;
+      let delay = 2000;
+      let response: any = null;
+      
+      for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+        try {
+          response = await axios.put(endpoint, {}, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            timeout: 30000
+          });
+          break; // Sucesso, sair do loop
+        } catch (error: any) {
+          const isTimeout = error.code === 'ECONNABORTED' || 
+                           error.response?.status === 504 || 
+                           error.response?.status === 502 || 
+                           error.response?.status === 503;
+          
+          if (tentativa < maxTentativas && isTimeout) {
+            logger.warn(`Tentativa ${tentativa} falhou por timeout no cancelamento, tentando novamente em ${delay}ms`, {
+              titulo_id: titulo.id,
+              status: error.response?.status,
+              tentativa
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2;
+            continue;
+          } else {
+            throw error; // Re-throw se não é erro temporário ou é última tentativa
+          }
         }
-      });
+      }
 
       logger.info('Resposta do cancelamento de título individual', {
         endpoint,

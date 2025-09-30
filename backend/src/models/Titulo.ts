@@ -232,17 +232,19 @@ export class Titulo extends Model<
   async gerarCodigoBarras(): Promise<string> {
     const banco = await this.getBanco();
     
-    // Formato: código do banco + ID do título (8 dígitos) + '00000000000'
-    const codigoBanco = banco?.codigo || '237';
-    const tituloId = this.id.toString().padStart(8, '0');
-    const zeros = '00000000000';
+    // Usar BarcodeService para gerar código FEBRABAN válido
+    const { BarcodeService } = await import('../services/BarcodeService');
+    const valorCentavos = Math.round(Number(this.valor) * 100);
+    const vencimento = new Date(this.data_vencimento).toISOString().slice(0, 10).replace(/-/g, '');
+    const nossoNumero = this.charge_id || this.id.toString();
+    const bancoCodigo = banco?.codigo || '364';
     
-    const codigoCompleto = `${codigoBanco}${tituloId}${zeros}`;
-    
-    // Garantir que o código tenha exatamente 47 caracteres para linha digitável
-    const codigoFinal = codigoCompleto.padEnd(47, '0');
-    
-    return codigoFinal;
+    return BarcodeService.gerarCodigoBarrasFebraban(
+      bancoCodigo,
+      nossoNumero,
+      valorCentavos,
+      vencimento
+    );
   }
 
   async gerarLinhaDigitavel(): Promise<string> {

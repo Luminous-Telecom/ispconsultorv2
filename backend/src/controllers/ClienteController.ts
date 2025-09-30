@@ -31,7 +31,6 @@ export class ClienteController {
     estado: Joi.string().length(2).allow(null, ''),
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean().default(true),
-    tipo_cobranca: Joi.string().max(50).allow(null, ''),
     valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
     isento_mensalidade: Joi.boolean().default(false),
     recebe_email: Joi.boolean().default(true),
@@ -70,7 +69,6 @@ export class ClienteController {
     estado: Joi.string().length(2).allow(null, ''),
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean(),
-    tipo_cobranca: Joi.string().max(50).allow(null, ''),
     valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
     isento_mensalidade: Joi.boolean(),
     recebe_email: Joi.boolean(),
@@ -247,7 +245,7 @@ export class ClienteController {
       const clienteCriado = await Cliente.findByPk(cliente.id, {
         include: [
           { association: 'planos' },
-          { association: 'carnes' },
+          { association: 'titulos' },
           { 
             association: 'bancoBoleto',
             attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
@@ -330,7 +328,7 @@ export class ClienteController {
       const clienteAtualizado = await Cliente.findByPk(id, {
         include: [
           { association: 'planos' },
-          { association: 'carnes' },
+          { association: 'titulos' },
           { 
             association: 'bancoBoleto',
             attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao']

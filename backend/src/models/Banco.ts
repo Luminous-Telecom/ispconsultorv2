@@ -68,6 +68,7 @@ export class Banco extends Model<
   declare instrucao_linha_4: string | null;
   declare instrucao_linha_5: string | null;
   declare configuracoes: Record<string, any> | null;
+  declare logo: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -429,6 +430,10 @@ Banco.init(
     },
     configuracoes: {
       type: DataTypes.JSON,
+      allowNull: true
+    },
+    logo: {
+      type: DataTypes.STRING(500),
       allowNull: true
     },
     created_at: {

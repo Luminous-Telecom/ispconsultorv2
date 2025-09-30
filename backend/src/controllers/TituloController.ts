@@ -4,6 +4,7 @@ import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { BancoApiService } from '../services/BancoApiService';
+import { BarcodeService } from '../services/BarcodeService';
 import { logger } from '../utils/logger';
 import { Op } from 'sequelize';
 
@@ -20,6 +21,38 @@ export class TituloController {
     });
     
     return resultado;
+  }
+
+
+
+
+
+  // Obter logo padrão do banco
+  private static getLogoBancoPadrao(tipoBanco: string): string {
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+    const logosPadrao: Record<string, string> = {
+      'efi': `${baseUrl}/images/bancos/efi.png`,
+      'asaas': `${baseUrl}/images/bancos/asaas.png`,
+      'bancario': `${baseUrl}/images/bancos/boletoproprio.png`,
+      'outros': `${baseUrl}/images/bancos/boletoproprio.png`
+    };
+
+    return logosPadrao[tipoBanco] || logosPadrao['outros'];
+  }
+
+  // Processar instruções com substituição de variáveis
+  private static processarInstrucao(instrucao: string, titulo: any): string {
+    if (!instrucao) return '';
+    
+    return instrucao
+      .replace(/%quantidade_usuarios%/g, titulo.plano?.quantidade_usuarios || '1')
+      .replace(/%tipo_servico%/g, titulo.plano?.tipo_servico || 'Internet')
+      .replace(/%nome_plano%/g, titulo.plano?.nome_plano || 'Plano')
+      .replace(/%valor_plano%/g, Number(titulo.plano?.valor_mensal || 0).toFixed(2).replace('.', ','))
+      .replace(/%cliente_nome%/g, titulo.cliente?.razao_social || '')
+      .replace(/%cliente_cnpj%/g, titulo.cliente?.cnpj || '')
+      .replace(/%data_vencimento%/g, new Date(titulo.data_vencimento).toLocaleDateString('pt-BR'))
+      .replace(/%valor_boleto%/g, Number(titulo.valor).toFixed(2).replace('.', ','));
   }
 
   // Listar títulos com filtros
@@ -422,7 +455,15 @@ export class TituloController {
         include: [
           { model: Cliente, as: 'cliente' },
           { model: Plano, as: 'plano' },
-          { model: Banco, as: 'banco', attributes: ['id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox'] }
+          { 
+            model: Banco, 
+            as: 'banco', 
+            attributes: [
+              'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
+              'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
+              'instrucao_linha_4', 'instrucao_linha_5', 'logo'
+            ] 
+          }
         ]
       }) as any;
 
@@ -447,13 +488,34 @@ export class TituloController {
           const resultado = await BancoApiService.gerarTitulo(titulo as any);
           
           if (resultado.success && resultado.data) {
+            // Validar e corrigir código de barras se necessário
+            let codigoBarrasFinal = resultado.data.codigo_barras;
+            if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras)) {
+              logger.warn('Código de barras da EFI inválido, gerando novo', {
+                titulo_id: titulo.id,
+                codigo_original: resultado.data.codigo_barras
+              });
+              
+              // Gerar código de barras válido
+              const valorCentavos = Math.round(Number(titulo.valor) * 100);
+              const vencimento = new Date(titulo.data_vencimento).toISOString().slice(0, 10).replace(/-/g, '');
+              const nossoNumero = resultado.data.charge_id || titulo.id.toString();
+              
+              codigoBarrasFinal = BarcodeService.gerarCodigoBarrasFebraban(
+                titulo.banco.codigo || '364',
+                nossoNumero,
+                valorCentavos,
+                vencimento
+              );
+            }
+
             // Atualizar título com dados do banco
             await titulo.update({
               charge_id: resultado.data.charge_id,
               url_boleto: resultado.data.url_boleto,
               qrcode: resultado.data.qrcode,
               qrcode_image: resultado.data.qrcode_image,
-              codigo_barras: resultado.data.codigo_barras,
+              codigo_barras: codigoBarrasFinal,
               linha_digitavel: resultado.data.linha_digitavel,
               nosso_numero: resultado.data.nosso_numero
             });
@@ -481,83 +543,133 @@ export class TituloController {
         }
       }
 
-      // Renderizar template do boleto
+      // Carregar dados da empresa
+      const { DadosEmpresa } = await import('../models/DadosEmpresa');
+      const dadosEmpresa = await DadosEmpresa.findOne();
+      
+      if (!dadosEmpresa) {
+        res.status(500).json({
+          success: false,
+          message: 'Dados da empresa não configurados'
+        });
+        return;
+      }
+
+      // Preparar variáveis para o template
+      const dataVencimento = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
+      const dataProcessamento = new Date().toLocaleDateString('pt-BR');
+      const valorBoleto = Number(titulo.valor).toFixed(2).replace('.', ',');
+      
+      // Carregar templates
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const topoTemplatePath = path.join(__dirname, '../templates/boleto-topo-inner.html');
+      const corpoTemplatePath = path.join(__dirname, '../templates/boleto-corpo-inner.html');
+      
+      let topoTemplate = '';
+      let corpoTemplate = '';
+      
+      try {
+        topoTemplate = fs.readFileSync(topoTemplatePath, 'utf8');
+        corpoTemplate = fs.readFileSync(corpoTemplatePath, 'utf8');
+      } catch (error: any) {
+        logger.error('Erro ao carregar templates do boleto', { error: error.message });
+        res.status(500).json({
+          success: false,
+          message: 'Erro ao carregar template do boleto'
+        });
+        return;
+      }
+
+      // Variáveis para substituição no template - Padrão FEBRABAN
+      const templateVars = {
+        // Dados da empresa (Beneficiário)
+        LOGOMARCA: dadosEmpresa.logo || '',
+        CEDENTE: dadosEmpresa.razao_social || 'CTM Telecom',
+        EMPRESACPF: dadosEmpresa.cnpj || '',
+        EMPRESAENDERECO: `${dadosEmpresa.endereco || ''} ${dadosEmpresa.numero || ''}`.trim(),
+        EMPRESABAIRRO: dadosEmpresa.bairro || '',
+        EMPRESACEP: dadosEmpresa.cep || '',
+        EMPRESACIDADE: dadosEmpresa.cidade || '',
+        EMPRESAESTADO: dadosEmpresa.estado || '',
+        
+        // Dados do banco - FEBRABAN
+        LOGOBANCO: (titulo.banco as any).logo || TituloController.getLogoBancoPadrao(titulo.banco.tipo_banco) || dadosEmpresa.logo || '',
+        CODIGO_BANCO_COM_DV: titulo.banco.codigo ? `${titulo.banco.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
+        LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
+        AGENCIA_CODIGO: titulo.banco.agencia_codigo || 'Não configurado',
+        
+        // Dados do boleto - FEBRABAN
+        LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
+        DATA_VENC: dataVencimento,
+        DATA_DOCUMENTO: dataProcessamento,
+        NUMERO_DOCUMENTO: titulo.numero_titulo || titulo.id?.toString() || '',
+        ESPECIE_DOC: 'DM', // Duplicata de Venda Mercantil
+        DATA_PROC: dataProcessamento,
+        NOSSO_NUMERO: titulo.charge_id || titulo.nosso_numero || '',
+        CARTEIRA: 'SR', // Sem Registro
+        VAR_CARTEIRA: '',
+        ESPECIE: 'R$',
+        VALOR_BOLETO: valorBoleto,
+        
+        // Dados do cliente (Pagador) - FEBRABAN
+        SACADO_NOME: titulo.cliente.razao_social || titulo.cliente.nome || '',
+        TIPO_PSACADO: titulo.cliente.cnpj ? 'CNPJ' : 'CPF',
+        SACADO_CPF: titulo.cliente.cnpj || titulo.cliente.cpf || '',
+        SACADO_ENDERECO: `${titulo.cliente.endereco || ''} ${titulo.cliente.numero || ''}`.trim(),
+        SACADO_BAIRRO: titulo.cliente.bairro || '',
+        SACADO_COMPLEMENTO: titulo.cliente.complemento || '',
+        SACADO_CIDADE: titulo.cliente.cidade || '',
+        SACADO_ESTADO: titulo.cliente.estado || '',
+        SACADO_CEP: titulo.cliente.cep || '',
+        SACADO_IDNOME: titulo.cliente.razao_social || titulo.cliente.nome || '',
+        
+        // Dados do plano
+        NOME_PLANO: titulo.plano.nome_plano || titulo.plano.nome || '',
+        DESCRICAO_PLANO: titulo.plano.descricao || '',
+        TIPO_SERVICO: titulo.plano.tipo_servico || 'Internet',
+        QUANTIDADE_USUARIOS: titulo.plano.quantidade_usuarios || '1',
+        VALOR_PLANO: valorBoleto,
+        PERIODICIDADE: 'Mensal',
+        
+        // Instruções do banco - Padrão FEBRABAN
+        TEXTO_MULTAMORA: `Após o vencimento, cobrar multa de ${titulo.banco.percentual_multa || 2}% e juros de ${titulo.banco.percentual_juros || 1}% ao mês.`,
+        INSTRUCOES1: TituloController.processarInstrucao(titulo.banco.instrucao_linha_1 || 'Não receber após o vencimento.', titulo),
+        INSTRUCOES2: TituloController.processarInstrucao(titulo.banco.instrucao_linha_2 || 'Em caso de dúvidas, entre em contato conosco.', titulo),
+        INSTRUCOES3: TituloController.processarInstrucao(titulo.banco.instrucao_linha_3 || 'Pagável em qualquer banco até o vencimento.', titulo),
+        INSTRUCOES4: TituloController.processarInstrucao(titulo.banco.instrucao_linha_4 || 'Ficha de Compensação do Boleto Bancário.', titulo),
+        INSTRUCOES5: TituloController.processarInstrucao(titulo.banco.instrucao_linha_5 || '', titulo),
+        
+        // QR Code e código de barras - FEBRABAN
+        QRCODE: titulo.qrcode_image || '',
+        QRCODE_HTML: titulo.qrcode_image 
+          ? `<img src="${titulo.qrcode_image}" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px;" /><br><span style="font-size: 8px; font-weight: bold;">PIX - Pagamento Instantâneo</span>`
+          : '<div style="color: #666; font-size: 8px;">QR Code PIX<br>Não disponível</div>',
+        BOLETO_BARCODE2: titulo.codigo_barras ? BarcodeService.generateFebrabanBarcodeSvg(titulo.codigo_barras) : ''
+      };
+
+      // Processar templates
+      let topoProcessado = topoTemplate;
+      let corpoProcessado = corpoTemplate;
+      
+      Object.entries(templateVars).forEach(([key, value]) => {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        topoProcessado = topoProcessado.replace(regex, String(value));
+        corpoProcessado = corpoProcessado.replace(regex, String(value));
+      });
+
+      // Template final
       const template = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
           <title>Boleto - ${titulo.numero_titulo}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .boleto-info { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-            .cliente-info { margin-bottom: 15px; }
-            .valor-info { font-size: 18px; font-weight: bold; text-align: center; margin: 20px 0; }
-            .codigo-barras { font-family: monospace; font-size: 12px; margin: 10px 0; }
-            .linha-digitavel { font-family: monospace; font-size: 14px; margin: 10px 0; }
-            .qr-code { text-align: center; margin: 20px 0; }
-            .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
-          </style>
         </head>
         <body>
-          <div class="header">
-            <h1>Boleto de Pagamento</h1>
-            <p>Número do Título: ${titulo.numero_titulo}</p>
-          </div>
-          
-          <div class="boleto-info">
-            <div class="cliente-info">
-              <h3>Dados do Cliente</h3>
-              <p><strong>Razão Social:</strong> ${titulo.cliente.razao_social}</p>
-              <p><strong>CNPJ:</strong> ${titulo.cliente.cnpj}</p>
-              <p><strong>Email:</strong> ${titulo.cliente.email}</p>
-            </div>
-            
-            <div class="cliente-info">
-              <h3>Dados do Plano</h3>
-              <p><strong>Plano:</strong> ${titulo.plano.nome_plano}</p>
-              <p><strong>Descrição:</strong> ${titulo.plano.descricao || 'N/A'}</p>
-            </div>
-            
-            <div class="valor-info">
-              <p>Valor: R$ ${Number(titulo.valor).toFixed(2)}</p>
-              <p>Vencimento: ${new Date(titulo.data_vencimento).toLocaleDateString('pt-BR')}</p>
-            </div>
-            
-            ${titulo.codigo_barras ? `
-              <div class="codigo-barras">
-                <strong>Código de Barras:</strong><br>
-                ${titulo.codigo_barras}
-              </div>
-            ` : ''}
-            
-            ${titulo.linha_digitavel ? `
-              <div class="linha-digitavel">
-                <strong>Linha Digitável:</strong><br>
-                ${titulo.linha_digitavel}
-              </div>
-            ` : ''}
-            
-            ${titulo.qrcode_image ? `
-              <div class="qr-code">
-                <img src="${titulo.qrcode_image}" alt="QR Code" style="max-width: 200px;">
-              </div>
-            ` : ''}
-            
-            ${titulo.url_boleto ? `
-              <div style="text-align: center; margin: 20px 0;">
-                <a href="${titulo.url_boleto}" target="_blank" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                  Abrir Boleto no Banco
-                </a>
-              </div>
-            ` : ''}
-          </div>
-          
-          <div class="footer">
-            <p>Este boleto foi gerado automaticamente pelo sistema CTM Telecom</p>
-            <p>Data de geração: ${new Date().toLocaleString('pt-BR')}</p>
-          </div>
+          ${topoProcessado}
+          ${corpoProcessado}
         </body>
         </html>
       `;

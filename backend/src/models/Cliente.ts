@@ -44,7 +44,6 @@ export class Cliente extends Model<
   declare estado: string | null;
   declare observacoes: string | null;
   declare ativo: boolean;
-  declare tipo_cobranca: string | null;
   declare valor_primeiro_titulo: string | null;
   declare isento_mensalidade: boolean;
   declare recebe_email: boolean;
@@ -107,7 +106,7 @@ export class Cliente extends Model<
     return this.findOne({
       where: { cnpj },
       include: [
-        { association: 'carnes', include: ['parcelas'] },
+        { association: 'titulos' },
         { association: 'planos' },
         { association: 'contratos' },
         { association: 'bancoBoleto' }
@@ -200,10 +199,6 @@ Cliente.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
-    },
-    tipo_cobranca: {
-      type: DataTypes.STRING(50),
-      allowNull: true
     },
     valor_primeiro_titulo: {
       type: DataTypes.STRING(20),

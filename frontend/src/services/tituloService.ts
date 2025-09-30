@@ -114,7 +114,7 @@ export class TituloService {
   // Imprimir boleto da parcela
   static async imprimirBoleto(id: number): Promise<string> {
     try {
-      const response = await apiService.get<string>(`${API_ENDPOINTS.TITULOS}/${id}/imprimir`);
+      const response = await apiService.get<string>(`/boleto/web/${id}`);
       return response;
     } catch (error) {
       console.error('Erro ao imprimir boleto:', error);

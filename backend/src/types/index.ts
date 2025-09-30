@@ -22,7 +22,6 @@ export interface Cliente extends BaseEntity {
   estado?: string;
   observacoes?: string;
   ativo: boolean;
-  tipo_cobranca?: string;
   valor_primeiro_titulo?: number;
   isento_mensalidade: boolean;
   recebe_email: boolean;
@@ -103,6 +102,7 @@ export interface Banco extends BaseEntity {
   instrucao_linha_4?: string;
   instrucao_linha_5?: string;
   configuracoes_json?: Record<string, any>;
+  logo?: string;
   
   // Relacionamentos
   clientes?: Cliente[];
