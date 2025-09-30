@@ -11,7 +11,7 @@ import DataTable from '../../common/DataTable';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
-import MarcarPagoModal from '../pagamentos/MarcarPagoModal';
+import ReceberModal from '../pagamentos/ReceberModal';
 
 interface ClienteForm {
   cnpj: string;
@@ -101,7 +101,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [showCancelados, setShowCancelados] = useState(false);
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
-  const [showMarcarPagoModal, setShowMarcarPagoModal] = useState(false);
+  const [showReceberModal, setShowReceberModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
@@ -267,12 +267,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     },
     {
-      label: 'Marcar como Pago',
+      label: 'Receber',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedParcela(item);
-          setShowMarcarPagoModal(true);
+          setShowReceberModal(true);
         }
       }
     },
@@ -1428,11 +1428,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         parcelaId={selectedTituloId || 0}
       />
 
-      {/* Modal para marcar como pago */}
-      <MarcarPagoModal
-        isOpen={showMarcarPagoModal}
+      {/* Modal para receber */}
+      <ReceberModal
+        isOpen={showReceberModal}
         onClose={() => {
-          setShowMarcarPagoModal(false);
+          setShowReceberModal(false);
           setSelectedParcela(null);
         }}
         parcela={selectedParcela ? {
@@ -1443,7 +1443,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           cliente: selectedParcela.cliente || selectedParcela.carne?.cliente
         } : null}
         onSuccess={() => {
-          setShowMarcarPagoModal(false);
+          setShowReceberModal(false);
           setSelectedParcela(null);
           refetchParcelas();
         }}

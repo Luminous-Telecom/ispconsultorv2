@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMarcarTituloPago } from '../../../hooks/useTitulos';
 import DraggableModal from '../../common/DraggableModal';
 
-interface MarcarPagoModalProps {
+interface ReceberModalProps {
   isOpen: boolean;
   onClose: () => void;
   parcela: {
@@ -17,7 +17,7 @@ interface MarcarPagoModalProps {
   onSuccess?: () => void;
 }
 
-const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
+const ReceberModal: React.FC<ReceberModalProps> = ({
   isOpen,
   onClose,
   parcela,
@@ -121,7 +121,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
     <DraggableModal
       show={isOpen}
       onClose={onClose}
-      title={`Marcar como Pago - Título ${parcela.numero_titulo}`}
+      title={`Receber - Título ${parcela.numero_titulo}`}
       size="lg"
     >
       <form onSubmit={handleSubmit}>
@@ -237,7 +237,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
                 Processando...
               </>
             ) : (
-              'Marcar como Pago'
+              'Receber'
             )}
           </button>
         </div>
@@ -246,4 +246,4 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
   );
 };
 
-export default MarcarPagoModal;
+export default ReceberModal;
