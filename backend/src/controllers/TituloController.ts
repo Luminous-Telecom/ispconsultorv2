@@ -496,17 +496,8 @@ export class TituloController {
                 codigo_original: resultado.data.codigo_barras
               });
               
-              // Gerar código de barras válido
-              const valorCentavos = Math.round(Number(titulo.valor) * 100);
-              const vencimento = new Date(titulo.data_vencimento).toISOString().slice(0, 10).replace(/-/g, '');
-              const nossoNumero = resultado.data.charge_id || titulo.id.toString();
-              
-              codigoBarrasFinal = BarcodeService.gerarCodigoBarrasFebraban(
-                titulo.banco.codigo || '364',
-                nossoNumero,
-                valorCentavos,
-                vencimento
-              );
+              // Usar o código de barras retornado pela API
+              codigoBarrasFinal = resultado.data.codigo_barras;
             }
 
             // Atualizar título com dados do banco

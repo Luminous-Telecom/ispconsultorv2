@@ -230,21 +230,9 @@ export class Titulo extends Model<
   }
 
   async gerarCodigoBarras(): Promise<string> {
-    const banco = await this.getBanco();
-    
-    // Usar BarcodeService para gerar código FEBRABAN válido
-    const { BarcodeService } = await import('../services/BarcodeService');
-    const valorCentavos = Math.round(Number(this.valor) * 100);
-    const vencimento = new Date(this.data_vencimento).toISOString().slice(0, 10).replace(/-/g, '');
-    const nossoNumero = this.charge_id || this.id.toString();
-    const bancoCodigo = banco?.codigo || '364';
-    
-    return BarcodeService.gerarCodigoBarrasFebraban(
-      bancoCodigo,
-      nossoNumero,
-      valorCentavos,
-      vencimento
-    );
+    // Retornar o código de barras salvo no banco de dados
+    // Se não houver, retornar string vazia
+    return this.codigo_barras || '';
   }
 
   async gerarLinhaDigitavel(): Promise<string> {
