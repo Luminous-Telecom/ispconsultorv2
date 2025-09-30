@@ -3,8 +3,6 @@ import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
 import { BancoConfiguracao } from './BancoConfiguracao';
-import { Carne } from './Carne';
-import { CarneParcela } from './CarneParcela';
 import { Titulo } from './Titulo';
 import { ClientePlano } from './ClientePlano';
 import { DadosEmpresa } from './DadosEmpresa';
@@ -26,10 +24,6 @@ Cliente.hasMany(ClientePlano, {
   as: 'contratos'
 });
 
-Cliente.hasMany(Carne, {
-  foreignKey: 'cliente_id',
-  as: 'carnes'
-});
 
 Cliente.hasMany(Titulo, {
   foreignKey: 'cliente_id',
@@ -54,10 +48,6 @@ Plano.hasMany(ClientePlano, {
   as: 'contratos'
 });
 
-Plano.hasMany(Carne, {
-  foreignKey: 'plano_id',
-  as: 'carnes'
-});
 
 Plano.hasMany(Titulo, {
   foreignKey: 'plano_id',
@@ -70,10 +60,6 @@ Banco.hasMany(Cliente, {
   as: 'clientes'
 });
 
-Banco.hasMany(Carne, {
-  foreignKey: 'banco_id',
-  as: 'carnes'
-});
 
 Banco.hasMany(Titulo, {
   foreignKey: 'banco_id',
@@ -90,32 +76,6 @@ Banco.hasOne(BancoConfiguracao, {
   as: 'configuracaoPrincipal'
 });
 
-// Carne
-Carne.belongsTo(Cliente, {
-  foreignKey: 'cliente_id',
-  as: 'cliente'
-});
-
-Carne.belongsTo(Plano, {
-  foreignKey: 'plano_id',
-  as: 'plano'
-});
-
-Carne.belongsTo(Banco, {
-  foreignKey: 'banco_id',
-  as: 'banco'
-});
-
-Carne.hasMany(CarneParcela, {
-  foreignKey: 'carne_id',
-  as: 'parcelas'
-});
-
-// CarneParcela
-CarneParcela.belongsTo(Carne, {
-  foreignKey: 'carne_id',
-  as: 'carne'
-});
 
 // Titulo
 Titulo.belongsTo(Cliente, {
@@ -168,8 +128,6 @@ export {
   Plano,
   Banco,
   BancoConfiguracao,
-  Carne,
-  CarneParcela,
   Titulo,
   ClientePlano,
   DadosEmpresa,

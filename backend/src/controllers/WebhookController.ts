@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
 import { Banco } from '../models/Banco';
-import { CarneParcela } from '../models/CarneParcela';
-import { Carne } from '../models/Carne';
 import { BancoApiService } from '../services/BancoApiService';
 import { logger } from '../utils/logger';
 
@@ -74,12 +72,6 @@ export class WebhookController {
         case 'carnet_paid':
         case 'carnet_settled':
         case 'carnet_canceled':
-        case 'carnet_expired':
-        case 'carnet_waiting':
-        case 'carnet_pending':
-          const carnetResult = await WebhookController.processarNotificacaoCarnet(notification);
-          res.status(carnetResult.status || 200).json(carnetResult);
-          break;
         
         case 'pix_paid':
         case 'pix_settled':
@@ -127,23 +119,18 @@ export class WebhookController {
     try {
       logger.info(`Iniciando processamento de token de notificação: ${notificationToken}`);
       
-      // Primeiro, tentar consultar usando custom_id para identificar o banco correto
-      // Buscar carnês recentes que possam ter esse token
-      const carnesRecentes = await Carne.findAll({
+      // Buscar bancos ativos para processar notificação
+      const bancosAtivos = await Banco.findAll({
         where: { 
-          status: ['ativo', 'pendente'],
-          created_at: {
-            [require('sequelize').Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) // Últimas 24h
-          }
+          tipo_banco: 'efi',
+          ativo: true
         },
-        include: [{ association: 'banco', where: { tipo_banco: 'efi', ativo: true } }],
         order: [['created_at', 'DESC']]
       });
 
-      // Tentar cada carnê recente para encontrar o banco correto
-      for (const carne of carnesRecentes) {
-        const banco = await carne.getBanco();
-        logger.info(`Tentando consultar token no banco do carnê ${carne.id}`, {
+      // Tentar cada banco ativo para encontrar o token correto
+      for (const banco of bancosAtivos) {
+        logger.info(`Tentando consultar token no banco ${banco.id}`, {
           banco_id: banco.id,
           banco_nome: banco.nome,
           sandbox: banco.sandbox
@@ -154,7 +141,6 @@ export class WebhookController {
         if (resultado.success) {
           logger.info('Token encontrado no banco correto!', {
             banco_id: banco.id,
-            carne_id: carne.id,
             data_count: resultado.data?.data?.length || 0
           });
           
@@ -271,95 +257,47 @@ export class WebhookController {
             status
           });
           
-          // Buscar parcela pelo charge_id
-          const parcela = await CarneParcela.findOne({
+          // Buscar título pelo charge_id
+          const { Titulo } = await import('../models/Titulo');
+          const titulo = await Titulo.findOne({
             where: { charge_id: chargeId }
           });
           
-          if (parcela) {
+          if (titulo) {
             const statusLocal = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-            const oldStatus = parcela.status;
-            const oldPago = parcela.pago;
+            const oldStatus = titulo.status;
+            const oldPago = titulo.pago;
             
-            await parcela.update({
+            await titulo.update({
               status: statusLocal,
               pago: ['pago', 'liquidado'].includes(statusLocal)
             });
             
-            // Verificar e atualizar status do carnê
-            const carne = await parcela.getCarne();
-            await carne.verificarEAtualizarStatus();
-            
-            logger.info('Parcela atualizada via webhook', {
-              parcela_id: parcela.id,
+            logger.info('Título atualizado via webhook', {
+              titulo_id: titulo.id,
               charge_id: chargeId,
               status_anterior: oldStatus,
               status_novo: statusLocal,
               pago_anterior: oldPago,
-              pago_novo: parcela.pago
+              pago_novo: titulo.pago
             });
             
             return {
               success: true,
-              message: 'Parcela atualizada com sucesso',
-              data: { parcela_id: parcela.id }
+              message: 'Título atualizado com sucesso',
+              data: { titulo_id: titulo.id }
             };
           } else {
-            logger.warn('Parcela não encontrada para charge', { charge_id: chargeId });
+            logger.warn('Título não encontrado para charge', { charge_id: chargeId });
             return {
               success: false,
-              message: 'Parcela não encontrada',
+              message: 'Título não encontrado',
               status: 404
             };
           }
         }
       }
 
-      // Verificar se é uma notificação de carnê - estrutura antiga
-      if (dados.carnet) {
-        const carnet = dados.carnet;
-        const carnetId = carnet.carnet_id || null;
-        const status = carnet.status || 'unknown';
-        
-        if (carnetId) {
-          logger.info('Processando notificação de carnê', {
-            carnet_id: carnetId,
-            status
-          });
-          
-          // Buscar carnê pelo carnet_id
-          const carne = await Carne.findOne({
-            where: { carnet_id: carnetId }
-          });
-          
-          if (carne) {
-            const statusLocal = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
-            const oldStatus = carne.status;
-            
-            await carne.update({ status: statusLocal });
-            
-            logger.info('Carnê atualizado via webhook', {
-              carne_id: carne.id,
-              carnet_id: carnetId,
-              status_anterior: oldStatus,
-              status_novo: statusLocal
-            });
-            
-            return {
-              success: true,
-              message: 'Carnê atualizado com sucesso',
-              data: { carne_id: carne.id }
-            };
-          } else {
-            logger.warn('Carnê não encontrado para carnet', { carnet_id: carnetId });
-            return {
-              success: false,
-              message: 'Carnê não encontrado',
-              status: 404
-            };
-          }
-        }
-      }
 
       // Verificar se é uma notificação individual ou múltipla (estrutura direta)
       if (Array.isArray(dados)) {
@@ -416,11 +354,8 @@ export class WebhookController {
       });
       
       switch (type) {
-        case 'carnet_charge':
-          return await WebhookController.processarNotificacaoParcela(identifiers, status, customId, notificacao);
-          
-        case 'carnet':
-          return await WebhookController.processarNotificacaoCarne(identifiers, status, customId);
+        case 'charge':
+          return await WebhookController.processarNotificacaoTitulo(identifiers, status, customId, notificacao);
           
         default:
           logger.warn('Tipo de notificação não suportado', { type });
@@ -436,28 +371,29 @@ export class WebhookController {
   }
 
   /**
-   * Processar notificação de parcela (carnet_charge)
+   * Processar notificação de título (charge)
    */
-  private static async processarNotificacaoParcela(identifiers: any, status: string, customId: string, dadosCompletos?: any): Promise<number> {
+  private static async processarNotificacaoTitulo(identifiers: any, status: string, customId: string, dadosCompletos?: any): Promise<number> {
     const chargeId = identifiers.charge_id || null;
     
     if (!chargeId) {
-      logger.warn('Charge ID não encontrado na notificação de parcela');
+      logger.warn('Charge ID não encontrado na notificação de título');
       return 0;
     }
 
     try {
-      // Buscar parcela pelo charge_id
-      const parcela = await CarneParcela.findOne({
+      // Buscar título pelo charge_id
+      const { Titulo } = await import('../models/Titulo');
+      const titulo = await Titulo.findOne({
         where: { charge_id: chargeId }
       });
 
-      if (!parcela) {
-        logger.warn('Parcela não encontrada', { charge_id: chargeId });
+      if (!titulo) {
+        logger.warn('Título não encontrado', { charge_id: chargeId });
         return 0;
       }
 
-      // Atualizar status da parcela
+      // Atualizar status do título
       const novoStatus = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       const isPago = ['pago', 'liquidado'].includes(novoStatus);
       
@@ -468,7 +404,7 @@ export class WebhookController {
 
       // Consultar dados atualizados da EFI para obter código de barras, linha digitável, PIX, etc.
       try {
-        const dadosAtualizados = await WebhookController.consultarDadosAtualizadosParcela(parcela);
+        const dadosAtualizados = await WebhookController.consultarDadosAtualizadosTitulo(titulo);
         if (dadosAtualizados.success && dadosAtualizados.data) {
           const dados = dadosAtualizados.data;
           
@@ -481,14 +417,14 @@ export class WebhookController {
           
         } else {
           // Se não conseguir consultar da EFI, gerar dados fictícios como fallback
-          const codigoBarras = await parcela.gerarCodigoBarras();
-          const linhaDigitavel = await parcela.gerarLinhaDigitavel();
+          const codigoBarras = await titulo.gerarCodigoBarras();
+          const linhaDigitavel = await titulo.gerarLinhaDigitavel();
           
           updateData.codigo_barras = codigoBarras;
           updateData.linha_digitavel = linhaDigitavel;
           
           logger.warn('Usando dados fictícios como fallback', {
-            parcela_id: parcela.id,
+            titulo_id: titulo.id,
             charge_id: chargeId,
             codigo_barras: codigoBarras,
             linha_digitavel: linhaDigitavel,
@@ -498,14 +434,14 @@ export class WebhookController {
       } catch (error) {
         // Em caso de erro, gerar dados fictícios como fallback
         try {
-          const codigoBarras = await parcela.gerarCodigoBarras();
-          const linhaDigitavel = await parcela.gerarLinhaDigitavel();
+          const codigoBarras = await titulo.gerarCodigoBarras();
+          const linhaDigitavel = await titulo.gerarLinhaDigitavel();
           
           updateData.codigo_barras = codigoBarras;
           updateData.linha_digitavel = linhaDigitavel;
           
           logger.warn('Erro ao consultar dados da EFI, usando fallback', {
-            parcela_id: parcela.id,
+            titulo_id: titulo.id,
             charge_id: chargeId,
             error: error instanceof Error ? error.message : 'Erro desconhecido',
             codigo_barras: codigoBarras,
@@ -513,7 +449,7 @@ export class WebhookController {
           });
         } catch (fallbackError) {
           logger.error('Erro crítico ao gerar dados de fallback', {
-            parcela_id: parcela.id,
+            titulo_id: titulo.id,
             charge_id: chargeId,
             error: error instanceof Error ? error.message : 'Erro desconhecido',
             fallback_error: fallbackError instanceof Error ? fallbackError.message : 'Erro de fallback'
@@ -522,7 +458,7 @@ export class WebhookController {
       }
       
       // Se está sendo marcada como paga via webhook, atualizar data_pagamento
-      if (isPago && !parcela.pago) {
+      if (isPago && !titulo.pago) {
         // Usar data do webhook se disponível, senão usar data atual
         let dataPagamento = new Date().toISOString().split('T')[0]; // Default: hoje
         
@@ -542,11 +478,11 @@ export class WebhookController {
         }
         
         updateData.data_pagamento = dataPagamento;
-        updateData.valor_pago = parcela.valor_parcela; // Assumir valor total pago
+        updateData.valor_pago = titulo.valor; // Assumir valor total pago
       }
       
       // Se está sendo desmarcada como paga, limpar data_pagamento
-      if (!isPago && parcela.pago) {
+      if (!isPago && titulo.pago) {
         updateData.data_pagamento = null;
         updateData.valor_pago = null;
       }
@@ -565,18 +501,14 @@ export class WebhookController {
         }
       }
       
-      await parcela.update(updateData);
+      await titulo.update(updateData);
 
-      // Verificar e atualizar status do carnê
-      const carne = await parcela.getCarne();
-      await carne.verificarEAtualizarStatus();
-
-      logger.info('Status da parcela atualizado via webhook', {
-        parcela_id: parcela.id,
+      logger.info('Status do título atualizado via webhook', {
+        titulo_id: titulo.id,
         charge_id: chargeId,
-        status_anterior: parcela.status,
+        status_anterior: titulo.status,
         status_novo: novoStatus,
-        pago_anterior: parcela.pago,
+        pago_anterior: titulo.pago,
         pago_novo: isPago,
         data_pagamento: updateData.data_pagamento || 'não alterada',
         data_vencimento: updateData.data_vencimento || 'não alterada',
@@ -585,7 +517,7 @@ export class WebhookController {
 
       return 1;
     } catch (error: any) {
-      logger.error('Erro ao processar notificação de parcela', {
+      logger.error('Erro ao processar notificação de título', {
         charge_id: chargeId,
         error: error.message
       });
@@ -593,48 +525,6 @@ export class WebhookController {
     }
   }
 
-  /**
-   * Processar notificação de carnê
-   */
-  private static async processarNotificacaoCarne(identifiers: any, status: string, customId: string): Promise<number> {
-    const carnetId = identifiers.carnet_id || null;
-    
-    if (!carnetId) {
-      logger.warn('Carnet ID não encontrado na notificação de carnê');
-      return 0;
-    }
-
-    try {
-      // Buscar carnê pelo carnet_id
-      const carne = await Carne.findOne({
-        where: { carnet_id: carnetId }
-      });
-
-      if (!carne) {
-        logger.warn('Carnê não encontrado', { carnet_id: carnetId });
-        return 0;
-      }
-
-      // Atualizar status do carnê
-      const novoStatus = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
-      await carne.update({ status: novoStatus });
-
-      logger.info('Status do carnê atualizado', {
-        carne_id: carne.id,
-        carnet_id: carnetId,
-        status_anterior: carne.status,
-        status_novo: novoStatus
-      });
-
-      return 1;
-    } catch (error: any) {
-      logger.error('Erro ao processar notificação de carnê', {
-        carnet_id: carnetId,
-        error: error.message
-      });
-      return 0;
-    }
-  }
 
   /**
    * Processar notificação de charge
@@ -659,36 +549,37 @@ export class WebhookController {
         };
       }
 
-      // Buscar parcela pelo charge_id
-      const parcela = await CarneParcela.findOne({
+      // Buscar título pelo charge_id
+      const { Titulo } = await import('../models/Titulo');
+      const titulo = await Titulo.findOne({
         where: { charge_id: chargeId }
       });
 
-      if (!parcela) {
-        logger.warn('Parcela não encontrada para charge', { charge_id: chargeId });
+      if (!titulo) {
+        logger.warn('Título não encontrado para charge', { charge_id: chargeId });
         return {
           success: false,
-          message: 'Parcela não encontrada',
+          message: 'Título não encontrado',
           status: 404
         };
       }
 
-      // Atualizar status da parcela
+      // Atualizar status do título
       const novoStatus = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-      await parcela.update({ status: novoStatus });
+      await titulo.update({ status: novoStatus });
 
-      logger.info('Status da parcela atualizado via charge', {
-        parcela_id: parcela.id,
+      logger.info('Status do título atualizado via charge', {
+        titulo_id: titulo.id,
         charge_id: chargeId,
-        status_anterior: parcela.status,
+        status_anterior: titulo.status,
         status_novo: novoStatus
       });
 
       return {
         success: true,
-        message: 'Status da parcela atualizado',
+        message: 'Status do título atualizado',
         data: {
-          parcela_id: parcela.id,
+          titulo_id: titulo.id,
           status: novoStatus
         }
       };
@@ -705,74 +596,6 @@ export class WebhookController {
     }
   }
 
-  /**
-   * Processar notificação de carnê
-   */
-  private static async processarNotificacaoCarnet(notification: any): Promise<any> {
-    try {
-      const carnetId = notification.carnet_id || notification.id;
-      const status = notification.status;
-      const customId = notification.custom_id;
-
-      logger.info('Processando notificação de carnê', {
-        carnet_id: carnetId,
-        status,
-        custom_id: customId
-      });
-
-      if (!carnetId) {
-        return {
-          success: false,
-          message: 'Carnet ID não encontrado',
-          status: 400
-        };
-      }
-
-      // Buscar carnê pelo carnet_id
-      const carne = await Carne.findOne({
-        where: { carnet_id: carnetId }
-      });
-
-      if (!carne) {
-        logger.warn('Carnê não encontrado para carnet', { carnet_id: carnetId });
-        return {
-          success: false,
-          message: 'Carnê não encontrado',
-          status: 404
-        };
-      }
-
-      // Atualizar status do carnê
-      const novoStatus = WebhookController.mapearStatusEfi(status) as 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
-      await carne.update({ status: novoStatus });
-
-      logger.info('Status do carnê atualizado via carnet', {
-        carne_id: carne.id,
-        carnet_id: carnetId,
-        status_anterior: carne.status,
-        status_novo: novoStatus
-      });
-
-      return {
-        success: true,
-        message: 'Status do carnê atualizado',
-        data: {
-          carne_id: carne.id,
-          status: novoStatus
-        }
-      };
-    } catch (error: any) {
-      logger.error('Erro ao processar notificação de carnê', {
-        notification,
-        error: error.message
-      });
-      return {
-        success: false,
-        message: 'Erro ao processar notificação de carnê',
-        status: 500
-      };
-    }
-  }
 
   /**
    * Processar notificação de PIX
@@ -811,20 +634,19 @@ export class WebhookController {
 
       if (chargeId) {
         return await WebhookController.processarNotificacaoCharge(notification);
-      } else if (carnetId) {
-        return await WebhookController.processarNotificacaoCarnet(notification);
       } else if (customId) {
         // Tentar buscar por custom_id
-        const parcela = await CarneParcela.findByPk(customId);
-        if (parcela) {
+        const { Titulo } = await import('../models/Titulo');
+        const titulo = await Titulo.findByPk(customId);
+        if (titulo) {
           const novoStatus = WebhookController.mapearStatusEfi(notification.status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
-          await parcela.update({ status: novoStatus });
+          await titulo.update({ status: novoStatus });
           
           return {
             success: true,
             message: 'Status atualizado via custom_id',
             data: {
-              parcela_id: parcela.id,
+              titulo_id: titulo.id,
               status: novoStatus
             }
           };
@@ -851,24 +673,23 @@ export class WebhookController {
   }
 
   /**
-   * Consultar dados atualizados da parcela na EFI
+   * Consultar dados atualizados do título na EFI
    */
-  private static async consultarDadosAtualizadosParcela(parcela: CarneParcela): Promise<{ success: boolean; data?: any; message?: string }> {
+  private static async consultarDadosAtualizadosTitulo(titulo: any): Promise<{ success: boolean; data?: any; message?: string }> {
     try {
-      if (!parcela.charge_id) {
+      if (!titulo.charge_id) {
         return { success: false, message: 'Charge ID não disponível' };
       }
 
-      // Buscar o banco da parcela
-      const carne = await parcela.getCarne();
-      const banco = await carne.getBanco();
+      // Buscar o banco do título
+      const banco = await titulo.getBanco();
       
       if (!banco || banco.tipo_banco !== 'efi') {
         return { success: false, message: 'Banco EFI não encontrado' };
       }
 
       // Usar o BancoApiService para consultar dados atualizados
-      const resultado = await BancoApiService.consultarStatus(parcela);
+      const resultado = await BancoApiService.consultarStatus(titulo);
       
       if (resultado.success && resultado.data) {
         const dados = resultado.data;
@@ -877,55 +698,50 @@ export class WebhookController {
         // Extrair dados específicos baseado na estrutura real da EFI
         const dadosAtualizados: any = {};
         
-        // Código de barras (linha digitável) - está em payment.carnet.barcode
-        if (dados.payment?.carnet?.barcode) {
-          dadosAtualizados.linha_digitavel = dados.payment.carnet.barcode;
+        // Código de barras (linha digitável) - está em payment.banking_billet.barcode
+        if (dados.payment?.banking_billet?.barcode) {
+          dadosAtualizados.linha_digitavel = dados.payment.banking_billet.barcode;
         }
         
-        // URL do boleto - está em payment.carnet.url
-        if (dados.payment?.carnet?.url) {
-          dadosAtualizados.url_boleto = dados.payment.carnet.url;
+        // URL do boleto - está em payment.banking_billet.url
+        if (dados.payment?.banking_billet?.url) {
+          dadosAtualizados.url_boleto = dados.payment.banking_billet.url;
         }
         
-        // Link da parcela - está em payment.carnet.parcel_link
-        if (dados.payment?.carnet?.parcel_link) {
-          dadosAtualizados.parcel_link = dados.payment.carnet.parcel_link;
+        // PDF do boleto - está em payment.banking_billet.pdf.charge
+        if (dados.payment?.banking_billet?.pdf?.charge) {
+          dadosAtualizados.pdf_url = dados.payment.banking_billet.pdf.charge;
         }
         
-        // PDF do boleto - está em payment.carnet.pdf.charge
-        if (dados.payment?.carnet?.pdf?.charge) {
-          dadosAtualizados.pdf_url = dados.payment.carnet.pdf.charge;
-        }
-        
-        // Para carnês, usar dados da EFI (reais ou zeros)
-        if (dados.payment?.carnet?.barcode) {
+        // Para títulos, usar dados da EFI (reais ou zeros)
+        if (dados.payment?.banking_billet?.barcode) {
           // Usar linha digitável da EFI (pode ser real ou zeros)
-          dadosAtualizados.linha_digitavel = dados.payment.carnet.barcode;
+          dadosAtualizados.linha_digitavel = dados.payment.banking_billet.barcode;
           // Converter linha digitável para código de barras (remover pontos e espaços)
-          dadosAtualizados.codigo_barras = dados.payment.carnet.barcode.replace(/[.\s]/g, '');
+          dadosAtualizados.codigo_barras = dados.payment.banking_billet.barcode.replace(/[.\s]/g, '');
         }
         
-        // Para carnês, verificar se há dados PIX disponíveis
-        // Nota: No sandbox da EFI, dados PIX podem não estar disponíveis para carnês
-        if (dados.payment?.carnet?.pix) {
-          logger.info('Dados PIX encontrados em payment.carnet.pix', {
-            parcela_id: parcela.id,
-            charge_id: parcela.charge_id,
-            pix_data: dados.payment.carnet.pix
+        // Para títulos, verificar se há dados PIX disponíveis
+        // Nota: No sandbox da EFI, dados PIX podem não estar disponíveis para títulos
+        if (dados.payment?.banking_billet?.pix) {
+          logger.info('Dados PIX encontrados em payment.banking_billet.pix', {
+            titulo_id: titulo.id,
+            charge_id: titulo.charge_id,
+            pix_data: dados.payment.banking_billet.pix
           });
           
-          if (dados.payment.carnet.pix.qrcode) {
-            dadosAtualizados.qrcode = dados.payment.carnet.pix.qrcode;
+          if (dados.payment.banking_billet.pix.qrcode) {
+            dadosAtualizados.qrcode = dados.payment.banking_billet.pix.qrcode;
           }
-          if (dados.payment.carnet.pix.qrcode_image) {
-            dadosAtualizados.qrcode_image = dados.payment.carnet.pix.qrcode_image;
+          if (dados.payment.banking_billet.pix.qrcode_image) {
+            dadosAtualizados.qrcode_image = dados.payment.banking_billet.pix.qrcode_image;
           }
         } else {
-          logger.info('Dados PIX não disponíveis para carnê (normal no sandbox)', {
-            parcela_id: parcela.id,
-            charge_id: parcela.charge_id,
-            tem_payment_carnet: !!dados.payment?.carnet,
-            chaves_carnet: dados.payment?.carnet ? Object.keys(dados.payment.carnet) : []
+          logger.info('Dados PIX não disponíveis para título (normal no sandbox)', {
+            titulo_id: titulo.id,
+            charge_id: titulo.charge_id,
+            tem_payment_banking_billet: !!dados.payment?.banking_billet,
+            chaves_banking_billet: dados.payment?.banking_billet ? Object.keys(dados.payment.banking_billet) : []
           });
         }
         
@@ -942,9 +758,9 @@ export class WebhookController {
       };
       
     } catch (error: any) {
-      logger.error('Erro ao consultar dados atualizados da parcela', {
-        parcela_id: parcela.id,
-        charge_id: parcela.charge_id,
+      logger.error('Erro ao consultar dados atualizados do título', {
+        titulo_id: titulo.id,
+        charge_id: titulo.charge_id,
         error: error.message
       });
       
