@@ -10,10 +10,10 @@ router.get('/', DashboardController.getDashboardData);
 router.get('/stats', DashboardController.getStats);
 
 // Dados para gráficos e relatórios
-router.get('/carnes-recentes', DashboardController.getCarnesRecentes);
-router.get('/parcelas-vencidas', DashboardController.getParcelasVencidas);
-router.get('/parcelas-proximas-vencimento', DashboardController.getParcelasProximasVencimento);
-router.get('/grafico-carnes-status', DashboardController.getGraficoCarnesPorStatus);
+router.get('/titulos-recentes', DashboardController.getTitulosRecentes);
+router.get('/titulos-vencidos', DashboardController.getTitulosVencidos);
+router.get('/titulos-proximos-vencimento', DashboardController.getTitulosProximosVencimento);
+router.get('/grafico-titulos-status', DashboardController.getGraficoTitulosPorStatus);
 router.get('/grafico-clientes-cidade', DashboardController.getGraficoClientesPorCidade);
 router.get('/resumo-mensal', DashboardController.getResumoMensal);
 
