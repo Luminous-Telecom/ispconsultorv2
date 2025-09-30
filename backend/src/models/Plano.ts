@@ -17,7 +17,6 @@ import {
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Cliente } from './Cliente';
-import { Carne } from './Carne';
 import { ClientePlano } from './ClientePlano';
 
 export class Plano extends Model<
@@ -55,16 +54,6 @@ export class Plano extends Model<
   declare countClientes: HasManyCountAssociationsMixin;
   declare createCliente: HasManyCreateAssociationMixin<Cliente>;
 
-  declare getCarnes: HasManyGetAssociationsMixin<Carne>;
-  declare addCarne: HasManyAddAssociationMixin<Carne, number>;
-  declare addCarnes: HasManyAddAssociationsMixin<Carne, number>;
-  declare setCarnes: HasManySetAssociationsMixin<Carne, number>;
-  declare removeCarne: HasManyRemoveAssociationMixin<Carne, number>;
-  declare removeCarnes: HasManyRemoveAssociationsMixin<Carne, number>;
-  declare hasCarne: HasManyHasAssociationMixin<Carne, number>;
-  declare hasCarnes: HasManyHasAssociationsMixin<Carne, number>;
-  declare countCarnes: HasManyCountAssociationsMixin;
-  declare createCarne: HasManyCreateAssociationMixin<Carne>;
 
   declare getContratos: HasManyGetAssociationsMixin<ClientePlano>;
   declare addContrato: HasManyAddAssociationMixin<ClientePlano, number>;
@@ -121,11 +110,6 @@ export class Plano extends Model<
     });
   }
 
-  async getCarnesAtivos(): Promise<Carne[]> {
-    return this.getCarnes({
-      where: { status: 'ativo' }
-    });
-  }
 
   async isVigente(): Promise<boolean> {
     const agora = new Date();

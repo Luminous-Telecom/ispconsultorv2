@@ -19,7 +19,6 @@ import {
   HasOneCreateAssociationMixin
 } from 'sequelize';
 import { sequelize } from '../config/database';
-import { Carne } from './Carne';
 import { Cliente } from './Cliente';
 import { BancoConfiguracao } from './BancoConfiguracao';
 
@@ -83,16 +82,6 @@ export class Banco extends Model<
   declare countClientes: HasManyCountAssociationsMixin;
   declare createCliente: HasManyCreateAssociationMixin<Cliente>;
 
-  declare getCarnes: HasManyGetAssociationsMixin<Carne>;
-  declare addCarne: HasManyAddAssociationMixin<Carne, number>;
-  declare addCarnes: HasManyAddAssociationsMixin<Carne, number>;
-  declare setCarnes: HasManySetAssociationsMixin<Carne, number>;
-  declare removeCarne: HasManyRemoveAssociationMixin<Carne, number>;
-  declare removeCarnes: HasManyRemoveAssociationsMixin<Carne, number>;
-  declare hasCarne: HasManyHasAssociationMixin<Carne, number>;
-  declare hasCarnes: HasManyHasAssociationsMixin<Carne, number>;
-  declare countCarnes: HasManyCountAssociationsMixin;
-  declare createCarne: HasManyCreateAssociationMixin<Carne>;
 
   declare getConfiguracoes: HasManyGetAssociationsMixin<BancoConfiguracao>;
   declare addConfiguracao: HasManyAddAssociationMixin<BancoConfiguracao, number>;

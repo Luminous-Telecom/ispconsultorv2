@@ -19,7 +19,6 @@ import {
   BelongsToCreateAssociationMixin
 } from 'sequelize';
 import { sequelize } from '../config/database';
-import { Carne } from './Carne';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
 import { ClientePlano } from './ClientePlano';
@@ -57,16 +56,6 @@ export class Cliente extends Model<
   declare updated_at: CreationOptional<Date>;
 
   // Relacionamentos
-  declare getCarnes: HasManyGetAssociationsMixin<Carne>;
-  declare addCarne: HasManyAddAssociationMixin<Carne, number>;
-  declare addCarnes: HasManyAddAssociationsMixin<Carne, number>;
-  declare setCarnes: HasManySetAssociationsMixin<Carne, number>;
-  declare removeCarne: HasManyRemoveAssociationMixin<Carne, number>;
-  declare removeCarnes: HasManyRemoveAssociationsMixin<Carne, number>;
-  declare hasCarne: HasManyHasAssociationMixin<Carne, number>;
-  declare hasCarnes: HasManyHasAssociationsMixin<Carne, number>;
-  declare countCarnes: HasManyCountAssociationsMixin;
-  declare createCarne: HasManyCreateAssociationMixin<Carne>;
 
   declare getPlanos: HasManyGetAssociationsMixin<Plano>;
   declare addPlano: HasManyAddAssociationMixin<Plano, number>;
@@ -114,27 +103,6 @@ export class Cliente extends Model<
     });
   }
 
-  async getTotalCarnes(): Promise<number> {
-    return this.countCarnes();
-  }
-
-  async getCarnesAtivos(): Promise<Carne[]> {
-    return this.getCarnes({
-      where: { status: 'ativo' }
-    });
-  }
-
-  async getCarnesPagados(): Promise<Carne[]> {
-    return this.getCarnes({
-      where: { status: 'pago' }
-    });
-  }
-
-  async getCarnesPendentes(): Promise<Carne[]> {
-    return this.getCarnes({
-      where: { status: 'pendente' }
-    });
-  }
 }
 
 Cliente.init(
