@@ -179,10 +179,10 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
               <div className="input-group">
                 <span className="input-group-text" style={{ 
                   padding: 0,
-                  backgroundColor: 'var(--sidebar-active)',
-                  color: '#ffffff',
-                  borderColor: 'var(--border-color)',
-                  border: '1px solid var(--border-color)'
+                  backgroundColor: 'var(--bs-tertiary-bg)',
+                  color: 'var(--bs-body-color)',
+                  borderColor: 'var(--bs-border-color)',
+                  border: '1px solid var(--bs-border-color)'
                 }}>R$</span>
                 <input
                   type="text"
