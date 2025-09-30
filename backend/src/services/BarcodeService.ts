@@ -114,11 +114,11 @@ export class BarcodeService {
             return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Código de barras inválido - muito curto</div>';
         }
 
-        // Se tem 47 dígitos, é linha digitável - converter para código de barras (44 dígitos)
+        // Se tem 47 dígitos, é linha digitável - usar diretamente
         let codigoParaUsar = codigoLimpo;
         if (codigoLimpo.length === 47) {
-            // Para linha digitável, usar os primeiros 44 dígitos
-            codigoParaUsar = codigoLimpo.substring(0, 44);
+            // Usar a linha digitável completa (47 dígitos)
+            codigoParaUsar = codigoLimpo;
         } else if (codigoLimpo.length === 44) {
             // Já é código de barras, usar diretamente
             codigoParaUsar = codigoLimpo;
