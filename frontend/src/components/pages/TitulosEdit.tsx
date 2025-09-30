@@ -45,7 +45,7 @@ const CarneParcelasEdit: React.FC = () => {
     if (parcela && parcela.success && parcela.data) {
       const tituloData = parcela.data;
       setFormData({
-        valor_parcela: (tituloData as any).valor_parcela?.toString() || tituloData.valor?.toString() || '',
+        valor_parcela: (tituloData as any).valor_parcela?.toString() || (tituloData as any).valor?.toString() || '',
         data_vencimento: tituloData.data_vencimento ? new Date(tituloData.data_vencimento).toISOString().split('T')[0] : '',
         status: tituloData.status || 'pendente',
         data_pagamento: tituloData.data_pagamento ? new Date(tituloData.data_pagamento).toISOString().split('T')[0] : '',
