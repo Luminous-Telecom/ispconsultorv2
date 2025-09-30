@@ -1339,22 +1339,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor baixado:</div>
-                          <strong>R$ {(() => {
-                            console.log('=== INICIANDO CÁLCULO VALOR BAIXADO ===');
-                            console.log('Total de itens:', sortedData.length);
-                            const total = sortedData.reduce((sum: number, item: any) => {
-                              console.log('Item:', item.id, 'Pago:', item.pago, 'Status:', item.status, 'Valor pago:', item.valor_pago, 'Valor:', item.valor);
-                              // Só considerar como baixado se estiver pago E não cancelado
-                              if (item.pago && item.status === 'pago') {
-                                console.log('*** ITEM BAIXADO ***:', item.id, 'Valor pago:', item.valor_pago);
-                                return sum + Number(item.valor_pago || 0);
-                              }
-                              return sum;
-                            }, 0);
-                            console.log('Total calculado:', total);
-                            console.log('=== FIM CÁLCULO ===');
-                            return total.toFixed(2);
-                          })()}</strong>
+                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                            // Só considerar como baixado se estiver pago E não cancelado
+                            if (item.pago && item.status === 'pago') {
+                              return sum + Number(item.valor_pago || 0);
+                            }
+                            return sum;
+                          }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor aberto:</div>
