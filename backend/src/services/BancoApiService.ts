@@ -316,6 +316,30 @@ export class BancoApiService {
           status: 'pendente'
         });
 
+        // Atualizar metadados com notification_url
+        try {
+          const baseUrl = banco.url_retorno || `${process.env.BASE_URL}/webhook/efi`;
+          const metadataEndpoint = `${baseUrlCobranca}/v1/charge/${chargeId}/metadata`;
+          const metadataPayload = {
+            notification_url: baseUrl,
+            custom_id: `titulo_${titulo.id}`
+          };
+
+          await axios.put(metadataEndpoint, metadataPayload, { headers });
+          
+          logger.info('Metadados atualizados com sucesso', {
+            titulo_id: titulo.id,
+            charge_id: chargeId,
+            notification_url: baseUrl
+          });
+        } catch (metadataError: any) {
+          logger.warn('Falha ao atualizar metadados, mas título foi criado', {
+            titulo_id: titulo.id,
+            charge_id: chargeId,
+            error: metadataError.message
+          });
+        }
+
         logger.info('Título gerado com sucesso', {
           titulo_id: titulo.id,
           charge_id: chargeId
