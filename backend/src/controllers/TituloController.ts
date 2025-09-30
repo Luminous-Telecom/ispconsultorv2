@@ -521,7 +521,7 @@ export class TituloController {
             </div>
             
             <div class="valor-info">
-              <p>Valor: R$ ${titulo.valor.toFixed(2)}</p>
+              <p>Valor: R$ ${Number(titulo.valor).toFixed(2)}</p>
               <p>Vencimento: ${new Date(titulo.data_vencimento).toLocaleDateString('pt-BR')}</p>
             </div>
             
