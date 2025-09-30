@@ -177,7 +177,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                 Valor Pago *
               </label>
               <div className="input-group">
-                <span className="input-group-text" style={{ height: '38px', display: 'flex', alignItems: 'center' }}>R$</span>
+                <span className="input-group-text d-flex align-items-center" style={{ height: '38px' }}>R$</span>
                 <input
                   type="text"
                   className={`form-control ${errors.valor_pago ? 'is-invalid' : ''}`}
