@@ -800,17 +800,17 @@ export class CarneParcelaController {
         const { BancoApiService } = await import('../services/BancoApiService');
         const resultado = await BancoApiService.gerarTitulo(titulo as any);
         
-        if (resultado.success) {
+        if (resultado.success && resultado.data) {
           console.log('Boleto registrado no banco com sucesso:', resultado.data);
           
           // Atualizar título com dados do banco
           await titulo.update({
-            charge_id: resultado.data?.charge_id || null,
-            codigo_barras: resultado.data?.codigo_barras || null,
-            linha_digitavel: resultado.data?.linha_digitavel || null,
-            url_boleto: resultado.data?.url_boleto || null,
-            qrcode: resultado.data?.qrcode || null,
-            qrcode_image: resultado.data?.qrcode_image || null
+            charge_id: resultado.data.charge_id || null,
+            codigo_barras: resultado.data.codigo_barras || null,
+            linha_digitavel: resultado.data.linha_digitavel || null,
+            url_boleto: resultado.data.url_boleto || null,
+            qrcode: resultado.data.qrcode || null,
+            qrcode_image: resultado.data.qrcode_image || null
           });
           
           // Recarregar título com dados atualizados

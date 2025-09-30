@@ -412,21 +412,28 @@ export class TituloController {
           // Registrar no banco
           const resultado = await BancoApiService.gerarTitulo(titulo as any);
           
-          // Atualizar título com dados do banco
-          await titulo.update({
-            charge_id: (resultado as any).charge_id,
-            url_boleto: (resultado as any).url_boleto,
-            qrcode: (resultado as any).qrcode,
-            qrcode_image: (resultado as any).qrcode_image,
-            codigo_barras: (resultado as any).codigo_barras,
-            linha_digitavel: (resultado as any).linha_digitavel,
-            nosso_numero: (resultado as any).nosso_numero
-          });
+          if (resultado.success && resultado.data) {
+            // Atualizar título com dados do banco
+            await titulo.update({
+              charge_id: resultado.data.charge_id,
+              url_boleto: resultado.data.url_boleto,
+              qrcode: resultado.data.qrcode,
+              qrcode_image: resultado.data.qrcode_image,
+              codigo_barras: resultado.data.codigo_barras,
+              linha_digitavel: resultado.data.linha_digitavel,
+              nosso_numero: resultado.data.nosso_numero
+            });
 
-          logger.info('Título registrado no banco com sucesso', {
-            titulo_id: titulo.id,
-            charge_id: (resultado as any).charge_id
-          });
+            logger.info('Título registrado no banco com sucesso', {
+              titulo_id: titulo.id,
+              charge_id: resultado.data.charge_id
+            });
+          } else {
+            logger.warn('Falha ao registrar título no banco', {
+              titulo_id: titulo.id,
+              message: resultado.message
+            });
+          }
         } catch (error: any) {
           logger.error('Erro ao registrar título no banco', { 
             titulo_id: titulo.id, 
