@@ -2,8 +2,7 @@ import { Request, Response } from 'express';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
-import { Carne } from '../models/Carne';
-import { CarneParcela } from '../models/CarneParcela';
+import { Titulo } from '../models/Titulo';
 import { Op } from 'sequelize';
 
 export class DashboardController {
@@ -11,16 +10,16 @@ export class DashboardController {
   static async getDashboardData(req: Request, res: Response): Promise<void> {
     try {
       // Buscar todas as estatísticas e dados em paralelo
-      const [statsData, carnesRecentes, parcelasVencidas] = await Promise.all([
+      const [statsData, titulosRecentes, titulosVencidos] = await Promise.all([
         DashboardController.getStatsData(),
-        DashboardController.getCarnesRecentesData(5),
-        DashboardController.getParcelasVencidasData(10)
+        DashboardController.getTitulosRecentesData(5),
+        DashboardController.getTitulosVencidosData(10)
       ]);
 
       const dashboardData = {
         stats: statsData,
-        carnesRecentes,
-        parcelasVencidas,
+        titulosRecentes,
+        titulosVencidos,
         receitaUltimosMeses: {
           labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
           data: [0, 0, 0, 0, 0, 0] // Placeholder - pode ser implementado depois
@@ -54,9 +53,9 @@ export class DashboardController {
       planosAtivos,
       totalBancos,
       bancosAtivos,
-      totalCarnes,
-      carnesAtivos,
-      carnesPagos,
+      totalTitulos,
+      titulosAtivos,
+      titulosPagos,
       carnesPendentes
     ] = await Promise.all([
       Cliente.count(),
@@ -65,33 +64,28 @@ export class DashboardController {
       Plano.count({ where: { status: 'ativo' } }),
       Banco.count(),
       Banco.count({ where: { ativo: true } }),
-      Carne.count(),
-      Carne.count({ where: { status: 'ativo' } }),
-      Carne.count({ where: { status: 'pago' } }),
-      Carne.count({ where: { status: 'pendente' } })
+      Titulo.count(),
+      Titulo.count({ where: { status: 'ativo' } }),
+      Titulo.count({ where: { status: 'pago' } }),
+      Titulo.count({ where: { status: 'pendente' } })
     ]);
 
     // Calcular valores monetários
-    const carnes = await Carne.findAll({
-      include: [{ association: 'parcelas' }]
-    });
+    const titulos = await Titulo.findAll();
 
-    let valorTotalCarnes = 0;
+    let valorTotalTitulos = 0;
     let valorTotalPago = 0;
     let valorTotalPendente = 0;
 
-    for (const carne of carnes) {
-      const parcelas = await carne.getParcelas();
-      const valorCarne = parcelas.reduce((total, parcela) => {
-        return total + parseFloat(parcela.valor_parcela.toString());
-      }, 0);
+    for (const titulo of titulos) {
+      const valorTitulo = parseFloat(titulo.valor.toString());
 
-      valorTotalCarnes += valorCarne;
+      valorTotalTitulos += valorTitulo;
 
-      if (carne.status === 'pago') {
-        valorTotalPago += valorCarne;
-      } else if (carne.status === 'pendente' || carne.status === 'ativo') {
-        valorTotalPendente += valorCarne;
+      if (titulo.status === 'pago') {
+        valorTotalPago += valorTitulo;
+      } else if (titulo.status === 'pendente' || titulo.status === 'ativo') {
+        valorTotalPendente += valorTitulo;
       }
     }
 
@@ -99,8 +93,8 @@ export class DashboardController {
       totalClientes: totalClientes,
       clientesAtivos: clientesAtivos,
       planosAtivos: planosAtivos,
-      carnesAtivos: carnesAtivos,
-      parcelasVencidas: await CarneParcela.count({
+      titulosAtivos: titulosAtivos,
+      titulosVencidos: await Titulo.count({
         where: {
           data_vencimento: { [Op.lte]: new Date() },
           status: 'pendente'
@@ -113,9 +107,9 @@ export class DashboardController {
     };
   }
 
-  // Método auxiliar para obter carnês recentes
-  private static async getCarnesRecentesData(limit: number) {
-    const carnes = await Carne.findAll({
+  // Método auxiliar para obter títulos recentes
+  private static async getTitulosRecentesData(limit: number) {
+    const titulos = await Titulo.findAll({
       include: [
         { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'] },
         { association: 'plano', attributes: ['id', 'nome_plano'] },
@@ -125,45 +119,40 @@ export class DashboardController {
       limit
     });
 
-    return carnes.map(carne => ({
-      id: carne.id,
-      numero_carne: carne.numero_carne,
-      cliente: (carne as any).cliente?.razao_social || 'N/A',
-      valor_total: carne.valor_total,
-      status: carne.status,
-      data: carne.created_at.toLocaleDateString('pt-BR')
+    return titulos.map(titulo => ({
+      id: titulo.id,
+      numero_titulo: titulo.numero_titulo,
+      cliente: (titulo as any).cliente?.razao_social || 'N/A',
+      valor: titulo.valor,
+      status: titulo.status,
+      data: titulo.created_at.toLocaleDateString('pt-BR')
     }));
   }
 
-  // Método auxiliar para obter parcelas vencidas
-  private static async getParcelasVencidasData(limit: number) {
+  // Método auxiliar para obter títulos vencidos
+  private static async getTitulosVencidosData(limit: number) {
     const hoje = new Date();
     hoje.setHours(23, 59, 59, 999);
 
-    const parcelas = await CarneParcela.findAll({
+    const titulos = await Titulo.findAll({
       where: {
         data_vencimento: { [Op.lte]: hoje },
         status: 'pendente'
       },
       include: [
-        { 
-          association: 'carne',
-          include: [
-            { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email'] }
-          ]
-        }
+        { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email'] }
       ],
       order: [['data_vencimento', 'ASC']],
       limit
     });
 
-    return parcelas.map(parcela => ({
-      id: parcela.id,
-      numero_parcela: parcela.numero_parcela,
-      valor_parcela: parcela.valor_parcela,
-      data_vencimento: parcela.data_vencimento,
-      cliente: (parcela as any).carne?.cliente?.razao_social || 'N/A',
-      status: parcela.status
+    return titulos.map(titulo => ({
+      id: titulo.id,
+      numero_titulo: titulo.numero_titulo,
+      valor: titulo.valor,
+      data_vencimento: titulo.data_vencimento,
+      cliente: (titulo as any).cliente?.razao_social || 'N/A',
+      status: titulo.status
     }));
   }
 
@@ -178,10 +167,10 @@ export class DashboardController {
         planosAtivos,
         totalBancos,
         bancosAtivos,
-        totalCarnes,
-        carnesAtivos,
-        carnesPagos,
-        carnesPendentes
+        totalTitulos,
+        titulosAtivos,
+        titulosPagos,
+        titulosPendentes
       ] = await Promise.all([
         Cliente.count(),
         Cliente.count({ where: { ativo: true } }),
@@ -189,33 +178,28 @@ export class DashboardController {
         Plano.count({ where: { status: 'ativo' } }),
         Banco.count(),
         Banco.count({ where: { ativo: true } }),
-        Carne.count(),
-        Carne.count({ where: { status: 'ativo' } }),
-        Carne.count({ where: { status: 'pago' } }),
-        Carne.count({ where: { status: 'pendente' } })
+        Titulo.count(),
+        Titulo.count({ where: { status: 'ativo' } }),
+        Titulo.count({ where: { status: 'pago' } }),
+        Titulo.count({ where: { status: 'pendente' } })
       ]);
 
       // Calcular valores monetários
-      const carnes = await Carne.findAll({
-        include: [{ association: 'parcelas' }]
-      });
+      const titulos = await Titulo.findAll();
 
-      let valorTotalCarnes = 0;
+      let valorTotalTitulos = 0;
       let valorTotalPago = 0;
       let valorTotalPendente = 0;
 
-      for (const carne of carnes) {
-        const parcelas = await carne.getParcelas();
-        const valorCarne = parcelas.reduce((total, parcela) => {
-          return total + parseFloat(parcela.valor_parcela.toString());
-        }, 0);
+      for (const titulo of titulos) {
+        const valorTitulo = parseFloat(titulo.valor.toString());
 
-        valorTotalCarnes += valorCarne;
+        valorTotalTitulos += valorTitulo;
 
-        if (carne.status === 'pago') {
-          valorTotalPago += valorCarne;
-        } else if (carne.status === 'pendente' || carne.status === 'ativo') {
-          valorTotalPendente += valorCarne;
+        if (titulo.status === 'pago') {
+          valorTotalPago += valorTitulo;
+        } else if (titulo.status === 'pendente' || titulo.status === 'ativo') {
+          valorTotalPendente += valorTitulo;
         }
       }
 
@@ -226,11 +210,11 @@ export class DashboardController {
         planos_ativos: planosAtivos,
         total_bancos: totalBancos,
         bancos_ativos: bancosAtivos,
-        total_carnes: totalCarnes,
-        carnes_ativos: carnesAtivos,
-        carnes_pagos: carnesPagos,
-        carnes_pendentes: carnesPendentes,
-        valor_total_carnes: valorTotalCarnes,
+        total_titulos: totalTitulos,
+        titulos_ativos: titulosAtivos,
+        titulos_pagos: titulosPagos,
+        titulos_pendentes: titulosPendentes,
+        valor_total_titulos: valorTotalTitulos,
         valor_total_pago: valorTotalPago,
         valor_total_pendente: valorTotalPendente
       };
@@ -249,17 +233,16 @@ export class DashboardController {
     }
   }
 
-  // Obter carnês recentes
-  static async getCarnesRecentes(req: Request, res: Response): Promise<void> {
+  // Obter títulos recentes
+  static async getTitulosRecentes(req: Request, res: Response): Promise<void> {
     try {
       const limit = parseInt(req.query.limit as string) || 15;
 
-      const carnes = await Carne.findAll({
+      const titulos = await Titulo.findAll({
         include: [
           { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia'] },
           { association: 'plano', attributes: ['id', 'nome_plano'] },
-          { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] },
-          { association: 'parcelas', limit: 1, order: [['numero_parcela', 'ASC']] }
+          { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
         ],
         order: [['created_at', 'DESC']],
         limit
@@ -267,10 +250,10 @@ export class DashboardController {
 
       res.json({
         success: true,
-        data: carnes
+        data: titulos
       });
     } catch (error) {
-      console.error('Erro ao obter carnês recentes:', error);
+      console.error('Erro ao obter títulos recentes:', error);
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -279,13 +262,13 @@ export class DashboardController {
     }
   }
 
-  // Obter parcelas vencidas
-  static async getParcelasVencidas(req: Request, res: Response): Promise<void> {
+  // Obter títulos vencidos
+  static async getTitulosVencidos(req: Request, res: Response): Promise<void> {
     try {
       const hoje = new Date();
       hoje.setHours(23, 59, 59, 999);
 
-      const parcelas = await CarneParcela.findAll({
+      const titulos = await Titulo.findAll({
         where: {
           data_vencimento: {
             [Op.lte]: hoje
@@ -293,24 +276,19 @@ export class DashboardController {
           status: 'pendente'
         },
         include: [
-          { 
-            association: 'carne',
-            include: [
-              { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
-              { association: 'plano', attributes: ['id', 'nome_plano'] },
-              { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
-            ]
-          }
+          { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
+          { association: 'plano', attributes: ['id', 'nome_plano'] },
+          { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
         ],
         order: [['data_vencimento', 'ASC']]
       });
 
       res.json({
         success: true,
-        data: parcelas
+        data: titulos
       });
     } catch (error) {
-      console.error('Erro ao obter parcelas vencidas:', error);
+      console.error('Erro ao obter títulos vencidos:', error);
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -319,14 +297,14 @@ export class DashboardController {
     }
   }
 
-  // Obter parcelas próximas do vencimento
-  static async getParcelasProximasVencimento(req: Request, res: Response): Promise<void> {
+  // Obter títulos próximos do vencimento
+  static async getTitulosProximosVencimento(req: Request, res: Response): Promise<void> {
     try {
       const hoje = new Date();
       const proximos7Dias = new Date();
       proximos7Dias.setDate(hoje.getDate() + 7);
 
-      const parcelas = await CarneParcela.findAll({
+      const titulos = await Titulo.findAll({
         where: {
           data_vencimento: {
             [Op.between]: [hoje, proximos7Dias]
@@ -334,24 +312,19 @@ export class DashboardController {
           status: 'pendente'
         },
         include: [
-          { 
-            association: 'carne',
-            include: [
-              { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
-              { association: 'plano', attributes: ['id', 'nome_plano'] },
-              { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
-            ]
-          }
+          { association: 'cliente', attributes: ['id', 'razao_social', 'nome_fantasia', 'email', 'telefone'] },
+          { association: 'plano', attributes: ['id', 'nome_plano'] },
+          { association: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
         ],
         order: [['data_vencimento', 'ASC']]
       });
 
       res.json({
         success: true,
-        data: parcelas
+        data: titulos
       });
     } catch (error) {
-      console.error('Erro ao obter parcelas próximas do vencimento:', error);
+      console.error('Erro ao obter títulos próximos do vencimento:', error);
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -360,19 +333,19 @@ export class DashboardController {
     }
   }
 
-  // Obter gráfico de carnês por status
-  static async getGraficoCarnesPorStatus(req: Request, res: Response): Promise<void> {
+  // Obter gráfico de títulos por status
+  static async getGraficoTitulosPorStatus(req: Request, res: Response): Promise<void> {
     try {
-      const carnesPorStatus = await Carne.findAll({
+      const titulosPorStatus = await Titulo.findAll({
         attributes: [
           'status',
-          [Carne.sequelize!.fn('COUNT', Carne.sequelize!.col('id')), 'total']
+          [Titulo.sequelize!.fn('COUNT', Titulo.sequelize!.col('id')), 'total']
         ],
         group: ['status'],
         raw: true
       });
 
-      const dados = carnesPorStatus.map((item: any) => ({
+      const dados = titulosPorStatus.map((item: any) => ({
         status: item.status,
         total: parseInt(item.total)
       }));
@@ -382,7 +355,7 @@ export class DashboardController {
         data: dados
       });
     } catch (error) {
-      console.error('Erro ao obter gráfico de carnês por status:', error);
+      console.error('Erro ao obter gráfico de títulos por status:', error);
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -439,8 +412,8 @@ export class DashboardController {
       const inicioMes = new Date(anoAtual, mesAtual - 1, 1);
       const fimMes = new Date(anoAtual, mesAtual, 0, 23, 59, 59, 999);
 
-      // Carnês criados no mês
-      const carnesCriados = await Carne.count({
+      // Títulos criados no mês
+      const titulosCriados = await Titulo.count({
         where: {
           created_at: {
             [Op.between]: [inicioMes, fimMes]
@@ -448,8 +421,8 @@ export class DashboardController {
         }
       });
 
-      // Parcelas pagas no mês
-      const parcelasPagas = await CarneParcela.count({
+      // Títulos pagos no mês
+      const titulosPagos = await Titulo.count({
         where: {
           data_pagamento: {
             [Op.between]: [inicioMes, fimMes]
@@ -459,7 +432,7 @@ export class DashboardController {
       });
 
       // Valor total pago no mês
-      const parcelasPagasMes = await CarneParcela.findAll({
+      const titulosPagasMes = await Titulo.findAll({
         where: {
           data_pagamento: {
             [Op.between]: [inicioMes, fimMes]
@@ -468,8 +441,8 @@ export class DashboardController {
         }
       });
 
-      const valorTotalPago = parcelasPagasMes.reduce((total, parcela) => {
-        return total + parseFloat(parcela.valor_pago?.toString() || parcela.valor_parcela.toString());
+      const valorTotalPago = titulosPagasMes.reduce((total, titulo) => {
+        return total + parseFloat(titulo.valor_pago?.toString() || titulo.valor.toString());
       }, 0);
 
       // Clientes novos no mês
@@ -484,8 +457,8 @@ export class DashboardController {
       const resumo = {
         mes: mesAtual,
         ano: anoAtual,
-        carnes_criados: carnesCriados,
-        parcelas_pagas: parcelasPagas,
+        titulos_criados: titulosCriados,
+        titulos_pagos: titulosPagos,
         valor_total_pago: valorTotalPago,
         clientes_novos: clientesNovos
       };

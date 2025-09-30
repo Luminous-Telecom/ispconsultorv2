@@ -238,12 +238,12 @@ export class BancoController {
         return;
       }
       
-      // Verificar se tem carnês associados
-      const carnesCount = await banco.countCarnes();
+      // Verificar se tem títulos associados
+      const titulosCount = await banco.countTitulos();
       
-      if (carnesCount > 0) {
+      if (titulosCount > 0) {
         res.status(400).json({ 
-          error: 'Não é possível excluir banco com carnês associados.' 
+          error: 'Não é possível excluir banco com títulos associados.' 
         });
         return;
       }

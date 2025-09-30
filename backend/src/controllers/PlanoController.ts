@@ -165,14 +165,14 @@ export class PlanoController {
         return;
       }
       
-      // Verificar se tem carnês associados
-      const carnesCount = await plano.countCarnes();
+      // Verificar se tem títulos associados
+      const titulosCount = await plano.countTitulos();
       
-      if (carnesCount > 0) {
+      if (titulosCount > 0) {
         res.status(409).json({ 
           success: false,
           error: 'Não é possível excluir plano',
-          message: `Plano possui ${carnesCount} carnê(s) associado(s). Remova os carnês antes de excluir o plano.`
+          message: `Plano possui ${titulosCount} título(s) associado(s). Remova os títulos antes de excluir o plano.`
         });
         return;
       }

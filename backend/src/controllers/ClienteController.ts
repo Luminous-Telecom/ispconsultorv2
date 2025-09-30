@@ -369,14 +369,14 @@ export class ClienteController {
         return;
       }
 
-      // Verificar se cliente tem carnês associados
-      const carnesCount = await cliente.countCarnes();
+      // Verificar se cliente tem títulos associados
+      const titulosCount = await cliente.countTitulos();
 
-      if (carnesCount > 0) {
+      if (titulosCount > 0) {
         res.status(409).json({
           success: false,
           error: 'Não é possível excluir cliente',
-          message: `Cliente possui ${carnesCount} carnê(s) associado(s). Remova os carnês antes de excluir o cliente.`
+          message: `Cliente possui ${titulosCount} título(s) associado(s). Remova os títulos antes de excluir o cliente.`
         });
         return;
       }
