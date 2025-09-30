@@ -344,8 +344,8 @@ p, span, div, label {
   border-color: #dc2626;
 }
 
-/* Formulários modernos */
-.form-control {
+/* Formulários modernos - removido para evitar conflito com temas */
+/* .form-control {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
@@ -370,7 +370,7 @@ p, span, div, label {
   background: var(--bg-tertiary);
   color: var(--text-muted);
   cursor: not-allowed;
-}
+} */
 
 .form-label {
   color: var(--text-primary);
