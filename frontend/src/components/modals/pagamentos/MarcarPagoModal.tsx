@@ -24,7 +24,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
   onSuccess
 }) => {
   const [formData, setFormData] = useState({
-    data_pagamento: '',
+    data_pagamento: new Date().toISOString().split('T')[0], // Inicializar com data atual
     valor_pago: '',
     observacoes: ''
   });
@@ -36,7 +36,6 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
     if (isOpen && parcela) {
       // Sempre usar a data atual quando o modal abrir
       const hoje = new Date().toISOString().split('T')[0];
-      console.log('MarcarPagoModal: Definindo data atual:', hoje);
       setFormData({
         data_pagamento: hoje,
         valor_pago: (Number(parcela.valor_parcela) || 0).toString(),
@@ -44,7 +43,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
       });
       setErrors({});
     }
-  }, [isOpen, parcela]); // Voltar a incluir parcela para resetar quando mudar
+  }, [isOpen, parcela]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
