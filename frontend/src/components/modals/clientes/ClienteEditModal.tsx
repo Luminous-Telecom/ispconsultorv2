@@ -1334,25 +1334,25 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <div className="text-end">
                           <div className="small text-muted">Valor:</div>
                           <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                            return sum + Number(item.valor_parcela || 0);
+                            return sum + Number(item.valor || item.valor_parcela || 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor baixado:</div>
                           <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                            return sum + (item.pago ? Number(item.valor_pago || item.valor_parcela || 0) : 0);
+                            return sum + (item.pago ? Number(item.valor_pago || item.valor || item.valor_parcela || 0) : 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor aberto:</div>
                           <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                            return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor_parcela || 0));
+                            return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || item.valor_parcela || 0));
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor cancelado:</div>
                           <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                            return sum + (item.status === 'cancelado' ? Number(item.valor_parcela || 0) : 0);
+                            return sum + (item.status === 'cancelado' ? Number(item.valor || item.valor_parcela || 0) : 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
                       </div>
