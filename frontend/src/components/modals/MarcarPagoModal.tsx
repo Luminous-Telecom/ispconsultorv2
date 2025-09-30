@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMarcarTituloPago } from '../../hooks/useTitulos';
+import DraggableModal from '../common/DraggableModal';
 
 interface MarcarPagoModalProps {
   isOpen: boolean;
@@ -113,158 +114,143 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
     handleInputChange('valor_pago', formatted);
   };
 
-  if (!isOpen || !parcela) return null;
+  if (!parcela) return null;
 
   return (
-    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-lg">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">
-              Marcar como Pago - Título {parcela.numero_titulo}
-            </h5>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={onClose}
-              disabled={marcarPagoMutation.isPending}
-            ></button>
+    <DraggableModal
+      show={isOpen}
+      onClose={onClose}
+      title={`Marcar como Pago - Título ${parcela.numero_titulo}`}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit}>
+        {/* Informações da parcela */}
+        <div className="card mb-3">
+          <div className="card-header">
+            <h6 className="mb-0">Informações da Parcela</h6>
+          </div>
+          <div className="card-body">
+            <div className="row">
+              <div className="col-md-6">
+                <strong>Cliente:</strong><br />
+                {parcela.cliente?.razao_social || 'N/A'}
+              </div>
+              <div className="col-md-6">
+                <strong>Vencimento:</strong><br />
+                {new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}
+              </div>
+            </div>
+            <div className="row mt-2">
+              <div className="col-md-6">
+                <strong>Valor Original:</strong><br />
+                R$ {(parcela.valor_parcela || 0).toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Dados do pagamento */}
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label htmlFor="data_pagamento" className="form-label">
+                Data de Pagamento *
+              </label>
+              <input
+                type="date"
+                className={`form-control ${errors.data_pagamento ? 'is-invalid' : ''}`}
+                id="data_pagamento"
+                value={formData.data_pagamento}
+                onChange={(e) => handleInputChange('data_pagamento', e.target.value)}
+                disabled={marcarPagoMutation.isPending}
+              />
+              {errors.data_pagamento && (
+                <div className="invalid-feedback">{errors.data_pagamento}</div>
+              )}
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="modal-body">
-              {/* Informações da parcela */}
-              <div className="card mb-3">
-                <div className="card-header">
-                  <h6 className="mb-0">Informações da Parcela</h6>
-                </div>
-                <div className="card-body">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <strong>Cliente:</strong><br />
-                      {parcela.cliente?.razao_social || 'N/A'}
-                    </div>
-                    <div className="col-md-6">
-                      <strong>Vencimento:</strong><br />
-                      {new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}
-                    </div>
-                  </div>
-                  <div className="row mt-2">
-                    <div className="col-md-6">
-                      <strong>Valor Original:</strong><br />
-                      R$ {(parcela.valor_parcela || 0).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dados do pagamento */}
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="data_pagamento" className="form-label">
-                      Data de Pagamento *
-                    </label>
-                    <input
-                      type="date"
-                      className={`form-control ${errors.data_pagamento ? 'is-invalid' : ''}`}
-                      id="data_pagamento"
-                      value={formData.data_pagamento}
-                      onChange={(e) => handleInputChange('data_pagamento', e.target.value)}
-                      disabled={marcarPagoMutation.isPending}
-                    />
-                    {errors.data_pagamento && (
-                      <div className="invalid-feedback">{errors.data_pagamento}</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="valor_pago" className="form-label">
-                      Valor Pago *
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group-text">R$</span>
-                      <input
-                        type="text"
-                        className={`form-control ${errors.valor_pago ? 'is-invalid' : ''}`}
-                        id="valor_pago"
-                        value={formData.valor_pago}
-                        onChange={(e) => handleValorChange(e.target.value)}
-                        placeholder="0,00"
-                        disabled={marcarPagoMutation.isPending}
-                      />
-                      {errors.valor_pago && (
-                        <div className="invalid-feedback">{errors.valor_pago}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label htmlFor="observacoes" className="form-label">
-                  Observações
-                </label>
-                <textarea
-                  className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
-                  id="observacoes"
-                  rows={3}
-                  value={formData.observacoes}
-                  onChange={(e) => handleInputChange('observacoes', e.target.value)}
-                  placeholder="Observações sobre o pagamento (opcional)"
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label htmlFor="valor_pago" className="form-label">
+                Valor Pago *
+              </label>
+              <div className="input-group">
+                <span className="input-group-text">R$</span>
+                <input
+                  type="text"
+                  className={`form-control ${errors.valor_pago ? 'is-invalid' : ''}`}
+                  id="valor_pago"
+                  value={formData.valor_pago}
+                  onChange={(e) => handleValorChange(e.target.value)}
+                  placeholder="0,00"
                   disabled={marcarPagoMutation.isPending}
                 />
-                {errors.observacoes && (
-                  <div className="invalid-feedback">{errors.observacoes}</div>
+                {errors.valor_pago && (
+                  <div className="invalid-feedback">{errors.valor_pago}</div>
                 )}
-                <div className="form-text">
-                  {formData.observacoes.length}/500 caracteres
-                </div>
-              </div>
-
-              {/* Resumo */}
-              <div className="alert alert-info">
-                <strong>Resumo:</strong><br />
-                • Título: {parcela.numero_titulo}<br />
-                • Valor original: R$ {(parcela.valor_parcela || 0).toFixed(2)}<br />
-                • Valor pago: R$ {formData.valor_pago || '0,00'}<br />
-                • Data de pagamento: {formData.data_pagamento ? new Date(formData.data_pagamento).toLocaleDateString('pt-BR') : 'Não informada'}
               </div>
             </div>
-
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onClose}
-                disabled={marcarPagoMutation.isPending}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="btn btn-success"
-                disabled={marcarPagoMutation.isPending}
-              >
-                {marcarPagoMutation.isPending ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Processando...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-check-circle me-2"></i>
-                    Marcar como Pago
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
+
+        <div className="mb-3">
+          <label htmlFor="observacoes" className="form-label">
+            Observações
+          </label>
+          <textarea
+            className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
+            id="observacoes"
+            rows={3}
+            value={formData.observacoes}
+            onChange={(e) => handleInputChange('observacoes', e.target.value)}
+            placeholder="Observações sobre o pagamento (opcional)"
+            disabled={marcarPagoMutation.isPending}
+          />
+          {errors.observacoes && (
+            <div className="invalid-feedback">{errors.observacoes}</div>
+          )}
+          <div className="form-text">
+            {formData.observacoes.length}/500 caracteres
+          </div>
+        </div>
+
+        {/* Resumo */}
+        <div className="alert alert-info">
+          <strong>Resumo:</strong><br />
+          • Título: {parcela.numero_titulo}<br />
+          • Valor original: R$ {(parcela.valor_parcela || 0).toFixed(2)}<br />
+          • Valor pago: R$ {formData.valor_pago || '0,00'}<br />
+          • Data de pagamento: {formData.data_pagamento ? new Date(formData.data_pagamento).toLocaleDateString('pt-BR') : 'Não informada'}
+        </div>
+
+        {/* Botões */}
+        <div className="d-flex justify-content-end gap-2 mt-3">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onClose}
+            disabled={marcarPagoMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="btn btn-success"
+            disabled={marcarPagoMutation.isPending}
+          >
+            {marcarPagoMutation.isPending ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Processando...
+              </>
+            ) : (
+              'Marcar como Pago'
+            )}
+          </button>
+        </div>
+      </form>
+    </DraggableModal>
   );
 };
 
