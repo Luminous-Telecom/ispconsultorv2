@@ -114,12 +114,16 @@ export class BarcodeService {
             return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Código de barras inválido - muito curto</div>';
         }
 
-        // Se tem 47 dígitos, é linha digitável - usar os primeiros 44 dígitos
+        // Se tem 47 dígitos, é linha digitável - converter para código de barras (44 dígitos)
         let codigoParaUsar = codigoLimpo;
         if (codigoLimpo.length === 47) {
+            // Para linha digitável, usar os primeiros 44 dígitos
             codigoParaUsar = codigoLimpo.substring(0, 44);
-        } else if (codigoLimpo.length !== 44) {
-            return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Código de barras inválido - deve ter 44 dígitos</div>';
+        } else if (codigoLimpo.length === 44) {
+            // Já é código de barras, usar diretamente
+            codigoParaUsar = codigoLimpo;
+        } else {
+            return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Código de barras inválido - deve ter 44 ou 47 dígitos</div>';
         }
 
 
