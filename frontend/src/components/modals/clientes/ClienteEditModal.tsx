@@ -240,7 +240,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const paginatedData = getPaginatedData();
 
   // Ações para o header do modal (apenas na aba Financeiro)
-  const bulkActions = [
+  const bulkActions: Array<{
+    label: string;
+    action: (selectedItems: any[]) => void;
+    disabled?: (selectedItems: any[]) => boolean;
+  }> = [
     {
       label: 'Novo Título',
       action: () => {
