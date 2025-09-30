@@ -372,10 +372,25 @@ export class BancoApiService {
         const pixQrcode = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode);
         const pixQrcodeImage = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode_image);
 
+        // Se barcode for linha digitável (47 dígitos), converter para código de barras (44 dígitos)
+        let codigoBarrasFinal = barcode;
+        if (barcode) {
+          const barcodeLimpo = barcode.replace(/\D/g, '');
+          if (barcodeLimpo.length === 47) {
+            // É linha digitável, pegar os primeiros 44 dígitos
+            codigoBarrasFinal = barcodeLimpo.substring(0, 44);
+            logger.info('Linha digitável convertida para código de barras', {
+              titulo_id: titulo.id,
+              linha_original: barcode,
+              codigo_gerado: codigoBarrasFinal
+            });
+          }
+        }
+
         // Atualizar título
         await titulo.update({
           charge_id: chargeId,
-          codigo_barras: barcode,
+          codigo_barras: codigoBarrasFinal,
           url_boleto: url,
           linha_digitavel: linhaDigitavel,
           qrcode: pixQrcode,
