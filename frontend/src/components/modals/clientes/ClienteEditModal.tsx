@@ -379,6 +379,20 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       render: (item: any) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
+    },
+    {
+      key: 'data_pagamento',
+      label: 'Data Pagamento',
+      render: (item: any) => {
+        return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
+      }
+    },
+    {
+      key: 'charge_id',
+      label: 'Charge ID',
+      render: (item: any) => {
+        return item.charge_id || '-';
+      }
     }
   ];
 
