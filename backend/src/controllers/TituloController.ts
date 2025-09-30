@@ -755,6 +755,46 @@ export class TituloController {
     }
   }
 
+  // Estornar título (volta para pendente)
+  static async estornar(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const titulo = await Titulo.findByPk(id);
+      if (!titulo) {
+        res.status(404).json({
+          success: false,
+          message: 'Título não encontrado'
+        });
+        return;
+      }
+
+      // Validação: só pode estornar se estiver pago
+      if (titulo.status !== 'pago') {
+        res.status(400).json({
+          success: false,
+          message: 'Só é possível estornar títulos que estão pagos'
+        });
+        return;
+      }
+
+      // Estornar = desmarcar como pago (volta para pendente)
+      await titulo.desmarcarPago();
+
+      res.json({
+        success: true,
+        message: 'Título estornado com sucesso',
+        data: titulo
+      });
+    } catch (error: any) {
+      logger.error('Erro ao estornar título', { error: error.message });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
 
   // Estatísticas dos títulos
   static async getStats(req: Request, res: Response): Promise<void> {
