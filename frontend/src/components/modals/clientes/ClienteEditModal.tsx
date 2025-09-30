@@ -1340,7 +1340,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <div className="text-end">
                           <div className="small text-muted">Valor baixado:</div>
                           <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                            console.log('Item:', item.id, 'Pago:', item.pago, 'Valor pago:', item.valor_pago, 'Valor:', item.valor, 'Status:', item.status);
+                            if (item.pago) {
+                              console.log('Item PAGO:', item.id, 'Valor pago:', item.valor_pago, 'Valor total:', item.valor, 'Status:', item.status);
+                            }
                             return sum + (item.pago ? Number(item.valor_pago || 0) : 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
