@@ -280,10 +280,10 @@ const CarneParcelasEdit: React.FC = () => {
         onClose={() => setShowMarcarPagoModal(false)}
         parcela={parcela ? {
           id: parcela.id,
-          numero_titulo: parcela.numero_titulo,
-          valor_parcela: parseFloat(parcela.valor_parcela),
+          numero_titulo: `Parcela ${parcela.numero_parcela}`,
+          valor_parcela: parcela.valor_parcela,
           data_vencimento: parcela.data_vencimento,
-          cliente: parcela.cliente
+          cliente: parcela.carne?.cliente
         } : null}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
@@ -292,7 +292,7 @@ const CarneParcelasEdit: React.FC = () => {
               ...prev,
               status: 'pago',
               data_pagamento: new Date().toISOString().split('T')[0],
-              valor_pago: parcela.valor_parcela
+              valor_pago: parcela.valor_parcela.toString()
             }));
           }
         }}
