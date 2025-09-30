@@ -258,15 +258,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     },
     {
-      label: 'Alterar Vencimento',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          const item = selectedItems[0];
-          showNotification('Funcionalidade de alterar vencimento em desenvolvimento', 'info');
-        }
-      }
-    },
-    {
       label: 'Receber',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
@@ -1160,9 +1151,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             }
                             if (bulkAction.label === 'Receber' && selectedItem.status === 'cancelado') {
                               isDisabled = true; // Não pode receber título cancelado
-                            }
-                            if (bulkAction.label === 'Alterar Vencimento' && selectedItem.status === 'cancelado') {
-                              isDisabled = true; // Não pode alterar vencimento de título cancelado
                             }
                           }
                           
