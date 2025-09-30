@@ -365,7 +365,7 @@ export class BancoApiService {
     plano: any, 
     config: BancoConfig
   ): Promise<any> {
-    const baseUrl = banco.url_retorno || process.env.APP_URL;
+    const baseUrl = banco.url_retorno || `${process.env.BASE_URL}/webhook/efi`;
     
     // Buscar dados da empresa (recebedor)
     const { DadosEmpresa } = await import('../models/DadosEmpresa');
