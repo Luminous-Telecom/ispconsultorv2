@@ -68,43 +68,10 @@ export class BarcodeService {
         return dvCalculado === dvFornecido;
     }
 
-    /**
-     * Calcula o dígito verificador do código de barras FEBRABAN (44 dígitos).
-     * @param codigoBarras O código de barras sem o DV (43 dígitos).
-     * @returns O dígito verificador calculado.
-     */
-    public static calcularDVCodigoBarras(codigoBarras: string): number {
-        const codigoLimpo = codigoBarras.replace(/\D/g, '');
-        if (codigoLimpo.length !== 43) {
-            throw new Error('Código de barras deve ter 43 dígitos para cálculo do DV');
-        }
-
-        let soma = 0;
-        let multiplicador = 2; // Começa com peso 2
-
-        // Itera o bloco de trás para frente
-        for (let i = codigoLimpo.length - 1; i >= 0; i--) {
-            soma += parseInt(codigoLimpo[i]) * multiplicador;
-            multiplicador++;
-            if (multiplicador > 9) {
-                multiplicador = 2; // Reinicia o peso em 2 após 9
-            }
-        }
-
-        const resto = soma % 11;
-        let dvCalculado = 11 - resto;
-
-        // Regras específicas para o DV do Módulo 11 FEBRABAN
-        if (dvCalculado === 0 || dvCalculado === 10 || dvCalculado === 11) {
-            dvCalculado = 1;
-        }
-
-        return dvCalculado;
-    }
 
     /**
-     * Gera o SVG do código de barras FEBRABAN usando JsBarcode com configurações otimizadas.
-     * @param codigoBarras O código de barras numérico de 44 dígitos.
+     * Gera o SVG do código de barras usando JsBarcode com configurações otimizadas.
+     * @param codigoBarras O código de barras numérico (44 ou 47 dígitos).
      * @returns Uma string HTML contendo o SVG do código de barras ou uma mensagem de erro.
      */
     public static generateFebrabanBarcodeSvg(codigoBarras: string): string {
@@ -125,12 +92,6 @@ export class BarcodeService {
         } else {
             return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Código de barras inválido - deve ter 44 ou 47 dígitos</div>';
         }
-
-
-        // Validar o código de barras antes de gerar (temporariamente desabilitado)
-        // if (!this.validarCodigoBarrasFebraban(codigoParaUsar)) {
-        //     return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Código de barras inválido - dígito verificador incorreto</div>';
-        // }
 
         try {
             // Usar JsBarcode com configurações otimizadas para bancos
@@ -159,60 +120,7 @@ export class BarcodeService {
         }
     }
 
-    /**
-     * Gera código de barras FEBRABAN válido para títulos.
-     * @param bancoCodigo Código do banco (3 dígitos)
-     * @param nossoNumero Nosso número (20 dígitos)
-     * @param valor Valor em centavos (10 dígitos)
-     * @param vencimento Data de vencimento no formato YYYYMMDD
-     * @returns Código de barras FEBRABAN válido de 44 dígitos
-     */
-    public static gerarCodigoBarrasFebraban(
-        bancoCodigo: string, 
-        nossoNumero: string, 
-        valor: number, 
-        vencimento: string
-    ): string {
-        // Formato FEBRABAN: 3 + 1 + 1 + 4 + 5 + 10 + 10 + 10
-        // banco + moeda + dv + fator_vencimento + valor + campo_livre + campo_livre + campo_livre
-        
-        const moeda = '9'; // Real
-        const fatorVencimento = this.calcularFatorVencimento(vencimento);
-        const valorFormatado = valor.toString().padStart(10, '0');
-        
-        // Campo livre (20 dígitos) - usar nosso número + zeros
-        const campoLivre = nossoNumero.padStart(20, '0');
-        
-        // Montar código sem DV (43 dígitos)
-        const codigoSemDV = bancoCodigo + moeda + '0' + fatorVencimento + valorFormatado + campoLivre;
-        
-        // Calcular DV
-        const dv = this.calcularDVCodigoBarras(codigoSemDV);
-        
-        // Inserir DV na posição 5 (índice 4)
-        const codigoCompleto = codigoSemDV.substring(0, 4) + dv + codigoSemDV.substring(4);
-        
-        return codigoCompleto;
-    }
 
-    /**
-     * Calcula o fator de vencimento FEBRABAN.
-     * @param vencimento Data no formato YYYYMMDD
-     * @returns Fator de vencimento (4 dígitos)
-     */
-    private static calcularFatorVencimento(vencimento: string): string {
-        const dataBase = new Date('1997-10-07'); // Data base FEBRABAN
-        const dataVencimento = new Date(
-            parseInt(vencimento.substring(0, 4)),
-            parseInt(vencimento.substring(4, 6)) - 1,
-            parseInt(vencimento.substring(6, 8))
-        );
-        
-        const diffTime = dataVencimento.getTime() - dataBase.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        return diffDays.toString().padStart(4, '0');
-    }
 
 }
 
