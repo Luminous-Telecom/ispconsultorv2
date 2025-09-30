@@ -134,15 +134,15 @@ export class BarcodeService {
 
         try {
             // Usar JsBarcode com configurações otimizadas para bancos
-            const canvas = createCanvas(400, 70);
+            const canvas = createCanvas(500, 100);
             JsBarcode(canvas, codigoParaUsar, {
-                format: "CODE128", // CODE128 é mais legível que ITF-25
-                width: 2, // Largura das barras otimizada
-                height: 60, // Altura adequada para leitura
+                format: "CODE128", // CODE128 com configurações otimizadas
+                width: 3, // Largura das barras aumentada para melhor leitura
+                height: 80, // Altura aumentada para melhor leitura
                 displayValue: false, // Não mostrar o texto
                 background: "#ffffff",
                 lineColor: "#000000",
-                margin: 0,
+                margin: 10, // Margem para melhor leitura
                 fontSize: 0
             });
 
@@ -150,7 +150,7 @@ export class BarcodeService {
             return `
                 <div class="barcode-container">
                     <div class="barcode-wrap">
-                        <img src="${dataUrl}" alt="Código de Barras" style="width: auto; height: 60px; max-width: 400px;" />
+                        <img src="${dataUrl}" alt="Código de Barras" style="width: auto; height: 80px; max-width: 500px;" />
                     </div>
                 </div>
             `;
