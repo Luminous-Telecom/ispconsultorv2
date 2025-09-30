@@ -58,22 +58,36 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
     enabled: show,
   });
 
+  // Debug dos clientes
+  useEffect(() => {
+    if (clientes) {
+      console.log('Clientes carregados:', clientes);
+    }
+  }, [clientes]);
+
   // Carregar dados da parcela quando disponível
   useEffect(() => {
     if (parcela && parcela.success && parcela.data) {
       const tituloData = parcela.data;
+      
+      console.log('Dados do título recebidos:', tituloData);
+      console.log('Cliente ID encontrado:', (tituloData as any).cliente_id);
+      console.log('Plano ID encontrado:', tituloData.plano_id);
       
       // Formatar data de vencimento para o input date
       const dataVencimento = tituloData.data_vencimento 
         ? new Date(tituloData.data_vencimento).toISOString().split('T')[0]
         : '';
 
-      setFormData({
+      const formDataToSet = {
         cliente_id: (tituloData as any).cliente_id || 0,
         plano_id: tituloData.plano_id || 0,
         data_vencimento: dataVencimento,
         observacoes: tituloData.observacoes || '',
-      });
+      };
+
+      console.log('Dados do formulário a serem definidos:', formDataToSet);
+      setFormData(formDataToSet);
     }
   }, [parcela]);
 
