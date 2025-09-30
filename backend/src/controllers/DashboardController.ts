@@ -65,7 +65,7 @@ export class DashboardController {
       Banco.count(),
       Banco.count({ where: { ativo: true } }),
       Titulo.count(),
-      Titulo.count({ where: { status: 'ativo' } }),
+      Titulo.count({ where: { status: 'vencido' } }),
       Titulo.count({ where: { status: 'pago' } }),
       Titulo.count({ where: { status: 'pendente' } })
     ]);
@@ -84,7 +84,7 @@ export class DashboardController {
 
       if (titulo.status === 'pago') {
         valorTotalPago += valorTitulo;
-      } else if (titulo.status === 'pendente' || titulo.status === 'ativo') {
+      } else if (titulo.status === 'pendente' || titulo.status === 'vencido') {
         valorTotalPendente += valorTitulo;
       }
     }
@@ -179,7 +179,7 @@ export class DashboardController {
         Banco.count(),
         Banco.count({ where: { ativo: true } }),
         Titulo.count(),
-        Titulo.count({ where: { status: 'ativo' } }),
+        Titulo.count({ where: { status: 'vencido' } }),
         Titulo.count({ where: { status: 'pago' } }),
         Titulo.count({ where: { status: 'pendente' } })
       ]);
@@ -198,7 +198,7 @@ export class DashboardController {
 
         if (titulo.status === 'pago') {
           valorTotalPago += valorTitulo;
-        } else if (titulo.status === 'pendente' || titulo.status === 'ativo') {
+        } else if (titulo.status === 'pendente' || titulo.status === 'vencido') {
           valorTotalPendente += valorTitulo;
         }
       }
