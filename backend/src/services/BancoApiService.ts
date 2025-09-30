@@ -427,16 +427,16 @@ export class BancoApiService {
           customer: {
             name: cliente.razao_social,
             email: cliente.email,
-            phone_number: cliente.telefone,
+            phone_number: cliente.telefone.replace(/\D/g, ''),
             juridical_person: {
               corporate_name: cliente.razao_social,
-              cnpj: cliente.cnpj
+              cnpj: cliente.cnpj.replace(/\D/g, ''),
             },
             address: {
               street: cliente.endereco,
               number: cliente.numero,
               neighborhood: cliente.bairro,
-              zipcode: cliente.cep,
+              zipcode: cliente.cep.replace(/\D/g, ''),
               city: cliente.cidade,
               complement: cliente.complemento,
               state: cliente.estado
