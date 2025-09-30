@@ -69,7 +69,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
         : '';
 
       const formDataToSet = {
-        cliente_id: parcela.cliente_id || parcela.carne?.cliente_id || 0,
+        cliente_id: parcela.carne?.cliente_id || 0,
         plano_id: parcela.plano_id || 0,
         data_vencimento: dataVencimento,
         observacoes: parcela.observacoes || '',
