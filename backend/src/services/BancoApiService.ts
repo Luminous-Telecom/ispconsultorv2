@@ -37,16 +37,6 @@ export interface BancoConfig {
     grant_type: string;
     auth_type: string;
   };
-  suporta_carne: boolean;
-  operacoes_suportadas: {
-    gerar_carne: boolean;
-    cancelar_carne: boolean;
-    cancelar_parcela_carne: boolean;
-    alterar_vencimento_carne: boolean;
-    alterar_vencimento_parcela_carne: boolean;
-    liquidar_carne: boolean;
-    liquidar_parcela_carne: boolean;
-  };
   auth_type: 'basic' | 'bearer';
   client_id_field: string;
   client_secret_field: string;

@@ -51,7 +51,6 @@ export class Banco extends Model<
   declare maximo_dias_recalcular: number | null;
   declare layout_web: string | null;
   declare layout_pdf: string | null;
-  declare layout_carne: string | null;
   declare local_pagamento: string | null;
   declare dados_avalista: string | null;
   declare exibir_mes_referente: boolean;
@@ -359,10 +358,6 @@ Banco.init(
       allowNull: true
     },
     layout_pdf: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    layout_carne: {
       type: DataTypes.TEXT,
       allowNull: true
     },

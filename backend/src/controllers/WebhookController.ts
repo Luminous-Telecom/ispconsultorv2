@@ -28,7 +28,7 @@ export class WebhookController {
       }
       
       // Verificar se é uma notificação válida da Efí
-      if (!payload.notification && !payload.charge && !payload.carnet && !payload.pix) {
+      if (!payload.notification && !payload.charge && !payload.pix) {
         logger.warn('Payload não contém campos esperados da Efí');
         res.status(400).json({
           success: false,
@@ -47,9 +47,6 @@ export class WebhookController {
       } else if (payload.charge) {
         notification = payload.charge;
         notificationType = 'charge_' + (notification.status || 'unknown');
-      } else if (payload.carnet) {
-        notification = payload.carnet;
-        notificationType = 'carnet_' + (notification.status || 'unknown');
       } else if (payload.pix) {
         notification = payload.pix;
         notificationType = 'pix_' + (notification.status || 'unknown');
@@ -69,9 +66,6 @@ export class WebhookController {
           res.status(chargeResult.status || 200).json(chargeResult);
           break;
         
-        case 'carnet_paid':
-        case 'carnet_settled':
-        case 'carnet_canceled':
         
         case 'pix_paid':
         case 'pix_settled':
@@ -629,7 +623,6 @@ export class WebhookController {
 
       // Tentar identificar o tipo de notificação pelos campos disponíveis
       const chargeId = notification.charge_id || notification.id;
-      const carnetId = notification.carnet_id;
       const customId = notification.custom_id;
 
       if (chargeId) {

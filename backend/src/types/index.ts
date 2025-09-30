@@ -34,7 +34,6 @@ export interface Cliente extends BaseEntity {
   // Relacionamentos
   planos?: Plano[];
   contratos?: ClientePlano[];
-  carnes?: Carne[];
   banco_boleto?: Banco;
 }
 
@@ -58,7 +57,6 @@ export interface Plano extends BaseEntity {
   // Relacionamentos
   clientes?: Cliente[];
   contratos?: ClientePlano[];
-  carnes?: Carne[];
 }
 
 export interface Banco extends BaseEntity {
@@ -85,7 +83,6 @@ export interface Banco extends BaseEntity {
   maximo_dias_recalcular?: number;
   layout_web?: string;
   layout_pdf?: string;
-  layout_carne?: string;
   local_pagamento?: string;
   dados_avalista?: string;
   exibir_mes_referente: boolean;
@@ -106,7 +103,6 @@ export interface Banco extends BaseEntity {
   
   // Relacionamentos
   clientes?: Cliente[];
-  carnes?: Carne[];
   banco_configuracoes?: BancoConfiguracao[];
   configuracao_principal?: BancoConfiguracao;
 }
@@ -122,53 +118,6 @@ export interface BancoConfiguracao extends BaseEntity {
   banco?: Banco;
 }
 
-export interface Carne extends BaseEntity {
-  cliente_id: number;
-  plano_id: number;
-  banco_id: number;
-  numero_carne: string;
-  carnet_id?: string;
-  valor_total: number;
-  quantidade_parcelas: number;
-  data_vencimento_primeira: Date;
-  status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
-  observacoes?: string;
-  codigo_barras?: string;
-  linha_digitavel?: string;
-  
-  // Campos calculados
-  valor_parcela?: number;
-  parcelas_pagas_count?: number;
-  valor_total_carne?: number;
-  
-  // Relacionamentos
-  cliente?: Cliente;
-  plano?: Plano;
-  banco?: Banco;
-  parcelas?: CarneParcela[];
-}
-
-export interface CarneParcela extends BaseEntity {
-  carne_id: number;
-  numero_parcela: number;
-  valor_parcela: number;
-  tipo?: string;
-  data_vencimento: Date;
-  pago: boolean;
-  data_pagamento?: Date;
-  valor_pago?: number;
-  status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
-  codigo_barras?: string;
-  linha_digitavel?: string;
-  qrcode?: string;
-  qrcode_image?: string;
-  observacoes?: string;
-  charge_id?: string;
-  url_boleto?: string;
-  
-  // Relacionamentos
-  carne?: Carne;
-}
 
 export interface ClientePlano extends BaseEntity {
   cliente_id: number;
@@ -250,15 +199,6 @@ export interface BancoFilters {
   sandbox?: boolean;
 }
 
-export interface CarneFilters {
-  search?: string;
-  status?: string;
-  cliente_id?: number;
-  plano_id?: number;
-  banco_id?: number;
-  data_vencimento_inicio?: string;
-  data_vencimento_fim?: string;
-}
 
 // Tipos para criação e atualização
 export type CreateCliente = Omit<Cliente, 'id' | 'created_at' | 'updated_at'>;
@@ -270,11 +210,6 @@ export type UpdatePlano = Partial<CreatePlano>;
 export type CreateBanco = Omit<Banco, 'id' | 'created_at' | 'updated_at'>;
 export type UpdateBanco = Partial<CreateBanco>;
 
-export type CreateCarne = Omit<Carne, 'id' | 'created_at' | 'updated_at'>;
-export type UpdateCarne = Partial<CreateCarne>;
-
-export type CreateCarneParcela = Omit<CarneParcela, 'id' | 'created_at' | 'updated_at'>;
-export type UpdateCarneParcela = Partial<CreateCarneParcela>;
 
 // Tipos para dashboard
 export interface DashboardStats {
@@ -284,11 +219,6 @@ export interface DashboardStats {
   planos_ativos: number;
   total_bancos: number;
   bancos_ativos: number;
-  total_carnes: number;
-  carnes_ativos: number;
-  carnes_pagos: number;
-  carnes_pendentes: number;
-  valor_total_carnes: number;
   valor_total_pago: number;
   valor_total_pendente: number;
 }

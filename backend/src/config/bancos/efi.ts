@@ -26,7 +26,6 @@ export const efiConfig = {
     maximo_dias_recalcular: 0,
     layout_web: 'normal',
     layout_pdf: 'normal',
-    layout_carne: '3folhas',
     exibir_mes_referente: false,
     taxa_cobranca: 0,
     incluir_taxa: false,
@@ -105,23 +104,6 @@ export const efiConfig = {
   
   // ===== LÓGICA ESPECÍFICA DA EFÍ MIGRADA DO BancoApiService =====
   
-  /**
-   * Verificar se o banco suporta operações de carnê
-   */
-  suporta_carne: false,
-  
-  /**
-   * Verificar se o banco suporta operações específicas
-   */
-  operacoes_suportadas: {
-    gerar_carne: false,
-    cancelar_carne: false,
-    cancelar_parcela_carne: false,
-    alterar_vencimento_carne: false,
-    alterar_vencimento_parcela_carne: false,
-    liquidar_carne: false,
-    liquidar_parcela_carne: false,
-  },
   
   // Configurações para compatibilidade com BancoApiService
   auth_type: 'basic' as const,
