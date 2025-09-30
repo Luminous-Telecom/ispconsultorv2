@@ -377,6 +377,38 @@ export class BancoApiService {
       throw new Error('Dados da empresa não configurados');
     }
     
+    // Validar dados obrigatórios do cliente
+    if (!cliente.razao_social) {
+      throw new Error('Cliente deve ter razão social preenchida');
+    }
+    if (!cliente.email) {
+      throw new Error('Cliente deve ter email preenchido');
+    }
+    if (!cliente.telefone) {
+      throw new Error('Cliente deve ter telefone preenchido');
+    }
+    if (!cliente.cnpj) {
+      throw new Error('Cliente deve ter CNPJ preenchido');
+    }
+    if (!cliente.endereco) {
+      throw new Error('Cliente deve ter endereço preenchido');
+    }
+    if (!cliente.numero) {
+      throw new Error('Cliente deve ter número do endereço preenchido');
+    }
+    if (!cliente.bairro) {
+      throw new Error('Cliente deve ter bairro preenchido');
+    }
+    if (!cliente.cep) {
+      throw new Error('Cliente deve ter CEP preenchido');
+    }
+    if (!cliente.cidade) {
+      throw new Error('Cliente deve ter cidade preenchida');
+    }
+    if (!cliente.estado) {
+      throw new Error('Cliente deve ter estado preenchido');
+    }
+    
     // Converter valor para centavos
     const valorCentavos = Math.round(Number(titulo.valor) * 100);
     
@@ -393,21 +425,21 @@ export class BancoApiService {
       payment: {
         banking_billet: {
           customer: {
-            name: cliente.razao_social || cliente.nome || 'Cliente',
-            email: cliente.email || 'cliente@email.com',
-            phone_number: cliente.telefone || cliente.celular || '11999999999',
+            name: cliente.razao_social,
+            email: cliente.email,
+            phone_number: cliente.telefone,
             juridical_person: {
-              corporate_name: cliente.razao_social || cliente.nome || 'Cliente',
-              cnpj: cliente.cnpj || '11222333000181'
+              corporate_name: cliente.razao_social,
+              cnpj: cliente.cnpj
             },
             address: {
-              street: cliente.endereco || 'Rua das Flores',
-              number: cliente.numero || '123',
-              neighborhood: cliente.bairro || 'Centro',
-              zipcode: cliente.cep || '01234567',
-              city: cliente.cidade || 'São Paulo',
-              complement: cliente.complemento || '',
-              state: cliente.estado || 'SP'
+              street: cliente.endereco,
+              number: cliente.numero,
+              neighborhood: cliente.bairro,
+              zipcode: cliente.cep,
+              city: cliente.cidade,
+              complement: cliente.complemento,
+              state: cliente.estado
             }
           },
           expire_at: new Date(titulo.data_vencimento).toISOString().split('T')[0],
