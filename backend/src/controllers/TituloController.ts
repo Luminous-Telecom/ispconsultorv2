@@ -288,6 +288,14 @@ export class TituloController {
         return;
       }
 
+      if (status === 'cancelado' && titulo.status === 'cancelado') {
+        res.status(400).json({
+          success: false,
+          message: 'Este título já está cancelado'
+        });
+        return;
+      }
+
       if (status === 'pago' && titulo.status === 'cancelado') {
         res.status(400).json({
           success: false,
@@ -317,6 +325,15 @@ export class TituloController {
 
       // Verificar alteração de vencimento
       if (data_vencimento && new Date(data_vencimento).getTime() !== new Date(titulo.data_vencimento).getTime()) {
+        // Não permitir alterar vencimento de títulos cancelados
+        if (titulo.status === 'cancelado') {
+          res.status(400).json({
+            success: false,
+            message: 'Não é possível alterar o vencimento de um título cancelado'
+          });
+          return;
+        }
+
         logger.info('Verificando alteração de vencimento', {
           titulo_id: titulo.id,
           data_original: titulo.data_vencimento,

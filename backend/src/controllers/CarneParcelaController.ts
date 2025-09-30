@@ -703,6 +703,15 @@ export class CarneParcelaController {
       const novaDataVencimento = data_vencimento ? new Date(data_vencimento).toISOString().split('T')[0] : null;
       const dataVencimentoOriginal = new Date(parcela.data_vencimento).toISOString().split('T')[0];
       
+      // Não permitir alterar vencimento de parcelas canceladas
+      if (novaDataVencimento && novaDataVencimento !== dataVencimentoOriginal && parcela.status === 'cancelado') {
+        res.status(400).json({
+          success: false,
+          message: 'Não é possível alterar o vencimento de uma parcela cancelada'
+        });
+        return;
+      }
+      
       logger.info('Verificando alteração de vencimento', {
         parcela_id: parcela.id,
         data_original: dataVencimentoOriginal,
@@ -750,6 +759,14 @@ export class CarneParcelaController {
           res.status(400).json({
             success: false,
             message: 'Não é possível cancelar uma parcela que já foi paga'
+          });
+          return;
+        }
+
+        if (req.body.status === 'cancelado' && parcela.status === 'cancelado') {
+          res.status(400).json({
+            success: false,
+            message: 'Esta parcela já está cancelada'
           });
           return;
         }

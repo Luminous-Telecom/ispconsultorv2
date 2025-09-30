@@ -1155,8 +1155,14 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             if (bulkAction.label === 'Cancelar' && selectedItem.status === 'pago') {
                               isDisabled = true; // Não pode cancelar título pago
                             }
+                            if (bulkAction.label === 'Cancelar' && selectedItem.status === 'cancelado') {
+                              isDisabled = true; // Não pode cancelar título já cancelado
+                            }
                             if (bulkAction.label === 'Receber' && selectedItem.status === 'cancelado') {
                               isDisabled = true; // Não pode receber título cancelado
+                            }
+                            if (bulkAction.label === 'Alterar Vencimento' && selectedItem.status === 'cancelado') {
+                              isDisabled = true; // Não pode alterar vencimento de título cancelado
                             }
                           }
                           
