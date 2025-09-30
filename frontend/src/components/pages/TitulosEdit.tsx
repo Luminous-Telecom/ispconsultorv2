@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TituloService } from '../../services/tituloService';
 import { useNotificationContext } from '../../contexts/NotificationContext';
-import MarcarPagoModal from '../modals/MarcarPagoModal';
 import { getApiUrl } from '../../config/api';
 
 const CarneParcelasEdit: React.FC = () => {
@@ -19,8 +18,6 @@ const CarneParcelasEdit: React.FC = () => {
     data_pagamento: '',
     valor_pago: ''
   });
-
-  const [showMarcarPagoModal, setShowMarcarPagoModal] = useState(false);
 
   // Buscar parcela
   const { data: parcela, isLoading } = useQuery({
@@ -240,9 +237,16 @@ const CarneParcelasEdit: React.FC = () => {
                   <button
                     type="button"
                     className="btn btn-success"
-                    onClick={() => setShowMarcarPagoModal(true)}
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        status: 'pago',
+                        data_pagamento: new Date().toISOString().split('T')[0],
+                        valor_pago: prev.valor_parcela
+                      }));
+                    }}
                   >
-                    Marcar como Pago
+                    <i className="bi bi-check"></i> Marcar como Pago
                   </button>
                 )}
                 {formData.status === 'pago' && (
@@ -273,30 +277,6 @@ const CarneParcelasEdit: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Modal para marcar como pago */}
-      <MarcarPagoModal
-        isOpen={showMarcarPagoModal}
-        onClose={() => setShowMarcarPagoModal(false)}
-        parcela={parcela ? {
-          id: parcela.id,
-          numero_titulo: `Parcela ${parcela.numero_parcela}`,
-          valor_parcela: parcela.valor_parcela,
-          data_vencimento: parcela.data_vencimento,
-          cliente: parcela.carne?.cliente
-        } : null}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
-          if (parcela) {
-            setFormData(prev => ({
-              ...prev,
-              status: 'pago',
-              data_pagamento: new Date().toISOString().split('T')[0],
-              valor_pago: parcela.valor_parcela.toString()
-            }));
-          }
-        }}
-      />
     </>
   );
 };

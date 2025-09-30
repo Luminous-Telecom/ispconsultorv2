@@ -11,8 +11,6 @@ import DataTable from '../../common/DataTable';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
-import MarcarPagoModal from '../MarcarPagoModal';
-import { useMarcarTituloPago } from '../../../hooks/useTitulos';
 
 interface ClienteForm {
   cnpj: string;
@@ -102,9 +100,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [showCancelados, setShowCancelados] = useState(false);
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
-  const [showMarcarPagoModal, setShowMarcarPagoModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
-  const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -272,8 +268,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
-          setSelectedParcela(item);
-          setShowMarcarPagoModal(true);
+          showNotification('Funcionalidade de marcar como pago em desenvolvimento', 'info');
         }
       }
     },
@@ -1427,27 +1422,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           refetchParcelas();
         }}
         parcelaId={selectedTituloId || 0}
-      />
-
-      {/* Modal para marcar como pago */}
-      <MarcarPagoModal
-        isOpen={showMarcarPagoModal}
-        onClose={() => {
-          setShowMarcarPagoModal(false);
-          setSelectedParcela(null);
-        }}
-        parcela={selectedParcela ? {
-          id: selectedParcela.id,
-          numero_titulo: `Parcela ${selectedParcela.numero_parcela}`,
-          valor_parcela: selectedParcela.valor_parcela,
-          data_vencimento: selectedParcela.data_vencimento,
-          cliente: selectedParcela.carne?.cliente
-        } : null}
-        onSuccess={() => {
-          setShowMarcarPagoModal(false);
-          setSelectedParcela(null);
-          refetchParcelas();
-        }}
       />
     </DraggableModal>
   );

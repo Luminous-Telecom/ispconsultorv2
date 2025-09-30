@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TituloService } from '../../services/tituloService';
 import { getApiUrl } from '../../config/api';
 import { useNotificationContext } from '../../contexts/NotificationContext';
-import MarcarPagoModal from '../modals/MarcarPagoModal';
 import DataTable from '../common/DataTable';
 
 const CarneParcelas: React.FC = () => {
@@ -18,8 +17,6 @@ const CarneParcelas: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const [isRegistering, setIsRegistering] = useState(false);
-  const [showMarcarPagoModal, setShowMarcarPagoModal] = useState(false);
-  const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const queryClient = useQueryClient();
   const { success, error } = useNotificationContext();
 
@@ -197,18 +194,10 @@ const CarneParcelas: React.FC = () => {
     // A query será refeita automaticamente devido ao queryKey
   };
 
-  const handleMarcarPago = (parcela: any) => {
-    setSelectedParcela(parcela);
-    setShowMarcarPagoModal(true);
-  };
-
-  const handleCloseMarcarPagoModal = () => {
-    setShowMarcarPagoModal(false);
-    setSelectedParcela(null);
-  };
-
-  const handleMarcarPagoSuccess = () => {
-    // A query será invalidada automaticamente pelo hook
+  const handleMarcarPago = (parcelaId: number) => {
+    if (window.confirm('Deseja marcar esta parcela como paga?')) {
+      marcarPagoMutation.mutate(parcelaId);
+    }
   };
 
 
@@ -354,7 +343,7 @@ const CarneParcelas: React.FC = () => {
     switch (action) {
       case 'marcar_pago':
         if (selectedItems.length === 1) {
-          handleMarcarPago(selectedItems[0]);
+          handleMarcarPago(selectedItems[0].id);
         }
         break;
       case 'cancelar':
@@ -643,14 +632,6 @@ const CarneParcelas: React.FC = () => {
           />
         </div>
       </div>
-
-      {/* Modal para marcar como pago */}
-      <MarcarPagoModal
-        isOpen={showMarcarPagoModal}
-        onClose={handleCloseMarcarPagoModal}
-        parcela={selectedParcela}
-        onSuccess={handleMarcarPagoSuccess}
-      />
     </div>
   );
 };
