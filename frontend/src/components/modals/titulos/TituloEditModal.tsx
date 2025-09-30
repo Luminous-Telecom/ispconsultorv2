@@ -62,6 +62,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
   useEffect(() => {
     if (clientes) {
       console.log('Clientes carregados:', clientes);
+      console.log('Primeiro cliente:', clientes.data?.[0]);
     }
   }, [clientes]);
 
@@ -191,7 +192,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
                 <option value={0}>Selecione um cliente</option>
                 {clientes?.data?.map((cliente: any) => (
                   <option key={cliente.id} value={cliente.id}>
-                    {cliente.nome} - {cliente.cpf_cnpj}
+                    {cliente.nome || cliente.razao_social} - {cliente.cpf_cnpj || cliente.cnpj}
                   </option>
                 ))}
               </select>
