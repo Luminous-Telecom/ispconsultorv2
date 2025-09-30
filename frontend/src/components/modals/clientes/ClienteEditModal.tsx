@@ -1344,10 +1344,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             console.log('Total de itens:', sortedData.length);
                             const total = sortedData.reduce((sum: number, item: any) => {
                               console.log('Item:', item.id, 'Pago:', item.pago, 'Status:', item.status, 'Valor pago:', item.valor_pago, 'Valor:', item.valor);
-                              if (item.pago) {
-                                console.log('*** ITEM PAGO ***:', item.id, 'Valor pago:', item.valor_pago);
+                              // Só considerar como baixado se estiver pago E não cancelado
+                              if (item.pago && item.status === 'pago') {
+                                console.log('*** ITEM BAIXADO ***:', item.id, 'Valor pago:', item.valor_pago);
+                                return sum + Number(item.valor_pago || 0);
                               }
-                              return sum + (item.pago ? Number(item.valor_pago || 0) : 0);
+                              return sum;
                             }, 0);
                             console.log('Total calculado:', total);
                             console.log('=== FIM CÁLCULO ===');
