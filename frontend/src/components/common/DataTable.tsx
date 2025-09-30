@@ -62,6 +62,23 @@ const DataTable: React.FC<TableProps> = ({
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Limpar seleção quando os dados mudarem
+  React.useEffect(() => {
+    if (selectedItems.length > 0 && data.length > 0) {
+      // Verificar se o item selecionado ainda existe nos dados
+      const stillExists = data.some(item => 
+        selectedItems.some(selected => selected.id === item.id)
+      );
+      
+      // Se não existe mais ou mudou, limpar seleção
+      if (stillExists) {
+        const currentItem = data.find(item => item.id === selectedItems[0].id);
+        if (currentItem && JSON.stringify(currentItem) !== JSON.stringify(selectedItems[0])) {
+          setSelectedItems([]);
+        }
+      }
+    }
+  }, [data]);
 
   const handleSelectItem = (item: any, checked: boolean) => {
     // Permitir seleção de apenas uma linha
