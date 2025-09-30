@@ -70,11 +70,29 @@ export class TituloService {
   }
 
   // Marcar parcela como paga
-  static async marcarPago(id: number, dataPagamento?: string): Promise<{ success: boolean; message: string; novo_carne_gerado?: any }> {
+  static async marcarPago(
+    id: number, 
+    dataPagamento?: string, 
+    valorPago?: number, 
+    observacoes?: string
+  ): Promise<{ success: boolean; message: string; novo_carne_gerado?: any }> {
     try {
-      const response = await apiService.post<{ success: boolean; message: string; novo_carne_gerado?: any }>(`${API_ENDPOINTS.TITULOS}/${id}/pagar`, {
+      const payload: any = {
         data_pagamento: dataPagamento || new Date().toISOString().split('T')[0]
-      });
+      };
+
+      if (valorPago !== undefined) {
+        payload.valor_pago = valorPago;
+      }
+
+      if (observacoes) {
+        payload.observacoes = observacoes;
+      }
+
+      const response = await apiService.post<{ success: boolean; message: string; novo_carne_gerado?: any }>(
+        `${API_ENDPOINTS.TITULOS}/${id}/pagar`, 
+        payload
+      );
       return response;
     } catch (error) {
       console.error('Erro ao marcar parcela como paga:', error);

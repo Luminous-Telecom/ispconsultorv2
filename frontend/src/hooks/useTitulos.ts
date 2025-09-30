@@ -56,8 +56,18 @@ export const useMarcarTituloPago = () => {
   const { success, error } = useNotificationContext();
 
   return useMutation({
-    mutationFn: ({ id, dataPagamento }: { id: number; dataPagamento?: string }) =>
-      TituloService.marcarPago(id, dataPagamento),
+    mutationFn: ({ 
+      id, 
+      dataPagamento, 
+      valorPago, 
+      observacoes 
+    }: { 
+      id: number; 
+      dataPagamento?: string;
+      valorPago?: number;
+      observacoes?: string;
+    }) =>
+      TituloService.marcarPago(id, dataPagamento, valorPago, observacoes),
     onSuccess: (response, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcela', id] });
