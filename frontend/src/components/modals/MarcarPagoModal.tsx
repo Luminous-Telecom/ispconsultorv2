@@ -36,7 +36,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
       const hoje = new Date().toISOString().split('T')[0];
       setFormData({
         data_pagamento: hoje,
-        valor_pago: parcela.valor_parcela.toString(),
+        valor_pago: (parcela.valor_parcela || 0).toString(),
         observacoes: ''
       });
       setErrors({});
@@ -152,7 +152,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
                   <div className="row mt-2">
                     <div className="col-md-6">
                       <strong>Valor Original:</strong><br />
-                      R$ {parcela.valor_parcela.toFixed(2)}
+                      R$ {(parcela.valor_parcela || 0).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -228,7 +228,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
               <div className="alert alert-info">
                 <strong>Resumo:</strong><br />
                 • Título: {parcela.numero_titulo}<br />
-                • Valor original: R$ {parcela.valor_parcela.toFixed(2)}<br />
+                • Valor original: R$ {(parcela.valor_parcela || 0).toFixed(2)}<br />
                 • Valor pago: R$ {formData.valor_pago || '0,00'}<br />
                 • Data de pagamento: {formData.data_pagamento ? new Date(formData.data_pagamento).toLocaleDateString('pt-BR') : 'Não informada'}
               </div>
