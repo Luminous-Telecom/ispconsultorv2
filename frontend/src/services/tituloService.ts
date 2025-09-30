@@ -26,9 +26,9 @@ export class TituloService {
   }
 
   // Buscar parcela por ID
-  static async getById(id: number): Promise<CarneParcela> {
+  static async getById(id: number): Promise<{success: boolean, data: CarneParcela}> {
     try {
-      const response = await apiService.get<CarneParcela>(`${API_ENDPOINTS.TITULOS}/${id}`);
+      const response = await apiService.get<{success: boolean, data: CarneParcela}>(`${API_ENDPOINTS.TITULOS}/${id}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar parcela:', error);
