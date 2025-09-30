@@ -34,6 +34,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
 
   useEffect(() => {
     if (isOpen && parcela) {
+      // Sempre usar a data atual quando o modal abrir
       const hoje = new Date().toISOString().split('T')[0];
       setFormData({
         data_pagamento: hoje,
@@ -42,7 +43,7 @@ const MarcarPagoModal: React.FC<MarcarPagoModalProps> = ({
       });
       setErrors({});
     }
-  }, [isOpen, parcela]);
+  }, [isOpen]); // Remover parcela da dependência para sempre resetar
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
