@@ -180,10 +180,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                 <span className="input-group-text" style={{ 
                   height: 'calc(1.5em + 0.75rem + 2px)', 
                   display: 'flex', 
-                  alignItems: 'center',
-                  padding: '0.375rem 0.75rem',
-                  border: '1px solid var(--bs-border-color)',
-                  backgroundColor: 'var(--bs-tertiary-bg)'
+                  alignItems: 'center'
                 }}>R$</span>
                 <input
                   type="text"
