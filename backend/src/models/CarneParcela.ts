@@ -88,12 +88,28 @@ export class CarneParcela extends Model<
     const valor = valorPago || this.valor_parcela;
     const data = dataPagamento || new Date();
     
+    // Atualizar no banco de dados local
     await this.update({
       pago: true,
       data_pagamento: data,
       valor_pago: valor,
       status: 'pago'
     });
+
+    // Integrar com banco externo se tiver charge_id
+    if (this.charge_id) {
+      try {
+        const BancoApiService = require('../services/BancoApiService').BancoApiService;
+        const resultado = await BancoApiService.liquidarParcelaCarne(this);
+        
+        if (!resultado.success) {
+          console.warn('Falha ao liquidar parcela no banco externo:', resultado.message);
+        }
+      } catch (error) {
+        console.error('Erro ao integrar com banco externo:', error);
+        // Não falhar a operação se a integração externa falhar
+      }
+    }
 
     // Atualizar status do carnê
     const carne = await this.getCarne();
