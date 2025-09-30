@@ -476,6 +476,24 @@ export class CarneParcelaController {
         return;
       }
 
+      // Validação: não pode marcar como pago se já estiver cancelado
+      if (parcela.status === 'cancelado') {
+        res.status(400).json({
+          success: false,
+          message: 'Não é possível marcar como pago uma parcela cancelada'
+        });
+        return;
+      }
+
+      // Validação: não pode marcar como pago se já estiver pago
+      if (parcela.status === 'pago') {
+        res.status(400).json({
+          success: false,
+          message: 'Esta parcela já foi marcada como paga'
+        });
+        return;
+      }
+
       const carne = await parcela.getCarne();
       const banco = await carne.getBanco();
 
@@ -727,6 +745,23 @@ export class CarneParcelaController {
 
       // Se status foi enviado, atualizar
       if (req.body.status) {
+        // Validações de status
+        if (req.body.status === 'cancelado' && parcela.status === 'pago') {
+          res.status(400).json({
+            success: false,
+            message: 'Não é possível cancelar uma parcela que já foi paga'
+          });
+          return;
+        }
+
+        if (req.body.status === 'pago' && parcela.status === 'cancelado') {
+          res.status(400).json({
+            success: false,
+            message: 'Não é possível marcar como pago uma parcela cancelada'
+          });
+          return;
+        }
+
         updateData.status = req.body.status;
         
         // Se for cancelado, cancelar na EFI também

@@ -1142,7 +1142,23 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         {bulkActions.map((bulkAction, index) => {
                           // Botão "Novo Título" sempre habilitado, outros apenas quando há seleção
                           const isNewButton = bulkAction.label === 'Novo Título';
-                          const isDisabled = !isNewButton && selectedItems.length === 0;
+                          const hasSelection = selectedItems.length > 0;
+                          const selectedItem = hasSelection ? selectedItems[0] : null;
+                          
+                          // Lógica de desabilitação baseada no status
+                          let isDisabled = !isNewButton && !hasSelection;
+                          
+                          if (hasSelection && selectedItem) {
+                            if (bulkAction.label === 'Receber' && selectedItem.status === 'pago') {
+                              isDisabled = true; // Não pode receber título já pago
+                            }
+                            if (bulkAction.label === 'Cancelar' && selectedItem.status === 'pago') {
+                              isDisabled = true; // Não pode cancelar título pago
+                            }
+                            if (bulkAction.label === 'Receber' && selectedItem.status === 'cancelado') {
+                              isDisabled = true; // Não pode receber título cancelado
+                            }
+                          }
                           
                           return (
                             <button

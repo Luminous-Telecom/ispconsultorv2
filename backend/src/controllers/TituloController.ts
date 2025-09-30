@@ -279,6 +279,23 @@ export class TituloController {
         return;
       }
 
+      // Validações de status
+      if (status === 'cancelado' && titulo.status === 'pago') {
+        res.status(400).json({
+          success: false,
+          message: 'Não é possível cancelar um título que já foi pago'
+        });
+        return;
+      }
+
+      if (status === 'pago' && titulo.status === 'cancelado') {
+        res.status(400).json({
+          success: false,
+          message: 'Não é possível marcar como pago um título cancelado'
+        });
+        return;
+      }
+
       // Verificar se está cancelando
       if (status === 'cancelado' && titulo.status !== 'cancelado') {
         // Cancelar na API do banco se tiver charge_id
@@ -550,6 +567,24 @@ export class TituloController {
         res.status(404).json({
           success: false,
           message: 'Título não encontrado'
+        });
+        return;
+      }
+
+      // Validação: não pode marcar como pago se já estiver cancelado
+      if (titulo.status === 'cancelado') {
+        res.status(400).json({
+          success: false,
+          message: 'Não é possível marcar como pago um título cancelado'
+        });
+        return;
+      }
+
+      // Validação: não pode marcar como pago se já estiver pago
+      if (titulo.status === 'pago') {
+        res.status(400).json({
+          success: false,
+          message: 'Este título já foi marcado como pago'
         });
         return;
       }
