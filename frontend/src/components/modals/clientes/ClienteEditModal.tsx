@@ -296,21 +296,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     },
     {
-      label: 'Imprimir',
-      action: async (selectedItems: any[]) => {
-        try {
-          for (const item of selectedItems) {
-            const url = TituloService.getBoletoUrl(Number(item.id));
-            window.open(url, '_blank');
-          }
-          showNotification('Documentos abertos para impressão', 'success');
-        } catch (error) {
-          console.error('Erro ao imprimir:', error);
-          showNotification('Erro ao abrir impressão', 'error');
-        }
-      }
-    },
-    {
       label: 'Estornar',
       action: async (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
@@ -482,6 +467,34 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         ...prev,
         [field]: undefined
       }));
+    }
+  };
+
+  const handleImprimirSelecionados = () => {
+    if (selectedItems.length > 0) {
+      selectedItems.forEach(item => {
+        const url = TituloService.getBoletoUrl(Number(item.id));
+        window.open(url, '_blank');
+      });
+      showNotification(`${selectedItems.length} boleto(s) aberto(s) para impressão`, 'success');
+    } else {
+      showNotification('Nenhum título selecionado', 'info');
+    }
+  };
+
+  const handleImprimirTodosEmAberto = () => {
+    const titulosEmAberto = parcelas.filter((p: any) => 
+      p.status === 'pendente' || p.status === 'vencido'
+    );
+    
+    if (titulosEmAberto.length > 0) {
+      titulosEmAberto.forEach((item: any) => {
+        const url = TituloService.getBoletoUrl(Number(item.id));
+        window.open(url, '_blank');
+      });
+      showNotification(`${titulosEmAberto.length} boleto(s) em aberto aberto(s) para impressão`, 'success');
+    } else {
+      showNotification('Não há títulos em aberto para imprimir', 'info');
     }
   };
 
@@ -1371,6 +1384,37 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       setPage={setPage}
                       emptyMessage="Este cliente ainda não possui títulos cadastrados."
                     />
+                  </div>
+
+                  {/* Botão Imprimir com Dropdown */}
+                  <div className="dropdown mt-2">
+                    <button 
+                      className="btn btn-primary dropdown-toggle" 
+                      type="button" 
+                      id="dropdownImprimirModal" 
+                      data-bs-toggle="dropdown" 
+                      aria-expanded="false"
+                    >
+                      Imprimir
+                    </button>
+                    <ul className="dropdown-menu" aria-labelledby="dropdownImprimirModal">
+                      <li>
+                        <button 
+                          className="dropdown-item" 
+                          onClick={handleImprimirSelecionados}
+                        >
+                          Imprimir Selecionados ({selectedItems.length})
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          className="dropdown-item" 
+                          onClick={handleImprimirTodosEmAberto}
+                        >
+                          Imprimir Todos em Aberto
+                        </button>
+                      </li>
+                    </ul>
                   </div>
 
                   {/* Resumo Financeiro */}

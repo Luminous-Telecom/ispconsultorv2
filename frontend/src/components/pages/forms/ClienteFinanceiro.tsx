@@ -23,6 +23,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const [showParcelaEditModal, setShowParcelaEditModal] = useState(false);
   const [selectedParcelaId, setSelectedParcelaId] = useState<number | null>(null);
   const [showParcelaCreateModal, setShowParcelaCreateModal] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const { addNotification } = useNotificationContext();
   const navigate = useNavigate();
 
@@ -91,10 +92,31 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     }
   };
 
-  const handleImprimirParcela = (selectedItems: any[]) => {
+  const handleImprimirSelecionados = () => {
     if (selectedItems.length > 0) {
-      const url = getApiUrl(`/boleto/web/${selectedItems[0].id}`);
-      window.open(url, '_blank');
+      selectedItems.forEach(item => {
+        const url = getApiUrl(`/boleto/web/${item.id}`);
+        window.open(url, '_blank');
+      });
+      showNotification(`${selectedItems.length} boleto(s) aberto(s) para impressão`, 'success');
+    } else {
+      showNotification('Nenhum título selecionado', 'info');
+    }
+  };
+
+  const handleImprimirTodosEmAberto = () => {
+    const titulosEmAberto = parcelas.filter((p: any) => 
+      p.status === 'pendente' || p.status === 'vencido'
+    );
+    
+    if (titulosEmAberto.length > 0) {
+      titulosEmAberto.forEach((item: any) => {
+        const url = getApiUrl(`/boleto/web/${item.id}`);
+        window.open(url, '_blank');
+      });
+      showNotification(`${titulosEmAberto.length} boleto(s) em aberto aberto(s) para impressão`, 'success');
+    } else {
+      showNotification('Não há títulos em aberto para imprimir', 'info');
     }
   };
 
@@ -216,17 +238,45 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     if (selectedItems.length === 0) return true;
                     return selectedItems.every(item => item.status !== 'pago');
                   }
-                },
-                {
-                  label: 'Imprimir',
-                  action: handleImprimirParcela
                 }
               ]}
               onSort={handleSortParcelas}
               sortColumn={sortColumnParcelas}
               sortDirection={sortDirectionParcelas}
               onRefresh={refetchParcelas}
+              onSelectionChange={setSelectedItems}
             />
+
+      {/* Botão Imprimir com Dropdown */}
+      <div className="dropdown mt-2">
+        <button 
+          className="btn btn-primary dropdown-toggle" 
+          type="button" 
+          id="dropdownImprimir" 
+          data-bs-toggle="dropdown" 
+          aria-expanded="false"
+        >
+          Imprimir
+        </button>
+        <ul className="dropdown-menu" aria-labelledby="dropdownImprimir">
+          <li>
+            <button 
+              className="dropdown-item" 
+              onClick={handleImprimirSelecionados}
+            >
+              Imprimir Selecionados ({selectedItems.length})
+            </button>
+          </li>
+          <li>
+            <button 
+              className="dropdown-item" 
+              onClick={handleImprimirTodosEmAberto}
+            >
+              Imprimir Todos em Aberto
+            </button>
+          </li>
+        </ul>
+      </div>
 
       {/* Modal de edição de parcela */}
       <TituloEditModal
