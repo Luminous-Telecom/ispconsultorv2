@@ -916,6 +916,11 @@ export class TituloController {
         }
       }
 
+      // Se for número único, transformar em array
+      if (typeof ids === 'number') {
+        ids = [ids];
+      }
+
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         res.status(400).json({
           success: false,
