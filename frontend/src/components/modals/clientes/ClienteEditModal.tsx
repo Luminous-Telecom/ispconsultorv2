@@ -32,17 +32,9 @@ interface ClienteForm {
   ativo: boolean;
   tipo_cobranca: 'titulo';
   valor_primeiro_titulo: 'total' | 'proporcional';
-  dia_vencimento: number;
-  conta_boleto: number;
-  isento_mensalidade: boolean;
   recebe_email: boolean;
   recebe_sms: boolean;
   recebe_whatsapp: boolean;
-  plano_id: number;
-  desconto_percentual: number;
-  desconto_valor: number;
-  data_validade_desconto: string;
-  data_inicio_plano: string;
   observacoes: string;
 }
 
@@ -84,17 +76,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     ativo: true,
     tipo_cobranca: 'titulo',
     valor_primeiro_titulo: 'total',
-    dia_vencimento: 10,
-    conta_boleto: 0,
-    isento_mensalidade: false,
     recebe_email: true,
     recebe_sms: false,
     recebe_whatsapp: true,
-    plano_id: 0,
-    desconto_percentual: 0,
-    desconto_valor: 0,
-    data_validade_desconto: '',
-    data_inicio_plano: '',
     observacoes: ''
   });
 
@@ -517,17 +501,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         ativo: cliente.ativo ?? true,
         tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
         valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
-        dia_vencimento: cliente.dia_vencimento || 10,
-        conta_boleto: cliente.conta_boleto || 0,
-        isento_mensalidade: cliente.isento_mensalidade ?? false,
         recebe_email: cliente.recebe_email ?? true,
         recebe_sms: cliente.recebe_sms ?? false,
         recebe_whatsapp: cliente.recebe_whatsapp ?? true,
-        plano_id: (cliente as any).planos?.[0]?.id || (cliente as any).plano_id || 0,
-        desconto_percentual: (cliente as any).desconto_percentual || 0,
-        desconto_valor: (cliente as any).desconto_valor || 0,
-        data_validade_desconto: (cliente as any).data_validade_desconto || '',
-        data_inicio_plano: (cliente as any).data_inicio_plano || '',
         observacoes: cliente.observacoes || ''
       });
     }
