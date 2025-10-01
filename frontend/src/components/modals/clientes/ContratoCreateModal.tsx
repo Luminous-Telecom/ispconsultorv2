@@ -258,6 +258,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 placeholder="0.00"
               />
             </div>
+          </div>
         </div>
 
         <div className="row">
