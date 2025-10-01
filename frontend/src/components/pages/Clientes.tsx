@@ -147,12 +147,15 @@ const Clientes: React.FC = () => {
       label: 'Razão Social',
       sortable: true,
       render: (cliente: Cliente) => (
-        <div>
-          <strong className="d-block">{cliente.razao_social}</strong>
-          {cliente.nome_fantasia && (
-            <small className="text-muted">{cliente.nome_fantasia}</small>
-          )}
-        </div>
+        <strong>{cliente.razao_social}</strong>
+      )
+    },
+    {
+      key: 'nome_fantasia',
+      label: 'Nome Fantasia',
+      sortable: true,
+      render: (cliente: Cliente) => (
+        <span className="text-muted">{cliente.nome_fantasia || '-'}</span>
       )
     },
     {
