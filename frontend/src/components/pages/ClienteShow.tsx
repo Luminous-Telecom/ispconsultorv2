@@ -284,6 +284,18 @@ const ClienteShow: React.FC = () => {
               Pago
             </span>
           );
+        } else if (titulo.status === 'pago_atraso') {
+          return (
+            <span className="badge bg-warning">
+              Pago com Atraso
+            </span>
+          );
+        } else if (titulo.status === 'parcial') {
+          return (
+            <span className="badge bg-info">
+              Parcial
+            </span>
+          );
         } else if (titulo.status === 'cancelado') {
           return (
             <span className="badge bg-danger">
@@ -292,7 +304,7 @@ const ClienteShow: React.FC = () => {
           );
         } else if (titulo.status === 'vencido') {
           return (
-            <span className="badge bg-warning">
+            <span className="badge bg-danger">
               Vencido
             </span>
           );
