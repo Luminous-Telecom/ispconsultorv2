@@ -884,8 +884,12 @@ export class TituloController {
           <meta charset="UTF-8">
           <title>Boletos - ${titulos.length} título(s)</title>
           <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+            body { background: #fff; }
             @media print {
               .page-break { page-break-after: always; }
+              body { margin: 0; padding: 0; }
             }
           </style>
         </head>
