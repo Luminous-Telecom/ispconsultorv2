@@ -1589,7 +1589,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
       {/* Modal de impressão de boletos */}
       <ImpressaoBoletosModal
-        isOpen={showImpressaoModal}
+        show={showImpressaoModal}
         onClose={() => setShowImpressaoModal(false)}
         ids={idsParaImprimir}
       />

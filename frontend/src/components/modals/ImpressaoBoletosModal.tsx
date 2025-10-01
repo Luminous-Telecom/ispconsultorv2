@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import DraggableModal from '../common/DraggableModal';
 
 interface ImpressaoBoletosModalProps {
-  isOpen: boolean;
+  show: boolean;
   onClose: () => void;
   ids: number[];
 }
 
 const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({ 
-  isOpen, 
+  show, 
   onClose, 
   ids 
 }) => {
@@ -15,10 +16,10 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (isOpen && ids.length > 0) {
+    if (show && ids.length > 0) {
       carregarBoletos();
     }
-  }, [isOpen, ids]);
+  }, [show, ids]);
 
   const carregarBoletos = async () => {
     setLoading(true);
@@ -48,65 +49,52 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div 
-      className="modal fade show" 
-      style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
-      tabIndex={-1}
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title={`Impressão de Boletos (${ids.length})`}
+      size="fullscreen"
     >
-      <div className="modal-dialog modal-fullscreen">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Impressão de Boletos ({ids.length})</h5>
-            <button 
-              type="button" 
-              className="btn-close" 
-              onClick={onClose}
-              aria-label="Close"
-            ></button>
+      <div style={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+        {loading ? (
+          <div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
+            <div className="spinner-border" role="status">
+              <span className="visually-hidden">Carregando...</span>
+            </div>
           </div>
-          <div className="modal-body" style={{ padding: 0, height: 'calc(100vh - 120px)' }}>
-            {loading ? (
-              <div className="d-flex justify-content-center align-items-center" style={{ height: '100%' }}>
-                <div className="spinner-border" role="status">
-                  <span className="visually-hidden">Carregando...</span>
-                </div>
-              </div>
-            ) : (
-              <iframe
-                id="iframe-boletos"
-                srcDoc={htmlContent}
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  border: 'none' 
-                }}
-                title="Boletos"
-              />
-            )}
-          </div>
-          <div className="modal-footer">
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              onClick={onClose}
-            >
-              Fechar
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-primary" 
-              onClick={handleImprimir} 
-              disabled={loading}
-            >
-              Imprimir
-            </button>
-          </div>
+        ) : (
+          <iframe
+            id="iframe-boletos"
+            srcDoc={htmlContent}
+            style={{ 
+              width: '100%', 
+              flex: 1,
+              border: 'none' 
+            }}
+            title="Boletos"
+          />
+        )}
+        
+        <div className="d-flex justify-content-end gap-2 mt-3 p-3 border-top">
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={onClose}
+          >
+            Fechar
+          </button>
+          <button 
+            type="button" 
+            className="btn btn-primary" 
+            onClick={handleImprimir} 
+            disabled={loading}
+          >
+            Imprimir
+          </button>
         </div>
       </div>
-    </div>
+    </DraggableModal>
   );
 };
 

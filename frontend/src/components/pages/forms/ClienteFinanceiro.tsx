@@ -277,7 +277,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 
       {/* Modal de impressão de boletos */}
       <ImpressaoBoletosModal
-        isOpen={showImpressaoModal}
+        show={showImpressaoModal}
         onClose={() => setShowImpressaoModal(false)}
         ids={idsParaImprimir}
       />
