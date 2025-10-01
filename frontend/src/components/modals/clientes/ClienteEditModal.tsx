@@ -1060,8 +1060,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   <div className="mb-3">
                     <label className="form-label">Vencimento</label>
-                    <div className="form-control-plaintext text-muted">
-                      Dia {formData.dia_vencimento} de cada mês
+                    <div className="form-control-plaintext">
+                      <span className="text-muted">
+                        Dia <strong>{formData.dia_vencimento || '-'}</strong> de cada mês
+                      </span>
                     </div>
                   </div>
 
