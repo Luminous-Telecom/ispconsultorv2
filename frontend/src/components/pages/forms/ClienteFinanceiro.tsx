@@ -207,11 +207,32 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                   disabled: (selectedItems) => selectedItems.every(item => item.status === 'pago')
                 },
                 {
+                  label: 'Consultar Recebimento',
+                  action: async (selectedItems) => {
+                    if (selectedItems.length > 0) {
+                      const item = selectedItems[0];
+                      if (!item.charge_id) {
+                        showNotification('Título não possui charge_id (não foi registrado no banco)', 'warning');
+                        return;
+                      }
+
+                      try {
+                        const resultado = await TituloService.consultarRecebimento(item.id);
+                        showNotification(resultado.message, 'success');
+                        refetchParcelas();
+                      } catch (err: any) {
+                        showNotification(err.message || 'Erro ao consultar recebimento.', 'error');
+                      }
+                    }
+                  },
+                  disabled: (selectedItems) => selectedItems.length !== 1 || !selectedItems[0].charge_id
+                },
+                {
                   label: 'Estornar',
                   action: async (selectedItems) => {
                     if (selectedItems.length > 0) {
                       const item = selectedItems[0];
-                      if (item.status === 'pago') {
+                      if (item.status === 'pago' || item.status === 'pago_atraso') {
                         const confirmar = window.confirm(
                           `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
                           `Valor: R$ ${item.valor_pago || item.valor}\n` +
@@ -234,7 +255,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                   },
                   disabled: (selectedItems) => {
                     if (selectedItems.length === 0) return true;
-                    return selectedItems.every(item => item.status !== 'pago');
+                    return selectedItems.every(item => item.status !== 'pago' && item.status !== 'pago_atraso');
                   }
                 },
                 {

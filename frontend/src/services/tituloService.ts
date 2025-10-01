@@ -168,6 +168,19 @@ export class TituloService {
     }
   }
 
+  // Consultar recebimento na API do banco
+  static async consultarRecebimento(id: number): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      const response = await apiService.post<{ success: boolean; message: string; data?: any }>(
+        `${API_ENDPOINTS.TITULOS}/${id}/consultar-recebimento`
+      );
+      return response;
+    } catch (error) {
+      console.error('Erro ao consultar recebimento:', error);
+      throw error;
+    }
+  }
+
   // Visualizar boleto na web
   static getBoletoUrl(id: number): string {
     return `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/${id}`;

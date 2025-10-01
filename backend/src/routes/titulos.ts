@@ -30,6 +30,9 @@ router.post('/:id/desmarcar-pago', TituloController.desmarcarPago);
 // Estornar título
 router.post('/:id/estornar', TituloController.estornar);
 
+// Consultar recebimento na API do banco
+router.post('/:id/consultar-recebimento', TituloController.consultarRecebimento);
+
 // Estatísticas
 router.get('/stats/geral', TituloController.getStats);
 

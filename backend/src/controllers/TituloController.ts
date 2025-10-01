@@ -996,6 +996,88 @@ export class TituloController {
   }
 
   // Estornar título (volta para pendente)
+  // Consultar recebimento na API do banco
+  static async consultarRecebimento(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const titulo = await Titulo.findByPk(id, {
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { model: Banco, as: 'banco' }
+        ]
+      });
+
+      if (!titulo) {
+        res.status(404).json({
+          success: false,
+          message: 'Título não encontrado'
+        });
+        return;
+      }
+
+      if (!titulo.charge_id) {
+        res.status(400).json({
+          success: false,
+          message: 'Título não possui charge_id (não foi registrado no banco)'
+        });
+        return;
+      }
+
+      // Consultar status na API do banco
+      const resultado = await BancoApiService.consultarStatus(titulo);
+
+      if (resultado.success && resultado.data) {
+        // Verificar se foi pago
+        const statusPago = resultado.data.status === 'paid' || resultado.data.status === 'settled';
+        
+        if (statusPago) {
+          const valorPago = resultado.data.valor_pago || titulo.valor;
+          const dataPagamento = resultado.data.data_pagamento 
+            ? new Date(resultado.data.data_pagamento) 
+            : new Date();
+
+          // Marcar como pago (lógica automática de parcial/atraso)
+          await titulo.marcarComoPago(Number(valorPago), dataPagamento);
+
+          res.json({
+            success: true,
+            message: 'Título atualizado com sucesso',
+            data: {
+              titulo_id: titulo.id,
+              status_anterior: titulo.status,
+              status_novo: titulo.status,
+              valor_pago: valorPago,
+              data_pagamento: dataPagamento
+            }
+          });
+        } else {
+          res.json({
+            success: true,
+            message: 'Título consultado - sem alterações (ainda não foi pago)',
+            data: {
+              titulo_id: titulo.id,
+              status: titulo.status,
+              status_banco: resultado.data.status
+            }
+          });
+        }
+      } else {
+        res.status(400).json({
+          success: false,
+          message: resultado.message || 'Erro ao consultar status no banco'
+        });
+      }
+    } catch (error: any) {
+      logger.error('Erro ao consultar recebimento', { error: error.message });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
   static async estornar(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
