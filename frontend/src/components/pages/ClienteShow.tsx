@@ -215,20 +215,43 @@ const ClienteShow: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (carne: any) => {
-        const getStatusClass = (status: string) => {
-          const statusClasses: Record<string, string> = {
-            'ativo': 'bg-primary',
-            'pago': 'bg-success',
-            'cancelado': 'bg-danger',
-            'parcial': 'bg-warning',
-            'pendente': 'bg-secondary'
-          };
-          return statusClasses[status] || 'bg-secondary';
+        const getStatusBadgeStyle = (status: string) => {
+          switch (status) {
+            case 'pago': 
+              return { backgroundColor: '#28a745', color: 'white' };
+            case 'pago_atraso': 
+              return { backgroundColor: '#ff8c00', color: 'white' };
+            case 'pendente': 
+              return { backgroundColor: '#87ceeb', color: '#333333' };
+            case 'vencido': 
+              return { backgroundColor: '#dc3545', color: 'white' };
+            case 'cancelado': 
+              return { backgroundColor: '#6c757d', color: 'white' };
+            case 'parcial': 
+              return { backgroundColor: '#17a2b8', color: 'white' };
+            case 'ativo': 
+              return { backgroundColor: '#007bff', color: 'white' };
+            default: 
+              return { backgroundColor: '#6c757d', color: 'white' };
+          }
+        };
+
+        const getStatusLabel = (status: string) => {
+          switch (status) {
+            case 'pago': return '✔ Recebimento em dia';
+            case 'pago_atraso': return '✔ Pago com Atraso';
+            case 'pendente': return 'Pendente';
+            case 'vencido': return 'Vencido';
+            case 'cancelado': return 'Cancelado';
+            case 'parcial': return 'Parcial';
+            case 'ativo': return 'Ativo';
+            default: return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Desconhecido';
+          }
         };
         
         return (
-          <span className={`badge ${getStatusClass(carne.status)}`}>
-            {carne.status?.charAt(0).toUpperCase() + carne.status?.slice(1) || 'Desconhecido'}
+          <span className="badge" style={getStatusBadgeStyle(carne.status)}>
+            {getStatusLabel(carne.status)}
           </span>
         );
       }
