@@ -12,6 +12,8 @@ import ModalHeaderActions from '../../common/ModalHeaderActions';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
+import { useContratos } from '../../../hooks/useContratos';
+import ContratoCreateModal from './ContratoCreateModal';
 
 interface ClienteForm {
   cnpj: string;
@@ -102,6 +104,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
+  const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
@@ -139,6 +142,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     queryKey: ['bancos'],
     queryFn: () => BancoService.list({ page: 1, limit: 100 }),
   });
+
+  // Buscar contratos do cliente
+  const { data: contratosData } = useContratos(cliente?.id);
 
   // Buscar parcelas do cliente (dados reais do banco)
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
@@ -965,181 +971,85 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             {/* Aba Contratos */}
             {activeTab === 'contratos' && (
               <div className="row">
-                <div className="col-md-6">
-                  <h6 className="text-primary mb-3">Plano Atual</h6>
-                  
-                  <div className="mb-3">
-                    <label htmlFor="plano_id" className="form-label">Plano</label>
-                    <select
-                      className="form-select"
-                      id="plano_id"
-                      value={formData.plano_id}
-                      onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
+                <div className="col-12">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="text-primary mb-0">Contratos do Cliente</h6>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={() => setShowContratoCreateModal(true)}
                     >
-                      <option value={0}>Selecione um plano</option>
-                      {planosData?.data?.map((plano: any) => (
-                        <option key={plano.id} value={plano.id}>
-                          {plano.nome} - R$ {Number(plano.valor_mensal || 0).toFixed(2)}
-                        </option>
-                      ))}
-                    </select>
+                      Novo Contrato
+                    </button>
                   </div>
 
-                  <div className="mb-3">
-                    <label htmlFor="data_inicio_plano" className="form-label">Data de Início do Plano</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      id="data_inicio_plano"
-                      value={formData.data_inicio_plano}
-                      onChange={(e) => handleInputChange('data_inicio_plano', e.target.value)}
-                    />
-                  </div>
-
-                  <h6 className="text-primary mb-3">Configurações Gerais</h6>
-                  
-                  <div className="mb-3">
-                    <label htmlFor="valor_primeiro_titulo" className="form-label">Valor do Primeiro Título</label>
-                    <select
-                      className="form-select"
-                      id="valor_primeiro_titulo"
-                      value={formData.valor_primeiro_titulo}
-                      onChange={(e) => handleInputChange('valor_primeiro_titulo', e.target.value as 'total' | 'proporcional')}
-                    >
-                      <option value="total">Valor Total</option>
-                      <option value="proporcional">Valor Proporcional</option>
-                    </select>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="isento_mensalidade"
-                        checked={formData.isento_mensalidade}
-                        onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="isento_mensalidade">
-                        Isento de Mensalidade
-                      </label>
+                  {contratosData?.data && contratosData.data.length > 0 ? (
+                    <div className="table-responsive">
+                      <table className="table table-sm table-hover">
+                        <thead className="table-light">
+                          <tr>
+                            <th>ID</th>
+                            <th>Plano</th>
+                            <th>Status</th>
+                            <th>Desconto %</th>
+                            <th>Desconto R$</th>
+                            <th>Valor Final</th>
+                            <th>Data Início</th>
+                            <th>Data Fim</th>
+                            <th>Isento</th>
+                            <th>Dia Venc.</th>
+                            <th>Banco</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {contratosData.data.map((contrato: any) => (
+                            <tr key={contrato.id}>
+                              <td>{contrato.id}</td>
+                              <td>
+                                <div>
+                                  <strong>{contrato.plano?.nome_plano}</strong>
+                                  <div className="text-muted small">R$ {contrato.plano?.valor_mensal}</div>
+                                </div>
+                              </td>
+                              <td>
+                                <span className={`badge ${
+                                  contrato.status === 'ativo' ? 'bg-success' :
+                                  contrato.status === 'inativo' ? 'bg-danger' :
+                                  'bg-warning'
+                                }`}>
+                                  {contrato.status}
+                                </span>
+                              </td>
+                              <td>{contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'}</td>
+                              <td>{contrato.desconto_valor ? `R$ ${contrato.desconto_valor}` : '-'}</td>
+                              <td>{contrato.valor_final ? `R$ ${contrato.valor_final}` : '-'}</td>
+                              <td>{contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'}</td>
+                              <td>{contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'}</td>
+                              <td>
+                                <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
+                                  {contrato.isento_mensalidade ? 'Sim' : 'Não'}
+                                </span>
+                              </td>
+                              <td>{contrato.dia_vencimento ? `Dia ${contrato.dia_vencimento}` : '-'}</td>
+                              <td>{contrato.bancoBoleto?.nome || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  </div>
-
-                  <h6 className="text-primary mb-3">Configurações de Cobrança</h6>
-
-                  <div className="mb-3">
-                    <label htmlFor="dia_vencimento" className="form-label">Dia de Vencimento</label>
-                    <select
-                      className="form-select"
-                      id="dia_vencimento"
-                      value={formData.dia_vencimento}
-                      onChange={(e) => handleInputChange('dia_vencimento', parseInt(e.target.value))}
-                    >
-                      {Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
-                        <option key={day} value={day}>{day}º dia</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="conta_boleto" className="form-label">Conta para Boleto</label>
-                    <select
-                      className="form-select"
-                      id="conta_boleto"
-                      value={formData.conta_boleto}
-                      onChange={(e) => handleInputChange('conta_boleto', parseInt(e.target.value))}
-                    >
-                      <option value={0}>Selecione um banco</option>
-                      {bancosData?.data?.map((banco: any) => (
-                        <option key={banco.id} value={banco.id}>
-                          {banco.nome}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <h6 className="text-primary mb-3">Informações do Contrato</h6>
-                  
-                  <div className="mb-3">
-                    <label className="form-label">Status do Contrato</label>
-                    <div className="form-control-plaintext">
-                      <span className={`badge ${formData.ativo ? 'bg-success' : 'bg-secondary'}`}>
-                        {formData.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Vencimento</label>
-                    <div className="form-control-plaintext">
-                      <span className="text-muted">
-                        Dia <strong>{formData.dia_vencimento || '-'}</strong> de cada mês
-                      </span>
-                    </div>
-                  </div>
-
-                  <h6 className="text-primary mb-3">Descontos</h6>
-                  
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="isento_mensalidade"
-                        checked={formData.isento_mensalidade}
-                        onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="isento_mensalidade">
-                        Isento de Mensalidade
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="desconto_percentual" className="form-label">Desconto (%)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="desconto_percentual"
-                          value={formData.desconto_percentual}
-                          onChange={(e) => handleInputChange('desconto_percentual', parseFloat(e.target.value) || 0)}
-                          min="0"
-                          max="100"
-                          step="0.01"
-                        />
+                  ) : (
+                    <div className="text-center py-4">
+                      <div className="text-muted">
+                        <i className="bi bi-file-earmark-text fs-1"></i>
+                        <p className="mt-2">Nenhum contrato encontrado para este cliente</p>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => setShowContratoCreateModal(true)}
+                        >
+                          Criar Primeiro Contrato
+                        </button>
                       </div>
                     </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="desconto_valor" className="form-label">Desconto (R$)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="desconto_valor"
-                          value={formData.desconto_valor}
-                          onChange={(e) => handleInputChange('desconto_valor', parseFloat(e.target.value) || 0)}
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="data_validade_desconto" className="form-label">Validade do Desconto</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      id="data_validade_desconto"
-                      value={formData.data_validade_desconto}
-                      onChange={(e) => handleInputChange('data_validade_desconto', e.target.value)}
-                    />
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1545,6 +1455,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           setShowReceberModal(false);
           setSelectedParcela(null);
           refetchParcelas();
+        }}
+      />
+
+      {/* Modal de criação de contrato */}
+      <ContratoCreateModal
+        show={showContratoCreateModal}
+        clienteId={cliente?.id}
+        onClose={() => setShowContratoCreateModal(false)}
+        onSuccess={() => {
+          setShowContratoCreateModal(false);
+          // Refetch contratos
         }}
       />
 
