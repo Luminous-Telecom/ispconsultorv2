@@ -239,6 +239,36 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const paginatedData = getPaginatedData();
 
+  // Funções de impressão
+  const handleImprimirSelecionados = () => {
+    if (selectedItems.length > 0) {
+      selectedItems.forEach(item => {
+        const url = TituloService.getBoletoUrl(Number(item.id));
+        window.open(url, '_blank');
+      });
+      showNotification(`${selectedItems.length} boleto(s) aberto(s) para impressão`, 'success');
+    } else {
+      showNotification('Nenhum título selecionado', 'info');
+    }
+  };
+
+  const handleImprimirTodosEmAberto = () => {
+    const allTitulos = parcelasData?.data || [];
+    const titulosEmAberto = allTitulos.filter((p: any) => 
+      p.status === 'pendente' || p.status === 'vencido'
+    );
+    
+    if (titulosEmAberto.length > 0) {
+      titulosEmAberto.forEach((item: any) => {
+        const url = TituloService.getBoletoUrl(Number(item.id));
+        window.open(url, '_blank');
+      });
+      showNotification(`${titulosEmAberto.length} boleto(s) em aberto aberto(s) para impressão`, 'success');
+    } else {
+      showNotification('Não há títulos em aberto para imprimir', 'info');
+    }
+  };
+
   // Ações para o header do modal (apenas na aba Financeiro)
   const bulkActions: Array<{
     label: string;
@@ -484,35 +514,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         ...prev,
         [field]: undefined
       }));
-    }
-  };
-
-  const handleImprimirSelecionados = () => {
-    if (selectedItems.length > 0) {
-      selectedItems.forEach(item => {
-        const url = TituloService.getBoletoUrl(Number(item.id));
-        window.open(url, '_blank');
-      });
-      showNotification(`${selectedItems.length} boleto(s) aberto(s) para impressão`, 'success');
-    } else {
-      showNotification('Nenhum título selecionado', 'info');
-    }
-  };
-
-  const handleImprimirTodosEmAberto = () => {
-    const allTitulos = parcelasData?.data || [];
-    const titulosEmAberto = allTitulos.filter((p: any) => 
-      p.status === 'pendente' || p.status === 'vencido'
-    );
-    
-    if (titulosEmAberto.length > 0) {
-      titulosEmAberto.forEach((item: any) => {
-        const url = TituloService.getBoletoUrl(Number(item.id));
-        window.open(url, '_blank');
-      });
-      showNotification(`${titulosEmAberto.length} boleto(s) em aberto aberto(s) para impressão`, 'success');
-    } else {
-      showNotification('Não há títulos em aberto para imprimir', 'info');
     }
   };
 
@@ -1226,22 +1227,53 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           }
                           
                           return (
-                            <button
-                              key={index}
-                              className="btn btn-sm btn-primary"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (!isDisabled) {
-                                  bulkAction.action(selectedItems);
-                                }
-                              }}
-                              onMouseDown={(e) => e.stopPropagation()}
-                              disabled={isDisabled}
-                              style={{ flexShrink: 0 }}
-                            >
-                              {bulkAction.label}
-                            </button>
+                            {bulkAction.dropdown ? (
+                              <div key={index} className="dropdown" style={{ flexShrink: 0 }}>
+                                <button
+                                  className="btn btn-sm btn-primary dropdown-toggle"
+                                  type="button"
+                                  id={`dropdown-modal-${index}`}
+                                  data-bs-toggle="dropdown"
+                                  aria-expanded="false"
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                >
+                                  {bulkAction.label}
+                                </button>
+                                <ul className="dropdown-menu" aria-labelledby={`dropdown-modal-${index}`}>
+                                  {bulkAction.dropdown.map((item, itemIndex) => (
+                                    <li key={itemIndex}>
+                                      <button
+                                        className="dropdown-item"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          item.action();
+                                        }}
+                                      >
+                                        {item.label}
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ) : (
+                              <button
+                                key={index}
+                                className="btn btn-sm btn-primary"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (!isDisabled && bulkAction.action) {
+                                    bulkAction.action(selectedItems);
+                                  }
+                                }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                disabled={isDisabled}
+                                style={{ flexShrink: 0 }}
+                              >
+                                {bulkAction.label}
+                              </button>
+                            )}
                           );
                         })}
                       </div>
