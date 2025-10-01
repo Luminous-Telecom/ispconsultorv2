@@ -783,7 +783,7 @@ export class TituloController {
     }
   }
 
-  // Imprimir múltiplos boletos em PDF (redireciona para PDFs do banco)
+  // Imprimir múltiplos boletos em PDF
   static async imprimirPDFMultiplos(req: Request, res: Response): Promise<void> {
     try {
       // Aceitar ids de GET (query)
@@ -824,19 +824,68 @@ export class TituloController {
         return;
       }
 
-      // Se for apenas um título, redireciona para o PDF do banco
-      if (titulos.length === 1) {
-        const titulo: any = titulos[0];
-        if (titulo.pdf_url) {
-          res.redirect(titulo.pdf_url);
-          return;
-        }
+      // Gerar HTML de todos os boletos
+      const boletosHtml: string[] = [];
+      
+      for (const titulo of titulos) {
+        const boletoHtml = await TituloController.processarBoletoHtml(titulo);
+        boletosHtml.push(`
+          <div style="page-break-after: always;">
+            ${boletoHtml}
+          </div>
+        `);
       }
 
-      // Para múltiplos títulos, por enquanto usa HTML
-      // TODO: Implementar merge de PDFs ou usar biblioteca de geração de PDF
-      const idsParam = titulos.map(t => t.id).join(',');
-      res.redirect(`/boleto/web/multiplos?ids=${idsParam}`);
+      // Template HTML completo
+      const htmlCompleto = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Boletos - ${titulos.length} título(s)</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+            body { background: #fff; }
+            @media print {
+              .page-break { page-break-after: always; }
+              body { margin: 0; padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          ${boletosHtml.join('\n')}
+        </body>
+        </html>
+      `;
+
+      // Gerar PDF usando Puppeteer
+      const puppeteer = await import('puppeteer');
+      const browser = await puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      await page.setContent(htmlCompleto, { waitUntil: 'networkidle0' });
+      
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '0mm',
+          right: '0mm',
+          bottom: '0mm',
+          left: '0mm'
+        }
+      });
+      
+      await browser.close();
+
+      // Enviar PDF
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="boletos-${ids.join('-')}.pdf"`);
+      res.send(pdfBuffer);
     } catch (error: any) {
       logger.error('Erro ao imprimir PDFs múltiplos', { error: error.message });
       res.status(500).json({
