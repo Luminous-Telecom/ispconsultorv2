@@ -7,6 +7,7 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { getApiUrl } from '../../../config/api';
 import { TituloEditModal, TituloCreateModal } from '../../modals/titulos';
 import { TituloService } from '../../../services/tituloService';
+import ImpressaoBoletosModal from '../../modals/ImpressaoBoletosModal';
 
 interface ClienteFinanceiroProps {
   cliente: any;
@@ -24,6 +25,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const [selectedParcelaId, setSelectedParcelaId] = useState<number | null>(null);
   const [showParcelaCreateModal, setShowParcelaCreateModal] = useState(false);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [showImpressaoModal, setShowImpressaoModal] = useState(false);
+  const [idsParaImprimir, setIdsParaImprimir] = useState<number[]>([]);
   const { addNotification } = useNotificationContext();
   const navigate = useNavigate();
 
@@ -95,24 +98,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const handleImprimirSelecionados = () => {
     if (selectedItems.length > 0) {
       const ids = selectedItems.map(item => item.id);
-      
-      // Criar formulário para enviar via POST
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = getApiUrl('/boleto/web/multiplos');
-      form.target = '_blank';
-      
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'ids';
-      input.value = JSON.stringify(ids);
-      
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-      
-      showNotification(`${selectedItems.length} boleto(s) aberto(s) para impressão`, 'success');
+      setIdsParaImprimir(ids);
+      setShowImpressaoModal(true);
     } else {
       showNotification('Nenhum título selecionado', 'info');
     }
@@ -125,24 +112,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     
     if (titulosEmAberto.length > 0) {
       const ids = titulosEmAberto.map((item: any) => item.id);
-      
-      // Criar formulário para enviar via POST
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = getApiUrl('/boleto/web/multiplos');
-      form.target = '_blank';
-      
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'ids';
-      input.value = JSON.stringify(ids);
-      
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-      
-      showNotification(`${titulosEmAberto.length} boleto(s) em aberto abertos para impressão`, 'success');
+      setIdsParaImprimir(ids);
+      setShowImpressaoModal(true);
     } else {
       showNotification('Não há títulos em aberto para imprimir', 'info');
     }
@@ -302,6 +273,13 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         onClose={handleCloseParcelaCreateModal}
         onSuccess={handleParcelaCreateSuccess}
         clienteId={cliente.id}
+      />
+
+      {/* Modal de impressão de boletos */}
+      <ImpressaoBoletosModal
+        isOpen={showImpressaoModal}
+        onClose={() => setShowImpressaoModal(false)}
+        ids={idsParaImprimir}
       />
 
     </div>
