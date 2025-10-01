@@ -561,14 +561,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       ativo: formData.ativo,
       tipo_cobranca: formData.tipo_cobranca,
       valor_primeiro_titulo: formData.valor_primeiro_titulo,
-      dia_vencimento: Number(formData.dia_vencimento),
-      conta_boleto: Number(formData.conta_boleto),
-      isento_mensalidade: formData.isento_mensalidade,
       recebe_email: formData.recebe_email,
       recebe_sms: formData.recebe_sms,
       recebe_whatsapp: formData.recebe_whatsapp,
-      observacoes: formData.observacoes,
-      data_validade_desconto: formData.data_validade_desconto || null
+      observacoes: formData.observacoes
     };
 
     // Remover apenas campos undefined (permitir null, string vazia e 0)
