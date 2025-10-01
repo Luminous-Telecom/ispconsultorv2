@@ -574,10 +574,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       observacoes: formData.observacoes
     };
 
-    // Remover apenas campos realmente vazios (não remover 0 ou false)
+    // Remover apenas campos null ou undefined (permitir string vazia e 0)
     Object.keys(dataToSend).forEach(key => {
       const value = dataToSend[key];
-      if (value === '' || value === null || value === undefined) {
+      if (value === null || value === undefined) {
         delete dataToSend[key];
       }
     });
