@@ -95,7 +95,7 @@ export class ContratoController {
   // Criar novo contrato
   static async create(req: Request, res: Response): Promise<void> {
     try {
-      const { error, value } = this.createSchema.validate(req.body);
+      const { error, value } = ContratoController.createSchema.validate(req.body);
       
       if (error) {
         res.status(400).json({
@@ -158,7 +158,7 @@ export class ContratoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { error, value } = this.updateSchema.validate(req.body);
+      const { error, value } = ContratoController.updateSchema.validate(req.body);
       
       if (error) {
         res.status(400).json({
