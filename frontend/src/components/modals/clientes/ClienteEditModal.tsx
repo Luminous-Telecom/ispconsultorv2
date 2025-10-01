@@ -982,7 +982,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </button>
                   </div>
 
-                  {contratosData?.data && contratosData.data.length > 0 ? (
+                  {contratosData && contratosData.length > 0 ? (
                     <div className="table-responsive">
                       <table className="table table-sm table-hover">
                         <thead className="table-light">
@@ -1001,7 +1001,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {contratosData.data.map((contrato: any) => (
+                          {contratosData.map((contrato: any) => (
                             <tr key={contrato.id}>
                               <td>{contrato.id}</td>
                               <td>
