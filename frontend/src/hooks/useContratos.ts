@@ -62,7 +62,7 @@ export const useUpdateContrato = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, ...data }: UpdateContratoData) => ContratoService.update(id, data),
+    mutationFn: (data: UpdateContratoData) => ContratoService.update(data.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
     },
