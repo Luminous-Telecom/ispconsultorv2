@@ -109,10 +109,7 @@ export class ClienteController {
         include: [
           { association: 'planos', attributes: ['id', 'nome_plano', 'valor_mensal', 'status'] },
           { association: 'titulos', attributes: ['id', 'numero_titulo', 'status', 'valor'] },
-          { 
-            association: 'bancoBoleto', 
-            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao'] 
-          }
+          { association: 'contratos' }
         ],
         order: [['razao_social', 'ASC']],
         limit,
@@ -163,10 +160,6 @@ export class ClienteController {
                 attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao'] 
               }
             ]
-          },
-          { 
-            association: 'bancoBoleto',
-            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
           },
           { association: 'contratos' }
         ]
@@ -231,10 +224,6 @@ export class ClienteController {
         include: [
           { association: 'planos' },
           { association: 'titulos' },
-          { 
-            association: 'bancoBoleto',
-            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
-          }
         ]
       });
 
@@ -314,10 +303,6 @@ export class ClienteController {
         include: [
           { association: 'planos' },
           { association: 'titulos' },
-          { 
-            association: 'bancoBoleto',
-            attributes: ['id', 'nome', 'tipo_banco', 'client_id_producao', 'client_secret_producao']
-          }
         ]
       });
 
