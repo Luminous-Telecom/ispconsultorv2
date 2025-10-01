@@ -32,17 +32,9 @@ export class ClienteController {
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean().default(true),
     valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
-    isento_mensalidade: Joi.boolean().default(false),
     recebe_email: Joi.boolean().default(true),
     recebe_sms: Joi.boolean().default(false),
-    recebe_whatsapp: Joi.boolean().default(false),
-    dia_vencimento: Joi.number().min(1).max(31).allow(null),
-    conta_boleto: Joi.number().integer().min(1).required(),
-    data_validade_desconto: Joi.date().allow(null),
-    plano_id: Joi.number().integer().min(1).allow(null),
-    desconto_percentual: Joi.number().min(0).max(100).allow(null),
-    desconto_valor: Joi.number().min(0).allow(null),
-    data_inicio_plano: Joi.date().allow(null)
+    recebe_whatsapp: Joi.boolean().default(false)
   });
 
   // Schema de validação para atualização
@@ -71,17 +63,9 @@ export class ClienteController {
     ativo: Joi.boolean(),
     tipo_cobranca: Joi.string().valid('titulo', 'carne').allow(null),
     valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
-    isento_mensalidade: Joi.boolean(),
     recebe_email: Joi.boolean(),
     recebe_sms: Joi.boolean(),
-    recebe_whatsapp: Joi.boolean(),
-    dia_vencimento: Joi.number().min(1).max(31).allow(null),
-    conta_boleto: Joi.number().integer().min(1).required(),
-    data_validade_desconto: Joi.date().allow(null),
-    plano_id: Joi.number().integer().min(1).allow(null),
-    desconto_percentual: Joi.number().min(0).max(100).allow(null),
-    desconto_valor: Joi.number().min(0).allow(null),
-    data_inicio_plano: Joi.date().allow(null)
+    recebe_whatsapp: Joi.boolean()
   });
 
   // Listar todos os clientes

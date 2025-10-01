@@ -11,6 +11,7 @@ import {
 import { sequelize } from '../config/database';
 import { Cliente } from './Cliente';
 import { Plano } from './Plano';
+import { Banco } from './Banco';
 
 export class ClientePlano extends Model<
   InferAttributes<ClientePlano>,
@@ -26,6 +27,10 @@ export class ClientePlano extends Model<
   declare data_fim: Date | null;
   declare status: 'ativo' | 'inativo' | 'suspenso';
   declare observacoes: string | null;
+  declare isento_mensalidade: boolean;
+  declare dia_vencimento: number | null;
+  declare conta_boleto: number | null;
+  declare data_validade_desconto: Date | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -37,6 +42,10 @@ export class ClientePlano extends Model<
   declare getPlano: BelongsToGetAssociationMixin<Plano>;
   declare setPlano: BelongsToSetAssociationMixin<Plano, number>;
   declare createPlano: BelongsToCreateAssociationMixin<Plano>;
+
+  declare getBancoBoleto: BelongsToGetAssociationMixin<Banco>;
+  declare setBancoBoleto: BelongsToSetAssociationMixin<Banco, number>;
+  declare createBancoBoleto: BelongsToCreateAssociationMixin<Banco>;
 
   // Métodos de instância
   static async findAtivos(): Promise<ClientePlano[]> {
@@ -154,6 +163,35 @@ ClientePlano.init(
     observacoes: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    isento_mensalidade: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'Se o cliente está isento de mensalidade'
+    },
+    dia_vencimento: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'Dia do mês para vencimento da mensalidade',
+      validate: {
+        min: 1,
+        max: 31
+      }
+    },
+    conta_boleto: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'ID do banco para geração de boleto',
+      references: {
+        model: 'bancos',
+        key: 'id'
+      }
+    },
+    data_validade_desconto: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Data de validade do desconto aplicado'
     },
     created_at: {
       type: DataTypes.DATE,

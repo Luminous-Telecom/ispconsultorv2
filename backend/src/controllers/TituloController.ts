@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Titulo } from '../models/Titulo';
 import { Cliente } from '../models/Cliente';
+import { ClientePlano } from '../models/ClientePlano';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { BancoApiService } from '../services/BancoApiService';
@@ -341,9 +342,17 @@ export class TituloController {
 
       // Selecionar banco
       let banco;
-      if (cliente.conta_boleto) {
-        // Usar banco configurado no cliente
-        banco = await Banco.findByPk(cliente.conta_boleto);
+      // Buscar banco do contrato ativo do cliente
+      const contratoAtivo = await ClientePlano.findOne({
+        where: { 
+          cliente_id: cliente.id, 
+          status: 'ativo' 
+        },
+        include: [{ model: Banco, as: 'bancoBoleto' }]
+      });
+      
+      if (contratoAtivo?.conta_boleto) {
+        banco = await Banco.findByPk(contratoAtivo.conta_boleto);
         if (!banco || !banco.ativo) {
           res.status(400).json({
             success: false,

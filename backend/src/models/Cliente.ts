@@ -20,7 +20,6 @@ import {
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Plano } from './Plano';
-import { Banco } from './Banco';
 import { ClientePlano } from './ClientePlano';
 import { Titulo } from './Titulo';
 
@@ -45,13 +44,9 @@ export class Cliente extends Model<
   declare observacoes: string | null;
   declare ativo: boolean;
   declare valor_primeiro_titulo: string | null;
-  declare isento_mensalidade: boolean;
   declare recebe_email: boolean;
   declare recebe_sms: boolean;
   declare recebe_whatsapp: boolean;
-  declare dia_vencimento: number | null;
-  declare conta_boleto: number | null;
-  declare data_validade_desconto: Date | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -90,9 +85,6 @@ export class Cliente extends Model<
   declare countContratos: HasManyCountAssociationsMixin;
   declare createContrato: HasManyCreateAssociationMixin<ClientePlano>;
 
-  declare getBancoBoleto: BelongsToGetAssociationMixin<Banco>;
-  declare setBancoBoleto: BelongsToSetAssociationMixin<Banco, number>;
-  declare createBancoBoleto: BelongsToCreateAssociationMixin<Banco>;
 
   // Métodos de instância
   static async findAtivos(): Promise<Cliente[]> {
@@ -108,8 +100,7 @@ export class Cliente extends Model<
       include: [
         { association: 'titulos' },
         { association: 'planos' },
-        { association: 'contratos' },
-        { association: 'bancoBoleto' }
+        { association: 'contratos' }
       ]
     });
   }
@@ -205,11 +196,6 @@ Cliente.init(
       allowNull: true,
       comment: 'Valor do primeiro título: total, proporcional ou valor numérico'
     },
-    isento_mensalidade: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
     recebe_email: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -224,26 +210,6 @@ Cliente.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
-    },
-    dia_vencimento: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      validate: {
-        min: 1,
-        max: 31
-      }
-    },
-    conta_boleto: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'bancos',
-        key: 'id'
-      }
-    },
-    data_validade_desconto: {
-      type: DataTypes.DATE,
-      allowNull: true
     },
     created_at: {
       type: DataTypes.DATE,
