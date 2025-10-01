@@ -126,6 +126,23 @@ export class ContratoController {
         return;
       }
 
+      // Verificar se já existe um contrato para o mesmo cliente, plano e data
+      const contratoExistente = await ClientePlano.findOne({
+        where: {
+          cliente_id: value.cliente_id,
+          plano_id: value.plano_id,
+          data_inicio: value.data_inicio
+        }
+      });
+
+      if (contratoExistente) {
+        res.status(409).json({
+          success: false,
+          message: 'Já existe um contrato para este cliente, plano e data de início'
+        });
+        return;
+      }
+
       // Verificar se o banco existe (se fornecido)
       if (value.conta_boleto) {
         const banco = await Banco.findByPk(value.conta_boleto);
@@ -171,8 +188,18 @@ export class ContratoController {
         message: 'Contrato criado com sucesso',
         data: contrato
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar contrato:', error);
+      
+      // Tratar erro de constraint de unicidade
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        res.status(409).json({
+          success: false,
+          message: 'Já existe um contrato para este cliente, plano e data de início'
+        });
+        return;
+      }
+      
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
