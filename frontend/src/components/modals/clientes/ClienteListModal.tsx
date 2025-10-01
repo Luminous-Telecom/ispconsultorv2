@@ -83,12 +83,15 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       label: 'Razão Social',
       sortable: true,
       render: (item: Cliente) => (
-        <div>
-          <div className="fw-bold">{item.razao_social}</div>
-          {item.nome_fantasia && (
-            <small className="text-muted">{item.nome_fantasia}</small>
-          )}
-        </div>
+        <strong>{item.razao_social}</strong>
+      )
+    },
+    {
+      key: 'nome_fantasia',
+      label: 'Nome Fantasia',
+      sortable: true,
+      render: (item: Cliente) => (
+        <span className="text-muted">{item.nome_fantasia || '-'}</span>
       )
     },
     {
