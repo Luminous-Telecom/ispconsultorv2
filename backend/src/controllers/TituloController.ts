@@ -859,23 +859,32 @@ export class TituloController {
         </html>
       `;
 
-      // Gerar PDF usando html-pdf-node
-      // @ts-ignore - biblioteca sem tipos TypeScript
-      const htmlPdf = await import('html-pdf-node');
+      // Gerar PDF usando html-pdf
+      const pdf = await import('html-pdf');
       
-      const options = {
+      const options: any = {
         format: 'A4',
-        printBackground: true,
-        margin: {
+        orientation: 'portrait',
+        border: {
           top: '0mm',
           right: '0mm',
           bottom: '0mm',
           left: '0mm'
-        }
+        },
+        type: 'pdf',
+        timeout: 30000
       };
-      
-      const file = { content: htmlCompleto };
-      const pdfBuffer = await htmlPdf.default.generatePdf(file, options);
+
+      // Criar PDF de forma assíncrona
+      const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+        pdf.default.create(htmlCompleto, options).toBuffer((err: any, buffer: Buffer) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(buffer);
+          }
+        });
+      });
 
       // Enviar PDF
       res.setHeader('Content-Type', 'application/pdf');
