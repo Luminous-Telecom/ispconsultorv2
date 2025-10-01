@@ -12,7 +12,6 @@ import ModalHeaderActions from '../../common/ModalHeaderActions';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
-import ImpressaoBoletosModal from '../ImpressaoBoletosModal';
 
 interface ClienteForm {
   cnpj: string;
@@ -112,8 +111,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-  const [showImpressaoModal, setShowImpressaoModal] = useState(false);
-  const [idsParaImprimir, setIdsParaImprimir] = useState<number[]>([]);
 
   // Fechar dropdown ao clicar fora
   React.useEffect(() => {
@@ -256,8 +253,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const handleImprimirSelecionados = () => {
     if (selectedItems.length > 0) {
       const ids = selectedItems.map(item => item.id);
-      setIdsParaImprimir(ids);
-      setShowImpressaoModal(true);
+      const idsParam = ids.join(',');
+      const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
+      window.open(url, '_blank');
     } else {
       showNotification('Nenhum título selecionado', 'info');
     }
@@ -271,8 +269,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     
     if (titulosEmAberto.length > 0) {
       const ids = titulosEmAberto.map((item: any) => item.id);
-      setIdsParaImprimir(ids);
-      setShowImpressaoModal(true);
+      const idsParam = ids.join(',');
+      const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
+      window.open(url, '_blank');
     } else {
       showNotification('Não há títulos em aberto para imprimir', 'info');
     }
@@ -1585,13 +1584,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           setSelectedParcela(null);
           refetchParcelas();
         }}
-      />
-
-      {/* Modal de impressão de boletos */}
-      <ImpressaoBoletosModal
-        show={showImpressaoModal}
-        onClose={() => setShowImpressaoModal(false)}
-        ids={idsParaImprimir}
       />
 
     </DraggableModal>
