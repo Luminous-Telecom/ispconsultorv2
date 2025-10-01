@@ -18,6 +18,20 @@ export interface Contrato {
   data_validade_desconto: string | null;
   created_at: string;
   updated_at: string;
+  cliente?: {
+    id: number;
+    razao_social: string;
+    nome_fantasia: string;
+  };
+  plano?: {
+    id: number;
+    nome_plano: string;
+    valor_mensal: number;
+  };
+  bancoBoleto?: {
+    id: number;
+    nome: string;
+  };
 }
 
 export interface CreateContratoData {
@@ -42,8 +56,8 @@ export interface UpdateContratoData extends Partial<CreateContratoData> {
 export const useContratos = (clienteId?: number) => {
   return useQuery({
     queryKey: ['contratos', clienteId],
-    queryFn: () => ContratoService.getByCliente(clienteId!),
-    enabled: !!clienteId,
+    queryFn: () => clienteId ? ContratoService.getByCliente(clienteId) : ContratoService.getAtivos(),
+    enabled: !clienteId || !!clienteId,
   });
 };
 

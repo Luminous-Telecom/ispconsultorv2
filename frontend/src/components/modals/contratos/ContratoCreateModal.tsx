@@ -54,9 +54,13 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
   const { success, error } = useNotificationContext();
   
   // Hooks para buscar dados
-  const { data: clientes = [] } = useClientes();
-  const { data: planos = [] } = usePlanos();
-  const { data: bancos = [] } = useBancos();
+  const { data: clientesData } = useClientes();
+  const { data: planosData } = usePlanos();
+  const { data: bancosData } = useBancos();
+  
+  const clientes = Array.isArray(clientesData) ? clientesData : (clientesData?.data || []);
+  const planos = Array.isArray(planosData) ? planosData : (planosData?.data || []);
+  const bancos = Array.isArray(bancosData) ? bancosData : (bancosData?.data || []);
   
   // Mutation para criar contrato
   const createContratoMutation = useCreateContrato();
@@ -82,7 +86,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     }
   }, [show, clienteId]);
 
-  const handleInputChange = (field: keyof ContratoForm, value: string | number) => {
+  const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value

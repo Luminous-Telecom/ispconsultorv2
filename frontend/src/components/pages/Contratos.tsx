@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useContratos } from '../../hooks/useContratos';
 import DataTable from '../common/DataTable';
 import { Contrato } from '../../hooks/useContratos';
-import { ContratoCreateModal } from '../modals/contratos/ContratoCreateModal';
+import ContratoCreateModal from '../modals/contratos/ContratoCreateModal';
 
 const Contratos: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -141,7 +141,7 @@ const Contratos: React.FC = () => {
     {
       label: 'Novo',
       action: () => setShowCreateModal(true),
-      variant: 'primary'
+      variant: 'primary' as const
     }
   ];
 
@@ -168,16 +168,13 @@ const Contratos: React.FC = () => {
           </div>
 
           <DataTable
-            data={contratos}
             columns={columns}
-            loading={isLoading}
+            data={contratos}
+            isLoading={isLoading}
             bulkActions={bulkActions}
-            searchFields={['cliente.razao_social', 'cliente.nome_fantasia', 'plano.nome_plano']}
-            pagination={{
-              pageSize: 15,
-              showSizeChanger: true,
-              pageSizeOptions: [10, 15, 25, 50, 100]
-            }}
+            limit={15}
+            setLimit={() => {}}
+            setPage={() => {}}
           />
         </div>
       </div>
