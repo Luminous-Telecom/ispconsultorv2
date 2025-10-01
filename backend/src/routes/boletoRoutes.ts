@@ -3,10 +3,7 @@ import { TituloController } from '../controllers/TituloController';
 
 const router = Router();
 
-// Imprimir múltiplos boletos em PDF (DEVE VIR ANTES da rota com :id)
-router.get('/pdf/multiplos', TituloController.imprimirPDFMultiplos);
-
-// Imprimir múltiplos boletos em HTML
+// Imprimir múltiplos boletos em HTML (DEVE VIR ANTES da rota com :id)
 router.post('/web/multiplos', TituloController.imprimirBoletosMultiplos);
 router.get('/web/multiplos', TituloController.imprimirBoletosMultiplos);
 
