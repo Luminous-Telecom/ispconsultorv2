@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useClientes, useDeleteCliente } from '../../hooks/useClientes';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
+import { ClienteCreateModal } from '../modals/clientes';
 
 interface Cliente {
   id: number;
@@ -22,6 +23,7 @@ const Clientes: React.FC = () => {
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showClienteCreateModal, setShowClienteCreateModal] = useState(false);
 
   // Hooks para gerenciar clientes
   const { data: clientesData, isLoading, refetch } = useClientes({
@@ -191,7 +193,7 @@ const Clientes: React.FC = () => {
         bulkActions={[
           {
             label: "Novo",
-            action: () => window.location.href = "/clientes/create"
+            action: () => setShowClienteCreateModal(true)
           },
           {
             label: "Visualizar",
@@ -210,6 +212,16 @@ const Clientes: React.FC = () => {
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onRefresh={refetch}
+      />
+
+      {/* Modal de criação de cliente */}
+      <ClienteCreateModal
+        show={showClienteCreateModal}
+        onClose={() => setShowClienteCreateModal(false)}
+        onSuccess={() => {
+          setShowClienteCreateModal(false);
+          refetch();
+        }}
       />
     </>
   );
