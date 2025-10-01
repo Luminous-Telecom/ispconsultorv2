@@ -49,6 +49,9 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
     }
   };
 
+  // Calcular 90% da altura da viewport
+  const modalHeight = typeof window !== 'undefined' ? window.innerHeight * 0.9 : 600;
+
   return (
     <DraggableModal
       show={show}
@@ -56,7 +59,11 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       title={`Impressão de Boletos (${ids.length})`}
       size="xl"
     >
-      <div style={{ height: '80vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ 
+        height: `${modalHeight - 120}px`, // Altura total - header e footer
+        display: 'flex', 
+        flexDirection: 'column' 
+      }}>
         {loading ? (
           <div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
             <div className="spinner-border" role="status">

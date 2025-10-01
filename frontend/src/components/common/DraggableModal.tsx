@@ -44,17 +44,20 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       
+      // Altura: 90% da tela ou automática
+      const autoHeight = Math.min(screenHeight * 0.9, 800); // 90% da tela, max 800px
+      
       // Centralização simples - sempre no centro da tela
       const centerX = Math.max(0, Math.floor((screenWidth - width) / 2));
-      const centerY = Math.max(20, (screenHeight - 600) / 2);
+      const centerY = Math.max(20, (screenHeight - autoHeight) / 2);
       
       setPosition({
         x: centerX,
         y: centerY
       });
       
-      // Largura fixa, altura automática
-      setModalSize({ width, height: 600 });
+      // Largura fixa, altura 90% da viewport
+      setModalSize({ width, height: autoHeight });
     }
   }, [show, size]);
 
