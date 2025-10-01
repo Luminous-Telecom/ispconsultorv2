@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DraggableModal from '../common/DraggableModal';
+import { getApiUrl } from '../../config/api';
 
 interface ImpressaoBoletosModalProps {
   show: boolean;
@@ -26,9 +27,8 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
       if (iframe) {
         const idsParam = ids.join(',');
-        const baseUrl = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:3001';
         const timestamp = new Date().getTime();
-        iframe.src = `${baseUrl}/boleto/web/multiplos?ids=${idsParam}&_=${timestamp}`;
+        iframe.src = getApiUrl(`/boleto/web/multiplos?ids=${idsParam}&_=${timestamp}`);
       }
     } catch (error) {
       console.error('Erro ao carregar boletos:', error);
