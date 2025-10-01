@@ -483,7 +483,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   };
 
   const handleImprimirTodosEmAberto = () => {
-    const titulosEmAberto = parcelas.filter((p: any) => 
+    const allTitulos = parcelasData?.data || [];
+    const titulosEmAberto = allTitulos.filter((p: any) => 
       p.status === 'pendente' || p.status === 'vencido'
     );
     
