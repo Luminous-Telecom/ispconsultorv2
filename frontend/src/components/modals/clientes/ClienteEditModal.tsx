@@ -397,22 +397,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       label: 'Status',
       render: (item: any) => {
         return (
-          <span className="badge" style={{
-            backgroundColor: 
-              item.status === 'pago' ? '#28a745' :
-              item.status === 'pago_atraso' ? '#ff8c00' :
-              item.status === 'parcial' ? '#17a2b8' :
-              item.status === 'vencido' ? '#dc3545' :
-              item.status === 'pendente' ? '#87ceeb' :
-              '#6c757d',
-            color: item.status === 'pendente' ? '#333333' : 'white'
-          }}>
-            {item.status === 'pago' ? '✔ Recebimento em dia' :
-             item.status === 'pago_atraso' ? '✔ Pago com Atraso' :
-             item.status === 'parcial' ? 'Parcial' :
-             item.status === 'vencido' ? '✔ Recebimento em atraso' :
-             item.status === 'pendente' ? 'Pendente' :
-             item.status}
+          <span className="badge bg-secondary">
+            {item.status}
           </span>
         );
       }
