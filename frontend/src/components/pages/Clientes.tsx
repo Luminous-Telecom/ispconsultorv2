@@ -138,31 +138,38 @@ const Clientes: React.FC = () => {
       key: 'cnpj',
       label: 'CNPJ',
       sortable: true,
-      render: (cliente: Cliente) => cliente.cnpj
+      render: (cliente: Cliente) => (
+        <span className="text-nowrap">{cliente.cnpj}</span>
+      )
     },
     {
       key: 'razao_social',
       label: 'Razão Social',
       sortable: true,
-      render: (cliente: Cliente) => <strong>{cliente.razao_social}</strong>
-    },
-    {
-      key: 'nome_fantasia',
-      label: 'Nome Fantasia',
-      sortable: true,
-      render: (cliente: Cliente) => cliente.nome_fantasia || '-'
+      render: (cliente: Cliente) => (
+        <div>
+          <strong className="d-block">{cliente.razao_social}</strong>
+          {cliente.nome_fantasia && (
+            <small className="text-muted">{cliente.nome_fantasia}</small>
+          )}
+        </div>
+      )
     },
     {
       key: 'email',
       label: 'Email',
       sortable: true,
-      render: (cliente: Cliente) => cliente.email
+      render: (cliente: Cliente) => (
+        <span className="text-nowrap">{cliente.email}</span>
+      )
     },
     {
       key: 'whatsapp',
       label: 'WhatsApp',
       sortable: false,
-      render: (cliente: Cliente) => cliente.whatsapp || '-'
+      render: (cliente: Cliente) => (
+        <span className="text-nowrap">{cliente.whatsapp || '-'}</span>
+      )
     },
     {
       key: 'ativo',
