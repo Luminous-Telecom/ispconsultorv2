@@ -80,15 +80,29 @@ const DataTable: React.FC<TableProps> = ({
     }
   }, [data]);
 
-  const handleSelectItem = (item: any, checked: boolean) => {
-    // Permitir seleção de apenas uma linha
-    // Se já está selecionado, não desselecionar
-    const isAlreadySelected = selectedItems.some(selected => selected.id === item.id);
-    if (isAlreadySelected && !checked) {
-      return; // Não permitir desseleção
+  // Seleção via clique na linha (apenas um item)
+  const handleRowClick = (item: any) => {
+    const newSelection = [item];
+    setSelectedItems(newSelection);
+    if (onSelectionChange) {
+      onSelectionChange(newSelection);
     }
+  };
+
+  // Seleção via checkbox (múltiplos itens)
+  const handleCheckboxChange = (item: any, event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation(); // Evitar que dispare o click da linha
     
-    const newSelection = checked ? [item] : [];
+    const isAlreadySelected = selectedItems.some(selected => selected.id === item.id);
+    let newSelection: any[];
+    
+    if (isAlreadySelected) {
+      // Desmarcar
+      newSelection = selectedItems.filter(selected => selected.id !== item.id);
+    } else {
+      // Marcar (adicionar à seleção)
+      newSelection = [...selectedItems, item];
+    }
     
     setSelectedItems(newSelection);
     if (onSelectionChange) {
@@ -255,6 +269,22 @@ const DataTable: React.FC<TableProps> = ({
             <table className="table table-striped table-sm">
               <thead>
                 <tr>
+                  <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '40px' }}>
+                    <input 
+                      type="checkbox" 
+                      className="form-check-input"
+                      checked={selectedItems.length === data.length && data.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedItems([...data]);
+                          if (onSelectionChange) onSelectionChange([...data]);
+                        } else {
+                          setSelectedItems([]);
+                          if (onSelectionChange) onSelectionChange([]);
+                        }
+                      }}
+                    />
+                  </th>
                   {columns.map((column) => (
                 <th 
                   key={column.key} 
@@ -292,7 +322,7 @@ const DataTable: React.FC<TableProps> = ({
               <tbody>
                 {isLoading ? (
                   <tr>
-                <td colSpan={columns.length} className="text-center">
+                <td colSpan={columns.length + 1} className="text-center">
                   <div className="spinner-border spinner-border-sm" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
@@ -305,13 +335,31 @@ const DataTable: React.FC<TableProps> = ({
                   <tr
                     key={item.id || index} 
                     className={isSelected ? 'table-active' : ''}
-                    onClick={() => !isSelected && handleSelectItem(item, true)}
+                    onClick={() => handleRowClick(item)}
                     style={{ 
                       cursor: 'pointer',
                       backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
                       color: isSelected ? getSelectionColors().color : 'inherit'
                     }}
                   >
+                    <td 
+                      className="py-1 px-2"
+                      style={{ 
+                        fontSize: '0.75rem', 
+                        padding: '0.5rem',
+                        backgroundColor: isSelected ? getSelectionColors().backgroundColor : 'inherit',
+                        color: isSelected ? getSelectionColors().color : 'inherit',
+                        width: '40px'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input 
+                        type="checkbox" 
+                        className="form-check-input"
+                        checked={isSelected}
+                        onChange={(e) => handleCheckboxChange(item, e)}
+                      />
+                    </td>
                     
                       {columns.map((column) => (
                       <td 
@@ -332,7 +380,7 @@ const DataTable: React.FC<TableProps> = ({
               })
                 ) : (
                   <tr>
-                <td colSpan={columns.length} className="text-center">
+                <td colSpan={columns.length + 1} className="text-center">
                       {emptyMessage}
                     </td>
                   </tr>
