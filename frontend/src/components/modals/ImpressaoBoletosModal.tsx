@@ -57,7 +57,7 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       show={show}
       onClose={onClose}
       title={`Impressão de Boletos (${ids.length})`}
-      size="xl"
+      size="a4"
     >
       <div style={{ 
         height: `${modalHeight - 120}px`, // Altura total - header e footer

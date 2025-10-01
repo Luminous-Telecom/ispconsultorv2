@@ -5,7 +5,7 @@ interface DraggableModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'a4';
   className?: string;
   headerActions?: React.ReactNode;
 }
@@ -33,6 +33,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       case 'md': return { width: 800 };
       case 'lg': return { width: 1000 };
       case 'xl': return { width: 1200 };
+      case 'a4': return { width: 794 }; // Largura A4 (210mm em 96 DPI)
       default: return { width: 1000 }; // Tamanho padrão bom para todos
     }
   };
