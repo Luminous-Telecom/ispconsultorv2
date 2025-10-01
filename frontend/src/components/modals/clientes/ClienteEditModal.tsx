@@ -1226,8 +1226,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             isDisabled = isDisabled || bulkAction.disabled(selectedItems);
                           }
                           
-                          return (
-                            {bulkAction.dropdown ? (
+                          // Se tem dropdown, renderizar dropdown
+                          if (bulkAction.dropdown) {
+                            return (
                               <div key={index} className="dropdown" style={{ flexShrink: 0 }}>
                                 <button
                                   className="btn btn-sm btn-primary dropdown-toggle"
@@ -1256,24 +1257,27 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   ))}
                                 </ul>
                               </div>
-                            ) : (
-                              <button
-                                key={index}
-                                className="btn btn-sm btn-primary"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if (!isDisabled && bulkAction.action) {
-                                    bulkAction.action(selectedItems);
-                                  }
-                                }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                disabled={isDisabled}
-                                style={{ flexShrink: 0 }}
-                              >
-                                {bulkAction.label}
-                              </button>
-                            )}
+                            );
+                          }
+                          
+                          // Botão normal
+                          return (
+                            <button
+                              key={index}
+                              className="btn btn-sm btn-primary"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (!isDisabled && bulkAction.action) {
+                                  bulkAction.action(selectedItems);
+                                }
+                              }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              disabled={isDisabled}
+                              style={{ flexShrink: 0 }}
+                            >
+                              {bulkAction.label}
+                            </button>
                           );
                         })}
                       </div>
