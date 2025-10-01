@@ -54,7 +54,7 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       show={show}
       onClose={onClose}
       title={`Impressão de Boletos (${ids.length})`}
-      size="fullscreen"
+      size="xl"
     >
       <div style={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
         {loading ? (
