@@ -76,6 +76,15 @@ export class TituloController {
       SACADO_CIDADE: titulo.cliente.cidade || '',
       SACADO_ESTADO: titulo.cliente.estado || '',
       SACADO_CEP: titulo.cliente.cep || '',
+      SACADO_IDNOME: titulo.cliente.razao_social || titulo.cliente.nome || '',
+      
+      // Dados do plano
+      NOME_PLANO: titulo.plano.nome_plano || titulo.plano.nome || '',
+      DESCRICAO_PLANO: titulo.plano.descricao || '',
+      TIPO_SERVICO: titulo.plano.tipo_servico || 'Internet',
+      QUANTIDADE_USUARIOS: titulo.plano.quantidade_usuarios || '1',
+      VALOR_PLANO: valorBoleto,
+      PERIODICIDADE: 'Mensal',
       
       // Instruções
       TEXTO_MULTAMORA: titulo.banco.percentual_multa || titulo.banco.percentual_juros ? 
