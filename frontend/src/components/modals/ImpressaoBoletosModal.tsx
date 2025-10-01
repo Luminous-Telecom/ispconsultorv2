@@ -55,8 +55,9 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       onClose={onClose}
       title={`Impressão de Boletos (${ids.length})`}
       size="xl"
+      style={{ height: '90vh', maxHeight: '90vh' }}
     >
-      <div style={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: 'calc(90vh - 120px)', display: 'flex', flexDirection: 'column' }}>
         {loading ? (
           <div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
             <div className="spinner-border" role="status">
