@@ -278,43 +278,35 @@ const ClienteShow: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (titulo: any) => {
-        if (titulo.status === 'pago') {
-          return (
-            <span className="badge bg-success">
-              Pago
-            </span>
-          );
-        } else if (titulo.status === 'pago_atraso') {
-          return (
-            <span className="badge" style={{ backgroundColor: '#ff8c00', color: 'white' }}>
-              Pago com Atraso
-            </span>
-          );
-        } else if (titulo.status === 'parcial') {
-          return (
-            <span className="badge bg-info">
-              Parcial
-            </span>
-          );
-        } else if (titulo.status === 'cancelado') {
-          return (
-            <span className="badge bg-danger">
-              Cancelado
-            </span>
-          );
-        } else if (titulo.status === 'vencido') {
-          return (
-            <span className="badge bg-danger">
-              Vencido
-            </span>
-          );
-        } else {
-          return (
-            <span className="badge" style={{ backgroundColor: '#87ceeb', color: '#333' }}>
-              Pendente
-            </span>
-          );
-        }
+        const getStatusStyle = () => {
+          switch(titulo.status) {
+            case 'pago': return { backgroundColor: '#28a745', color: 'white' };
+            case 'pago_atraso': return { backgroundColor: '#ff8c00', color: 'white' };
+            case 'parcial': return { backgroundColor: '#17a2b8', color: 'white' };
+            case 'vencido': return { backgroundColor: '#dc3545', color: 'white' };
+            case 'pendente': return { backgroundColor: '#87ceeb', color: '#333' };
+            case 'cancelado': return { backgroundColor: '#dc3545', color: 'white' };
+            default: return { backgroundColor: '#6c757d', color: 'white' };
+          }
+        };
+
+        const getStatusLabel = () => {
+          switch(titulo.status) {
+            case 'pago': return 'Pago';
+            case 'pago_atraso': return 'Pago com Atraso';
+            case 'parcial': return 'Parcial';
+            case 'vencido': return 'Vencido';
+            case 'pendente': return 'Pendente';
+            case 'cancelado': return 'Cancelado';
+            default: return titulo.status;
+          }
+        };
+
+        return (
+          <span className="badge" style={getStatusStyle()}>
+            {getStatusLabel()}
+          </span>
+        );
       }
     },
     {
