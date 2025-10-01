@@ -94,10 +94,24 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 
   const handleImprimirSelecionados = () => {
     if (selectedItems.length > 0) {
-      selectedItems.forEach(item => {
-        const url = getApiUrl(`/boleto/web/${item.id}`);
-        window.open(url, '_blank');
-      });
+      const ids = selectedItems.map(item => item.id);
+      
+      // Criar formulário para enviar via POST
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = getApiUrl('/boleto/web/multiplos');
+      form.target = '_blank';
+      
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'ids';
+      input.value = JSON.stringify(ids);
+      
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      
       showNotification(`${selectedItems.length} boleto(s) aberto(s) para impressão`, 'success');
     } else {
       showNotification('Nenhum título selecionado', 'info');
@@ -110,11 +124,25 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     );
     
     if (titulosEmAberto.length > 0) {
-      titulosEmAberto.forEach((item: any) => {
-        const url = getApiUrl(`/boleto/web/${item.id}`);
-        window.open(url, '_blank');
-      });
-      showNotification(`${titulosEmAberto.length} boleto(s) em aberto aberto(s) para impressão`, 'success');
+      const ids = titulosEmAberto.map((item: any) => item.id);
+      
+      // Criar formulário para enviar via POST
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = getApiUrl('/boleto/web/multiplos');
+      form.target = '_blank';
+      
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'ids';
+      input.value = JSON.stringify(ids);
+      
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      
+      showNotification(`${titulosEmAberto.length} boleto(s) em aberto abertos para impressão`, 'success');
     } else {
       showNotification('Não há títulos em aberto para imprimir', 'info');
     }

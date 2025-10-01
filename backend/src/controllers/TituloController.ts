@@ -676,6 +676,184 @@ export class TituloController {
     }
   }
 
+  // Imprimir múltiplos boletos
+  static async imprimirBoletosMultiplos(req: Request, res: Response): Promise<void> {
+    try {
+      const { ids } = req.body;
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        res.status(400).json({
+          success: false,
+          message: 'IDs dos títulos não fornecidos'
+        });
+        return;
+      }
+
+      const titulos = await Titulo.findAll({
+        where: { id: ids },
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { 
+            model: Banco, 
+            as: 'banco', 
+            attributes: [
+              'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
+              'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
+              'instrucao_linha_4', 'instrucao_linha_5', 'logo'
+            ] 
+          }
+        ]
+      });
+
+      if (titulos.length === 0) {
+        res.status(404).json({
+          success: false,
+          message: 'Nenhum título encontrado'
+        });
+        return;
+      }
+
+      // Gerar HTML para cada boleto
+      const boletosHtml: string[] = [];
+
+      for (const titulo of titulos) {
+        // Registrar no banco se necessário
+        if (!titulo.charge_id) {
+          try {
+            const resultado = await BancoApiService.gerarTitulo(titulo as any);
+            
+            if (resultado.success && resultado.data) {
+              let codigoBarrasFinal = resultado.data.codigo_barras;
+              if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras)) {
+                codigoBarrasFinal = resultado.data.codigo_barras;
+              }
+
+              await titulo.update({
+                charge_id: resultado.data.charge_id,
+                url_boleto: resultado.data.url_boleto,
+                qrcode: resultado.data.qrcode,
+                qrcode_image: resultado.data.qrcode_image,
+                codigo_barras: codigoBarrasFinal,
+                linha_digitavel: resultado.data.linha_digitavel,
+                nosso_numero: resultado.data.nosso_numero
+              });
+            }
+          } catch (error: any) {
+            logger.error('Erro ao registrar título', { error: error.message, titulo_id: titulo.id });
+          }
+        }
+
+        // Recarregar título com dados atualizados
+        await titulo.reload();
+
+        // Buscar dados da empresa
+        const { DadosEmpresa } = await import('../models/DadosEmpresa');
+        const dadosEmpresa = await DadosEmpresa.findOne();
+        if (!dadosEmpresa) {
+          throw new Error('Dados da empresa não encontrados');
+        }
+
+        // Ler templates
+        const fs = await import('fs');
+        const path = await import('path');
+        const topoTemplate = fs.readFileSync(path.join(__dirname, '../templates/boleto-topo-inner.html'), 'utf-8');
+        const corpoTemplate = fs.readFileSync(path.join(__dirname, '../templates/boleto-corpo-inner.html'), 'utf-8');
+
+        // Preparar variáveis do template
+        const templateVars = {
+          LOGOMARCA: dadosEmpresa.logo || '',
+          LOGOBANCO: (titulo as any).banco?.logo ? `/images/bancos/${(titulo as any).banco.logo}` : '',
+          CODIGO_BANCO_COM_DV: (titulo as any).banco?.codigo || '000-0',
+          LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
+          LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
+          DATA_VENC: new Date(titulo.data_vencimento).toLocaleDateString('pt-BR'),
+          CEDENTE: dadosEmpresa.nome_fantasia || dadosEmpresa.razao_social,
+          AGENCIA_CODIGO: '0001 / 0000001',
+          DATA_DOCUMENTO: new Date(titulo.created_at).toLocaleDateString('pt-BR'),
+          NUMERO_DOCUMENTO: titulo.numero_titulo,
+          ESPECIE_DOC: 'DM',
+          DATA_PROC: new Date(titulo.created_at).toLocaleDateString('pt-BR'),
+          NOSSO_NUMERO: titulo.nosso_numero || '',
+          CARTEIRA: '09',
+          VAR_CARTEIRA: '',
+          ESPECIE: 'R$',
+          QUANTIDADE: '',
+          VALOR_UNITARIO: '',
+          VALOR_BOLETO: `R$ ${parseFloat(titulo.valor.toString()).toFixed(2).replace('.', ',')}`,
+          TEXTO_MULTAMORA: `Multa de ${(titulo as any).banco?.percentual_multa || 2}% após o vencimento. Juros de ${(titulo as any).banco?.percentual_juros || 0.03}% ao dia.`,
+          INSTRUCOES1: (titulo as any).banco?.instrucao_linha_1 || '',
+          INSTRUCOES2: (titulo as any).banco?.instrucao_linha_2 || '',
+          INSTRUCOES3: (titulo as any).banco?.instrucao_linha_3 || '',
+          INSTRUCOES4: (titulo as any).banco?.instrucao_linha_4 || '',
+          INSTRUCOES5: (titulo as any).banco?.instrucao_linha_5 || '',
+          SACADO_NOME: (titulo as any).cliente?.razao_social || '',
+          TIPO_PSACADO: (titulo as any).cliente?.cnpj ? 'CNPJ:' : 'CPF:',
+          SACADO_CPF: (titulo as any).cliente?.cnpj || (titulo as any).cliente?.cpf || '',
+          SACADO_ENDERECO: (titulo as any).cliente?.endereco || '',
+          SACADO_BAIRRO: (titulo as any).cliente?.bairro || '',
+          SACADO_COMPLEMENTO: (titulo as any).cliente?.complemento || '',
+          SACADO_CIDADE: (titulo as any).cliente?.cidade || '',
+          SACADO_ESTADO: (titulo as any).cliente?.estado || '',
+          SACADO_CEP: (titulo as any).cliente?.cep || '',
+          QRCODE: titulo.qrcode_image || '',
+          QRCODE_HTML: titulo.qrcode_image 
+            ? `<img src="${titulo.qrcode_image}" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px;" /><br><span style="font-size: 8px; font-weight: bold;">PIX - Pagamento Instantâneo</span>`
+            : '<div style="color: #666; font-size: 8px;">QR Code PIX<br>Não disponível</div>',
+          BOLETO_BARCODE2: titulo.codigo_barras ? BarcodeService.generateFebrabanBarcodeSvg(titulo.codigo_barras) : ''
+        };
+
+        // Processar templates
+        let topoProcessado = topoTemplate;
+        let corpoProcessado = corpoTemplate;
+        
+        Object.entries(templateVars).forEach(([key, value]) => {
+          const regex = new RegExp(`{{${key}}}`, 'g');
+          topoProcessado = topoProcessado.replace(regex, String(value));
+          corpoProcessado = corpoProcessado.replace(regex, String(value));
+        });
+
+        // Adicionar quebra de página após cada boleto (exceto o último)
+        const boletoHtml = `
+          <div style="page-break-after: always;">
+            ${topoProcessado}
+            ${corpoProcessado}
+          </div>
+        `;
+
+        boletosHtml.push(boletoHtml);
+      }
+
+      // Template final com todos os boletos
+      const template = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Boletos - ${titulos.length} título(s)</title>
+          <style>
+            @media print {
+              .page-break { page-break-after: always; }
+            }
+          </style>
+        </head>
+        <body>
+          ${boletosHtml.join('\n')}
+        </body>
+        </html>
+      `;
+
+      res.setHeader('Content-Type', 'text/html');
+      res.send(template);
+    } catch (error: any) {
+      logger.error('Erro ao imprimir boletos múltiplos', { error: error.message });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
   // Marcar como pago
   static async marcarComoPago(req: Request, res: Response): Promise<void> {
     try {
