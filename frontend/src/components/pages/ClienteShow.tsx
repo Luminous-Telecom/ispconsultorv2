@@ -278,33 +278,25 @@ const ClienteShow: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (titulo: any) => {
-        const getStatusStyle = () => {
-          switch(titulo.status) {
-            case 'pago': return { backgroundColor: '#28a745', color: 'white' };
-            case 'pago_atraso': return { backgroundColor: '#ff8c00', color: 'white' };
-            case 'parcial': return { backgroundColor: '#17a2b8', color: 'white' };
-            case 'vencido': return { backgroundColor: '#dc3545', color: 'white' };
-            case 'pendente': return { backgroundColor: '#87ceeb', color: '#333' };
-            case 'cancelado': return { backgroundColor: '#dc3545', color: 'white' };
-            default: return { backgroundColor: '#6c757d', color: 'white' };
-          }
-        };
-
-        const getStatusLabel = () => {
-          switch(titulo.status) {
-            case 'pago': return 'Pago';
-            case 'pago_atraso': return 'Pago com Atraso';
-            case 'parcial': return 'Parcial';
-            case 'vencido': return 'Vencido';
-            case 'pendente': return 'Pendente';
-            case 'cancelado': return 'Cancelado';
-            default: return titulo.status;
-          }
-        };
-
         return (
-          <span className="badge" style={getStatusStyle()}>
-            {getStatusLabel()}
+          <span className="badge" style={{
+            backgroundColor: 
+              titulo.status === 'pago' ? '#28a745' :
+              titulo.status === 'pago_atraso' ? '#ff8c00' :
+              titulo.status === 'parcial' ? '#17a2b8' :
+              titulo.status === 'vencido' ? '#dc3545' :
+              titulo.status === 'pendente' ? '#87ceeb' :
+              titulo.status === 'cancelado' ? '#dc3545' :
+              '#6c757d',
+            color: titulo.status === 'pendente' ? '#333' : 'white'
+          }}>
+            {titulo.status === 'pago' ? 'Pago' :
+             titulo.status === 'pago_atraso' ? 'Pago com Atraso' :
+             titulo.status === 'parcial' ? 'Parcial' :
+             titulo.status === 'vencido' ? 'Vencido' :
+             titulo.status === 'pendente' ? 'Pendente' :
+             titulo.status === 'cancelado' ? 'Cancelado' :
+             titulo.status}
           </span>
         );
       }

@@ -150,14 +150,16 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       key: 'status', 
       label: 'Status', 
       render: (item: any) => (
-        <span className="badge" style={
-          item.status === 'pago' ? { backgroundColor: '#28a745', color: 'white' } :
-          item.status === 'pago_atraso' ? { backgroundColor: '#ff8c00', color: 'white' } :
-          item.status === 'parcial' ? { backgroundColor: '#17a2b8', color: 'white' } :
-          item.status === 'vencido' ? { backgroundColor: '#dc3545', color: 'white' } :
-          item.status === 'pendente' ? { backgroundColor: '#87ceeb', color: '#333' } :
-          { backgroundColor: '#6c757d', color: 'white' }
-        }>
+        <span className="badge" style={{
+          backgroundColor: 
+            item.status === 'pago' ? '#28a745' :
+            item.status === 'pago_atraso' ? '#ff8c00' :
+            item.status === 'parcial' ? '#17a2b8' :
+            item.status === 'vencido' ? '#dc3545' :
+            item.status === 'pendente' ? '#87ceeb' :
+            '#6c757d',
+          color: item.status === 'pendente' ? '#333' : 'white'
+        }}>
           {item.status === 'pago' ? 'Pago' :
            item.status === 'pago_atraso' ? 'Pago com Atraso' :
            item.status === 'parcial' ? 'Parcial' :
