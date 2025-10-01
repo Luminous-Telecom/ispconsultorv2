@@ -771,7 +771,8 @@ export class TituloController {
         </html>
       `;
 
-      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
       res.send(template);
     } catch (error: any) {
       logger.error('Erro ao imprimir boleto', { error: error.message });
@@ -894,7 +895,8 @@ export class TituloController {
         </html>
       `;
 
-      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
       res.send(template);
     } catch (error: any) {
       logger.error('Erro ao imprimir boletos múltiplos', { error: error.message });
