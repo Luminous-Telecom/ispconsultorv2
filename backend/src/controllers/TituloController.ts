@@ -10,6 +10,103 @@ import { Op } from 'sequelize';
 
 export class TituloController {
   
+  // Método auxiliar para processar um único boleto
+  private static async processarBoletoHtml(titulo: any): Promise<string> {
+    // Carregar dados da empresa
+    const { DadosEmpresa } = await import('../models/DadosEmpresa');
+    const dadosEmpresa = await DadosEmpresa.findOne();
+    
+    if (!dadosEmpresa) {
+      throw new Error('Dados da empresa não configurados');
+    }
+
+    // Preparar variáveis para o template
+    const dataVencimento = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
+    const dataProcessamento = new Date().toLocaleDateString('pt-BR');
+    const valorBoleto = Number(titulo.valor).toFixed(2).replace('.', ',');
+    
+    // Carregar templates
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const topoTemplatePath = path.join(__dirname, '../templates/boleto-topo-inner.html');
+    const corpoTemplatePath = path.join(__dirname, '../templates/boleto-corpo-inner.html');
+    
+    const topoTemplate = fs.readFileSync(topoTemplatePath, 'utf8');
+    const corpoTemplate = fs.readFileSync(corpoTemplatePath, 'utf8');
+
+    // Variáveis para substituição no template - Padrão FEBRABAN
+    const templateVars = {
+      // Dados da empresa (Beneficiário)
+      LOGOMARCA: dadosEmpresa.logo || '',
+      CEDENTE: dadosEmpresa.razao_social || 'CTM Telecom',
+      EMPRESACPF: dadosEmpresa.cnpj || '',
+      EMPRESAENDERECO: `${dadosEmpresa.endereco || ''} ${dadosEmpresa.numero || ''}`.trim(),
+      EMPRESABAIRRO: dadosEmpresa.bairro || '',
+      EMPRESACEP: dadosEmpresa.cep || '',
+      EMPRESACIDADE: dadosEmpresa.cidade || '',
+      EMPRESAESTADO: dadosEmpresa.estado || '',
+      
+      // Dados do banco - FEBRABAN
+      LOGOBANCO: (titulo.banco as any).logo || TituloController.getLogoBancoPadrao(titulo.banco.tipo_banco) || dadosEmpresa.logo || '',
+      CODIGO_BANCO_COM_DV: titulo.banco.codigo ? `${titulo.banco.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
+      LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
+      AGENCIA_CODIGO: titulo.banco.agencia_codigo || 'Não configurado',
+      
+      // Dados do boleto - FEBRABAN
+      LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
+      DATA_VENC: dataVencimento,
+      DATA_DOCUMENTO: dataProcessamento,
+      NUMERO_DOCUMENTO: titulo.numero_titulo || titulo.id?.toString() || '',
+      ESPECIE_DOC: 'DM',
+      DATA_PROC: dataProcessamento,
+      NOSSO_NUMERO: titulo.charge_id || titulo.nosso_numero || '',
+      CARTEIRA: 'SR',
+      VAR_CARTEIRA: '',
+      ESPECIE: 'R$',
+      VALOR_BOLETO: valorBoleto,
+      
+      // Dados do cliente (Pagador) - FEBRABAN
+      SACADO_NOME: titulo.cliente.razao_social || titulo.cliente.nome || '',
+      TIPO_PSACADO: titulo.cliente.cnpj ? 'CNPJ' : 'CPF',
+      SACADO_CPF: titulo.cliente.cnpj || titulo.cliente.cpf || '',
+      SACADO_ENDERECO: `${titulo.cliente.endereco || ''} ${titulo.cliente.numero || ''}`.trim(),
+      SACADO_BAIRRO: titulo.cliente.bairro || '',
+      SACADO_COMPLEMENTO: titulo.cliente.complemento || '',
+      SACADO_CIDADE: titulo.cliente.cidade || '',
+      SACADO_ESTADO: titulo.cliente.estado || '',
+      SACADO_CEP: titulo.cliente.cep || '',
+      
+      // Instruções
+      TEXTO_MULTAMORA: titulo.banco.percentual_multa || titulo.banco.percentual_juros ? 
+        `Multa de ${titulo.banco.percentual_multa || 2}% + Juros de ${titulo.banco.percentual_juros || 0.033}% ao dia após o vencimento` : '',
+      INSTRUCOES1: titulo.banco.instrucao_linha_1 || '',
+      INSTRUCOES2: titulo.banco.instrucao_linha_2 || '',
+      INSTRUCOES3: titulo.banco.instrucao_linha_3 || '',
+      INSTRUCOES4: titulo.banco.instrucao_linha_4 || '',
+      INSTRUCOES5: titulo.banco.instrucao_linha_5 || '',
+      
+      // QR Code PIX e Código de Barras
+      QRCODE: titulo.qrcode_image || '',
+      QRCODE_HTML: titulo.qrcode_image 
+        ? `<img src="${titulo.qrcode_image}" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px;" /><br><span style="font-size: 8px; font-weight: bold;">PIX - Pagamento Instantâneo</span>`
+        : '<div style="color: #666; font-size: 8px;">QR Code PIX<br>Não disponível</div>',
+      BOLETO_BARCODE2: titulo.codigo_barras ? BarcodeService.generateFebrabanBarcodeSvg(titulo.codigo_barras) : ''
+    };
+
+    // Processar templates
+    let topoProcessado = topoTemplate;
+    let corpoProcessado = corpoTemplate;
+    
+    Object.entries(templateVars).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      topoProcessado = topoProcessado.replace(regex, String(value));
+      corpoProcessado = corpoProcessado.replace(regex, String(value));
+    });
+
+    return `${topoProcessado}${corpoProcessado}`;
+  }
+  
   // Método para processar template do topo
   private static processarTemplateTopo(template: string, variables: any): string {
     let resultado = template;
@@ -725,7 +822,7 @@ export class TituloController {
         return;
       }
 
-      // Gerar HTML para cada boleto
+      // Gerar HTML para cada boleto usando função auxiliar
       const boletosHtml: string[] = [];
 
       for (const titulo of titulos) {
@@ -758,81 +855,15 @@ export class TituloController {
         // Recarregar título com dados atualizados
         await titulo.reload();
 
-        // Buscar dados da empresa
-        const { DadosEmpresa } = await import('../models/DadosEmpresa');
-        const dadosEmpresa = await DadosEmpresa.findOne();
-        if (!dadosEmpresa) {
-          throw new Error('Dados da empresa não encontrados');
-        }
-
-        // Ler templates
-        const fs = await import('fs');
-        const path = await import('path');
-        const topoTemplate = fs.readFileSync(path.join(__dirname, '../templates/boleto-topo-inner.html'), 'utf-8');
-        const corpoTemplate = fs.readFileSync(path.join(__dirname, '../templates/boleto-corpo-inner.html'), 'utf-8');
-
-        // Preparar variáveis do template
-        const templateVars = {
-          LOGOMARCA: dadosEmpresa.logo || '',
-          LOGOBANCO: (titulo as any).banco?.logo ? `/images/bancos/${(titulo as any).banco.logo}` : '',
-          CODIGO_BANCO_COM_DV: (titulo as any).banco?.codigo || '000-0',
-          LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
-          LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
-          DATA_VENC: new Date(titulo.data_vencimento).toLocaleDateString('pt-BR'),
-          CEDENTE: dadosEmpresa.nome_fantasia || dadosEmpresa.razao_social,
-          AGENCIA_CODIGO: '0001 / 0000001',
-          DATA_DOCUMENTO: new Date(titulo.created_at).toLocaleDateString('pt-BR'),
-          NUMERO_DOCUMENTO: titulo.numero_titulo,
-          ESPECIE_DOC: 'DM',
-          DATA_PROC: new Date(titulo.created_at).toLocaleDateString('pt-BR'),
-          NOSSO_NUMERO: titulo.nosso_numero || '',
-          CARTEIRA: '09',
-          VAR_CARTEIRA: '',
-          ESPECIE: 'R$',
-          QUANTIDADE: '',
-          VALOR_UNITARIO: '',
-          VALOR_BOLETO: `R$ ${parseFloat(titulo.valor.toString()).toFixed(2).replace('.', ',')}`,
-          TEXTO_MULTAMORA: `Multa de ${(titulo as any).banco?.percentual_multa || 2}% após o vencimento. Juros de ${(titulo as any).banco?.percentual_juros || 0.03}% ao dia.`,
-          INSTRUCOES1: (titulo as any).banco?.instrucao_linha_1 || '',
-          INSTRUCOES2: (titulo as any).banco?.instrucao_linha_2 || '',
-          INSTRUCOES3: (titulo as any).banco?.instrucao_linha_3 || '',
-          INSTRUCOES4: (titulo as any).banco?.instrucao_linha_4 || '',
-          INSTRUCOES5: (titulo as any).banco?.instrucao_linha_5 || '',
-          SACADO_NOME: (titulo as any).cliente?.razao_social || '',
-          TIPO_PSACADO: (titulo as any).cliente?.cnpj ? 'CNPJ:' : 'CPF:',
-          SACADO_CPF: (titulo as any).cliente?.cnpj || (titulo as any).cliente?.cpf || '',
-          SACADO_ENDERECO: (titulo as any).cliente?.endereco || '',
-          SACADO_BAIRRO: (titulo as any).cliente?.bairro || '',
-          SACADO_COMPLEMENTO: (titulo as any).cliente?.complemento || '',
-          SACADO_CIDADE: (titulo as any).cliente?.cidade || '',
-          SACADO_ESTADO: (titulo as any).cliente?.estado || '',
-          SACADO_CEP: (titulo as any).cliente?.cep || '',
-          QRCODE: titulo.qrcode_image || '',
-          QRCODE_HTML: titulo.qrcode_image 
-            ? `<img src="${titulo.qrcode_image}" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px;" /><br><span style="font-size: 8px; font-weight: bold;">PIX - Pagamento Instantâneo</span>`
-            : '<div style="color: #666; font-size: 8px;">QR Code PIX<br>Não disponível</div>',
-          BOLETO_BARCODE2: titulo.codigo_barras ? BarcodeService.generateFebrabanBarcodeSvg(titulo.codigo_barras) : ''
-        };
-
-        // Processar templates
-        let topoProcessado = topoTemplate;
-        let corpoProcessado = corpoTemplate;
+        // Processar HTML do boleto usando função auxiliar
+        const boletoHtml = await TituloController.processarBoletoHtml(titulo);
         
-        Object.entries(templateVars).forEach(([key, value]) => {
-          const regex = new RegExp(`{{${key}}}`, 'g');
-          topoProcessado = topoProcessado.replace(regex, String(value));
-          corpoProcessado = corpoProcessado.replace(regex, String(value));
-        });
-
-        // Adicionar quebra de página após cada boleto (exceto o último)
-        const boletoHtml = `
+        // Adicionar quebra de página
+        boletosHtml.push(`
           <div style="page-break-after: always;">
-            ${topoProcessado}
-            ${corpoProcessado}
+            ${boletoHtml}
           </div>
-        `;
-
-        boletosHtml.push(boletoHtml);
+        `);
       }
 
       // Template final com todos os boletos
