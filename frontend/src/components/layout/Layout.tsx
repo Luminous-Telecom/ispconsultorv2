@@ -26,6 +26,7 @@ const Layout: React.FC = () => {
     { path: '/clientes', icon: 'bi-people', label: 'Clientes', isModal: true, modalHandler: () => setShowClienteModal(true) },
     { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => setShowPlanoModal(true) },
     { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => setShowBancoModal(true) },
+    { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: false },
     { path: '/carne-parcelas', icon: 'bi-calendar-check', label: 'Parcelas', isModal: false },
     { path: '/rotinas-agendadas', icon: 'bi-clock', label: 'Rotinas Agendadas', isModal: false },
     { path: '/parametros', icon: 'bi-gear', label: 'Parâmetros', isModal: false },

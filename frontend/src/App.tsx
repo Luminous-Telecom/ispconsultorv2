@@ -27,6 +27,7 @@ import BoletoView from './components/pages/BoletoView';
 import DadosEmpresa from './components/pages/DadosEmpresa';
 import RotinasAgendadas from './components/pages/RotinasAgendadas';
 import Parametros from './components/pages/Parametros';
+import Contratos from './components/pages/Contratos';
 import Login from './components/pages/Login';
 
 // Query Client
@@ -63,6 +64,7 @@ function App() {
             <Route path="titulos" element={<Titulos />} />
             <Route path="titulos/:id/edit" element={<TitulosEdit />} />
             <Route path="boleto/web/:id" element={<BoletoView />} />
+            <Route path="contratos" element={<Contratos />} />
             <Route path="dados-empresa" element={<DadosEmpresa />} />
             <Route path="rotinas-agendadas" element={<RotinasAgendadas />} />
             <Route path="parametros" element={<Parametros />} />
