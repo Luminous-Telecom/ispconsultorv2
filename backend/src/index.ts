@@ -57,7 +57,8 @@ const corsOrigins = [
 
 app.use(cors({
   origin: corsOrigins,
-  credentials: true
+  credentials: true,
+  exposedHeaders: ['Content-Disposition']
 }));
 
 // Servir arquivos estáticos de uploads

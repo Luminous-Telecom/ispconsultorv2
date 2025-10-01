@@ -39,22 +39,18 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
   };
 
   const handleImprimir = () => {
-    const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
-    if (iframe) {
-      try {
-        // Tentar imprimir diretamente (igual Ctrl+P)
-        iframe.contentWindow?.print();
-      } catch (error) {
-        // Se der erro de CORS, abrir em nova aba e imprimir
-        const newWindow = window.open(iframe.src, '_blank');
-        if (newWindow) {
-          newWindow.onload = () => {
-            setTimeout(() => {
-              newWindow.print();
-            }, 500);
-          };
-        }
-      }
+    // Abrir em nova aba com auto-print
+    const idsParam = ids.join(',');
+    const timestamp = new Date().getTime();
+    const url = getApiUrl(`/boleto/web/multiplos?ids=${idsParam}&_=${timestamp}&print=true`);
+    
+    const newWindow = window.open(url, '_blank');
+    if (newWindow) {
+      newWindow.onload = () => {
+        setTimeout(() => {
+          newWindow.print();
+        }, 1000);
+      };
     }
   };
 

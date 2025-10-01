@@ -993,6 +993,9 @@ export class TituloController {
         `);
       }
 
+      // Verificar se deve auto-imprimir
+      const autoPrint = req.query.print === 'true';
+      
       // Template final com todos os boletos
       const template = `
         <!DOCTYPE html>
@@ -1005,6 +1008,7 @@ export class TituloController {
               .page-break { page-break-after: always; }
             }
           </style>
+          ${autoPrint ? '<script>window.onload = function() { setTimeout(function() { window.print(); }, 500); };</script>' : ''}
         </head>
         <body>
           ${boletosHtml.join('\n')}
