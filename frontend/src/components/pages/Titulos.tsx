@@ -163,6 +163,25 @@ const CarneParcelas: React.FC = () => {
 
   const parcelas = parcelasData?.data || [];
 
+  // Função para obter a cor do status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pago':
+        return 'success';
+      case 'pago_atraso':
+        return 'warning';
+      case 'pendente':
+        return 'primary';
+      case 'vencido':
+        return 'danger';
+      case 'parcial':
+        return 'info';
+      case 'cancelado':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
 
   const handleFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -499,7 +518,7 @@ const CarneParcelas: React.FC = () => {
                         </div>
                         <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Status:</span>
-                          <span className="badge bg-secondary ms-1">
+                          <span className={`badge bg-${getStatusColor(carneData.status)} ms-1`}>
                             {carneData.status}
                           </span>
                         </div>

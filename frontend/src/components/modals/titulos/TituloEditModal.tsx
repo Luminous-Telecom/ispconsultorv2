@@ -85,9 +85,12 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
       success('Parcela atualizada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcela', parcelaId] });
+      queryClient.invalidateQueries({ queryKey: ['parcelas'] }); // Para ClienteEditModal
+      queryClient.invalidateQueries({ queryKey: ['titulos'] }); // Para outras páginas
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      onClose();
+      // Chamar onSuccess antes de fechar o modal
       onSuccess?.();
+      onClose();
     },
     onError: (err: any) => {
       console.error('Erro ao atualizar parcela:', err);

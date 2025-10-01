@@ -60,7 +60,10 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
     onSuccess: () => {
       success('Parcela criada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
+      queryClient.invalidateQueries({ queryKey: ['parcelas'] }); // Para ClienteEditModal
+      queryClient.invalidateQueries({ queryKey: ['titulos'] }); // Para outras páginas
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      // Chamar onSuccess antes de fechar o modal
       onSuccess?.();
       onClose();
     },

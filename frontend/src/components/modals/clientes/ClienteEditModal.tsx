@@ -330,6 +330,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               
               // Recarregar dados
               queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
+              queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
+              refetchParcelas();
             } catch (err: any) {
               showNotification(err.response?.data?.message || 'Erro ao cancelar título', 'error');
             }
@@ -353,6 +355,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               try {
                 await TituloService.estornar(item.id);
                 showNotification('Título estornado com sucesso!', 'success');
+                queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
                 refetchParcelas();
               } catch (err: any) {
                 showNotification(err.message || 'Erro ao estornar título.', 'error');
@@ -383,6 +386,25 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }
   ];
 
+  // Função para obter a cor do status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pago':
+        return 'success';
+      case 'pago_atraso':
+        return 'warning';
+      case 'pendente':
+        return 'primary';
+      case 'vencido':
+        return 'danger';
+      case 'parcial':
+        return 'info';
+      case 'cancelado':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
 
   // Colunas para o DataTable
   const columns = [
@@ -397,7 +419,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       label: 'Status',
       render: (item: any) => {
         return (
-          <span className="badge bg-secondary">
+          <span className={`badge bg-${getStatusColor(item.status)}`}>
             {item.status}
           </span>
         );
@@ -1515,10 +1537,18 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       {/* Modal de criação de título */}
       <TituloCreateModal
         show={showTituloCreateModal}
-        onClose={() => setShowTituloCreateModal(false)}
+        onClose={() => {
+          setShowTituloCreateModal(false);
+          // Sempre refetch quando modal fechar (cancelar ou sucesso)
+          refetchParcelas();
+          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
+        }}
         onSuccess={() => {
           setShowTituloCreateModal(false);
+          // Forçar refetch imediatamente
           refetchParcelas();
+          // Também invalidar queries para garantir atualização
+          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
         }}
         clienteId={clienteId || undefined}
       />
@@ -1529,11 +1559,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         onClose={() => {
           setShowTituloEditModal(false);
           setSelectedTituloId(null);
+          // Sempre refetch quando modal fechar (cancelar ou sucesso)
+          refetchParcelas();
+          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
         }}
         onSuccess={() => {
           setShowTituloEditModal(false);
           setSelectedTituloId(null);
+          // Forçar refetch imediatamente
           refetchParcelas();
+          // Também invalidar queries para garantir atualização
+          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
         }}
         parcelaId={selectedTituloId || 0}
       />

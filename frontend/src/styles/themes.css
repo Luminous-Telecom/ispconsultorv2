@@ -1077,6 +1077,11 @@ p, span, div, label {
   line-height: 1.2;
 }
 
+.badge-primary {
+  background: #007bff;
+  color: white;
+}
+
 .badge-success {
   background: #10b981;
   color: white;
@@ -1284,6 +1289,12 @@ p, span, div, label {
 [data-theme="dark"] .badge.bg-light {
   background-color: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
+}
+
+/* Sobrescrever badge bg-primary para tema escuro */
+[data-theme="dark"] .badge.bg-primary {
+  background-color: #007bff !important;
+  color: #ffffff !important;
 }
 
 /* Sobrescrever badge bg-warning para tema escuro */

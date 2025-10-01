@@ -178,6 +178,26 @@ const ClienteShow: React.FC = () => {
     );
   }
 
+  // Função para obter a cor do status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pago':
+        return 'success';
+      case 'pago_atraso':
+        return 'warning';
+      case 'pendente':
+        return 'primary';
+      case 'vencido':
+        return 'danger';
+      case 'parcial':
+        return 'info';
+      case 'cancelado':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
+
   // Colunas para tabela de carnês
   const carnesColumns = [
     {
@@ -268,7 +288,7 @@ const ClienteShow: React.FC = () => {
       sortable: true,
       render: (titulo: any) => {
         return (
-          <span className="badge bg-secondary">
+          <span className={`badge bg-${getStatusColor(titulo.status)}`}>
             {titulo.status}
           </span>
         );

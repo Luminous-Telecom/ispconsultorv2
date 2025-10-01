@@ -142,6 +142,25 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     refetchParcelas();
   };
 
+  // Função para obter a cor do status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pago':
+        return 'success';
+      case 'pago_atraso':
+        return 'warning';
+      case 'pendente':
+        return 'primary';
+      case 'vencido':
+        return 'danger';
+      case 'parcial':
+        return 'info';
+      case 'cancelado':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
 
   const parcelasColumns = [
     { key: 'id', label: 'ID', sortable: true },
@@ -150,7 +169,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       key: 'status', 
       label: 'Status', 
       render: (item: any) => (
-        <span className="badge bg-secondary">
+        <span className={`badge bg-${getStatusColor(item.status)}`}>
           {item.status}
         </span>
       )
