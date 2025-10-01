@@ -28,13 +28,20 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       if (iframe) {
         const idsParam = ids.join(',');
         const timestamp = new Date().getTime();
-        // Usar endpoint de PDF
-        iframe.src = getApiUrl(`/boleto/pdf/multiplos?ids=${idsParam}&_=${timestamp}`);
+        // Usar endpoint HTML
+        iframe.src = getApiUrl(`/boleto/web/multiplos?ids=${idsParam}&_=${timestamp}`);
       }
     } catch (error) {
       console.error('Erro ao carregar boletos:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImprimir = () => {
+    const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.print();
     }
   };
 
@@ -48,6 +55,24 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       title="Relatório"
       size="a4"
       className="no-padding"
+      headerActions={
+        !loading && (
+          <div className="d-flex justify-content-end mt-2">
+            <button 
+              className="btn btn-sm btn-primary me-2"
+              onClick={handleImprimir}
+            >
+              Imprimir
+            </button>
+            <button 
+              className="btn btn-sm btn-secondary"
+              onClick={onClose}
+            >
+              Fechar
+            </button>
+          </div>
+        )
+      }
     >
       <div style={{ 
         height: `${modalHeight - 48}px`, // Altura total - header
