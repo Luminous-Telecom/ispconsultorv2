@@ -154,9 +154,12 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
           item.status === 'pago' ? 'bg-success' :
           item.status === 'parcial' ? 'bg-info' :
           item.status === 'vencido' ? 'bg-danger' :
-          item.status === 'pendente' ? 'bg-warning text-dark' :
           'bg-secondary'
-        }`} style={item.status === 'pago_atraso' ? { backgroundColor: '#ff8c00', color: 'white' } : {}}>
+        }`} style={
+          item.status === 'pago_atraso' ? { backgroundColor: '#ff8c00', color: 'white' } :
+          item.status === 'pendente' ? { backgroundColor: '#87ceeb', color: '#333' } :
+          {}
+        }>
           {item.status === 'pago' ? 'Pago' :
            item.status === 'pago_atraso' ? 'Pago com Atraso' :
            item.status === 'parcial' ? 'Parcial' :

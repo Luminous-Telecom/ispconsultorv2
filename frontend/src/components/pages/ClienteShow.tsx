@@ -310,7 +310,7 @@ const ClienteShow: React.FC = () => {
           );
         } else {
           return (
-            <span className="badge bg-warning text-dark">
+            <span className="badge" style={{ backgroundColor: '#87ceeb', color: '#333' }}>
               Pendente
             </span>
           );
