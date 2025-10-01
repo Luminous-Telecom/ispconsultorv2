@@ -52,15 +52,24 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
   };
 
   const handleBaixarPDF = () => {
-    const idsParam = ids.join(',');
-    const url = getApiUrl(`/boleto/pdf/multiplos?ids=${idsParam}&download=true`);
-    // Criar link temporário para forçar download
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `boletos-${idsParam}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
+    if (iframe) {
+      try {
+        // Tentar imprimir com opção de salvar como PDF
+        iframe.contentWindow?.print();
+      } catch (error) {
+        // Se der erro de CORS, abrir em nova aba para o usuário salvar
+        const newWindow = window.open(iframe.src, '_blank');
+        if (newWindow) {
+          // Após carregar, mostrar diálogo de impressão automaticamente
+          newWindow.onload = () => {
+            setTimeout(() => {
+              newWindow.print();
+            }, 500);
+          };
+        }
+      }
+    }
   };
 
   // Calcular altura total do modal
