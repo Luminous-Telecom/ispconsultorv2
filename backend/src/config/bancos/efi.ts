@@ -87,7 +87,7 @@ export const efiConfig = {
       id: 'data.charge_id',
       url: 'data.link',
       barcode: 'data.barcode',
-      linha_digitavel: 'data.pix.qrcode', // A EFI retorna a linha digitável no campo pix.qrcode
+      linha_digitavel: 'data.barcode', // EFI retorna barcode já formatado como linha digitável
       pdf: 'data.pdf.charge',
       pix_qrcode: 'data.pix.qrcode',
       pix_qrcode_image: 'data.pix.qrcode_image',
