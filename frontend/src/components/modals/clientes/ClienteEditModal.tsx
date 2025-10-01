@@ -400,12 +400,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           <span className="badge" style={{
             backgroundColor: 
               item.status === 'pago' ? '#28a745' :
-              item.status === 'pago_atraso' ? '#ffc107' :
-              item.status === 'parcial' ? '#0dcaf0' :
+              item.status === 'pago_atraso' ? '#ff8c00' :
+              item.status === 'parcial' ? '#17a2b8' :
               item.status === 'vencido' ? '#dc3545' :
-              item.status === 'pendente' ? '#6c757d' :
+              item.status === 'pendente' ? '#87ceeb' :
               '#6c757d',
-            color: item.status === 'pago_atraso' ? '#000' : 'white'
+            color: item.status === 'pendente' ? '#333333' : 'white'
           }}>
             {item.status === 'pago' ? '✔ Recebimento em dia' :
              item.status === 'pago_atraso' ? '✔ Pago com Atraso' :
