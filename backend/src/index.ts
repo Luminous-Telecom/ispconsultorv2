@@ -45,7 +45,8 @@ const PORT = process.env.PORT;
 // Middleware de segurança
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false // Desabilitar CSP para permitir iframes
+  contentSecurityPolicy: false, // Desabilitar CSP para permitir iframes
+  frameguard: false // Desabilitar X-Frame-Options para permitir iframes
 }));
 
 // Middleware de CORS
