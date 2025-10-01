@@ -179,7 +179,6 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 export interface ClienteFilters {
   search?: string;
   ativo?: boolean;
-  tipo_cobranca?: string;
   cidade?: string;
   estado?: string;
 }

@@ -1011,20 +1011,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-                  <h6 className="text-primary mb-3">Configurações de Carnê</h6>
-                  
-                  <div className="mb-3">
-                    <label htmlFor="tipo_cobranca" className="form-label">Tipo de Cobrança</label>
-                    <select
-                      className="form-select"
-                      id="tipo_cobranca"
-                      value={formData.tipo_cobranca}
-                      onChange={(e) => handleInputChange('tipo_cobranca', e.target.value as 'titulo' | 'carne')}
-                    >
-                      <option value="titulo">Título</option>
-                      <option value="carne">Carnê</option>
-                    </select>
-                  </div>
+                  <h6 className="text-primary mb-3">Configurações de Cobrança</h6>
 
                   <div className="mb-3">
                     <label htmlFor="dia_vencimento" className="form-label">Dia de Vencimento</label>
@@ -1066,15 +1053,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     <div className="form-control-plaintext">
                       <span className={`badge ${formData.ativo ? 'bg-success' : 'bg-secondary'}`}>
                         {formData.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Tipo de Cobrança Atual</label>
-                    <div className="form-control-plaintext">
-                      <span className="badge bg-info">
-                        {formData.tipo_cobranca === 'titulo' ? 'Título' : 'Carnê'}
                       </span>
                     </div>
                   </div>
