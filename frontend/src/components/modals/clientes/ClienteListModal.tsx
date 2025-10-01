@@ -220,8 +220,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         clienteId={selectedClienteId}
         onSuccess={() => {
           refetch();
-          setShowEditModal(false);
-          setSelectedClienteId(null);
+          // Não fechar o modal automaticamente
         }}
       />
     </DraggableModal>
