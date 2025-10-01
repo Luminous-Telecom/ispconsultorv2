@@ -571,13 +571,14 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       recebe_email: formData.recebe_email,
       recebe_sms: formData.recebe_sms,
       recebe_whatsapp: formData.recebe_whatsapp,
-      observacoes: formData.observacoes
+      observacoes: formData.observacoes,
+      data_validade_desconto: formData.data_validade_desconto || null
     };
 
-    // Remover apenas campos null ou undefined (permitir string vazia e 0)
+    // Remover apenas campos undefined (permitir null, string vazia e 0)
     Object.keys(dataToSend).forEach(key => {
       const value = dataToSend[key];
-      if (value === null || value === undefined) {
+      if (value === undefined) {
         delete dataToSend[key];
       }
     });
