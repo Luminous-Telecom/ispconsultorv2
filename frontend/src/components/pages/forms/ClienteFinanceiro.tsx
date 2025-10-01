@@ -152,12 +152,11 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       render: (item: any) => (
         <span className={`badge ${
           item.status === 'pago' ? 'bg-success' :
-          item.status === 'pago_atraso' ? 'bg-warning' :
           item.status === 'parcial' ? 'bg-info' :
           item.status === 'vencido' ? 'bg-danger' :
           item.status === 'pendente' ? 'bg-secondary' :
           'bg-secondary'
-        }`}>
+        }`} style={item.status === 'pago_atraso' ? { backgroundColor: '#ff8c00', color: 'white' } : {}}>
           {item.status === 'pago' ? 'Pago' :
            item.status === 'pago_atraso' ? 'Pago com Atraso' :
            item.status === 'parcial' ? 'Parcial' :

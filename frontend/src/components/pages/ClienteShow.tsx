@@ -286,7 +286,7 @@ const ClienteShow: React.FC = () => {
           );
         } else if (titulo.status === 'pago_atraso') {
           return (
-            <span className="badge bg-warning">
+            <span className="badge" style={{ backgroundColor: '#ff8c00', color: 'white' }}>
               Pago com Atraso
             </span>
           );
