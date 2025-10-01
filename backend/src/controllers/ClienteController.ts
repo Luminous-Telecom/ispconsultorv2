@@ -69,6 +69,7 @@ export class ClienteController {
     estado: Joi.string().length(2).allow(null, ''),
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean(),
+    tipo_cobranca: Joi.string().valid('titulo', 'carne').allow(null),
     valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
     isento_mensalidade: Joi.boolean(),
     recebe_email: Joi.boolean(),
