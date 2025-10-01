@@ -30,11 +30,6 @@ Cliente.hasMany(Titulo, {
   as: 'titulos'
 });
 
-Cliente.belongsTo(Banco, {
-  foreignKey: 'conta_boleto',
-  as: 'bancoBoleto'
-});
-
 // Plano
 Plano.belongsToMany(Cliente, {
   through: ClientePlano,
@@ -48,17 +43,12 @@ Plano.hasMany(ClientePlano, {
   as: 'contratos'
 });
 
-
 Plano.hasMany(Titulo, {
   foreignKey: 'plano_id',
   as: 'titulos'
 });
 
 // Banco
-Banco.hasMany(Cliente, {
-  foreignKey: 'conta_boleto',
-  as: 'clientes'
-});
 
 
 Banco.hasMany(Titulo, {
@@ -102,6 +92,11 @@ ClientePlano.belongsTo(Cliente, {
 ClientePlano.belongsTo(Plano, {
   foreignKey: 'plano_id',
   as: 'plano'
+});
+
+ClientePlano.belongsTo(Banco, {
+  foreignKey: 'conta_boleto',
+  as: 'bancoBoleto'
 });
 
 // BancoConfiguracao
