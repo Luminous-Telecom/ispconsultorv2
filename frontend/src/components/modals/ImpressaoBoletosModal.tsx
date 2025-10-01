@@ -28,8 +28,8 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       if (iframe) {
         const idsParam = ids.join(',');
         const timestamp = new Date().getTime();
-        // Usar endpoint de PDF em vez de HTML
-        iframe.src = getApiUrl(`/boleto/pdf/multiplos?ids=${idsParam}&_=${timestamp}`);
+        // Usar endpoint HTML
+        iframe.src = getApiUrl(`/boleto/web/multiplos?ids=${idsParam}&_=${timestamp}`);
       }
     } catch (error) {
       console.error('Erro ao carregar boletos:', error);
