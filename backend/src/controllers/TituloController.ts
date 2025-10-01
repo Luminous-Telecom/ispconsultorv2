@@ -859,17 +859,11 @@ export class TituloController {
         </html>
       `;
 
-      // Gerar PDF usando Puppeteer
-      const puppeteer = await import('puppeteer');
-      const browser = await puppeteer.default.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      // Gerar PDF usando html-pdf-node
+      // @ts-ignore - biblioteca sem tipos TypeScript
+      const htmlPdf = await import('html-pdf-node');
       
-      const page = await browser.newPage();
-      await page.setContent(htmlCompleto, { waitUntil: 'networkidle0' });
-      
-      const pdfBuffer = await page.pdf({
+      const options = {
         format: 'A4',
         printBackground: true,
         margin: {
@@ -878,9 +872,10 @@ export class TituloController {
           bottom: '0mm',
           left: '0mm'
         }
-      });
+      };
       
-      await browser.close();
+      const file = { content: htmlCompleto };
+      const pdfBuffer = await htmlPdf.default.generatePdf(file, options);
 
       // Enviar PDF
       res.setHeader('Content-Type', 'application/pdf');
