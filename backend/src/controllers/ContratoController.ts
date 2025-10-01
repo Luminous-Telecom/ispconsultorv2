@@ -3,7 +3,7 @@ import { ClientePlano } from '../models/ClientePlano';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
-import Joi from 'joi';
+import * as Joi from 'joi';
 
 export class ContratoController {
   // Schema de validação para criação
@@ -135,6 +135,32 @@ export class ContratoController {
             message: 'Banco não encontrado'
           });
           return;
+        }
+      }
+
+      // Calcular valor_final se não fornecido
+      if (!value.valor_final) {
+        const plano = await Plano.findByPk(value.plano_id);
+        if (plano) {
+          let valorFinal = parseFloat(plano.valor_mensal.toString());
+          
+          // Aplicar desconto percentual
+          if (value.desconto_percentual && value.desconto_percentual > 0) {
+            const desconto = (parseFloat(value.desconto_percentual) / 100) * valorFinal;
+            valorFinal -= desconto;
+          }
+          
+          // Aplicar desconto em valor
+          if (value.desconto_valor && parseFloat(value.desconto_valor) > 0) {
+            valorFinal -= parseFloat(value.desconto_valor);
+          }
+          
+          // Garantir que o valor não seja negativo
+          if (valorFinal < 0) {
+            valorFinal = 0;
+          }
+          
+          value.valor_final = valorFinal.toFixed(2);
         }
       }
 
