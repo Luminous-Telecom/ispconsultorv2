@@ -886,9 +886,10 @@ export class TituloController {
         });
       });
 
-      // Enviar PDF
+      // Enviar PDF (attachment para download, inline para visualizar)
+      const disposition = req.query.download === 'true' ? 'attachment' : 'inline';
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="boletos-${ids.join('-')}.pdf"`);
+      res.setHeader('Content-Disposition', `${disposition}; filename="boletos-${ids.join('-')}.pdf"`);
       res.send(pdfBuffer);
     } catch (error: any) {
       logger.error('Erro ao imprimir PDFs múltiplos', { error: error.message });

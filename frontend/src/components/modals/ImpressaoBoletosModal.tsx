@@ -40,9 +40,27 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
 
   const handleImprimir = () => {
     const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.print();
+    if (iframe) {
+      try {
+        // Tentar imprimir diretamente
+        iframe.contentWindow?.print();
+      } catch (error) {
+        // Se der erro de CORS, abrir em nova aba
+        window.open(iframe.src, '_blank');
+      }
     }
+  };
+
+  const handleBaixarPDF = () => {
+    const idsParam = ids.join(',');
+    const url = getApiUrl(`/boleto/pdf/multiplos?ids=${idsParam}&download=true`);
+    // Criar link temporário para forçar download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `boletos-${idsParam}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Calcular altura total do modal
@@ -58,6 +76,12 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       headerActions={
         !loading && (
           <div className="d-flex justify-content-end mt-2">
+            <button 
+              className="btn btn-sm btn-success me-2"
+              onClick={handleBaixarPDF}
+            >
+              Baixar PDF
+            </button>
             <button 
               className="btn btn-sm btn-primary me-2"
               onClick={handleImprimir}
