@@ -396,40 +396,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'status',
       label: 'Status',
       render: (item: any) => {
-        const getStatusBadgeStyle = (status: string) => {
-          switch (status) {
-            case 'pago':
-              return { backgroundColor: '#28a745', color: 'white' };
-            case 'pago_atraso':
-              return { backgroundColor: '#ff8c00', color: 'white' };
-            case 'pendente':
-              return { backgroundColor: '#87ceeb', color: '#333333' };
-            case 'vencido':
-              return { backgroundColor: '#dc3545', color: 'white' };
-            case 'cancelado':
-              return { backgroundColor: '#6c757d', color: 'white' };
-            case 'parcial':
-              return { backgroundColor: '#17a2b8', color: 'white' };
-            default:
-              return { backgroundColor: '#6c757d', color: 'white' };
-          }
-        };
-
-        const getStatusLabel = (status: string) => {
-          switch (status) {
-            case 'pago': return '✔ Recebimento em dia';
-            case 'pago_atraso': return '✔ Pago com Atraso';
-            case 'pendente': return 'Pendente';
-            case 'vencido': return 'Vencido';
-            case 'cancelado': return 'Cancelado';
-            case 'parcial': return 'Parcial';
-            default: return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Desconhecido';
-          }
-        };
-
         return (
-          <span className="badge" style={getStatusBadgeStyle(item.status)}>
-            {getStatusLabel(item.status)}
+          <span className="badge bg-secondary">
+            {item.status}
           </span>
         );
       }

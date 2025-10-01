@@ -163,42 +163,6 @@ const CarneParcelas: React.FC = () => {
 
   const parcelas = parcelasData?.data || [];
 
-  const getStatusBadgeStyle = (status: string) => {
-    switch (status) {
-      case 'pago': 
-        return { backgroundColor: '#28a745', color: 'white' };
-      case 'pago_atraso': 
-        return { backgroundColor: '#ff8c00', color: 'white' };
-      case 'pendente': 
-        return { backgroundColor: '#87ceeb', color: '#333333' };
-      case 'vencido': 
-        return { backgroundColor: '#dc3545', color: 'white' };
-      case 'cancelado': 
-        return { backgroundColor: '#6c757d', color: 'white' };
-      case 'registrado': 
-        return { backgroundColor: '#17a2b8', color: 'white' };
-      case 'ativo': 
-        return { backgroundColor: '#007bff', color: 'white' };
-      case 'parcial': 
-        return { backgroundColor: '#17a2b8', color: 'white' };
-      default: 
-        return { backgroundColor: '#6c757d', color: 'white' };
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pago': return '✔ Recebimento em dia';
-      case 'pago_atraso': return '✔ Pago com Atraso';
-      case 'pendente': return 'Pendente';
-      case 'vencido': return 'Vencido';
-      case 'cancelado': return 'Cancelado';
-      case 'registrado': return 'Registrado';
-      case 'ativo': return 'Ativo';
-      case 'parcial': return 'Parcial';
-      default: return status;
-    }
-  };
 
   const handleFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -319,8 +283,8 @@ const CarneParcelas: React.FC = () => {
       key: 'status',
       label: 'Status',
       render: (parcela: any) => (
-        <span className="badge" style={getStatusBadgeStyle(parcela.status)}>
-          {getStatusLabel(parcela.status)}
+        <span className="badge bg-secondary">
+          {parcela.status}
         </span>
       )
     }
@@ -535,8 +499,8 @@ const CarneParcelas: React.FC = () => {
                         </div>
                         <div className="mb-0">
                           <span className="small" style={{ color: 'var(--text-secondary)' }}>Status:</span>
-                          <span className="badge ms-1" style={getStatusBadgeStyle(carneData.status)}>
-                            {getStatusLabel(carneData.status)}
+                          <span className="badge bg-secondary ms-1">
+                            {carneData.status}
                           </span>
                         </div>
                         {carneData.carnet_id && (

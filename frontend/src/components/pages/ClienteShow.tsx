@@ -215,43 +215,9 @@ const ClienteShow: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (carne: any) => {
-        const getStatusBadgeStyle = (status: string) => {
-          switch (status) {
-            case 'pago': 
-              return { backgroundColor: '#28a745', color: 'white' };
-            case 'pago_atraso': 
-              return { backgroundColor: '#ff8c00', color: 'white' };
-            case 'pendente': 
-              return { backgroundColor: '#87ceeb', color: '#333333' };
-            case 'vencido': 
-              return { backgroundColor: '#dc3545', color: 'white' };
-            case 'cancelado': 
-              return { backgroundColor: '#6c757d', color: 'white' };
-            case 'parcial': 
-              return { backgroundColor: '#17a2b8', color: 'white' };
-            case 'ativo': 
-              return { backgroundColor: '#007bff', color: 'white' };
-            default: 
-              return { backgroundColor: '#6c757d', color: 'white' };
-          }
-        };
-
-        const getStatusLabel = (status: string) => {
-          switch (status) {
-            case 'pago': return '✔ Recebimento em dia';
-            case 'pago_atraso': return '✔ Pago com Atraso';
-            case 'pendente': return 'Pendente';
-            case 'vencido': return 'Vencido';
-            case 'cancelado': return 'Cancelado';
-            case 'parcial': return 'Parcial';
-            case 'ativo': return 'Ativo';
-            default: return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Desconhecido';
-          }
-        };
-        
         return (
-          <span className="badge" style={getStatusBadgeStyle(carne.status)}>
-            {getStatusLabel(carne.status)}
+          <span className="badge bg-secondary">
+            {carne.status}
           </span>
         );
       }
@@ -301,40 +267,9 @@ const ClienteShow: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (titulo: any) => {
-        const bgColor = 
-          titulo.status === 'pago' ? '#28a745' :
-          titulo.status === 'pago_atraso' ? '#ff8c00' :
-          titulo.status === 'parcial' ? '#17a2b8' :
-          titulo.status === 'vencido' ? '#dc3545' :
-          titulo.status === 'pendente' ? '#87ceeb' :
-          titulo.status === 'cancelado' ? '#6c757d' :
-          '#6c757d';
-        
-        const textColor = titulo.status === 'pendente' ? '#333333' : 'white';
-        
-        const label = 
-          titulo.status === 'pago' ? '✔ Recebimento em dia' :
-          titulo.status === 'pago_atraso' ? '✔ Pago com Atraso' :
-          titulo.status === 'parcial' ? 'Parcial' :
-          titulo.status === 'vencido' ? 'Vencido' :
-          titulo.status === 'pendente' ? 'Pendente' :
-          titulo.status === 'cancelado' ? 'Cancelado' :
-          titulo.status;
-        
         return (
-          <span 
-            style={{
-              backgroundColor: bgColor + ' !important',
-              color: textColor + ' !important',
-              borderRadius: '12px',
-              padding: '0.125rem 0.5rem',
-              fontSize: '0.6875rem',
-              fontWeight: '500',
-              lineHeight: '1.2',
-              display: 'inline-block'
-            }}
-          >
-            {label}
+          <span className="badge bg-secondary">
+            {titulo.status}
           </span>
         );
       }
