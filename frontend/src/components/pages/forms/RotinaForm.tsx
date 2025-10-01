@@ -105,14 +105,9 @@ const RotinaForm: React.FC<RotinaFormProps> = ({ show, onSuccess, onCancel, edit
     try {
       if (editData) {
         // Modo edição
-        console.log('📤 Enviando dados para atualização:', {
-          id: editData.id,
-          formData: formData
-        });
         await SchedulerService.updateRotina(editData.id, formData);
       } else {
         // Modo criação
-        console.log('📤 Enviando dados para criação:', formData);
         await SchedulerService.createRotina(formData);
       }
       onSuccess();

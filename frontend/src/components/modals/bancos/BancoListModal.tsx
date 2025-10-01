@@ -144,7 +144,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       label: 'Editar',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
-          console.log('Editar banco:', selectedItems[0]);
         }
       }
     },

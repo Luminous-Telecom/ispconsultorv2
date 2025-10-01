@@ -43,7 +43,6 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
 
   const handleBulkAction = (action: string) => {
-    console.log(`${action} contratos`);
   };
 
   // Funções de ordenação
@@ -190,7 +189,6 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
            onClose={() => setShowContratoCreateModal(false)}
            onSuccess={() => {
              // Atualizar lista de contratos
-             console.log('Contrato criado com sucesso');
            }}
            clienteId={cliente?.id}
          />

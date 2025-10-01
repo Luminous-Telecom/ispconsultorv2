@@ -118,7 +118,6 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       cliente_id: clienteId
     };
 
-    console.log('Payload sendo enviado:', payload);
     createParcelaMutation.mutate(payload as any);
   };
 

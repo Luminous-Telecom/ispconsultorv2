@@ -228,7 +228,6 @@ const RotinasAgendadas: React.FC = () => {
   };
 
   const handleEditFormSuccess = () => {
-    console.log('🎉 Formulário de edição foi salvo com sucesso, recarregando dados...');
     setShowEditForm(false);
     setSelectedRoutine(null);
     fetchRotinas(); // Recarregar dados
@@ -269,7 +268,6 @@ const RotinasAgendadas: React.FC = () => {
           break;
         
         default:
-          console.log('Ação não implementada:', action);
       }
     } catch (error: any) {
       console.error(`Erro ao ${action} rotina:`, error);
