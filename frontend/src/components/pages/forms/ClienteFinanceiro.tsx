@@ -238,6 +238,19 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     if (selectedItems.length === 0) return true;
                     return selectedItems.every(item => item.status !== 'pago');
                   }
+                },
+                {
+                  label: 'Imprimir',
+                  dropdown: [
+                    {
+                      label: `Imprimir Selecionados (${selectedItems.length})`,
+                      action: handleImprimirSelecionados
+                    },
+                    {
+                      label: 'Imprimir Todos em Aberto',
+                      action: handleImprimirTodosEmAberto
+                    }
+                  ]
                 }
               ]}
               onSort={handleSortParcelas}
@@ -246,37 +259,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               onRefresh={refetchParcelas}
               onSelectionChange={setSelectedItems}
             />
-
-      {/* Botão Imprimir com Dropdown */}
-      <div className="dropdown mt-2">
-        <button 
-          className="btn btn-primary dropdown-toggle" 
-          type="button" 
-          id="dropdownImprimir" 
-          data-bs-toggle="dropdown" 
-          aria-expanded="false"
-        >
-          Imprimir
-        </button>
-        <ul className="dropdown-menu" aria-labelledby="dropdownImprimir">
-          <li>
-            <button 
-              className="dropdown-item" 
-              onClick={handleImprimirSelecionados}
-            >
-              Imprimir Selecionados ({selectedItems.length})
-            </button>
-          </li>
-          <li>
-            <button 
-              className="dropdown-item" 
-              onClick={handleImprimirTodosEmAberto}
-            >
-              Imprimir Todos em Aberto
-            </button>
-          </li>
-        </ul>
-      </div>
 
       {/* Modal de edição de parcela */}
       <TituloEditModal

@@ -242,8 +242,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   // Ações para o header do modal (apenas na aba Financeiro)
   const bulkActions: Array<{
     label: string;
-    action: (selectedItems: any[]) => void;
+    action?: (selectedItems: any[]) => void;
     disabled?: (selectedItems: any[]) => boolean;
+    dropdown?: {
+      label: string;
+      action: () => void;
+    }[];
   }> = [
     {
       label: 'Novo Título',
@@ -325,6 +329,19 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status !== 'pago');
       }
+    },
+    {
+      label: 'Imprimir',
+      dropdown: [
+        {
+          label: `Imprimir Selecionados (${selectedItems.length})`,
+          action: handleImprimirSelecionados
+        },
+        {
+          label: 'Imprimir Todos em Aberto',
+          action: handleImprimirTodosEmAberto
+        }
+      ]
     }
   ];
 
@@ -1385,37 +1402,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       setPage={setPage}
                       emptyMessage="Este cliente ainda não possui títulos cadastrados."
                     />
-                  </div>
-
-                  {/* Botão Imprimir com Dropdown */}
-                  <div className="dropdown mt-2">
-                    <button 
-                      className="btn btn-primary dropdown-toggle" 
-                      type="button" 
-                      id="dropdownImprimirModal" 
-                      data-bs-toggle="dropdown" 
-                      aria-expanded="false"
-                    >
-                      Imprimir
-                    </button>
-                    <ul className="dropdown-menu" aria-labelledby="dropdownImprimirModal">
-                      <li>
-                        <button 
-                          className="dropdown-item" 
-                          onClick={handleImprimirSelecionados}
-                        >
-                          Imprimir Selecionados ({selectedItems.length})
-                        </button>
-                      </li>
-                      <li>
-                        <button 
-                          className="dropdown-item" 
-                          onClick={handleImprimirTodosEmAberto}
-                        >
-                          Imprimir Todos em Aberto
-                        </button>
-                      </li>
-                    </ul>
                   </div>
 
                   {/* Resumo Financeiro */}

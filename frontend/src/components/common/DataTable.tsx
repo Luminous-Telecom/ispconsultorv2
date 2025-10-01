@@ -24,12 +24,16 @@ interface TableProps {
   setPage: (page: number) => void;
   emptyMessage?: string;
   actions?: (item: any) => React.ReactNode;
-  bulkActions?: {
+  bulkActions?: Array<{
     label: string;
-    action: (selectedItems: any[]) => void;
+    action?: (selectedItems: any[]) => void;
     variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
     disabled?: (selectedItems: any[]) => boolean;
-  }[];
+    dropdown?: {
+      label: string;
+      action: () => void;
+    }[];
+  }>;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
   onSelectionChange?: (selectedItems: any[]) => void;
@@ -163,12 +167,42 @@ const DataTable: React.FC<TableProps> = ({
                 const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
                 const isDisabled = isDisabledBySelection || isDisabledByCondition;
                 
+                // Se tem dropdown, renderizar como dropdown
+                if (bulkAction.dropdown) {
+                  return (
+                    <div key={index} className="dropdown" style={{ flexShrink: 0 }}>
+                      <button
+                        className="btn btn-sm btn-primary dropdown-toggle"
+                        type="button"
+                        id={`dropdown-${index}`}
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        {bulkAction.label}
+                      </button>
+                      <ul className="dropdown-menu" aria-labelledby={`dropdown-${index}`}>
+                        {bulkAction.dropdown.map((item, itemIndex) => (
+                          <li key={itemIndex}>
+                            <button
+                              className="dropdown-item"
+                              onClick={item.action}
+                            >
+                              {item.label}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
+                
+                // Botão normal
                 return (
                   <button
                     key={index}
                     className="btn btn-sm btn-primary"
                     onClick={() => {
-                      if (!isDisabled) {
+                      if (!isDisabled && bulkAction.action) {
                         handleBulkAction(bulkAction.action);
                       }
                     }}
