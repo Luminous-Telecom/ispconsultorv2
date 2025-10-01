@@ -470,7 +470,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
       onSuccess?.();
-      onClose();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao atualizar cliente');

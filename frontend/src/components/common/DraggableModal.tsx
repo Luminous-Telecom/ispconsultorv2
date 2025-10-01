@@ -265,11 +265,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           bottom: 0,
           zIndex: 1050
         }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
       >
       <div
         ref={modalRef}
