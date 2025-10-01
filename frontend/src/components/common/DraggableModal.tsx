@@ -360,11 +360,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
         {/* Body com scroll */}
         <div 
-          className="modal-body"
+          className={`modal-body ${className?.includes('no-padding') ? '' : ''}`}
           style={{
             flex: 1,
-            overflow: 'auto',
-            padding: '16px',
+            overflow: className?.includes('no-padding') ? 'hidden' : 'auto',
+            padding: className?.includes('no-padding') ? '0' : '16px',
             minHeight: 0,
             height: 'calc(100% - 48px)' // Altura total menos header
           }}

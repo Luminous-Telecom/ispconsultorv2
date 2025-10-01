@@ -47,13 +47,15 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       onClose={onClose}
       title="Relatório"
       size="a4"
+      className="no-padding"
     >
       <div style={{ 
         height: `${modalHeight - 48}px`, // Altura total - header
         display: 'flex', 
         flexDirection: 'column',
         margin: 0,
-        padding: 0
+        padding: 0,
+        overflow: 'hidden'
       }}>
         {loading ? (
           <div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
