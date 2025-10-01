@@ -89,11 +89,11 @@ export class TituloController {
       // Instruções
       TEXTO_MULTAMORA: titulo.banco.percentual_multa || titulo.banco.percentual_juros ? 
         `Multa de ${titulo.banco.percentual_multa || 2}% + Juros de ${titulo.banco.percentual_juros || 0.033}% ao dia após o vencimento` : '',
-      INSTRUCOES1: titulo.banco.instrucao_linha_1 || '',
-      INSTRUCOES2: titulo.banco.instrucao_linha_2 || '',
-      INSTRUCOES3: titulo.banco.instrucao_linha_3 || '',
-      INSTRUCOES4: titulo.banco.instrucao_linha_4 || '',
-      INSTRUCOES5: titulo.banco.instrucao_linha_5 || '',
+      INSTRUCOES1: TituloController.processarInstrucao(titulo.banco.instrucao_linha_1 || '', titulo),
+      INSTRUCOES2: TituloController.processarInstrucao(titulo.banco.instrucao_linha_2 || '', titulo),
+      INSTRUCOES3: TituloController.processarInstrucao(titulo.banco.instrucao_linha_3 || '', titulo),
+      INSTRUCOES4: TituloController.processarInstrucao(titulo.banco.instrucao_linha_4 || '', titulo),
+      INSTRUCOES5: TituloController.processarInstrucao(titulo.banco.instrucao_linha_5 || '', titulo),
       
       // QR Code PIX e Código de Barras
       QRCODE: titulo.qrcode_image || '',
