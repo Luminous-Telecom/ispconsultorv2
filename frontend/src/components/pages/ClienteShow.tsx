@@ -301,25 +301,35 @@ const ClienteShow: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (titulo: any) => {
+        const bgColor = 
+          titulo.status === 'pago' ? '#28a745' :
+          titulo.status === 'pago_atraso' ? '#ff8c00' :
+          titulo.status === 'parcial' ? '#17a2b8' :
+          titulo.status === 'vencido' ? '#dc3545' :
+          titulo.status === 'pendente' ? '#87ceeb' :
+          titulo.status === 'cancelado' ? '#6c757d' :
+          '#6c757d';
+        
+        const textColor = titulo.status === 'pendente' ? '#333333' : 'white';
+        
+        const label = 
+          titulo.status === 'pago' ? '✔ Recebimento em dia' :
+          titulo.status === 'pago_atraso' ? '✔ Pago com Atraso' :
+          titulo.status === 'parcial' ? 'Parcial' :
+          titulo.status === 'vencido' ? 'Vencido' :
+          titulo.status === 'pendente' ? 'Pendente' :
+          titulo.status === 'cancelado' ? 'Cancelado' :
+          titulo.status;
+        
         return (
-          <span className="badge" style={{
-            backgroundColor: 
-              titulo.status === 'pago' ? '#28a745' :
-              titulo.status === 'pago_atraso' ? '#ff8c00' :
-              titulo.status === 'parcial' ? '#17a2b8' :
-              titulo.status === 'vencido' ? '#dc3545' :
-              titulo.status === 'pendente' ? '#87ceeb' :
-              titulo.status === 'cancelado' ? '#6c757d' :
-              '#6c757d',
-            color: titulo.status === 'pendente' ? '#333333' : 'white'
-          }}>
-            {titulo.status === 'pago' ? '✔ Recebimento em dia' :
-             titulo.status === 'pago_atraso' ? '✔ Pago com Atraso' :
-             titulo.status === 'parcial' ? 'Parcial' :
-             titulo.status === 'vencido' ? 'Vencido' :
-             titulo.status === 'pendente' ? 'Pendente' :
-             titulo.status === 'cancelado' ? 'Cancelado' :
-             titulo.status}
+          <span 
+            className="badge" 
+            style={{
+              backgroundColor: bgColor,
+              color: textColor
+            }}
+          >
+            {label}
           </span>
         );
       }
