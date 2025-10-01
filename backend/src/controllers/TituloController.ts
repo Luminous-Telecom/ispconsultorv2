@@ -785,10 +785,10 @@ export class TituloController {
   // Imprimir múltiplos boletos
   static async imprimirBoletosMultiplos(req: Request, res: Response): Promise<void> {
     try {
-      // Aceitar ids tanto de JSON quanto de form data
-      let ids = req.body.ids;
+      // Aceitar ids de POST (body) ou GET (query)
+      let ids = req.body.ids || req.query.ids;
       
-      // Se vier como string (form data), fazer parse
+      // Se vier como string (form data ou query string), fazer parse
       if (typeof ids === 'string') {
         try {
           ids = JSON.parse(ids);

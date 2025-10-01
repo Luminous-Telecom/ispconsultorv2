@@ -12,7 +12,6 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
   onClose, 
   ids 
 }) => {
-  const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -24,45 +23,36 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
   const carregarBoletos = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ids })
-      });
-
-      const html = await response.text();
-      setHtmlContent(html);
+      const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
+      if (iframe) {
+        // Construir URL com os IDs como query string
+        const idsParam = ids.join(',');
+        const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}`;
+        iframe.src = url;
+      }
     } catch (error) {
       console.error('Erro ao carregar boletos:', error);
-      setHtmlContent('<p>Erro ao carregar boletos</p>');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleImprimir = () => {
-    const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.print();
-    }
-  };
-
-  // Calcular 90% da altura da viewport
-  const modalHeight = typeof window !== 'undefined' ? window.innerHeight * 0.9 : 600;
+  // Calcular altura total do modal
+  const modalHeight = typeof window !== 'undefined' ? window.innerHeight - 16 : 884;
 
   return (
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={`Impressão de Boletos (${ids.length})`}
+      title="Relatório"
       size="a4"
     >
       <div style={{ 
-        height: `${modalHeight - 120}px`, // Altura total - header e footer
+        height: `${modalHeight - 48}px`, // Altura total - header
         display: 'flex', 
-        flexDirection: 'column' 
+        flexDirection: 'column',
+        margin: 0,
+        padding: 0
       }}>
         {loading ? (
           <div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
@@ -73,33 +63,17 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
         ) : (
           <iframe
             id="iframe-boletos"
-            srcDoc={htmlContent}
+            name="iframe-boletos"
             style={{ 
-              width: '100%', 
-              flex: 1,
-              border: 'none' 
+              width: '980px',
+              height: `${modalHeight - 48}px`,
+              margin: 0,
+              border: 'none',
+              display: 'block'
             }}
             title="Boletos"
           />
         )}
-        
-        <div className="d-flex justify-content-end gap-2 mt-3 p-3 border-top">
-          <button 
-            type="button" 
-            className="btn btn-secondary" 
-            onClick={onClose}
-          >
-            Fechar
-          </button>
-          <button 
-            type="button" 
-            className="btn btn-primary" 
-            onClick={handleImprimir} 
-            disabled={loading}
-          >
-            Imprimir
-          </button>
-        </div>
       </div>
     </DraggableModal>
   );
