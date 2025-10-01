@@ -323,10 +323,15 @@ const ClienteShow: React.FC = () => {
         
         return (
           <span 
-            className="badge" 
             style={{
-              backgroundColor: bgColor,
-              color: textColor
+              backgroundColor: bgColor + ' !important',
+              color: textColor + ' !important',
+              borderRadius: '12px',
+              padding: '0.125rem 0.5rem',
+              fontSize: '0.6875rem',
+              fontWeight: '500',
+              lineHeight: '1.2',
+              display: 'inline-block'
             }}
           >
             {label}
