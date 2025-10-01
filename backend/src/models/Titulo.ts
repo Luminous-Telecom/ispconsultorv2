@@ -25,10 +25,11 @@ export class Titulo extends Model<
   declare numero_titulo: string;
   declare valor: number;
   declare data_vencimento: Date;
-  declare status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  declare status: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'parcial' | 'pago_atraso';
   declare pago: boolean;
   declare data_pagamento: Date | null;
   declare valor_pago: number | null;
+  declare valor_aberto: number | null;
   declare codigo_barras: string | null;
   declare linha_digitavel: string | null;
   declare qrcode: string | null;
@@ -113,13 +114,40 @@ export class Titulo extends Model<
   async marcarComoPago(valorPago?: number, dataPagamento?: Date): Promise<void> {
     const valor = valorPago || this.valor;
     const data = dataPagamento || new Date();
+    const valorTotal = Number(this.valor);
+    const valorPagoNum = Number(valor);
+    
+    // Determinar status baseado no valor pago e data de pagamento
+    let novoStatus: 'pago' | 'parcial' | 'pago_atraso';
+    let valorAberto: number | null = null;
+    let estaPago = false;
+    
+    // Verificar se é pagamento parcial
+    if (valorPagoNum < valorTotal) {
+      novoStatus = 'parcial';
+      valorAberto = valorTotal - valorPagoNum;
+      estaPago = false;
+    } else {
+      // Pagamento total - verificar se foi em atraso
+      const dataVencimento = new Date(this.data_vencimento);
+      const dataPagamentoDate = new Date(data);
+      
+      if (dataPagamentoDate > dataVencimento) {
+        novoStatus = 'pago_atraso';
+      } else {
+        novoStatus = 'pago';
+      }
+      estaPago = true;
+      valorAberto = null;
+    }
     
     // Atualizar no banco de dados local
     await this.update({
-      pago: true,
+      pago: estaPago,
       data_pagamento: data,
       valor_pago: valor,
-      status: 'pago'
+      valor_aberto: valorAberto,
+      status: novoStatus
     });
 
     // Integrar com banco externo se tiver charge_id
@@ -366,7 +394,7 @@ Titulo.init(
       allowNull: false
     },
     status: {
-      type: DataTypes.ENUM('pendente', 'pago', 'vencido', 'cancelado'),
+      type: DataTypes.ENUM('pendente', 'pago', 'vencido', 'cancelado', 'parcial', 'pago_atraso'),
       allowNull: false,
       defaultValue: 'pendente'
     },
@@ -382,6 +410,11 @@ Titulo.init(
     valor_pago: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true
+    },
+    valor_aberto: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Valor restante em aberto (para pagamentos parciais)'
     },
     codigo_barras: {
       type: DataTypes.STRING(255),
