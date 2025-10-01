@@ -282,13 +282,13 @@ const ClienteShow: React.FC = () => {
           <span className="badge" style={{
             backgroundColor: 
               titulo.status === 'pago' ? '#28a745' :
-              titulo.status === 'pago_atraso' ? '#ff8c00' :
-              titulo.status === 'parcial' ? '#17a2b8' :
+              titulo.status === 'pago_atraso' ? '#ffc107' :
+              titulo.status === 'parcial' ? '#0dcaf0' :
               titulo.status === 'vencido' ? '#dc3545' :
-              titulo.status === 'pendente' ? '#87ceeb' :
+              titulo.status === 'pendente' ? '#6c757d' :
               titulo.status === 'cancelado' ? '#dc3545' :
               '#6c757d',
-            color: titulo.status === 'pendente' ? '#333' : 'white'
+            color: titulo.status === 'pago_atraso' ? '#000' : 'white'
           }}>
             {titulo.status === 'pago' ? 'Pago' :
              titulo.status === 'pago_atraso' ? 'Pago com Atraso' :
