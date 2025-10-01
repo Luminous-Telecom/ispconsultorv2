@@ -503,7 +503,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         recebe_email: cliente.recebe_email ?? true,
         recebe_sms: cliente.recebe_sms ?? false,
         recebe_whatsapp: cliente.recebe_whatsapp ?? true,
-        plano_id: (cliente as any).plano_id || 0,
+        plano_id: (cliente as any).planos?.[0]?.id || (cliente as any).plano_id || 0,
         desconto_percentual: (cliente as any).desconto_percentual || 0,
         desconto_valor: (cliente as any).desconto_valor || 0,
         data_validade_desconto: (cliente as any).data_validade_desconto || '',
@@ -1059,7 +1059,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   <div className="mb-3">
                     <label className="form-label">Vencimento</label>
-                    <div className="form-control-plaintext">
+                    <div className="form-control-plaintext text-muted">
                       Dia {formData.dia_vencimento} de cada mês
                     </div>
                   </div>
