@@ -174,7 +174,7 @@ const CarneParcelas: React.FC = () => {
       case 'vencido': 
         return { backgroundColor: '#dc3545', color: 'white' };
       case 'cancelado': 
-        return { backgroundColor: '#dc3545', color: 'white' };
+        return { backgroundColor: '#6c757d', color: 'white' };
       case 'registrado': 
         return { backgroundColor: '#17a2b8', color: 'white' };
       case 'ativo': 
