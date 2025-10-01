@@ -783,6 +783,69 @@ export class TituloController {
     }
   }
 
+  // Imprimir múltiplos boletos em PDF (redireciona para PDFs do banco)
+  static async imprimirPDFMultiplos(req: Request, res: Response): Promise<void> {
+    try {
+      // Aceitar ids de GET (query)
+      let idsRaw = req.query.ids;
+      let ids: number[] = [];
+      
+      // Se vier como string, fazer parse
+      if (typeof idsRaw === 'string') {
+        ids = idsRaw.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id));
+      }
+
+      if (!ids || ids.length === 0) {
+        res.status(400).json({
+          success: false,
+          message: 'IDs dos títulos não fornecidos'
+        });
+        return;
+      }
+
+      const titulos = await Titulo.findAll({
+        where: { id: { [Op.in]: ids } },
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { 
+            model: Banco, 
+            as: 'banco',
+            required: true
+          }
+        ]
+      });
+
+      if (!titulos || titulos.length === 0) {
+        res.status(404).json({
+          success: false,
+          message: 'Nenhum título encontrado'
+        });
+        return;
+      }
+
+      // Se for apenas um título, redireciona para o PDF do banco
+      if (titulos.length === 1) {
+        const titulo: any = titulos[0];
+        if (titulo.pdf_url) {
+          res.redirect(titulo.pdf_url);
+          return;
+        }
+      }
+
+      // Para múltiplos títulos, por enquanto usa HTML
+      // TODO: Implementar merge de PDFs ou usar biblioteca de geração de PDF
+      const idsParam = titulos.map(t => t.id).join(',');
+      res.redirect(`/boleto/web/multiplos?ids=${idsParam}`);
+    } catch (error: any) {
+      logger.error('Erro ao imprimir PDFs múltiplos', { error: error.message });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
   // Imprimir múltiplos boletos
   static async imprimirBoletosMultiplos(req: Request, res: Response): Promise<void> {
     try {
@@ -884,12 +947,8 @@ export class TituloController {
           <meta charset="UTF-8">
           <title>Boletos - ${titulos.length} título(s)</title>
           <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
-            body { background: #fff; }
             @media print {
               .page-break { page-break-after: always; }
-              body { margin: 0; padding: 0; }
             }
           </style>
         </head>
