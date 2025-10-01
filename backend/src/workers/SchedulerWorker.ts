@@ -252,6 +252,10 @@ if (!isMainThread && workerData) {
         case 'remessa_bancaria':
           routineInstance = new RemessaBancariaRoutine();
           break;
+        case 'verificar_vencimentos':
+          const { VerificarVencimentosRoutine } = await import('../services/routines/VerificarVencimentosRoutine');
+          routineInstance = new VerificarVencimentosRoutine();
+          break;
         default:
           throw new Error(`Tipo de rotina não suportado: ${routine.tipo}`);
       }

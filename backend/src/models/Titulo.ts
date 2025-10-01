@@ -132,7 +132,11 @@ export class Titulo extends Model<
       const dataVencimento = new Date(this.data_vencimento);
       const dataPagamentoDate = new Date(data);
       
-      if (dataPagamentoDate > dataVencimento) {
+      // Comparar apenas as datas (sem horário) para determinar se foi pago em dia
+      const dataVencimentoSemHora = new Date(dataVencimento.getFullYear(), dataVencimento.getMonth(), dataVencimento.getDate());
+      const dataPagamentoSemHora = new Date(dataPagamentoDate.getFullYear(), dataPagamentoDate.getMonth(), dataPagamentoDate.getDate());
+      
+      if (dataPagamentoSemHora > dataVencimentoSemHora) {
         novoStatus = 'pago_atraso';
       } else {
         novoStatus = 'pago';
