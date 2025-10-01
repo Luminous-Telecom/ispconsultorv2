@@ -7,7 +7,6 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { getApiUrl } from '../../../config/api';
 import { TituloEditModal, TituloCreateModal } from '../../modals/titulos';
 import { TituloService } from '../../../services/tituloService';
-import ImpressaoBoletosModal from '../../modals/ImpressaoBoletosModal';
 
 interface ClienteFinanceiroProps {
   cliente: any;
@@ -25,8 +24,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const [selectedParcelaId, setSelectedParcelaId] = useState<number | null>(null);
   const [showParcelaCreateModal, setShowParcelaCreateModal] = useState(false);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
-  const [showImpressaoModal, setShowImpressaoModal] = useState(false);
-  const [idsParaImprimir, setIdsParaImprimir] = useState<number[]>([]);
   const { addNotification } = useNotificationContext();
   const navigate = useNavigate();
 
@@ -98,8 +95,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const handleImprimirSelecionados = () => {
     if (selectedItems.length > 0) {
       const ids = selectedItems.map(item => item.id);
-      setIdsParaImprimir(ids);
-      setShowImpressaoModal(true);
+      const idsParam = ids.join(',');
+      const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
+      window.open(url, '_blank');
     } else {
       showNotification('Nenhum título selecionado', 'info');
     }
@@ -112,8 +110,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     
     if (titulosEmAberto.length > 0) {
       const ids = titulosEmAberto.map((item: any) => item.id);
-      setIdsParaImprimir(ids);
-      setShowImpressaoModal(true);
+      const idsParam = ids.join(',');
+      const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
+      window.open(url, '_blank');
     } else {
       showNotification('Não há títulos em aberto para imprimir', 'info');
     }
@@ -273,13 +272,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         onClose={handleCloseParcelaCreateModal}
         onSuccess={handleParcelaCreateSuccess}
         clienteId={cliente.id}
-      />
-
-      {/* Modal de impressão de boletos */}
-      <ImpressaoBoletosModal
-        show={showImpressaoModal}
-        onClose={() => setShowImpressaoModal(false)}
-        ids={idsParaImprimir}
       />
 
     </div>
