@@ -33,7 +33,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       case 'md': return { width: 800 };
       case 'lg': return { width: 1000 };
       case 'xl': return { width: 1200 };
-      case 'a4': return { width: 794 }; // Largura A4 (210mm em 96 DPI)
+      case 'a4': return { width: 980 }; // Largura para impressão de boletos
       default: return { width: 1000 }; // Tamanho padrão bom para todos
     }
   };
@@ -45,19 +45,21 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       
-      // Altura: 90% da tela ou automática
-      const autoHeight = Math.min(screenHeight * 0.9, 800); // 90% da tela, max 800px
+      // Altura: para modais A4, usar altura maior (90%), outros usam padrão
+      const autoHeight = size === 'a4' 
+        ? Math.min(screenHeight - 16, 900) // Altura máxima menos margem pequena
+        : Math.min(screenHeight * 0.9, 800);
       
       // Centralização simples - sempre no centro da tela
       const centerX = Math.max(0, Math.floor((screenWidth - width) / 2));
-      const centerY = Math.max(20, (screenHeight - autoHeight) / 2);
+      const centerY = Math.max(8, (screenHeight - autoHeight) / 2); // 8px de margem superior
       
       setPosition({
         x: centerX,
         y: centerY
       });
       
-      // Largura fixa, altura 90% da viewport
+      // Largura fixa, altura calculada
       setModalSize({ width, height: autoHeight });
     }
   }, [show, size]);
