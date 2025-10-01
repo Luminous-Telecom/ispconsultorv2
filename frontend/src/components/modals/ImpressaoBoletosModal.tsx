@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Button } from 'react-bootstrap';
 
 interface ImpressaoBoletosModalProps {
   isOpen: boolean;
@@ -49,40 +48,65 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Modal show={isOpen} onHide={onClose} size="xl" fullscreen>
-      <Modal.Header closeButton>
-        <Modal.Title>Impressão de Boletos ({ids.length})</Modal.Title>
-      </Modal.Header>
-      <Modal.Body style={{ padding: 0, height: 'calc(100vh - 120px)' }}>
-        {loading ? (
-          <div className="d-flex justify-content-center align-items-center" style={{ height: '100%' }}>
-            <div className="spinner-border" role="status">
-              <span className="visually-hidden">Carregando...</span>
-            </div>
+    <div 
+      className="modal fade show" 
+      style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+      tabIndex={-1}
+    >
+      <div className="modal-dialog modal-fullscreen">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">Impressão de Boletos ({ids.length})</h5>
+            <button 
+              type="button" 
+              className="btn-close" 
+              onClick={onClose}
+              aria-label="Close"
+            ></button>
           </div>
-        ) : (
-          <iframe
-            id="iframe-boletos"
-            srcDoc={htmlContent}
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              border: 'none' 
-            }}
-            title="Boletos"
-          />
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onClose}>
-          Fechar
-        </Button>
-        <Button variant="primary" onClick={handleImprimir} disabled={loading}>
-          Imprimir
-        </Button>
-      </Modal.Footer>
-    </Modal>
+          <div className="modal-body" style={{ padding: 0, height: 'calc(100vh - 120px)' }}>
+            {loading ? (
+              <div className="d-flex justify-content-center align-items-center" style={{ height: '100%' }}>
+                <div className="spinner-border" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </div>
+            ) : (
+              <iframe
+                id="iframe-boletos"
+                srcDoc={htmlContent}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  border: 'none' 
+                }}
+                title="Boletos"
+              />
+            )}
+          </div>
+          <div className="modal-footer">
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              onClick={onClose}
+            >
+              Fechar
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-primary" 
+              onClick={handleImprimir} 
+              disabled={loading}
+            >
+              Imprimir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
