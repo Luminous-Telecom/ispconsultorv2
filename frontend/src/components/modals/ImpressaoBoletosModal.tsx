@@ -25,14 +25,10 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
     try {
       const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
       if (iframe) {
-        // Construir URL com os IDs como query string
         const idsParam = ids.join(',');
         const baseUrl = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:3001';
-        // Adicionar timestamp para evitar cache
         const timestamp = new Date().getTime();
-        const url = `${baseUrl}/boleto/web/multiplos?ids=${idsParam}&_=${timestamp}`;
-        console.log('Carregando boletos:', url);
-        iframe.src = url;
+        iframe.src = `${baseUrl}/boleto/web/multiplos?ids=${idsParam}&_=${timestamp}`;
       }
     } catch (error) {
       console.error('Erro ao carregar boletos:', error);
