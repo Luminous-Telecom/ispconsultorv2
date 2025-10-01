@@ -42,26 +42,12 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
     const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
     if (iframe) {
       try {
-        // Tentar imprimir diretamente
+        // Tentar imprimir diretamente (igual Ctrl+P)
         iframe.contentWindow?.print();
       } catch (error) {
-        // Se der erro de CORS, abrir em nova aba
-        window.open(iframe.src, '_blank');
-      }
-    }
-  };
-
-  const handleBaixarPDF = () => {
-    const iframe = document.getElementById('iframe-boletos') as HTMLIFrameElement;
-    if (iframe) {
-      try {
-        // Tentar imprimir com opção de salvar como PDF
-        iframe.contentWindow?.print();
-      } catch (error) {
-        // Se der erro de CORS, abrir em nova aba para o usuário salvar
+        // Se der erro de CORS, abrir em nova aba e imprimir
         const newWindow = window.open(iframe.src, '_blank');
         if (newWindow) {
-          // Após carregar, mostrar diálogo de impressão automaticamente
           newWindow.onload = () => {
             setTimeout(() => {
               newWindow.print();
@@ -85,12 +71,6 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       headerActions={
         !loading && (
           <div className="d-flex justify-content-end mt-2">
-            <button 
-              className="btn btn-sm btn-success me-2"
-              onClick={handleBaixarPDF}
-            >
-              Baixar PDF
-            </button>
             <button 
               className="btn btn-sm btn-primary me-2"
               onClick={handleImprimir}
