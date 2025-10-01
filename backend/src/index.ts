@@ -24,6 +24,7 @@ import webhookRoutes from './routes/webhookRoutes';
 import schedulerRoutes from './routes/schedulerRoutes';
 import workerRoutes from './routes/workerRoutes';
 import parametroRoutes from './routes/parametroRoutes';
+import contratoRoutes from './routes/contratos';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -95,6 +96,7 @@ app.use('/api/clientes', clienteRoutes);
 app.use('/api/planos', planoRoutes);
 app.use('/api/bancos', bancoRoutes);
 app.use('/api/titulos', tituloRoutes);
+app.use('/api/contratos', contratoRoutes);
 app.use('/boleto', boletoRoutes);
 app.use('/api/dados-empresa', dadosEmpresaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
