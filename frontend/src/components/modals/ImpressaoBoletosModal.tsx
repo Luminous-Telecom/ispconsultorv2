@@ -66,7 +66,7 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
             id="iframe-boletos"
             name="iframe-boletos"
             style={{ 
-              width: '980px',
+              width: '100%',
               height: `${modalHeight - 48}px`,
               margin: 0,
               border: 'none',
