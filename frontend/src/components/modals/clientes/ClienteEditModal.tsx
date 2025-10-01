@@ -1140,53 +1140,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       onChange={(e) => handleInputChange('data_validade_desconto', e.target.value)}
                     />
                   </div>
-
-                  <h6 className="text-primary mb-3">Preferências de Comunicação</h6>
-                  
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_email"
-                        checked={formData.recebe_email}
-                        onChange={(e) => handleInputChange('recebe_email', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_email">
-                        Recebe E-mail
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_sms"
-                        checked={formData.recebe_sms}
-                        onChange={(e) => handleInputChange('recebe_sms', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_sms">
-                        Recebe SMS
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_whatsapp"
-                        checked={formData.recebe_whatsapp}
-                        onChange={(e) => handleInputChange('recebe_whatsapp', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_whatsapp">
-                        Recebe WhatsApp
-                      </label>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
