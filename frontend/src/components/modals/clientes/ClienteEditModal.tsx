@@ -110,6 +110,16 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [limit, setLimit] = useState(10);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+
+  // Fechar dropdown ao clicar fora
+  React.useEffect(() => {
+    const handleClickOutside = () => setOpenDropdown(null);
+    if (openDropdown !== null) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdown]);
 
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
@@ -1229,33 +1239,41 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           // Se tem dropdown, renderizar dropdown
                           if (bulkAction.dropdown) {
                             return (
-                              <div key={index} className="dropdown" style={{ flexShrink: 0 }}>
+                              <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
                                 <button
                                   className="btn btn-sm btn-primary dropdown-toggle"
                                   type="button"
-                                  id={`dropdown-modal-${index}`}
-                                  data-bs-toggle="dropdown"
-                                  aria-expanded="false"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setOpenDropdown(openDropdown === index ? null : index);
+                                  }}
                                   onMouseDown={(e) => e.stopPropagation()}
                                 >
                                   {bulkAction.label}
                                 </button>
-                                <ul className="dropdown-menu" aria-labelledby={`dropdown-modal-${index}`}>
-                                  {bulkAction.dropdown.map((item, itemIndex) => (
-                                    <li key={itemIndex}>
-                                      <button
-                                        className="dropdown-item"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          item.action();
-                                        }}
-                                      >
-                                        {item.label}
-                                      </button>
-                                    </li>
-                                  ))}
-                                </ul>
+                                {openDropdown === index && (
+                                  <ul 
+                                    className="dropdown-menu show" 
+                                    style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
+                                  >
+                                    {bulkAction.dropdown.map((item, itemIndex) => (
+                                      <li key={itemIndex}>
+                                        <button
+                                          className="dropdown-item"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            item.action();
+                                            setOpenDropdown(null);
+                                          }}
+                                        >
+                                          {item.label}
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
                               </div>
                             );
                           }
