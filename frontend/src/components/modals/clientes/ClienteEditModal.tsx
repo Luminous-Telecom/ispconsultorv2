@@ -399,10 +399,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         return (
           <span className={`badge ${
             item.status === 'pago' ? 'bg-success' :
-            item.status === 'pago_atraso' ? 'bg-warning text-dark' :
+            item.status === 'pago_atraso' ? '' :
             item.status === 'parcial' ? 'bg-info' :
             item.status === 'vencido' ? 'bg-danger' :
-            item.status === 'pendente' ? 'bg-secondary' :
+            item.status === 'pendente' ? 'bg-warning text-dark' :
             'bg-secondary'
           }`} style={item.status === 'pago_atraso' ? { backgroundColor: '#ff8c00', color: 'white' } : {}}>
             {item.status === 'pago' ? '✔ Recebimento em dia' :
