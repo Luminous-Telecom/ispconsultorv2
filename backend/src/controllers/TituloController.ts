@@ -772,7 +772,7 @@ export class TituloController {
       `;
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      // Não definir X-Frame-Options para permitir iframe em desenvolvimento
       res.send(template);
     } catch (error: any) {
       logger.error('Erro ao imprimir boleto', { error: error.message });
@@ -896,7 +896,7 @@ export class TituloController {
       `;
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      // Não definir X-Frame-Options para permitir iframe em desenvolvimento
       res.send(template);
     } catch (error: any) {
       logger.error('Erro ao imprimir boletos múltiplos', { error: error.message });

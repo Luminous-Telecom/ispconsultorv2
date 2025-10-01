@@ -27,7 +27,9 @@ const ImpressaoBoletosModal: React.FC<ImpressaoBoletosModalProps> = ({
       if (iframe) {
         // Construir URL com os IDs como query string
         const idsParam = ids.join(',');
-        const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}`;
+        const baseUrl = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:3001';
+        const url = `${baseUrl}/boleto/web/multiplos?ids=${idsParam}`;
+        console.log('Carregando boletos:', url);
         iframe.src = url;
       }
     } catch (error) {
