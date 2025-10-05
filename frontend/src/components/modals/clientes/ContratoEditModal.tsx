@@ -62,7 +62,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const { data: contratoData, isLoading } = useQuery({
     queryKey: ['contrato', contratoId],
     queryFn: async () => {
-      const response = await fetch(`/api/contratos/${contratoId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/contratos/${contratoId}`);
       if (!response.ok) throw new Error('Erro ao buscar contrato');
       return response.json();
     },
@@ -74,7 +74,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   // Carregar dados do contrato quando disponível
   useEffect(() => {
+    console.log('🔍 Debug ContratoEditModal - contratoData:', contratoData);
+    console.log('🔍 Debug ContratoEditModal - show:', show);
+    console.log('🔍 Debug ContratoEditModal - contratoId:', contratoId);
+    
     if (contratoData?.data) {
+      console.log('🔍 Debug - Carregando dados do contrato:', contratoData.data);
       const contrato = contratoData.data;
       setFormData({
         plano_id: contrato.plano_id || 0,
@@ -90,7 +95,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         data_validade_desconto: contrato.data_validade_desconto ? contrato.data_validade_desconto.split('T')[0] : ''
       });
     }
-  }, [contratoData]);
+  }, [contratoData, show, contratoId]);
 
   // Limpar formulário quando modal fechar
   useEffect(() => {

@@ -1089,7 +1089,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       {
                         label: 'Editar',
                         action: (selectedItems) => {
+                          console.log('🔍 Debug ClienteEditModal - Editar contrato clicado!');
+                          console.log('🔍 Debug - selectedItems:', selectedItems);
                           if (selectedItems.length === 1) {
+                            console.log('🔍 Debug - Abrindo modal de edição para contrato ID:', selectedItems[0].id);
                             setSelectedContratoId(selectedItems[0].id);
                             setShowContratoEditModal(true);
                           }
@@ -1513,14 +1516,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       />
 
       {/* Modal de edição de contrato */}
+      {console.log('🔍 Debug - Renderizando ContratoEditModal, show:', showContratoEditModal, 'contratoId:', selectedContratoId)}
       <ContratoEditModal
         show={showContratoEditModal}
         contratoId={selectedContratoId}
         onClose={() => {
+          console.log('🔍 Debug - ContratoEditModal fechado');
           setShowContratoEditModal(false);
           setSelectedContratoId(null);
         }}
         onSuccess={() => {
+          console.log('🔍 Debug - ContratoEditModal sucesso');
           setShowContratoEditModal(false);
           setSelectedContratoId(null);
           // Refetch contratos
