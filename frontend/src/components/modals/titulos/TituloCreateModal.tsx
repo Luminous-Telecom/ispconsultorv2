@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { TituloService } from '../../../services/tituloService';
 import { PlanoService } from '../../../services/planoService';
@@ -57,7 +57,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
   const { data: clienteData } = useQuery({
     queryKey: ['cliente', clienteId],
     queryFn: () => ClienteService.getById(clienteId!),
-    enabled: show && !!clienteId,
+    enabled: !!clienteId, // Sempre habilitar quando há clienteId
   });
 
   // Função para calcular a próxima data de vencimento
@@ -75,8 +75,9 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
 
   // Pré-selecionar plano ativo do cliente e data de vencimento
   useEffect(() => {
-    if (clienteData?.contratos && clienteData.contratos.length > 0) {
+    if (show && clienteData?.contratos && clienteData.contratos.length > 0) {
       const contratoAtivo = clienteData.contratos.find((contrato: any) => contrato.status === 'ativo');
+      
       if (contratoAtivo && contratoAtivo.plano_id) {
         let dataVencimento = '';
         
@@ -88,18 +89,27 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
           dataVencimento = calcularProximaDataVencimento(15);
         }
         
-        setFormData(prev => ({
-          ...prev,
-          plano_id: contratoAtivo.plano_id,
-          data_vencimento: dataVencimento
-        }));
+        // Só atualizar se os valores forem diferentes dos atuais
+        setFormData(prev => {
+          if (prev.plano_id === contratoAtivo.plano_id && prev.data_vencimento === dataVencimento) {
+            return prev; // Não atualizar se os valores já estão corretos
+          }
+          
+          return {
+            ...prev,
+            plano_id: contratoAtivo.plano_id,
+            data_vencimento: dataVencimento
+          };
+        });
       }
     }
-  }, [clienteData]);
+  }, [show, clienteData]);
 
-  // Limpar formulário quando modal fechar
+  // Limpar formulário quando modal fechar (usar ref para evitar conflitos)
+  const prevShowRef = useRef(show);
   useEffect(() => {
-    if (!show) {
+    // Só limpar quando o modal estava aberto e agora está fechando
+    if (prevShowRef.current && !show) {
       setFormData({
         plano_id: 0,
         data_vencimento: '',
@@ -112,6 +122,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       });
       setErrors({});
     }
+    prevShowRef.current = show;
   }, [show]);
 
   // Mutation para criar parcela
