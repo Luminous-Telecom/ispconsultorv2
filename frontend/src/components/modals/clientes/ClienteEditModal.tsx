@@ -118,8 +118,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
     queryKey: ['cliente', clienteId],
-    queryFn: () => ClienteService.getById(clienteId!),
+    queryFn: () => {
+      console.log('🔍 Debug - ClienteService.getById executado!', clienteId);
+      return ClienteService.getById(clienteId!);
+    },
     enabled: !!clienteId,
+    onSuccess: (data) => {
+      console.log('🔍 Debug - useQuery cliente onSuccess executado!', data);
+    },
+    onError: (error) => {
+      console.log('🔍 Debug - useQuery cliente onError executado!', error);
+    },
   });
 
   // Buscar planos
@@ -497,8 +506,14 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
-    mutationFn: (data: Partial<Cliente>) => ClienteService.update(clienteId!, data),
+    mutationFn: (data: Partial<Cliente>) => {
+      console.log('🔍 Debug - updateClienteMutation.mutateFn executado!', data);
+      console.log('🔍 Debug - Stack trace:', new Error().stack);
+      return ClienteService.update(clienteId!, data);
+    },
     onSuccess: () => {
+      console.log('🔍 Debug - updateClienteMutation.onSuccess executado!');
+      console.log('🔍 Debug - Stack trace:', new Error().stack);
       success('Cliente atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
@@ -506,13 +521,16 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
+      console.log('🔍 Debug - updateClienteMutation.onError executado!', err);
       error(err.response?.data?.message || 'Erro ao atualizar cliente');
     },
   });
 
   // Carregar dados do cliente no formulário
   useEffect(() => {
+    console.log('🔍 Debug - useEffect [cliente] executado!', cliente);
     if (cliente) {
+      console.log('🔍 Debug - Carregando dados do cliente no formulário');
       setFormData({
         cnpj: cliente.cnpj || '',
         razao_social: cliente.razao_social || '',
@@ -568,6 +586,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   };
 
   const handleSubmit = (e: React.FormEvent) => {
+    console.log('🔍 Debug - handleSubmit executado!', e);
+    console.log('🔍 Debug - Stack trace:', new Error().stack);
     e.preventDefault();
     
     if (!validateForm()) return;
