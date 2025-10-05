@@ -646,8 +646,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 Cancelar
               </button>
               <button
-                type="submit"
-                form="cliente-form"
+                type="button"
+                onClick={handleSubmit}
                 className="btn btn-primary btn-sm"
                 disabled={updateClienteMutation.isPending}
               >
