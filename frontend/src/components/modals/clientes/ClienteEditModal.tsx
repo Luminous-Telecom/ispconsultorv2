@@ -123,12 +123,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       return ClienteService.getById(clienteId!);
     },
     enabled: !!clienteId,
-    onSuccess: (data) => {
-      console.log('🔍 Debug - useQuery cliente onSuccess executado!', data);
-    },
-    onError: (error) => {
-      console.log('🔍 Debug - useQuery cliente onError executado!', error);
-    },
   });
 
   // Buscar planos
@@ -144,7 +138,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   });
 
   // Buscar contratos do cliente
-  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError } = useContratos(cliente?.id);
+  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError } = useContratos((cliente as any)?.id);
 
   // Buscar parcelas do cliente (dados reais do banco)
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
@@ -529,29 +523,29 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   // Carregar dados do cliente no formulário
   useEffect(() => {
     console.log('🔍 Debug - useEffect [cliente] executado!', cliente);
-    if (cliente) {
+    if (cliente && typeof cliente === 'object') {
       console.log('🔍 Debug - Carregando dados do cliente no formulário');
       setFormData({
-        cnpj: cliente.cnpj || '',
-        razao_social: cliente.razao_social || '',
-        nome_fantasia: cliente.nome_fantasia || '',
-        email: cliente.email || '',
-        telefone: cliente.telefone || '',
-        whatsapp: cliente.whatsapp || '',
-        cep: cliente.cep || '',
-        endereco: cliente.endereco || '',
-        numero: cliente.numero || '',
-        complemento: cliente.complemento || '',
-        bairro: cliente.bairro || '',
-        cidade: cliente.cidade || '',
-        estado: cliente.estado || '',
-        ativo: cliente.ativo ?? true,
-        tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
-        valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
-        recebe_email: cliente.recebe_email ?? true,
-        recebe_sms: cliente.recebe_sms ?? false,
-        recebe_whatsapp: cliente.recebe_whatsapp ?? true,
-        observacoes: cliente.observacoes || ''
+        cnpj: (cliente as any).cnpj || '',
+        razao_social: (cliente as any).razao_social || '',
+        nome_fantasia: (cliente as any).nome_fantasia || '',
+        email: (cliente as any).email || '',
+        telefone: (cliente as any).telefone || '',
+        whatsapp: (cliente as any).whatsapp || '',
+        cep: (cliente as any).cep || '',
+        endereco: (cliente as any).endereco || '',
+        numero: (cliente as any).numero || '',
+        complemento: (cliente as any).complemento || '',
+        bairro: (cliente as any).bairro || '',
+        cidade: (cliente as any).cidade || '',
+        estado: (cliente as any).estado || '',
+        ativo: (cliente as any).ativo ?? true,
+        tipo_cobranca: ((cliente as any).tipo_cobranca === 'carne' ? 'titulo' : (cliente as any).tipo_cobranca) || 'titulo',
+        valor_primeiro_titulo: (cliente as any).valor_primeiro_titulo || 'total',
+        recebe_email: (cliente as any).recebe_email ?? true,
+        recebe_sms: (cliente as any).recebe_sms ?? false,
+        recebe_whatsapp: (cliente as any).recebe_whatsapp ?? true,
+        observacoes: (cliente as any).observacoes || ''
       });
     }
   }, [cliente]);
@@ -1532,7 +1526,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       {/* Modal de criação de contrato */}
       <ContratoCreateModal
         show={showContratoCreateModal}
-        clienteId={cliente?.id}
+        clienteId={(cliente as any)?.id}
         onClose={() => setShowContratoCreateModal(false)}
         onSuccess={() => {
           setShowContratoCreateModal(false);
