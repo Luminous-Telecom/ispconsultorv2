@@ -331,18 +331,88 @@ const CarneParcelas: React.FC = () => {
   };
 
   // Funções para os botões do topo
-  const handleTopoActions = (action: string, selectedItems: any[]) => {
+  const handleTopoActions = async (action: string, selectedItems: any[]) => {
     if (selectedItems.length === 0) return;
     
     switch (action) {
       case 'marcar_pago':
-        if (selectedItems.length === 1) {
-          handleMarcarPago(selectedItems[0].id);
+        if (selectedItems.length > 0) {
+          // Marcar múltiplos títulos como pagos
+          const confirmMessage = selectedItems.length === 1 
+            ? 'Tem certeza que deseja marcar esta parcela como paga?'
+            : `Tem certeza que deseja marcar ${selectedItems.length} parcelas como pagas?`;
+            
+          if (window.confirm(confirmMessage)) {
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const item of selectedItems) {
+              try {
+                await handleMarcarPago(item.id);
+                successCount++;
+              } catch (err: any) {
+                console.error(`Erro ao marcar parcela ${item.id} como paga:`, err);
+                errorCount++;
+              }
+            }
+            
+            if (successCount > 0) {
+              const message = successCount === 1 
+                ? 'Parcela marcada como paga com sucesso!'
+                : `${successCount} parcelas marcadas como pagas com sucesso!`;
+              success(message);
+            }
+            
+            if (errorCount > 0) {
+              const message = errorCount === 1 
+                ? '1 parcela não pôde ser marcada como paga'
+                : `${errorCount} parcelas não puderam ser marcadas como pagas`;
+              error(message);
+            }
+            
+            queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
+            queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
+          }
         }
         break;
       case 'cancelar':
-        if (selectedItems.length === 1) {
-          handleCancelarParcela(selectedItems[0].id);
+        if (selectedItems.length > 0) {
+          // Cancelar múltiplos títulos
+          const confirmMessage = selectedItems.length === 1 
+            ? 'Tem certeza que deseja cancelar esta parcela?'
+            : `Tem certeza que deseja cancelar ${selectedItems.length} parcelas?`;
+            
+          if (window.confirm(confirmMessage)) {
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const item of selectedItems) {
+              try {
+                const response = await TituloService.update(item.id, { status: 'cancelado' });
+                successCount++;
+              } catch (err: any) {
+                console.error(`Erro ao cancelar parcela ${item.id}:`, err);
+                errorCount++;
+              }
+            }
+            
+            if (successCount > 0) {
+              const message = successCount === 1 
+                ? 'Parcela cancelada com sucesso!'
+                : `${successCount} parcelas canceladas com sucesso!`;
+              success(message);
+            }
+            
+            if (errorCount > 0) {
+              const message = errorCount === 1 
+                ? '1 parcela não pôde ser cancelada'
+                : `${errorCount} parcelas não puderam ser canceladas`;
+              error(message);
+            }
+            
+            queryClient.invalidateQueries({ queryKey: ['carne-parcelas', carneId] });
+            queryClient.invalidateQueries({ queryKey: ['carne', carneId] });
+          }
         }
         break;
       case 'imprimir':
