@@ -110,6 +110,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }
   }, [openDropdown]);
 
+  // Debug: Log quando o modal de edição de contrato mudar
+  useEffect(() => {
+    console.log('🔍 Debug - Renderizando ContratoEditModal, show:', showContratoEditModal, 'contratoId:', selectedContratoId);
+  }, [showContratoEditModal, selectedContratoId]);
+
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
     queryKey: ['cliente', clienteId],
@@ -1516,7 +1521,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       />
 
       {/* Modal de edição de contrato */}
-      {console.log('🔍 Debug - Renderizando ContratoEditModal, show:', showContratoEditModal, 'contratoId:', selectedContratoId)}
       <ContratoEditModal
         show={showContratoEditModal}
         contratoId={selectedContratoId}
