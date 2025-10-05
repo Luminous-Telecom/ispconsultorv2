@@ -135,10 +135,12 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   };
 
   const handleCloseParcelaCreateModal = () => {
+    console.log('🔍 Debug - Modal de criação fechado');
     setShowParcelaCreateModal(false);
   };
 
   const handleParcelaCreateSuccess = () => {
+    console.log('🔍 Debug - Título criado com sucesso');
     refetchParcelas();
   };
 
@@ -214,7 +216,11 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
               bulkActions={[
                 {
                   label: 'Novo Título',
-                  action: () => setShowParcelaCreateModal(true)
+                  action: () => {
+                    console.log('🔍 Debug - Botão Novo Título clicado!');
+                    console.log('🔍 Debug - cliente.id:', cliente.id);
+                    setShowParcelaCreateModal(true);
+                  }
                 },
                 {
                   label: 'Editar',
@@ -307,6 +313,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       />
 
       {/* Modal de criação de parcela */}
+      {console.log('🔍 Debug - Renderizando TituloCreateModal, show:', showParcelaCreateModal, 'clienteId:', cliente.id)}
       <TituloCreateModal
         show={showParcelaCreateModal}
         onClose={handleCloseParcelaCreateModal}
