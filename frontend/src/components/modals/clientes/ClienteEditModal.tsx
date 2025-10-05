@@ -306,15 +306,37 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       label: 'Cancelar',
       action: async (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
-          const item = selectedItems[0];
-          if (window.confirm('Tem certeza que deseja cancelar este título?')) {
+          const confirmMessage = selectedItems.length === 1 
+            ? 'Tem certeza que deseja cancelar este título?'
+            : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+            
+          if (window.confirm(confirmMessage)) {
             try {
-              const response = await TituloService.update(item.id, { status: 'cancelado' });
+              let successCount = 0;
+              let errorCount = 0;
               
-              if (response?.message) {
-                showNotification(response.message, 'success');
-              } else {
-                showNotification('Título cancelado com sucesso!', 'success');
+              for (const item of selectedItems) {
+                try {
+                  const response = await TituloService.update(item.id, { status: 'cancelado' });
+                  successCount++;
+                } catch (err: any) {
+                  console.error(`Erro ao cancelar título ${item.id}:`, err);
+                  errorCount++;
+                }
+              }
+              
+              if (successCount > 0) {
+                const message = successCount === 1 
+                  ? 'Título cancelado com sucesso!'
+                  : `${successCount} títulos cancelados com sucesso!`;
+                showNotification(message, 'success');
+              }
+              
+              if (errorCount > 0) {
+                const message = errorCount === 1 
+                  ? '1 título não pôde ser cancelado'
+                  : `${errorCount} títulos não puderam ser cancelados`;
+                showNotification(message, 'error');
               }
               
               // Recarregar dados
@@ -322,7 +344,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
               refetchParcelas();
             } catch (err: any) {
-              showNotification(err.response?.data?.message || 'Erro ao cancelar título', 'error');
+              showNotification('Erro ao cancelar títulos', 'error');
             }
           }
         }
