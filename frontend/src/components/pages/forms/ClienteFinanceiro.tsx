@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DataTable from '../../common/DataTable';
 import { useTitulos } from '../../../hooks/useTitulos';
@@ -143,6 +143,11 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     console.log('🔍 Debug - Título criado com sucesso');
     refetchParcelas();
   };
+
+  // Debug: Log quando o modal de criação mudar
+  useEffect(() => {
+    console.log('🔍 Debug - Renderizando TituloCreateModal, show:', showParcelaCreateModal, 'clienteId:', cliente.id);
+  }, [showParcelaCreateModal, cliente.id]);
 
   // Função para obter a cor do status
   const getStatusColor = (status: string) => {
@@ -313,7 +318,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       />
 
       {/* Modal de criação de parcela */}
-      {console.log('🔍 Debug - Renderizando TituloCreateModal, show:', showParcelaCreateModal, 'clienteId:', cliente.id)}
       <TituloCreateModal
         show={showParcelaCreateModal}
         onClose={handleCloseParcelaCreateModal}
