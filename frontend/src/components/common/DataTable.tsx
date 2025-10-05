@@ -26,7 +26,7 @@ interface TableProps {
   actions?: (item: any) => React.ReactNode;
   bulkActions?: Array<{
     label: string;
-    action?: (selectedItems: any[]) => void;
+    action?: (selectedItems: any[], event?: React.MouseEvent) => void;
     variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
     disabled?: (selectedItems: any[]) => boolean;
     dropdown?: {
@@ -131,8 +131,8 @@ const DataTable: React.FC<TableProps> = ({
     }
   };
 
-  const handleBulkAction = (action: (selectedItems: any[]) => void) => {
-    action(selectedItems);
+  const handleBulkAction = (action: (selectedItems: any[], event?: React.MouseEvent) => void, event?: React.MouseEvent) => {
+    action(selectedItems, event);
     // Não limpar seleção após ação - manter linha selecionada
   };
 
@@ -217,9 +217,9 @@ const DataTable: React.FC<TableProps> = ({
                   <button
                     key={index}
                     className="btn btn-sm btn-primary"
-                    onClick={() => {
+                    onClick={(event) => {
                       if (!isDisabled && bulkAction.action) {
-                        handleBulkAction(bulkAction.action);
+                        handleBulkAction(bulkAction.action, event);
                       }
                     }}
                     disabled={isDisabled}

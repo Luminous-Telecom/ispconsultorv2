@@ -1107,9 +1107,18 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       },
                       {
                         label: 'Editar',
-                        action: (selectedItems) => {
+                        action: (selectedItems, event) => {
                           console.log('🔍 Debug ClienteEditModal - Editar contrato clicado!');
                           console.log('🔍 Debug - selectedItems:', selectedItems);
+                          console.log('🔍 Debug - event:', event);
+                          
+                          // CRÍTICO: Prevenir propagação do evento para evitar submit do formulário
+                          if (event) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            console.log('🔍 Debug - Evento bloqueado para prevenir submit do formulário');
+                          }
+                          
                           if (selectedItems.length === 1) {
                             console.log('🔍 Debug - Abrindo modal de edição para contrato ID:', selectedItems[0].id);
                             setSelectedContratoId(selectedItems[0].id);
