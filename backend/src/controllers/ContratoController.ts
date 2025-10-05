@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ClientePlano } from '../models/ClientePlano';
+import { Contrato } from '../models/Contrato';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
@@ -42,7 +42,7 @@ export class ContratoController {
     try {
       const { clienteId } = req.params;
       
-      const contratos = await ClientePlano.findAll({
+      const contratos = await Contrato.findAll({
         where: { cliente_id: clienteId },
         include: [
           { model: Plano, as: 'plano' },
@@ -66,7 +66,7 @@ export class ContratoController {
     try {
       const { id } = req.params;
       
-      const contrato = await ClientePlano.findByPk(id, {
+      const contrato = await Contrato.findByPk(id, {
         include: [
           { model: Cliente, as: 'cliente' },
           { model: Plano, as: 'plano' },
@@ -127,7 +127,7 @@ export class ContratoController {
       }
 
       // Verificar se já existe um contrato para o mesmo cliente, plano e data
-      const contratoExistente = await ClientePlano.findOne({
+      const contratoExistente = await Contrato.findOne({
         where: {
           cliente_id: value.cliente_id,
           plano_id: value.plano_id,
@@ -181,7 +181,7 @@ export class ContratoController {
         }
       }
 
-      const contrato = await ClientePlano.create(value);
+      const contrato = await Contrato.create(value);
 
       res.status(201).json({
         success: true,
@@ -222,7 +222,7 @@ export class ContratoController {
         return;
       }
 
-      const contrato = await ClientePlano.findByPk(id);
+      const contrato = await Contrato.findByPk(id);
       if (!contrato) {
         res.status(404).json({
           success: false,
@@ -276,7 +276,7 @@ export class ContratoController {
     try {
       const { id } = req.params;
       
-      const contrato = await ClientePlano.findByPk(id);
+      const contrato = await Contrato.findByPk(id);
       if (!contrato) {
         res.status(404).json({
           success: false,
@@ -303,7 +303,7 @@ export class ContratoController {
   // Listar contratos ativos
   static async getAtivos(req: Request, res: Response): Promise<void> {
     try {
-      const contratos = await ClientePlano.findAll({
+      const contratos = await Contrato.findAll({
         where: { status: 'ativo' },
         include: [
           { model: Cliente, as: 'cliente' },

@@ -33,7 +33,7 @@ export interface Cliente extends BaseEntity {
   
   // Relacionamentos
   planos?: Plano[];
-  contratos?: ClientePlano[];
+  contratos?: Contrato[];
   banco_boleto?: Banco;
 }
 
@@ -56,7 +56,7 @@ export interface Plano extends BaseEntity {
   
   // Relacionamentos
   clientes?: Cliente[];
-  contratos?: ClientePlano[];
+  contratos?: Contrato[];
 }
 
 export interface Banco extends BaseEntity {
@@ -119,7 +119,7 @@ export interface BancoConfiguracao extends BaseEntity {
 }
 
 
-export interface ClientePlano extends BaseEntity {
+export interface Contrato extends BaseEntity {
   cliente_id: number;
   plano_id: number;
   desconto_percentual?: number;

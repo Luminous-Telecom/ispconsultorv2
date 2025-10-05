@@ -35,6 +35,12 @@ export class Titulo extends Model<
   declare qrcode: string | null;
   declare qrcode_image: string | null;
   declare observacoes: string | null;
+  declare desconto_percentual: number | null;
+  declare desconto_valor: number | null;
+  declare acrescimo_percentual: number | null;
+  declare acrescimo_valor: number | null;
+  declare valor_final: number | null;
+  declare descricao: string | null;
   declare charge_id: string | null;
   declare url_boleto: string | null;
   declare nosso_numero: string | null;
@@ -439,6 +445,46 @@ Titulo.init(
     observacoes: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    desconto_percentual: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 100
+      }
+    },
+    desconto_valor: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      validate: {
+        min: 0
+      }
+    },
+    acrescimo_percentual: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 100
+      }
+    },
+    acrescimo_valor: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      validate: {
+        min: 0
+      }
+    },
+    valor_final: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Valor final após aplicar desconto/acréscimo'
+    },
+    descricao: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Descrição do título'
     },
     charge_id: {
       type: DataTypes.STRING(100),

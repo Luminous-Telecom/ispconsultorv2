@@ -4,7 +4,7 @@ import { Plano } from './Plano';
 import { Banco } from './Banco';
 import { BancoConfiguracao } from './BancoConfiguracao';
 import { Titulo } from './Titulo';
-import { ClientePlano } from './ClientePlano';
+import { Contrato } from './Contrato';
 import { DadosEmpresa } from './DadosEmpresa';
 import { ScheduledRoutine } from './ScheduledRoutine';
 import { RoutineExecutionLog } from './RoutineExecutionLog';
@@ -13,13 +13,13 @@ import { RoutineExecutionLog } from './RoutineExecutionLog';
 
 // Cliente
 Cliente.belongsToMany(Plano, {
-  through: ClientePlano,
+  through: Contrato,
   foreignKey: 'cliente_id',
   otherKey: 'plano_id',
   as: 'planos'
 });
 
-Cliente.hasMany(ClientePlano, {
+Cliente.hasMany(Contrato, {
   foreignKey: 'cliente_id',
   as: 'contratos'
 });
@@ -32,13 +32,13 @@ Cliente.hasMany(Titulo, {
 
 // Plano
 Plano.belongsToMany(Cliente, {
-  through: ClientePlano,
+  through: Contrato,
   foreignKey: 'plano_id',
   otherKey: 'cliente_id',
   as: 'clientes'
 });
 
-Plano.hasMany(ClientePlano, {
+Plano.hasMany(Contrato, {
   foreignKey: 'plano_id',
   as: 'contratos'
 });
@@ -83,18 +83,18 @@ Titulo.belongsTo(Banco, {
   as: 'banco'
 });
 
-// ClientePlano
-ClientePlano.belongsTo(Cliente, {
+// Contrato
+Contrato.belongsTo(Cliente, {
   foreignKey: 'cliente_id',
   as: 'cliente'
 });
 
-ClientePlano.belongsTo(Plano, {
+Contrato.belongsTo(Plano, {
   foreignKey: 'plano_id',
   as: 'plano'
 });
 
-ClientePlano.belongsTo(Banco, {
+Contrato.belongsTo(Banco, {
   foreignKey: 'conta_boleto',
   as: 'bancoBoleto'
 });
@@ -124,7 +124,7 @@ export {
   Banco,
   BancoConfiguracao,
   Titulo,
-  ClientePlano,
+  Contrato,
   DadosEmpresa,
   ScheduledRoutine,
   RoutineExecutionLog

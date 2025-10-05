@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Titulo } from '../models/Titulo';
 import { Cliente } from '../models/Cliente';
-import { ClientePlano } from '../models/ClientePlano';
+import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { BancoApiService } from '../services/BancoApiService';
@@ -300,27 +300,29 @@ export class TituloController {
   // Criar novo título
   static async create(req: Request, res: Response): Promise<void> {
     try {
-      const { cliente_id, plano_id, data_vencimento, observacoes } = req.body;
+      const { 
+        cliente_id, 
+        plano_id, 
+        data_vencimento, 
+        observacoes,
+        desconto_percentual,
+        desconto_valor,
+        acrescimo_percentual,
+        acrescimo_valor,
+        descricao
+      } = req.body;
 
       // Validar dados obrigatórios
-      if (!cliente_id || !plano_id || !data_vencimento) {
+      if (!cliente_id) {
         res.status(400).json({
           success: false,
-          message: 'Cliente, plano e data de vencimento são obrigatórios'
+          message: 'Cliente é obrigatório'
         });
         return;
       }
 
       // Buscar cliente
-      const cliente = await Cliente.findByPk(cliente_id, {
-        include: [
-          {
-            model: Banco,
-            as: 'bancoBoleto',
-            attributes: ['id', 'nome', 'tipo_banco', 'ativo']
-          }
-        ]
-      });
+      const cliente = await Cliente.findByPk(cliente_id);
 
       if (!cliente) {
         res.status(404).json({
@@ -330,20 +332,76 @@ export class TituloController {
         return;
       }
 
-      // Buscar plano
-      const plano = await Plano.findByPk(plano_id);
-      if (!plano) {
-        res.status(404).json({
-          success: false,
-          message: 'Plano não encontrado'
+      // Buscar plano - se não foi informado, buscar o plano ativo do cliente
+      let plano;
+      if (plano_id) {
+        plano = await Plano.findByPk(plano_id);
+        if (!plano) {
+          res.status(404).json({
+            success: false,
+            message: 'Plano não encontrado'
+          });
+          return;
+        }
+      } else {
+        // Buscar plano ativo do cliente
+        const contratoAtivo = await Contrato.findOne({
+          where: { 
+            cliente_id: cliente.id, 
+            status: 'ativo' 
+          },
+          include: [{ model: Plano, as: 'plano' }]
         });
-        return;
+
+        if (!contratoAtivo) {
+          res.status(400).json({
+            success: false,
+            message: 'Cliente não possui plano ativo'
+          });
+          return;
+        }
+
+        plano = await Plano.findByPk(contratoAtivo.plano_id);
+        if (!plano) {
+          res.status(400).json({
+            success: false,
+            message: 'Plano do contrato não encontrado'
+          });
+          return;
+        }
+      }
+
+      // Calcular data de vencimento se não foi informada
+      let dataVencimentoFinal = data_vencimento;
+      if (!dataVencimentoFinal) {
+        // Buscar contrato ativo para pegar o dia de vencimento
+        const contratoAtivo = await Contrato.findOne({
+          where: { 
+            cliente_id: cliente.id, 
+            status: 'ativo' 
+          }
+        });
+
+        let diaVencimento = 15; // Dia padrão
+        if (contratoAtivo && contratoAtivo.dia_vencimento) {
+          diaVencimento = contratoAtivo.dia_vencimento;
+        }
+
+        // Calcular próxima data de vencimento
+        const hoje = new Date();
+        const proximoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, diaVencimento);
+        
+        // Se o dia já passou neste mês, usar o próximo mês
+        const vencimento = new Date(hoje.getFullYear(), hoje.getMonth(), diaVencimento);
+        const dataFinal = vencimento > hoje ? vencimento : proximoMes;
+        
+        dataVencimentoFinal = dataFinal.toISOString().split('T')[0];
       }
 
       // Selecionar banco
       let banco;
       // Buscar banco do contrato ativo do cliente
-      const contratoAtivo = await ClientePlano.findOne({
+      const contratoAtivo = await Contrato.findOne({
         where: { 
           cliente_id: cliente.id, 
           status: 'ativo' 
@@ -379,15 +437,47 @@ export class TituloController {
         return `TIT-${timestamp}-${random}`;
       };
 
+      // Calcular valor final com desconto/acréscimo
+      let valorFinal = parseFloat(plano.valor_mensal.toString());
+      
+      // Aplicar desconto percentual
+      if (desconto_percentual && desconto_percentual > 0) {
+        valorFinal = valorFinal * (1 - (desconto_percentual / 100));
+      }
+      
+      // Aplicar desconto em valor
+      if (desconto_valor && desconto_valor > 0) {
+        valorFinal = valorFinal - parseFloat(desconto_valor.toString());
+      }
+      
+      // Aplicar acréscimo percentual
+      if (acrescimo_percentual && acrescimo_percentual > 0) {
+        valorFinal = valorFinal * (1 + (acrescimo_percentual / 100));
+      }
+      
+      // Aplicar acréscimo em valor
+      if (acrescimo_valor && acrescimo_valor > 0) {
+        valorFinal = valorFinal + parseFloat(acrescimo_valor.toString());
+      }
+      
+      // Garantir que o valor final não seja negativo
+      valorFinal = Math.max(0, valorFinal);
+
       // Criar título
       const titulo = await Titulo.create({
         cliente_id,
-        plano_id,
+        plano_id: plano.id,
         banco_id: banco.id,
         numero_titulo: gerarNumeroTitulo(),
         valor: plano.valor_mensal,
-        data_vencimento,
+        valor_final: valorFinal,
+        data_vencimento: dataVencimentoFinal,
         observacoes: observacoes || '',
+        desconto_percentual: desconto_percentual || null,
+        desconto_valor: desconto_valor || null,
+        acrescimo_percentual: acrescimo_percentual || null,
+        acrescimo_valor: acrescimo_valor || null,
+        descricao: descricao || null,
         status: 'pendente',
         pago: false
       });

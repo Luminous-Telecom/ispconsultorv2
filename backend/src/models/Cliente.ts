@@ -20,7 +20,7 @@ import {
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Plano } from './Plano';
-import { ClientePlano } from './ClientePlano';
+import { Contrato } from './Contrato';
 import { Titulo } from './Titulo';
 
 export class Cliente extends Model<
@@ -74,16 +74,16 @@ export class Cliente extends Model<
   declare countTitulos: HasManyCountAssociationsMixin;
   declare createTitulo: HasManyCreateAssociationMixin<Titulo>;
 
-  declare getContratos: HasManyGetAssociationsMixin<ClientePlano>;
-  declare addContrato: HasManyAddAssociationMixin<ClientePlano, number>;
-  declare addContratos: HasManyAddAssociationsMixin<ClientePlano, number>;
-  declare setContratos: HasManySetAssociationsMixin<ClientePlano, number>;
-  declare removeContrato: HasManyRemoveAssociationMixin<ClientePlano, number>;
-  declare removeContratos: HasManyRemoveAssociationsMixin<ClientePlano, number>;
-  declare hasContrato: HasManyHasAssociationMixin<ClientePlano, number>;
-  declare hasContratos: HasManyHasAssociationsMixin<ClientePlano, number>;
+  declare getContratos: HasManyGetAssociationsMixin<Contrato>;
+  declare addContrato: HasManyAddAssociationMixin<Contrato, number>;
+  declare addContratos: HasManyAddAssociationsMixin<Contrato, number>;
+  declare setContratos: HasManySetAssociationsMixin<Contrato, number>;
+  declare removeContrato: HasManyRemoveAssociationMixin<Contrato, number>;
+  declare removeContratos: HasManyRemoveAssociationsMixin<Contrato, number>;
+  declare hasContrato: HasManyHasAssociationMixin<Contrato, number>;
+  declare hasContratos: HasManyHasAssociationsMixin<Contrato, number>;
   declare countContratos: HasManyCountAssociationsMixin;
-  declare createContrato: HasManyCreateAssociationMixin<ClientePlano>;
+  declare createContrato: HasManyCreateAssociationMixin<Contrato>;
 
 
   // Métodos de instância

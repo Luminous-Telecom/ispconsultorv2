@@ -13,9 +13,9 @@ import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
 
-export class ClientePlano extends Model<
-  InferAttributes<ClientePlano>,
-  InferCreationAttributes<ClientePlano>
+export class Contrato extends Model<
+  InferAttributes<Contrato>,
+  InferCreationAttributes<Contrato>
 > {
   declare id: CreationOptional<number>;
   declare cliente_id: number;
@@ -48,7 +48,7 @@ export class ClientePlano extends Model<
   declare createBancoBoleto: BelongsToCreateAssociationMixin<Banco>;
 
   // Métodos de instância
-  static async findAtivos(): Promise<ClientePlano[]> {
+  static async findAtivos(): Promise<Contrato[]> {
     return this.findAll({
       where: { status: 'ativo' },
       include: [
@@ -105,7 +105,7 @@ export class ClientePlano extends Model<
   }
 }
 
-ClientePlano.init(
+Contrato.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -206,8 +206,8 @@ ClientePlano.init(
   },
   {
     sequelize,
-    modelName: 'ClientePlano',
-    tableName: 'cliente_planos',
+    modelName: 'Contrato',
+    tableName: 'contratos',
     timestamps: true,
     underscored: true,
     indexes: [
