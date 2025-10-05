@@ -8,7 +8,6 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { Cliente, CarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
-import ModalHeaderActions from '../../common/ModalHeaderActions';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
@@ -128,7 +127,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   });
 
   // Buscar contratos do cliente
-  const { data: contratosData } = useContratos(cliente?.id);
+  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError } = useContratos(cliente?.id);
 
   // Buscar parcelas do cliente (dados reais do banco)
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
@@ -607,6 +606,25 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           onClose={onClose}
           title="Editar Cliente"
           size="xl"
+          headerActions={
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={onClose}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                form="cliente-form"
+                className="btn btn-primary btn-sm"
+                disabled={updateClienteMutation.isPending}
+              >
+                {updateClienteMutation.isPending ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          }
         >
       <div style={{ 
         height: '100%',
@@ -673,7 +691,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
         {/* Conteúdo das Abas - Com Scroll */}
         <div className="tab-content" id="clienteTabContent" style={{ flex: 1, overflow: 'auto', padding: '16px', minHeight: 0 }}>
-          <form onSubmit={handleSubmit}>
+          <form id="cliente-form" onSubmit={handleSubmit}>
             {/* Aba Dados Básicos */}
             {activeTab === 'dados-basicos' && (
               <div className="row">
@@ -944,84 +962,129 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             {activeTab === 'contratos' && (
               <div className="row">
                 <div className="col-12">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="text-primary mb-0">Contratos do Cliente</h6>
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => setShowContratoCreateModal(true)}
-                    >
-                      Novo Contrato
-                    </button>
-                  </div>
-
-                  {contratosData && contratosData.length > 0 ? (
-                    <div className="table-responsive">
-                      <table className="table table-sm table-hover">
-                        <thead className="table-light">
-                          <tr>
-                            <th>ID</th>
-                            <th>Plano</th>
-                            <th>Status</th>
-                            <th>Desconto %</th>
-                            <th>Desconto R$</th>
-                            <th>Valor Final</th>
-                            <th>Data Início</th>
-                            <th>Data Fim</th>
-                            <th>Isento</th>
-                            <th>Dia Venc.</th>
-                            <th>Banco</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {contratosData.map((contrato: any) => (
-                            <tr key={contrato.id}>
-                              <td>{contrato.id}</td>
-                              <td>
-                                <div>
-                                  <strong>{contrato.plano?.nome_plano}</strong>
-                                  <div className="text-muted small">R$ {contrato.plano?.valor_mensal}</div>
-                                </div>
-                              </td>
-                              <td>
-                                <span className={`badge ${
-                                  contrato.status === 'ativo' ? 'bg-success' :
-                                  contrato.status === 'inativo' ? 'bg-danger' :
-                                  'bg-warning'
-                                }`}>
-                                  {contrato.status}
-                                </span>
-                              </td>
-                              <td>{contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'}</td>
-                              <td>{contrato.desconto_valor ? `R$ ${contrato.desconto_valor}` : '-'}</td>
-                              <td>{contrato.valor_final ? `R$ ${contrato.valor_final}` : '-'}</td>
-                              <td>{contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'}</td>
-                              <td>{contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'}</td>
-                              <td>
-                                <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
-                                  {contrato.isento_mensalidade ? 'Sim' : 'Não'}
-                                </span>
-                              </td>
-                              <td>{contrato.dia_vencimento ? `Dia ${contrato.dia_vencimento}` : '-'}</td>
-                              <td>{contrato.bancoBoleto?.nome || '-'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-4">
-                      <div className="text-muted">
-                        <i className="bi bi-file-earmark-text fs-1"></i>
-                        <p className="mt-2">Nenhum contrato encontrado para este cliente</p>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => setShowContratoCreateModal(true)}
-                        >
-                          Criar Primeiro Contrato
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <DataTable
+                    columns={[
+                      {
+                        key: 'id',
+                        label: 'ID',
+                        sortable: true,
+                        render: (contrato: any) => contrato.id
+                      },
+                      {
+                        key: 'nome_plano',
+                        label: 'Plano',
+                        sortable: true,
+                        render: (contrato: any) => contrato.plano?.nome_plano || '-'
+                      },
+                      {
+                        key: 'valor_plano',
+                        label: 'Valor Plano',
+                        sortable: true,
+                        render: (contrato: any) => contrato.plano?.valor_mensal ? `R$ ${contrato.plano.valor_mensal}` : '-'
+                      },
+                      {
+                        key: 'status',
+                        label: 'Status',
+                        sortable: true,
+                        render: (contrato: any) => (
+                          <span className={`badge ${
+                            contrato.status === 'ativo' ? 'bg-success' :
+                            contrato.status === 'inativo' ? 'bg-danger' :
+                            'bg-warning'
+                          }`}>
+                            {contrato.status}
+                          </span>
+                        )
+                      },
+                      {
+                        key: 'desconto_percentual',
+                        label: 'Desconto %',
+                        sortable: true,
+                        render: (contrato: any) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
+                      },
+                      {
+                        key: 'desconto_valor',
+                        label: 'Desconto R$',
+                        sortable: true,
+                        render: (contrato: any) => contrato.desconto_valor ? `R$ ${contrato.desconto_valor}` : '-'
+                      },
+                      {
+                        key: 'valor_final',
+                        label: 'Valor Final',
+                        sortable: true,
+                        render: (contrato: any) => contrato.valor_final ? `R$ ${contrato.valor_final}` : '-'
+                      },
+                      {
+                        key: 'data_inicio',
+                        label: 'Data Início',
+                        sortable: true,
+                        render: (contrato: any) => contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'
+                      },
+                      {
+                        key: 'data_fim',
+                        label: 'Data Fim',
+                        sortable: true,
+                        render: (contrato: any) => contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'
+                      },
+                      {
+                        key: 'isento_mensalidade',
+                        label: 'Isento',
+                        sortable: true,
+                        render: (contrato: any) => (
+                          <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
+                            {contrato.isento_mensalidade ? 'Sim' : 'Não'}
+                          </span>
+                        )
+                      },
+                      {
+                        key: 'dia_vencimento',
+                        label: 'Dia Venc.',
+                        sortable: true,
+                        render: (contrato: any) => contrato.dia_vencimento ? contrato.dia_vencimento : '-'
+                      },
+                      {
+                        key: 'banco_nome',
+                        label: 'Banco',
+                        sortable: true,
+                        render: (contrato: any) => contrato.bancoBoleto?.nome || '-'
+                      }
+                    ]}
+                    data={contratosData || []}
+                    isLoading={isLoadingContratos}
+                    limit={10}
+                    setLimit={() => {}}
+                    setPage={() => {}}
+                    emptyMessage="Nenhum contrato encontrado para este cliente"
+                    bulkActions={[
+                      {
+                        label: 'Novo Contrato',
+                        action: () => setShowContratoCreateModal(true),
+                        variant: 'primary'
+                      },
+                      {
+                        label: 'Editar',
+                        action: (selectedItems) => {
+                          if (selectedItems.length === 1) {
+                            // TODO: Implementar edição de contrato
+                            console.log('Editar contrato:', selectedItems[0]);
+                          }
+                        },
+                        variant: 'secondary',
+                        disabled: (selectedItems) => selectedItems.length !== 1
+                      },
+                      {
+                        label: 'Deletar',
+                        action: (selectedItems) => {
+                          if (selectedItems.length > 0) {
+                            // TODO: Implementar exclusão de contratos
+                            console.log('Deletar contratos:', selectedItems);
+                          }
+                        },
+                        variant: 'danger',
+                        disabled: (selectedItems) => selectedItems.length === 0
+                      }
+                    ]}
+                  />
                 </div>
               </div>
             )}
@@ -1348,23 +1411,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               </div>
             )}
 
-            {/* Botões */}
-            <div className="d-flex justify-content-end gap-2 mt-4">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={onClose}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={updateClienteMutation.isPending}
-              >
-                {updateClienteMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
-              </button>
-            </div>
           </form>
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { TituloService } from '../../../services/tituloService';
 import { PlanoService } from '../../../services/planoService';
+import { ClienteService } from '../../../services/clienteService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { CreateCarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
@@ -10,6 +11,11 @@ interface TituloForm {
   plano_id: number;
   data_vencimento: string;
   observacoes?: string;
+  desconto_percentual?: number;
+  desconto_valor?: number;
+  acrescimo_percentual?: number;
+  acrescimo_valor?: number;
+  descricao?: string;
 }
 
 interface TituloCreateModalProps {
@@ -29,6 +35,11 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
     plano_id: 0,
     data_vencimento: '',
     observacoes: '',
+    desconto_percentual: 0,
+    desconto_valor: 0,
+    acrescimo_percentual: 0,
+    acrescimo_valor: 0,
+    descricao: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
@@ -42,6 +53,50 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
     enabled: show,
   });
 
+  // Buscar cliente para obter plano ativo
+  const { data: clienteData } = useQuery({
+    queryKey: ['cliente', clienteId],
+    queryFn: () => ClienteService.getById(clienteId!),
+    enabled: show && !!clienteId,
+  });
+
+  // Função para calcular a próxima data de vencimento
+  const calcularProximaDataVencimento = (diaVencimento: number): string => {
+    const hoje = new Date();
+    const proximoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, diaVencimento);
+    
+    // Se o dia já passou neste mês, usar o próximo mês
+    const vencimento = new Date(hoje.getFullYear(), hoje.getMonth(), diaVencimento);
+    const dataFinal = vencimento > hoje ? vencimento : proximoMes;
+    
+    // Formatar para YYYY-MM-DD
+    return dataFinal.toISOString().split('T')[0];
+  };
+
+  // Pré-selecionar plano ativo do cliente e data de vencimento
+  useEffect(() => {
+    if (clienteData?.contratos && clienteData.contratos.length > 0) {
+      const contratoAtivo = clienteData.contratos.find((contrato: any) => contrato.status === 'ativo');
+      if (contratoAtivo && contratoAtivo.plano_id) {
+        let dataVencimento = '';
+        
+        // Se tem dia de vencimento configurado no contrato, usar ele
+        if ((contratoAtivo as any).dia_vencimento) {
+          dataVencimento = calcularProximaDataVencimento((contratoAtivo as any).dia_vencimento);
+        } else {
+          // Se não tem dia configurado, usar o dia 15 do próximo mês como padrão
+          dataVencimento = calcularProximaDataVencimento(15);
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          plano_id: contratoAtivo.plano_id,
+          data_vencimento: dataVencimento
+        }));
+      }
+    }
+  }, [clienteData]);
+
   // Limpar formulário quando modal fechar
   useEffect(() => {
     if (!show) {
@@ -49,6 +104,11 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         plano_id: 0,
         data_vencimento: '',
         observacoes: '',
+        desconto_percentual: 0,
+        desconto_valor: 0,
+        acrescimo_percentual: 0,
+        acrescimo_valor: 0,
+        descricao: '',
       });
       setErrors({});
     }
@@ -115,6 +175,11 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       plano_id: formData.plano_id,
       data_vencimento: formData.data_vencimento,
       observacoes: formData.observacoes || '',
+      desconto_percentual: formData.desconto_percentual || 0,
+      desconto_valor: formData.desconto_valor || 0,
+      acrescimo_percentual: formData.acrescimo_percentual || 0,
+      acrescimo_valor: formData.acrescimo_valor || 0,
+      descricao: formData.descricao || '',
       cliente_id: clienteId
     };
 
@@ -170,8 +235,95 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
               {errors.data_vencimento && <div className="invalid-feedback">{errors.data_vencimento}</div>}
             </div>
           </div>
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label htmlFor="descricao" className="form-label small">Descrição</label>
+              <input
+                type="text"
+                className="form-control"
+                id="descricao"
+                value={formData.descricao}
+                onChange={(e) => handleInputChange('descricao', e.target.value)}
+                disabled={createParcelaMutation.isPending}
+                placeholder="Descrição do título..."
+              />
+            </div>
+          </div>
         </div>
 
+        {/* Campos de Desconto */}
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label htmlFor="desconto_percentual" className="form-label small">Desconto (%)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                className="form-control"
+                id="desconto_percentual"
+                value={formData.desconto_percentual}
+                onChange={(e) => handleInputChange('desconto_percentual', parseFloat(e.target.value) || 0)}
+                disabled={createParcelaMutation.isPending}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label htmlFor="desconto_valor" className="form-label small">Desconto (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                className="form-control"
+                id="desconto_valor"
+                value={formData.desconto_valor}
+                onChange={(e) => handleInputChange('desconto_valor', parseFloat(e.target.value) || 0)}
+                disabled={createParcelaMutation.isPending}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Campos de Acréscimo */}
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label htmlFor="acrescimo_percentual" className="form-label small">Acréscimo (%)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                className="form-control"
+                id="acrescimo_percentual"
+                value={formData.acrescimo_percentual}
+                onChange={(e) => handleInputChange('acrescimo_percentual', parseFloat(e.target.value) || 0)}
+                disabled={createParcelaMutation.isPending}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label htmlFor="acrescimo_valor" className="form-label small">Acréscimo (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                className="form-control"
+                id="acrescimo_valor"
+                value={formData.acrescimo_valor}
+                onChange={(e) => handleInputChange('acrescimo_valor', parseFloat(e.target.value) || 0)}
+                disabled={createParcelaMutation.isPending}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+        </div>
 
         <div className="row">
           <div className="col-12">

@@ -57,7 +57,7 @@ export const useContratos = (clienteId?: number) => {
   return useQuery({
     queryKey: ['contratos', clienteId],
     queryFn: () => clienteId ? ContratoService.getByCliente(clienteId) : ContratoService.getAtivos(),
-    enabled: !clienteId || !!clienteId,
+    enabled: !!clienteId,
   });
 };
 

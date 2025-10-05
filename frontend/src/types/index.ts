@@ -34,7 +34,7 @@ export interface Cliente extends BaseEntity {
   
   // Relacionamentos
   planos?: Plano[];
-  contratos?: ClientePlano[];
+  contratos?: Contrato[];
   carnes?: Carne[];
   banco_boleto?: Banco;
 }
@@ -58,7 +58,7 @@ export interface Plano extends BaseEntity {
   
   // Relacionamentos
   clientes?: Cliente[];
-  contratos?: ClientePlano[];
+  contratos?: Contrato[];
   carnes?: Carne[];
 }
 
@@ -164,6 +164,12 @@ export interface CarneParcela extends BaseEntity {
   qrcode?: string;
   qrcode_image?: string;
   observacoes?: string;
+  desconto_percentual?: number;
+  desconto_valor?: number;
+  acrescimo_percentual?: number;
+  acrescimo_valor?: number;
+  valor_final?: number;
+  descricao?: string;
   charge_id?: string;
   url_boleto?: string;
   nosso_numero?: string;
@@ -173,7 +179,7 @@ export interface CarneParcela extends BaseEntity {
   plano?: Plano;
 }
 
-export interface ClientePlano extends BaseEntity {
+export interface Contrato extends BaseEntity {
   cliente_id: number;
   plano_id: number;
   desconto_percentual?: number;
@@ -183,6 +189,10 @@ export interface ClientePlano extends BaseEntity {
   data_fim?: string;
   status: 'ativo' | 'inativo' | 'suspenso';
   observacoes?: string;
+  isento_mensalidade?: boolean;
+  dia_vencimento?: number;
+  conta_boleto?: number;
+  data_validade_desconto?: string;
   
   // Relacionamentos
   cliente?: Cliente;
