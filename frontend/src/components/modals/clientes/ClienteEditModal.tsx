@@ -13,6 +13,7 @@ import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import { useContratos } from '../../../hooks/useContratos';
 import ContratoCreateModal from './ContratoCreateModal';
+import ContratoEditModal from './ContratoEditModal';
 
 interface ClienteForm {
   cnpj: string;
@@ -88,6 +89,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
   const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
+  const [showContratoEditModal, setShowContratoEditModal] = useState(false);
+  const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
@@ -1087,8 +1090,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         label: 'Editar',
                         action: (selectedItems) => {
                           if (selectedItems.length === 1) {
-                            // TODO: Implementar edição de contrato
-                            console.log('Editar contrato:', selectedItems[0]);
+                            setSelectedContratoId(selectedItems[0].id);
+                            setShowContratoEditModal(true);
                           }
                         },
                         variant: 'secondary',
@@ -1505,6 +1508,21 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         onClose={() => setShowContratoCreateModal(false)}
         onSuccess={() => {
           setShowContratoCreateModal(false);
+          // Refetch contratos
+        }}
+      />
+
+      {/* Modal de edição de contrato */}
+      <ContratoEditModal
+        show={showContratoEditModal}
+        contratoId={selectedContratoId}
+        onClose={() => {
+          setShowContratoEditModal(false);
+          setSelectedContratoId(null);
+        }}
+        onSuccess={() => {
+          setShowContratoEditModal(false);
+          setSelectedContratoId(null);
           // Refetch contratos
         }}
       />
