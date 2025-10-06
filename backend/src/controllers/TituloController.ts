@@ -303,6 +303,7 @@ export class TituloController {
       const { 
         cliente_id, 
         plano_id, 
+        contrato_id,
         data_vencimento, 
         observacoes,
         desconto_percentual,
@@ -468,6 +469,7 @@ export class TituloController {
         cliente_id,
         plano_id: plano.id,
         banco_id: banco.id,
+        contrato_id: contrato_id || null,
         numero_titulo: gerarNumeroTitulo(),
         valor: plano.valor_mensal,
         valor_final: valorFinal,
@@ -1235,7 +1237,7 @@ export class TituloController {
       // Buscar títulos do contrato
       const titulos = await Titulo.findAll({
         where: {
-          plano_id: contrato.plano_id
+          contrato_id: contratoId
         },
         include: [
           {

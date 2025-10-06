@@ -22,6 +22,7 @@ export class Titulo extends Model<
   declare cliente_id: number;
   declare plano_id: number;
   declare banco_id: number;
+  declare contrato_id: number | null;
   declare numero_titulo: string;
   declare valor: number;
   declare data_vencimento: Date;
@@ -387,6 +388,11 @@ Titulo.init(
         key: 'id'
       }
     },
+    contrato_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'ID do contrato relacionado'
+    },
     numero_titulo: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -525,6 +531,9 @@ Titulo.init(
       },
       {
         fields: ['banco_id']
+      },
+      {
+        fields: ['contrato_id']
       },
       {
         fields: ['status']
