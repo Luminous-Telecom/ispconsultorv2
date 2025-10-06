@@ -206,18 +206,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   };
 
-  // Verificar se titulosData é um array ou se tem propriedade data
-  const titulosArray = titulosData && Array.isArray(titulosData) 
-    ? titulosData 
-    : titulosData?.data && Array.isArray(titulosData.data) 
-    ? titulosData.data 
-    : [];
-
   // Debug temporário
   console.log('🔍 Debug ContratoEditModal:');
   console.log('- titulosData:', titulosData);
-  console.log('- titulosArray:', titulosArray);
-  console.log('- titulosArray.length:', titulosArray.length);
+  console.log('- titulosData?.data:', titulosData?.data);
   console.log('- isLoadingTitulos:', isLoadingTitulos);
 
   // Funções para impressão
@@ -228,7 +220,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   };
 
   const handleImprimirTodosEmAberto = async () => {
-    const titulosEmAberto = titulosArray.filter((titulo: any) => 
+    if (!titulosData?.data) {
+      success('Nenhum título encontrado');
+      return;
+    }
+    const titulosEmAberto = titulosData.data.filter((titulo: any) => 
       titulo.status === 'pendente' || titulo.status === 'vencido'
     );
     if (titulosEmAberto.length === 0) {
@@ -430,16 +426,34 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   ];
 
-  // Funções para filtrar e paginar dados
-  const filteredData = titulosArray.filter((titulo: any) => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      titulo.numero_titulo?.toLowerCase().includes(searchLower) ||
-      titulo.status?.toLowerCase().includes(searchLower) ||
-      titulo.valor?.toString().includes(searchLower)
-    );
-  });
+  // Funções para filtrar e paginar dados (igual ao ClienteEditModal)
+  const getFilteredData = () => {
+    if (!titulosData?.data) return [];
+    
+    const allData = titulosData.data;
+
+    // Aplicar filtro de busca
+    if (search.trim()) {
+      const searchTerm = search.toLowerCase().trim();
+      return allData.filter((titulo: any) => {
+        const id = titulo.id?.toString() || '';
+        const numeroTitulo = titulo.numero_titulo || '';
+        const valor = titulo.valor?.toString() || '';
+        const status = titulo.status || '';
+        
+        return (
+          id.includes(searchTerm) ||
+          numeroTitulo.toLowerCase().includes(searchTerm) ||
+          valor.includes(searchTerm) ||
+          status.toLowerCase().includes(searchTerm)
+        );
+      });
+    }
+
+    return allData;
+  };
+
+  const filteredData = getFilteredData();
 
   const sortedData = [...filteredData].sort((a: any, b: any) => {
     if (!sortColumn) return 0;
