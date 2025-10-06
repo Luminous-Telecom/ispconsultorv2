@@ -47,7 +47,9 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     search: search || undefined,
     status: status || undefined,
     page,
-    limit
+    limit,
+    sortColumn: sortColumn || undefined,
+    sortDirection: sortDirection || undefined
   });
 
   const deletePlanoMutation = useDeletePlano();
@@ -224,6 +226,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             onSort={(column: string, direction: 'asc' | 'desc') => {
               setSortColumn(column);
               setSortDirection(direction);
+              setPage(1); // Voltar para primeira página ao ordenar
             }}
             sortColumn={sortColumn}
             sortDirection={sortDirection}

@@ -12,6 +12,8 @@ export class PlanoService {
     if (filters.cliente_id) params.append('cliente_id', filters.cliente_id.toString());
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
+    if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
 
     try {
       const response = await apiService.get<PaginatedResponse<Plano>>(`/planos?${params.toString()}`);

@@ -239,6 +239,8 @@ export interface PlanoFilters {
   valor_max?: number;
   page?: number;
   limit?: number;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
 export interface BancoFilters {

@@ -11,6 +11,8 @@ export class PlanoController {
       const search = req.query.search as string;
       const status = req.query.status as string;
       const tipo_servico = req.query.tipo_servico as string;
+      const sortColumn = req.query.sortColumn as string;
+      const sortDirection = req.query.sortDirection as string;
 
       const offset = (page - 1) * limit;
 
@@ -32,6 +34,21 @@ export class PlanoController {
         where.tipo_servico = tipo_servico;
       }
 
+      // Construir ordenação
+      let order: any[] = [['created_at', 'DESC']]; // Padrão
+      if (sortColumn && sortDirection) {
+        // Validar colunas permitidas para ordenação
+        const allowedColumns = [
+          'id', 'nome_plano', 'descricao', 'tipo_servico', 'quantidade_usuarios', 
+          'valor_mensal', 'periodicidade', 'status', 'created_at'
+        ];
+        
+        if (allowedColumns.includes(sortColumn)) {
+          const direction = sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+          order = [[sortColumn, direction]];
+        }
+      }
+
       const { count, rows: planos } = await Plano.findAndCountAll({
         where,
         attributes: [
@@ -47,7 +64,7 @@ export class PlanoController {
             through: { attributes: ['desconto_percentual', 'desconto_valor', 'valor_final', 'status'] }
           }
         ],
-        order: [['created_at', 'DESC']],
+        order,
         limit,
         offset,
         raw: false
