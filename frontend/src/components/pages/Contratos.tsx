@@ -12,13 +12,7 @@ const Contratos: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
-  const { data: contratosData, isLoading, error, refetch } = useContratos({
-    search: search || undefined,
-    page,
-    limit
-  });
-
-  const contratos = contratosData?.data || [];
+  const { data: contratos = [], isLoading, error, refetch } = useContratos();
 
   // Função para ordenação
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
@@ -26,11 +20,32 @@ const Contratos: React.FC = () => {
     setSortDirection(direction);
   };
 
+  // Função para filtrar dados por busca
+  const getFilteredData = () => {
+    if (!search.trim()) return contratos;
+    
+    const searchTerm = search.toLowerCase().trim();
+    return contratos.filter((contrato: Contrato) => {
+      const cliente = contrato.cliente?.razao_social?.toLowerCase() || '';
+      const plano = contrato.plano?.nome_plano?.toLowerCase() || '';
+      const status = contrato.status?.toLowerCase() || '';
+      const id = contrato.id?.toString() || '';
+      
+      return (
+        cliente.includes(searchTerm) ||
+        plano.includes(searchTerm) ||
+        status.includes(searchTerm) ||
+        id.includes(searchTerm)
+      );
+    });
+  };
+
   // Função para ordenar dados
   const getSortedData = () => {
-    if (!sortColumn) return contratos;
+    const filteredData = getFilteredData();
+    if (!sortColumn) return filteredData;
     
-    return [...contratos].sort((a, b) => {
+    return [...filteredData].sort((a, b) => {
       let aVal: any = a[sortColumn as keyof Contrato];
       let bVal: any = b[sortColumn as keyof Contrato];
       
@@ -49,6 +64,26 @@ const Contratos: React.FC = () => {
         return aVal < bVal ? 1 : -1;
       }
     });
+  };
+
+  // Função para paginar dados
+  const getPaginatedData = () => {
+    const sortedData = getSortedData();
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    return sortedData.slice(startIndex, endIndex);
+  };
+
+  // Calcular paginação
+  const filteredData = getFilteredData();
+  const totalPages = Math.ceil(filteredData.length / limit);
+  const pagination = {
+    current_page: page,
+    last_page: totalPages,
+    per_page: limit,
+    total: filteredData.length,
+    from: (page - 1) * limit + 1,
+    to: Math.min(page * limit, filteredData.length)
   };
 
   // Função para ações em lote
@@ -207,12 +242,12 @@ const Contratos: React.FC = () => {
     },
     {
       label: 'Editar',
-      action: (selectedItems) => handleTopoActions('editar', selectedItems),
+      action: (selectedItems: any[]) => handleTopoActions('editar', selectedItems),
       variant: 'secondary' as const
     },
     {
       label: 'Deletar',
-      action: (selectedItems) => handleTopoActions('deletar', selectedItems),
+      action: (selectedItems: any[]) => handleTopoActions('deletar', selectedItems),
       variant: 'danger' as const
     }
   ];
@@ -241,9 +276,9 @@ const Contratos: React.FC = () => {
 
           <DataTable
             columns={columns}
-            data={getSortedData()}
+            data={getPaginatedData()}
             isLoading={isLoading}
-            pagination={contratosData?.pagination}
+            pagination={pagination}
             limit={limit}
             setLimit={setLimit}
             setPage={setPage}
