@@ -9,6 +9,7 @@ import DraggableModal from '../../common/DraggableModal';
 
 interface TituloForm {
   plano_id: number;
+  contrato_id?: number;
   data_vencimento: string;
   observacoes?: string;
   desconto_percentual?: number;
@@ -33,6 +34,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<TituloForm>({
     plano_id: 0,
+    contrato_id: undefined,
     data_vencimento: '',
     observacoes: '',
     desconto_percentual: 0,
@@ -91,13 +93,16 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         
         // Só atualizar se os valores forem diferentes dos atuais
         setFormData(prev => {
-          if (prev.plano_id === contratoAtivo.plano_id && prev.data_vencimento === dataVencimento) {
+          if (prev.plano_id === contratoAtivo.plano_id && 
+              prev.contrato_id === contratoAtivo.id && 
+              prev.data_vencimento === dataVencimento) {
             return prev; // Não atualizar se os valores já estão corretos
           }
           
           return {
             ...prev,
             plano_id: contratoAtivo.plano_id,
+            contrato_id: contratoAtivo.id,
             data_vencimento: dataVencimento
           };
         });
@@ -112,6 +117,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
     if (prevShowRef.current && !show) {
       setFormData({
         plano_id: 0,
+        contrato_id: undefined,
         data_vencimento: '',
         observacoes: '',
         desconto_percentual: 0,

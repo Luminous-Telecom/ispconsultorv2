@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import { useCreateContrato, useUpdateContrato } from '../../../hooks/useContratos';
+import { TituloService } from '../../../services/tituloService';
 import DraggableModal from '../../common/DraggableModal';
+import DataTable from '../../common/DataTable';
+import TituloCreateModal from '../titulos/TituloCreateModal';
+import TituloEditModal from '../titulos/TituloEditModal';
+import ReceberModal from '../pagamentos/ReceberModal';
 
 interface ContratoForm {
   plano_id: number;
@@ -49,6 +54,18 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
   const [activeTab, setActiveTab] = useState('contrato');
+  const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
+  const [showTituloEditModal, setShowTituloEditModal] = useState(false);
+  const [showReceberModal, setShowReceberModal] = useState(false);
+  const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
+  const [selectedParcela, setSelectedParcela] = useState<any>(null);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   
@@ -168,6 +185,262 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // Função para obter a cor do status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pago':
+        return 'success';
+      case 'pago_atraso':
+        return 'warning';
+      case 'pendente':
+        return 'primary';
+      case 'vencido':
+        return 'danger';
+      case 'parcial':
+        return 'info';
+      case 'cancelado':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
+
+  // Funções para impressão
+  const handleImprimirSelecionados = () => {
+    if (selectedItems.length === 0) return;
+    const ids = selectedItems.map(item => item.id);
+    window.open(`${process.env.REACT_APP_API_URL}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`, '_blank');
+  };
+
+  const handleImprimirTodosEmAberto = async () => {
+    if (!titulosData || !Array.isArray(titulosData)) return;
+    const titulosEmAberto = titulosData.filter((titulo: any) => 
+      titulo.status === 'pendente' || titulo.status === 'vencido'
+    );
+    if (titulosEmAberto.length === 0) {
+      success('Nenhum título em aberto encontrado');
+      return;
+    }
+    const ids = titulosEmAberto.map((titulo: any) => titulo.id);
+    window.open(`${process.env.REACT_APP_API_URL}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`, '_blank');
+  };
+
+  // Bulk actions para títulos
+  const bulkActions: Array<{
+    label: string;
+    action?: (selectedItems: any[]) => void;
+    disabled?: (selectedItems: any[]) => boolean;
+    dropdown?: {
+      label: string;
+      action: () => void;
+    }[];
+  }> = [
+    {
+      label: 'Novo Título',
+      action: () => {
+        setShowTituloCreateModal(true);
+      }
+    },
+    {
+      label: 'Editar',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          setSelectedTituloId(item.id);
+          setShowTituloEditModal(true);
+        }
+      }
+    },
+    {
+      label: 'Receber',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          setSelectedParcela(item);
+          setShowReceberModal(true);
+        }
+      }
+    },
+    {
+      label: 'Cancelar',
+      action: async (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const confirmMessage = selectedItems.length === 1 
+            ? 'Tem certeza que deseja cancelar este título?'
+            : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+            
+          if (window.confirm(confirmMessage)) {
+            try {
+              let successCount = 0;
+              let errorCount = 0;
+              
+              for (const item of selectedItems) {
+                try {
+                  await TituloService.update(item.id, { status: 'cancelado' });
+                  successCount++;
+                } catch (err: any) {
+                  console.error(`Erro ao cancelar título ${item.id}:`, err);
+                  errorCount++;
+                }
+              }
+              
+              if (successCount > 0) {
+                const message = successCount === 1 
+                  ? 'Título cancelado com sucesso!'
+                  : `${successCount} títulos cancelados com sucesso!`;
+                success(message);
+              }
+              
+              if (errorCount > 0) {
+                const message = errorCount === 1 
+                  ? '1 título não pôde ser cancelado'
+                  : `${errorCount} títulos não puderam ser cancelados`;
+                error(message);
+              }
+              
+              // Recarregar dados
+              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
+            } catch (err: any) {
+              error('Erro ao cancelar títulos');
+            }
+          }
+        }
+      }
+    },
+    {
+      label: 'Estornar',
+      action: async (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          if (item.status === 'pago') {
+            const confirmar = window.confirm(
+              `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
+              `Valor: R$ ${item.valor_pago || item.valor}\n` +
+              `O título voltará para status PENDENTE.`
+            );
+            
+            if (confirmar) {
+              try {
+                await TituloService.estornar(item.id);
+                success('Título estornado com sucesso!');
+                queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
+              } catch (err: any) {
+                error(err.message || 'Erro ao estornar título.');
+              }
+            }
+          } else {
+            success('Só é possível estornar títulos que estão pagos');
+          }
+        }
+      },
+      disabled: (selectedItems: any[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status !== 'pago');
+      }
+    },
+    {
+      label: 'Imprimir',
+      dropdown: [
+        {
+          label: `Imprimir Selecionados (${selectedItems.length})`,
+          action: handleImprimirSelecionados
+        },
+        {
+          label: 'Imprimir Todos em Aberto',
+          action: handleImprimirTodosEmAberto
+        }
+      ]
+    }
+  ];
+
+  // Colunas para o DataTable
+  const columns = [
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      render: (item: any) => item.id
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (item: any) => {
+        return (
+          <span className={`badge bg-${getStatusColor(item.status)}`}>
+            {item.status}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'numero_titulo',
+      label: 'Nº Título',
+      render: (item: any) => {
+        return item.numero_titulo || '-';
+      }
+    },
+    {
+      key: 'data_vencimento',
+      label: 'Vencimento',
+      render: (item: any) => {
+        return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
+      }
+    },
+    {
+      key: 'valor',
+      label: 'Valor',
+      render: (item: any) => {
+        return `R$ ${Number(item.valor || 0).toFixed(2)}`;
+      }
+    },
+    {
+      key: 'valor_pago',
+      label: 'Valor baixado',
+      render: (item: any) => {
+        return item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00';
+      }
+    },
+    {
+      key: 'valor_aberto',
+      label: 'Valor aberto',
+      render: (item: any) => {
+        return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
+      }
+    },
+    {
+      key: 'data_pagamento',
+      label: 'Data Pagamento',
+      render: (item: any) => {
+        return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
+      }
+    }
+  ];
+
+  // Funções para filtrar e paginar dados
+  const filteredData = titulosData && Array.isArray(titulosData) ? titulosData.filter((titulo: any) => {
+    if (!search) return true;
+    const searchLower = search.toLowerCase();
+    return (
+      titulo.numero_titulo?.toLowerCase().includes(searchLower) ||
+      titulo.status?.toLowerCase().includes(searchLower) ||
+      titulo.valor?.toString().includes(searchLower)
+    );
+  }) : [];
+
+  const sortedData = [...filteredData].sort((a: any, b: any) => {
+    if (!sortColumn) return 0;
+    const aVal = a[sortColumn];
+    const bVal = b[sortColumn];
+    
+    if (sortDirection === 'asc') {
+      return aVal > bVal ? 1 : -1;
+    } else {
+      return aVal < bVal ? 1 : -1;
+    }
+  });
+
+  const paginatedData = sortedData.slice((page - 1) * limit, page * limit);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -418,56 +691,255 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Aba Financeiro */}
           {activeTab === 'financeiro' && (
-            <div>
-              <h5 className="mb-3">Títulos Financeiros</h5>
-              {isLoadingTitulos ? (
-                <div className="text-center p-4">
-                  <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Carregando...</span>
+            <div className="row">
+              <div className="col-12">
+                {/* Cabeçalho fixo - não rola */}
+                <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
+                  {/* Botões de Ação - Linha 1 */}
+                  <div className="d-flex justify-content-start mb-3">
+                    <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
+                      {bulkActions.map((bulkAction, index) => {
+                        // Botão "Novo Título" sempre habilitado, outros apenas quando há seleção
+                        const isNewButton = bulkAction.label === 'Novo Título';
+                        const hasSelection = selectedItems.length > 0;
+                        const selectedItem = hasSelection ? selectedItems[0] : null;
+                        
+                        // Lógica de desabilitação baseada no status
+                        let isDisabled = !isNewButton && !hasSelection;
+                        
+                        if (hasSelection && selectedItem) {
+                          if (bulkAction.label === 'Receber' && selectedItem.status === 'pago') {
+                            isDisabled = true; // Não pode receber título já pago
+                          }
+                          if (bulkAction.label === 'Cancelar' && selectedItem.status === 'pago') {
+                            isDisabled = true; // Não pode cancelar título pago
+                          }
+                          if (bulkAction.label === 'Cancelar' && selectedItem.status === 'cancelado') {
+                            isDisabled = true; // Não pode cancelar título já cancelado
+                          }
+                          if (bulkAction.label === 'Receber' && selectedItem.status === 'cancelado') {
+                            isDisabled = true; // Não pode receber título cancelado
+                          }
+                        }
+                        
+                        // Usar a função disabled do bulkAction se existir
+                        if (bulkAction.disabled) {
+                          isDisabled = isDisabled || bulkAction.disabled(selectedItems);
+                        }
+                        
+                        // Se tem dropdown, renderizar dropdown
+                        if (bulkAction.dropdown) {
+                          return (
+                            <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
+                              <button
+                                className="btn btn-sm btn-primary dropdown-toggle"
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setOpenDropdown(openDropdown === index ? null : index);
+                                }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                              >
+                                {bulkAction.label}
+                              </button>
+                              {openDropdown === index && (
+                                <ul 
+                                  className="dropdown-menu show" 
+                                  style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
+                                >
+                                  {bulkAction.dropdown.map((item, itemIndex) => (
+                                    <li key={itemIndex}>
+                                      <button
+                                        className="dropdown-item"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          item.action();
+                                          setOpenDropdown(null);
+                                        }}
+                                      >
+                                        {item.label}
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          );
+                        }
+                        
+                        // Botão normal
+                        return (
+                          <button
+                            key={index}
+                            className="btn btn-sm btn-primary"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (!isDisabled && bulkAction.action) {
+                                bulkAction.action(selectedItems);
+                              }
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            disabled={isDisabled}
+                            style={{ flexShrink: 0 }}
+                          >
+                            {bulkAction.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Busca, Filtros e Paginação - Linha 2 */}
+                  <div className="d-flex mb-3">
+                    {/* Busca à esquerda */}
+                    <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder="Buscar títulos..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        style={{ width: '200px' }}
+                      />
+                    </div>
+
+                    {/* Paginação à direita */}
+                    <div className="ms-auto d-flex align-items-center gap-2" style={{ paddingRight: '1rem' }}>
+                      <span className="text-muted small">
+                        Mostrando {paginatedData.length} de {filteredData.length} títulos
+                      </span>
+                      <select
+                        className="form-select form-select-sm"
+                        value={limit}
+                        onChange={(e) => setLimit(Number(e.target.value))}
+                        style={{ width: '80px' }}
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                      <div className="btn-group" role="group">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => setPage(Math.max(1, page - 1))}
+                          disabled={page === 1}
+                        >
+                          Anterior
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => setPage(Math.min(Math.ceil(filteredData.length / limit), page + 1))}
+                          disabled={page >= Math.ceil(filteredData.length / limit)}
+                        >
+                          Próxima
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ) : titulosData && Array.isArray(titulosData) && titulosData.length > 0 ? (
-                <div className="table-responsive">
-                  <table className="table table-striped">
-                    <thead>
-                      <tr>
-                        <th>Nº Título</th>
-                        <th>Valor</th>
-                        <th>Vencimento</th>
-                        <th>Status</th>
-                        <th>Pago</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {titulosData.map((titulo: any) => (
-                        <tr key={titulo.id}>
-                          <td>{titulo.numero_titulo}</td>
-                          <td>R$ {parseFloat(titulo.valor).toFixed(2)}</td>
-                          <td>{new Date(titulo.data_vencimento).toLocaleDateString('pt-BR')}</td>
-                          <td>
-                            <span className={`badge ${titulo.status === 'pago' ? 'bg-success' : titulo.status === 'pendente' ? 'bg-warning' : 'bg-danger'}`}>
-                              {titulo.status}
-                            </span>
-                          </td>
-                          <td>
-                            <span className={`badge ${titulo.pago ? 'bg-success' : 'bg-secondary'}`}>
-                              {titulo.pago ? 'Sim' : 'Não'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+
+                {/* Conteúdo rolável - apenas a tabela */}
+                <div style={{ paddingLeft: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+                  <DataTable
+                    data={paginatedData}
+                    columns={columns}
+                    isLoading={isLoadingTitulos}
+                    showHeader={false}
+                    onSelectionChange={setSelectedItems}
+                    onSort={(column: string, direction: 'asc' | 'desc') => {
+                      setSortColumn(column);
+                      setSortDirection(direction);
+                    }}
+                    sortColumn={sortColumn}
+                    sortDirection={sortDirection}
+                    limit={limit}
+                    setLimit={setLimit}
+                    setPage={setPage}
+                    emptyMessage="Este contrato ainda não possui títulos cadastrados."
+                  />
                 </div>
-              ) : (
-                <div className="text-center p-4">
-                  <p className="text-muted">Nenhum título encontrado para este contrato.</p>
-                </div>
-              )}
+
+                {/* Resumo Financeiro */}
+                {sortedData.length > 0 && (
+                  <div className="mt-3 p-3 bg-light rounded">
+                    <h6 className="text-primary mb-2">Resumo Financeiro</h6>
+                    <div className="row">
+                      <div className="col-md-3">
+                        <small className="text-muted">Total de Títulos:</small>
+                        <div className="fw-bold">{sortedData.length}</div>
+                      </div>
+                      <div className="col-md-3">
+                        <small className="text-muted">Valor Total:</small>
+                        <div className="fw-bold">
+                          R$ {sortedData.reduce((sum: number, titulo: any) => sum + Number(titulo.valor || 0), 0).toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="col-md-3">
+                        <small className="text-muted">Valor Pago:</small>
+                        <div className="fw-bold text-success">
+                          R$ {sortedData
+                            .filter((titulo: any) => titulo.status === 'pago')
+                            .reduce((sum: number, titulo: any) => sum + Number(titulo.valor_pago || titulo.valor || 0), 0)
+                            .toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="col-md-3">
+                        <small className="text-muted">Valor em Aberto:</small>
+                        <div className="fw-bold text-danger">
+                          R$ {sortedData
+                            .filter((titulo: any) => titulo.status !== 'pago' && titulo.status !== 'cancelado')
+                            .reduce((sum: number, titulo: any) => sum + Number(titulo.valor || 0), 0)
+                            .toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Modais */}
+      <TituloCreateModal
+        show={showTituloCreateModal}
+        clienteId={contratoData?.cliente_id}
+        onClose={() => setShowTituloCreateModal(false)}
+        onSuccess={() => {
+          setShowTituloCreateModal(false);
+          queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
+        }}
+      />
+
+      <TituloEditModal
+        show={showTituloEditModal}
+        parcelaId={selectedTituloId || 0}
+        onClose={() => {
+          setShowTituloEditModal(false);
+          setSelectedTituloId(null);
+        }}
+        onSuccess={() => {
+          setShowTituloEditModal(false);
+          setSelectedTituloId(null);
+          queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
+        }}
+      />
+
+      <ReceberModal
+        isOpen={showReceberModal}
+        parcela={selectedParcela}
+        onClose={() => {
+          setShowReceberModal(false);
+          setSelectedParcela(null);
+        }}
+      />
     </DraggableModal>
   );
 };
