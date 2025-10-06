@@ -213,11 +213,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     ? titulosData.data 
     : [];
 
-  // Debug temporário
-  console.log('🔍 Debug ContratoEditModal - titulosData:', titulosData);
-  console.log('🔍 Debug ContratoEditModal - titulosArray:', titulosArray);
-  console.log('🔍 Debug ContratoEditModal - isLoadingTitulos:', isLoadingTitulos);
-
   // Funções para impressão
   const handleImprimirSelecionados = () => {
     if (selectedItems.length === 0) return;
