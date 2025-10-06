@@ -1,0 +1,12 @@
+Funcionalidades Obrigatórias Tabelas padrão:
+Ordenação - onSort, sortColumn, sortDirection
+Botão de Recarregar - onRefresh
+Busca - onSearch, searchPlaceholder
+Paginação - limit, setLimit, setPage, pagination
+Ações em Lote - bulkActions
+Mensagem Vazia - emptyMessage
+Loading State - isLoading
+
+---
+alwaysApply: true
+---
