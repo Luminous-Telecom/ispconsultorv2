@@ -8,7 +8,6 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { Cliente, CarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
-import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import { useContratos } from '../../../hooks/useContratos';
@@ -85,7 +84,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [errors, setErrors] = useState<Partial<ClienteForm>>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
   const [showCancelados, setShowCancelados] = useState(false);
-  const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
   const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
@@ -280,12 +278,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       action: () => void;
     }[];
   }> = [
-    {
-      label: 'Novo Título',
-      action: () => {
-        setShowTituloCreateModal(true);
-      }
-    },
     {
       label: 'Editar',
       action: (selectedItems: any[]) => {
@@ -1131,13 +1123,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     <div className="d-flex justify-content-start mb-3">
                       <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
                         {bulkActions.map((bulkAction, index) => {
-                          // Botão "Novo Título" sempre habilitado, outros apenas quando há seleção
-                          const isNewButton = bulkAction.label === 'Novo Título';
                           const hasSelection = selectedItems.length > 0;
                           const selectedItem = hasSelection ? selectedItems[0] : null;
                           
                           // Lógica de desabilitação baseada no status
-                          let isDisabled = !isNewButton && !hasSelection;
+                          let isDisabled = !hasSelection;
                           
                           if (hasSelection && selectedItem) {
                             if (bulkAction.label === 'Receber' && selectedItem.status === 'pago') {
@@ -1446,25 +1436,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           </form>
         </div>
       </div>
-
-      {/* Modal de criação de título */}
-      <TituloCreateModal
-        show={showTituloCreateModal}
-        onClose={() => {
-          setShowTituloCreateModal(false);
-          // Sempre refetch quando modal fechar (cancelar ou sucesso)
-          refetchParcelas();
-          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
-        }}
-        onSuccess={() => {
-          setShowTituloCreateModal(false);
-          // Forçar refetch imediatamente
-          refetchParcelas();
-          // Também invalidar queries para garantir atualização
-          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
-        }}
-        clienteId={clienteId || undefined}
-      />
 
       {/* Modal de edição de título */}
       <TituloEditModal
