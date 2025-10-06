@@ -74,14 +74,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   // Carregar dados do contrato quando disponível
   useEffect(() => {
-    console.log('🔍 Debug ContratoEditModal - contratoData:', contratoData);
-    console.log('🔍 Debug ContratoEditModal - show:', show);
-    console.log('🔍 Debug ContratoEditModal - contratoId:', contratoId);
-    
     // O contratoData vem diretamente como objeto, não como contratoData.data
     if (contratoData && typeof contratoData === 'object' && contratoData.id) {
       const contrato = contratoData;
-      console.log('🔍 Debug - Carregando dados do contrato:', contrato);
       
       const newFormData = {
         plano_id: contrato.plano_id || 0,
@@ -97,7 +92,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         data_validade_desconto: contrato.data_validade_desconto ? contrato.data_validade_desconto.split('T')[0] : ''
       };
       
-      console.log('🔍 Debug - Novo formData:', newFormData);
       setFormData(newFormData);
     }
   }, [contratoData, show, contratoId]);
