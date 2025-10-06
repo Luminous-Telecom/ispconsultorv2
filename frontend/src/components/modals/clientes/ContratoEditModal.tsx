@@ -54,6 +54,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
   const [activeTab, setActiveTab] = useState('contrato');
+  const [showCancelados, setShowCancelados] = useState(false);
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
@@ -88,7 +89,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   });
 
   // Buscar títulos/financeiros do contrato
-  const { data: titulosData, isLoading: isLoadingTitulos } = useQuery({
+  const { data: titulosData, isLoading: isLoadingTitulos, refetch: refetchTitulos } = useQuery({
     queryKey: ['titulos', 'contrato', contratoId],
     queryFn: async () => {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/titulos/contrato/${contratoId}`);
@@ -378,6 +379,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       }
     },
     {
+      key: 'plano',
+      label: 'Plano',
+      render: (item: any) => {
+        return item.plano?.nome_plano || '-';
+      }
+    },
+    {
       key: 'numero_titulo',
       label: 'Nº Título',
       render: (item: any) => {
@@ -418,6 +426,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       render: (item: any) => {
         return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
       }
+    },
+    {
+      key: 'charge_id',
+      label: 'Charge ID',
+      render: (item: any) => {
+        return item.charge_id || '-';
+      }
     }
   ];
 
@@ -425,7 +440,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const getFilteredData = () => {
     if (!titulosData?.data) return [];
     
-    const allData = titulosData.data;
+    let allData = titulosData.data;
+
+    // Filtro para mostrar/ocultar cancelados
+    if (!showCancelados) {
+      allData = allData.filter((titulo: any) => titulo.status !== 'cancelado');
+    }
 
     // Aplicar filtro de busca
     if (search.trim()) {
@@ -435,12 +455,14 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         const numeroTitulo = titulo.numero_titulo || '';
         const valor = titulo.valor?.toString() || '';
         const status = titulo.status || '';
+        const plano = titulo.plano?.nome_plano?.toLowerCase() || '';
         
         return (
           id.includes(searchTerm) ||
           numeroTitulo.toLowerCase().includes(searchTerm) ||
           valor.includes(searchTerm) ||
-          status.toLowerCase().includes(searchTerm)
+          status.toLowerCase().includes(searchTerm) ||
+          plano.includes(searchTerm)
         );
       });
     }
@@ -822,47 +844,131 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        placeholder="Buscar títulos..."
+                        placeholder="Buscar por ID, carnê, valor..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{ width: '200px' }}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setSearch(e.target.value);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ width: '300px', height: '32px' }}
                       />
                     </div>
 
+                    {/* Filtros após a busca */}
+                    <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
+                      <div className="form-check">
+                        <input 
+                          className="form-check-input" 
+                          type="checkbox" 
+                          id="showCanceled"
+                          checked={showCancelados}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setShowCancelados(e.target.checked);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <label className="form-check-label small" htmlFor="showCanceled">
+                          Mostrar cancelados
+                        </label>
+                      </div>
+                    </div>
+
                     {/* Paginação à direita */}
-                    <div className="ms-auto d-flex align-items-center gap-2" style={{ paddingRight: '1rem' }}>
-                      <span className="text-muted small">
-                        Mostrando {paginatedData.length} de {filteredData.length} títulos
-                      </span>
-                      <select
-                        className="form-select form-select-sm"
+                    <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
+                      {/* Seletor de linhas por página */}
+                      <select 
+                        className="form-select form-select-sm" 
                         value={limit}
-                        onChange={(e) => setLimit(Number(e.target.value))}
-                        style={{ width: '80px' }}
+                        onChange={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setLimit(parseInt(e.target.value));
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{ width: '80px', height: '32px', cursor: 'pointer' }}
                       >
                         <option value={5}>5</option>
                         <option value={10}>10</option>
-                        <option value={20}>20</option>
+                        <option value={15}>15</option>
+                        <option value={25}>25</option>
                         <option value={50}>50</option>
+                        <option value={100}>100</option>
                       </select>
-                      <div className="btn-group" role="group">
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => setPage(Math.max(1, page - 1))}
-                          disabled={page === 1}
+
+                      {/* Paginação compacta */}
+                      <div className="d-flex gap-1">
+                        <button 
+                          className="btn btn-outline-secondary btn-sm" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPage(1);
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          disabled={page <= 1}
                         >
-                          Anterior
+                          <i className="bi bi-chevron-double-left"></i>
                         </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => setPage(Math.min(Math.ceil(filteredData.length / limit), page + 1))}
-                          disabled={page >= Math.ceil(filteredData.length / limit)}
+                        <button 
+                          className="btn btn-outline-secondary btn-sm" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPage(page - 1);
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          disabled={page <= 1}
                         >
-                          Próxima
+                          <i className="bi bi-chevron-left"></i>
+                        </button>
+                        <span className="small text-muted mx-2">
+                          {sortedData.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, sortedData.length)} / {sortedData.length}
+                        </span>
+                        <button 
+                          className="btn btn-outline-secondary btn-sm" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPage(page + 1);
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          disabled={page >= Math.ceil(sortedData.length / limit)}
+                        >
+                          <i className="bi bi-chevron-right"></i>
+                        </button>
+                        <button 
+                          className="btn btn-outline-secondary btn-sm" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPage(Math.ceil(sortedData.length / limit));
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          disabled={page >= Math.ceil(sortedData.length / limit)}
+                        >
+                          <i className="bi bi-chevron-double-right"></i>
                         </button>
                       </div>
+
+                      {/* Botão de refresh */}
+                      <button 
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          refetchTitulos();
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        title="Recarregar dados"
+                      >
+                        <i className="bi bi-arrow-clockwise"></i>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -890,36 +996,39 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
                 {/* Resumo Financeiro */}
                 {sortedData.length > 0 && (
-                  <div className="mt-3 p-3 bg-light rounded">
-                    <h6 className="text-primary mb-2">Resumo Financeiro</h6>
-                    <div className="row">
-                      <div className="col-md-3">
-                        <small className="text-muted">Total de Títulos:</small>
-                        <div className="fw-bold">{sortedData.length}</div>
+                  <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                    <div className="d-flex align-items-center">
+                      <i className="bi bi-info-circle text-muted me-2"></i>
+                      <span className="small text-muted">Legenda de cores</span>
+                    </div>
+                    <div className="d-flex gap-4">
+                      <div className="text-end">
+                        <div className="small text-muted">Valor:</div>
+                        <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                          return sum + Number(item.valor || item.valor_parcela || 0);
+                        }, 0).toFixed(2)}</strong>
                       </div>
-                      <div className="col-md-3">
-                        <small className="text-muted">Valor Total:</small>
-                        <div className="fw-bold">
-                          R$ {sortedData.reduce((sum: number, titulo: any) => sum + Number(titulo.valor || 0), 0).toFixed(2)}
-                        </div>
+                      <div className="text-end">
+                        <div className="small text-muted">Valor baixado:</div>
+                        <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                          // Só considerar como baixado se estiver pago E não cancelado
+                          if (item.pago && item.status === 'pago') {
+                            return sum + Number(item.valor_pago || 0);
+                          }
+                          return sum;
+                        }, 0).toFixed(2)}</strong>
                       </div>
-                      <div className="col-md-3">
-                        <small className="text-muted">Valor Pago:</small>
-                        <div className="fw-bold text-success">
-                          R$ {sortedData
-                            .filter((titulo: any) => titulo.status === 'pago')
-                            .reduce((sum: number, titulo: any) => sum + Number(titulo.valor_pago || titulo.valor || 0), 0)
-                            .toFixed(2)}
-                        </div>
+                      <div className="text-end">
+                        <div className="small text-muted">Valor aberto:</div>
+                        <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                          return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || item.valor_parcela || 0));
+                        }, 0).toFixed(2)}</strong>
                       </div>
-                      <div className="col-md-3">
-                        <small className="text-muted">Valor em Aberto:</small>
-                        <div className="fw-bold text-danger">
-                          R$ {sortedData
-                            .filter((titulo: any) => titulo.status !== 'pago' && titulo.status !== 'cancelado')
-                            .reduce((sum: number, titulo: any) => sum + Number(titulo.valor || 0), 0)
-                            .toFixed(2)}
-                        </div>
+                      <div className="text-end">
+                        <div className="small text-muted">Valor cancelado:</div>
+                        <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                          return sum + (item.status === 'cancelado' ? Number(item.valor || item.valor_parcela || 0) : 0);
+                        }, 0).toFixed(2)}</strong>
                       </div>
                     </div>
                   </div>
