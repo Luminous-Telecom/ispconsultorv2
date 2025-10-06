@@ -64,9 +64,19 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [show, size]);
 
-  // Funções de drag
+  // Funções de drag - só permite arrastar pelo título
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.target === headerRef.current || headerRef.current?.contains(e.target as Node)) {
+    // Só permite arrastar se clicar diretamente no título ou na área do header (exceto botões)
+    const target = e.target as HTMLElement;
+    const isTitle = target.classList.contains('modal-title') || target.closest('.modal-title');
+    const isHeader = target.closest('.modal-header-draggable');
+    const isButton = target.closest('button') || target.tagName === 'BUTTON';
+    const isInput = target.closest('input') || target.tagName === 'INPUT';
+    const isSelect = target.closest('select') || target.tagName === 'SELECT';
+    
+    // Só permite arrastar se for o título ou header, mas não botões/inputs
+    if ((isTitle || isHeader) && !isButton && !isInput && !isSelect) {
+      e.preventDefault();
       setIsDragging(true);
       setDragStart({
         x: e.clientX - position.x,
@@ -289,11 +299,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         {/* Header arrastável */}
         <div
           ref={headerRef}
+          className="modal-header-draggable"
           style={{
             backgroundColor: 'var(--bg-secondary)',
             borderBottom: '1px solid var(--border-color)',
             padding: '16px',
-            cursor: isDragging ? 'grabbing' : 'grab',
             userSelect: 'none',
             display: 'flex',
             flexDirection: 'column',
@@ -313,7 +323,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
               margin: 0,
               paddingRight: '40px', // Espaço para o botão X
               paddingLeft: '40px',  // Espaço simétrico
-              marginBottom: headerActions ? '8px' : '0'
+              marginBottom: headerActions ? '8px' : '0',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              userSelect: 'none'
             }}
           >
             {title}
@@ -324,6 +336,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             type="button"
             className="btn-close"
             onClick={onClose}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{ 
               filter: 'var(--btn-close-filter)',
               background: 'none',
@@ -339,7 +352,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
               position: 'absolute',
               right: '12px',
               top: '12px',
-              zIndex: 10
+              zIndex: 10,
+              userSelect: 'none'
             }}
           >
             ×
@@ -347,7 +361,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
           {/* Ações do header (botões e filtros) */}
           {headerActions && (
-            <div>
+            <div onMouseDown={(e) => e.stopPropagation()}>
               {headerActions}
             </div>
           )}
