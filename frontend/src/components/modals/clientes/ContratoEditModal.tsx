@@ -213,6 +213,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     ? titulosData.data 
     : [];
 
+  // Debug temporário
+  console.log('🔍 Debug ContratoEditModal:');
+  console.log('- titulosData:', titulosData);
+  console.log('- titulosArray:', titulosArray);
+  console.log('- titulosArray.length:', titulosArray.length);
+  console.log('- isLoadingTitulos:', isLoadingTitulos);
+
   // Funções para impressão
   const handleImprimirSelecionados = () => {
     if (selectedItems.length === 0) return;
@@ -447,6 +454,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   });
 
   const paginatedData = sortedData.slice((page - 1) * limit, page * limit);
+
+  // Debug paginatedData
+  console.log('- filteredData.length:', filteredData.length);
+  console.log('- sortedData.length:', sortedData.length);
+  console.log('- paginatedData.length:', paginatedData.length);
+  console.log('- paginatedData:', paginatedData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
