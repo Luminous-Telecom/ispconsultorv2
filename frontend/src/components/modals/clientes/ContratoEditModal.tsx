@@ -206,6 +206,18 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   };
 
+  // Verificar se titulosData é um array ou se tem propriedade data
+  const titulosArray = titulosData && Array.isArray(titulosData) 
+    ? titulosData 
+    : titulosData?.data && Array.isArray(titulosData.data) 
+    ? titulosData.data 
+    : [];
+
+  // Debug temporário
+  console.log('🔍 Debug ContratoEditModal - titulosData:', titulosData);
+  console.log('🔍 Debug ContratoEditModal - titulosArray:', titulosArray);
+  console.log('🔍 Debug ContratoEditModal - isLoadingTitulos:', isLoadingTitulos);
+
   // Funções para impressão
   const handleImprimirSelecionados = () => {
     if (selectedItems.length === 0) return;
@@ -214,8 +226,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   };
 
   const handleImprimirTodosEmAberto = async () => {
-    if (!titulosData || !Array.isArray(titulosData)) return;
-    const titulosEmAberto = titulosData.filter((titulo: any) => 
+    const titulosEmAberto = titulosArray.filter((titulo: any) => 
       titulo.status === 'pendente' || titulo.status === 'vencido'
     );
     if (titulosEmAberto.length === 0) {
@@ -418,7 +429,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   ];
 
   // Funções para filtrar e paginar dados
-  const filteredData = titulosData && Array.isArray(titulosData) ? titulosData.filter((titulo: any) => {
+  const filteredData = titulosArray.filter((titulo: any) => {
     if (!search) return true;
     const searchLower = search.toLowerCase();
     return (
@@ -426,7 +437,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       titulo.status?.toLowerCase().includes(searchLower) ||
       titulo.valor?.toString().includes(searchLower)
     );
-  }) : [];
+  });
 
   const sortedData = [...filteredData].sort((a: any, b: any) => {
     if (!sortColumn) return 0;
