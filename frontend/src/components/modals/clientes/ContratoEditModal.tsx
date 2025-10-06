@@ -74,12 +74,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   // Carregar dados do contrato quando disponível
   useEffect(() => {
-    console.log('🔍 Debug ContratoEditModal - contratoData:', contratoData);
-    console.log('🔍 Debug ContratoEditModal - show:', show);
-    console.log('🔍 Debug ContratoEditModal - contratoId:', contratoId);
-    
     if (contratoData?.data) {
-      console.log('🔍 Debug - Carregando dados do contrato:', contratoData.data);
       const contrato = contratoData.data;
       setFormData({
         plano_id: contrato.plano_id || 0,

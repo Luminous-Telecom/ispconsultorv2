@@ -110,18 +110,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }
   }, [openDropdown]);
 
-  // Debug: Log quando o modal de edição de contrato mudar
-  useEffect(() => {
-    console.log('🔍 Debug - Renderizando ContratoEditModal, show:', showContratoEditModal, 'contratoId:', selectedContratoId);
-  }, [showContratoEditModal, selectedContratoId]);
 
   // Buscar dados do cliente
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
     queryKey: ['cliente', clienteId],
-    queryFn: () => {
-      console.log('🔍 Debug - ClienteService.getById executado!', clienteId);
-      return ClienteService.getById(clienteId!);
-    },
+    queryFn: () => ClienteService.getById(clienteId!),
     enabled: !!clienteId,
   });
 
@@ -500,14 +493,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
-    mutationFn: (data: Partial<Cliente>) => {
-      console.log('🔍 Debug - updateClienteMutation.mutateFn executado!', data);
-      console.log('🔍 Debug - Stack trace:', new Error().stack);
-      return ClienteService.update(clienteId!, data);
-    },
+    mutationFn: (data: Partial<Cliente>) => ClienteService.update(clienteId!, data),
     onSuccess: () => {
-      console.log('🔍 Debug - updateClienteMutation.onSuccess executado!');
-      console.log('🔍 Debug - Stack trace:', new Error().stack);
       success('Cliente atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
@@ -515,16 +502,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
-      console.log('🔍 Debug - updateClienteMutation.onError executado!', err);
       error(err.response?.data?.message || 'Erro ao atualizar cliente');
     },
   });
 
   // Carregar dados do cliente no formulário
   useEffect(() => {
-    console.log('🔍 Debug - useEffect [cliente] executado!', cliente);
     if (cliente && typeof cliente === 'object') {
-      console.log('🔍 Debug - Carregando dados do cliente no formulário');
       setFormData({
         cnpj: (cliente as any).cnpj || '',
         razao_social: (cliente as any).razao_social || '',
@@ -580,8 +564,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    console.log('🔍 Debug - handleSubmit executado!', e);
-    console.log('🔍 Debug - Stack trace:', new Error().stack);
     e.preventDefault();
     
     if (!validateForm()) return;
@@ -1108,19 +1090,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       {
                         label: 'Editar',
                         action: (selectedItems, event) => {
-                          console.log('🔍 Debug ClienteEditModal - Editar contrato clicado!');
-                          console.log('🔍 Debug - selectedItems:', selectedItems);
-                          console.log('🔍 Debug - event:', event);
-                          
-                          // CRÍTICO: Prevenir propagação do evento para evitar submit do formulário
+                          // Prevenir propagação do evento para evitar submit do formulário
                           if (event) {
                             event.preventDefault();
                             event.stopPropagation();
-                            console.log('🔍 Debug - Evento bloqueado para prevenir submit do formulário');
                           }
                           
                           if (selectedItems.length === 1) {
-                            console.log('🔍 Debug - Abrindo modal de edição para contrato ID:', selectedItems[0].id);
                             setSelectedContratoId(selectedItems[0].id);
                             setShowContratoEditModal(true);
                           }
@@ -1548,12 +1524,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         show={showContratoEditModal}
         contratoId={selectedContratoId}
         onClose={() => {
-          console.log('🔍 Debug - ContratoEditModal fechado');
           setShowContratoEditModal(false);
           setSelectedContratoId(null);
         }}
         onSuccess={() => {
-          console.log('🔍 Debug - ContratoEditModal sucesso');
           setShowContratoEditModal(false);
           setSelectedContratoId(null);
           // Refetch contratos
