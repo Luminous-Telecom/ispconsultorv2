@@ -48,6 +48,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
+  const [activeTab, setActiveTab] = useState('contrato');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   
@@ -64,6 +65,17 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     queryFn: async () => {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/contratos/${contratoId}`);
       if (!response.ok) throw new Error('Erro ao buscar contrato');
+      return response.json();
+    },
+    enabled: show && !!contratoId,
+  });
+
+  // Buscar títulos/financeiros do contrato
+  const { data: titulosData, isLoading: isLoadingTitulos } = useQuery({
+    queryKey: ['titulos', 'contrato', contratoId],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/titulos/contrato/${contratoId}`);
+      if (!response.ok) throw new Error('Erro ao buscar títulos');
       return response.json();
     },
     enabled: show && !!contratoId,
@@ -204,11 +216,38 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Editar Contrato"
-      size="lg"
+      title={`Contrato - ${contratoData?.plano?.nome_plano || 'Carregando...'}`}
+      size="xl"
     >
-      <form onSubmit={handleSubmit}>
-        <div className="row">
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Navegação por Abas */}
+        <ul className="nav nav-tabs" id="contratoTab" role="tablist">
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('contrato')}
+            >
+              Contrato
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
+              type="button"
+              onClick={() => setActiveTab('financeiro')}
+            >
+              Financeiro
+            </button>
+          </li>
+        </ul>
+
+        {/* Conteúdo das Abas */}
+        <div className="tab-content" style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
+          {/* Aba Contrato */}
+          {activeTab === 'contrato' && (
+            <form onSubmit={handleSubmit}>
+              <div className="row">
           {/* Plano */}
           <div className="col-md-6 mb-3">
             <label className="form-label">Plano *</label>
@@ -362,19 +401,73 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </div>
         </div>
 
-        <div className="d-flex justify-content-end gap-2">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Cancelar
-          </button>
-          <button 
-            type="submit" 
-            className="btn btn-primary"
-            disabled={updateContratoMutation.isPending}
-          >
-            {updateContratoMutation.isPending ? 'Salvando...' : 'Salvar'}
-          </button>
+              <div className="d-flex justify-content-end gap-2">
+                <button type="button" className="btn btn-secondary" onClick={onClose}>
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={updateContratoMutation.isPending}
+                >
+                  {updateContratoMutation.isPending ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Aba Financeiro */}
+          {activeTab === 'financeiro' && (
+            <div>
+              <h5 className="mb-3">Títulos Financeiros</h5>
+              {isLoadingTitulos ? (
+                <div className="text-center p-4">
+                  <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Carregando...</span>
+                  </div>
+                </div>
+              ) : titulosData && Array.isArray(titulosData) && titulosData.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Nº Título</th>
+                        <th>Valor</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                        <th>Pago</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {titulosData.map((titulo: any) => (
+                        <tr key={titulo.id}>
+                          <td>{titulo.numero_titulo}</td>
+                          <td>R$ {parseFloat(titulo.valor).toFixed(2)}</td>
+                          <td>{new Date(titulo.data_vencimento).toLocaleDateString('pt-BR')}</td>
+                          <td>
+                            <span className={`badge ${titulo.status === 'pago' ? 'bg-success' : titulo.status === 'pendente' ? 'bg-warning' : 'bg-danger'}`}>
+                              {titulo.status}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`badge ${titulo.pago ? 'bg-success' : 'bg-secondary'}`}>
+                              {titulo.pago ? 'Sim' : 'Não'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center p-4">
+                  <p className="text-muted">Nenhum título encontrado para este contrato.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      </form>
+      </div>
     </DraggableModal>
   );
 };
