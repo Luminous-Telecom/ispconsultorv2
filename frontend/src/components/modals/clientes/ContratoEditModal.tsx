@@ -212,7 +212,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const handleImprimirSelecionados = () => {
     if (selectedItems.length === 0) return;
     const ids = selectedItems.map(item => item.id);
-    window.open(`${process.env.REACT_APP_API_URL}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`, '_blank');
+    const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`;
+    window.open(url, '_blank');
   };
 
   const handleImprimirTodosEmAberto = async () => {
@@ -228,7 +229,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       return;
     }
     const ids = titulosEmAberto.map((titulo: any) => titulo.id);
-    window.open(`${process.env.REACT_APP_API_URL}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`, '_blank');
+    const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`;
+    window.open(url, '_blank');
   };
 
   // Bulk actions para títulos
