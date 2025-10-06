@@ -78,8 +78,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     console.log('🔍 Debug ContratoEditModal - show:', show);
     console.log('🔍 Debug ContratoEditModal - contratoId:', contratoId);
     
-    if (contratoData?.data) {
-      const contrato = contratoData.data;
+    // O contratoData vem diretamente como objeto, não como contratoData.data
+    if (contratoData && typeof contratoData === 'object' && contratoData.id) {
+      const contrato = contratoData;
       console.log('🔍 Debug - Carregando dados do contrato:', contrato);
       
       const newFormData = {
