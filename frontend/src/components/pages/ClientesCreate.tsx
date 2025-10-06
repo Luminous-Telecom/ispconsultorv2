@@ -600,7 +600,7 @@ const ClientesCreate: React.FC = () => {
                     <option value="">Selecione um plano (opcional)</option>
                     {planos?.map(plano => (
                       <option key={plano.id} value={plano.id}>
-                        {plano.nome_plano} - {plano.tipo_servico.charAt(0).toUpperCase() + plano.tipo_servico.slice(1)} - R$ {Number(plano.valor_mensal).toFixed(2).replace('.', ',')}
+                        {plano.nome_plano}
                       </option>
                     ))}
                   </select>
