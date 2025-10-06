@@ -15,6 +15,9 @@ router.post('/', TituloController.create);
 // Atualizar título
 router.put('/:id', TituloController.update);
 
+// Buscar títulos por contrato
+router.get('/contrato/:contratoId', TituloController.getByContrato);
+
 // Deletar título
 router.delete('/:id', TituloController.destroy);
 

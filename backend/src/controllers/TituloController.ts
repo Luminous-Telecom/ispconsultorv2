@@ -1217,6 +1217,60 @@ export class TituloController {
   }
 
 
+  // Buscar títulos por contrato
+  static async getByContrato(req: Request, res: Response): Promise<void> {
+    try {
+      const { contratoId } = req.params;
+
+      // Validar se o contrato existe
+      const contrato = await Contrato.findByPk(contratoId);
+      if (!contrato) {
+        res.status(404).json({
+          success: false,
+          message: 'Contrato não encontrado'
+        });
+        return;
+      }
+
+      // Buscar títulos do contrato
+      const titulos = await Titulo.findAll({
+        where: {
+          plano_id: contrato.plano_id
+        },
+        include: [
+          {
+            model: Cliente,
+            as: 'cliente',
+            where: { id: contrato.cliente_id },
+            attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj']
+          },
+          {
+            model: Plano,
+            as: 'plano',
+            attributes: ['id', 'nome_plano', 'valor_mensal']
+          },
+          {
+            model: Banco,
+            as: 'banco',
+            attributes: ['id', 'nome', 'tipo_banco']
+          }
+        ],
+        order: [['data_vencimento', 'DESC']]
+      });
+
+      res.json({
+        success: true,
+        data: titulos
+      });
+    } catch (error: any) {
+      logger.error('Erro ao buscar títulos por contrato', { error: error.message });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
   // Estatísticas dos títulos
   static async getStats(req: Request, res: Response): Promise<void> {
     try {
