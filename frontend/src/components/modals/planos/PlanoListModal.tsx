@@ -99,13 +99,14 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       label: 'Nome do Plano',
       sortable: true,
       render: (item: Plano) => (
-        <div>
-          <div className="fw-bold">{item.nome_plano}</div>
-          {item.descricao && (
-            <small className="text-muted">{item.descricao}</small>
-          )}
-        </div>
+        <div className="fw-bold">{item.nome_plano}</div>
       )
+    },
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      sortable: false,
+      render: (item: Plano) => item.descricao || '-'
     },
     {
       key: 'tipo_servico',
