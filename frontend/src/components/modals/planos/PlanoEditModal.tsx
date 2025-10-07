@@ -170,21 +170,29 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
     
     if (!validateForm() || !planoId) return;
 
-    // Converter campo ativo para status
-    const dataToSubmit = {
-      ...formData,
-      status: formData.ativo ? 'ativo' : 'suspenso'
+    // Converter campo ativo para status e limpar dados
+    const dataToSubmit: any = {
+      nome_plano: formData.nome_plano,
+      tipo_servico: formData.tipo_servico,
+      descricao: formData.descricao,
+      valor_mensal: formData.valor_mensal,
+      desconto_percentual: formData.desconto_percentual,
+      desconto_valor: formData.desconto_valor,
+      desconto_ativo: formData.desconto_ativo,
+      quantidade_usuarios: formData.quantidade_usuarios,
+      periodicidade: formData.periodicidade,
+      servicos_inclusos: formData.servicos_inclusos,
+      renovacao_automatica: formData.renovacao_automatica,
+      status: formData.ativo ? 'ativo' : 'suspenso',
+      observacoes: formData.observacoes
     };
     
-    // Remover campo ativo dos dados enviados
-    delete (dataToSubmit as any).ativo;
-    
-    // Limpar datas inválidas
-    if (!dataToSubmit.data_inicio || dataToSubmit.data_inicio === '') {
-      delete dataToSubmit.data_inicio;
+    // Adicionar datas apenas se forem válidas
+    if (formData.data_inicio && formData.data_inicio !== '') {
+      dataToSubmit.data_inicio = formData.data_inicio;
     }
-    if (!dataToSubmit.data_fim || dataToSubmit.data_fim === '') {
-      delete dataToSubmit.data_fim;
+    if (formData.data_fim && formData.data_fim !== '') {
+      dataToSubmit.data_fim = formData.data_fim;
     }
 
     updatePlanoMutation.mutate({
