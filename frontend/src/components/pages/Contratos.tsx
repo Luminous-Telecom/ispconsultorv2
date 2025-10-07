@@ -92,7 +92,7 @@ const Contratos: React.FC = () => {
   };
 
   // Função para ações em lote
-  const handleTopoActions = (action: string, selectedItems: any[]) => {
+  const handleTopoActions = async (action: string, selectedItems: any[]) => {
     if (selectedItems.length === 0) {
       warning('Selecione pelo menos um item');
       return;
