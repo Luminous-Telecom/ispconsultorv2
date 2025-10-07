@@ -4,9 +4,7 @@ import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
-import ConfirmModal from '../../common/ConfirmModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { useConfirm } from '../../../hooks/useConfirm';
 import { PlanoCreateModal, PlanoEditModal } from './index';
 
 interface Plano {
@@ -55,7 +53,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const deletePlanoMutation = useDeletePlano();
   const { error: showError } = useNotificationContext();
-  const { confirm, confirmState } = useConfirm();
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -81,14 +78,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
 
   const handleDelete = async (planoId: number) => {
-    const confirmed = await confirm({
-      message: 'Tem certeza que deseja excluir este plano?',
-      type: 'danger',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar'
-    });
-
-    if (confirmed) {
+    if (window.confirm('Tem certeza que deseja excluir este plano?')) {
       try {
         await deletePlanoMutation.mutateAsync(planoId);
         refetch();
@@ -239,35 +229,26 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     {
       label: 'Excluir',
       action: async (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          const confirmed = await confirm({
-            message: `Tem certeza que deseja excluir ${selectedItems.length} plano(s)?`,
-            type: 'danger',
-            confirmText: 'Excluir',
-            cancelText: 'Cancelar'
-          });
-
-          if (confirmed) {
-            // Excluir um por vez para evitar problemas de concorrência
-            for (const item of selectedItems) {
-              try {
-                await deletePlanoMutation.mutateAsync(item.id);
-              } catch (error: any) {
-                console.error(`Erro ao excluir plano ${item.id}:`, error);
-                
-                // Mostrar erro específico para o usuário
-                const errorMessage = error?.response?.data?.message || 
-                                   error?.response?.data?.error || 
-                                   `Erro ao excluir plano ${item.id}`;
-                
-                showError(`Erro ao excluir plano: ${errorMessage}`);
-                
-                // Continuar com os próximos mesmo se um falhar
-              }
+        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} plano(s)?`)) {
+          // Excluir um por vez para evitar problemas de concorrência
+          for (const item of selectedItems) {
+            try {
+              await deletePlanoMutation.mutateAsync(item.id);
+            } catch (error: any) {
+              console.error(`Erro ao excluir plano ${item.id}:`, error);
+              
+              // Mostrar erro específico para o usuário
+              const errorMessage = error?.response?.data?.message || 
+                                 error?.response?.data?.error || 
+                                 `Erro ao excluir plano ${item.id}`;
+              
+              showError(`Erro ao excluir plano: ${errorMessage}`);
+              
+              // Continuar com os próximos mesmo se um falhar
             }
-            // Refetch apenas uma vez após todas as exclusões
-            refetch();
           }
+          // Refetch apenas uma vez após todas as exclusões
+          refetch();
         }
       }
     }
@@ -352,19 +333,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         }}
       />
 
-      {/* Modal de confirmação */}
-      {confirmState && (
-        <ConfirmModal
-          show={confirmState.show}
-          title={confirmState.options.title || 'Confirmar Ação'}
-          message={confirmState.options.message}
-          confirmText={confirmState.options.confirmText || 'Confirmar'}
-          cancelText={confirmState.options.cancelText || 'Cancelar'}
-          type={confirmState.options.type || 'warning'}
-          onConfirm={confirmState.onConfirm}
-          onCancel={confirmState.onCancel}
-        />
-      )}
     </DraggableModal>
   );
 };
