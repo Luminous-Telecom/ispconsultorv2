@@ -121,7 +121,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
         periodicidade: 'mensal',
         servicos_inclusos: [],
         renovacao_automatica: true,
-        status: 'ativo',
+        ativo: true,
         data_inicio: new Date().toISOString().split('T')[0],
         data_fim: '',
         observacoes: ''
