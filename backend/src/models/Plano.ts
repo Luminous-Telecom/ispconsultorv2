@@ -231,7 +231,7 @@ Plano.init(
       allowNull: true
     },
     status: {
-      type: DataTypes.ENUM('ativo', 'suspenso', 'cancelado'),
+      type: DataTypes.ENUM('ativo', 'inativo', 'cancelado'),
       allowNull: false,
       defaultValue: 'ativo'
     },

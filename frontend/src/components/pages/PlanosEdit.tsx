@@ -14,7 +14,7 @@ interface PlanoForm {
   periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   servicos_inclusos: string[];
   renovacao_automatica: boolean;
-  status: 'ativo' | 'suspenso' | 'cancelado';
+  status: 'ativo' | 'inativo' | 'cancelado';
   data_inicio: string;
   data_fim: string;
   observacoes: string;
@@ -329,7 +329,7 @@ const PlanosEdit: React.FC = () => {
                         onChange={(e) => handleInputChange('status', e.target.value as PlanoForm['status'])}
                       >
                         <option value="ativo">Ativo</option>
-                        <option value="suspenso">Suspenso</option>
+                        <option value="inativo">Inativo</option>
                         <option value="cancelado">Cancelado</option>
                       </select>
                       {errors.status && <div className="invalid-feedback">{errors.status}</div>}

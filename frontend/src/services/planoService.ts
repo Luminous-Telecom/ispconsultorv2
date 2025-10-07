@@ -90,7 +90,7 @@ export class PlanoService {
   }
 
   // Alterar status do plano (desativar/ativar)
-  static async toggleStatus(id: number, status: 'ativo' | 'suspenso' | 'cancelado'): Promise<Plano> {
+  static async toggleStatus(id: number, status: 'ativo' | 'inativo' | 'cancelado'): Promise<Plano> {
     try {
       const response = await apiService.patch<Plano>(`/planos/${id}/status`, { status });
       return response;

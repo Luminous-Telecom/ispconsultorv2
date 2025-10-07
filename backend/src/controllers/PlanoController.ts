@@ -329,11 +329,11 @@ export class PlanoController {
       const { status } = req.body;
 
       // Validar status
-      if (!status || !['ativo', 'suspenso', 'cancelado'].includes(status)) {
+      if (!status || !['ativo', 'inativo', 'cancelado'].includes(status)) {
         res.status(400).json({
           success: false,
           error: 'Status inválido',
-          message: 'Status deve ser: ativo, suspenso ou cancelado'
+          message: 'Status deve ser: ativo, inativo ou cancelado'
         });
         return;
       }
@@ -353,7 +353,7 @@ export class PlanoController {
 
       res.json({
         success: true,
-        message: `Plano ${status === 'ativo' ? 'ativado' : status === 'suspenso' ? 'suspenso' : 'cancelado'} com sucesso!`,
+        message: `Plano ${status === 'ativo' ? 'ativado' : status === 'inativo' ? 'desativado' : 'cancelado'} com sucesso!`,
         data: {
           id: plano.id,
           nome_plano: plano.nome_plano,

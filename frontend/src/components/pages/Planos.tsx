@@ -13,7 +13,7 @@ interface Plano {
   quantidade_usuarios?: number;
   valor_mensal: number;
   periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
-  status: 'ativo' | 'inativo' | 'suspenso';
+  status: 'ativo' | 'inativo' | 'cancelado';
   created_at: string;
 }
 
@@ -41,8 +41,8 @@ const Planos: React.FC = () => {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'ativo': return 'bg-success';
-      case 'inativo': return 'bg-danger';
-      case 'suspenso': return 'bg-warning';
+      case 'inativo': return 'bg-warning';
+      case 'cancelado': return 'bg-danger';
       default: return 'bg-secondary';
     }
   };

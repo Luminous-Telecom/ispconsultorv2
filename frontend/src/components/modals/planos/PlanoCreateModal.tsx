@@ -16,7 +16,7 @@ interface PlanoForm {
   periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   servicos_inclusos: string[];
   renovacao_automatica: boolean;
-  status: 'ativo' | 'suspenso' | 'cancelado';
+  status: 'ativo' | 'inativo' | 'cancelado';
   data_inicio: string;
   data_fim: string;
   observacoes: string;

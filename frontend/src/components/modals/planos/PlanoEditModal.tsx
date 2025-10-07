@@ -183,7 +183,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
       periodicidade: formData.periodicidade,
       servicos_inclusos: formData.servicos_inclusos,
       renovacao_automatica: formData.renovacao_automatica,
-      status: formData.ativo ? 'ativo' : 'suspenso',
+      status: formData.ativo ? 'ativo' : 'inativo',
       observacoes: formData.observacoes
     };
     
@@ -359,9 +359,9 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                     onChange={(e) => handleInputChange('ativo', e.target.checked)}
                     disabled={updatePlanoMutation.isPending}
                   />
-                  <label className="form-check-label" htmlFor="ativo">
-                    Plano Ativo
-                  </label>
+                       <label className="form-check-label" htmlFor="ativo">
+                         Ativo
+                       </label>
                 </div>
               </div>
             </div>
