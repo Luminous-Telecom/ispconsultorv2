@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { info } = useNotificationContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +101,7 @@ const Login: React.FC = () => {
                   <button 
                     type="button" 
                     className="btn btn-link text-decoration-none p-0 border-0 bg-transparent"
-                    onClick={() => alert('Funcionalidade em desenvolvimento')}
+                    onClick={() => info('Funcionalidade em desenvolvimento')}
                   >
                     Esqueceu sua senha?
                   </button>

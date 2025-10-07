@@ -3,6 +3,9 @@ import { useContratos } from '../../hooks/useContratos';
 import DataTable from '../common/DataTable';
 import { Contrato } from '../../hooks/useContratos';
 import ContratoCreateModal from '../modals/contratos/ContratoCreateModal';
+import ConfirmModal from '../common/ConfirmModal';
+import { useNotificationContext } from '../../contexts/NotificationContext';
+import { useConfirm } from '../../hooks/useConfirm';
 
 const Contratos: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -13,6 +16,8 @@ const Contratos: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   const { data: contratos = [], isLoading, error, refetch } = useContratos();
+  const { warning } = useNotificationContext();
+  const { confirm, confirmState } = useConfirm();
 
   // Função para ordenação
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
@@ -89,7 +94,7 @@ const Contratos: React.FC = () => {
   // Função para ações em lote
   const handleTopoActions = (action: string, selectedItems: any[]) => {
     if (selectedItems.length === 0) {
-      alert('Selecione pelo menos um item');
+      warning('Selecione pelo menos um item');
       return;
     }
 
@@ -99,11 +104,18 @@ const Contratos: React.FC = () => {
           // TODO: Implementar edição de contrato
           console.log('Editar contrato:', selectedItems[0].id);
         } else {
-          alert('Selecione apenas um contrato para editar');
+          warning('Selecione apenas um contrato para editar');
         }
         break;
       case 'deletar':
-        if (window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} contrato(s)?`)) {
+        const confirmed = await confirm({
+          message: `Tem certeza que deseja deletar ${selectedItems.length} contrato(s)?`,
+          type: 'danger',
+          confirmText: 'Deletar',
+          cancelText: 'Cancelar'
+        });
+
+        if (confirmed) {
           // TODO: Implementar exclusão de contratos
           console.log('Deletar contratos:', selectedItems.map(item => item.id));
         }
@@ -303,6 +315,20 @@ const Contratos: React.FC = () => {
           refetch();
         }}
       />
+
+      {/* Modal de confirmação */}
+      {confirmState && (
+        <ConfirmModal
+          show={confirmState.show}
+          title={confirmState.options.title || 'Confirmar Ação'}
+          message={confirmState.options.message}
+          confirmText={confirmState.options.confirmText || 'Confirmar'}
+          cancelText={confirmState.options.cancelText || 'Cancelar'}
+          type={confirmState.options.type || 'warning'}
+          onConfirm={confirmState.onConfirm}
+          onCancel={confirmState.onCancel}
+        />
+      )}
     </div>
   );
 };
