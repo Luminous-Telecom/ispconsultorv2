@@ -4,7 +4,6 @@ import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { PlanoCreateModal, PlanoEditModal } from './index';
 
 interface Plano {
@@ -52,7 +51,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   });
 
   const deletePlanoMutation = useDeletePlano();
-  const { error: showError } = useNotificationContext();
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -84,13 +82,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         refetch();
       } catch (error: any) {
         console.error('Erro ao excluir plano:', error);
-        
-        // Mostrar erro específico para o usuário
-        const errorMessage = error?.response?.data?.message || 
-                           error?.response?.data?.error || 
-                           'Erro ao excluir plano';
-        
-        showError(errorMessage);
+        // O erro já é tratado pelo hook useDeletePlano
       }
     }
   };
@@ -236,14 +228,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
               await deletePlanoMutation.mutateAsync(item.id);
             } catch (error: any) {
               console.error(`Erro ao excluir plano ${item.id}:`, error);
-              
-              // Mostrar erro específico para o usuário
-              const errorMessage = error?.response?.data?.message || 
-                                 error?.response?.data?.error || 
-                                 `Erro ao excluir plano ${item.id}`;
-              
-              showError(`Erro ao excluir plano: ${errorMessage}`);
-              
+              // O erro já é tratado pelo hook useDeletePlano
               // Continuar com os próximos mesmo se um falhar
             }
           }
