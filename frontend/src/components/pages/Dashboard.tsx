@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
+import { useDashboard } from '../../hooks/useDashboard';
 
 const Dashboard: React.FC = () => {
   const [chartData, setChartData] = useState<any>(null);
@@ -59,6 +60,8 @@ const Dashboard: React.FC = () => {
   };
 
   // Queries para buscar dados
+  const { data: dashboardData, isLoading: loadingDashboard } = useDashboard();
+  
   const { data: clientesData, isLoading: loadingClientes } = useQuery({
     queryKey: ['clientes-dashboard'],
     queryFn: () => ClienteService.list({ limit: 1000 }),
@@ -75,28 +78,28 @@ const Dashboard: React.FC = () => {
   // Processar dados
   const clientes = clientesData?.data || [];
   const planos = planosData?.data || [];
+  const stats = dashboardData?.stats;
 
   // Estatísticas de clientes
-  const totalClientes = clientes.length;
-  const clientesAtivos = clientes.filter(c => c.ativo).length;
+  const totalClientes = stats?.totalClientes || clientes.length;
+  const clientesAtivos = stats?.clientesAtivos || clientes.filter(c => c.ativo).length;
   const clientesInativos = totalClientes - clientesAtivos;
 
   // Estatísticas de planos
   const totalPlanos = planos.length;
-  const planosAtivos = planos.filter(p => p.status === 'ativo').length;
+  const planosAtivos = stats?.planosAtivos || planos.filter(p => p.status === 'ativo').length;
   const planosInativos = totalPlanos - planosAtivos;
 
+  // Receitas reais do backend
+  const receitaTotal = (stats?.valorTotalRecebido || 0) + (stats?.valorTotalReceber || 0);
+  const receitaPaga = stats?.valorTotalRecebido || 0;
+  const receitaPendente = stats?.valorTotalReceber || 0;
 
-  // Receitas (simuladas para demonstração)
-  const receitaTotal = 0;
-  const receitaPaga = 0;
-  const receitaPendente = 0;
-
-  // Métricas adicionais (simuladas)
-  const totalBoletos = 0;
-  const ticketMedio = 0;
-  const taxaPagamento = 0;
-  const receitaPorCliente = 0;
+  // Métricas adicionais (usando dados reais quando disponíveis)
+  const totalBoletos = stats?.carnesAtivos || 0;
+  const ticketMedio = receitaTotal > 0 && totalBoletos > 0 ? receitaTotal / totalBoletos : 0;
+  const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
+  const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
   // Faturamento mensal (últimos 12 meses)
   const getFaturamentoMensal = () => {
@@ -423,15 +426,15 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  if (loadingClientes || loadingPlanos) {
+  if (loadingDashboard || loadingClientes || loadingPlanos) {
     return (
       <div className="dashboard-container">
         <div className="text-center">
           <div className="spinner-border" role="status">
             <span className="visually-hidden">Carregando...</span>
-                  </div>
-                  </div>
-                </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
