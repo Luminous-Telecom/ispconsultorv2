@@ -80,8 +80,15 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       try {
         await deletePlanoMutation.mutateAsync(planoId);
         refetch();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao excluir plano:', error);
+        
+        // Mostrar erro específico para o usuário
+        const errorMessage = error?.response?.data?.message || 
+                           error?.response?.data?.error || 
+                           'Erro ao excluir plano';
+        
+        alert(`Erro: ${errorMessage}`);
       }
     }
   };
@@ -218,9 +225,27 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       label: 'Excluir',
-      action: (selectedItems: any[]) => {
+      action: async (selectedItems: any[]) => {
         if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} plano(s)?`)) {
-          selectedItems.forEach(item => handleDelete(item.id));
+          // Excluir um por vez para evitar problemas de concorrência
+          for (const item of selectedItems) {
+            try {
+              await deletePlanoMutation.mutateAsync(item.id);
+            } catch (error: any) {
+              console.error(`Erro ao excluir plano ${item.id}:`, error);
+              
+              // Mostrar erro específico para o usuário
+              const errorMessage = error?.response?.data?.message || 
+                                 error?.response?.data?.error || 
+                                 `Erro ao excluir plano ${item.id}`;
+              
+              alert(`Erro ao excluir plano: ${errorMessage}`);
+              
+              // Continuar com os próximos mesmo se um falhar
+            }
+          }
+          // Refetch apenas uma vez após todas as exclusões
+          refetch();
         }
       }
     }

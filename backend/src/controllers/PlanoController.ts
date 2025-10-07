@@ -170,9 +170,7 @@ export class PlanoController {
     try {
       const { id } = req.params;
       
-      const plano = await Plano.findByPk(id, {
-        include: [{ association: 'carnes' }]
-      });
+      const plano = await Plano.findByPk(id);
       
       if (!plano) {
         res.status(404).json({ 
@@ -214,10 +212,22 @@ export class PlanoController {
       });
     } catch (error) {
       console.error('Erro ao deletar plano:', error);
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+      
+      // Log mais detalhado para debugging
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+      }
+      
       res.status(500).json({ 
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        details: process.env.NODE_ENV === 'development' ? {
+          stack: error instanceof Error ? error.stack : undefined,
+          name: error instanceof Error ? error.name : undefined
+        } : undefined
       });
     }
   }
