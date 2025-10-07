@@ -16,7 +16,7 @@ interface PlanoForm {
   periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   servicos_inclusos: string[];
   renovacao_automatica: boolean;
-  status: 'ativo' | 'suspenso' | 'cancelado';
+  ativo: boolean;
   data_inicio: string;
   data_fim: string;
   observacoes: string;
@@ -47,7 +47,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
     periodicidade: 'mensal',
     servicos_inclusos: [],
     renovacao_automatica: true,
-    status: 'ativo',
+    ativo: true,
     data_inicio: new Date().toISOString().split('T')[0],
     data_fim: '',
     observacoes: ''
@@ -98,7 +98,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             ? JSON.parse(plano.servicos_inclusos) 
             : [],
         renovacao_automatica: plano.renovacao_automatica || false,
-        status: (plano.status as PlanoForm['status']) || 'ativo',
+        ativo: plano.status === 'ativo',
         data_inicio: plano.data_inicio || new Date().toISOString().split('T')[0],
         data_fim: plano.data_fim || '',
         observacoes: plano.observacoes || ''
@@ -170,9 +170,18 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
     
     if (!validateForm() || !planoId) return;
 
+    // Converter campo ativo para status
+    const dataToSubmit = {
+      ...formData,
+      status: formData.ativo ? 'ativo' : 'suspenso'
+    };
+    
+    // Remover campo ativo dos dados enviados
+    delete (dataToSubmit as any).ativo;
+
     updatePlanoMutation.mutate({
       id: planoId,
-      data: formData
+      data: dataToSubmit
     });
   };
 
@@ -318,6 +327,26 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   onChange={(e) => handleInputChange('data_fim', e.target.value)}
                   disabled={updatePlanoMutation.isPending}
                 />
+              </div>
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="col-md-6">
+              <div className="mb-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="ativo"
+                    checked={formData.ativo}
+                    onChange={(e) => handleInputChange('ativo', e.target.checked)}
+                    disabled={updatePlanoMutation.isPending}
+                  />
+                  <label className="form-check-label" htmlFor="ativo">
+                    Plano Ativo
+                  </label>
+                </div>
               </div>
             </div>
           </div>
