@@ -178,6 +178,14 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
     
     // Remover campo ativo dos dados enviados
     delete (dataToSubmit as any).ativo;
+    
+    // Limpar datas inválidas
+    if (!dataToSubmit.data_inicio || dataToSubmit.data_inicio === '') {
+      delete dataToSubmit.data_inicio;
+    }
+    if (!dataToSubmit.data_fim || dataToSubmit.data_fim === '') {
+      delete dataToSubmit.data_fim;
+    }
 
     updatePlanoMutation.mutate({
       id: planoId,

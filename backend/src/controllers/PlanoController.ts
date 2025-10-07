@@ -184,7 +184,19 @@ export class PlanoController {
       const updateData: any = {};
       Object.keys(req.body).forEach(key => {
         if (allowedFields.includes(key)) {
-          updateData[key] = req.body[key];
+          // Validar datas
+          if (key === 'data_inicio' || key === 'data_fim') {
+            const dateValue = req.body[key];
+            if (dateValue && dateValue !== '' && dateValue !== 'Invalid date') {
+              // Verificar se é uma data válida
+              const date = new Date(dateValue);
+              if (!isNaN(date.getTime())) {
+                updateData[key] = dateValue;
+              }
+            }
+          } else {
+            updateData[key] = req.body[key];
+          }
         }
       });
       
