@@ -2,7 +2,10 @@ import { apiService } from './api';
 
 export interface DashboardStats {
   totalClientes: number;
+  clientesAtivos: number;
   planosAtivos: number;
+  titulosAtivos: number;
+  titulosVencidos: number;
   carnesAtivos: number;
   parcelasVencidas: number;
   valorTotalReceber: number;
