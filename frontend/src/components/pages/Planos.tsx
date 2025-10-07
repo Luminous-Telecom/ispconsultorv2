@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { usePlanos, useDeletePlano } from '../../hooks/usePlanos';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
+import ConfirmModal from '../common/ConfirmModal';
+import { useNotificationContext } from '../../contexts/NotificationContext';
+import { useConfirm } from '../../hooks/useConfirm';
 import { PlanoCreateModal, PlanoEditModal } from '../modals/planos';
 
 interface Plano {
@@ -37,6 +40,8 @@ const Planos: React.FC = () => {
   });
 
   const deletePlanoMutation = useDeletePlano();
+  const { error: showError } = useNotificationContext();
+  const { confirm, confirmState } = useConfirm();
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -61,8 +66,24 @@ const Planos: React.FC = () => {
   };
 
   const handleDelete = async (planoId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este plano?')) {
-      deletePlanoMutation.mutate(planoId);
+    const confirmed = await confirm({
+      message: 'Tem certeza que deseja excluir este plano?',
+      type: 'danger',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar'
+    });
+
+    if (confirmed) {
+      try {
+        await deletePlanoMutation.mutateAsync(planoId);
+        refetch();
+      } catch (error: any) {
+        console.error('Erro ao excluir plano:', error);
+        const errorMessage = error?.response?.data?.message || 
+                           error?.response?.data?.error || 
+                           'Erro ao excluir plano';
+        showError(errorMessage);
+      }
     }
   };
 
@@ -275,6 +296,20 @@ const Planos: React.FC = () => {
         planoId={selectedPlanoId}
         onSuccess={handlePlanoEditSuccess}
       />
+
+      {/* Modal de confirmação */}
+      {confirmState && (
+        <ConfirmModal
+          show={confirmState.show}
+          title={confirmState.options.title || 'Confirmar Ação'}
+          message={confirmState.options.message}
+          confirmText={confirmState.options.confirmText || 'Confirmar'}
+          cancelText={confirmState.options.cancelText || 'Cancelar'}
+          type={confirmState.options.type || 'warning'}
+          onConfirm={confirmState.onConfirm}
+          onCancel={confirmState.onCancel}
+        />
+      )}
     </>
   );
 };

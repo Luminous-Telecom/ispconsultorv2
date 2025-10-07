@@ -4,6 +4,9 @@ import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
+import ConfirmModal from '../../common/ConfirmModal';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { useConfirm } from '../../../hooks/useConfirm';
 import { ClienteCreateModal, ClienteEditModal } from './index';
 
 interface Cliente {
@@ -49,15 +52,28 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   });
 
   const deleteClienteMutation = useDeleteCliente();
+  const { error: showError } = useNotificationContext();
+  const { confirm, confirmState } = useConfirm();
 
 
   const handleDelete = async (clienteId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
+    const confirmed = await confirm({
+      message: 'Tem certeza que deseja excluir este cliente?',
+      type: 'danger',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar'
+    });
+
+    if (confirmed) {
       try {
         await deleteClienteMutation.mutateAsync(clienteId);
         refetch();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao excluir cliente:', error);
+        const errorMessage = error?.response?.data?.message || 
+                           error?.response?.data?.error || 
+                           'Erro ao excluir cliente';
+        showError(errorMessage);
       }
     }
   };
@@ -140,9 +156,29 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     },
     {
       label: 'Excluir',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} cliente(s)?`)) {
-          selectedItems.forEach(item => handleDelete(item.id));
+      action: async (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const confirmed = await confirm({
+            message: `Tem certeza que deseja excluir ${selectedItems.length} cliente(s)?`,
+            type: 'danger',
+            confirmText: 'Excluir',
+            cancelText: 'Cancelar'
+          });
+
+          if (confirmed) {
+            for (const item of selectedItems) {
+              try {
+                await deleteClienteMutation.mutateAsync(item.id);
+              } catch (error: any) {
+                console.error(`Erro ao excluir cliente ${item.id}:`, error);
+                const errorMessage = error?.response?.data?.message || 
+                                   error?.response?.data?.error || 
+                                   `Erro ao excluir cliente ${item.id}`;
+                showError(`Erro ao excluir cliente: ${errorMessage}`);
+              }
+            }
+            refetch();
+          }
         }
       }
     }
@@ -226,6 +262,20 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
           // Não fechar o modal automaticamente
         }}
       />
+
+      {/* Modal de confirmação */}
+      {confirmState && (
+        <ConfirmModal
+          show={confirmState.show}
+          title={confirmState.options.title || 'Confirmar Ação'}
+          message={confirmState.options.message}
+          confirmText={confirmState.options.confirmText || 'Confirmar'}
+          cancelText={confirmState.options.cancelText || 'Cancelar'}
+          type={confirmState.options.type || 'warning'}
+          onConfirm={confirmState.onConfirm}
+          onCancel={confirmState.onCancel}
+        />
+      )}
     </DraggableModal>
   );
 };
