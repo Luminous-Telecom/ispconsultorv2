@@ -149,20 +149,84 @@ export class PlanoController {
     try {
       const { id } = req.params;
       
-      const [updatedRowsCount] = await Plano.update(req.body, {
+      console.log('Dados recebidos para atualização:', req.body);
+      console.log('ID do plano:', id);
+      
+      // Verificar se o plano existe
+      const existingPlano = await Plano.findByPk(id);
+      if (!existingPlano) {
+        res.status(404).json({
+          success: false,
+          error: 'Plano não encontrado'
+        });
+        return;
+      }
+      
+      // Validar dados obrigatórios
+      const { nome_plano, tipo_servico, valor_mensal } = req.body;
+      if (!nome_plano || !tipo_servico || valor_mensal === undefined) {
+        res.status(400).json({
+          success: false,
+          error: 'Dados obrigatórios não fornecidos',
+          message: 'Nome do plano, tipo de serviço e valor mensal são obrigatórios'
+        });
+        return;
+      }
+      
+      // Filtrar apenas campos válidos para atualização
+      const allowedFields = [
+        'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
+        'quantidade_usuarios', 'valor_mensal', 'desconto_percentual', 'desconto_valor',
+        'desconto_ativo', 'periodicidade', 'renovacao_automatica', 'data_inicio',
+        'data_fim', 'status', 'observacoes'
+      ];
+      
+      const updateData: any = {};
+      Object.keys(req.body).forEach(key => {
+        if (allowedFields.includes(key)) {
+          updateData[key] = req.body[key];
+        }
+      });
+      
+      console.log('Dados filtrados para atualização:', updateData);
+      
+      const [updatedRowsCount] = await Plano.update(updateData, {
         where: { id }
       });
 
       if (updatedRowsCount === 0) {
-        res.status(404).json({ error: 'Plano não encontrado' });
+        res.status(404).json({ 
+          success: false,
+          error: 'Plano não encontrado' 
+        });
         return;
       }
 
       const plano = await Plano.findByPk(id);
-      res.json(plano);
+      res.json({
+        success: true,
+        message: 'Plano atualizado com sucesso!',
+        data: plano
+      });
     } catch (error) {
       console.error('Erro ao atualizar plano:', error);
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+      
+      // Log mais detalhado para debugging
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+      }
+      
+      res.status(500).json({ 
+        success: false,
+        error: 'Erro interno do servidor',
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        details: process.env.NODE_ENV === 'development' ? {
+          stack: error instanceof Error ? error.stack : undefined,
+          name: error instanceof Error ? error.name : undefined
+        } : undefined
+      });
     }
   }
 
