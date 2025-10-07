@@ -187,7 +187,7 @@ export interface Contrato extends BaseEntity {
   valor_final?: number;
   data_inicio?: string;
   data_fim?: string;
-  status: 'ativo' | 'inativo' | 'suspenso';
+  status: 'ativo' | 'suspenso' | 'cancelado';
   observacoes?: string;
   isento_mensalidade?: boolean;
   dia_vencimento?: number;

@@ -10,6 +10,7 @@ router.get('/ativos', PlanoController.findAtivos);
 router.get('/:id', PlanoController.getById);
 router.post('/', PlanoController.create);
 router.put('/:id', PlanoController.update);
+router.patch('/:id/status', PlanoController.toggleStatus);
 router.delete('/:id', PlanoController.delete);
 
 export default router;

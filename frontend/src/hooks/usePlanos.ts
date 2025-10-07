@@ -93,3 +93,24 @@ export const useDeletePlano = () => {
     },
   });
 };
+
+// Hook para alterar status do plano
+export const useTogglePlanoStatus = () => {
+  const queryClient = useQueryClient();
+  const { success, error } = useNotificationContext();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: 'ativo' | 'suspenso' | 'cancelado' }) => 
+      PlanoService.toggleStatus(id, status),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
+      const statusText = data.status === 'ativo' ? 'ativado' : 
+                        data.status === 'suspenso' ? 'suspenso' : 'cancelado';
+      success(`Plano ${statusText} com sucesso!`);
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao alterar status do plano');
+    },
+  });
+};

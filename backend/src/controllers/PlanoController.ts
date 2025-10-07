@@ -245,4 +245,52 @@ export class PlanoController {
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
+
+  // Desativar/ativar plano
+  static async toggleStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      // Validar status
+      if (!status || !['ativo', 'suspenso', 'cancelado'].includes(status)) {
+        res.status(400).json({
+          success: false,
+          error: 'Status inválido',
+          message: 'Status deve ser: ativo, suspenso ou cancelado'
+        });
+        return;
+      }
+
+      const plano = await Plano.findByPk(id);
+      
+      if (!plano) {
+        res.status(404).json({
+          success: false,
+          error: 'Plano não encontrado'
+        });
+        return;
+      }
+
+      // Atualizar status
+      await plano.update({ status });
+
+      res.json({
+        success: true,
+        message: `Plano ${status === 'ativo' ? 'ativado' : status === 'suspenso' ? 'suspenso' : 'cancelado'} com sucesso!`,
+        data: {
+          id: plano.id,
+          nome_plano: plano.nome_plano,
+          status: plano.status
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao alterar status do plano:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor',
+        message: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
+import { usePlanos, useDeletePlano, useTogglePlanoStatus } from '../../../hooks/usePlanos';
 import DataTable from '../../common/DataTable';
 import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
@@ -51,12 +51,13 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   });
 
   const deletePlanoMutation = useDeletePlano();
+  const toggleStatusMutation = useTogglePlanoStatus();
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'ativo': return 'bg-success';
-      case 'inativo': return 'bg-danger';
       case 'suspenso': return 'bg-warning';
+      case 'cancelado': return 'bg-danger';
       default: return 'bg-secondary';
     }
   };
@@ -97,6 +98,33 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     if (onSelectPlano) {
       onSelectPlano(plano);
       onClose();
+    }
+  };
+
+  const handleToggleStatus = async (planoId: number, currentStatus: string) => {
+    let newStatus: 'ativo' | 'suspenso' | 'cancelado';
+    
+    if (currentStatus === 'ativo') {
+      newStatus = 'suspenso';
+    } else if (currentStatus === 'suspenso') {
+      newStatus = 'cancelado';
+    } else {
+      newStatus = 'ativo';
+    }
+
+    const actionText = newStatus === 'ativo' ? 'ativar' : 
+                      newStatus === 'suspenso' ? 'suspender' : 'cancelar';
+    
+    if (window.confirm(`Tem certeza que deseja ${actionText} este plano?`)) {
+      try {
+        await toggleStatusMutation.mutateAsync({ id: planoId, status: newStatus });
+      } catch (error: any) {
+        console.error('Erro ao alterar status do plano:', error);
+        const errorMessage = error?.response?.data?.message || 
+                           error?.response?.data?.error || 
+                           'Erro ao alterar status do plano';
+        alert(`Erro: ${errorMessage}`);
+      }
     }
   };
 
@@ -200,9 +228,24 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       label: 'Status',
       sortable: true,
       render: (item: Plano) => (
-        <span className={`badge ${getStatusBadgeClass(item.status)}`}>
-          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-        </span>
+        <div className="d-flex align-items-center gap-2">
+          <span className={`badge ${getStatusBadgeClass(item.status)}`}>
+            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          </span>
+          {!onSelectPlano && (
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleStatus(item.id, item.status);
+              }}
+              title={`Alterar status do plano ${item.nome_plano}`}
+            >
+              {item.status === 'ativo' ? 'Suspender' : 
+               item.status === 'suspenso' ? 'Cancelar' : 'Ativar'}
+            </button>
+          )}
+        </div>
       )
     }
   ];
@@ -220,6 +263,38 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         if (selectedItems.length > 0) {
           setSelectedPlanoId(selectedItems[0].id);
           setShowEditModal(true);
+        }
+      }
+    },
+    {
+      label: 'Suspender',
+      action: async (selectedItems: any[]) => {
+        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja suspender ${selectedItems.length} plano(s)?`)) {
+          for (const item of selectedItems) {
+            try {
+              await toggleStatusMutation.mutateAsync({ id: item.id, status: 'suspenso' });
+            } catch (error: any) {
+              console.error(`Erro ao suspender plano ${item.id}:`, error);
+              const errorMessage = error?.response?.data?.message || 'Erro ao suspender plano';
+              alert(`Erro ao suspender plano: ${errorMessage}`);
+            }
+          }
+        }
+      }
+    },
+    {
+      label: 'Cancelar',
+      action: async (selectedItems: any[]) => {
+        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja cancelar ${selectedItems.length} plano(s)?`)) {
+          for (const item of selectedItems) {
+            try {
+              await toggleStatusMutation.mutateAsync({ id: item.id, status: 'cancelado' });
+            } catch (error: any) {
+              console.error(`Erro ao cancelar plano ${item.id}:`, error);
+              const errorMessage = error?.response?.data?.message || 'Erro ao cancelar plano';
+              alert(`Erro ao cancelar plano: ${errorMessage}`);
+            }
+          }
         }
       }
     },
