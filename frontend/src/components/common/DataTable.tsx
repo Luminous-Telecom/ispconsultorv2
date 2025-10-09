@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
 
-interface Column {
+export interface Column<T = any> {
   key: string;
   label: string;
-  render?: (item: any) => React.ReactNode;
+  render?: (item: T) => React.ReactNode;
   className?: string;
   sortable?: boolean;
 }
 
-interface TableProps {
-  columns: Column[];
-  data: any[];
+export interface BulkAction<T = any> {
+  label: string;
+  action?: (selectedItems: T[], event?: React.MouseEvent) => void;
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
+  disabled?: (selectedItems: T[]) => boolean;
+  dropdown?: {
+    label: string;
+    action: () => void;
+  }[];
+}
+
+interface TableProps<T = any> {
+  columns: Column<T>[];
+  data: T[];
   isLoading: boolean;
   pagination?: {
     from: number;
@@ -23,20 +34,11 @@ interface TableProps {
   setLimit: (limit: number) => void;
   setPage: (page: number) => void;
   emptyMessage?: string;
-  actions?: (item: any) => React.ReactNode;
-  bulkActions?: Array<{
-    label: string;
-    action?: (selectedItems: any[], event?: React.MouseEvent) => void;
-    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
-    disabled?: (selectedItems: any[]) => boolean;
-    dropdown?: {
-      label: string;
-      action: () => void;
-    }[];
-  }>;
+  actions?: (item: T) => React.ReactNode;
+  bulkActions?: BulkAction<T>[];
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
-  onSelectionChange?: (selectedItems: any[]) => void;
+  onSelectionChange?: (selectedItems: T[]) => void;
   onSort?: (column: string, direction: 'asc' | 'desc') => void;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
@@ -44,7 +46,7 @@ interface TableProps {
   showHeader?: boolean;
 }
 
-const DataTable: React.FC<TableProps> = ({
+const DataTable = <T extends { id: number | string }>({
   columns,
   data,
   isLoading,
@@ -63,7 +65,7 @@ const DataTable: React.FC<TableProps> = ({
   onRefresh,
   showHeader = true
 }) => {
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [selectedItems, setSelectedItems] = useState<T[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
@@ -95,7 +97,7 @@ const DataTable: React.FC<TableProps> = ({
   }, [openDropdown]);
 
   // Seleção via clique na linha (apenas um item)
-  const handleRowClick = (item: any) => {
+  const handleRowClick = (item: T) => {
     const newSelection = [item];
     setSelectedItems(newSelection);
     if (onSelectionChange) {
@@ -104,11 +106,11 @@ const DataTable: React.FC<TableProps> = ({
   };
 
   // Seleção via checkbox (múltiplos itens)
-  const handleCheckboxChange = (item: any, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCheckboxChange = (item: T, event: React.ChangeEvent<HTMLInputElement>) => {
     event.stopPropagation(); // Evitar que dispare o click da linha
     
     const isAlreadySelected = selectedItems.some(selected => selected.id === item.id);
-    let newSelection: any[];
+    let newSelection: T[];
     
     if (isAlreadySelected) {
       // Desmarcar
