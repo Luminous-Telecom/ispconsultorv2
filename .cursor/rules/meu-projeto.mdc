@@ -1,11 +1,313 @@
-Funcionalidades Obrigatórias Tabelas padrão:
-Ordenação - onSort, sortColumn, sortDirection
-Botão de Recarregar - onRefresh
-Busca - onSearch, searchPlaceholder
-Paginação - limit, setLimit, setPage, pagination
-Ações em Lote - bulkActions
-Mensagem Vazia - emptyMessage
-Loading State - isLoading
+# Regras e Boas Práticas - CTM Telecom ERP
+
+## Estrutura de Código
+
+### TypeScript
+- Use TypeScript com tipagem forte em todos os arquivos
+- Evite usar `any`, prefira tipos específicos ou `unknown`
+- Defina interfaces para props de componentes
+- Use enums para valores constantes
+- Exporte tipos e interfaces quando necessário
+
+### React Components
+- Use componentes funcionais com hooks
+- Prefira `React.FC<Props>` para componentes
+- Mantenha componentes pequenos e focados (máximo 300 linhas)
+- Separe lógica complexa em custom hooks
+- Use `useCallback` e `useMemo` para otimização quando necessário
+
+### State Management
+- Use React Query (@tanstack/react-query) para dados do servidor
+- Configure `staleTime: 0` para permitir refresh manual
+- Use `queryClient.invalidateQueries()` após mutations
+- Sempre faça refetch após criar/atualizar/deletar
+
+### Hooks Personalizados
+- Nomeie hooks com prefixo `use` (ex: `usePlanos`, `useClientes`)
+- Retorne objetos com propriedades nomeadas, não arrays
+- Implemente hooks para cada entidade: list, getById, create, update, delete
+- Use `useNotificationContext` para feedback ao usuário
+
+## Componentes de Tabela
+
+### DataTable - Funcionalidades Obrigatórias
+```typescript
+<DataTable
+  data={getSortedData()}           // Dados ordenados localmente
+  columns={columns}                // Definição de colunas
+  isLoading={isLoading}            // Estado de carregamento
+  
+  // Paginação
+  pagination={pagination}          // Objeto com currentPage, totalPages, total, from, to
+  limit={limit}
+  setLimit={setLimit}
+  setPage={setPage}
+  
+  // Ordenação
+  onSort={handleSort}              // Ordenação LOCAL, não servidor
+  sortColumn={sortColumn}
+  sortDirection={sortDirection}
+  
+  // Busca e Ações
+  onSearch={setSearch}
+  searchPlaceholder="Buscar..."
+  onRefresh={refetch}              // Botão recarregar
+  
+  // Ações em Lote
+  bulkActions={bulkActions}
+  onSelectionChange={setSelectedItems}
+  
+  // Estados
+  emptyMessage="Nenhum registro encontrado"
+  showHeader={true}
+/>
+```
+
+### Ordenação Local
+- SEMPRE implemente ordenação LOCAL, não no servidor
+- Use função `getSortedData()` para ordenar dados
+- Suporte ordenação por: strings, números, datas
+- Trate valores `null` e `undefined` na ordenação
+
+### Bulk Actions
+- Sempre valide se há itens selecionados
+- Use `window.confirm()` para ações destrutivas
+- Delete itens um por vez em loop `for...of` com `await`
+- Faça refetch após ações em lote
+
+## Modais e Formulários
+
+### DraggableModal
+- Use `DraggableModal` para todos os modais
+- Implemente `onClose` e `onSuccess` callbacks
+- Limpe formulário quando modal fechar
+- Use `ModalHeaderActions` para ações no header
+
+### Validação de Formulários
+- Valide campos obrigatórios antes de submit
+- Mostre mensagens de erro específicas
+- Use estado `errors` para armazenar erros
+- Limpe erros quando usuário começar a digitar
+
+### Estados de Formulário
+- Use `useState` para cada campo do formulário
+- Implemente `handleInputChange` genérico
+- Desabilite botões durante submissão
+- Mostre loading states apropriados
+
+## API e Services
+
+### Estrutura de Services
+```typescript
+export class EntityService {
+  static async list(filters: Filters): Promise<PaginatedResponse<Entity>> {
+    // GET /api/entities
+  }
+  
+  static async getById(id: number): Promise<{ success: boolean; data: Entity }> {
+    // GET /api/entities/:id
+  }
+  
+  static async create(data: CreateEntity): Promise<{ success: boolean; message: string; data: Entity }> {
+    // POST /api/entities
+  }
+  
+  static async update(id: number, data: Partial<Entity>): Promise<{ success: boolean; message: string }> {
+    // PUT /api/entities/:id
+  }
+  
+  static async delete(id: number): Promise<void> {
+    // DELETE /api/entities/:id
+  }
+}
+```
+
+### Tratamento de Erros
+- Use try/catch em todas as requisições
+- Extraia mensagens de erro: `error?.response?.data?.message`
+- Mostre mensagens específicas ao usuário
+- Log erros no console para debugging
+- Use notificações do sistema para feedback
+
+### Invalidação de Queries
+Após mutations, sempre invalide:
+```typescript
+queryClient.invalidateQueries({ queryKey: ['entity'] }); // Invalida TODAS as queries
+queryClient.invalidateQueries({ queryKey: ['entity', filters] }); // Query específica
+queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // Atualizar dashboard
+refetch(); // Refetch imediato se necessário
+```
+
+## Notificações
+
+### NotificationContext
+- Use `success()` para ações bem-sucedidas
+- Use `error()` para erros
+- Use `warning()` para avisos
+- Use `info()` para informações
+- Notificações somem automaticamente
+
+### Confirmações
+- Use `window.confirm()` para confirmações destrutivas
+- Mensagens claras: "Tem certeza que deseja deletar X item(ns)?"
+- NÃO use modais customizados para confirmações
+- Confirme antes de deletar, sempre
+
+## Padrões de Nomenclatura
+
+### Arquivos
+- Componentes: `PascalCase.tsx` (ex: `ClienteEditModal.tsx`)
+- Services: `camelCase.ts` (ex: `clienteService.ts`)
+- Hooks: `camelCase.ts` (ex: `useClientes.ts`)
+- Types: `camelCase.ts` ou `index.ts`
+
+### Variáveis e Funções
+- Variáveis: `camelCase`
+- Constantes: `UPPER_SNAKE_CASE`
+- Funções: `camelCase`
+- Handlers: prefixo `handle` (ex: `handleSubmit`)
+- Booleans: prefixo `is`, `has`, `should` (ex: `isLoading`)
+
+### Componentes
+- Props interface: `ComponentNameProps`
+- Form data: `ComponentForm` ou `EntityForm`
+- Estado local: descritivo (ex: `selectedItems`, `showModal`)
+
+## Banco de Dados e Backend
+
+### Migrations
+- SEMPRE em JavaScript, não TypeScript
+- Use `queryInterface` para operações
+- Implemente `up` e `down` para reversão
+- Teste migrations antes de commit
+
+### Models (Sequelize)
+- Use TypeScript com tipos do Sequelize
+- Defina associations corretamente
+- Use `allowNull`, `defaultValue` apropriadamente
+- Valide dados no model quando possível
+
+### Controllers
+- Valide dados de entrada
+- Use try/catch para tratamento de erros
+- Retorne objetos padronizados: `{ success, message, data }`
+- Log erros mas não exponha detalhes sensíveis
+- Use status codes HTTP corretos
+
+### Associações de Dados
+- SEMPRE associe dados quando criar (ex: `contrato_id` ao criar título)
+- Valide IDs antes de criar associações
+- Use transações para operações críticas
+- Implemente CASCADE ou SET NULL apropriadamente
+
+## Performance
+
+### Otimizações
+- Use paginação para listas grandes
+- Implemente busca/filtro no frontend quando possível
+- Cache queries do React Query apropriadamente
+- Lazy load componentes pesados
+- Otimize re-renders com `memo`, `useCallback`, `useMemo`
+
+### Queries
+- Não faça N+1 queries
+- Use `include` do Sequelize para eager loading
+- Limite campos retornados quando possível
+- Use índices no banco de dados
+
+## UI/UX
+
+### Bootstrap
+- SEMPRE use classes Bootstrap para estilos
+- Use sistema de grid: `container`, `row`, `col-*`
+- Use utilitários: `mb-3`, `p-4`, `text-center`, etc
+- Use componentes: `btn`, `form-control`, `card`, etc
+- NÃO use estilos inline
+
+### Badges e Status
+- Use cores semânticas: `success`, `danger`, `warning`, `info`
+- Capitalize primeira letra de status
+- Use ícones quando apropriado (Bootstrap Icons)
+
+### Loading States
+- Mostre spinners durante carregamento
+- Desabilite botões durante submissão
+- Use skeleton screens para listas
+- Feedback visual para todas as ações
+
+### Mensagens ao Usuário
+- Sucesso: "Entidade criada/atualizada/excluída com sucesso!"
+- Erro: Mensagem específica do backend
+- Confirmação: "Tem certeza que deseja..."
+- Sempre em português
+
+## Git e Commits
+
+### Commits
+- Use conventional commits quando possível
+- Mensagens descritivas em português
+- Commits pequenos e focados
+- Teste antes de commitar
+
+### Exemplos de Commits
+```
+feat: adicionar funcionalidade de deleção de contratos
+fix: corrigir atualização de títulos após criação
+refactor: remover logs de debug
+style: ajustar espaçamento em tabelas
+docs: atualizar documentação de APIs
+```
+
+## O QUE NÃO FAZER
+
+### Código
+- ❌ NÃO use `var`, sempre `const` ou `let`
+- ❌ NÃO use `any` sem necessidade
+- ❌ NÃO ignore erros de TypeScript
+- ❌ NÃO deixe `console.log` desnecessários
+- ❌ NÃO use callbacks quando `async/await` é possível
+
+### React
+- ❌ NÃO use class components
+- ❌ NÃO deixe componentes muito grandes (>300 linhas)
+- ❌ NÃO modifique state diretamente
+- ❌ NÃO esqueça dependências em useEffect
+- ❌ NÃO ignore warnings do React
+
+### API
+- ❌ NÃO use URLs hardcoded, use variáveis de ambiente
+- ❌ NÃO exponha dados sensíveis em logs
+- ❌ NÃO ignore validação de dados
+- ❌ NÃO esqueça tratamento de erros
+- ❌ NÃO faça queries N+1
+
+### UI
+- ❌ NÃO use jQuery
+- ❌ NÃO crie tabelas sem ordenação
+- ❌ NÃO esqueça estados de loading
+- ❌ NÃO ignore feedback ao usuário
+- ❌ NÃO use ícones em botões (preferência do projeto)
+
+### Git
+- ❌ NÃO commite arquivos .env
+- ❌ NÃO commite node_modules
+- ❌ NÃO force push para main/master
+- ❌ NÃO commite sem testar
+- ❌ NÃO use commits genéricos ("fix", "update")
+
+## Ambiente de Desenvolvimento
+
+### PM2
+- NÃO reinicie manualmente (hot reload automático)
+- NÃO rode `pm2 logs` (trava terminal)
+- NÃO rode `npm run build` em desenvolvimento
+- Configure watch mode corretamente
+
+### Testes
+- Teste funcionalidade ANTES de commitar
+- Verifique erros de TypeScript
+- Teste em diferentes navegadores se possível
+- Verifique console por erros/warnings
 
 ---
 alwaysApply: true
