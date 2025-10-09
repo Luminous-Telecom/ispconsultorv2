@@ -156,7 +156,14 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       
       // Chamar onSuccess antes de fechar o modal
       console.log('📞 [TituloCreateModal] Chamando callback onSuccess');
-      onSuccess?.();
+      console.log('📞 [TituloCreateModal] onSuccess está definido?', typeof onSuccess, onSuccess);
+      
+      if (onSuccess) {
+        console.log('✅ [TituloCreateModal] Executando callback onSuccess');
+        onSuccess();
+      } else {
+        console.warn('⚠️ [TituloCreateModal] Callback onSuccess não está definido!');
+      }
       
       console.log('🚪 [TituloCreateModal] Fechando modal');
       onClose();
