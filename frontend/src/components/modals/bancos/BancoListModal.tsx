@@ -90,8 +90,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       label: 'Tipo',
       sortable: true,
       render: (item: Banco) => (
-        <span className={`badge ${getTipoBadgeClass(item.tipo)}`}>
-          {getTipoLabel(item.tipo)}
+        <span className={`badge ${getTipoBadgeClass(item.tipo || '')}`}>
+          {getTipoLabel(item.tipo || '')}
         </span>
       )
     },
@@ -119,7 +119,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       sortable: true,
       render: (item: Banco) => (
         <span className="text-nowrap">
-          {new Date(item.data_criacao).toLocaleDateString('pt-BR')}
+          {item.data_criacao ? new Date(item.data_criacao).toLocaleDateString('pt-BR') : '-'}
         </span>
       )
     }

@@ -3,15 +3,7 @@ import { Link } from 'react-router-dom';
 import { useBancos, useDeleteBanco } from '../../hooks/useBancos';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
-
-interface Banco {
-  id: number;
-  nome: string;
-  tipo: 'tradicional' | 'efi' | 'asaas';
-  url: string;
-  ativo: boolean;
-  data_criacao: string;
-}
+import { Banco } from '../../types';
 
 const Bancos: React.FC = () => {
   const [search, setSearch] = useState('');

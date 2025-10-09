@@ -14,7 +14,7 @@ const CarneParcelasEdit: React.FC = () => {
   const [formData, setFormData] = useState({
     valor_parcela: '',
     data_vencimento: '',
-    status: 'pendente' as 'pendente' | 'pago' | 'vencido' | 'cancelado',
+    status: 'pendente' as 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'pago_atraso' | 'parcial',
     data_pagamento: '',
     valor_pago: ''
   });
