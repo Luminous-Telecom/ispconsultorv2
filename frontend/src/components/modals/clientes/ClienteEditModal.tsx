@@ -10,7 +10,7 @@ import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
-import { useContratos } from '../../../hooks/useContratos';
+import { useContratos, useDeleteContrato } from '../../../hooks/useContratos';
 import ContratoCreateModal from './ContratoCreateModal';
 import ContratoEditModal from './ContratoEditModal';
 
@@ -129,7 +129,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   });
 
   // Buscar contratos do cliente
-  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError } = useContratos((cliente as any)?.id);
+  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError, refetch: refetchContratos } = useContratos((cliente as any)?.id);
+  
+  // Hook para deletar contrato
+  const deleteContratoMutation = useDeleteContrato();
 
   // Buscar parcelas do cliente (dados reais do banco)
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
@@ -1098,10 +1101,23 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       },
                       {
                         label: 'Deletar',
-                        action: (selectedItems) => {
+                        action: async (selectedItems) => {
                           if (selectedItems.length > 0) {
-                            // TODO: Implementar exclusão de contratos
-                            console.log('Deletar contratos:', selectedItems);
+                            if (window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} contrato(s)?`)) {
+                              for (const item of selectedItems) {
+                                try {
+                                  await deleteContratoMutation.mutateAsync(item.id);
+                                } catch (error: any) {
+                                  console.error(`Erro ao deletar contrato ${item.id}:`, error);
+                                  const errorMessage = error?.response?.data?.message || 
+                                                     error?.response?.data?.error || 
+                                                     `Erro ao deletar contrato ${item.id}`;
+                                  alert(`Erro: ${errorMessage}`);
+                                }
+                              }
+                              // Refetch contratos após deletar
+                              refetchContratos();
+                            }
                           }
                         },
                         variant: 'danger',
