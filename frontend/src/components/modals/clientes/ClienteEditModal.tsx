@@ -303,7 +303,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       label: 'Cancelar',
-      action: async (selectedItems: Titulo[]) => {
+      action: async (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const confirmMessage = selectedItems.length === 1 
             ? 'Tem certeza que deseja cancelar este título?'
@@ -351,7 +351,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       label: 'Estornar',
-      action: async (selectedItems: Titulo[]) => {
+      action: async (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           if (item.status === 'pago') {
