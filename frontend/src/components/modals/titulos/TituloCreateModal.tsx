@@ -24,17 +24,19 @@ interface TituloCreateModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   clienteId?: number;
+  contratoId?: number;
 }
 
 const TituloCreateModal: React.FC<TituloCreateModalProps> = ({ 
   show, 
   onClose, 
   onSuccess,
-  clienteId
+  clienteId,
+  contratoId
 }) => {
   const [formData, setFormData] = useState<TituloForm>({
     plano_id: 0,
-    contrato_id: undefined,
+    contrato_id: contratoId,
     data_vencimento: '',
     observacoes: '',
     desconto_percentual: 0,
@@ -197,7 +199,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       return;
     }
 
-    const payload = {
+    const payload: any = {
       plano_id: formData.plano_id,
       data_vencimento: formData.data_vencimento,
       observacoes: formData.observacoes || '',
@@ -208,6 +210,11 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       descricao: formData.descricao || '',
       cliente_id: clienteId
     };
+    
+    // Adicionar contrato_id se fornecido
+    if (contratoId) {
+      payload.contrato_id = contratoId;
+    }
 
     createParcelaMutation.mutate(payload as any);
   };
