@@ -7,10 +7,11 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { getApiUrl } from '../../../config/api';
 import { TituloEditModal, TituloCreateModal } from '../../modals/titulos';
 import { TituloService } from '../../../services/tituloService';
+import { Cliente, Titulo } from '../../../types';
 
 interface ClienteFinanceiroProps {
-  cliente: any;
-  onDataChange: (field: string, value: any) => void;
+  cliente: Cliente;
+  onDataChange: (field: string, value: unknown) => void;
 }
 
 const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({ 
@@ -47,8 +48,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     }
 
     return [...parcelas].sort((a, b) => {
-      let aValue = (a as any)[sortColumnParcelas];
-      let bValue = (b as any)[sortColumnParcelas];
+      const aValue = a[sortColumnParcelas as keyof Titulo];
+      const bValue = b[sortColumnParcelas as keyof Titulo];
 
       // Converter para string se necessário para comparação
       if (typeof aValue === 'string') {
@@ -78,7 +79,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
 
   const parcelas = parcelasData?.data || [];
 
-  const handleMarcarPago = async (selectedItems: any[]) => {
+  const handleMarcarPago = async (selectedItems: Titulo[]) => {
     try {
       for (const item of selectedItems) {
         if (item.status !== 'pago') {
@@ -104,12 +105,12 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   };
 
   const handleImprimirTodosEmAberto = () => {
-    const titulosEmAberto = parcelas.filter((p: any) => 
+    const titulosEmAberto = parcelas.filter((p: Titulo) => 
       p.status === 'pendente' || p.status === 'vencido'
     );
     
     if (titulosEmAberto.length > 0) {
-      const ids = titulosEmAberto.map((item: any) => item.id);
+      const ids = titulosEmAberto.map((item: Titulo) => item.id);
       const idsParam = ids.join(',');
       const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
       window.open(url, '_blank');
@@ -118,7 +119,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     }
   };
 
-  const handleEditarParcela = (selectedItems: any[]) => {
+  const handleEditarParcela = (selectedItems: Titulo[]) => {
     if (selectedItems.length > 0) {
       setSelectedParcelaId(selectedItems[0].id);
       setShowParcelaEditModal(true);
@@ -169,14 +170,14 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     { 
       key: 'status', 
       label: 'Status', 
-      render: (item: any) => (
+      render: (item: Titulo) => (
         <span className={`badge bg-${getStatusColor(item.status)}`}>
           {item.status}
         </span>
       )
     },
-    { key: 'valor', label: 'Valor', render: (item: any) => {
-        const valor = parseFloat(item.valor) || 0;
+    { key: 'valor', label: 'Valor', render: (item: Titulo) => {
+        const valor = parseFloat(String(item.valor)) || 0;
         return `R$ ${valor.toFixed(2)}`;
       }
     },

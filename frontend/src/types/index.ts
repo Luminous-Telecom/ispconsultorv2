@@ -1,5 +1,8 @@
 // Tipos para o sistema ERP Assessoria - Frontend
 
+// Re-exportar tipos consolidados
+export * from './entities';
+
 export interface BaseEntity {
   id: number;
   created_at: string;

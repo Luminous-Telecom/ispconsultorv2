@@ -5,7 +5,7 @@ import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
 import { TituloService } from '../../../services/tituloService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { Cliente, CarneParcela } from '../../../types';
+import { Cliente, CarneParcela, Titulo, Contrato } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import TituloEditModal from '../titulos/TituloEditModal';
@@ -129,7 +129,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   });
 
   // Buscar contratos do cliente
-  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError, refetch: refetchContratos } = useContratos((cliente as any)?.id);
+  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError, refetch: refetchContratos } = useContratos(cliente?.id);
   
   // Hook para deletar contrato
   const deleteContratoMutation = useDeleteContrato();
@@ -149,7 +149,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     const allData = parcelasData.data;
 
     // Filtrar cancelados se não estiver marcado para mostrar
-    let filteredData = allData.filter((titulo: any) => {
+    let filteredData = allData.filter((titulo: Titulo) => {
       if (titulo.status === 'cancelado' && !showCancelados) {
         return false;
       }
@@ -159,7 +159,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     // Aplicar filtro de busca
     if (search.trim()) {
       const searchTerm = search.toLowerCase().trim();
-      filteredData = filteredData.filter((titulo: any) => {
+      filteredData = filteredData.filter((titulo: Titulo) => {
         const id = titulo.id?.toString() || '';
         const numeroTitulo = titulo.numero_titulo || '';
         const valor = titulo.valor?.toString() || '';
@@ -184,8 +184,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     if (!sortColumn) return filteredData;
     
     return [...filteredData].sort((a, b) => {
-      let valueA: any;
-      let valueB: any;
+      let valueA: string | number | Date;
+      let valueB: string | number | Date;
       
       switch (sortColumn) {
         case 'id':
@@ -221,8 +221,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           valueB = (b.pago || b.status === 'cancelado') ? 0 : Number(b.valor_parcela || 0);
           break;
         default:
-          valueA = (a as any)[sortColumn] || '';
-          valueB = (b as any)[sortColumn] || '';
+          valueA = a[sortColumn as keyof Titulo] as string | number || '';
+          valueB = b[sortColumn as keyof Titulo] as string | number || '';
       }
       
       // Comparação
@@ -257,12 +257,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const handleImprimirTodosEmAberto = () => {
     const allTitulos = parcelasData?.data || [];
-    const titulosEmAberto = allTitulos.filter((p: any) => 
+    const titulosEmAberto = allTitulos.filter((p: Titulo) => 
       p.status === 'pendente' || p.status === 'vencido'
     );
     
     if (titulosEmAberto.length > 0) {
-      const ids = titulosEmAberto.map((item: any) => item.id);
+      const ids = titulosEmAberto.map((item: Titulo) => item.id);
       const idsParam = ids.join(',');
       const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
       window.open(url, '_blank');
@@ -274,8 +274,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   // Ações para o header do modal (apenas na aba Financeiro)
   const bulkActions: Array<{
     label: string;
-    action?: (selectedItems: any[]) => void;
-    disabled?: (selectedItems: any[]) => boolean;
+    action?: (selectedItems: Titulo[]) => void;
+    disabled?: (selectedItems: Titulo[]) => boolean;
     dropdown?: {
       label: string;
       action: () => void;
@@ -283,7 +283,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   }> = [
     {
       label: 'Editar',
-      action: (selectedItems: any[]) => {
+      action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedTituloId(item.id);
@@ -293,7 +293,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       label: 'Receber',
-      action: (selectedItems: any[]) => {
+      action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedParcela(item);
@@ -303,7 +303,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       label: 'Cancelar',
-      action: async (selectedItems: any[]) => {
+      action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const confirmMessage = selectedItems.length === 1 
             ? 'Tem certeza que deseja cancelar este título?'
@@ -351,7 +351,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       label: 'Estornar',
-      action: async (selectedItems: any[]) => {
+      action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           if (item.status === 'pago') {
@@ -376,7 +376,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           }
         }
       },
-      disabled: (selectedItems: any[]) => {
+      disabled: (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status !== 'pago');
       }
@@ -422,12 +422,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      render: (item: any) => item.id
+      render: (item: Titulo) => item.id
     },
     {
       key: 'status',
       label: 'Status',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return (
           <span className={`badge bg-${getStatusColor(item.status)}`}>
             {item.status}
@@ -438,49 +438,49 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'plano',
       label: 'Plano',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.plano?.nome_plano || '-';
       }
     },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
       }
     },
     {
       key: 'valor',
       label: 'Valor',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
     },
     {
       key: 'valor_pago',
       label: 'Valor baixado',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00';
       }
     },
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
     },
     {
       key: 'data_pagamento',
       label: 'Data Pagamento',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
       }
     },
     {
       key: 'charge_id',
       label: 'Charge ID',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.charge_id || '-';
       }
     }
@@ -505,26 +505,26 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   useEffect(() => {
     if (cliente && typeof cliente === 'object') {
       setFormData({
-        cnpj: (cliente as any).cnpj || '',
-        razao_social: (cliente as any).razao_social || '',
-        nome_fantasia: (cliente as any).nome_fantasia || '',
-        email: (cliente as any).email || '',
-        telefone: (cliente as any).telefone || '',
-        whatsapp: (cliente as any).whatsapp || '',
-        cep: (cliente as any).cep || '',
-        endereco: (cliente as any).endereco || '',
-        numero: (cliente as any).numero || '',
-        complemento: (cliente as any).complemento || '',
-        bairro: (cliente as any).bairro || '',
-        cidade: (cliente as any).cidade || '',
-        estado: (cliente as any).estado || '',
-        ativo: (cliente as any).ativo ?? true,
-        tipo_cobranca: ((cliente as any).tipo_cobranca === 'carne' ? 'titulo' : (cliente as any).tipo_cobranca) || 'titulo',
-        valor_primeiro_titulo: (cliente as any).valor_primeiro_titulo || 'total',
-        recebe_email: (cliente as any).recebe_email ?? true,
-        recebe_sms: (cliente as any).recebe_sms ?? false,
-        recebe_whatsapp: (cliente as any).recebe_whatsapp ?? true,
-        observacoes: (cliente as any).observacoes || ''
+        cnpj: cliente.cnpj || '',
+        razao_social: cliente.razao_social || '',
+        nome_fantasia: cliente.nome_fantasia || '',
+        email: cliente.email || '',
+        telefone: cliente.telefone || '',
+        whatsapp: cliente.whatsapp || '',
+        cep: cliente.cep || '',
+        endereco: cliente.endereco || '',
+        numero: cliente.numero || '',
+        complemento: cliente.complemento || '',
+        bairro: cliente.bairro || '',
+        cidade: cliente.cidade || '',
+        estado: cliente.estado || '',
+        ativo: cliente.ativo ?? true,
+        tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
+        valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
+        recebe_email: cliente.recebe_email ?? true,
+        recebe_sms: cliente.recebe_sms ?? false,
+        recebe_whatsapp: cliente.recebe_whatsapp ?? true,
+        observacoes: cliente.observacoes || ''
       });
     }
   }, [cliente]);
@@ -1498,7 +1498,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       {/* Modal de criação de contrato */}
       <ContratoCreateModal
         show={showContratoCreateModal}
-        clienteId={(cliente as any)?.id}
+        clienteId={cliente?.id}
         onClose={() => setShowContratoCreateModal(false)}
         onSuccess={() => {
           setShowContratoCreateModal(false);
