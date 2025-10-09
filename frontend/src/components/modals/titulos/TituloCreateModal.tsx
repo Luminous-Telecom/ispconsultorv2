@@ -134,19 +134,25 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
   // Mutation para criar parcela
   const createParcelaMutation = useMutation({
     mutationFn: (data: CreateCarneParcela) => TituloService.create(data),
-    onSuccess: () => {
-      success('Parcela criada com sucesso!');
+    onSuccess: (response) => {
+      const mensagem = response?.message || 'Título criado com sucesso!';
+      success(mensagem);
+      
+      // Invalidar todas as queries relacionadas a títulos
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
-      queryClient.invalidateQueries({ queryKey: ['parcelas'] }); // Para ClienteEditModal
-      queryClient.invalidateQueries({ queryKey: ['titulos'] }); // Para outras páginas
+      queryClient.invalidateQueries({ queryKey: ['parcelas'] });
+      queryClient.invalidateQueries({ queryKey: ['titulos'] }); // Invalida TODAS as queries que começam com 'titulos'
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // Atualizar dashboard
+      
       // Chamar onSuccess antes de fechar o modal
       onSuccess?.();
       onClose();
     },
     onError: (err: any) => {
       console.error('Erro ao criar parcela:', err);
-      error('Erro ao criar parcela. Tente novamente.');
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao criar título. Tente novamente.';
+      error(errorMessage);
     }
   });
 
