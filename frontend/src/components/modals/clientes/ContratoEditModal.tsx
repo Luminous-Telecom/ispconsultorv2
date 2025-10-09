@@ -1059,7 +1059,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       <TituloCreateModal
         show={showTituloCreateModal}
         clienteId={contratoData?.cliente_id}
-        contratoId={contratoId}
+        contratoId={contratoId ?? undefined}
         onClose={() => setShowTituloCreateModal(false)}
         onSuccess={() => {
           setShowTituloCreateModal(false);
