@@ -92,26 +92,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const { data: titulosData, isLoading: isLoadingTitulos, refetch: refetchTitulos } = useQuery({
     queryKey: ['titulos', 'contrato', contratoId],
     queryFn: async () => {
-      console.log('📡 [ContratoEditModal] Buscando títulos do contrato:', contratoId);
       const response = await fetch(`${process.env.REACT_APP_API_URL}/titulos/contrato/${contratoId}`);
       if (!response.ok) throw new Error('Erro ao buscar títulos');
-      const data = await response.json();
-      console.log('✅ [ContratoEditModal] Títulos recebidos:', data);
-      return data;
+      return response.json();
     },
     enabled: show && !!contratoId,
   });
-  
-  // Log quando titulosData mudar
-  useEffect(() => {
-    if (titulosData) {
-      console.log('📊 [ContratoEditModal] titulosData mudou:', {
-        success: titulosData.success,
-        totalTitulos: titulosData.data?.length || 0,
-        titulos: titulosData.data
-      });
-    }
-  }, [titulosData]);
 
   // Mutation para atualizar contrato
   const updateContratoMutation = useUpdateContrato();
