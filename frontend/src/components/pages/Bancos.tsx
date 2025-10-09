@@ -137,7 +137,7 @@ const Bancos: React.FC = () => {
       label: 'Tipo',
       sortable: true,
       render: (banco: Banco) => (
-        <span className={`badge ${getTipoBadgeClass(banco.tipo)}`}>
+        <span className={`badge ${getTipoBadgeClass(banco.tipo || '')}`}>
           {banco.tipo ? banco.tipo.charAt(0).toUpperCase() + banco.tipo.slice(1) : 'Desconhecido'}
         </span>
       )
@@ -166,7 +166,7 @@ const Bancos: React.FC = () => {
       key: 'data_criacao',
       label: 'Data de Criação',
       sortable: true,
-      render: (banco: Banco) => new Date(banco.data_criacao).toLocaleDateString('pt-BR')
+      render: (banco: Banco) => banco.data_criacao ? new Date(banco.data_criacao).toLocaleDateString('pt-BR') : '-'
     }
   ];
 
