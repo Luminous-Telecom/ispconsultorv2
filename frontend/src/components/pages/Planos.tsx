@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlanos, useDeletePlano } from '../../hooks/usePlanos';
+import { useSorting } from '../../hooks/useSorting';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
 import { PlanoCreateModal, PlanoEditModal } from '../modals/planos';
@@ -61,49 +62,8 @@ const Planos: React.FC = () => {
     setPage(1); // Voltar para primeira página ao ordenar
   };
 
-  // Função para ordenar os dados localmente
-  const getSortedData = () => {
-    if (!planosData?.data || !sortColumn) {
-      return planosData?.data || [];
-    }
-
-    return [...planosData.data].sort((a, b) => {
-      let aValue: any = a[sortColumn as keyof Plano];
-      let bValue: any = b[sortColumn as keyof Plano];
-
-      // Converter para string se necessário para comparação
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-      }
-      if (typeof bValue === 'string') {
-        bValue = bValue.toLowerCase();
-      }
-
-      // Converter datas se necessário
-      if (sortColumn.includes('data') || sortColumn.includes('created_at')) {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
-      }
-
-      // Converter números se necessário
-      if (sortColumn.includes('valor') || sortColumn.includes('total') || sortColumn.includes('quantidade')) {
-        aValue = parseFloat(aValue) || 0;
-        bValue = parseFloat(bValue) || 0;
-      }
-
-      // Tratar valores nulos/undefined
-      if (aValue == null) aValue = '';
-      if (bValue == null) bValue = '';
-
-      if (aValue < bValue) {
-        return sortDirection === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortDirection === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-  };
+  // Usar hook de ordenação reutilizável
+  const sortedData = useSorting(planosData?.data, sortColumn, sortDirection);
 
   const handleTopoActions = (action: string, selectedItems: Plano[]) => {
     if (selectedItems.length === 0) return;
@@ -221,7 +181,7 @@ const Planos: React.FC = () => {
       {/* Tabela de Planos com controles integrados */}
       <DataTable
         columns={columns}
-        data={getSortedData()}
+        data={sortedData}
         isLoading={isLoading}
         pagination={planosData?.pagination}
         limit={limit}
