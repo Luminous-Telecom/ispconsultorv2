@@ -135,7 +135,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   };
 
   const handleCloseParcelaCreateModal = () => {
-    console.log('🔍 Debug - Modal de criação fechado');
     setShowParcelaCreateModal(false);
   };
 
@@ -143,10 +142,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     refetchParcelas();
   };
 
-  // Debug: Log quando o modal de criação mudar
-  useEffect(() => {
-    console.log('🔍 Debug - Renderizando TituloCreateModal, show:', showParcelaCreateModal, 'clienteId:', cliente.id);
-  }, [showParcelaCreateModal, cliente.id]);
 
   // Função para obter a cor do status
   const getStatusColor = (status: string) => {
@@ -221,8 +216,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                 {
                   label: 'Novo Título',
                   action: () => {
-                    console.log('🔍 Debug - Botão Novo Título clicado!');
-                    console.log('🔍 Debug - cliente.id:', cliente.id);
                     setShowParcelaCreateModal(true);
                   }
                 },
