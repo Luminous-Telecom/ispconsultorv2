@@ -5,6 +5,7 @@ import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import { useCreateContrato, useUpdateContrato } from '../../../hooks/useContratos';
 import { TituloService } from '../../../services/tituloService';
+import { Titulo, Plano, ValidationError } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import TituloCreateModal from '../titulos/TituloCreateModal';
@@ -161,7 +162,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: any = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.plano_id) {
       newErrors.plano_id = 'Plano é obrigatório';
@@ -221,14 +222,14 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       success('Nenhum título encontrado');
       return;
     }
-    const titulosEmAberto = titulosData.data.filter((titulo: any) => 
+    const titulosEmAberto = titulosData.data.filter((titulo: Titulo) => 
       titulo.status === 'pendente' || titulo.status === 'vencido'
     );
     if (titulosEmAberto.length === 0) {
       success('Nenhum título em aberto encontrado');
       return;
     }
-    const ids = titulosEmAberto.map((titulo: any) => titulo.id);
+    const ids = titulosEmAberto.map((titulo: Titulo) => titulo.id);
     const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`;
     window.open(url, '_blank');
   };
@@ -236,8 +237,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   // Bulk actions para títulos
   const bulkActions: Array<{
     label: string;
-    action?: (selectedItems: any[]) => void;
-    disabled?: (selectedItems: any[]) => boolean;
+    action?: (selectedItems: Titulo[]) => void;
+    disabled?: (selectedItems: Titulo[]) => boolean;
     dropdown?: {
       label: string;
       action: () => void;
@@ -251,7 +252,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     },
     {
       label: 'Editar',
-      action: (selectedItems: any[]) => {
+      action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedTituloId(item.id);
@@ -261,7 +262,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     },
     {
       label: 'Receber',
-      action: (selectedItems: any[]) => {
+      action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedParcela(item);
@@ -271,7 +272,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     },
     {
       label: 'Cancelar',
-      action: async (selectedItems: any[]) => {
+      action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const confirmMessage = selectedItems.length === 1 
             ? 'Tem certeza que deseja cancelar este título?'
@@ -317,7 +318,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     },
     {
       label: 'Estornar',
-      action: async (selectedItems: any[]) => {
+      action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           if (item.status === 'pago') {
@@ -341,7 +342,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           }
         }
       },
-      disabled: (selectedItems: any[]) => {
+      disabled: (selectedItems: Titulo[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status !== 'pago');
       }
@@ -367,12 +368,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      render: (item: any) => item.id
+      render: (item: Titulo) => item.id
     },
     {
       key: 'status',
       label: 'Status',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return (
           <span className={`badge bg-${getStatusColor(item.status)}`}>
             {item.status}
@@ -383,56 +384,56 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     {
       key: 'plano',
       label: 'Plano',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.plano?.nome_plano || '-';
       }
     },
     {
       key: 'numero_titulo',
       label: 'Nº Título',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.numero_titulo || '-';
       }
     },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
       }
     },
     {
       key: 'valor',
       label: 'Valor',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
     },
     {
       key: 'valor_pago',
       label: 'Valor baixado',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00';
       }
     },
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
     },
     {
       key: 'data_pagamento',
       label: 'Data Pagamento',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
       }
     },
     {
       key: 'charge_id',
       label: 'Charge ID',
-      render: (item: any) => {
+      render: (item: Titulo) => {
         return item.charge_id || '-';
       }
     }
@@ -446,13 +447,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
     // Filtro para mostrar/ocultar cancelados
     if (!showCancelados) {
-      allData = allData.filter((titulo: any) => titulo.status !== 'cancelado');
+      allData = allData.filter((titulo: Titulo) => titulo.status !== 'cancelado');
     }
 
     // Aplicar filtro de busca
     if (search.trim()) {
       const searchTerm = search.toLowerCase().trim();
-      return allData.filter((titulo: any) => {
+      return allData.filter((titulo: Titulo) => {
         const id = titulo.id?.toString() || '';
         const numeroTitulo = titulo.numero_titulo || '';
         const valor = titulo.valor?.toString() || '';
@@ -474,7 +475,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   const filteredData = getFilteredData();
 
-  const sortedData = [...filteredData].sort((a: any, b: any) => {
+  const sortedData = [...filteredData].sort((a: Titulo, b: Titulo) => {
     if (!sortColumn) return 0;
     const aVal = a[sortColumn];
     const bVal = b[sortColumn];
@@ -577,7 +578,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
             >
               <option value={0}>Selecione um plano</option>
-              {planos.map((plano: any) => (
+              {planos.map((plano: Plano) => (
                 <option key={plano.id} value={plano.id}>
                   {plano.nome_plano}
                 </option>
@@ -592,7 +593,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <select
               className="form-select"
               value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value as any)}
+              onChange={(e) => handleInputChange('status', e.target.value as 'ativo' | 'inativo' | 'suspenso')}
             >
               <option value="ativo">Ativo</option>
               <option value="inativo">Inativo</option>
