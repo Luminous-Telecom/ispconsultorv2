@@ -4,18 +4,7 @@ import { usePlanos, useDeletePlano } from '../../hooks/usePlanos';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
 import { PlanoCreateModal, PlanoEditModal } from '../modals/planos';
-
-interface Plano {
-  id: number;
-  nome_plano: string;
-  descricao?: string;
-  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
-  quantidade_usuarios?: number;
-  valor_mensal: number;
-  periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
-  status: 'ativo' | 'inativo' | 'cancelado';
-  created_at: string;
-}
+import { Plano } from '../../types';
 
 const Planos: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -79,8 +68,8 @@ const Planos: React.FC = () => {
     }
 
     return [...planosData.data].sort((a, b) => {
-      let aValue = (a as any)[sortColumn];
-      let bValue = (b as any)[sortColumn];
+      let aValue: any = a[sortColumn as keyof Plano];
+      let bValue: any = b[sortColumn as keyof Plano];
 
       // Converter para string se necessário para comparação
       if (typeof aValue === 'string') {
@@ -116,7 +105,7 @@ const Planos: React.FC = () => {
     });
   };
 
-  const handleTopoActions = (action: string, selectedItems: any[]) => {
+  const handleTopoActions = (action: string, selectedItems: Plano[]) => {
     if (selectedItems.length === 0) return;
     
     switch (action) {

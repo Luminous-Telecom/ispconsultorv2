@@ -5,18 +5,7 @@ import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { PlanoCreateModal, PlanoEditModal } from './index';
-
-interface Plano {
-  id: number;
-  nome_plano: string;
-  descricao?: string;
-  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
-  quantidade_usuarios?: number;
-  valor_mensal: number;
-  periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
-  status: 'ativo' | 'inativo' | 'cancelado';
-  created_at: string;
-}
+import { Plano } from '../../../types';
 
 interface PlanoListModalProps {
   show: boolean;
@@ -102,8 +91,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
 
     return [...planosData.data].sort((a, b) => {
-      let aValue = (a as any)[sortColumn];
-      let bValue = (b as any)[sortColumn];
+      let aValue: any = a[sortColumn as keyof Plano];
+      let bValue: any = b[sortColumn as keyof Plano];
 
       // Converter para string se necessário para comparação
       if (typeof aValue === 'string') {
@@ -211,7 +200,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     },
     {
       label: 'Editar',
-      action: (selectedItems: any[]) => {
+      action: (selectedItems: Plano[]) => {
         if (selectedItems.length > 0) {
           setSelectedPlanoId(selectedItems[0].id);
           setShowEditModal(true);
