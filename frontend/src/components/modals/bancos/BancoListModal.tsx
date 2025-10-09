@@ -5,15 +5,7 @@ import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { BancoCreateModal } from './index';
-
-interface Banco {
-  id: number;
-  nome: string;
-  tipo: 'tradicional' | 'efi' | 'asaas';
-  url: string;
-  ativo: boolean;
-  data_criacao: string;
-}
+import { Banco } from '../../../types';
 
 interface BancoListModalProps {
   show: boolean;
@@ -142,14 +134,14 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     },
     {
       label: 'Editar',
-      action: (selectedItems: any[]) => {
+      action: (selectedItems: Banco[]) => {
         if (selectedItems.length > 0) {
         }
       }
     },
     {
       label: 'Excluir',
-      action: (selectedItems: any[]) => {
+      action: (selectedItems: Banco[]) => {
         if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} banco(s)?`)) {
           selectedItems.forEach(item => handleDelete(item.id));
         }

@@ -46,25 +46,26 @@ interface TableProps<T = any> {
   showHeader?: boolean;
 }
 
-const DataTable = <T extends { id: number | string }>({
-  columns,
-  data,
-  isLoading,
-  pagination,
-  limit,
-  setLimit,
-  setPage,
-  emptyMessage = 'Nenhum dado encontrado',
-  bulkActions = [],
-  onSearch,
-  searchPlaceholder = 'Buscar...',
-  onSelectionChange,
-  onSort,
-  sortColumn,
-  sortDirection = 'asc',
-  onRefresh,
-  showHeader = true
-}) => {
+const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
+  const {
+    columns,
+    data,
+    isLoading,
+    pagination,
+    limit,
+    setLimit,
+    setPage,
+    emptyMessage = 'Nenhum dado encontrado',
+    bulkActions = [],
+    onSearch,
+    searchPlaceholder = 'Buscar...',
+    onSelectionChange,
+    onSort,
+    sortColumn,
+    sortDirection = 'asc',
+    onRefresh,
+    showHeader = true
+  } = props;
   const [selectedItems, setSelectedItems] = useState<T[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
@@ -73,13 +74,13 @@ const DataTable = <T extends { id: number | string }>({
   React.useEffect(() => {
     if (selectedItems.length > 0 && data.length > 0) {
       // Verificar se o item selecionado ainda existe nos dados
-      const stillExists = data.some(item => 
+      const stillExists = data.some((item: T) => 
         selectedItems.some(selected => selected.id === item.id)
       );
       
       // Se não existe mais ou mudou, limpar seleção
       if (stillExists) {
-        const currentItem = data.find(item => item.id === selectedItems[0].id);
+        const currentItem = data.find((item: T) => item.id === selectedItems[0].id);
         if (currentItem && JSON.stringify(currentItem) !== JSON.stringify(selectedItems[0])) {
           setSelectedItems([]);
         }
@@ -195,7 +196,7 @@ const DataTable = <T extends { id: number | string }>({
                           className="dropdown-menu show" 
                           style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
                         >
-                          {bulkAction.dropdown.map((item, itemIndex) => (
+                          {bulkAction.dropdown.map((item: { label: string; action: () => void }, itemIndex: number) => (
                             <li key={itemIndex}>
                               <button
                                 className="dropdown-item"
@@ -337,7 +338,7 @@ const DataTable = <T extends { id: number | string }>({
                       }}
                     />
                   </th>
-                  {columns.map((column) => (
+                  {columns.map((column: Column<T>) => (
                 <th 
                   key={column.key} 
                   className={`py-1 px-2 ${column.className || ''} ${column.sortable !== false && onSort ? 'cursor-pointer' : ''}`} 
@@ -381,7 +382,7 @@ const DataTable = <T extends { id: number | string }>({
                     </td>
                   </tr>
                 ) : data.length > 0 ? (
-              data.map((item, index) => {
+              data.map((item: T, index: number) => {
                 const isSelected = selectedItems.some(selected => selected.id === item.id);
                 return (
                   <tr
@@ -413,7 +414,7 @@ const DataTable = <T extends { id: number | string }>({
                       />
                     </td>
                     
-                      {columns.map((column) => (
+                      {columns.map((column: Column<T>) => (
                       <td 
                         key={column.key} 
                         className="py-1 px-2"

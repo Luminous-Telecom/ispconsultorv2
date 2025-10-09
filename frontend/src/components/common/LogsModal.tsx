@@ -284,6 +284,8 @@ const LogsModal: React.FC<LogsModalProps> = ({
             onSort={handleSort}
             sortColumn={sortColumn}
             sortDirection={sortDirection}
+            onSelectionChange={() => {}}
+            onRefresh={refetch}
           />
         </div>
       )}
