@@ -134,9 +134,9 @@ export class TituloService {
   }
 
   // Criar nova parcela
-  static async create(data: CreateCarneParcela): Promise<CarneParcela> {
+  static async create(data: CreateCarneParcela): Promise<{ success: boolean; message: string; data: CarneParcela }> {
     try {
-      const response = await apiService.post<CarneParcela>(API_ENDPOINTS.TITULOS, data);
+      const response = await apiService.post<{ success: boolean; message: string; data: CarneParcela }>(API_ENDPOINTS.TITULOS, data);
       return response;
     } catch (error) {
       console.error('Erro ao criar parcela:', error);
