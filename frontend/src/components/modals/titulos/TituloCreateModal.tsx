@@ -133,10 +133,17 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
 
   // Mutation para criar parcela
   const createParcelaMutation = useMutation({
-    mutationFn: (data: CreateCarneParcela) => TituloService.create(data),
+    mutationFn: (data: CreateCarneParcela) => {
+      console.log('🔍 [TituloCreateModal] Enviando dados para criar título:', data);
+      return TituloService.create(data);
+    },
     onSuccess: (response) => {
+      console.log('✅ [TituloCreateModal] Título criado com sucesso! Resposta:', response);
+      
       const mensagem = response?.message || 'Título criado com sucesso!';
       success(mensagem);
+      
+      console.log('🔄 [TituloCreateModal] Invalidando queries...');
       
       // Invalidar todas as queries relacionadas a títulos
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
@@ -145,12 +152,17 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // Atualizar dashboard
       
+      console.log('✅ [TituloCreateModal] Queries invalidadas');
+      
       // Chamar onSuccess antes de fechar o modal
+      console.log('📞 [TituloCreateModal] Chamando callback onSuccess');
       onSuccess?.();
+      
+      console.log('🚪 [TituloCreateModal] Fechando modal');
       onClose();
     },
     onError: (err: any) => {
-      console.error('Erro ao criar parcela:', err);
+      console.error('❌ [TituloCreateModal] Erro ao criar parcela:', err);
       const errorMessage = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao criar título. Tente novamente.';
       error(errorMessage);
     }

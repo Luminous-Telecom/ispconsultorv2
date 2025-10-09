@@ -140,8 +140,10 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   };
 
   const handleParcelaCreateSuccess = () => {
-    console.log('🔍 Debug - Título criado com sucesso');
+    console.log('✅ [ClienteFinanceiro] handleParcelaCreateSuccess chamado!');
+    console.log('🔄 [ClienteFinanceiro] Fazendo refetch das parcelas...');
     refetchParcelas();
+    console.log('✅ [ClienteFinanceiro] Refetch executado');
   };
 
   // Debug: Log quando o modal de criação mudar
