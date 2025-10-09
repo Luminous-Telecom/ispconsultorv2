@@ -53,17 +53,17 @@ class ApiService {
   }
 
   // Métodos HTTP genéricos
-  async get<T>(url: string, params?: any, config?: any): Promise<T> {
+  async get<T>(url: string, params?: unknown, config?: unknown): Promise<T> {
     const response = await this.api.get(url, { params, ...config });
     return response as T;
   }
 
-  async post<T>(url: string, data?: any): Promise<T> {
+  async post<T>(url: string, data?: unknown): Promise<T> {
     const response = await this.api.post(url, data);
     return response as T;
   }
 
-  async put<T>(url: string, data?: any): Promise<T> {
+  async put<T>(url: string, data?: unknown): Promise<T> {
     const response = await this.api.put(url, data);
     return response as T;
   }
@@ -73,7 +73,7 @@ class ApiService {
     return response as T;
   }
 
-  async patch<T>(url: string, data?: any): Promise<T> {
+  async patch<T>(url: string, data?: unknown): Promise<T> {
     const response = await this.api.patch(url, data);
     return response as T;
   }

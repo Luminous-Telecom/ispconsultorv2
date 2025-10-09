@@ -1112,7 +1112,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   const errorMessage = error?.response?.data?.message || 
                                                      error?.response?.data?.error || 
                                                      `Erro ao deletar contrato ${item.id}`;
-                                  alert(`Erro: ${errorMessage}`);
+                                  showNotification(errorMessage, 'error');
                                 }
                               }
                               // Refetch contratos após deletar
