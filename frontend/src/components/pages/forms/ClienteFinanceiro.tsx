@@ -77,6 +77,15 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const marcarPagoMutation = useMarcarTituloPago();
 
   const parcelas = parcelasData?.data || [];
+  
+  // Debug: Log quando os dados mudarem
+  useEffect(() => {
+    console.log('📊 [ClienteFinanceiro] Dados de parcelas mudaram:', {
+      totalParcelas: parcelas.length,
+      isLoading: parcelasLoading,
+      parcelasData: parcelasData
+    });
+  }, [parcelas.length, parcelasLoading, parcelasData]);
 
   const handleMarcarPago = async (selectedItems: any[]) => {
     try {
