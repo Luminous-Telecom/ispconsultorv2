@@ -425,7 +425,7 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
                           color: isSelected ? getSelectionColors().color : 'inherit'
                         }}
                       >
-                          {column.render ? column.render(item) : item[column.key]}
+                          {column.render ? column.render(item) : String((item as any)[column.key] ?? '')}
                         </td>
                       ))}
                     </tr>

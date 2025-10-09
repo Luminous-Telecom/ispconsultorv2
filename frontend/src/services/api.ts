@@ -53,7 +53,7 @@ class ApiService {
   }
 
   // Métodos HTTP genéricos
-  async get<T>(url: string, params?: unknown, config?: unknown): Promise<T> {
+  async get<T>(url: string, params?: unknown, config?: Record<string, any>): Promise<T> {
     const response = await this.api.get(url, { params, ...config });
     return response as T;
   }

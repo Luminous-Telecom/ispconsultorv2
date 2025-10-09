@@ -71,7 +71,10 @@ export interface Banco extends BaseEntity {
   descricao?: string;
   ativo: boolean;
   tipo_banco: 'efi' | 'asaas' | 'bancario' | 'outros';
+  tipo?: 'tradicional' | 'efi' | 'asaas'; // Alias para tipo_banco (compatibilidade)
   api_url?: string;
+  url?: string; // Alias para api_url (compatibilidade)
+  data_criacao?: string; // Alias para created_at (compatibilidade)
   api_key?: string;
   api_secret?: string;
   sandbox: boolean;
@@ -164,7 +167,7 @@ export interface CarneParcela extends BaseEntity {
   pago: boolean;
   data_pagamento?: string;
   valor_pago?: number;
-  status: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  status: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'pago_atraso' | 'parcial';
   codigo_barras?: string;
   linha_digitavel?: string;
   qrcode?: string;

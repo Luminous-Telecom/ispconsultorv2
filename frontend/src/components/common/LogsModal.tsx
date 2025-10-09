@@ -285,7 +285,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
             sortColumn={sortColumn}
             sortDirection={sortDirection}
             onSelectionChange={() => {}}
-            onRefresh={refetch}
+            onRefresh={() => window.location.reload()}
           />
         </div>
       )}
