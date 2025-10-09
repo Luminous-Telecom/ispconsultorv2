@@ -77,15 +77,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const marcarPagoMutation = useMarcarTituloPago();
 
   const parcelas = parcelasData?.data || [];
-  
-  // Debug: Log quando os dados mudarem
-  useEffect(() => {
-    console.log('📊 [ClienteFinanceiro] Dados de parcelas mudaram:', {
-      totalParcelas: parcelas.length,
-      isLoading: parcelasLoading,
-      parcelasData: parcelasData
-    });
-  }, [parcelas.length, parcelasLoading, parcelasData]);
 
   const handleMarcarPago = async (selectedItems: any[]) => {
     try {
@@ -149,10 +140,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   };
 
   const handleParcelaCreateSuccess = () => {
-    console.log('✅ [ClienteFinanceiro] handleParcelaCreateSuccess chamado!');
-    console.log('🔄 [ClienteFinanceiro] Fazendo refetch das parcelas...');
     refetchParcelas();
-    console.log('✅ [ClienteFinanceiro] Refetch executado');
   };
 
   // Debug: Log quando o modal de criação mudar

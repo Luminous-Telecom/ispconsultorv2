@@ -1047,7 +1047,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         clienteId={contratoData?.cliente_id}
         onClose={() => setShowTituloCreateModal(false)}
         onSuccess={() => {
-          console.log('✅ [ContratoEditModal] Título criado, invalidando queries...');
           setShowTituloCreateModal(false);
           
           // Invalidar query específica do contrato
@@ -1063,8 +1062,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           
           // Refetch imediatamente
           refetchTitulos();
-          
-          console.log('✅ [ContratoEditModal] Queries invalidadas e refetch executado');
         }}
       />
 

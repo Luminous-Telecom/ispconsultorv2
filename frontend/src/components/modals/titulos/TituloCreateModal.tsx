@@ -133,43 +133,27 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
 
   // Mutation para criar parcela
   const createParcelaMutation = useMutation({
-    mutationFn: (data: CreateCarneParcela) => {
-      console.log('🔍 [TituloCreateModal] Enviando dados para criar título:', data);
-      return TituloService.create(data);
-    },
+    mutationFn: (data: CreateCarneParcela) => TituloService.create(data),
     onSuccess: (response) => {
-      console.log('✅ [TituloCreateModal] Título criado com sucesso! Resposta:', response);
-      
       const mensagem = response?.message || 'Título criado com sucesso!';
       success(mensagem);
-      
-      console.log('🔄 [TituloCreateModal] Invalidando queries...');
       
       // Invalidar todas as queries relacionadas a títulos
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
       queryClient.invalidateQueries({ queryKey: ['parcelas'] });
-      queryClient.invalidateQueries({ queryKey: ['titulos'] }); // Invalida TODAS as queries que começam com 'titulos'
+      queryClient.invalidateQueries({ queryKey: ['titulos'] });
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // Atualizar dashboard
-      
-      console.log('✅ [TituloCreateModal] Queries invalidadas');
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       
       // Chamar onSuccess antes de fechar o modal
-      console.log('📞 [TituloCreateModal] Chamando callback onSuccess');
-      console.log('📞 [TituloCreateModal] onSuccess está definido?', typeof onSuccess, onSuccess);
-      
       if (onSuccess) {
-        console.log('✅ [TituloCreateModal] Executando callback onSuccess');
         onSuccess();
-      } else {
-        console.warn('⚠️ [TituloCreateModal] Callback onSuccess não está definido!');
       }
       
-      console.log('🚪 [TituloCreateModal] Fechando modal');
       onClose();
     },
     onError: (err: any) => {
-      console.error('❌ [TituloCreateModal] Erro ao criar parcela:', err);
+      console.error('Erro ao criar título:', err);
       const errorMessage = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao criar título. Tente novamente.';
       error(errorMessage);
     }
