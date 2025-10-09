@@ -5,7 +5,7 @@ import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import { useCreateContrato, useUpdateContrato } from '../../../hooks/useContratos';
 import { TituloService } from '../../../services/tituloService';
-import { Titulo, Plano, ValidationError } from '../../../types';
+import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import TituloCreateModal from '../titulos/TituloCreateModal';
@@ -477,8 +477,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   const sortedData = [...filteredData].sort((a: Titulo, b: Titulo) => {
     if (!sortColumn) return 0;
-    const aVal = a[sortColumn];
-    const bVal = b[sortColumn];
+    const aVal = a[sortColumn as keyof Titulo];
+    const bVal = b[sortColumn as keyof Titulo];
     
     if (sortDirection === 'asc') {
       return aVal > bVal ? 1 : -1;

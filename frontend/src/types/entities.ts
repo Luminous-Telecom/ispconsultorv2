@@ -87,6 +87,8 @@ export interface Titulo {
   qrcode?: string;
   qrcode_image?: string;
   nosso_numero?: string;
+  charge_id?: string;
+  url_boleto?: string;
   created_at: string;
   updated_at?: string;
   
