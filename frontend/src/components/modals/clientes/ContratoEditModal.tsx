@@ -1047,8 +1047,24 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         clienteId={contratoData?.cliente_id}
         onClose={() => setShowTituloCreateModal(false)}
         onSuccess={() => {
+          console.log('✅ [ContratoEditModal] Título criado, invalidando queries...');
           setShowTituloCreateModal(false);
+          
+          // Invalidar query específica do contrato
           queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
+          
+          // Invalidar query de títulos do cliente
+          if (contratoData?.cliente_id) {
+            queryClient.invalidateQueries({ queryKey: ['titulos', { cliente_id: contratoData.cliente_id }] });
+          }
+          
+          // Invalidar todas as queries de títulos para garantir
+          queryClient.invalidateQueries({ queryKey: ['titulos'] });
+          
+          // Refetch imediatamente
+          refetchTitulos();
+          
+          console.log('✅ [ContratoEditModal] Queries invalidadas e refetch executado');
         }}
       />
 
