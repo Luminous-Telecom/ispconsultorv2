@@ -5,7 +5,7 @@ import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
 import { TituloService } from '../../../services/tituloService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { Cliente, CarneParcela, Titulo, Contrato } from '../../../types';
+import { Cliente, CarneParcela, Contrato } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import TituloEditModal from '../titulos/TituloEditModal';
@@ -149,7 +149,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     const allData = parcelasData.data;
 
     // Filtrar cancelados se não estiver marcado para mostrar
-    let filteredData = allData.filter((titulo: Titulo) => {
+    let filteredData = allData.filter((titulo: CarneParcela) => {
       if (titulo.status === 'cancelado' && !showCancelados) {
         return false;
       }
@@ -159,7 +159,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     // Aplicar filtro de busca
     if (search.trim()) {
       const searchTerm = search.toLowerCase().trim();
-      filteredData = filteredData.filter((titulo: Titulo) => {
+      filteredData = filteredData.filter((titulo: CarneParcela) => {
         const id = titulo.id?.toString() || '';
         const numeroTitulo = titulo.numero_titulo || '';
         const valor = titulo.valor?.toString() || '';
@@ -221,8 +221,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           valueB = (b.pago || b.status === 'cancelado') ? 0 : Number(b.valor_parcela || 0);
           break;
         default:
-          valueA = a[sortColumn as keyof Titulo] as string | number || '';
-          valueB = b[sortColumn as keyof Titulo] as string | number || '';
+          valueA = a[sortColumn as keyof CarneParcela] as string | number || '';
+          valueB = b[sortColumn as keyof CarneParcela] as string | number || '';
       }
       
       // Comparação
@@ -257,12 +257,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   const handleImprimirTodosEmAberto = () => {
     const allTitulos = parcelasData?.data || [];
-    const titulosEmAberto = allTitulos.filter((p: Titulo) => 
+    const titulosEmAberto = allTitulos.filter((p: CarneParcela) => 
       p.status === 'pendente' || p.status === 'vencido'
     );
     
     if (titulosEmAberto.length > 0) {
-      const ids = titulosEmAberto.map((item: Titulo) => item.id);
+      const ids = titulosEmAberto.map((item: CarneParcela) => item.id);
       const idsParam = ids.join(',');
       const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
       window.open(url, '_blank');
@@ -274,8 +274,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   // Ações para o header do modal (apenas na aba Financeiro)
   const bulkActions: Array<{
     label: string;
-    action?: (selectedItems: Titulo[]) => void;
-    disabled?: (selectedItems: Titulo[]) => boolean;
+    action?: (selectedItems: CarneParcela[]) => void;
+    disabled?: (selectedItems: CarneParcela[]) => boolean;
     dropdown?: {
       label: string;
       action: () => void;
@@ -283,7 +283,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   }> = [
     {
       label: 'Editar',
-      action: (selectedItems: Titulo[]) => {
+      action: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedTituloId(item.id);
@@ -293,7 +293,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       label: 'Receber',
-      action: (selectedItems: Titulo[]) => {
+      action: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedParcela(item);
@@ -376,7 +376,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           }
         }
       },
-      disabled: (selectedItems: Titulo[]) => {
+      disabled: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length === 0) return true;
         return selectedItems.every(item => item.status !== 'pago');
       }
@@ -422,12 +422,12 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      render: (item: Titulo) => item.id
+      render: (item: CarneParcela) => item.id
     },
     {
       key: 'status',
       label: 'Status',
-      render: (item: Titulo) => {
+      render: (item: CarneParcela) => {
         return (
           <span className={`badge bg-${getStatusColor(item.status)}`}>
             {item.status}
@@ -438,49 +438,49 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'plano',
       label: 'Plano',
-      render: (item: Titulo) => {
+      render: (item: CarneParcela) => {
         return item.plano?.nome_plano || '-';
       }
     },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
-      render: (item: Titulo) => {
+      render: (item: CarneParcela) => {
         return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
       }
     },
     {
       key: 'valor',
       label: 'Valor',
-      render: (item: Titulo) => {
+      render: (item: CarneParcela) => {
         return `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
     },
     {
       key: 'valor_pago',
       label: 'Valor baixado',
-      render: (item: Titulo) => {
+      render: (item: CarneParcela) => {
         return item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00';
       }
     },
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
-      render: (item: Titulo) => {
+      render: (item: CarneParcela) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
     },
     {
       key: 'data_pagamento',
       label: 'Data Pagamento',
-      render: (item: Titulo) => {
+      render: (item: CarneParcela) => {
         return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
       }
     },
     {
       key: 'charge_id',
       label: 'Charge ID',
-      render: (item: Titulo) => {
+      render: (item: CarneParcela) => {
         return item.charge_id || '-';
       }
     }

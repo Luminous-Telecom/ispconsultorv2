@@ -155,7 +155,10 @@ export interface CarneParcela extends BaseEntity {
   carne_id: number;
   plano_id: number;
   numero_parcela: number;
+  numero_titulo?: string;
   valor_parcela: number;
+  valor?: number;
+  valor_aberto?: number;
   tipo?: string;
   data_vencimento: string;
   pago: boolean;
