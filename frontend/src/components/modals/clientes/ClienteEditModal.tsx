@@ -5,7 +5,7 @@ import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
 import { TituloService } from '../../../services/tituloService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { Cliente, CarneParcela, Contrato } from '../../../types';
+import { Cliente, CarneParcela, Contrato, Titulo } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import TituloEditModal from '../titulos/TituloEditModal';

@@ -477,8 +477,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   const sortedData = [...filteredData].sort((a: Titulo, b: Titulo) => {
     if (!sortColumn) return 0;
-    const aVal = a[sortColumn as keyof Titulo];
-    const bVal = b[sortColumn as keyof Titulo];
+    const aVal = a[sortColumn as keyof Titulo] ?? '';
+    const bVal = b[sortColumn as keyof Titulo] ?? '';
     
     if (sortDirection === 'asc') {
       return aVal > bVal ? 1 : -1;
