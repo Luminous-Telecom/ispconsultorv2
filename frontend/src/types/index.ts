@@ -96,7 +96,6 @@ export interface Banco extends BaseEntity {
   local_pagamento?: string;
   dados_avalista?: string;
   exibir_mes_referente: boolean;
-  documento_cpf_cnpj?: string;
   taxa_cobranca?: number;
   incluir_taxa: boolean;
   observacao_linha_1?: string;

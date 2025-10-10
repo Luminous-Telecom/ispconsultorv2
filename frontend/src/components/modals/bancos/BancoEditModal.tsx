@@ -32,7 +32,6 @@ interface BancoForm {
   local_pagamento: string;
   dados_avalista: string;
   exibir_mes_referente: boolean;
-  documento_cpf_cnpj: string;
   taxa_cobranca: number;
   incluir_taxa: boolean;
   observacao_linha_1: string;
@@ -87,7 +86,6 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     local_pagamento: '',
     dados_avalista: '',
     exibir_mes_referente: false,
-    documento_cpf_cnpj: '',
     taxa_cobranca: 0,
     incluir_taxa: false,
     observacao_linha_1: '',
@@ -144,7 +142,6 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
         local_pagamento: banco.local_pagamento || '',
         dados_avalista: banco.dados_avalista || '',
         exibir_mes_referente: banco.exibir_mes_referente ?? false,
-        documento_cpf_cnpj: banco.documento_cpf_cnpj || '',
         taxa_cobranca: banco.taxa_cobranca || 0,
         incluir_taxa: banco.incluir_taxa ?? false,
         observacao_linha_1: banco.observacao_linha_1 || '',
@@ -239,7 +236,6 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       local_pagamento: '',
       dados_avalista: '',
       exibir_mes_referente: false,
-      documento_cpf_cnpj: '',
       taxa_cobranca: 0,
       incluir_taxa: false,
       observacao_linha_1: '',

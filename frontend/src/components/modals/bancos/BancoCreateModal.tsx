@@ -32,7 +32,6 @@ interface BancoForm {
   local_pagamento: string;
   dados_avalista: string;
   exibir_mes_referente: boolean;
-  documento_cpf_cnpj: string;
   taxa_cobranca: number;
   incluir_taxa: boolean;
   observacao_linha_1: string;
@@ -85,7 +84,6 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
     local_pagamento: '',
     dados_avalista: '',
     exibir_mes_referente: false,
-    documento_cpf_cnpj: '',
     taxa_cobranca: 0,
     incluir_taxa: false,
     observacao_linha_1: '',

@@ -54,7 +54,6 @@ export class Banco extends Model<
   declare local_pagamento: string | null;
   declare dados_avalista: string | null;
   declare exibir_mes_referente: boolean;
-  declare documento_cpf_cnpj: string | null;
   declare taxa_cobranca: number | null;
   declare incluir_taxa: boolean;
   declare observacao_linha_1: string | null;
@@ -373,10 +372,6 @@ Banco.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
-    },
-    documento_cpf_cnpj: {
-      type: DataTypes.STRING(18),
-      allowNull: true
     },
     taxa_cobranca: {
       type: DataTypes.DECIMAL(10, 2),
