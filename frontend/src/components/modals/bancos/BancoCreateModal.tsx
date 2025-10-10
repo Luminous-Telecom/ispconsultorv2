@@ -194,7 +194,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
         return (
           <>
             <div className="row">
-              <div className="col-md-6">
+              <div className="col-md-12">
                 <div className="mb-3">
                   <label htmlFor="identificador_conta" className="form-label small">Identificador da Conta *</label>
                   <input
@@ -207,21 +207,6 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     placeholder="Disponibilizado no menu configurações da API"
                   />
                   <small className="form-text text-muted">Disponível nas configurações da API Efi</small>
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="documento_cpf_cnpj" className="form-label small">CPF/CNPJ Titular</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    id="documento_cpf_cnpj"
-                    value={formData.documento_cpf_cnpj}
-                    onChange={(e) => handleInputChange('documento_cpf_cnpj', e.target.value)}
-                    disabled={createBancoMutation.isPending}
-                    placeholder="CPF ou CNPJ do titular da conta"
-                  />
                 </div>
               </div>
             </div>
