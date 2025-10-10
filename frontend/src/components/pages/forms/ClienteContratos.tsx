@@ -18,26 +18,18 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   // Mock data para contratos
   const mockContratos = [
     {
-      id: 1,
-      filial: 'Matriz',
-      status_contrato: 'Ativo',
-      status_acesso: 'Liberado',
-      plano_vendas: 'Plano Premium',
-      data_ativacao: '2024-01-15',
-      data_vencimento: '2024-12-15',
-      valor: 150.00,
-      observacoes: 'Contrato principal'
-    },
-    {
-      id: 2,
-      filial: 'Filial 1',
-      status_contrato: 'Suspenso',
-      status_acesso: 'Bloqueado',
-      plano_vendas: 'Plano Básico',
-      data_ativacao: '2024-02-01',
-      data_vencimento: '2024-11-01',
-      valor: 99.90,
-      observacoes: 'Contrato suspenso por inadimplência'
+      id: 12,
+      plano: 'Plano Full Core',
+      valor_plano: 1518.00,
+      status: 'ativo',
+      desconto_percentual: '0.00',
+      desconto_valor: '0.00',
+      valor_final: 89.90,
+      data_inicio: '29/09/2025',
+      data_fim: '-',
+      isento: 'Não',
+      dia_vencimento: 20,
+      banco: 'EFI-PJ-TESTE'
     }
   ];
 
@@ -92,6 +84,8 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
         return 'warning';
       case 'cancelado':
         return 'danger';
+      case 'inativo':
+        return 'danger';
       default:
         return 'secondary';
     }
@@ -99,34 +93,25 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
   const contratosColumns = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'filial', label: 'Filial', sortable: true },
+    { key: 'plano', label: 'Plano', sortable: true },
+    { key: 'valor_plano', label: 'Valor Plano', sortable: true },
     { 
-      key: 'status_contrato', 
-      label: 'Status Contrato',
+      key: 'status', 
+      label: 'Status',
       render: (item: any) => (
-        <span className={`badge bg-${getStatusColor(item.status_contrato)}`}>
-          {item.status_contrato}
+        <span className={`badge bg-${getStatusColor(item.status)}`}>
+          {item.status}
         </span>
       )
     },
-    { 
-      key: 'status_acesso', 
-      label: 'Status Acesso',
-      render: (item: any) => (
-        <span className={`badge ${item.status_acesso === 'Liberado' ? 'bg-success' : 'bg-danger'}`}>
-          {item.status_acesso}
-        </span>
-      )
-    },
-    { key: 'plano_vendas', label: 'Plano de Vendas', sortable: true },
-    { key: 'data_ativacao', label: 'Data Ativação', sortable: true },
-    { key: 'data_vencimento', label: 'Data Vencimento', sortable: true },
-    { 
-      key: 'valor', 
-      label: 'Valor',
-      render: (item: any) => `R$ ${item.valor.toFixed(2)}`
-    },
-    { key: 'observacoes', label: 'Observações' }
+    { key: 'desconto_percentual', label: 'Desconto %', sortable: true },
+    { key: 'desconto_valor', label: 'Desconto R$', sortable: true },
+    { key: 'valor_final', label: 'Valor Final', sortable: true },
+    { key: 'data_inicio', label: 'Data Início', sortable: true },
+    { key: 'data_fim', label: 'Data Fim', sortable: true },
+    { key: 'isento', label: 'Isento', sortable: true },
+    { key: 'dia_vencimento', label: 'Dia Venc.', sortable: true },
+    { key: 'banco', label: 'Banco', sortable: true }
   ];
 
   if (!cliente) {
