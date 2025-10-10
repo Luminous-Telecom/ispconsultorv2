@@ -211,13 +211,22 @@ export class ContratoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      
+      // Log do body recebido para debug
+      console.log('Update contrato - Body recebido:', JSON.stringify(req.body, null, 2));
+      
       const { error, value } = ContratoController.updateSchema.validate(req.body);
       
       if (error) {
+        console.error('Erro de validação do contrato:', error.details);
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: error.details.map(detail => detail.message)
+          errors: error.details.map(detail => ({
+            field: detail.path.join('.'),
+            message: detail.message,
+            type: detail.type
+          }))
         });
         return;
       }
