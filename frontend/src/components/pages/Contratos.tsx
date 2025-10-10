@@ -12,8 +12,8 @@ const Contratos: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortColumn, setSortColumn] = useState<string>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   const { data: contratos = [], isLoading, error, refetch } = useContratos();
   const { warning } = useNotificationContext();

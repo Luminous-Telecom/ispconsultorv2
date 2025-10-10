@@ -24,8 +24,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const [tipo, setTipo] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortColumn, setSortColumn] = useState<string>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
 

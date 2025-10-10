@@ -11,8 +11,8 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   cliente, 
   onDataChange 
 }) => {
-  const [sortColumn, setSortColumn] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortColumn, setSortColumn] = useState<string>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
 
   // Mock data para contratos

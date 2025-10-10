@@ -19,8 +19,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   onDataChange 
 }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const [sortColumnParcelas, setSortColumnParcelas] = useState<string>('');
-  const [sortDirectionParcelas, setSortDirectionParcelas] = useState<'asc' | 'desc'>('asc');
+  const [sortColumnParcelas, setSortColumnParcelas] = useState<string>('id');
+  const [sortDirectionParcelas, setSortDirectionParcelas] = useState<'asc' | 'desc'>('desc');
   const [showParcelaEditModal, setShowParcelaEditModal] = useState(false);
   const [selectedParcelaId, setSelectedParcelaId] = useState<number | null>(null);
   const [showParcelaCreateModal, setShowParcelaCreateModal] = useState(false);

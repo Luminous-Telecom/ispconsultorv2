@@ -12,8 +12,8 @@ const RotinasAgendadas: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortColumn, setSortColumn] = useState<string>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showForm, setShowForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showLogs, setShowLogs] = useState(false);

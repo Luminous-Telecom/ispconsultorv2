@@ -43,10 +43,10 @@
   setLimit={setLimit}
   setPage={setPage}
   
-  // Ordenação
+  // Ordenação - SEMPRE começar com ID decrescente (últimos primeiro)
   onSort={handleSort}              // Ordenação LOCAL, não servidor
-  sortColumn={sortColumn}
-  sortDirection={sortDirection}
+  sortColumn={sortColumn}          // Estado inicial: 'id'
+  sortDirection={sortDirection}    // Estado inicial: 'desc'
   
   // Busca e Ações
   onSearch={setSearch}
@@ -65,9 +65,17 @@
 
 ### Ordenação Local
 - SEMPRE implemente ordenação LOCAL, não no servidor
-- Use função `getSortedData()` para ordenar dados
+- **Estado inicial padrão: `sortColumn='id'` e `sortDirection='desc'`**
+- **Últimos registros (ID maior) aparecem primeiro por padrão**
+- Use hook `useSorting` para ordenar dados
 - Suporte ordenação por: strings, números, datas
 - Trate valores `null` e `undefined` na ordenação
+
+Exemplo de estado inicial:
+```typescript
+const [sortColumn, setSortColumn] = useState<string>('id');
+const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+```
 
 ### Bulk Actions
 - Sempre valide se há itens selecionados

@@ -95,8 +95,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [sortColumn, setSortColumn] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortColumn, setSortColumn] = useState<string>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
   // Fechar dropdown ao clicar fora

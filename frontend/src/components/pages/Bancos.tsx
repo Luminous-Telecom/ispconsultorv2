@@ -10,8 +10,8 @@ const Bancos: React.FC = () => {
   const [tipo, setTipo] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortColumn, setSortColumn] = useState<string>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Query para buscar bancos
   const { data: bancosData, isLoading, refetch } = useBancos({
