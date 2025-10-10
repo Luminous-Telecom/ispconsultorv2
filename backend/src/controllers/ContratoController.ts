@@ -12,14 +12,14 @@ export class ContratoController {
     plano_id: Joi.number().integer().min(1).required(),
     desconto_percentual: Joi.number().min(0).max(100).allow(null),
     desconto_valor: Joi.number().min(0).allow(null),
-    data_inicio: Joi.date().allow(null),
-    data_fim: Joi.date().allow(null),
+    data_inicio: Joi.date().allow(null, '').optional(),
+    data_fim: Joi.date().allow(null, '').optional(),
     status: Joi.string().valid('ativo', 'inativo', 'suspenso').default('ativo'),
     observacoes: Joi.string().allow(null, ''),
     isento_mensalidade: Joi.boolean().default(false),
     dia_vencimento: Joi.number().min(1).max(31).allow(null),
     conta_boleto: Joi.number().integer().min(1).allow(null),
-    data_validade_desconto: Joi.date().allow(null)
+    data_validade_desconto: Joi.date().allow(null, '').optional()
   });
 
   // Schema de validação para atualização
@@ -27,14 +27,14 @@ export class ContratoController {
     plano_id: Joi.number().integer().min(1),
     desconto_percentual: Joi.number().min(0).max(100).allow(null),
     desconto_valor: Joi.number().min(0).allow(null),
-    data_inicio: Joi.date().allow(null),
-    data_fim: Joi.date().allow(null),
+    data_inicio: Joi.date().allow(null, '').optional(),
+    data_fim: Joi.date().allow(null, '').optional(),
     status: Joi.string().valid('ativo', 'inativo', 'suspenso'),
     observacoes: Joi.string().allow(null, ''),
     isento_mensalidade: Joi.boolean(),
     dia_vencimento: Joi.number().min(1).max(31).allow(null),
     conta_boleto: Joi.number().integer().min(1).allow(null),
-    data_validade_desconto: Joi.date().allow(null)
+    data_validade_desconto: Joi.date().allow(null, '').optional()
   });
 
   // Listar contratos por cliente
@@ -105,6 +105,11 @@ export class ContratoController {
         });
         return;
       }
+
+      // Normalizar strings vazias para null
+      if (value.data_inicio === '') value.data_inicio = null;
+      if (value.data_fim === '') value.data_fim = null;
+      if (value.data_validade_desconto === '') value.data_validade_desconto = null;
 
       // Verificar se o cliente existe
       const cliente = await Cliente.findByPk(value.cliente_id);
@@ -230,6 +235,11 @@ export class ContratoController {
         });
         return;
       }
+
+      // Normalizar strings vazias para null
+      if (value.data_inicio === '') value.data_inicio = null;
+      if (value.data_fim === '') value.data_fim = null;
+      if (value.data_validade_desconto === '') value.data_validade_desconto = null;
 
       const contrato = await Contrato.findByPk(id);
       if (!contrato) {
