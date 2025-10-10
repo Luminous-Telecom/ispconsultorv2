@@ -88,6 +88,15 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     return tipos[tipo] || tipo;
   };
 
+  // Helper para obter código do banco baseado no tipo
+  const getCodigoBanco = (tipo: string) => {
+    const codigos: Record<string, string> = {
+      'efi': '364',
+      'asaas': '461'
+    };
+    return codigos[tipo] || '-';
+  };
+
   const columns = [
     {
       key: 'nome',
@@ -99,7 +108,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       key: 'codigo',
       label: 'Código',
       sortable: true,
-      render: (item: Banco) => <span className="text-muted">{item.codigo || '-'}</span>
+      render: (item: Banco) => <span className="text-muted">{getCodigoBanco(item.tipo_banco)}</span>
     },
     {
       key: 'tipo_banco',

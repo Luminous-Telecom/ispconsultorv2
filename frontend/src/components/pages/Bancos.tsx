@@ -148,6 +148,15 @@ const Bancos: React.FC = () => {
     return tipos[tipo] || tipo;
   };
 
+  // Helper para obter código do banco baseado no tipo
+  const getCodigoBanco = (tipo: string) => {
+    const codigos: Record<string, string> = {
+      'efi': '364',
+      'asaas': '461'
+    };
+    return codigos[tipo] || '-';
+  };
+
   // Definição das colunas da tabela
   const columns = [
     {
@@ -166,7 +175,7 @@ const Bancos: React.FC = () => {
       key: 'codigo',
       label: 'Código',
       sortable: true,
-      render: (banco: Banco) => <span className="text-muted">{banco.codigo || '-'}</span>
+      render: (banco: Banco) => <span className="text-muted">{getCodigoBanco(banco.tipo_banco)}</span>
     },
     {
       key: 'tipo_banco',
