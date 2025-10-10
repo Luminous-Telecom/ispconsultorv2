@@ -63,8 +63,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   // Carregar dados quando disponíveis
   useEffect(() => {
     if (dadosEmpresa) {
-      console.log('Dados da empresa carregados:', dadosEmpresa);
-      console.log('Logo:', dadosEmpresa.logo);
       setDados(dadosEmpresa as DadosEmpresaType);
     }
   }, [dadosEmpresa]);
@@ -102,7 +100,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         error('Não foi possível atualizar a logo');
       }
     } catch (err) {
-      console.error('Erro no upload da logo:', err);
       error('Erro ao enviar a logo');
     }
   };
@@ -264,10 +261,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                       alt="Logo da empresa" 
                       style={{ maxWidth: '200px', maxHeight: '100px', objectFit: 'contain' }}
                       className="border rounded p-2 bg-light"
-                      onError={(e) => {
-                        console.error('Erro ao carregar imagem');
-                        console.log('URL da logo:', dados.logo);
-                      }}
                     />
                   ) : (
                     <div 
@@ -293,11 +286,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   <small className="form-text text-muted">
                     Formatos aceitos: JPG, PNG, GIF (máx. 2MB)
                   </small>
-                  {dados.logo && (
-                    <div className="mt-2">
-                      <small className="text-muted">Arquivo atual: {dados.logo}</small>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
