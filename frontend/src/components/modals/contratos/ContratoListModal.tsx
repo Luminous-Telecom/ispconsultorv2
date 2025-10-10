@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { useContratos, useDeleteContrato } from '../../../hooks/useContratos';
+import { useQuery } from '@tanstack/react-query';
+import { useDeleteContrato } from '../../../hooks/useContratos';
 import { Contrato } from '../../../types';
+import { ContratoService } from '../../../services/ContratoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
@@ -29,11 +31,11 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   
   const { success, error } = useNotificationContext();
   
-  // Buscar contratos
-  const { data: contratosData, isLoading, refetch } = useContratos({
-    search,
-    page,
-    limit
+  // Buscar todos os contratos ativos
+  const { data: contratos, isLoading, refetch } = useQuery({
+    queryKey: ['contratos', 'ativos'],
+    queryFn: () => ContratoService.getAtivos(),
+    enabled: show
   });
 
   const deleteContratoMutation = useDeleteContrato();
@@ -66,6 +68,53 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       onClose();
     }
   };
+
+  // Filtrar e ordenar dados
+  const filteredData = React.useMemo(() => {
+    if (!contratos) return [];
+    
+    let filtered = [...contratos];
+    
+    // Aplicar busca
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(c => 
+        c.cliente?.razao_social?.toLowerCase().includes(searchLower) ||
+        c.plano?.nome_plano?.toLowerCase().includes(searchLower) ||
+        c.status?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Aplicar ordenação
+    filtered.sort((a, b) => {
+      let aVal: any = a[sortColumn as keyof Contrato];
+      let bVal: any = b[sortColumn as keyof Contrato];
+      
+      // Tratamento especial para campos aninhados
+      if (sortColumn === 'cliente') {
+        aVal = a.cliente?.razao_social || '';
+        bVal = b.cliente?.razao_social || '';
+      } else if (sortColumn === 'plano') {
+        aVal = a.plano?.nome_plano || '';
+        bVal = b.plano?.nome_plano || '';
+      }
+      
+      if (aVal === bVal) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      
+      const comparison = aVal < bVal ? -1 : 1;
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    
+    return filtered;
+  }, [contratos, search, sortColumn, sortDirection]);
+
+  // Paginar dados
+  const paginatedData = React.useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return filteredData.slice(startIndex, startIndex + limit);
+  }, [filteredData, page, limit]);
 
   const columns = [
     {
@@ -162,14 +211,13 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       <div className="modal-body">
         <DataTable
           columns={columns}
-          data={contratosData?.data || []}
+          data={paginatedData}
           isLoading={isLoading}
-          pagination={contratosData?.pagination}
           limit={limit}
           setLimit={setLimit}
           setPage={setPage}
           emptyMessage="Nenhum contrato encontrado"
-          searchPlaceholder="Buscar contratos..."
+          searchPlaceholder="Buscar por cliente ou plano..."
           onSearch={setSearch}
           bulkActions={bulkActions}
           onSort={handleSort}
@@ -177,7 +225,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           sortDirection={sortDirection}
           onRefresh={refetch}
           showHeader={!onSelectContrato}
-          onRowClick={onSelectContrato ? handleRowClick : undefined}
         />
       </div>
 
