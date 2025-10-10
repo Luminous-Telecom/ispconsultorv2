@@ -457,6 +457,23 @@ Banco.init(
     hooks: {
       beforeCreate: async (banco: Banco) => {
         await banco.aplicarConfiguracoesPadrao();
+        
+        // Preencher código do banco automaticamente baseado no tipo
+        const { BancoApiService } = await import('../services/BancoApiService');
+        const codigoBanco = BancoApiService.getCodigoBanco(banco.tipo_banco);
+        if (codigoBanco) {
+          banco.codigo = codigoBanco;
+        }
+      },
+      beforeUpdate: async (banco: Banco) => {
+        // Atualizar código se o tipo_banco mudou
+        if (banco.changed('tipo_banco')) {
+          const { BancoApiService } = await import('../services/BancoApiService');
+          const codigoBanco = BancoApiService.getCodigoBanco(banco.tipo_banco);
+          if (codigoBanco) {
+            banco.codigo = codigoBanco;
+          }
+        }
       }
     }
   }

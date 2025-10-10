@@ -429,85 +429,6 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
           </>
         );
 
-      case 'bancario':
-        return (
-          <>
-            <div className="row">
-              <div className="col-md-12">
-                <div className="mb-3">
-                  <label htmlFor="codigo" className="form-label small">Código do Banco *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="codigo_banco"
-                    value={formData.codigo}
-                    onChange={(e) => handleInputChange('codigo', e.target.value)}
-                    disabled={updateBancoMutation.isPending}
-                    placeholder="Ex: 001 (Banco do Brasil), 237 (Bradesco)"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="layout_carne" className="form-label small">Layout do Carnê</label>
-                  <select
-                    className="form-select"
-                    id="layout_carne"
-                    value={formData.layout_carne}
-                    onChange={(e) => handleInputChange('layout_carne', e.target.value)}
-                    disabled={updateBancoMutation.isPending}
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="padrao">Padrão</option>
-                    <option value="personalizado">Personalizado</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="form-check form-switch mt-4">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="contra_apresentacao"
-                    checked={formData.contra_apresentacao}
-                    onChange={(e) => handleInputChange('contra_apresentacao', e.target.checked)}
-                    disabled={updateBancoMutation.isPending}
-                  />
-                  <label className="form-check-label" htmlFor="contra_apresentacao">
-                    Contra Apresentação
-                  </label>
-                </div>
-              </div>
-            </div>
-          </>
-        );
-
-      case 'outros':
-        return (
-          <>
-            <div className="row">
-              <div className="col-md-12">
-                <div className="mb-3">
-                  <label htmlFor="observacao_linha_1" className="form-label small">Observações</label>
-                  <textarea
-                    className="form-control"
-                    id="observacao_linha_1"
-                    rows={3}
-                    value={formData.observacao_linha_1}
-                    onChange={(e) => handleInputChange('observacao_linha_1', e.target.value)}
-                    disabled={updateBancoMutation.isPending}
-                    placeholder="Observações gerais sobre este banco"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-          </>
-        );
-
       default:
         return null;
     }
@@ -542,7 +463,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
           <div className="row">
-            <div className="col-md-6">
+            <div className="col-md-12">
               <div className="mb-3">
                 <label htmlFor="nome" className="form-label small">Nome *</label>
                 <input
@@ -552,25 +473,10 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                   value={formData.nome}
                   onChange={(e) => handleInputChange('nome', e.target.value)}
                   disabled={updateBancoMutation.isPending}
-                  placeholder="Ex: EFI - Banco Digital"
+                  placeholder="Ex: EFI - Conta Principal"
                 />
                 {errors.nome && <div className="invalid-feedback">{errors.nome}</div>}
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className="mb-3">
-                <label htmlFor="codigo" className="form-label small">Código *</label>
-                <input
-                  type="text"
-                  className={`form-control ${errors.codigo ? 'is-invalid' : ''}`}
-                  id="codigo"
-                  value={formData.codigo}
-                  onChange={(e) => handleInputChange('codigo', e.target.value)}
-                  disabled={updateBancoMutation.isPending}
-                  placeholder="Ex: EFI001"
-                />
-                {errors.codigo && <div className="invalid-feedback">{errors.codigo}</div>}
+                <small className="form-text text-muted">Nome para identificar esta conta do banco</small>
               </div>
             </div>
           </div>
@@ -586,11 +492,10 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                   onChange={(e) => handleInputChange('tipo_banco', e.target.value as any)}
                   disabled={updateBancoMutation.isPending}
                 >
-                  <option value="efi">EFI</option>
-                  <option value="asaas">ASAAS</option>
-                  <option value="bancario">Bancário</option>
-                  <option value="outros">Outros</option>
+                  <option value="efi">EFI (Código: 364)</option>
+                  <option value="asaas">Asaas (Código: 461)</option>
                 </select>
+                <small className="form-text text-muted">Código do banco é definido automaticamente</small>
               </div>
             </div>
 

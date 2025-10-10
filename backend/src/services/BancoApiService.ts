@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { Banco } from '../models/Banco';
 import { logger } from '../utils/logger';
 import { efiConfig } from '../config/bancos/efi';
+import asaasConfig from '../config/bancos/asaas';
 
 export interface BancoConfig {
   nome: string;
@@ -53,7 +54,8 @@ export interface ApiResponse {
 
 export class BancoApiService {
   private static readonly BANCO_CONFIGS: Record<string, BancoConfig> = {
-    efi: efiConfig
+    efi: efiConfig,
+    asaas: asaasConfig as any
   };
 
   /**
@@ -61,6 +63,14 @@ export class BancoApiService {
    */
   private static getBancoConfig(tipoBanco: string): BancoConfig | null {
     return this.BANCO_CONFIGS[tipoBanco] || null;
+  }
+
+  /**
+   * Obter código do banco baseado no tipo
+   */
+  public static getCodigoBanco(tipoBanco: string): string | null {
+    const config = this.getBancoConfig(tipoBanco);
+    return config?.codigo || null;
   }
 
   /**
