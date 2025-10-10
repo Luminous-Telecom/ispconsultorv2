@@ -684,61 +684,19 @@ export class TituloController {
 
       // Verificar se já está registrado no banco
       if (!titulo.charge_id) {
-        logger.info('Título não registrado no banco, registrando agora...', {
+        logger.warn('Título não registrado no banco - impressão sem registro', {
           titulo_id: titulo.id,
           banco_id: titulo.banco_id,
           cliente_id: titulo.cliente_id
         });
-
-        try {
-          // Registrar no banco
-          const resultado = await BancoApiService.gerarTitulo(titulo as any);
-          
-          if (resultado.success && resultado.data) {
-            // Validar e corrigir código de barras se necessário
-            let codigoBarrasFinal = resultado.data.codigo_barras;
-            if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras)) {
-              logger.warn('Código de barras da EFI inválido, gerando novo', {
-                titulo_id: titulo.id,
-                codigo_original: resultado.data.codigo_barras
-              });
-              
-              // Usar o código de barras retornado pela API
-              codigoBarrasFinal = resultado.data.codigo_barras;
-            }
-
-            // Atualizar título com dados do banco
-            await titulo.update({
-              charge_id: resultado.data.charge_id,
-              url_boleto: resultado.data.url_boleto,
-              qrcode: resultado.data.qrcode,
-              qrcode_image: resultado.data.qrcode_image,
-              codigo_barras: codigoBarrasFinal,
-              linha_digitavel: resultado.data.linha_digitavel,
-              nosso_numero: resultado.data.nosso_numero
-            });
-
-            logger.info('Título registrado no banco com sucesso', {
-              titulo_id: titulo.id,
-              charge_id: resultado.data.charge_id
-            });
-          } else {
-            logger.warn('Falha ao registrar título no banco', {
-              titulo_id: titulo.id,
-              message: resultado.message
-            });
-          }
-        } catch (error: any) {
-          logger.error('Erro ao registrar título no banco', { 
-            titulo_id: titulo.id, 
-            error: error.message 
-          });
-          res.status(500).json({
-            success: false,
-            message: 'Erro ao registrar título no banco: ' + error.message
-          });
-          return;
-        }
+        
+        // Retornar erro informando que o título precisa ser registrado primeiro
+        res.status(400).json({
+          success: false,
+          message: 'Este título ainda não foi registrado no banco. Por favor, registre o título antes de imprimir o boleto.',
+          error: 'TITULO_NAO_REGISTRADO'
+        });
+        return;
       }
 
       // Carregar dados da empresa
@@ -941,36 +899,24 @@ export class TituloController {
       // Gerar HTML para cada boleto usando função auxiliar
       const boletosHtml: string[] = [];
 
+      // Verificar se algum título não está registrado no banco
+      const titulosNaoRegistrados = titulos.filter(t => !t.charge_id);
+      if (titulosNaoRegistrados.length > 0) {
+        logger.warn('Alguns títulos não estão registrados no banco', {
+          total_nao_registrados: titulosNaoRegistrados.length,
+          ids: titulosNaoRegistrados.map(t => t.id)
+        });
+        
+        res.status(400).json({
+          success: false,
+          message: `${titulosNaoRegistrados.length} título(s) ainda não foram registrados no banco. Por favor, registre todos os títulos antes de imprimir.`,
+          error: 'TITULOS_NAO_REGISTRADOS',
+          titulos_nao_registrados: titulosNaoRegistrados.map(t => t.id)
+        });
+        return;
+      }
+
       for (const titulo of titulos) {
-        // Registrar no banco se necessário
-        if (!titulo.charge_id) {
-          try {
-            const resultado = await BancoApiService.gerarTitulo(titulo as any);
-            
-            if (resultado.success && resultado.data) {
-              let codigoBarrasFinal = resultado.data.codigo_barras;
-              if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras)) {
-                codigoBarrasFinal = resultado.data.codigo_barras;
-              }
-
-              await titulo.update({
-                charge_id: resultado.data.charge_id,
-                url_boleto: resultado.data.url_boleto,
-                qrcode: resultado.data.qrcode,
-                qrcode_image: resultado.data.qrcode_image,
-                codigo_barras: codigoBarrasFinal,
-                linha_digitavel: resultado.data.linha_digitavel,
-                nosso_numero: resultado.data.nosso_numero
-              });
-            }
-          } catch (error: any) {
-            logger.error('Erro ao registrar título', { error: error.message, titulo_id: titulo.id });
-          }
-        }
-
-        // Recarregar título com dados atualizados
-        await titulo.reload();
-
         // Processar HTML do boleto usando função auxiliar
         const boletoHtml = await TituloController.processarBoletoHtml(titulo);
         
