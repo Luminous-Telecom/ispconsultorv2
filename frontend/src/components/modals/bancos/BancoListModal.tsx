@@ -79,31 +79,55 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     }
   };
 
+  // Helper para exibir tipo do banco formatado
+  const getTipoBancoLabel = (tipo: string) => {
+    const tipos: Record<string, string> = {
+      'efi': 'EFI',
+      'asaas': 'Asaas'
+    };
+    return tipos[tipo] || tipo;
+  };
+
   const columns = [
     {
       key: 'nome',
       label: 'Nome',
       sortable: true,
       render: (item: Banco) => (
-        <div className="fw-bold">{item.nome}</div>
+        <div>
+          <div className="fw-bold">{item.nome}</div>
+          {item.codigo && <div className="text-muted small">Código: {item.codigo}</div>}
+        </div>
       )
     },
     {
-      key: 'tipo',
+      key: 'tipo_banco',
       label: 'Tipo',
       sortable: true,
       render: (item: Banco) => (
-        <span className={`badge ${getTipoBadgeClass(item.tipo || '')}`}>
-          {getTipoLabel(item.tipo || '')}
+        <span className="badge bg-primary">
+          {getTipoBancoLabel(item.tipo_banco)}
         </span>
       )
     },
     {
-      key: 'url',
-      label: 'URL',
+      key: 'descricao',
+      label: 'Descrição',
       sortable: false,
       render: (item: Banco) => (
-        <span className="text-muted small">{item.url}</span>
+        <div className="text-truncate" style={{ maxWidth: '200px' }} title={item.descricao || ''}>
+          {item.descricao || '-'}
+        </div>
+      )
+    },
+    {
+      key: 'sandbox',
+      label: 'Ambiente',
+      sortable: true,
+      render: (item: Banco) => (
+        <span className={`badge ${item.sandbox ? 'bg-warning text-dark' : 'bg-success'}`}>
+          {item.sandbox ? 'Sandbox' : 'Produção'}
+        </span>
       )
     },
     {
@@ -113,16 +137,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       render: (item: Banco) => (
         <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
           {item.ativo ? 'Ativo' : 'Inativo'}
-        </span>
-      )
-    },
-    {
-      key: 'data_criacao',
-      label: 'Data de Criação',
-      sortable: true,
-      render: (item: Banco) => (
-        <span className="text-nowrap">
-          {item.data_criacao ? new Date(item.data_criacao).toLocaleDateString('pt-BR') : '-'}
         </span>
       )
     }
