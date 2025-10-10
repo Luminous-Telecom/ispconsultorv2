@@ -7,6 +7,7 @@ import { ClienteListModal } from '../modals/clientes';
 import { PlanoListModal } from '../modals/planos';
 import { BancoListModal } from '../modals/bancos';
 import ContratoListModal from '../modals/contratos/ContratoListModal';
+import DadosEmpresaModal from '../modals/empresa/DadosEmpresaModal';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -19,6 +20,7 @@ const Layout: React.FC = () => {
   const [showPlanoModal, setShowPlanoModal] = useState(false);
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [showContratoModal, setShowContratoModal] = useState(false);
+  const [showDadosEmpresaModal, setShowDadosEmpresaModal] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -29,7 +31,7 @@ const Layout: React.FC = () => {
     { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => setShowPlanoModal(true) },
     { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => setShowBancoModal(true) },
     { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: true, modalHandler: () => setShowContratoModal(true) },
-    { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: false },
+    { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => setShowDadosEmpresaModal(true) },
   ];
 
   return (
@@ -126,6 +128,11 @@ const Layout: React.FC = () => {
       <ContratoListModal
         show={showContratoModal}
         onClose={() => setShowContratoModal(false)}
+      />
+
+      <DadosEmpresaModal
+        show={showDadosEmpresaModal}
+        onClose={() => setShowDadosEmpresaModal(false)}
       />
 
     </div>

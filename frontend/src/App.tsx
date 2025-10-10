@@ -10,7 +10,6 @@ import Layout from './components/layout/Layout';
 
 // Pages
 import Dashboard from './components/pages/Dashboard';
-import DadosEmpresa from './components/pages/DadosEmpresa';
 import Login from './components/pages/Login';
 
 // Query Client
@@ -34,7 +33,6 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="dados-empresa" element={<DadosEmpresa />} />
           </Route>
             </Routes>
           </Router>
