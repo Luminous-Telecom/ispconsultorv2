@@ -276,11 +276,9 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       const resultado = await BancoService.testarConexao(bancoId);
       
       if (resultado.success) {
-        setTestResult(resultado.message || 'Conexão testada com sucesso!');
-        success('Conexão testada com sucesso!');
+        setTestResult('✅ ' + (resultado.message || 'Conexão testada com sucesso!'));
       } else {
-        setTestResult('Falha no teste de conexão');
-        error(resultado.message || 'Falha no teste de conexão');
+        setTestResult('❌ ' + (resultado.message || 'Falha no teste de conexão'));
       }
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || err?.message || 'Erro ao testar conexão';
