@@ -74,7 +74,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      render: (item: Cliente) => <code className="text-primary">#{item.id}</code>
+      render: (item: Cliente) => <span>{item.id}</span>
     },
     {
       key: 'cnpj',

@@ -102,7 +102,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      render: (item: Banco) => <code className="text-primary">#{item.id}</code>
+      render: (item: Banco) => <span>{item.id}</span>
     },
     {
       key: 'nome',

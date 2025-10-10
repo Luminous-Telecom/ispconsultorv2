@@ -124,7 +124,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      render: (item: Contrato) => <code className="text-primary">#{item.id}</code>
+      render: (item: Contrato) => <span>{item.id}</span>
     },
     {
       key: 'cliente',
