@@ -122,14 +122,25 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-2 mt-2">
-        <small className="mb-0">Contratos do Cliente</small>
+      <small className="mb-1 fw-bold">
+        Contratos do Cliente
+      </small>
+
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h6 className="mb-0">Contratos ({mockContratos.length})</h6>
       </div>
-      
+
       <DataTable
         data={getSortedContratos()}
         columns={contratosColumns}
         isLoading={false}
+        pagination={{
+          from: 1,
+          to: mockContratos.length,
+          total: mockContratos.length,
+          current_page: 1,
+          last_page: 1
+        }}
         limit={10}
         setLimit={() => {}}
         setPage={() => {}}
@@ -137,10 +148,10 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
         searchPlaceholder="Buscar contratos..."
         onSearch={() => {}}
         bulkActions={[
-             {
-               label: 'Novo Contrato',
-               action: () => setShowContratoCreateModal(true)
-             },
+          {
+            label: 'Novo Contrato',
+            action: () => setShowContratoCreateModal(true)
+          },
           {
             label: 'Editar',
             action: (selectedItems) => handleBulkAction('editar')
@@ -165,8 +176,9 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
         onSort={handleSort}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
-           onRefresh={() => {}}
-         />
+        onRefresh={() => {}}
+        onSelectionChange={() => {}}
+      />
 
          {/* Modal de criação de contrato */}
          <ContratoCreateModal
