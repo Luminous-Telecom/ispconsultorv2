@@ -72,7 +72,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const handleInputChange = (field: keyof DadosEmpresaType, value: string) => {
     setDados(prev => ({
       ...prev,
-      [field]: value
+      [field]: value || '' // Garantir que nunca seja null
     }));
   };
 
@@ -260,13 +260,13 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 <div style={{ minWidth: '200px' }}>
                   {dados.logo ? (
                     <img 
-                      src={`${process.env.REACT_APP_API_URL?.replace('/api', '')}/images/${dados.logo}`} 
+                      src={dados.logo} 
                       alt="Logo da empresa" 
                       style={{ maxWidth: '200px', maxHeight: '100px', objectFit: 'contain' }}
                       className="border rounded p-2 bg-light"
                       onError={(e) => {
-                        console.error('Erro ao carregar imagem:', e);
-                        console.log('Caminho tentado:', `${process.env.REACT_APP_API_URL?.replace('/api', '')}/images/${dados.logo}`);
+                        console.error('Erro ao carregar imagem');
+                        console.log('URL da logo:', dados.logo);
                       }}
                     />
                   ) : (
