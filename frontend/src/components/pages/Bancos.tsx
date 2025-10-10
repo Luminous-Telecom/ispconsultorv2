@@ -139,6 +139,15 @@ const Bancos: React.FC = () => {
     }
   };
 
+  // Helper para exibir tipo do banco formatado
+  const getTipoBancoLabel = (tipo: string) => {
+    const tipos: Record<string, string> = {
+      'efi': 'EFI',
+      'asaas': 'Asaas'
+    };
+    return tipos[tipo] || tipo;
+  };
+
   // Definição das colunas da tabela
   const columns = [
     {
@@ -151,26 +160,41 @@ const Bancos: React.FC = () => {
       key: 'nome',
       label: 'Nome',
       sortable: true,
-      render: (banco: Banco) => <strong>{banco.nome}</strong>
+      render: (banco: Banco) => (
+        <div>
+          <strong>{banco.nome}</strong>
+          {banco.codigo && <div className="text-muted small">Código: {banco.codigo}</div>}
+        </div>
+      )
     },
     {
-      key: 'tipo',
+      key: 'tipo_banco',
       label: 'Tipo',
       sortable: true,
       render: (banco: Banco) => (
-        <span className={`badge ${getTipoBadgeClass(banco.tipo || '')}`}>
-          {banco.tipo ? banco.tipo.charAt(0).toUpperCase() + banco.tipo.slice(1) : 'Desconhecido'}
+        <span className="badge bg-primary">
+          {getTipoBancoLabel(banco.tipo_banco)}
         </span>
       )
     },
     {
-      key: 'url',
-      label: 'URL',
+      key: 'descricao',
+      label: 'Descrição',
       sortable: false,
       render: (banco: Banco) => (
-        <a href={banco.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-          <i className="bi bi-box-arrow-up-right"></i> {banco.url}
-        </a>
+        <div className="text-truncate" style={{ maxWidth: '200px' }} title={banco.descricao || ''}>
+          {banco.descricao || '-'}
+        </div>
+      )
+    },
+    {
+      key: 'sandbox',
+      label: 'Ambiente',
+      sortable: true,
+      render: (banco: Banco) => (
+        <span className={`badge ${banco.sandbox ? 'bg-warning text-dark' : 'bg-success'}`}>
+          {banco.sandbox ? 'Sandbox' : 'Produção'}
+        </span>
       )
     },
     {
@@ -182,12 +206,6 @@ const Bancos: React.FC = () => {
           {banco.ativo ? 'Ativo' : 'Inativo'}
         </span>
       )
-    },
-    {
-      key: 'data_criacao',
-      label: 'Data de Criação',
-      sortable: true,
-      render: (banco: Banco) => banco.data_criacao ? new Date(banco.data_criacao).toLocaleDateString('pt-BR') : '-'
     }
   ];
 
