@@ -57,7 +57,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
   onClose, 
   onSuccess 
 }) => {
-  const [formData, setFormData] = useState<BancoForm>({
+  const initialFormData: BancoForm = {
     nome: '',
     codigo: '',
     descricao: '',
@@ -72,15 +72,15 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
     client_secret_producao: '',
     url_retorno: `${window.location.origin}/webhook/efi`,
     repassar_email_cliente: false,
-    percentual_multa: 0,
-    percentual_juros: 0,
-    desconto_tipo: '',
+    percentual_multa: 2,
+    percentual_juros: 0.03,
+    desconto_tipo: 'fixo',
     desconto_valor: 0,
     contra_apresentacao: false,
     recalcular_segunda_via: false,
     maximo_dias_recalcular: 0,
-    layout_web: '',
-    layout_pdf: '',
+    layout_web: 'normal',
+    layout_pdf: 'normal',
     layout_carne: '',
     local_pagamento: '',
     dados_avalista: '',
@@ -97,7 +97,9 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
     instrucao_linha_3: '',
     instrucao_linha_4: '',
     instrucao_linha_5: '',
-  });
+  };
+
+  const [formData, setFormData] = useState<BancoForm>(initialFormData);
 
   const [errors, setErrors] = useState<Partial<BancoForm>>({});
   const [testResult, setTestResult] = useState<string>('');
@@ -121,51 +123,21 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
   // Limpar formulário quando modal fechar
   React.useEffect(() => {
     if (!show) {
-      setFormData({
-        nome: '',
-        codigo: '',
-        descricao: '',
-        ativo: true,
-        tipo_banco: 'efi',
-        api_url: '',
-        api_key: '',
-        api_secret: '',
-        sandbox: true,
-        identificador_conta: '',
-        client_id_producao: '',
-        client_secret_producao: '',
-        url_retorno: `${window.location.origin}/webhook/efi`,
-        repassar_email_cliente: false,
-        percentual_multa: 0,
-        percentual_juros: 0,
-        desconto_tipo: '',
-        desconto_valor: 0,
-        contra_apresentacao: false,
-        recalcular_segunda_via: false,
-        maximo_dias_recalcular: 0,
-        layout_web: '',
-        layout_pdf: '',
-        layout_carne: '',
-        local_pagamento: '',
-        dados_avalista: '',
-        exibir_mes_referente: false,
-        documento_cpf_cnpj: '',
-        taxa_cobranca: 0,
-        incluir_taxa: false,
-        observacao_linha_1: '',
-        observacao_linha_2: '',
-        observacao_linha_3: '',
-        observacao_linha_4: '',
-        instrucao_linha_1: '',
-        instrucao_linha_2: '',
-        instrucao_linha_3: '',
-        instrucao_linha_4: '',
-        instrucao_linha_5: '',
-      });
+      setFormData(initialFormData);
       setErrors({});
       setTestResult('');
     }
   }, [show]);
+
+  // Atualizar url_retorno quando tipo_banco mudar
+  React.useEffect(() => {
+    if (formData.tipo_banco) {
+      setFormData(prev => ({
+        ...prev,
+        url_retorno: `${window.location.origin}/webhook/${formData.tipo_banco}`
+      }));
+    }
+  }, [formData.tipo_banco]);
 
   const handleInputChange = (field: keyof BancoForm, value: string | boolean | number) => {
     setFormData(prev => ({
@@ -212,6 +184,239 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
       setTestResult('Conexão testada com sucesso!');
     } catch (error) {
       setTestResult('Erro ao testar conexão');
+    }
+  };
+
+  // Renderizar campos específicos de cada tipo de banco
+  const renderBancoEspecificoCampos = () => {
+    switch (formData.tipo_banco) {
+      case 'efi':
+        return (
+          <>
+            <div className="row">
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label htmlFor="identificador_conta" className="form-label small">Identificador da Conta *</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    id="identificador_conta"
+                    value={formData.identificador_conta}
+                    onChange={(e) => handleInputChange('identificador_conta', e.target.value)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="Disponibilizado no menu configurações da API"
+                  />
+                  <small className="form-text text-muted">Disponível nas configurações da API Efi</small>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label htmlFor="documento_cpf_cnpj" className="form-label small">CPF/CNPJ Titular</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    id="documento_cpf_cnpj"
+                    value={formData.documento_cpf_cnpj}
+                    onChange={(e) => handleInputChange('documento_cpf_cnpj', e.target.value)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="CPF ou CNPJ do titular da conta"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label htmlFor="percentual_multa" className="form-label small">Percentual de Multa (%)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control form-control-sm"
+                    id="percentual_multa"
+                    value={formData.percentual_multa}
+                    onChange={(e) => handleInputChange('percentual_multa', parseFloat(e.target.value) || 0)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="2.00"
+                  />
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label htmlFor="percentual_juros" className="form-label small">Percentual de Juros (% ao dia)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control form-control-sm"
+                    id="percentual_juros"
+                    value={formData.percentual_juros}
+                    onChange={(e) => handleInputChange('percentual_juros', parseFloat(e.target.value) || 0)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="0.03"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-12">
+                <div className="mb-3">
+                  <label htmlFor="local_pagamento" className="form-label small">Local de Pagamento</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    id="local_pagamento"
+                    value={formData.local_pagamento}
+                    onChange={(e) => handleInputChange('local_pagamento', e.target.value)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="Pagável em qualquer banco até o vencimento"
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'asaas':
+        return (
+          <>
+            <div className="row">
+              <div className="col-md-12">
+                <div className="mb-3">
+                  <label htmlFor="api_key" className="form-label small">API Key *</label>
+                  <input
+                    type="password"
+                    className="form-control form-control-sm"
+                    id="api_key"
+                    value={formData.api_key}
+                    onChange={(e) => handleInputChange('api_key', e.target.value)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="Sua chave da API Asaas"
+                  />
+                  <small className="form-text text-muted">Disponível no painel administrativo da Asaas</small>
+                </div>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label htmlFor="taxa_cobranca" className="form-label small">Taxa de Cobrança (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control form-control-sm"
+                    id="taxa_cobranca"
+                    value={formData.taxa_cobranca}
+                    onChange={(e) => handleInputChange('taxa_cobranca', parseFloat(e.target.value) || 0)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="form-check mt-4">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="incluir_taxa"
+                    checked={formData.incluir_taxa}
+                    onChange={(e) => handleInputChange('incluir_taxa', e.target.checked)}
+                    disabled={createBancoMutation.isPending}
+                  />
+                  <label className="form-check-label" htmlFor="incluir_taxa">
+                    Incluir Taxa no Boleto
+                  </label>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'bancario':
+        return (
+          <>
+            <div className="row">
+              <div className="col-md-12">
+                <div className="mb-3">
+                  <label htmlFor="codigo" className="form-label small">Código do Banco *</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    id="codigo_banco"
+                    value={formData.codigo}
+                    onChange={(e) => handleInputChange('codigo', e.target.value)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="Ex: 001 (Banco do Brasil), 237 (Bradesco)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6">
+                <div className="mb-3">
+                  <label htmlFor="layout_carne" className="form-label small">Layout do Carnê</label>
+                  <select
+                    className="form-select form-select-sm"
+                    id="layout_carne"
+                    value={formData.layout_carne}
+                    onChange={(e) => handleInputChange('layout_carne', e.target.value)}
+                    disabled={createBancoMutation.isPending}
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="padrao">Padrão</option>
+                    <option value="personalizado">Personalizado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="col-md-6">
+                <div className="form-check mt-4">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="contra_apresentacao"
+                    checked={formData.contra_apresentacao}
+                    onChange={(e) => handleInputChange('contra_apresentacao', e.target.checked)}
+                    disabled={createBancoMutation.isPending}
+                  />
+                  <label className="form-check-label" htmlFor="contra_apresentacao">
+                    Contra Apresentação
+                  </label>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'outros':
+        return (
+          <>
+            <div className="row">
+              <div className="col-md-12">
+                <div className="mb-3">
+                  <label htmlFor="observacao_linha_1" className="form-label small">Observações</label>
+                  <textarea
+                    className="form-control form-control-sm"
+                    id="observacao_linha_1"
+                    rows={3}
+                    value={formData.observacao_linha_1}
+                    onChange={(e) => handleInputChange('observacao_linha_1', e.target.value)}
+                    disabled={createBancoMutation.isPending}
+                    placeholder="Observações gerais sobre este banco"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -315,84 +520,102 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
         {/* Configurações da API */}
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Configurações da API</h6>
-          <div className="row">
-            <div className="col-md-6">
-              <div className="mb-3">
-                <label htmlFor="client_id_producao" className="form-label small">Client ID Produção</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  id="client_id_producao"
-                  value={formData.client_id_producao}
-                  onChange={(e) => handleInputChange('client_id_producao', e.target.value)}
-                  disabled={createBancoMutation.isPending}
-                  placeholder="Client ID para produção"
-                />
-              </div>
-            </div>
+          
+          {/* Campos comuns para EFI e ASAAS */}
+          {(formData.tipo_banco === 'efi' || formData.tipo_banco === 'asaas') && (
+            <>
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="mb-3">
+                    <label htmlFor="client_id_producao" className="form-label small">
+                      {formData.tipo_banco === 'efi' ? 'Client ID Produção *' : 'Client ID'}
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      id="client_id_producao"
+                      value={formData.client_id_producao}
+                      onChange={(e) => handleInputChange('client_id_producao', e.target.value)}
+                      disabled={createBancoMutation.isPending}
+                      placeholder="Client ID para produção"
+                    />
+                  </div>
+                </div>
 
-            <div className="col-md-6">
-              <div className="mb-3">
-                <label htmlFor="client_secret_producao" className="form-label small">Client Secret Produção</label>
-                <input
-                  type="password"
-                  className="form-control form-control-sm"
-                  id="client_secret_producao"
-                  value={formData.client_secret_producao}
-                  onChange={(e) => handleInputChange('client_secret_producao', e.target.value)}
-                  disabled={createBancoMutation.isPending}
-                  placeholder="Client Secret para produção"
-                />
+                <div className="col-md-6">
+                  <div className="mb-3">
+                    <label htmlFor="client_secret_producao" className="form-label small">
+                      {formData.tipo_banco === 'efi' ? 'Client Secret Produção *' : 'Client Secret'}
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control form-control-sm"
+                      id="client_secret_producao"
+                      value={formData.client_secret_producao}
+                      onChange={(e) => handleInputChange('client_secret_producao', e.target.value)}
+                      disabled={createBancoMutation.isPending}
+                      placeholder="Client Secret para produção"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="mb-3">
-            <label htmlFor="url_retorno" className="form-label small">URL de Retorno</label>
-            <input
-              type="url"
-              className="form-control form-control-sm"
-              id="url_retorno"
-              value={formData.url_retorno}
-              onChange={(e) => handleInputChange('url_retorno', e.target.value)}
-              disabled={createBancoMutation.isPending}
-              placeholder="URL para retorno de webhooks"
-            />
-          </div>
-
-          <div className="row">
-            <div className="col-md-6">
-              <div className="form-check mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="sandbox"
-                  checked={formData.sandbox}
-                  onChange={(e) => handleInputChange('sandbox', e.target.checked)}
-                  disabled={createBancoMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="sandbox">
-                  Modo Sandbox
-                </label>
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="mb-3">
+                    <label htmlFor="url_retorno" className="form-label small">URL de Retorno (Webhook)</label>
+                    <input
+                      type="url"
+                      className="form-control form-control-sm"
+                      id="url_retorno"
+                      value={formData.url_retorno}
+                      onChange={(e) => handleInputChange('url_retorno', e.target.value)}
+                      disabled={createBancoMutation.isPending}
+                      placeholder="URL para retorno de webhooks"
+                    />
+                    <small className="form-text text-muted">URL gerada automaticamente baseada no tipo de banco</small>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="col-md-6">
-              <div className="form-check mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="repassar_email_cliente"
-                  checked={formData.repassar_email_cliente}
-                  onChange={(e) => handleInputChange('repassar_email_cliente', e.target.checked)}
-                  disabled={createBancoMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="repassar_email_cliente">
-                  Repassar Email do Cliente
-                </label>
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="sandbox"
+                      checked={formData.sandbox}
+                      onChange={(e) => handleInputChange('sandbox', e.target.checked)}
+                      disabled={createBancoMutation.isPending}
+                    />
+                    <label className="form-check-label" htmlFor="sandbox">
+                      Modo Sandbox (Testes)
+                    </label>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="repassar_email_cliente"
+                      checked={formData.repassar_email_cliente}
+                      onChange={(e) => handleInputChange('repassar_email_cliente', e.target.checked)}
+                      disabled={createBancoMutation.isPending}
+                    />
+                    <label className="form-check-label" htmlFor="repassar_email_cliente">
+                      Repassar Email do Cliente
+                    </label>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
+
+          {/* Campos específicos de cada tipo de banco */}
+          {renderBancoEspecificoCampos()}
         </div>
 
         {/* Teste de Conexão */}

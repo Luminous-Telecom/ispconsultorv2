@@ -4,6 +4,9 @@ import { useBancos, useDeleteBanco } from '../../hooks/useBancos';
 import DataTable from '../common/DataTable';
 import TableFilters from '../common/TableFilters';
 import { Banco } from '../../types';
+import BancoCreateModal from '../modals/bancos/BancoCreateModal';
+import BancoEditModal from '../modals/bancos/BancoEditModal';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 const Bancos: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -12,6 +15,9 @@ const Bancos: React.FC = () => {
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
 
   // Query para buscar bancos
   const { data: bancosData, isLoading, refetch } = useBancos({
@@ -22,6 +28,7 @@ const Bancos: React.FC = () => {
   });
 
   const deleteBancoMutation = useDeleteBanco();
+  const { success, error } = useNotificationContext();
 
   const getTipoBadgeClass = (tipo: string) => {
     switch (tipo) {
@@ -47,7 +54,16 @@ const Bancos: React.FC = () => {
 
   const handleDelete = async (bancoId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este banco?')) {
-      deleteBancoMutation.mutate(bancoId);
+      try {
+        await deleteBancoMutation.mutateAsync(bancoId);
+        success('Banco excluído com sucesso!');
+        refetch();
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.message || 
+                           error?.response?.data?.error || 
+                           'Erro ao excluir banco';
+        error(errorMessage);
+      }
     }
   };
 
@@ -107,12 +123,17 @@ const Bancos: React.FC = () => {
     switch (action) {
       case 'editar':
         if (selectedItems.length === 1) {
-          window.location.href = `/bancos/${selectedItems[0].id}/edit`;
+          setSelectedBancoId(selectedItems[0].id);
+          setShowEditModal(true);
         }
         break;
       case 'deletar':
-        if (selectedItems.length === 1) {
-          handleDelete(selectedItems[0].id);
+        if (selectedItems.length > 0) {
+          if (window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} banco(s)?`)) {
+            selectedItems.forEach(async (item) => {
+              await handleDelete(item.id);
+            });
+          }
         }
         break;
     }
@@ -187,21 +208,48 @@ const Bancos: React.FC = () => {
         bulkActions={[
           {
             label: "Novo",
-            action: () => window.location.href = "/bancos/create"
+            action: () => setShowCreateModal(true)
           },
           {
             label: "Editar",
-            action: (selectedItems) => handleTopoActions('editar', selectedItems)
+            action: (selectedItems) => handleTopoActions('editar', selectedItems),
+            disabled: (selectedItems) => selectedItems.length !== 1
           },
           {
             label: "Deletar",
-            action: (selectedItems) => handleTopoActions('deletar', selectedItems)
+            action: (selectedItems) => handleTopoActions('deletar', selectedItems),
+            disabled: (selectedItems) => selectedItems.length === 0
           }
         ]}
         onSort={handleSort}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onRefresh={refetch}
+      />
+
+      {/* Modal de Criação */}
+      <BancoCreateModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          setShowCreateModal(false);
+          refetch();
+        }}
+      />
+
+      {/* Modal de Edição */}
+      <BancoEditModal
+        show={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedBancoId(null);
+        }}
+        bancoId={selectedBancoId}
+        onSuccess={() => {
+          setShowEditModal(false);
+          setSelectedBancoId(null);
+          refetch();
+        }}
       />
     </>
   );

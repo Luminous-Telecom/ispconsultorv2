@@ -135,16 +135,6 @@ export class BancoApiService {
           : config.cobranca_base_url;
         const endpoint = baseUrl + config.token;
         
-        if (tentativa === 1) {
-          logger.info('Debug URL selection (token):', {
-            banco_sandbox: banco.sandbox,
-            sandbox_url: config.sandbox_url,
-            cobranca_base_url: config.cobranca_base_url,
-            selected_url: baseUrl,
-            final_endpoint: endpoint
-          });
-        }
-        
         let authData: any = {};
         
         if (config.auth_type === 'basic') {
@@ -298,20 +288,8 @@ export class BancoApiService {
         : config.cobranca_base_url;
       const endpoint = baseUrlCobranca + config.api_endpoints.boleto;
       
-      logger.info('Debug URL selection:', {
-        banco_sandbox: banco.sandbox,
-        sandbox_url: config.sandbox_url,
-        cobranca_base_url: config.cobranca_base_url,
-        selected_url: baseUrlCobranca,
-        final_endpoint: endpoint
-      });
       const headers = this.prepareHeaders(banco.tipo_banco, token);
       headers['Content-Type'] = 'application/json';
-      
-      logger.info('Endpoint e headers EFI:', {
-        endpoint,
-        headers: { ...headers, Authorization: headers.Authorization ? '***' : undefined }
-      });
       
       // Implementar retry para criação de boleto
       const maxTentativas = 3;

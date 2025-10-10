@@ -5,6 +5,7 @@ import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { BancoCreateModal } from './index';
+import BancoEditModal from './BancoEditModal';
 import { Banco } from '../../../types';
 
 interface BancoListModalProps {
@@ -27,6 +28,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const [sortColumn, setSortColumn] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
   // Query para buscar bancos
@@ -135,9 +138,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     {
       label: 'Editar',
       action: (selectedItems: Banco[]) => {
-        if (selectedItems.length > 0) {
+        if (selectedItems.length === 1) {
+          setSelectedBancoId(selectedItems[0].id);
+          setShowEditModal(true);
         }
-      }
+      },
+      disabled: (selectedItems: Banco[]) => selectedItems.length !== 1
     },
     {
       label: 'Excluir',
@@ -210,6 +216,21 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         onSuccess={() => {
           refetch();
           setShowCreateModal(false);
+        }}
+      />
+
+      {/* Modal de Edição */}
+      <BancoEditModal
+        show={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedBancoId(null);
+        }}
+        bancoId={selectedBancoId}
+        onSuccess={() => {
+          setShowEditModal(false);
+          setSelectedBancoId(null);
+          refetch();
         }}
       />
     </DraggableModal>
