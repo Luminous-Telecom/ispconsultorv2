@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import DataTable from '../../common/DataTable';
 import { ContratoCreateModal } from '../../modals/contratos';
+import { useContratos } from '../../hooks/useContratos';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 interface ClienteContratosProps {
   cliente: any;
@@ -14,28 +16,16 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   const [sortColumn, setSortColumn] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const { addNotification } = useNotificationContext();
 
-  // Mock data para contratos
-  const mockContratos = [
-    {
-      id: 12,
-      plano: 'Plano Full Core',
-      valor_plano: 1518.00,
-      status: 'ativo',
-      desconto_percentual: '0.00',
-      desconto_valor: '0.00',
-      valor_final: 89.90,
-      data_inicio: '29/09/2025',
-      data_fim: '-',
-      isento: 'Não',
-      dia_vencimento: 20,
-      banco: 'EFI-PJ-TESTE'
-    }
-  ];
-
-
-  const handleBulkAction = (action: string) => {
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    addNotification(type, message);
   };
+
+  // Buscar contratos reais do cliente
+  const { data: contratosData, isLoading: contratosLoading, refetch: refetchContratos } = useContratos();
+  const contratos = contratosData?.filter(contrato => contrato.cliente_id === cliente?.id) || [];
 
   // Funções de ordenação
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
@@ -44,16 +34,16 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   };
 
   const getSortedContratos = () => {
-    if (!mockContratos || !sortColumn) {
-      return mockContratos;
+    if (!contratos || !sortColumn) {
+      return contratos;
     }
 
-    return [...mockContratos].sort((a, b) => {
-      let aValue = (a as any)[sortColumn];
-      let bValue = (b as any)[sortColumn];
+    return [...contratos].sort((a, b) => {
+      let aValue: any = a[sortColumn as keyof any];
+      let bValue: any = b[sortColumn as keyof any];
 
       // Tratar campos especiais
-      if (sortColumn === 'valor') {
+      if (sortColumn === 'valor_final' || sortColumn === 'valor_plano') {
         aValue = parseFloat(aValue) || 0;
         bValue = parseFloat(bValue) || 0;
       }
@@ -76,6 +66,22 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
     });
   };
 
+  // Funções de ação
+  const handleEditarContrato = (selectedItems: any[]) => {
+    if (selectedItems.length === 1) {
+      console.log('Editar contrato:', selectedItems[0].id);
+    }
+  };
+
+  const handleDeletarContrato = (selectedItems: any[]) => {
+    if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} contrato(s)?`)) {
+      selectedItems.forEach(item => {
+        console.log('Deletar contrato:', item.id);
+        refetchContratos();
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'ativo':
@@ -93,25 +99,83 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
   const contratosColumns = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'plano', label: 'Plano', sortable: true },
-    { key: 'valor_plano', label: 'Valor Plano', sortable: true },
+    { 
+      key: 'plano', 
+      label: 'Plano', 
+      sortable: true,
+      render: (contrato: any) => contrato.plano?.nome_plano || '-'
+    },
+    { 
+      key: 'valor_plano', 
+      label: 'Valor Plano', 
+      sortable: true,
+      render: (contrato: any) => contrato.plano?.valor_mensal ? `R$ ${Number(contrato.plano.valor_mensal).toFixed(2).replace('.', ',')}` : '-'
+    },
     { 
       key: 'status', 
       label: 'Status',
-      render: (item: any) => (
-        <span className={`badge bg-${getStatusColor(item.status)}`}>
-          {item.status}
+      sortable: true,
+      render: (contrato: any) => (
+        <span className={`badge bg-${getStatusColor(contrato.status)}`}>
+          {contrato.status.charAt(0).toUpperCase() + contrato.status.slice(1)}
         </span>
       )
     },
-    { key: 'desconto_percentual', label: 'Desconto %', sortable: true },
-    { key: 'desconto_valor', label: 'Desconto R$', sortable: true },
-    { key: 'valor_final', label: 'Valor Final', sortable: true },
-    { key: 'data_inicio', label: 'Data Início', sortable: true },
-    { key: 'data_fim', label: 'Data Fim', sortable: true },
-    { key: 'isento', label: 'Isento', sortable: true },
-    { key: 'dia_vencimento', label: 'Dia Venc.', sortable: true },
-    { key: 'banco', label: 'Banco', sortable: true }
+    { 
+      key: 'desconto_percentual', 
+      label: 'Desconto %', 
+      sortable: true,
+      render: (contrato: any) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
+    },
+    { 
+      key: 'desconto_valor', 
+      label: 'Desconto R$', 
+      sortable: true,
+      render: (contrato: any) => contrato.desconto_valor ? `R$ ${Number(contrato.desconto_valor).toFixed(2).replace('.', ',')}` : '-'
+    },
+    { 
+      key: 'valor_final', 
+      label: 'Valor Final', 
+      sortable: true,
+      render: (contrato: any) => {
+        const valor = contrato.valor_final || contrato.plano?.valor_mensal || 0;
+        return `R$ ${Number(valor).toFixed(2).replace('.', ',')}`;
+      }
+    },
+    { 
+      key: 'data_inicio', 
+      label: 'Data Início', 
+      sortable: true,
+      render: (contrato: any) => contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'
+    },
+    { 
+      key: 'data_fim', 
+      label: 'Data Fim', 
+      sortable: true,
+      render: (contrato: any) => contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'
+    },
+    { 
+      key: 'isento', 
+      label: 'Isento', 
+      sortable: true,
+      render: (contrato: any) => (
+        <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
+          {contrato.isento_mensalidade ? 'Sim' : 'Não'}
+        </span>
+      )
+    },
+    { 
+      key: 'dia_vencimento', 
+      label: 'Dia Venc.', 
+      sortable: true,
+      render: (contrato: any) => contrato.dia_vencimento ? `Dia ${contrato.dia_vencimento}` : '-'
+    },
+    { 
+      key: 'banco', 
+      label: 'Banco', 
+      sortable: true,
+      render: (contrato: any) => contrato.bancoBoleto?.nome || '-'
+    }
   ];
 
   if (!cliente) {
@@ -127,17 +191,17 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
       </small>
 
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="mb-0">Contratos ({mockContratos.length})</h6>
+        <h6 className="mb-0">Contratos ({contratos.length})</h6>
       </div>
 
       <DataTable
         data={getSortedContratos()}
         columns={contratosColumns}
-        isLoading={false}
+        isLoading={contratosLoading}
         pagination={{
           from: 1,
-          to: mockContratos.length,
-          total: mockContratos.length,
+          to: contratos.length,
+          total: contratos.length,
           current_page: 1,
           last_page: 1
         }}
@@ -154,41 +218,54 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
           },
           {
             label: 'Editar',
-            action: (selectedItems) => handleBulkAction('editar')
+            action: handleEditarContrato
           },
           {
             label: 'Deletar',
-            action: (selectedItems) => handleBulkAction('deletar')
+            action: handleDeletarContrato
           },
           {
             label: 'Alteração Wizard',
-            action: (selectedItems) => handleBulkAction('alteracao_wizard')
+            action: (selectedItems) => {
+              if (selectedItems.length > 0) {
+                console.log('Alteração Wizard:', selectedItems.map(item => item.id));
+              }
+            }
           },
           {
             label: 'Imprimir',
-            action: (selectedItems) => handleBulkAction('imprimir')
+            action: (selectedItems) => {
+              if (selectedItems.length > 0) {
+                console.log('Imprimir:', selectedItems.map(item => item.id));
+              }
+            }
           },
           {
             label: 'Detalhamento Financeiro',
-            action: (selectedItems) => handleBulkAction('detalhamento_financeiro')
+            action: (selectedItems) => {
+              if (selectedItems.length > 0) {
+                console.log('Detalhamento Financeiro:', selectedItems.map(item => item.id));
+              }
+            }
           }
         ]}
         onSort={handleSort}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
-        onRefresh={() => {}}
-        onSelectionChange={() => {}}
+        onRefresh={refetchContratos}
+        onSelectionChange={setSelectedItems}
       />
 
-         {/* Modal de criação de contrato */}
-         <ContratoCreateModal
-           show={showContratoCreateModal}
-           onClose={() => setShowContratoCreateModal(false)}
-           onSuccess={() => {
-             // Atualizar lista de contratos
-           }}
-           clienteId={cliente?.id}
-         />
+      {/* Modal de criação de contrato */}
+      <ContratoCreateModal
+        show={showContratoCreateModal}
+        onClose={() => setShowContratoCreateModal(false)}
+        onSuccess={() => {
+          setShowContratoCreateModal(false);
+          refetchContratos();
+        }}
+        clienteId={cliente?.id}
+      />
        </div>
      );
    };
