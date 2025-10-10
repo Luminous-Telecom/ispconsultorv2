@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useDeleteContrato } from '../../../hooks/useContratos';
-import { Contrato } from '../../../types';
+import { useDeleteContrato, Contrato } from '../../../hooks/useContratos';
 import { ContratoService } from '../../../services/ContratoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
