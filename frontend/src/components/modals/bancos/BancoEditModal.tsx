@@ -690,7 +690,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
               </div>
 
               <div className="row">
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <div className="mb-3">
                     <div className="form-check form-switch">
                       <input
@@ -705,24 +705,9 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                         Modo Sandbox (Testes)
                       </label>
                     </div>
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <div className="form-check form-switch">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="repassar_email_cliente"
-                        checked={formData.repassar_email_cliente}
-                        onChange={(e) => handleInputChange('repassar_email_cliente', e.target.checked)}
-                        disabled={updateBancoMutation.isPending}
-                      />
-                      <label className="form-check-label" htmlFor="repassar_email_cliente">
-                        Repassar Email do Cliente
-                      </label>
-                    </div>
+                    <small className="form-text text-muted">
+                      Ative para usar ambiente de testes. Desative para produção.
+                    </small>
                   </div>
                 </div>
               </div>

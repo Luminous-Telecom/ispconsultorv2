@@ -505,6 +505,8 @@ export class BancoApiService {
     const interestBp = Math.round(Number(banco.percentual_juros || 0) * 100);
     
     // Preparar dados do customer
+    // IMPORTANTE: Email do cliente NUNCA é enviado para o banco
+    // para evitar que o banco envie emails automáticos ao cliente
     const customerData: any = {
       name: cliente.razao_social,
       phone_number: cliente.telefone.replace(/\D/g, ''),
@@ -523,18 +525,9 @@ export class BancoApiService {
       }
     };
 
-    // Só adicionar email se a opção "repassar_email_cliente" estiver ativada
-    if (banco.repassar_email_cliente) {
-      customerData.email = cliente.email;
-      logger.info('Email do cliente será repassado para API', {
-        titulo_id: titulo.id,
-        cliente_email: cliente.email
-      });
-    } else {
-      logger.info('Email do cliente NÃO será repassado para API (opção desativada)', {
-        titulo_id: titulo.id
-      });
-    }
+    logger.info('Email do cliente NÃO é enviado para API (política do sistema)', {
+      titulo_id: titulo.id
+    });
 
     return {
       items: [{

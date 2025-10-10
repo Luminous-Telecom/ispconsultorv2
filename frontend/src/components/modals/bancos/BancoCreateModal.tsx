@@ -591,7 +591,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
               </div>
 
               <div className="row">
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <div className="form-check mb-3">
                     <input
                       className="form-check-input"
@@ -604,22 +604,9 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     <label className="form-check-label" htmlFor="sandbox">
                       Modo Sandbox (Testes)
                     </label>
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="form-check mb-3">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="repassar_email_cliente"
-                      checked={formData.repassar_email_cliente}
-                      onChange={(e) => handleInputChange('repassar_email_cliente', e.target.checked)}
-                      disabled={createBancoMutation.isPending}
-                    />
-                    <label className="form-check-label" htmlFor="repassar_email_cliente">
-                      Repassar Email do Cliente
-                    </label>
+                    <small className="form-text text-muted d-block">
+                      Ative para usar ambiente de testes. Desative para produção.
+                    </small>
                   </div>
                 </div>
               </div>
