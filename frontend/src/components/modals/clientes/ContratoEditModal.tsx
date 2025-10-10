@@ -977,7 +977,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 </div>
 
                 {/* Conteúdo rolável - apenas a tabela */}
-                <div style={{ paddingLeft: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                   <DataTable
                     data={paginatedData}
                     columns={columns}

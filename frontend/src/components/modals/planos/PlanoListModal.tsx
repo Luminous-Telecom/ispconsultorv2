@@ -252,7 +252,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <div style={{ paddingLeft: '0.5rem' }}>
+      <div>
         <DataTable
             data={getSortedData()}
             columns={columns}

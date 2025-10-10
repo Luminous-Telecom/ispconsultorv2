@@ -203,7 +203,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <div style={{ paddingLeft: '0.5rem' }}>
+      <div>
         <DataTable
             data={bancosData?.data || []}
             columns={columns}

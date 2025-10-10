@@ -1158,8 +1158,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             e.stopPropagation();
                             if (selectedContratosItems.length === 1) {
                               setSelectedContratoId(selectedContratosItems[0].id);
-                              setShowContratoEditModal(true);
-                            }
+                            setShowContratoEditModal(true);
+                          }
                           }}
                           onMouseDown={(e) => e.stopPropagation()}
                           disabled={selectedContratosItems.length !== 1}
@@ -1176,18 +1176,18 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             if (selectedContratosItems.length > 0) {
                               if (window.confirm(`Tem certeza que deseja deletar ${selectedContratosItems.length} contrato(s)?`)) {
                                 for (const item of selectedContratosItems) {
-                                  try {
-                                    await deleteContratoMutation.mutateAsync(item.id);
-                                  } catch (error: any) {
-                                    console.error(`Erro ao deletar contrato ${item.id}:`, error);
-                                    const errorMessage = error?.response?.data?.message || 
-                                                       error?.response?.data?.error || 
-                                                       `Erro ao deletar contrato ${item.id}`;
-                                    showNotification(errorMessage, 'error');
-                                  }
+                                try {
+                                  await deleteContratoMutation.mutateAsync(item.id);
+                                } catch (error: any) {
+                                  console.error(`Erro ao deletar contrato ${item.id}:`, error);
+                                  const errorMessage = error?.response?.data?.message || 
+                                                     error?.response?.data?.error || 
+                                                     `Erro ao deletar contrato ${item.id}`;
+                                  showNotification(errorMessage, 'error');
                                 }
-                                // Refetch contratos após deletar
-                                refetchContratos();
+                              }
+                              // Refetch contratos após deletar
+                              refetchContratos();
                                 setSelectedContratosItems([]);
                               }
                             }
@@ -1336,9 +1336,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Conteúdo rolável - apenas a tabela */}
-                  <div style={{ paddingLeft: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
-                    <DataTable
+replace_all
                       data={paginatedContratosData}
                       columns={contratosColumns}
                       isLoading={isLoadingContratos}
@@ -1623,9 +1621,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Conteúdo rolável - apenas a tabela */}
-                  <div style={{ paddingLeft: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
-                    <DataTable
+replace_all
                       data={paginatedData}
                       columns={columns}
                       isLoading={isLoadingParcelas}

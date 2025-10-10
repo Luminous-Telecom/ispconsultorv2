@@ -237,7 +237,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <div style={{ paddingLeft: '0.5rem' }}>
+      <div>
         <DataTable
           data={paginatedData}
           columns={columns}

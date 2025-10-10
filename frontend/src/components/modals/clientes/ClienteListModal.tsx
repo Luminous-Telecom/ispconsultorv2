@@ -173,7 +173,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       size="lg"
       headerActions={headerActions}
     >
-      <div style={{ paddingLeft: '0.5rem' }}>
+      <div>
         <DataTable
             data={clientesData?.data || []}
             columns={columns}
