@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import DataTable from '../../common/DataTable';
 import { ContratoCreateModal } from '../../modals/contratos';
-import { useContratos } from '../../hooks/useContratos';
-import { useNotificationContext } from '../../contexts/NotificationContext';
+import { useContratos } from '../../../hooks/useContratos';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
 
 interface ClienteContratosProps {
   cliente: any;
@@ -25,7 +25,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
   // Buscar contratos reais do cliente
   const { data: contratosData, isLoading: contratosLoading, refetch: refetchContratos } = useContratos();
-  const contratos = contratosData?.filter(contrato => contrato.cliente_id === cliente?.id) || [];
+  const contratos = contratosData?.filter((contrato: any) => contrato.cliente_id === cliente?.id) || [];
 
   // Funções de ordenação
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
