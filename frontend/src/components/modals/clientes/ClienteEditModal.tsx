@@ -1336,7 +1336,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-replace_all
+                  {/* Conteúdo rolável - apenas a tabela */}
+                  <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <DataTable
                       data={paginatedContratosData}
                       columns={contratosColumns}
                       isLoading={isLoadingContratos}
