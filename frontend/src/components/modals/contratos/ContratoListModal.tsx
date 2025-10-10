@@ -5,6 +5,7 @@ import { ContratoService } from '../../../services/ContratoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
+import ModalHeaderActions from '../../common/ModalHeaderActions';
 import ContratoCreateModal from '../clientes/ContratoCreateModal';
 import ContratoEditModal from '../clientes/ContratoEditModal';
 
@@ -12,21 +13,24 @@ interface ContratoListModalProps {
   show: boolean;
   onClose: () => void;
   onSelectContrato?: (contrato: Contrato) => void;
+  title?: string;
 }
 
 const ContratoListModal: React.FC<ContratoListModalProps> = ({
   show,
   onClose,
-  onSelectContrato
+  onSelectContrato,
+  title = "Selecionar Contrato"
 }) => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Contrato[]>([]);
   
   const { success, error } = useNotificationContext();
   
@@ -200,30 +204,60 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     }
   ];
 
+  // Criar paginação manual para client-side
+  const pagination = {
+    from: (page - 1) * limit + 1,
+    to: Math.min(page * limit, filteredData.length),
+    total: filteredData.length,
+    current_page: page,
+    last_page: Math.ceil(filteredData.length / limit)
+  };
+
+  // Ações para o header do modal
+  const headerActions = (
+    <ModalHeaderActions
+      bulkActions={bulkActions}
+      selectedItems={selectedItems}
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Buscar por cliente ou plano..."
+      limit={limit}
+      onLimitChange={setLimit}
+      pagination={pagination}
+      onPageChange={setPage}
+      onRefresh={() => refetch()}
+    />
+  );
+
   return (
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Listar Contratos"
-      size="xl"
+      title={title}
+      size="lg"
+      headerActions={headerActions}
     >
-      <div className="modal-body">
+      <div style={{ paddingLeft: '0.5rem' }}>
         <DataTable
-          columns={columns}
           data={paginatedData}
+          columns={columns}
           isLoading={isLoading}
+          pagination={pagination}
           limit={limit}
           setLimit={setLimit}
           setPage={setPage}
-          emptyMessage="Nenhum contrato encontrado"
-          searchPlaceholder="Buscar por cliente ou plano..."
-          onSearch={setSearch}
-          bulkActions={bulkActions}
-          onSort={handleSort}
+          onSort={(column: string, direction: 'asc' | 'desc') => {
+            setSortColumn(column);
+            setSortDirection(direction);
+          }}
           sortColumn={sortColumn}
           sortDirection={sortDirection}
-          onRefresh={refetch}
-          showHeader={!onSelectContrato}
+          bulkActions={bulkActions}
+          onSelectionChange={setSelectedItems}
+          searchPlaceholder="Buscar por cliente ou plano..."
+          onSearch={setSearch}
+          emptyMessage="Nenhum contrato encontrado"
+          showHeader={false}
         />
       </div>
 
