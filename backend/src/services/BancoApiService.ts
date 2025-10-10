@@ -415,16 +415,32 @@ export class BancoApiService {
         message: 'Erro ao gerar título'
       };
     } catch (error: any) {
-      logger.error('Erro ao gerar título', { 
+      const errorDetails = {
         titulo_id: titulo.id,
         error: error.message,
         status: error.response?.status,
+        statusText: error.response?.statusText,
         data: error.response?.data,
-        config: error.config
-      });
+        banco_id: banco.id,
+        banco_nome: banco.nome,
+        sandbox: banco.sandbox,
+        tem_client_id: !!banco.client_id_producao,
+        tem_client_secret: !!banco.client_secret_producao
+      };
+
+      logger.error('Erro ao gerar título', errorDetails);
+
+      // Mensagem específica para erro 401
+      let errorMessage = 'Erro ao gerar título: ' + error.message;
+      if (error.response?.status === 401) {
+        errorMessage = 'Erro de autenticação (401): Verifique as credenciais (Client ID e Client Secret) do banco. ' +
+                      `Banco está em modo ${banco.sandbox ? 'SANDBOX' : 'PRODUÇÃO'}. ` +
+                      'Certifique-se de que as credenciais correspondem ao ambiente correto.';
+      }
+
       return {
         success: false,
-        message: 'Erro ao gerar título: ' + error.message
+        message: errorMessage
       };
     }
   }
