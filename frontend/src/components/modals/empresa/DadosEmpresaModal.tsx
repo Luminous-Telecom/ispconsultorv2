@@ -13,6 +13,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   show,
   onClose
 }) => {
+  const [activeTab, setActiveTab] = useState('basico');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -110,7 +111,52 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       size="xl"
     >
       <form onSubmit={handleSubmit}>
-        {/* Informações Básicas */}
+        {/* Navegação de Abas */}
+        <ul className="nav nav-tabs mb-3">
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link ${activeTab === 'basico' ? 'active' : ''}`}
+              onClick={() => setActiveTab('basico')}
+            >
+              <i className="bi bi-building me-2"></i>
+              Dados Básicos
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
+              onClick={() => setActiveTab('endereco')}
+            >
+              <i className="bi bi-geo-alt me-2"></i>
+              Endereço
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
+              onClick={() => setActiveTab('contato')}
+            >
+              <i className="bi bi-telephone me-2"></i>
+              Contato
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link ${activeTab === 'responsavel' ? 'active' : ''}`}
+              onClick={() => setActiveTab('responsavel')}
+            >
+              <i className="bi bi-person me-2"></i>
+              Responsável
+            </button>
+          </li>
+        </ul>
+
+        {/* Conteúdo das Abas */}
+        {activeTab === 'basico' && (
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
           <div className="row">
@@ -186,8 +232,10 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
           </div>
         </div>
+        )}
 
-        {/* Endereço */}
+        {/* Aba de Endereço */}
+        {activeTab === 'endereco' && (
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Endereço</h6>
           <div className="row">
@@ -291,8 +339,10 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
           </div>
         </div>
+        )}
 
-        {/* Contato */}
+        {/* Aba de Contato */}
+        {activeTab === 'contato' && (
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Contato</h6>
           <div className="row">
@@ -353,8 +403,10 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
           </div>
         </div>
+        )}
 
-        {/* Responsável */}
+        {/* Aba de Responsável */}
+        {activeTab === 'responsavel' && (
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Responsável Legal</h6>
           <div className="row">
@@ -399,9 +451,10 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
           </div>
         </div>
+        )}
 
         {/* Botões de Ação */}
-        <div className="d-flex justify-content-end gap-2">
+        <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
           <button
             type="button"
             className="btn btn-secondary"
