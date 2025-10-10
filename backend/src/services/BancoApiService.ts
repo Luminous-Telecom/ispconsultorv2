@@ -488,6 +488,38 @@ export class BancoApiService {
     const fineBp = Math.round(Number(banco.percentual_multa || 0) * 100);
     const interestBp = Math.round(Number(banco.percentual_juros || 0) * 100);
     
+    // Preparar dados do customer
+    const customerData: any = {
+      name: cliente.razao_social,
+      phone_number: cliente.telefone.replace(/\D/g, ''),
+      juridical_person: {
+        corporate_name: cliente.razao_social,
+        cnpj: cliente.cnpj.replace(/\D/g, ''),
+      },
+      address: {
+        street: cliente.endereco,
+        number: cliente.numero,
+        neighborhood: cliente.bairro,
+        zipcode: cliente.cep.replace(/\D/g, ''),
+        city: cliente.cidade,
+        complement: cliente.complemento,
+        state: cliente.estado
+      }
+    };
+
+    // Só adicionar email se a opção "repassar_email_cliente" estiver ativada
+    if (banco.repassar_email_cliente) {
+      customerData.email = cliente.email;
+      logger.info('Email do cliente será repassado para API', {
+        titulo_id: titulo.id,
+        cliente_email: cliente.email
+      });
+    } else {
+      logger.info('Email do cliente NÃO será repassado para API (opção desativada)', {
+        titulo_id: titulo.id
+      });
+    }
+
     return {
       items: [{
         name: plano.nome_plano || 'Serviço de Internet',
@@ -496,24 +528,7 @@ export class BancoApiService {
       }],
       payment: {
         banking_billet: {
-          customer: {
-            name: cliente.razao_social,
-            email: cliente.email,
-            phone_number: cliente.telefone.replace(/\D/g, ''),
-            juridical_person: {
-              corporate_name: cliente.razao_social,
-              cnpj: cliente.cnpj.replace(/\D/g, ''),
-            },
-            address: {
-              street: cliente.endereco,
-              number: cliente.numero,
-              neighborhood: cliente.bairro,
-              zipcode: cliente.cep.replace(/\D/g, ''),
-              city: cliente.cidade,
-              complement: cliente.complemento,
-              state: cliente.estado
-            }
-          },
+          customer: customerData,
           expire_at: new Date(titulo.data_vencimento).toISOString().split('T')[0],
           configurations: {
             fine: fineBp,
