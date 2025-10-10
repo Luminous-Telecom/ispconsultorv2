@@ -55,25 +55,34 @@ const Contratos: React.FC = () => {
       key: 'cliente',
       label: 'Cliente',
       sortable: true,
-      render: (contrato: Contrato) => (
-        <div>
-          <strong>{contrato.cliente?.razao_social}</strong>
-          {contrato.cliente?.nome_fantasia && (
-            <div className="text-muted small">{contrato.cliente.nome_fantasia}</div>
-          )}
-        </div>
-      )
+      render: (contrato: Contrato) => contrato.cliente?.razao_social || '-'
     },
     {
       key: 'plano',
       label: 'Plano',
       sortable: true,
-      render: (contrato: Contrato) => (
-        <div>
-          <strong>{contrato.plano?.nome_plano}</strong>
-          <div className="text-muted small">R$ {contrato.plano?.valor_mensal}</div>
-        </div>
-      )
+      render: (contrato: Contrato) => contrato.plano?.nome_plano || '-'
+    },
+    {
+      key: 'valor_final',
+      label: 'Valor',
+      sortable: true,
+      render: (contrato: Contrato) => {
+        const valor = contrato.valor_final || contrato.plano?.valor_mensal || 0;
+        return `R$ ${Number(valor).toFixed(2).replace('.', ',')}`;
+      }
+    },
+    {
+      key: 'data_inicio',
+      label: 'Início',
+      sortable: true,
+      render: (contrato: Contrato) => contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'
+    },
+    {
+      key: 'data_fim',
+      label: 'Fim',
+      sortable: true,
+      render: (contrato: Contrato) => contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'
     },
     {
       key: 'status',
@@ -81,75 +90,15 @@ const Contratos: React.FC = () => {
       sortable: true,
       render: (contrato: Contrato) => (
         <span className={`badge ${getStatusColor(contrato.status)}`}>
-          {contrato.status}
+          {contrato.status.charAt(0).toUpperCase() + contrato.status.slice(1)}
         </span>
-      )
-    },
-    {
-      key: 'desconto_percentual',
-      label: 'Desconto %',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
-      )
-    },
-    {
-      key: 'desconto_valor',
-      label: 'Desconto R$',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        contrato.desconto_valor ? `R$ ${contrato.desconto_valor}` : '-'
-      )
-    },
-    {
-      key: 'data_inicio',
-      label: 'Data Início',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'
-      )
-    },
-    {
-      key: 'data_fim',
-      label: 'Data Fim',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'
-      )
-    },
-    {
-      key: 'isento_mensalidade',
-      label: 'Isento',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
-          {contrato.isento_mensalidade ? 'Sim' : 'Não'}
-        </span>
-      )
-    },
-    {
-      key: 'dia_vencimento',
-      label: 'Dia Venc.',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        contrato.dia_vencimento ? `Dia ${contrato.dia_vencimento}` : '-'
-      )
-    },
-    {
-      key: 'bancoBoleto',
-      label: 'Banco Boleto',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        contrato.bancoBoleto?.nome || '-'
       )
     },
     {
       key: 'created_at',
       label: 'Criado em',
       sortable: true,
-      render: (contrato: Contrato) => (
-        new Date(contrato.created_at).toLocaleDateString('pt-BR')
-      )
+      render: (contrato: Contrato) => new Date(contrato.created_at).toLocaleDateString('pt-BR')
     }
   ];
 
