@@ -252,12 +252,38 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
   };
 
   const handleTestConnection = async () => {
+    if (!bancoId) {
+      error('ID do banco não encontrado');
+      return;
+    }
+
+    // Validar campos obrigatórios
+    if (formData.tipo_banco === 'efi' || formData.tipo_banco === 'asaas') {
+      if (!formData.client_id_producao || !formData.client_secret_producao) {
+        error('Client ID e Client Secret são obrigatórios para testar conexão');
+        return;
+      }
+    }
+
+    setTestResult('Testando conexão...');
     try {
-      setTestResult('Testando conexão...');
-      // TODO: Implementar teste de conexão
-      setTestResult('Conexão testada com sucesso');
-    } catch (error) {
-      setTestResult('Erro ao testar conexão');
+      // Salvar dados primeiro
+      await updateBancoMutation.mutateAsync(formData);
+      
+      // Testar conexão
+      const resultado = await BancoService.testarConexao(bancoId);
+      
+      if (resultado.success) {
+        setTestResult(resultado.message || 'Conexão testada com sucesso!');
+        success('Conexão testada com sucesso!');
+      } else {
+        setTestResult('Falha no teste de conexão');
+        error(resultado.message || 'Falha no teste de conexão');
+      }
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.message || 'Erro ao testar conexão';
+      setTestResult(errorMessage);
+      error(errorMessage);
     }
   };
 

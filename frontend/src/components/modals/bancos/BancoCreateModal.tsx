@@ -175,13 +175,44 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
   };
 
   const handleTestConnection = async () => {
+    // Validar campos obrigatórios antes de testar
+    if (!formData.nome.trim()) {
+      error('Nome é obrigatório para testar conexão');
+      return;
+    }
+
+    if (formData.tipo_banco === 'efi' || formData.tipo_banco === 'asaas') {
+      if (!formData.client_id_producao || !formData.client_secret_producao) {
+        error('Client ID e Client Secret são obrigatórios para testar conexão');
+        return;
+      }
+    }
+
     setTestResult('Testando conexão...');
     try {
-      // Simular teste de conexão
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setTestResult('Conexão testada com sucesso!');
-    } catch (error) {
-      setTestResult('Erro ao testar conexão');
+      // Criar banco temporário para testar
+      const tempBanco = await BancoService.create({
+        ...formData,
+        nome: `[TESTE] ${formData.nome}`,
+      });
+
+      // Testar conexão
+      const resultado = await BancoService.testarConexao(tempBanco.id);
+      
+      // Deletar banco temporário
+      await BancoService.delete(tempBanco.id);
+
+      if (resultado.success) {
+        setTestResult(resultado.message || 'Conexão testada com sucesso!');
+        success('Conexão testada com sucesso!');
+      } else {
+        setTestResult('Falha no teste de conexão');
+        error(resultado.message || 'Falha no teste de conexão');
+      }
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.message || 'Erro ao testar conexão';
+      setTestResult(errorMessage);
+      error(errorMessage);
     }
   };
 
