@@ -130,6 +130,12 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const columns = [
     {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      render: (item: Plano) => <code className="text-primary">#{item.id}</code>
+    },
+    {
       key: 'nome_plano',
       label: 'Nome do Plano',
       sortable: true,

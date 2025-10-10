@@ -71,6 +71,12 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
   const columns = [
     {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      render: (item: Cliente) => <code className="text-primary">#{item.id}</code>
+    },
+    {
       key: 'cnpj',
       label: 'CNPJ',
       sortable: true,
