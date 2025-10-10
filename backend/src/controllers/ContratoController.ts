@@ -285,6 +285,23 @@ export class ContratoController {
         return;
       }
 
+      // Verificar se contrato tem títulos associados
+      const { Titulo } = await import('../models/Titulo');
+      const titulosCount = await Titulo.count({
+        where: {
+          contrato_id: id
+        }
+      });
+
+      if (titulosCount > 0) {
+        res.status(409).json({
+          success: false,
+          error: 'Não é possível excluir contrato',
+          message: `Contrato possui ${titulosCount} título(s) financeiro(s) associado(s). Remova os títulos antes de excluir o contrato.`
+        });
+        return;
+      }
+
       await contrato.destroy();
 
       res.json({
