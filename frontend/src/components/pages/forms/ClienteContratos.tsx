@@ -39,8 +39,8 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
     }
 
     return [...contratos].sort((a, b) => {
-      let aValue: any = a[sortColumn as keyof any];
-      let bValue: any = b[sortColumn as keyof any];
+      let aValue: any = (a as any)[sortColumn];
+      let bValue: any = (b as any)[sortColumn];
 
       // Tratar campos especiais
       if (sortColumn === 'valor_final' || sortColumn === 'valor_plano') {
