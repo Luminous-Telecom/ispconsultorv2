@@ -267,8 +267,10 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
 
     setTestResult('Testando conexão...');
     try {
-      // Salvar dados primeiro
-      await updateBancoMutation.mutateAsync(formData);
+      // Salvar dados primeiro (sem fechar o modal)
+      await BancoService.update(bancoId, formData);
+      queryClient.invalidateQueries({ queryKey: ['bancos'] });
+      queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
       
       // Testar conexão
       const resultado = await BancoService.testarConexao(bancoId);
