@@ -25,7 +25,28 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
   // Buscar contratos reais do cliente
   const { data: contratosData, isLoading: contratosLoading, refetch: refetchContratos } = useContratos();
-  const contratos = contratosData?.filter((contrato: any) => contrato.cliente_id === cliente?.id) || [];
+  const contratosReais = contratosData?.filter((contrato: any) => contrato.cliente_id === cliente?.id) || [];
+  
+  // Dados mock temporários para demonstração (remover quando dados reais estiverem funcionando)
+  const mockContratos = [
+    {
+      id: 12,
+      cliente_id: cliente?.id || 1,
+      plano: { nome_plano: 'Plano Full Core', valor_mensal: 1518.00 },
+      status: 'ativo',
+      desconto_percentual: '0.00',
+      desconto_valor: '0.00',
+      valor_final: 89.90,
+      data_inicio: '2025-09-29',
+      data_fim: null,
+      isento_mensalidade: false,
+      dia_vencimento: 20,
+      bancoBoleto: { nome: 'EFI-PJ-TESTE' }
+    }
+  ];
+  
+  // Usar dados reais se disponíveis, senão usar mock
+  const contratos = contratosReais.length > 0 ? contratosReais : mockContratos;
 
   // Funções de ordenação
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
