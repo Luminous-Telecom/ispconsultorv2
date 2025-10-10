@@ -63,6 +63,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   // Carregar dados quando disponíveis
   useEffect(() => {
     if (dadosEmpresa) {
+      console.log('Dados da empresa carregados:', dadosEmpresa);
+      console.log('Logo:', dadosEmpresa.logo);
       setDados(dadosEmpresa as DadosEmpresaType);
     }
   }, [dadosEmpresa]);
@@ -253,17 +255,32 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           {/* Logo da Empresa */}
           <div className="row mt-4 pt-3 border-top">
             <div className="col-md-12">
-              <div className="d-flex align-items-center gap-3">
-                {dados.logo && (
-                  <div>
+              <label className="form-label small fw-bold">Logo da Empresa</label>
+              <div className="d-flex align-items-start gap-3">
+                <div style={{ minWidth: '200px' }}>
+                  {dados.logo ? (
                     <img 
                       src={`${process.env.REACT_APP_API_URL?.replace('/api', '')}/images/${dados.logo}`} 
                       alt="Logo da empresa" 
                       style={{ maxWidth: '200px', maxHeight: '100px', objectFit: 'contain' }}
-                      className="border rounded p-2"
+                      className="border rounded p-2 bg-light"
+                      onError={(e) => {
+                        console.error('Erro ao carregar imagem:', e);
+                        console.log('Caminho tentado:', `${process.env.REACT_APP_API_URL?.replace('/api', '')}/images/${dados.logo}`);
+                      }}
                     />
-                  </div>
-                )}
+                  ) : (
+                    <div 
+                      className="border rounded p-2 bg-light text-center text-muted"
+                      style={{ width: '200px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <div>
+                        <i className="bi bi-image" style={{ fontSize: '2rem' }}></i>
+                        <div className="small">Sem logo</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="flex-grow-1">
                   <input
                     type="file"
@@ -276,6 +293,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   <small className="form-text text-muted">
                     Formatos aceitos: JPG, PNG, GIF (máx. 2MB)
                   </small>
+                  {dados.logo && (
+                    <div className="mt-2">
+                      <small className="text-muted">Arquivo atual: {dados.logo}</small>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
