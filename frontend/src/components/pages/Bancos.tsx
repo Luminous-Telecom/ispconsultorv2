@@ -160,12 +160,13 @@ const Bancos: React.FC = () => {
       key: 'nome',
       label: 'Nome',
       sortable: true,
-      render: (banco: Banco) => (
-        <div>
-          <strong>{banco.nome}</strong>
-          {banco.codigo && <div className="text-muted small">Código: {banco.codigo}</div>}
-        </div>
-      )
+      render: (banco: Banco) => <strong>{banco.nome}</strong>
+    },
+    {
+      key: 'codigo',
+      label: 'Código',
+      sortable: true,
+      render: (banco: Banco) => <span className="text-muted">{banco.codigo || '-'}</span>
     },
     {
       key: 'tipo_banco',

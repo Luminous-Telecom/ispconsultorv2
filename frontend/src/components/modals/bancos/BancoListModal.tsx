@@ -93,12 +93,13 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       key: 'nome',
       label: 'Nome',
       sortable: true,
-      render: (item: Banco) => (
-        <div>
-          <div className="fw-bold">{item.nome}</div>
-          {item.codigo && <div className="text-muted small">Código: {item.codigo}</div>}
-        </div>
-      )
+      render: (item: Banco) => <div className="fw-bold">{item.nome}</div>
+    },
+    {
+      key: 'codigo',
+      label: 'Código',
+      sortable: true,
+      render: (item: Banco) => <span className="text-muted">{item.codigo || '-'}</span>
     },
     {
       key: 'tipo_banco',
