@@ -86,6 +86,25 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     onClose();
   };
 
+  const onLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const resp = await DadosEmpresaService.uploadLogo(file);
+      if (resp?.success && resp.logo) {
+        setDados(prev => ({ ...prev, logo: resp.logo }));
+        success('Logo atualizada com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
+      } else {
+        error('Não foi possível atualizar a logo');
+      }
+    } catch (err) {
+      console.error('Erro no upload da logo:', err);
+      error('Erro ao enviar a logo');
+    }
+  };
+
   if (isLoading) {
     return (
       <DraggableModal
@@ -158,7 +177,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         {/* Conteúdo das Abas */}
         {activeTab === 'basico' && (
         <div className="mb-4">
-          <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
@@ -231,13 +249,43 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Logo da Empresa */}
+          <div className="row mt-4 pt-3 border-top">
+            <div className="col-md-12">
+              <div className="d-flex align-items-center gap-3">
+                {dados.logo && (
+                  <div>
+                    <img 
+                      src={`${process.env.REACT_APP_API_URL?.replace('/api', '')}/images/${dados.logo}`} 
+                      alt="Logo da empresa" 
+                      style={{ maxWidth: '200px', maxHeight: '100px', objectFit: 'contain' }}
+                      className="border rounded p-2"
+                    />
+                  </div>
+                )}
+                <div className="flex-grow-1">
+                  <input
+                    type="file"
+                    className="form-control"
+                    id="logo"
+                    accept="image/*"
+                    onChange={onLogoChange}
+                    disabled={updateDadosMutation.isPending}
+                  />
+                  <small className="form-text text-muted">
+                    Formatos aceitos: JPG, PNG, GIF (máx. 2MB)
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         )}
 
         {/* Aba de Endereço */}
         {activeTab === 'endereco' && (
         <div className="mb-4">
-          <h6 className="border-bottom pb-2 mb-3">Endereço</h6>
           <div className="row">
             <div className="col-md-3">
               <div className="mb-3">
@@ -344,7 +392,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         {/* Aba de Contato */}
         {activeTab === 'contato' && (
         <div className="mb-4">
-          <h6 className="border-bottom pb-2 mb-3">Contato</h6>
           <div className="row">
             <div className="col-md-4">
               <div className="mb-3">
@@ -408,7 +455,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         {/* Aba de Responsável */}
         {activeTab === 'responsavel' && (
         <div className="mb-4">
-          <h6 className="border-bottom pb-2 mb-3">Responsável Legal</h6>
           <div className="row">
             <div className="col-md-4">
               <div className="mb-3">
