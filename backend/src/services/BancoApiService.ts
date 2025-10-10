@@ -504,9 +504,6 @@ export class BancoApiService {
     const fineBp = Math.round(Number(banco.percentual_multa || 0) * 100);
     const interestBp = Math.round(Number(banco.percentual_juros || 0) * 100);
     
-    // Preparar dados do customer
-    // IMPORTANTE: Email do cliente NUNCA é enviado para o banco
-    // para evitar que o banco envie emails automáticos ao cliente
     const customerData: any = {
       name: cliente.razao_social,
       phone_number: cliente.telefone.replace(/\D/g, ''),
@@ -524,10 +521,6 @@ export class BancoApiService {
         state: cliente.estado
       }
     };
-
-    logger.info('Email do cliente NÃO é enviado para API (política do sistema)', {
-      titulo_id: titulo.id
-    });
 
     return {
       items: [{
