@@ -111,6 +111,14 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     enabled: !!bancoId && show,
   });
 
+  // Limpar resultado do teste quando o modal abre
+  useEffect(() => {
+    if (show) {
+      setTestResult('');
+      setErrors({});
+    }
+  }, [show]);
+
   // Carregar dados do banco no formulário
   useEffect(() => {
     if (banco) {
