@@ -63,7 +63,30 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   // Carregar dados quando disponíveis
   useEffect(() => {
     if (dadosEmpresa) {
-      setDados(dadosEmpresa as DadosEmpresaType);
+      // Garantir que todos os campos sejam strings (nunca null)
+      setDados({
+        id: dadosEmpresa.id || 1,
+        razao_social: dadosEmpresa.razao_social || '',
+        nome_fantasia: dadosEmpresa.nome_fantasia || '',
+        cnpj: dadosEmpresa.cnpj || '',
+        inscricao_estadual: dadosEmpresa.inscricao_estadual || '',
+        inscricao_municipal: dadosEmpresa.inscricao_municipal || '',
+        cep: dadosEmpresa.cep || '',
+        endereco: dadosEmpresa.endereco || '',
+        numero: dadosEmpresa.numero || '',
+        complemento: dadosEmpresa.complemento || '',
+        bairro: dadosEmpresa.bairro || '',
+        cidade: dadosEmpresa.cidade || '',
+        estado: dadosEmpresa.estado || '',
+        telefone: dadosEmpresa.telefone || '',
+        celular: dadosEmpresa.celular || '',
+        email: dadosEmpresa.email || '',
+        site: dadosEmpresa.site || '',
+        responsavel_nome: dadosEmpresa.responsavel_nome || '',
+        responsavel_cpf: dadosEmpresa.responsavel_cpf || '',
+        responsavel_cargo: dadosEmpresa.responsavel_cargo || '',
+        logo: dadosEmpresa.logo || undefined,
+      });
     }
   }, [dadosEmpresa]);
 
