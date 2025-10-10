@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useContratos } from '../../hooks/useContratos';
+import { useSorting } from '../../hooks/useSorting';
 import DataTable from '../common/DataTable';
+import TableFilters from '../common/TableFilters';
 import { Contrato } from '../../hooks/useContratos';
 import ContratoCreateModal from '../modals/contratos/ContratoCreateModal';
-import ConfirmModal from '../common/ConfirmModal';
-import { useNotificationContext } from '../../contexts/NotificationContext';
-import { useConfirm } from '../../hooks/useConfirm';
 
 const Contratos: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -16,112 +15,20 @@ const Contratos: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   const { data: contratos = [], isLoading, error, refetch } = useContratos();
-  const { warning } = useNotificationContext();
-  const { confirm, confirmState } = useConfirm();
 
-  // Função para ordenação
+  // Usar hook de ordenação reutilizável
+  const sortedData = useSorting(contratos, sortColumn, sortDirection);
+
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
     setSortColumn(column);
     setSortDirection(direction);
+    setPage(1);
   };
 
-  // Função para filtrar dados por busca
-  const getFilteredData = () => {
-    if (!search.trim()) return contratos;
-    
-    const searchTerm = search.toLowerCase().trim();
-    return contratos.filter((contrato: Contrato) => {
-      const cliente = contrato.cliente?.razao_social?.toLowerCase() || '';
-      const plano = contrato.plano?.nome_plano?.toLowerCase() || '';
-      const status = contrato.status?.toLowerCase() || '';
-      const id = contrato.id?.toString() || '';
-      
-      return (
-        cliente.includes(searchTerm) ||
-        plano.includes(searchTerm) ||
-        status.includes(searchTerm) ||
-        id.includes(searchTerm)
-      );
-    });
-  };
-
-  // Função para ordenar dados
-  const getSortedData = () => {
-    const filteredData = getFilteredData();
-    if (!sortColumn) return filteredData;
-    
-    return [...filteredData].sort((a, b) => {
-      let aVal: any = a[sortColumn as keyof Contrato];
-      let bVal: any = b[sortColumn as keyof Contrato];
-      
-      // Tratamento especial para campos aninhados
-      if (sortColumn === 'cliente') {
-        aVal = a.cliente?.razao_social || '';
-        bVal = b.cliente?.razao_social || '';
-      } else if (sortColumn === 'plano') {
-        aVal = a.plano?.nome_plano || '';
-        bVal = b.plano?.nome_plano || '';
-      }
-      
-      if (sortDirection === 'asc') {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
-    });
-  };
-
-  // Função para paginar dados
-  const getPaginatedData = () => {
-    const sortedData = getSortedData();
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    return sortedData.slice(startIndex, endIndex);
-  };
-
-  // Calcular paginação
-  const filteredData = getFilteredData();
-  const totalPages = Math.ceil(filteredData.length / limit);
-  const pagination = {
-    current_page: page,
-    last_page: totalPages,
-    per_page: limit,
-    total: filteredData.length,
-    from: (page - 1) * limit + 1,
-    to: Math.min(page * limit, filteredData.length)
-  };
-
-  // Função para ações em lote
-  const handleTopoActions = async (action: string, selectedItems: any[]) => {
-    if (selectedItems.length === 0) {
-      warning('Selecione pelo menos um item');
-      return;
-    }
-
-    switch (action) {
-      case 'editar':
-        if (selectedItems.length === 1) {
-          // TODO: Implementar edição de contrato
-          console.log('Editar contrato:', selectedItems[0].id);
-        } else {
-          warning('Selecione apenas um contrato para editar');
-        }
-        break;
-      case 'deletar':
-        const confirmed = await confirm({
-          message: `Tem certeza que deseja deletar ${selectedItems.length} contrato(s)?`,
-          type: 'danger',
-          confirmText: 'Deletar',
-          cancelText: 'Cancelar'
-        });
-
-        if (confirmed) {
-          // TODO: Implementar exclusão de contratos
-          console.log('Deletar contratos:', selectedItems.map(item => item.id));
-        }
-        break;
-      default:
-        console.log('Ação não implementada:', action);
+  const handleDelete = (contratoId: number) => {
+    if (window.confirm('Tem certeza que deseja excluir este contrato?')) {
+      // TODO: Implementar exclusão
+      console.log('Deletar contrato:', contratoId);
     }
   };
 
@@ -248,19 +155,24 @@ const Contratos: React.FC = () => {
 
   const bulkActions = [
     {
-      label: 'Novo',
-      action: () => setShowCreateModal(true),
-      variant: 'primary' as const
+      label: 'Novo Contrato',
+      action: () => setShowCreateModal(true)
     },
     {
       label: 'Editar',
-      action: (selectedItems: any[]) => handleTopoActions('editar', selectedItems),
-      variant: 'secondary' as const
+      action: (selectedItems: Contrato[]) => {
+        if (selectedItems.length === 1) {
+          console.log('Editar contrato:', selectedItems[0].id);
+        }
+      }
     },
     {
-      label: 'Deletar',
-      action: (selectedItems: any[]) => handleTopoActions('deletar', selectedItems),
-      variant: 'danger' as const
+      label: 'Excluir',
+      action: (selectedItems: Contrato[]) => {
+        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} contrato(s)?`)) {
+          selectedItems.forEach(item => handleDelete(item.id));
+        }
+      }
     }
   ];
 
@@ -279,34 +191,32 @@ const Contratos: React.FC = () => {
   }
 
   return (
-    <div className="container-fluid">
-      <div className="row">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Contratos</h2>
-          </div>
+    <>
+      <DataTable
+        columns={columns}
+        data={sortedData}
+        isLoading={isLoading}
+        pagination={{
+          from: (page - 1) * limit + 1,
+          to: Math.min(page * limit, contratos.length),
+          total: contratos.length,
+          current_page: page,
+          last_page: Math.ceil(contratos.length / limit)
+        }}
+        limit={limit}
+        setLimit={setLimit}
+        setPage={setPage}
+        emptyMessage="Nenhum contrato encontrado"
+        searchPlaceholder="Buscar por cliente, plano ou status..."
+        onSearch={setSearch}
+        bulkActions={bulkActions}
+        onSort={handleSort}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+        onRefresh={refetch}
+        onSelectionChange={() => {}}
+      />
 
-          <DataTable
-            columns={columns}
-            data={getPaginatedData()}
-            isLoading={isLoading}
-            pagination={pagination}
-            limit={limit}
-            setLimit={setLimit}
-            setPage={setPage}
-            emptyMessage="Nenhum contrato encontrado"
-            searchPlaceholder="Cliente, plano ou status"
-            onSearch={setSearch}
-            bulkActions={bulkActions}
-            onSort={handleSort}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onRefresh={refetch}
-          />
-        </div>
-      </div>
-
-      {/* Modal de Criação */}
       <ContratoCreateModal
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -315,21 +225,7 @@ const Contratos: React.FC = () => {
           refetch();
         }}
       />
-
-      {/* Modal de confirmação */}
-      {confirmState && (
-        <ConfirmModal
-          show={confirmState.show}
-          title={confirmState.options.title || 'Confirmar Ação'}
-          message={confirmState.options.message}
-          confirmText={confirmState.options.confirmText || 'Confirmar'}
-          cancelText={confirmState.options.cancelText || 'Cancelar'}
-          type={confirmState.options.type || 'warning'}
-          onConfirm={confirmState.onConfirm}
-          onCancel={confirmState.onCancel}
-        />
-      )}
-    </div>
+    </>
   );
 };
 
