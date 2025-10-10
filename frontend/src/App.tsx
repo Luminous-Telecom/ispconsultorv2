@@ -31,8 +31,7 @@ function App() {
             <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Layout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            <Route index element={<Dashboard />} />
           </Route>
             </Routes>
           </Router>
