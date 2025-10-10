@@ -92,6 +92,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [selectedContratosItems, setSelectedContratosItems] = useState<any[]>([]);
+  const [showInativosContratos, setShowInativosContratos] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -415,6 +417,153 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         return 'secondary';
     }
   };
+
+  // Processamento dos dados de contratos
+  const sortedContratosData = React.useMemo(() => {
+    if (!contratosData) return [];
+    
+    let filtered = contratosData.filter((contrato: any) => {
+      // Filtro por busca
+      if (search) {
+        const searchLower = search.toLowerCase();
+        const matchesSearch = 
+          contrato.plano?.nome_plano?.toLowerCase().includes(searchLower) ||
+          contrato.status?.toLowerCase().includes(searchLower) ||
+          contrato.valor_final?.toString().includes(searchLower) ||
+          contrato.id?.toString().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+      
+      // Filtro por inativos
+      if (!showInativosContratos && contrato.status === 'inativo') {
+        return false;
+      }
+      
+      return true;
+    });
+
+    // Ordenação
+    if (sortColumn) {
+      filtered = [...filtered].sort((a: any, b: any) => {
+        let aValue: any = a[sortColumn];
+        let bValue: any = b[sortColumn];
+        
+        // Tratar campos especiais
+        if (sortColumn === 'plano') {
+          aValue = a.plano?.nome_plano || '';
+          bValue = b.plano?.nome_plano || '';
+        } else if (sortColumn === 'valor_plano') {
+          aValue = parseFloat(a.plano?.valor_mensal) || 0;
+          bValue = parseFloat(b.plano?.valor_mensal) || 0;
+        } else if (sortColumn === 'valor_final') {
+          aValue = parseFloat(aValue) || 0;
+          bValue = parseFloat(bValue) || 0;
+        }
+        
+        if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+        if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+        
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    
+    return filtered;
+  }, [contratosData, search, showInativosContratos, sortColumn, sortDirection]);
+
+  const paginatedContratosData = React.useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return sortedContratosData.slice(startIndex, startIndex + limit);
+  }, [sortedContratosData, page, limit]);
+
+  // Colunas para contratos
+  const contratosColumns = [
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      render: (contrato: any) => contrato.id
+    },
+    {
+      key: 'nome_plano',
+      label: 'Plano',
+      sortable: true,
+      render: (contrato: any) => contrato.plano?.nome_plano || '-'
+    },
+    {
+      key: 'valor_plano',
+      label: 'Valor Plano',
+      sortable: true,
+      render: (contrato: any) => contrato.plano?.valor_mensal ? `R$ ${contrato.plano.valor_mensal}` : '-'
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (contrato: any) => (
+        <span className={`badge ${
+          contrato.status === 'ativo' ? 'bg-success' :
+          contrato.status === 'inativo' ? 'bg-danger' :
+          'bg-warning'
+        }`}>
+          {contrato.status}
+        </span>
+      )
+    },
+    {
+      key: 'desconto_percentual',
+      label: 'Desconto %',
+      sortable: true,
+      render: (contrato: any) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
+    },
+    {
+      key: 'desconto_valor',
+      label: 'Desconto R$',
+      sortable: true,
+      render: (contrato: any) => contrato.desconto_valor ? `R$ ${contrato.desconto_valor}` : '-'
+    },
+    {
+      key: 'valor_final',
+      label: 'Valor Final',
+      sortable: true,
+      render: (contrato: any) => contrato.valor_final ? `R$ ${contrato.valor_final}` : '-'
+    },
+    {
+      key: 'data_inicio',
+      label: 'Data Início',
+      sortable: true,
+      render: (contrato: any) => contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'
+    },
+    {
+      key: 'data_fim',
+      label: 'Data Fim',
+      sortable: true,
+      render: (contrato: any) => contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'
+    },
+    {
+      key: 'isento_mensalidade',
+      label: 'Isento',
+      sortable: true,
+      render: (contrato: any) => (
+        <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
+          {contrato.isento_mensalidade ? 'Sim' : 'Não'}
+        </span>
+      )
+    },
+    {
+      key: 'dia_vencimento',
+      label: 'Dia Venc.',
+      sortable: true,
+      render: (contrato: any) => contrato.dia_vencimento ? contrato.dia_vencimento : '-'
+    },
+    {
+      key: 'banco_nome',
+      label: 'Banco',
+      sortable: true,
+      render: (contrato: any) => contrato.bancoBoleto?.nome || '-'
+    }
+  ];
 
   // Colunas para o DataTable
   const columns = [
@@ -983,148 +1132,256 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             {activeTab === 'contratos' && (
               <div className="row">
                 <div className="col-12">
-                  <DataTable
-                    columns={[
-                      {
-                        key: 'id',
-                        label: 'ID',
-                        sortable: true,
-                        render: (contrato: any) => contrato.id
-                      },
-                      {
-                        key: 'nome_plano',
-                        label: 'Plano',
-                        sortable: true,
-                        render: (contrato: any) => contrato.plano?.nome_plano || '-'
-                      },
-                      {
-                        key: 'valor_plano',
-                        label: 'Valor Plano',
-                        sortable: true,
-                        render: (contrato: any) => contrato.plano?.valor_mensal ? `R$ ${contrato.plano.valor_mensal}` : '-'
-                      },
-                      {
-                        key: 'status',
-                        label: 'Status',
-                        sortable: true,
-                        render: (contrato: any) => (
-                          <span className={`badge ${
-                            contrato.status === 'ativo' ? 'bg-success' :
-                            contrato.status === 'inativo' ? 'bg-danger' :
-                            'bg-warning'
-                          }`}>
-                            {contrato.status}
-                          </span>
-                        )
-                      },
-                      {
-                        key: 'desconto_percentual',
-                        label: 'Desconto %',
-                        sortable: true,
-                        render: (contrato: any) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
-                      },
-                      {
-                        key: 'desconto_valor',
-                        label: 'Desconto R$',
-                        sortable: true,
-                        render: (contrato: any) => contrato.desconto_valor ? `R$ ${contrato.desconto_valor}` : '-'
-                      },
-                      {
-                        key: 'valor_final',
-                        label: 'Valor Final',
-                        sortable: true,
-                        render: (contrato: any) => contrato.valor_final ? `R$ ${contrato.valor_final}` : '-'
-                      },
-                      {
-                        key: 'data_inicio',
-                        label: 'Data Início',
-                        sortable: true,
-                        render: (contrato: any) => contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'
-                      },
-                      {
-                        key: 'data_fim',
-                        label: 'Data Fim',
-                        sortable: true,
-                        render: (contrato: any) => contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'
-                      },
-                      {
-                        key: 'isento_mensalidade',
-                        label: 'Isento',
-                        sortable: true,
-                        render: (contrato: any) => (
-                          <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
-                            {contrato.isento_mensalidade ? 'Sim' : 'Não'}
-                          </span>
-                        )
-                      },
-                      {
-                        key: 'dia_vencimento',
-                        label: 'Dia Venc.',
-                        sortable: true,
-                        render: (contrato: any) => contrato.dia_vencimento ? contrato.dia_vencimento : '-'
-                      },
-                      {
-                        key: 'banco_nome',
-                        label: 'Banco',
-                        sortable: true,
-                        render: (contrato: any) => contrato.bancoBoleto?.nome || '-'
-                      }
-                    ]}
-                    data={contratosData || []}
-                    isLoading={isLoadingContratos}
-                    limit={10}
-                    setLimit={() => {}}
-                    setPage={() => {}}
-                    emptyMessage="Nenhum contrato encontrado para este cliente"
-                    bulkActions={[
-                      {
-                        label: 'Novo Contrato',
-                        action: () => setShowContratoCreateModal(true),
-                        variant: 'primary'
-                      },
-                      {
-                        label: 'Editar',
-                        action: (selectedItems, event) => {
-                          // Prevenir propagação do evento para evitar submit do formulário
-                          if (event) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                          }
-                          
-                          if (selectedItems.length === 1) {
-                            setSelectedContratoId(selectedItems[0].id);
-                            setShowContratoEditModal(true);
-                          }
-                        },
-                        variant: 'secondary',
-                        disabled: (selectedItems) => selectedItems.length !== 1
-                      },
-                      {
-                        label: 'Deletar',
-                        action: async (selectedItems) => {
-                          if (selectedItems.length > 0) {
-                            if (window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} contrato(s)?`)) {
-                              for (const item of selectedItems) {
-                                try {
-                                  await deleteContratoMutation.mutateAsync(item.id);
-                                } catch (error: any) {
-                                  console.error(`Erro ao deletar contrato ${item.id}:`, error);
-                                  const errorMessage = error?.response?.data?.message || 
-                                                     error?.response?.data?.error || 
-                                                     `Erro ao deletar contrato ${item.id}`;
-                                  showNotification(errorMessage, 'error');
-                                }
-                              }
-                              // Refetch contratos após deletar
-                              refetchContratos();
+                  {/* Cabeçalho fixo - não rola */}
+                  <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
+                    {/* Botões de Ação - Linha 1 */}
+                    <div className="d-flex justify-content-start mb-3">
+                      <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowContratoCreateModal(true);
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >
+                          Novo Contrato
+                        </button>
+                        
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (selectedContratosItems.length === 1) {
+                              setSelectedContratoId(selectedContratosItems[0].id);
+                              setShowContratoEditModal(true);
                             }
-                          }
-                        },
-                        variant: 'danger',
-                        disabled: (selectedItems) => selectedItems.length === 0
-                      }
-                    ]}
-                  />
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          disabled={selectedContratosItems.length !== 1}
+                        >
+                          Editar
+                        </button>
+                        
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (selectedContratosItems.length > 0) {
+                              if (window.confirm(`Tem certeza que deseja deletar ${selectedContratosItems.length} contrato(s)?`)) {
+                                for (const item of selectedContratosItems) {
+                                  try {
+                                    await deleteContratoMutation.mutateAsync(item.id);
+                                  } catch (error: any) {
+                                    console.error(`Erro ao deletar contrato ${item.id}:`, error);
+                                    const errorMessage = error?.response?.data?.message || 
+                                                       error?.response?.data?.error || 
+                                                       `Erro ao deletar contrato ${item.id}`;
+                                    showNotification(errorMessage, 'error');
+                                  }
+                                }
+                                // Refetch contratos após deletar
+                                refetchContratos();
+                                setSelectedContratosItems([]);
+                              }
+                            }
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          disabled={selectedContratosItems.length === 0}
+                        >
+                          Deletar
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Busca, Filtros e Paginação - Linha 2 */}
+                    <div className="d-flex mb-3">
+                      {/* Busca à esquerda */}
+                      <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="Buscar por plano, status, valor..."
+                          value={search}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setSearch(e.target.value);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ width: '300px', height: '32px' }}
+                        />
+                      </div>
+
+                      {/* Filtros após a busca */}
+                      <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            id="showInativosContratos"
+                            checked={showInativosContratos}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              setShowInativosContratos(e.target.checked);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <label className="form-check-label small" htmlFor="showInativosContratos">
+                            Mostrar inativos
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Paginação à direita */}
+                      <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
+                        {/* Seletor de linhas por página */}
+                        <select 
+                          className="form-select form-select-sm" 
+                          value={limit}
+                          onChange={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setLimit(parseInt(e.target.value));
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          style={{ width: '80px', height: '32px', cursor: 'pointer' }}
+                        >
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={15}>15</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+
+                        {/* Paginação compacta */}
+                        <div className="d-flex gap-1">
+                          <button 
+                            className="btn btn-outline-secondary btn-sm" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setPage(1);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            disabled={page <= 1}
+                          >
+                            <i className="bi bi-chevron-double-left"></i>
+                          </button>
+                          <button 
+                            className="btn btn-outline-secondary btn-sm" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setPage(page - 1);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            disabled={page <= 1}
+                          >
+                            <i className="bi bi-chevron-left"></i>
+                          </button>
+                          <span className="small text-muted mx-2">
+                            {sortedContratosData.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, sortedContratosData.length)} / {sortedContratosData.length}
+                          </span>
+                          <button 
+                            className="btn btn-outline-secondary btn-sm" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setPage(page + 1);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            disabled={page >= Math.ceil(sortedContratosData.length / limit)}
+                          >
+                            <i className="bi bi-chevron-right"></i>
+                          </button>
+                          <button 
+                            className="btn btn-outline-secondary btn-sm" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setPage(Math.ceil(sortedContratosData.length / limit));
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            disabled={page >= Math.ceil(sortedContratosData.length / limit)}
+                          >
+                            <i className="bi bi-chevron-double-right"></i>
+                          </button>
+                        </div>
+
+                        {/* Botão de refresh */}
+                        <button 
+                          className="btn btn-outline-secondary btn-sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            refetchContratos();
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          title="Recarregar dados"
+                        >
+                          <i className="bi bi-arrow-clockwise"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Conteúdo rolável - apenas a tabela */}
+                  <div style={{ paddingLeft: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+                    <DataTable
+                      data={paginatedContratosData}
+                      columns={contratosColumns}
+                      isLoading={isLoadingContratos}
+                      showHeader={false}
+                      onSelectionChange={setSelectedContratosItems}
+                      onSort={(column: string, direction: 'asc' | 'desc') => {
+                        setSortColumn(column);
+                        setSortDirection(direction);
+                      }}
+                      sortColumn={sortColumn}
+                      sortDirection={sortDirection}
+                      limit={limit}
+                      setLimit={setLimit}
+                      setPage={setPage}
+                      emptyMessage="Este cliente ainda não possui contratos cadastrados."
+                    />
+                  </div>
+
+                  {/* Resumo de Contratos */}
+                  {sortedContratosData.length > 0 && (
+                    <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                      <div className="d-flex align-items-center">
+                        <i className="bi bi-info-circle text-muted me-2"></i>
+                        <span className="small text-muted">Resumo de contratos</span>
+                      </div>
+                      <div className="d-flex gap-4">
+                        <div className="text-end">
+                          <div className="small text-muted">Total de contratos:</div>
+                          <strong>{sortedContratosData.length}</strong>
+                        </div>
+                        <div className="text-end">
+                          <div className="small text-muted">Contratos ativos:</div>
+                          <strong>{sortedContratosData.filter((c: any) => c.status === 'ativo').length}</strong>
+                        </div>
+                        <div className="text-end">
+                          <div className="small text-muted">Valor total mensal:</div>
+                          <strong>R$ {sortedContratosData.reduce((sum: number, contrato: any) => {
+                            return sum + Number(contrato.valor_final || 0);
+                          }, 0).toFixed(2)}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
