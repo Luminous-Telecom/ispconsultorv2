@@ -307,6 +307,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           border: '1px solid var(--border-color)',
           borderRadius: '8px',
           boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+          zIndex: 1052, // Garantir que o conteúdo do modal esteja acima do menu
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
