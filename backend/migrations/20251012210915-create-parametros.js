@@ -3,16 +3,6 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    // Verificar se a tabela já existe
-    const [tables] = await queryInterface.sequelize.query(
-      "SHOW TABLES LIKE 'parametros'"
-    );
-
-    if (tables.length > 0) {
-      console.log('Tabela parametros já existe, pulando criação...');
-      return;
-    }
-
     await queryInterface.createTable('parametros', {
       id: {
         type: Sequelize.INTEGER,
