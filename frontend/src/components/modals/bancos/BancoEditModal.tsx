@@ -654,17 +654,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
             className="btn btn-primary"
             disabled={updateBancoMutation.isPending}
           >
-            {updateBancoMutation.isPending ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Salvando...
-              </>
-            ) : (
-              <>
-                <i className="bi bi-check-lg me-1"></i>
-                Salvar Alterações
-              </>
-            )}
+            Salvar Alterações
           </button>
         </div>
       </form>

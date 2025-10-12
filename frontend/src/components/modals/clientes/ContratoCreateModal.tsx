@@ -361,14 +361,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
             className="btn btn-primary btn-sm"
             disabled={createContratoMutation.isPending}
           >
-            {createContratoMutation.isPending ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Criando...
-              </>
-            ) : (
-              'Criar Contrato'
-            )}
+            Criar Contrato
           </button>
         </div>
       </form>

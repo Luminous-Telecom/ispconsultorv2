@@ -731,7 +731,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   className="btn btn-primary"
                   disabled={updateContratoMutation.isPending}
                 >
-                  {updateContratoMutation.isPending ? 'Salvando...' : 'Salvar'}
+                  Salvar
                 </button>
               </div>
             </form>

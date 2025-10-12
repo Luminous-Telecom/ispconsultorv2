@@ -547,17 +547,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             className="btn btn-primary"
             disabled={updateDadosMutation.isPending}
           >
-            {updateDadosMutation.isPending ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Salvando...
-              </>
-            ) : (
-              <>
-                <i className="bi bi-check-lg me-1"></i>
-                Salvar Alterações
-              </>
-            )}
+            Salvar Alterações
           </button>
         </div>
       </form>

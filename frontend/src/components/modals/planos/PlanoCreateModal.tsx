@@ -322,19 +322,10 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           </button>
           <button
             type="submit"
-              className="btn btn-primary btn-sm"
+            className="btn btn-primary btn-sm"
             disabled={createPlanoMutation.isPending}
           >
-            {createPlanoMutation.isPending ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Criando...
-              </>
-            ) : (
-              <>
-                Criar Plano
-              </>
-            )}
+            Criar Plano
           </button>
         </div>
       </form>

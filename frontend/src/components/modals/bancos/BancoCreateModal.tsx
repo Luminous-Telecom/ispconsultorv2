@@ -552,19 +552,10 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           </button>
           <button
             type="submit"
-              className="btn btn-primary btn-sm"
+            className="btn btn-primary btn-sm"
             disabled={createBancoMutation.isPending}
           >
-            {createBancoMutation.isPending ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Criando...
-              </>
-            ) : (
-              <>
-                Criar Banco
-              </>
-            )}
+            Criar Banco
           </button>
         </div>
       </form>

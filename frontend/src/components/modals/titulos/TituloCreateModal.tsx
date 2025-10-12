@@ -390,7 +390,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
             className="btn btn-primary"
             disabled={createParcelaMutation.isPending}
           >
-            {createParcelaMutation.isPending ? 'Criando...' : 'Criar Título'}
+            Criar Título
           </button>
         </div>
       </form>

@@ -256,16 +256,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
             className="btn btn-primary btn-sm"
             disabled={updateParcelaMutation.isPending}
           >
-            {updateParcelaMutation.isPending ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Salvando...
-              </>
-            ) : (
-              <>
-                Salvar Alterações
-              </>
-            )}
+            Salvar Alterações
           </button>
         </div>
       </form>

@@ -237,14 +237,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             className="btn btn-success"
             disabled={marcarPagoMutation.isPending}
           >
-            {marcarPagoMutation.isPending ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Processando...
-              </>
-            ) : (
-              'Receber'
-            )}
+            Receber
           </button>
         </div>
       </form>

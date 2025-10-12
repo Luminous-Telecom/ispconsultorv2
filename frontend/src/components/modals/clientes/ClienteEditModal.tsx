@@ -791,7 +791,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 className="btn btn-primary btn-sm"
                 disabled={updateClienteMutation.isPending}
               >
-                {updateClienteMutation.isPending ? 'Salvando...' : 'Salvar'}
+                Salvar
               </button>
             </div>
           }

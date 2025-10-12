@@ -415,7 +415,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             className="btn btn-primary btn-sm"
             disabled={createClienteMutation.isPending}
           >
-            {createClienteMutation.isPending ? 'Criando...' : 'Criar Cliente'}
+            Criar Cliente
           </button>
         </div>
       </form>
