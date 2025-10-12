@@ -217,7 +217,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
           {errors.observacoes && (
             <div className="invalid-feedback">{errors.observacoes}</div>
           )}
-          <div className="text-muted">
+          <div className="text-light">
             {formData.observacoes.length}/500 caracteres
           </div>
         </div>

@@ -136,7 +136,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
                 <label className="form-check-label" htmlFor="validar_cpf_cnpj">
                   Validar CPF/CNPJ
                 </label>
-                <div className="text-muted">
+                <div className="text-light">
                   Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes
                 </div>
               </div>
@@ -160,7 +160,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
                 <label className="form-check-label" htmlFor="gerar_titulos_automatico">
                   Gerar Títulos Automaticamente
                 </label>
-                <div className="text-muted">
+                <div className="text-light">
                   Gera títulos automaticamente ao criar/renovar contratos
                 </div>
               </div>
@@ -177,7 +177,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
                 <label className="form-check-label" htmlFor="titulos_vence_sabado">
                   Títulos que Vencem aos Sábados
                 </label>
-                <div className="text-muted">
+                <div className="text-light">
                   Se data de vencimento cair em sábado, mantém no sábado. Se desativado, move para próximo dia útil
                 </div>
               </div>
@@ -194,7 +194,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
                 <label className="form-check-label" htmlFor="auto_lancamento_titulos">
                   Auto Lançamento de Títulos
                 </label>
-                <div className="text-muted">
+                <div className="text-light">
                   Lança automaticamente novos títulos para manter o total configurado no financeiro
                 </div>
               </div>
@@ -213,7 +213,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
                   onChange={(e) => handleNumberChange('total_titulos_financeiro', e.target.value)}
                   disabled={updateParametrosMutation.isPending || !formData.auto_lancamento_titulos}
                 />
-                <div className="text-muted">
+                <div className="text-light">
                   Quantidade de títulos futuros a manter sempre disponíveis no financeiro (de 1 a 24 meses)
                 </div>
               </div>

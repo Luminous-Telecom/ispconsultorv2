@@ -287,7 +287,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                     />
                   ) : (
                     <div 
-                      className="border rounded p-2 bg-light text-center text-muted"
+                      className="border rounded p-2 bg-light text-center text-light"
                       style={{ width: '200px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       <div>
@@ -306,7 +306,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                     onChange={onLogoChange}
                     disabled={updateDadosMutation.isPending}
                   />
-                  <small className="text-muted text-muted">
+                  <small className="text-light text-light">
                     Formatos aceitos: JPG, PNG, GIF (máx. 2MB)
                   </small>
                 </div>

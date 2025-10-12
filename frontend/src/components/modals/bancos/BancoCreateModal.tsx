@@ -233,7 +233,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     disabled={createBancoMutation.isPending}
                     placeholder="Disponibilizado no menu configurações da API"
                   />
-                  <small className="text-muted text-muted">Disponível nas configurações da API Efi</small>
+                  <small className="text-light text-light">Disponível nas configurações da API Efi</small>
                 </div>
               </div>
             </div>
@@ -307,7 +307,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     disabled={createBancoMutation.isPending}
                     placeholder="Sua chave da API Asaas"
                   />
-                  <small className="text-muted text-muted">Disponível no painel administrativo da Asaas</small>
+                  <small className="text-light text-light">Disponível no painel administrativo da Asaas</small>
                 </div>
               </div>
             </div>
@@ -377,7 +377,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                   placeholder="Ex: EFI - Conta Principal"
                 />
                 {errors.nome && <div className="invalid-feedback">{errors.nome}</div>}
-                <small className="text-muted text-muted">Nome para identificar esta conta do banco</small>
+                <small className="text-light text-light">Nome para identificar esta conta do banco</small>
               </div>
             </div>
           </div>
@@ -489,7 +489,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
               disabled={createBancoMutation.isPending}
               placeholder="URL para retorno de webhooks"
             />
-                    <small className="text-muted text-muted">URL gerada automaticamente baseada no tipo de banco</small>
+                    <small className="text-light text-light">URL gerada automaticamente baseada no tipo de banco</small>
                   </div>
                 </div>
           </div>
@@ -508,7 +508,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                 <label className="form-check-label" htmlFor="sandbox">
                       Modo Sandbox (Testes)
                 </label>
-                    <small className="text-muted text-muted d-block">
+                    <small className="text-light text-light d-block">
                       Ative para usar ambiente de testes. Desative para produção.
                     </small>
               </div>
