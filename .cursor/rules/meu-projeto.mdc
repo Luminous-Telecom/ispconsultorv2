@@ -266,56 +266,167 @@ style: ajustar espaçamento em tabelas
 docs: atualizar documentação de APIs
 ```
 
-## O QUE NÃO FAZER
+## O QUE PODE FAZER ✅
+
+### Código
+- ✅ Use `const` e `let` para declarações de variáveis
+- ✅ Use TypeScript com tipagem forte
+- ✅ Use `async/await` para operações assíncronas
+- ✅ Trate todos os erros com try/catch
+- ✅ Use ESLint e Prettier para formatação
+- ✅ Separe componentes reutilizáveis
+- ✅ Organize páginas por pastas
+- ✅ Sempre olhe erros de compilação TypeScript
+
+### Backend (Node.js/TypeScript)
+- ✅ Use validação de dados com Joi
+- ✅ Implemente tratamento de erros adequado
+- ✅ Use variáveis de ambiente (.env) para configurações sensíveis
+- ✅ Mantenha logs limpos (sem URLs, tokens, payloads desnecessários)
+- ✅ Use transações para operações críticas no banco
+
+### Frontend (React/TypeScript)
+- ✅ Use componentes funcionais com hooks
+- ✅ Implemente TypeScript com interfaces bem definidas
+- ✅ Use Bootstrap para todos os estilos
+- ✅ Implemente loading states e tratamento de erros
+- ✅ Use contextos para estado global quando necessário
+- ✅ Separe componentes reutilizáveis em arquivos próprios
+
+### Banco de Dados
+- ✅ Migrations sempre em JavaScript (`.js`)
+- ✅ Use migrations para mudanças de schema
+- ✅ Implemente índices adequados
+- ✅ Valide dados antes de inserir/atualizar
+- ✅ Não especifique o banco no código (já existe no cadastro do cliente)
+
+### UI/UX
+- ✅ Sempre use Bootstrap para estilos
+- ✅ Use ordenações nas colunas de tabelas
+- ✅ Coloque apenas um dado por linha nas tabelas
+- ✅ Botões sem ícones (preferência do projeto)
+- ✅ Botões de salvar com texto fixo "Salvar" (sem spinners ou texto condicional)
+- ✅ Mostre ID em todas as tabelas de listagem
+- ✅ Use modais para criar/editar/listar (exceto Dashboard)
+
+### Git
+- ✅ Commits descritivos em português
+- ✅ Use conventional commits quando possível
+- ✅ Teste funcionalidade ANTES de commitar
+- ✅ Commits pequenos e focados
+
+## O QUE NÃO PODE FAZER ❌
 
 ### Código
 - ❌ NÃO use `var`, sempre `const` ou `let`
 - ❌ NÃO use `any` sem necessidade
 - ❌ NÃO ignore erros de TypeScript
-- ❌ NÃO deixe `console.log` desnecessários
+- ❌ NÃO deixe `console.log` em produção
 - ❌ NÃO use callbacks quando `async/await` é possível
+- ❌ NÃO crie scripts auxiliares desnecessários
+- ❌ NÃO use URLs hardcoded no código
 
 ### React
-- ❌ NÃO use class components
+- ❌ NÃO use class components (prefira functional)
 - ❌ NÃO deixe componentes muito grandes (>300 linhas)
 - ❌ NÃO modifique state diretamente
 - ❌ NÃO esqueça dependências em useEffect
 - ❌ NÃO ignore warnings do React
 
-### API
-- ❌ NÃO use URLs hardcoded, use variáveis de ambiente
+### Backend
+- ❌ NÃO deixe senhas em texto plano
+- ❌ NÃO ignore validação de entrada
+- ❌ NÃO deixe portas hardcoded
 - ❌ NÃO exponha dados sensíveis em logs
-- ❌ NÃO ignore validação de dados
-- ❌ NÃO esqueça tratamento de erros
-- ❌ NÃO faça queries N+1
+- ❌ NÃO especifique banco de dados no código
+- ❌ NÃO use carnê (não será usado no projeto)
 
-### UI
-- ❌ NÃO use jQuery
+### Frontend/UI
+- ❌ NÃO use jQuery (use React hooks)
+- ❌ NÃO use inline styles (use Bootstrap)
+- ❌ NÃO use botões nas linhas de tabelas
+- ❌ NÃO use ícones nos botões
+- ❌ NÃO coloque mais de um dado na mesma linha das tabelas
 - ❌ NÃO crie tabelas sem ordenação
-- ❌ NÃO esqueça estados de loading
-- ❌ NÃO ignore feedback ao usuário
-- ❌ NÃO use ícones em botões (preferência do projeto)
+- ❌ NÃO use ícones ou spinners em botões de ação
+- ❌ NÃO mude o texto dos botões durante loading (mantenha texto fixo)
+- ❌ NÃO use URLs em códigos frontend
+
+### Banco de Dados
+- ❌ NÃO faça queries N+1
+- ❌ NÃO crie migrations em TypeScript (sempre JavaScript)
+- ❌ NÃO ignore índices em tabelas grandes
 
 ### Git
-- ❌ NÃO commite arquivos .env
+- ❌ NÃO commite arquivos .env ou dados sensíveis
 - ❌ NÃO commite node_modules
 - ❌ NÃO force push para main/master
-- ❌ NÃO commite sem testar
+- ❌ NÃO commite sem testar o código
 - ❌ NÃO use commits genéricos ("fix", "update")
+- ❌ NÃO atualize git config
+- ❌ NÃO rode comandos destrutivos (hard reset, force push)
 
-## Ambiente de Desenvolvimento
+### Ambiente de Desenvolvimento
+- ❌ NÃO reinicie o PM2 ao fazer mudanças (reload automático)
+- ❌ NÃO rode comandos de logs do PM2 (terminal fica travado)
+- ❌ NÃO rode `npm run build` em desenvolvimento
+- ❌ NÃO rode `pm2 logs` (trava o terminal)
+- ❌ NÃO olhe logs do PM2 pelo terminal
 
-### PM2
-- NÃO reinicie manualmente (hot reload automático)
-- NÃO rode `pm2 logs` (trava terminal)
-- NÃO rode `npm run build` em desenvolvimento
-- Configure watch mode corretamente
+### Rotas e URLs
+- ❌ NÃO use URLs hardcoded
+- ❌ Toda URL e rota deve ser dentro do código do banco emissor (pertencer somente a ele)
+
+## Regras Específicas do Projeto CTM Telecom
+
+### Tabelas
+- Sempre mostre a coluna ID (primeira coluna)
+- ID em texto normal (sem `#` ou formatação especial)
+- Nunca coloque mais de um dado na mesma linha
+- Sempre use ordenação nas colunas
+- Ordenação padrão: ID decrescente (últimos primeiro)
+
+### Botões
+- **SEM ícones** em nenhum botão
+- **SEM spinners** durante loading
+- **Texto fixo** mesmo durante isPending
+- Botões de salvar: apenas "Salvar" (não "Salvar Alterações")
+- Botões de criar: "Criar [Entidade]"
+- Mantém `disabled={isPending}` para prevenir múltiplos cliques
+
+### Modais
+- Use modais para todas as funcionalidades exceto Dashboard
+- Dashboard é a única "página" real (rota `/`)
+- Clientes, Planos, Bancos, Contratos: tudo em modais
+- Use `DraggableModal` para todos os modais
+- Modais de listagem seguem padrão: `DataTable` com `showHeader={false}` e `ModalHeaderActions`
+
+### Banco de Dados
+- NÃO especifique nome do banco no código
+- Banco já está no cadastro do cliente
+- Código do banco é automático baseado no tipo
+- Migrations sempre em `.js` (JavaScript)
+
+### URLs e APIs
+- URLs nunca no código (use variáveis de ambiente)
+- Cada banco emissor tem suas próprias rotas/URLs
+- URL da API do banco pertence apenas ao banco emissor
+
+### Email de Cliente
+- NUNCA envie email do cliente para o banco ao gerar títulos
+- Removida toda lógica de `repassar_email_cliente`
+
+### PM2 e Desenvolvimento
+- PM2 faz hot reload automático
+- Não rode `pm2 restart`
+- Não rode `pm2 logs` (trava terminal)
+- Não rode `npm run build` (é desenvolvimento)
 
 ### Testes
-- Teste funcionalidade ANTES de commitar
-- Verifique erros de TypeScript
-- Teste em diferentes navegadores se possível
-- Verifique console por erros/warnings
+- Teste PRIMEIRO
+- Confirme funcionando
+- Depois faça commit
+- Sempre verifique erros de compilação TypeScript
 
 ---
 alwaysApply: true
