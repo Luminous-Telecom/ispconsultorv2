@@ -94,12 +94,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
-      // Largura do menu lateral (240px) - não permitir arrastar para área do menu
-      const sidebarWidth = 240;
-      const minX = sidebarWidth;
-      
+      // Permitir arrastar para qualquer lugar, incluindo sobre o menu
       setPosition({
-        x: Math.max(minX, newX), // Não permitir ir para área do menu
+        x: newX,
         y: newY
       });
     }
@@ -277,12 +274,24 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           backgroundColor: 'rgba(0,0,0,0.5)',
           position: 'fixed',
           top: 0,
-          left: '240px', // Começar após o menu
+          left: '240px', // Backdrop começa após o menu
           right: 0,
           bottom: 0,
           zIndex: 1000
         }}
       >
+        {/* Backdrop transparente sobre o menu para permitir drag */}
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '240px', // Largura do menu
+            height: '100vh',
+            backgroundColor: 'transparent',
+            zIndex: 1001 // Acima do backdrop principal
+          }}
+        />
       <div
         ref={modalRef}
         className={`modal-content ${className}`}
