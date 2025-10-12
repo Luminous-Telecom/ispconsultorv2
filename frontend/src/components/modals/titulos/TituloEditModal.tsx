@@ -256,7 +256,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
             className="btn btn-primary btn-sm"
             disabled={updateParcelaMutation.isPending}
           >
-            Salvar Alterações
+            Salvar
           </button>
         </div>
       </form>
