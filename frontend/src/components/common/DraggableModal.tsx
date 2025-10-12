@@ -277,7 +277,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           left: '240px', // Backdrop começa após o menu
           right: 0,
           bottom: 0,
-          zIndex: 1000
+          zIndex: 1050
         }}
       >
         {/* Backdrop transparente sobre o menu para permitir drag */}
@@ -289,7 +289,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
             width: '240px', // Largura do menu
             height: '100vh',
             backgroundColor: 'transparent',
-            zIndex: 1001 // Acima do backdrop principal
+            zIndex: 1051 // Acima do backdrop principal
           }}
         />
       <div
