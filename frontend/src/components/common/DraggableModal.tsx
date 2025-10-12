@@ -94,9 +94,12 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
-      // Permitir arrastar para fora da tela
+      // Largura do menu lateral (240px) - não permitir arrastar para área do menu
+      const sidebarWidth = 240;
+      const minX = sidebarWidth;
+      
       setPosition({
-        x: newX,
+        x: Math.max(minX, newX), // Não permitir ir para área do menu
         y: newY
       });
     }
