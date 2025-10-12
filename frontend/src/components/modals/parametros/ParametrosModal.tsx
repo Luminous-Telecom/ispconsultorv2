@@ -120,7 +120,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
       <form onSubmit={handleSubmit}>
         <div className="modal-body">
           <div className="card mb-3">
-            <div className="card-header bg-light">
+            <div className="card-header">
               <h6 className="mb-0">Validações</h6>
             </div>
             <div className="card-body">
@@ -144,7 +144,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
           </div>
 
           <div className="card mb-3">
-            <div className="card-header bg-light">
+            <div className="card-header">
               <h6 className="mb-0">Geração de Títulos</h6>
             </div>
             <div className="card-body">
