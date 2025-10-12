@@ -24,6 +24,7 @@ import webhookRoutes from './routes/webhookRoutes';
 import schedulerRoutes from './routes/schedulerRoutes';
 import workerRoutes from './routes/workerRoutes';
 import parametroRoutes from './routes/parametroRoutes';
+import parametrosRoutes from './routes/parametrosRoutes';
 import contratoRoutes from './routes/contratos';
 
 // Carregar variáveis de ambiente
@@ -102,7 +103,8 @@ app.use('/api/dados-empresa', dadosEmpresaRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/workers', workerRoutes);
-app.use('/api/parametros', parametroRoutes);
+app.use('/api/parametro', parametroRoutes);
+app.use('/api/parametros', parametrosRoutes);
 
 // Rotas de webhook
 app.use('/webhook', webhookRoutes);
