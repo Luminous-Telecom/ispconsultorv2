@@ -38,20 +38,24 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   };
 
-  // Centralizar modal na tela
+  // Posicionar modal na área restante (excluindo menu)
   useEffect(() => {
     if (show) {
       const { width } = getSizeClasses();
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       
+      // Largura do menu lateral (240px)
+      const sidebarWidth = 240;
+      const availableWidth = screenWidth - sidebarWidth;
+      
       // Altura: para modais A4, usar altura maior (90%), outros usam padrão
       const autoHeight = size === 'a4' 
         ? Math.min(screenHeight - 16, 900) // Altura máxima menos margem pequena
         : Math.min(screenHeight * 0.9, 800);
       
-      // Centralização simples - sempre no centro da tela
-      const centerX = Math.max(0, Math.floor((screenWidth - width) / 2));
+      // Centralizar na área restante (excluindo menu)
+      const centerX = sidebarWidth + Math.max(0, Math.floor((availableWidth - width) / 2));
       const centerY = Math.max(8, (screenHeight - autoHeight) / 2); // 8px de margem superior
       
       setPosition({
@@ -270,7 +274,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           backgroundColor: 'rgba(0,0,0,0.5)',
           position: 'fixed',
           top: 0,
-          left: 0,
+          left: '240px', // Começar após o menu
           right: 0,
           bottom: 0,
           zIndex: 1000
