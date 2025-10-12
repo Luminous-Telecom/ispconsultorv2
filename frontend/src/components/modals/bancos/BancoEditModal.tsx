@@ -314,7 +314,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     disabled={updateBancoMutation.isPending}
                     placeholder="Disponibilizado no menu configurações da API"
                   />
-                  <small className="text-light text-light">Disponível nas configurações da API Efi</small>
+                  <small className="text-secondary text-secondary">Disponível nas configurações da API Efi</small>
                 </div>
               </div>
             </div>
@@ -388,7 +388,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     disabled={updateBancoMutation.isPending}
                     placeholder="Sua chave da API Asaas"
                   />
-                  <small className="text-light text-light">Disponível no painel administrativo da Asaas</small>
+                  <small className="text-secondary text-secondary">Disponível no painel administrativo da Asaas</small>
                 </div>
               </div>
             </div>
@@ -476,7 +476,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                   placeholder="Ex: EFI - Conta Principal"
                 />
                 {errors.nome && <div className="invalid-feedback">{errors.nome}</div>}
-                <small className="text-light text-light">Nome para identificar esta conta do banco</small>
+                <small className="text-secondary text-secondary">Nome para identificar esta conta do banco</small>
               </div>
             </div>
           </div>
@@ -495,7 +495,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                   <option value="efi">EFI (Código: 364)</option>
                   <option value="asaas">Asaas (Código: 461)</option>
                 </select>
-                <small className="text-light text-light">Código do banco é definido automaticamente</small>
+                <small className="text-secondary text-secondary">Código do banco é definido automaticamente</small>
               </div>
             </div>
 
@@ -589,7 +589,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                       disabled={updateBancoMutation.isPending}
                       placeholder="URL para retorno de webhooks"
                     />
-                    <small className="text-light text-light">URL para receber notificações de pagamento</small>
+                    <small className="text-secondary text-secondary">URL para receber notificações de pagamento</small>
                   </div>
                 </div>
               </div>
@@ -610,7 +610,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                         Modo Sandbox (Testes)
                       </label>
                     </div>
-                    <small className="text-light text-light">
+                    <small className="text-secondary text-secondary">
                       Ative para usar ambiente de testes. Desative para produção.
                     </small>
                   </div>
