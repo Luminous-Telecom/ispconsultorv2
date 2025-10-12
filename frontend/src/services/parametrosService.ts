@@ -1,4 +1,4 @@
-import api from './api';
+import { apiService } from './api';
 
 export interface Parametros {
   id: number;
@@ -18,12 +18,12 @@ export interface ParametrosResponse {
 
 export class ParametrosService {
   static async get(): Promise<ParametrosResponse> {
-    const response = await api.get<ParametrosResponse>('/parametros');
+    const response = await apiService.get<ParametrosResponse>('/api/parametros');
     return response.data;
   }
 
   static async update(data: Partial<Parametros>): Promise<{ success: boolean; message: string }> {
-    const response = await api.put('/parametros', data);
+    const response = await apiService.put('/api/parametros', data);
     return response.data;
   }
 }
