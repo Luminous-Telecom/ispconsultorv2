@@ -306,7 +306,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                     onChange={onLogoChange}
                     disabled={updateDadosMutation.isPending}
                   />
-                  <small className="form-text text-muted">
+                  <small className="text-muted text-muted">
                     Formatos aceitos: JPG, PNG, GIF (máx. 2MB)
                   </small>
                 </div>
