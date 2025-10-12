@@ -19,12 +19,12 @@ export interface ParametrosResponse {
 export class ParametrosService {
   static async get(): Promise<ParametrosResponse> {
     const response = await apiService.get<ParametrosResponse>('/api/parametros');
-    return response.data;
+    return response;
   }
 
   static async update(data: Partial<Parametros>): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.put('/api/parametros', data);
-    return response.data;
+    const response = await apiService.put<{ success: boolean; message: string }>('/api/parametros', data);
+    return response;
   }
 }
 

@@ -96,7 +96,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
   if (isLoading) {
     return (
       <DraggableModal
-        isOpen={isOpen}
+        show={isOpen}
         onClose={onClose}
         title="Parâmetros do Sistema"
         size="md"
@@ -112,7 +112,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
 
   return (
     <DraggableModal
-      isOpen={isOpen}
+      show={isOpen}
       onClose={onClose}
       title="Parâmetros do Sistema"
       size="md"
