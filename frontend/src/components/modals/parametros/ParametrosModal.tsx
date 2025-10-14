@@ -158,6 +158,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   type="checkbox"
                   className="form-check-input"
                   id="validar_cpf_cnpj"
+                  name="validar_cpf_cnpj"
                   checked={formData.validar_cpf_cnpj}
                   onChange={() => handleCheckboxChange('validar_cpf_cnpj')}
                   disabled={updateParametrosMutation.isPending}
@@ -182,6 +183,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   type="checkbox"
                   className="form-check-input"
                   id="gerar_titulos_automatico"
+                  name="gerar_titulos_automatico"
                   checked={formData.gerar_titulos_automatico}
                   onChange={() => handleCheckboxChange('gerar_titulos_automatico')}
                   disabled={updateParametrosMutation.isPending}
@@ -199,6 +201,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   type="checkbox"
                   className="form-check-input"
                   id="titulos_vence_sabado"
+                  name="titulos_vence_sabado"
                   checked={formData.titulos_vence_sabado}
                   onChange={() => handleCheckboxChange('titulos_vence_sabado')}
                   disabled={updateParametrosMutation.isPending}
@@ -216,6 +219,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   type="checkbox"
                   className="form-check-input"
                   id="auto_lancamento_titulos"
+                  name="auto_lancamento_titulos"
                   checked={formData.auto_lancamento_titulos}
                   onChange={() => handleCheckboxChange('auto_lancamento_titulos')}
                   disabled={updateParametrosMutation.isPending}
@@ -236,6 +240,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                   type="number"
                   className="form-control"
                   id="total_titulos_financeiro"
+                  name="total_titulos_financeiro"
                   min="1"
                   max="24"
                   value={formData.total_titulos_financeiro}

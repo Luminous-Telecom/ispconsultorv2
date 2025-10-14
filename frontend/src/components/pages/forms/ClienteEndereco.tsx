@@ -38,10 +38,12 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
 
 
           <div className="col-md-4">
-            <label className="form-label small text-muted">CEP</label>
+            <label htmlFor="cliente-cep" className="form-label small text-muted">CEP</label>
             <div className="input-group">
               <input
                 type="text"
+                id="cliente-cep"
+                name="cep"
                 className="form-control form-control-sm"
                 value={cliente.cep || ''}
                 onChange={(e) => handleInputChange('cep', e.target.value)}
@@ -55,13 +57,15 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
 
 
           <div className="col-md-8">
-            <label className="form-label small text-muted">Endereço</label>
+            <label htmlFor="cliente-endereco" className="form-label small text-muted">Endereço</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-geo-alt"></i>
               </span>
               <input
                 type="text"
+                id="cliente-endereco"
+                name="endereco"
                 className="form-control form-control-sm"
                 value={cliente.endereco || ''}
                 onChange={(e) => handleInputChange('endereco', e.target.value)}
@@ -71,9 +75,11 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-4">
-            <label className="form-label small text-muted">Número</label>
+            <label htmlFor="cliente-numero" className="form-label small text-muted">Número</label>
             <input
               type="text"
+              id="cliente-numero"
+              name="numero"
               className="form-control form-control-sm"
               value={cliente.numero || ''}
               onChange={(e) => handleInputChange('numero', e.target.value)}
@@ -82,9 +88,11 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Complemento</label>
+            <label htmlFor="cliente-complemento" className="form-label small text-muted">Complemento</label>
             <input
               type="text"
+              id="cliente-complemento"
+              name="complemento"
               className="form-control form-control-sm"
               value={cliente.complemento || ''}
               onChange={(e) => handleInputChange('complemento', e.target.value)}
@@ -93,9 +101,11 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Bairro</label>
+            <label htmlFor="cliente-bairro" className="form-label small text-muted">Bairro</label>
             <input
               type="text"
+              id="cliente-bairro"
+              name="bairro"
               className="form-control form-control-sm"
               value={cliente.bairro || ''}
               onChange={(e) => handleInputChange('bairro', e.target.value)}
@@ -104,10 +114,12 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Cidade</label>
+            <label htmlFor="cliente-cidade" className="form-label small text-muted">Cidade</label>
             <div className="input-group">
               <input
                 type="text"
+                id="cliente-cidade"
+                name="cidade"
                 className="form-control form-control-sm"
                 value={cliente.cidade || ''}
                 onChange={(e) => handleInputChange('cidade', e.target.value)}
@@ -117,9 +129,11 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Estado</label>
+            <label htmlFor="cliente-estado" className="form-label small text-muted">Estado</label>
             <input
               type="text"
+              id="cliente-estado"
+              name="estado"
               className="form-control form-control-sm"
               value={cliente.estado || ''}
               onChange={(e) => handleInputChange('estado', e.target.value)}

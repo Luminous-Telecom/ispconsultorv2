@@ -35,9 +35,11 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
 
       <div className="row g-1">
           <div className="col-md-6">
-            <label className="form-label small text-muted">ID</label>
+            <label htmlFor="cliente-id" className="form-label small text-muted">ID</label>
             <input
               type="text"
+              id="cliente-id"
+              name="id"
               className="form-control form-control-sm"
               value={cliente.id || ''}
               disabled
@@ -49,11 +51,13 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
               <input
                 className="form-check-input"
                 type="checkbox"
+                id="cliente-ativo"
+                name="ativo"
                 checked={cliente.ativo}
                 onChange={(e) => handleInputChange('ativo', e.target.checked)}
                 disabled={!isEditing}
               />
-              <label className="form-check-label">
+              <label htmlFor="cliente-ativo" className="form-check-label">
                 {cliente.ativo ? 'Ativo' : 'Inativo'}
               </label>
             </div>
@@ -61,9 +65,11 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
 
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Razão Social</label>
+            <label htmlFor="cliente-razao-social" className="form-label small text-muted">Razão Social</label>
             <input
               type="text"
+              id="cliente-razao-social"
+              name="razao_social"
               className="form-control form-control-sm"
               value={cliente.razao_social || ''}
               onChange={(e) => handleInputChange('razao_social', e.target.value)}
@@ -72,9 +78,11 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Nome Fantasia</label>
+            <label htmlFor="cliente-nome-fantasia" className="form-label small text-muted">Nome Fantasia</label>
             <input
               type="text"
+              id="cliente-nome-fantasia"
+              name="nome_fantasia"
               className="form-control form-control-sm"
               value={cliente.nome_fantasia || ''}
               onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
@@ -83,11 +91,13 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">
+            <label htmlFor="cliente-cnpj" className="form-label small text-muted">
               CNPJ
             </label>
             <input
               type="text"
+              id="cliente-cnpj"
+              name="cnpj"
               className="form-control form-control-sm"
               value={cliente.cnpj || ''}
               onChange={(e) => handleInputChange('cnpj', e.target.value)}
@@ -100,8 +110,10 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
 
 
           <div className="col-12">
-            <label className="form-label small text-muted">Observações</label>
+            <label htmlFor="cliente-observacoes" className="form-label small text-muted">Observações</label>
             <textarea
+              id="cliente-observacoes"
+              name="observacoes"
               className="form-control form-control-sm"
               rows={3}
               value={cliente.observacoes || ''}

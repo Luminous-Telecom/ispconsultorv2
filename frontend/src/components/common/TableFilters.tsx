@@ -63,36 +63,41 @@ const TableFilters: React.FC<TableFiltersProps> = ({
   if (fields.length > 0) {
     return (
       <form onSubmit={onFilter} className="d-flex align-items-center gap-2">
-        {fields.map((field) => (
-          <div key={field.name} className="d-flex flex-column">
-            <label className="form-label small mb-1">{field.label}</label>
-            {field.type === 'select' ? (
-              <select
-                className="form-select form-select-sm"
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-                style={{ height: '32px' }}
-              >
-                {field.options?.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type={field.type}
-                className="form-control form-control-sm"
-                id={`filter-${field.name}-${Math.random().toString(36).substr(2, 9)}`}
-                name={`filter-${field.name}`}
-                placeholder={field.placeholder}
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-                style={{ height: '32px' }}
-              />
-            )}
-          </div>
-        ))}
+        {fields.map((field) => {
+          const fieldId = `filter-${field.name}`;
+          return (
+            <div key={field.name} className="d-flex flex-column">
+              <label htmlFor={fieldId} className="form-label small mb-1">{field.label}</label>
+              {field.type === 'select' ? (
+                <select
+                  id={fieldId}
+                  name={fieldId}
+                  className="form-select form-select-sm"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  style={{ height: '32px' }}
+                >
+                  {field.options?.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={field.type}
+                  className="form-control form-control-sm"
+                  id={fieldId}
+                  name={fieldId}
+                  placeholder={field.placeholder}
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  style={{ height: '32px' }}
+                />
+              )}
+            </div>
+          );
+        })}
         
         {onFilter && (
           <button type="submit" className="btn btn-sm btn-primary" style={{ height: '32px' }}>
@@ -118,22 +123,26 @@ const TableFilters: React.FC<TableFiltersProps> = ({
           <input
             type="text"
             className="form-control form-control-sm"
-            id={`search-filter-${Math.random().toString(36).substr(2, 9)}`}
+            id="table-search-filter"
             name="searchFilter"
             placeholder={searchPlaceholder}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             style={{ width: '200px', height: '32px' }}
+            aria-label={searchPlaceholder}
           />
         )}
 
         {/* Seletor de limite */}
         {showLimitSelector && onLimitChange && (
           <select
+            id="table-limit-selector"
+            name="limitSelector"
             className="form-select form-select-sm"
             value={limit}
             onChange={(e) => onLimitChange(parseInt(e.target.value))}
             style={{ width: '80px', height: '32px' }}
+            aria-label="Itens por página"
           >
             {limitOptions.map((option) => (
               <option key={option} value={option}>

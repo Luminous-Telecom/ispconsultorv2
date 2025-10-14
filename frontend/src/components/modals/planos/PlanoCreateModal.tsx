@@ -196,6 +196,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                 type="text"
                 className={`form-control form-control-sm ${errors.nome_plano ? 'is-invalid' : ''}`}
                 id="nome_plano"
+                name="nome_plano"
                 value={formData.nome_plano}
                 onChange={(e) => handleInputChange('nome_plano', e.target.value)}
                 disabled={createPlanoMutation.isPending}
@@ -211,6 +212,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                 <select
                   className={`form-select form-select-sm ${errors.tipo_servico ? 'is-invalid' : ''}`}
                 id="tipo_servico"
+                name="tipo_servico"
                 value={formData.tipo_servico}
                 onChange={(e) => handleInputChange('tipo_servico', e.target.value)}
                 disabled={createPlanoMutation.isPending}
@@ -233,6 +235,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           <textarea
             className="form-control form-control-sm"
             id="descricao"
+            name="descricao"
             rows={2}
             value={formData.descricao}
             onChange={(e) => handleInputChange('descricao', e.target.value)}
@@ -250,6 +253,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                 step="0.01"
                 className={`form-control ${errors.valor_mensal ? 'is-invalid' : ''}`}
                 id="valor_mensal"
+                name="valor_mensal"
                 value={formData.valor_mensal}
                 onChange={(e) => handleInputChange('valor_mensal', parseFloat(e.target.value) || 0)}
                 disabled={createPlanoMutation.isPending}
@@ -267,6 +271,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                 min="1"
                 className="form-control form-control-sm"
                 id="quantidade_usuarios"
+                name="quantidade_usuarios"
                 value={formData.quantidade_usuarios}
                 onChange={(e) => handleInputChange('quantidade_usuarios', parseInt(e.target.value) || 1)}
                 disabled={createPlanoMutation.isPending}
@@ -283,6 +288,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                 type="date"
                 className={`form-control ${errors.data_inicio ? 'is-invalid' : ''}`}
                 id="data_inicio"
+                name="data_inicio"
                 value={formData.data_inicio}
                 onChange={(e) => handleInputChange('data_inicio', e.target.value)}
                 disabled={createPlanoMutation.isPending}
@@ -298,6 +304,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                 type="date"
                 className="form-control form-control-sm"
                 id="data_fim"
+                name="data_fim"
                 value={formData.data_fim}
                 onChange={(e) => handleInputChange('data_fim', e.target.value)}
                 disabled={createPlanoMutation.isPending}
@@ -316,6 +323,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                     className="form-check-input"
                     type="checkbox"
                     id={`servico_${servico}`}
+                    name={`servico_${servico}`}
                     checked={formData.servicos_inclusos.includes(servico)}
                     onChange={() => handleServiceToggle(servico)}
                     disabled={createPlanoMutation.isPending}
@@ -334,6 +342,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           <textarea
             className="form-control form-control-sm"
             id="observacoes"
+            name="observacoes"
             rows={2}
             value={formData.observacoes}
             onChange={(e) => handleInputChange('observacoes', e.target.value)}

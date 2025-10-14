@@ -257,6 +257,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   type="text"
                   className={`form-control ${errors.nome_plano ? 'is-invalid' : ''}`}
                   id="nome_plano"
+                  name="nome_plano"
                   value={formData.nome_plano}
                   onChange={(e) => handleInputChange('nome_plano', e.target.value)}
                   disabled={updatePlanoMutation.isPending}
@@ -272,6 +273,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                 <select
                   className={`form-select ${errors.tipo_servico ? 'is-invalid' : ''}`}
                   id="tipo_servico"
+                  name="tipo_servico"
                   value={formData.tipo_servico}
                   onChange={(e) => handleInputChange('tipo_servico', e.target.value as PlanoForm['tipo_servico'])}
                   disabled={updatePlanoMutation.isPending}
@@ -294,6 +296,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             <textarea
               className="form-control form-control-sm"
               id="descricao"
+              name="descricao"
               rows={2}
               value={formData.descricao}
               onChange={(e) => handleInputChange('descricao', e.target.value)}
@@ -311,6 +314,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   step="0.01"
                   className={`form-control ${errors.valor_mensal ? 'is-invalid' : ''}`}
                   id="valor_mensal"
+                  name="valor_mensal"
                   value={formData.valor_mensal}
                   onChange={(e) => handleInputChange('valor_mensal', parseFloat(e.target.value) || 0)}
                   disabled={updatePlanoMutation.isPending}
@@ -328,6 +332,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   min="1"
                   className="form-control form-control-sm"
                   id="quantidade_usuarios"
+                  name="quantidade_usuarios"
                   value={formData.quantidade_usuarios}
                   onChange={(e) => handleInputChange('quantidade_usuarios', parseInt(e.target.value) || 1)}
                   disabled={updatePlanoMutation.isPending}
@@ -344,6 +349,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   type="date"
                   className={`form-control ${errors.data_inicio ? 'is-invalid' : ''}`}
                   id="data_inicio"
+                  name="data_inicio"
                   value={formData.data_inicio}
                   onChange={(e) => handleInputChange('data_inicio', e.target.value)}
                   disabled={updatePlanoMutation.isPending}
@@ -359,6 +365,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   type="date"
                   className="form-control form-control-sm"
                   id="data_fim"
+                  name="data_fim"
                   value={formData.data_fim}
                   onChange={(e) => handleInputChange('data_fim', e.target.value)}
                   disabled={updatePlanoMutation.isPending}
@@ -375,6 +382,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                     className="form-check-input"
                     type="checkbox"
                     id="ativo"
+                    name="ativo"
                     checked={formData.ativo}
                     onChange={(e) => handleInputChange('ativo', e.target.checked)}
                     disabled={updatePlanoMutation.isPending}
@@ -397,6 +405,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                       className="form-check-input"
                       type="checkbox"
                       id={`servico_${servico}`}
+                      name={`servico_${servico}`}
                       checked={formData.servicos_inclusos.includes(servico)}
                       onChange={() => handleServiceToggle(servico)}
                       disabled={updatePlanoMutation.isPending}
@@ -415,6 +424,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             <textarea
               className="form-control form-control-sm"
               id="observacoes"
+              name="observacoes"
               rows={2}
               value={formData.observacoes}
               onChange={(e) => handleInputChange('observacoes', e.target.value)}

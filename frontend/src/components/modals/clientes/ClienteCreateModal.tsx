@@ -185,9 +185,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
           <div className="row g-2">
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">CNPJ *</label>
+                <label htmlFor="cliente-create-cnpj" className="form-label small">CNPJ *</label>
                 <input
                   type="text"
+                  id="cliente-create-cnpj"
+                  name="cnpj"
                   className={`form-control form-control-sm ${errors.cnpj ? 'is-invalid' : ''}`}
                   value={formData.cnpj}
                   onChange={(e) => handleInputChange('cnpj', e.target.value)}
@@ -198,9 +200,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Razão Social *</label>
+                <label htmlFor="cliente-create-razao-social" className="form-label small">Razão Social *</label>
                 <input
                   type="text"
+                  id="cliente-create-razao-social"
+                  name="razao_social"
                   className={`form-control form-control-sm ${errors.razao_social ? 'is-invalid' : ''}`}
                   value={formData.razao_social}
                   onChange={(e) => handleInputChange('razao_social', e.target.value)}
@@ -211,9 +215,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Nome Fantasia</label>
+                <label htmlFor="cliente-create-nome-fantasia" className="form-label small">Nome Fantasia</label>
                 <input
                   type="text"
+                  id="cliente-create-nome-fantasia"
+                  name="nome_fantasia"
                   className="form-control form-control-sm"
                   value={formData.nome_fantasia}
                   onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
@@ -223,9 +229,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Email *</label>
+                <label htmlFor="cliente-create-email" className="form-label small">Email *</label>
                 <input
                   type="email"
+                  id="cliente-create-email"
+                  name="email"
                   className={`form-control form-control-sm ${errors.email ? 'is-invalid' : ''}`}
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
@@ -236,9 +244,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Telefone *</label>
+                <label htmlFor="cliente-create-telefone" className="form-label small">Telefone *</label>
                 <input
                   type="text"
+                  id="cliente-create-telefone"
+                  name="telefone"
                   className={`form-control form-control-sm ${errors.telefone ? 'is-invalid' : ''}`}
                   value={formData.telefone}
                   onChange={(e) => handleInputChange('telefone', e.target.value)}
@@ -249,9 +259,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">WhatsApp</label>
+                <label htmlFor="cliente-create-whatsapp" className="form-label small">WhatsApp</label>
                 <input
                   type="text"
+                  id="cliente-create-whatsapp"
+                  name="whatsapp"
                   className="form-control form-control-sm"
                   value={formData.whatsapp}
                   onChange={(e) => handleInputChange('whatsapp', e.target.value)}
@@ -268,9 +280,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
           <div className="row g-2">
             <div className="col-md-3">
               <div className="mb-2">
-                <label className="form-label small">CEP</label>
+                <label htmlFor="cliente-create-cep" className="form-label small">CEP</label>
                 <input
                   type="text"
+                  id="cliente-create-cep"
+                  name="cep"
                   className="form-control form-control-sm"
                   value={formData.cep}
                   onChange={(e) => handleInputChange('cep', e.target.value)}
@@ -280,9 +294,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Endereço</label>
+                <label htmlFor="cliente-create-endereco" className="form-label small">Endereço</label>
                 <input
                   type="text"
+                  id="cliente-create-endereco"
+                  name="endereco"
                   className="form-control form-control-sm"
                   value={formData.endereco}
                   onChange={(e) => handleInputChange('endereco', e.target.value)}
@@ -292,9 +308,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-3">
               <div className="mb-2">
-                <label className="form-label small">Número</label>
+                <label htmlFor="cliente-create-numero" className="form-label small">Número</label>
                 <input
                   type="text"
+                  id="cliente-create-numero"
+                  name="numero"
                   className="form-control form-control-sm"
                   value={formData.numero}
                   onChange={(e) => handleInputChange('numero', e.target.value)}
@@ -304,9 +322,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Complemento</label>
+                <label htmlFor="cliente-create-complemento" className="form-label small">Complemento</label>
                 <input
                   type="text"
+                  id="cliente-create-complemento"
+                  name="complemento"
                   className="form-control form-control-sm"
                   value={formData.complemento}
                   onChange={(e) => handleInputChange('complemento', e.target.value)}
@@ -316,9 +336,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Bairro</label>
+                <label htmlFor="cliente-create-bairro" className="form-label small">Bairro</label>
                 <input
                   type="text"
+                  id="cliente-create-bairro"
+                  name="bairro"
                   className="form-control form-control-sm"
                   value={formData.bairro}
                   onChange={(e) => handleInputChange('bairro', e.target.value)}
@@ -328,9 +350,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Cidade</label>
+                <label htmlFor="cliente-create-cidade" className="form-label small">Cidade</label>
                 <input
                   type="text"
+                  id="cliente-create-cidade"
+                  name="cidade"
                   className="form-control form-control-sm"
                   value={formData.cidade}
                   onChange={(e) => handleInputChange('cidade', e.target.value)}
@@ -340,9 +364,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Estado</label>
+                <label htmlFor="cliente-create-estado" className="form-label small">Estado</label>
                 <input
                   type="text"
+                  id="cliente-create-estado"
+                  name="estado"
                   className="form-control form-control-sm"
                   value={formData.estado}
                   onChange={(e) => handleInputChange('estado', e.target.value)}
@@ -359,8 +385,10 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
           <div className="row g-2">
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Tipo de Cobrança</label>
+                <label htmlFor="cliente-create-tipo-cobranca" className="form-label small">Tipo de Cobrança</label>
                 <select
+                  id="cliente-create-tipo-cobranca"
+                  name="tipo_cobranca"
                   className="form-select form-select-sm"
                   value={formData.tipo_cobranca}
                   onChange={(e) => handleInputChange('tipo_cobranca', e.target.value)}
@@ -372,9 +400,11 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Dia do Vencimento</label>
+                <label htmlFor="cliente-create-dia-vencimento" className="form-label small">Dia do Vencimento</label>
                 <input
                   type="number"
+                  id="cliente-create-dia-vencimento"
+                  name="dia_vencimento"
                   className="form-control form-control-sm"
                   value={formData.dia_vencimento}
                   onChange={(e) => handleInputChange('dia_vencimento', parseInt(e.target.value))}
@@ -385,8 +415,10 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Plano</label>
+                <label htmlFor="cliente-create-plano" className="form-label small">Plano</label>
                 <select
+                  id="cliente-create-plano"
+                  name="plano_id"
                   className="form-select form-select-sm"
                   value={formData.plano_id}
                   onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
@@ -402,8 +434,10 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-2">
-                <label className="form-label small">Banco para Boletos</label>
+                <label htmlFor="cliente-create-conta-boleto" className="form-label small">Banco para Boletos</label>
                 <select
+                  id="cliente-create-conta-boleto"
+                  name="conta_boleto"
                   className="form-select form-select-sm"
                   value={formData.conta_boleto}
                   onChange={(e) => handleInputChange('conta_boleto', parseInt(e.target.value))}

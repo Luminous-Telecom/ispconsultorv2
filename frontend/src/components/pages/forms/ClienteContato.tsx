@@ -39,10 +39,12 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
 
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Telefone</label>
+            <label htmlFor="cliente-telefone" className="form-label small text-muted">Telefone</label>
             <div className="input-group">
               <input
                 type="text"
+                id="cliente-telefone"
+                name="telefone"
                 className="form-control form-control-sm"
                 value={cliente.telefone || ''}
                 onChange={(e) => handleInputChange('telefone', e.target.value)}
@@ -55,10 +57,12 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">WhatsApp</label>
+            <label htmlFor="cliente-whatsapp" className="form-label small text-muted">WhatsApp</label>
             <div className="input-group">
               <input
                 type="text"
+                id="cliente-whatsapp"
+                name="whatsapp"
                 className="form-control form-control-sm"
                 value={cliente.whatsapp || ''}
                 onChange={(e) => handleInputChange('whatsapp', e.target.value)}
@@ -71,13 +75,15 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Email</label>
+            <label htmlFor="cliente-email" className="form-label small text-muted">Email</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-envelope"></i>
               </span>
               <input
                 type="email"
+                id="cliente-email"
+                name="email"
                 className="form-control form-control-sm"
                 value={cliente.email || ''}
                 onChange={(e) => handleInputChange('email', e.target.value)}
@@ -91,13 +97,15 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Login</label>
+            <label htmlFor="cliente-login" className="form-label small text-muted">Login</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="bi bi-envelope"></i>
               </span>
               <input
                 type="text"
+                id="cliente-login"
+                name="login"
                 className="form-control form-control-sm"
                 value={cliente.login || ''}
                 onChange={(e) => handleInputChange('login', e.target.value)}
@@ -107,9 +115,11 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
           </div>
 
           <div className="col-md-6">
-            <label className="form-label small text-muted">Senha</label>
+            <label htmlFor="cliente-senha" className="form-label small text-muted">Senha</label>
             <input
               type="password"
+              id="cliente-senha"
+              name="senha"
               className="form-control form-control-sm"
               value={cliente.senha || ''}
               onChange={(e) => handleInputChange('senha', e.target.value)}
