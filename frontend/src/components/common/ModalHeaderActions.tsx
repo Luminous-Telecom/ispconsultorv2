@@ -94,6 +94,8 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
           {/* Seletor de linhas por página */}
           <select 
             className="form-select form-select-sm" 
+            id="modal-header-limit"
+            name="modalHeaderLimit"
             value={limit}
             onChange={(e) => onLimitChange(parseInt(e.target.value))}
             style={{ width: '80px', height: '32px', cursor: 'pointer' }}

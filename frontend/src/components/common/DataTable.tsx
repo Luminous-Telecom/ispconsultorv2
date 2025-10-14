@@ -256,6 +256,8 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
             {/* Seletor de linhas por página */}
             <select 
               className="form-select form-select-sm" 
+              id="data-table-limit"
+              name="dataTableLimit"
               value={limit}
               onChange={(e) => setLimit(parseInt(e.target.value))}
               style={{ width: '80px', height: '32px', cursor: 'pointer' }}

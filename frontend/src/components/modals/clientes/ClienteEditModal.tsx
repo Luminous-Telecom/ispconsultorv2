@@ -1291,6 +1291,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <input
                           type="text"
                           className="form-control form-control-sm"
+                          id="contratos-search"
+                          name="contratosSearch"
                           placeholder="Buscar por plano, status, valor..."
                           value={search}
                           onChange={(e) => {
@@ -1578,6 +1580,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <input
                           type="text"
                           className="form-control form-control-sm"
+                          id="parcelas-search"
+                          name="parcelasSearch"
                           placeholder="Buscar por ID, carnê, valor..."
                           value={search}
                           onChange={(e) => {
