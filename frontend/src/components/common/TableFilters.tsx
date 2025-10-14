@@ -83,8 +83,8 @@ const TableFilters: React.FC<TableFiltersProps> = ({
               <input
                 type={field.type}
                 className="form-control form-control-sm"
-                id={`filter-${field.key}-${Math.random().toString(36).substr(2, 9)}`}
-                name={`filter-${field.key}`}
+                id={`filter-${field.name}-${Math.random().toString(36).substr(2, 9)}`}
+                name={`filter-${field.name}`}
                 placeholder={field.placeholder}
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
