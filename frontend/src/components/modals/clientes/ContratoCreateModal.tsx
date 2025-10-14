@@ -151,8 +151,28 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       onClose={handleCancel}
       title="Contrato"
       size="lg"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleCancel}
+            disabled={createContratoMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="contrato-cliente-create-form"
+            className="btn btn-primary btn-sm"
+            disabled={createContratoMutation.isPending}
+          >
+            Criar Contrato
+          </button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit}>
+      <form id="contrato-cliente-create-form" onSubmit={handleSubmit}>
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
@@ -347,23 +367,6 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           ></textarea>
         </div>
 
-        <div className="d-flex justify-content-end gap-2 mt-2">
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={handleCancel}
-            disabled={createContratoMutation.isPending}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary btn-sm"
-            disabled={createContratoMutation.isPending}
-          >
-            Criar Contrato
-          </button>
-        </div>
       </form>
     </DraggableModal>
   );

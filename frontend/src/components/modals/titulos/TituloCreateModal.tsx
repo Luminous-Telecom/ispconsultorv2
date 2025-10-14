@@ -228,8 +228,28 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Título"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleCancel}
+            disabled={createParcelaMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="titulo-create-form"
+            className="btn btn-primary btn-sm"
+            disabled={createParcelaMutation.isPending}
+          >
+            Criar Título
+          </button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit}>
+      <form id="titulo-create-form" onSubmit={handleSubmit}>
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
@@ -376,23 +396,6 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         </div>
 
         {/* Botões */}
-        <div className="d-flex justify-content-end gap-2 mt-4">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleCancel}
-            disabled={createParcelaMutation.isPending}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={createParcelaMutation.isPending}
-          >
-            Criar Título
-          </button>
-        </div>
       </form>
     </DraggableModal>
   );

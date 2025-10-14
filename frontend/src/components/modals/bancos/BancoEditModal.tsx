@@ -457,8 +457,28 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       onClose={handleCancel}
       title="Banco"
       size="xl"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleCancel}
+            disabled={updateBancoMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="banco-edit-form"
+            className="btn btn-primary btn-sm"
+            disabled={updateBancoMutation.isPending}
+          >
+            Salvar
+          </button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit}>
+      <form id="banco-edit-form" onSubmit={handleSubmit}>
         {/* Informações Básicas */}
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
@@ -639,24 +659,6 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
           </div>
         </div>
 
-        {/* Botões de Ação */}
-        <div className="d-flex justify-content-end gap-2">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleCancel}
-            disabled={updateBancoMutation.isPending}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={updateBancoMutation.isPending}
-          >
-            Salvar
-          </button>
-        </div>
       </form>
     </DraggableModal>
   );

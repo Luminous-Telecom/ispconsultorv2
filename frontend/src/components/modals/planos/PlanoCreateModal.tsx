@@ -155,8 +155,28 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Plano"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleCancel}
+            disabled={createPlanoMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="plano-create-form"
+            className="btn btn-primary btn-sm"
+            disabled={createPlanoMutation.isPending}
+          >
+            Criar Plano
+          </button>
+        </div>
+      }
     >
-        <form onSubmit={handleSubmit}>
+        <form id="plano-create-form" onSubmit={handleSubmit}>
           <div className="row g-2">
             <div className="col-md-6">
               <div className="mb-2">
@@ -311,23 +331,6 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           ></textarea>
         </div>
 
-          <div className="d-flex justify-content-end gap-2 mt-2">
-          <button
-            type="button"
-              className="btn btn-secondary btn-sm"
-            onClick={handleCancel}
-            disabled={createPlanoMutation.isPending}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary btn-sm"
-            disabled={createPlanoMutation.isPending}
-          >
-            Criar Plano
-          </button>
-        </div>
       </form>
     </DraggableModal>
   );

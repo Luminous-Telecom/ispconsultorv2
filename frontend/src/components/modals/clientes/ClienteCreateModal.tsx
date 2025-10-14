@@ -157,8 +157,28 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Cliente"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleCancel}
+            disabled={createClienteMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="cliente-create-form"
+            className="btn btn-primary btn-sm"
+            disabled={createClienteMutation.isPending}
+          >
+            Criar Cliente
+          </button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit}>
+      <form id="cliente-create-form" onSubmit={handleSubmit}>
         {/* Dados Básicos */}
         <div className="mb-3">
           <h6 className="border-bottom pb-2 mb-3">Dados Básicos</h6>
@@ -400,24 +420,6 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
           </div>
         </div>
 
-        {/* Botões */}
-        <div className="d-flex justify-content-end gap-2 mt-4">
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={handleCancel}
-            disabled={createClienteMutation.isPending}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary btn-sm"
-            disabled={createClienteMutation.isPending}
-          >
-            Criar Cliente
-          </button>
-        </div>
       </form>
     </DraggableModal>
   );

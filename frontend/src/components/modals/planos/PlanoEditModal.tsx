@@ -220,6 +220,26 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Plano"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleCancel}
+            disabled={updatePlanoMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="plano-edit-form"
+            className="btn btn-primary btn-sm"
+            disabled={updatePlanoMutation.isPending}
+          >
+            Salvar
+          </button>
+        </div>
+      }
     >
       {planoLoading ? (
         <div className="text-center py-4">
@@ -228,7 +248,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form id="plano-edit-form" onSubmit={handleSubmit}>
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
@@ -403,23 +423,6 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             ></textarea>
           </div>
 
-          <div className="d-flex justify-content-end gap-2 mt-2">
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={handleCancel}
-              disabled={updatePlanoMutation.isPending}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary btn-sm"
-              disabled={updatePlanoMutation.isPending}
-            >
-              Salvar
-            </button>
-          </div>
         </form>
       )}
     </DraggableModal>

@@ -165,8 +165,28 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Título"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleCancel}
+            disabled={updateParcelaMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="titulo-edit-form"
+            className="btn btn-primary btn-sm"
+            disabled={updateParcelaMutation.isPending}
+          >
+            Salvar
+          </button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit}>
+      <form id="titulo-edit-form" onSubmit={handleSubmit}>
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
@@ -242,23 +262,6 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
           {errors.observacoes && <div className="invalid-feedback">{errors.observacoes}</div>}
         </div>
 
-        <div className="d-flex justify-content-end gap-2 mt-2">
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={handleCancel}
-            disabled={updateParcelaMutation.isPending}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary btn-sm"
-            disabled={updateParcelaMutation.isPending}
-          >
-            Salvar
-          </button>
-        </div>
       </form>
     </DraggableModal>
   );

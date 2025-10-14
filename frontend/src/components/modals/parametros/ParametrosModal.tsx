@@ -116,8 +116,28 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       onClose={onClose}
       title="Parâmetros"
       size="md"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onClose}
+            disabled={updateParametrosMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="parametros-form"
+            className="btn btn-primary btn-sm"
+            disabled={updateParametrosMutation.isPending}
+          >
+            Salvar
+          </button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit}>
+      <form id="parametros-form" onSubmit={handleSubmit}>
         <div className="modal-body">
           <div className="card mb-3">
             <div className="card-header">
@@ -221,23 +241,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
           </div>
         </div>
 
-        <div className="modal-footer">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleCancel}
-            disabled={updateParametrosMutation.isPending}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={updateParametrosMutation.isPending}
-          >
-            Salvar
-          </button>
-        </div>
       </form>
     </DraggableModal>
   );

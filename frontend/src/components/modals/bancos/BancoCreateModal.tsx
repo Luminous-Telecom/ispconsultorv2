@@ -358,8 +358,28 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Banco"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleCancel}
+            disabled={createBancoMutation.isPending}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="banco-create-form"
+            className="btn btn-primary btn-sm"
+            disabled={createBancoMutation.isPending}
+          >
+            Criar Banco
+          </button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit}>
+      <form id="banco-create-form" onSubmit={handleSubmit}>
         {/* Informações Básicas */}
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
@@ -541,23 +561,6 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           </div>
         </div>
 
-          <div className="d-flex justify-content-end gap-2 mt-2">
-          <button
-            type="button"
-              className="btn btn-secondary btn-sm"
-            onClick={handleCancel}
-            disabled={createBancoMutation.isPending}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-              className="btn btn-primary btn-sm"
-            disabled={createBancoMutation.isPending}
-          >
-                Criar Banco
-          </button>
-        </div>
       </form>
     </DraggableModal>
   );
