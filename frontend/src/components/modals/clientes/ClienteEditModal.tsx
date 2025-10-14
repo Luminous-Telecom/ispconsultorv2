@@ -734,6 +734,26 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     customData: customFormData
   });
 
+  // Debug: Log para identificar campos sem id/name
+  useEffect(() => {
+    if (show) {
+      console.log('🔍 DEBUG ACESSIBILIDADE: Verificando campos no ClienteEditModal');
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('input:not([id]):not([name]), select:not([id]):not([name]), textarea:not([id]):not([name])');
+        console.log('❌ CAMPOS SEM ID/NAME encontrados:', inputs.length);
+        inputs.forEach((input, index) => {
+          console.log(`❌ Campo ${index + 1}:`, input.outerHTML.substring(0, 200));
+        });
+        
+        const labelsWithoutFor = document.querySelectorAll('label:not([for])');
+        console.log('⚠️ LABELS SEM FOR encontrados:', labelsWithoutFor.length);
+        labelsWithoutFor.forEach((label, index) => {
+          console.log(`⚠️ Label ${index + 1}:`, label.outerHTML.substring(0, 200));
+        });
+      }, 1000);
+    }
+  }, [show]);
+
   const handleInputChange = (field: keyof ClienteForm, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
