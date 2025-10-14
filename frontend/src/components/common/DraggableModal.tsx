@@ -282,7 +282,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           color: 'var(--text-primary)',
           border: '1px solid var(--border-color)',
           borderRadius: '8px',
-          boxShadow: '0 6px 12px 10px rgba(var(--bg-color-black), 0.3)',
+          boxShadow: '0 6px 12px 10px rgba(0, 0, 0, 0.3)',
           zIndex: 1050,
           display: show ? 'flex' : 'none', // Ocultar ao invés de desmontar
           flexDirection: 'column',
