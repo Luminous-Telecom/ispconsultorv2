@@ -25,17 +25,22 @@ export function useFormReset<T>({
 }: UseFormResetOptions<T>) {
   const previousShow = useRef(show);
   const hasLoadedCustomData = useRef(false);
+  const previousCustomDataStr = useRef<string>('');
 
   useEffect(() => {
     // Só executa quando show muda
     if (show !== previousShow.current) {
       hasLoadedCustomData.current = false;
+      previousCustomDataStr.current = '';
       
       if (show) {
         // Se há dados customizados, carrega eles; senão usa os iniciais
         const dataToLoad = customData || initialData;
         setFormData(dataToLoad);
         hasLoadedCustomData.current = !!customData; // Só marca como carregado se customData existir
+        if (customData) {
+          previousCustomDataStr.current = JSON.stringify(customData);
+        }
         if (setErrors) {
           setErrors({});
         }
@@ -54,8 +59,13 @@ export function useFormReset<T>({
   // Atualizar customData quando ele estiver disponível após o modal abrir
   useEffect(() => {
     if (show && customData) {
-      setFormData(customData);
-      hasLoadedCustomData.current = true;
+      const currentCustomDataStr = JSON.stringify(customData);
+      // Só atualiza se o conteúdo realmente mudou
+      if (currentCustomDataStr !== previousCustomDataStr.current) {
+        setFormData(customData);
+        hasLoadedCustomData.current = true;
+        previousCustomDataStr.current = currentCustomDataStr;
+      }
     }
   }, [show, customData]);
 }
