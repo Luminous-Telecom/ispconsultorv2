@@ -427,7 +427,7 @@ docs: atualizar documentação de APIs
 - Confirme funcionando
 - Depois faça commit
 - Sempre verifique erros de compilação TypeScript
-
+- Nunca utilize urls nos codigos
 ---
 alwaysApply: true
 ---
