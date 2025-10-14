@@ -236,6 +236,8 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     type="text"
                     className="form-control form-control-sm"
                     id="identificador_conta"
+                    name="identificador_conta"
+                    autoComplete="off"
                     value={formData.identificador_conta}
                     onChange={(e) => handleInputChange('identificador_conta', e.target.value)}
                     disabled={createBancoMutation.isPending}
@@ -255,6 +257,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     step="0.01"
                     className="form-control form-control-sm"
                     id="percentual_multa"
+                    name="percentual_multa"
                     value={formData.percentual_multa}
                     onChange={(e) => handleInputChange('percentual_multa', parseFloat(e.target.value) || 0)}
                     disabled={createBancoMutation.isPending}
@@ -271,6 +274,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     step="0.01"
                     className="form-control form-control-sm"
                     id="percentual_juros"
+                    name="percentual_juros"
                     value={formData.percentual_juros}
                     onChange={(e) => handleInputChange('percentual_juros', parseFloat(e.target.value) || 0)}
                     disabled={createBancoMutation.isPending}
@@ -288,6 +292,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     type="text"
                     className="form-control form-control-sm"
                     id="local_pagamento"
+                    name="local_pagamento"
                     value={formData.local_pagamento}
                     onChange={(e) => handleInputChange('local_pagamento', e.target.value)}
                     disabled={createBancoMutation.isPending}
@@ -310,6 +315,8 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     type="password"
                     className="form-control form-control-sm"
                     id="api_key"
+                    name="api_key"
+                    autoComplete="off"
                     value={formData.api_key}
                     onChange={(e) => handleInputChange('api_key', e.target.value)}
                     disabled={createBancoMutation.isPending}
@@ -329,6 +336,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     step="0.01"
                     className="form-control form-control-sm"
                     id="taxa_cobranca"
+                    name="taxa_cobranca"
                     value={formData.taxa_cobranca}
                     onChange={(e) => handleInputChange('taxa_cobranca', parseFloat(e.target.value) || 0)}
                     disabled={createBancoMutation.isPending}
@@ -343,6 +351,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     className="form-check-input"
                     type="checkbox"
                     id="incluir_taxa"
+                    name="incluir_taxa"
                     checked={formData.incluir_taxa}
                     onChange={(e) => handleInputChange('incluir_taxa', e.target.checked)}
                     disabled={createBancoMutation.isPending}
@@ -482,6 +491,8 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                   type="text"
                   className="form-control form-control-sm"
                   id="client_id_producao"
+                  name="client_id_producao"
+                  autoComplete="off"
                   value={formData.client_id_producao}
                   onChange={(e) => handleInputChange('client_id_producao', e.target.value)}
                   disabled={createBancoMutation.isPending}
@@ -499,6 +510,8 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                   type="password"
                   className="form-control form-control-sm"
                   id="client_secret_producao"
+                  name="client_secret_producao"
+                  autoComplete="off"
                   value={formData.client_secret_producao}
                   onChange={(e) => handleInputChange('client_secret_producao', e.target.value)}
                   disabled={createBancoMutation.isPending}
@@ -516,6 +529,8 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
               type="url"
               className="form-control form-control-sm"
               id="url_retorno"
+              name="url_retorno"
+              autoComplete="url"
               value={formData.url_retorno}
               onChange={(e) => handleInputChange('url_retorno', e.target.value)}
               disabled={createBancoMutation.isPending}
@@ -533,6 +548,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                   className="form-check-input"
                   type="checkbox"
                   id="sandbox"
+                  name="sandbox"
                   checked={formData.sandbox}
                   onChange={(e) => handleInputChange('sandbox', e.target.checked)}
                   disabled={createBancoMutation.isPending}
