@@ -8,6 +8,7 @@ import { TituloService } from '../../../services/tituloService';
 import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
+import { useFormReset } from '../../../hooks/useFormReset';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
@@ -103,49 +104,44 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   // Mutation para atualizar contrato
   const updateContratoMutation = useUpdateContrato();
 
-  // Carregar dados do contrato quando disponível
-  useEffect(() => {
-    // O contratoData vem diretamente como objeto, não como contratoData.data
-    if (contratoData && typeof contratoData === 'object' && contratoData.id) {
-      const contrato = contratoData;
-      
-      const newFormData = {
-        plano_id: contrato.plano_id || 0,
-        desconto_percentual: parseFloat(contrato.desconto_percentual) || 0,
-        desconto_valor: parseFloat(contrato.desconto_valor) || 0,
-        data_inicio: contrato.data_inicio ? contrato.data_inicio.split('T')[0] : '',
-        data_fim: contrato.data_fim ? contrato.data_fim.split('T')[0] : '',
-        status: contrato.status || 'ativo',
-        observacoes: contrato.observacoes || '',
-        isento_mensalidade: contrato.isento_mensalidade || false,
-        dia_vencimento: contrato.dia_vencimento || 10,
-        conta_boleto: contrato.conta_boleto || 0,
-        data_validade_desconto: contrato.data_validade_desconto ? contrato.data_validade_desconto.split('T')[0] : ''
-      };
-      
-      setFormData(newFormData);
-    }
-  }, [contratoData, show, contratoId]);
+  // Dados iniciais do formulário
+  const initialFormData: ContratoForm = {
+    plano_id: 0,
+    desconto_percentual: 0,
+    desconto_valor: 0,
+    data_inicio: new Date().toISOString().split('T')[0],
+    data_fim: '',
+    status: 'ativo',
+    observacoes: '',
+    isento_mensalidade: false,
+    dia_vencimento: 10,
+    conta_boleto: 0,
+    data_validade_desconto: ''
+  };
 
-  // Limpar formulário quando modal fechar
-  useEffect(() => {
-    if (!show) {
-      setFormData({
-        plano_id: 0,
-        desconto_percentual: 0,
-        desconto_valor: 0,
-        data_inicio: new Date().toISOString().split('T')[0],
-        data_fim: '',
-        status: 'ativo',
-        observacoes: '',
-        isento_mensalidade: false,
-        dia_vencimento: 10,
-        conta_boleto: 0,
-        data_validade_desconto: ''
-      });
-      setErrors({});
-    }
-  }, [show]);
+  // Dados customizados do contrato (quando editando)
+  const customFormData = contratoData && typeof contratoData === 'object' && contratoData.id ? {
+    plano_id: contratoData.plano_id || 0,
+    desconto_percentual: parseFloat(contratoData.desconto_percentual) || 0,
+    desconto_valor: parseFloat(contratoData.desconto_valor) || 0,
+    data_inicio: contratoData.data_inicio ? contratoData.data_inicio.split('T')[0] : '',
+    data_fim: contratoData.data_fim ? contratoData.data_fim.split('T')[0] : '',
+    status: contratoData.status || 'ativo',
+    observacoes: contratoData.observacoes || '',
+    isento_mensalidade: contratoData.isento_mensalidade || false,
+    dia_vencimento: contratoData.dia_vencimento || 10,
+    conta_boleto: contratoData.conta_boleto || 0,
+    data_validade_desconto: contratoData.data_validade_desconto ? contratoData.data_validade_desconto.split('T')[0] : ''
+  } : undefined;
+
+  // Usar hook personalizado para reset do formulário
+  useFormReset({
+    show,
+    initialData: initialFormData,
+    setFormData,
+    setErrors,
+    customData: customFormData
+  });
 
   const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean) => {
     setFormData(prev => ({

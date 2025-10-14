@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlanoService } from '../../../services/planoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
+import { useFormReset } from '../../../hooks/useFormReset';
 
 interface PlanoForm {
   nome_plano: string;
@@ -33,7 +34,8 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
   onClose, 
   onSuccess 
 }) => {
-  const [formData, setFormData] = useState<PlanoForm>({
+  // Dados iniciais do formulário
+  const initialFormData: PlanoForm = {
     nome_plano: '',
     tipo_servico: 'internet',
     descricao: '',
@@ -49,11 +51,20 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
     data_inicio: new Date().toISOString().split('T')[0],
     data_fim: '',
     observacoes: ''
-  });
+  };
 
+  const [formData, setFormData] = useState<PlanoForm>(initialFormData);
   const [errors, setErrors] = useState<Partial<PlanoForm>>({});
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
+
+  // Usar hook personalizado para reset do formulário
+  useFormReset({
+    show,
+    initialData: initialFormData,
+    setFormData,
+    setErrors
+  });
 
   // Mutation para criar plano
   const createPlanoMutation = useMutation({

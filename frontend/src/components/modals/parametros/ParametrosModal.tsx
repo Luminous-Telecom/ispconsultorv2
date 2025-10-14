@@ -3,6 +3,7 @@ import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ParametrosService } from '../../../services/parametrosService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useFormReset } from '../../../hooks/useFormReset';
 
 interface ParametrosModalProps {
   show: boolean;
@@ -21,13 +22,16 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
 
-  const [formData, setFormData] = useState<ParametrosForm>({
+  // Dados iniciais do formulário
+  const initialFormData: ParametrosForm = {
     validar_cpf_cnpj: true,
     gerar_titulos_automatico: false,
     titulos_vence_sabado: false,
     auto_lancamento_titulos: false,
     total_titulos_financeiro: 12
-  });
+  };
+
+  const [formData, setFormData] = useState<ParametrosForm>(initialFormData);
 
   const { data: parametros, isLoading } = useQuery({
     queryKey: ['parametros'],
@@ -35,17 +39,22 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     enabled: show
   });
 
-  useEffect(() => {
-    if (parametros?.data) {
-      setFormData({
-        validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
-        gerar_titulos_automatico: parametros.data.gerar_titulos_automatico ?? false,
-        titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
-        auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
-        total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
-      });
-    }
-  }, [parametros]);
+  // Dados customizados dos parâmetros (quando editando)
+  const customFormData = parametros?.data ? {
+    validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
+    gerar_titulos_automatico: parametros.data.gerar_titulos_automatico ?? false,
+    titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
+    auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
+    total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
+  } : undefined;
+
+  // Usar hook personalizado para reset do formulário
+  useFormReset({
+    show,
+    initialData: initialFormData,
+    setFormData,
+    customData: customFormData
+  });
 
   const updateParametrosMutation = useMutation({
     mutationFn: (data: ParametrosForm) => ParametrosService.update(data),

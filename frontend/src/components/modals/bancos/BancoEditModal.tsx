@@ -3,6 +3,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
+import { useFormReset } from '../../../hooks/useFormReset';
 
 interface BancoForm {
   nome: string;
@@ -111,59 +112,105 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     enabled: !!bancoId && show,
   });
 
+  // Dados iniciais do formulário
+  const initialFormData: BancoForm = {
+    nome: '',
+    codigo: '',
+    descricao: '',
+    ativo: true,
+    tipo_banco: 'efi',
+    api_url: '',
+    api_key: '',
+    api_secret: '',
+    sandbox: true,
+    identificador_conta: '',
+    client_id_producao: '',
+    client_secret_producao: '',
+    url_retorno: `${window.location.origin}/webhook/efi`,
+    repassar_email_cliente: false,
+    percentual_multa: 0,
+    percentual_juros: 0,
+    desconto_tipo: '',
+    desconto_valor: 0,
+    contra_apresentacao: false,
+    recalcular_segunda_via: false,
+    maximo_dias_recalcular: 0,
+    layout_web: '',
+    layout_pdf: '',
+    layout_carne: '',
+    local_pagamento: '',
+    dados_avalista: '',
+    exibir_mes_referente: false,
+    taxa_cobranca: 0,
+    incluir_taxa: false,
+    observacao_linha_1: '',
+    observacao_linha_2: '',
+    observacao_linha_3: '',
+    observacao_linha_4: '',
+    instrucao_linha_1: '',
+    instrucao_linha_2: '',
+    instrucao_linha_3: '',
+    instrucao_linha_4: '',
+    instrucao_linha_5: '',
+  };
+
+  // Dados customizados do banco (quando editando)
+  const customFormData = banco ? {
+    nome: banco.nome || '',
+    codigo: banco.codigo || '',
+    descricao: banco.descricao || '',
+    ativo: banco.ativo ?? true,
+    tipo_banco: banco.tipo_banco || 'efi',
+    api_url: banco.api_url || '',
+    api_key: banco.api_key || '',
+    api_secret: banco.api_secret || '',
+    sandbox: banco.sandbox ?? true,
+    identificador_conta: banco.identificador_conta || '',
+    client_id_producao: banco.client_id_producao || '',
+    client_secret_producao: banco.client_secret_producao || '',
+    url_retorno: banco.url_retorno || `${window.location.origin}/webhook/efi`,
+    repassar_email_cliente: banco.repassar_email_cliente ?? false,
+    percentual_multa: banco.percentual_multa || 0,
+    percentual_juros: banco.percentual_juros || 0,
+    desconto_tipo: banco.desconto_tipo || '',
+    desconto_valor: banco.desconto_valor || 0,
+    contra_apresentacao: banco.contra_apresentacao ?? false,
+    recalcular_segunda_via: banco.recalcular_segunda_via ?? false,
+    maximo_dias_recalcular: banco.maximo_dias_recalcular || 0,
+    layout_web: banco.layout_web || '',
+    layout_pdf: banco.layout_pdf || '',
+    layout_carne: banco.layout_carne || '',
+    local_pagamento: banco.local_pagamento || '',
+    dados_avalista: banco.dados_avalista || '',
+    exibir_mes_referente: banco.exibir_mes_referente ?? false,
+    taxa_cobranca: banco.taxa_cobranca || 0,
+    incluir_taxa: banco.incluir_taxa ?? false,
+    observacao_linha_1: banco.observacao_linha_1 || '',
+    observacao_linha_2: banco.observacao_linha_2 || '',
+    observacao_linha_3: banco.observacao_linha_3 || '',
+    observacao_linha_4: banco.observacao_linha_4 || '',
+    instrucao_linha_1: banco.instrucao_linha_1 || '',
+    instrucao_linha_2: banco.instrucao_linha_2 || '',
+    instrucao_linha_3: banco.instrucao_linha_3 || '',
+    instrucao_linha_4: banco.instrucao_linha_4 || '',
+    instrucao_linha_5: banco.instrucao_linha_5 || '',
+  } : undefined;
+
+  // Usar hook personalizado para reset do formulário
+  useFormReset({
+    show,
+    initialData: initialFormData,
+    setFormData,
+    setErrors,
+    customData: customFormData
+  });
+
   // Limpar resultado do teste quando o modal abre
   useEffect(() => {
     if (show) {
       setTestResult('');
-      setErrors({});
     }
   }, [show]);
-
-  // Carregar dados do banco no formulário
-  useEffect(() => {
-    if (banco) {
-      setFormData({
-        nome: banco.nome || '',
-        codigo: banco.codigo || '',
-        descricao: banco.descricao || '',
-        ativo: banco.ativo ?? true,
-        tipo_banco: banco.tipo_banco || 'efi',
-        api_url: banco.api_url || '',
-        api_key: banco.api_key || '',
-        api_secret: banco.api_secret || '',
-        sandbox: banco.sandbox ?? true,
-        identificador_conta: banco.identificador_conta || '',
-        client_id_producao: banco.client_id_producao || '',
-        client_secret_producao: banco.client_secret_producao || '',
-        url_retorno: banco.url_retorno || `${window.location.origin}/webhook/efi`,
-        repassar_email_cliente: banco.repassar_email_cliente ?? false,
-        percentual_multa: banco.percentual_multa || 0,
-        percentual_juros: banco.percentual_juros || 0,
-        desconto_tipo: banco.desconto_tipo || '',
-        desconto_valor: banco.desconto_valor || 0,
-        contra_apresentacao: banco.contra_apresentacao ?? false,
-        recalcular_segunda_via: banco.recalcular_segunda_via ?? false,
-        maximo_dias_recalcular: banco.maximo_dias_recalcular || 0,
-        layout_web: banco.layout_web || '',
-        layout_pdf: banco.layout_pdf || '',
-        layout_carne: banco.layout_carne || '',
-        local_pagamento: banco.local_pagamento || '',
-        dados_avalista: banco.dados_avalista || '',
-        exibir_mes_referente: banco.exibir_mes_referente ?? false,
-        taxa_cobranca: banco.taxa_cobranca || 0,
-        incluir_taxa: banco.incluir_taxa ?? false,
-        observacao_linha_1: banco.observacao_linha_1 || '',
-        observacao_linha_2: banco.observacao_linha_2 || '',
-        observacao_linha_3: banco.observacao_linha_3 || '',
-        observacao_linha_4: banco.observacao_linha_4 || '',
-        instrucao_linha_1: banco.instrucao_linha_1 || '',
-        instrucao_linha_2: banco.instrucao_linha_2 || '',
-        instrucao_linha_3: banco.instrucao_linha_3 || '',
-        instrucao_linha_4: banco.instrucao_linha_4 || '',
-        instrucao_linha_5: banco.instrucao_linha_5 || '',
-      });
-    }
-  }, [banco]);
 
   // Mutation para atualizar banco
   const updateBancoMutation = useMutation({

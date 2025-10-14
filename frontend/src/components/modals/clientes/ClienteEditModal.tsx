@@ -13,6 +13,7 @@ import ReceberModal from '../pagamentos/ReceberModal';
 import { useContratos, useDeleteContrato } from '../../../hooks/useContratos';
 import ContratoCreateModal from './ContratoCreateModal';
 import ContratoEditModal from './ContratoEditModal';
+import { useFormReset } from '../../../hooks/useFormReset';
 
 interface ClienteForm {
   cnpj: string;
@@ -650,33 +651,62 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
   });
 
-  // Carregar dados do cliente no formulário
-  useEffect(() => {
-    if (cliente && typeof cliente === 'object') {
-      setFormData({
-        cnpj: cliente.cnpj || '',
-        razao_social: cliente.razao_social || '',
-        nome_fantasia: cliente.nome_fantasia || '',
-        email: cliente.email || '',
-        telefone: cliente.telefone || '',
-        whatsapp: cliente.whatsapp || '',
-        cep: cliente.cep || '',
-        endereco: cliente.endereco || '',
-        numero: cliente.numero || '',
-        complemento: cliente.complemento || '',
-        bairro: cliente.bairro || '',
-        cidade: cliente.cidade || '',
-        estado: cliente.estado || '',
-        ativo: cliente.ativo ?? true,
-        tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
-        valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
-        recebe_email: cliente.recebe_email ?? true,
-        recebe_sms: cliente.recebe_sms ?? false,
-        recebe_whatsapp: cliente.recebe_whatsapp ?? true,
-        observacoes: cliente.observacoes || ''
-      });
-    }
-  }, [cliente]);
+  // Dados iniciais do formulário
+  const initialFormData: ClienteForm = {
+    cnpj: '',
+    razao_social: '',
+    nome_fantasia: '',
+    email: '',
+    telefone: '',
+    whatsapp: '',
+    cep: '',
+    endereco: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    ativo: true,
+    tipo_cobranca: 'titulo',
+    valor_primeiro_titulo: 'total',
+    recebe_email: true,
+    recebe_sms: false,
+    recebe_whatsapp: true,
+    observacoes: ''
+  };
+
+  // Dados customizados do cliente (quando editando)
+  const customFormData = cliente && typeof cliente === 'object' ? {
+    cnpj: cliente.cnpj || '',
+    razao_social: cliente.razao_social || '',
+    nome_fantasia: cliente.nome_fantasia || '',
+    email: cliente.email || '',
+    telefone: cliente.telefone || '',
+    whatsapp: cliente.whatsapp || '',
+    cep: cliente.cep || '',
+    endereco: cliente.endereco || '',
+    numero: cliente.numero || '',
+    complemento: cliente.complemento || '',
+    bairro: cliente.bairro || '',
+    cidade: cliente.cidade || '',
+    estado: cliente.estado || '',
+    ativo: cliente.ativo ?? true,
+    tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
+    valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
+    recebe_email: cliente.recebe_email ?? true,
+    recebe_sms: cliente.recebe_sms ?? false,
+    recebe_whatsapp: cliente.recebe_whatsapp ?? true,
+    observacoes: cliente.observacoes || ''
+  } : undefined;
+
+  // Usar hook personalizado para reset do formulário
+  useFormReset({
+    show,
+    initialData: initialFormData,
+    setFormData,
+    setErrors,
+    customData: customFormData
+  });
 
   const handleInputChange = (field: keyof ClienteForm, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));

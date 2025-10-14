@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
+import { useFormReset } from '../../../hooks/useFormReset';
 
 interface BancoForm {
   nome: string;
@@ -98,11 +99,18 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
   };
 
   const [formData, setFormData] = useState<BancoForm>(initialFormData);
-
   const [errors, setErrors] = useState<Partial<BancoForm>>({});
   const [testResult, setTestResult] = useState<string>('');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
+
+  // Usar hook personalizado para reset do formulário
+  useFormReset({
+    show,
+    initialData: initialFormData,
+    setFormData,
+    setErrors
+  });
 
   // Mutation para criar banco
   const createBancoMutation = useMutation({

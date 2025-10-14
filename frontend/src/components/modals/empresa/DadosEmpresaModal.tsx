@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '../../../services/dadosEmpresaService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
+import { useFormReset } from '../../../hooks/useFormReset';
 
 interface DadosEmpresaModalProps {
   show: boolean;
@@ -36,7 +37,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     }
   });
 
-  const [dados, setDados] = useState<DadosEmpresaType>({
+  // Dados iniciais do formulário
+  const initialFormData: DadosEmpresaType = {
     id: 1,
     razao_social: '',
     nome_fantasia: '',
@@ -58,37 +60,42 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     responsavel_cpf: '',
     responsavel_cargo: '',
     logo: undefined,
-  });
+  };
 
-  // Carregar dados quando disponíveis
-  useEffect(() => {
-    if (dadosEmpresa) {
-      // Garantir que todos os campos sejam strings (nunca null)
-      setDados({
-        id: dadosEmpresa.id || 1,
-        razao_social: dadosEmpresa.razao_social || '',
-        nome_fantasia: dadosEmpresa.nome_fantasia || '',
-        cnpj: dadosEmpresa.cnpj || '',
-        inscricao_estadual: dadosEmpresa.inscricao_estadual || '',
-        inscricao_municipal: dadosEmpresa.inscricao_municipal || '',
-        cep: dadosEmpresa.cep || '',
-        endereco: dadosEmpresa.endereco || '',
-        numero: dadosEmpresa.numero || '',
-        complemento: dadosEmpresa.complemento || '',
-        bairro: dadosEmpresa.bairro || '',
-        cidade: dadosEmpresa.cidade || '',
-        estado: dadosEmpresa.estado || '',
-        telefone: dadosEmpresa.telefone || '',
-        celular: dadosEmpresa.celular || '',
-        email: dadosEmpresa.email || '',
-        site: dadosEmpresa.site || '',
-        responsavel_nome: dadosEmpresa.responsavel_nome || '',
-        responsavel_cpf: dadosEmpresa.responsavel_cpf || '',
-        responsavel_cargo: dadosEmpresa.responsavel_cargo || '',
-        logo: dadosEmpresa.logo || undefined,
-      });
-    }
-  }, [dadosEmpresa]);
+  const [dados, setDados] = useState<DadosEmpresaType>(initialFormData);
+
+  // Dados customizados da empresa (quando editando)
+  const customFormData = dadosEmpresa ? {
+    id: dadosEmpresa.id || 1,
+    razao_social: dadosEmpresa.razao_social || '',
+    nome_fantasia: dadosEmpresa.nome_fantasia || '',
+    cnpj: dadosEmpresa.cnpj || '',
+    inscricao_estadual: dadosEmpresa.inscricao_estadual || '',
+    inscricao_municipal: dadosEmpresa.inscricao_municipal || '',
+    cep: dadosEmpresa.cep || '',
+    endereco: dadosEmpresa.endereco || '',
+    numero: dadosEmpresa.numero || '',
+    complemento: dadosEmpresa.complemento || '',
+    bairro: dadosEmpresa.bairro || '',
+    cidade: dadosEmpresa.cidade || '',
+    estado: dadosEmpresa.estado || '',
+    telefone: dadosEmpresa.telefone || '',
+    celular: dadosEmpresa.celular || '',
+    email: dadosEmpresa.email || '',
+    site: dadosEmpresa.site || '',
+    responsavel_nome: dadosEmpresa.responsavel_nome || '',
+    responsavel_cpf: dadosEmpresa.responsavel_cpf || '',
+    responsavel_cargo: dadosEmpresa.responsavel_cargo || '',
+    logo: dadosEmpresa.logo || undefined,
+  } : undefined;
+
+  // Usar hook personalizado para reset do formulário
+  useFormReset({
+    show,
+    initialData: initialFormData,
+    setFormData: setDados,
+    customData: customFormData
+  });
 
   const handleInputChange = (field: keyof DadosEmpresaType, value: string) => {
     setDados(prev => ({
