@@ -50,7 +50,13 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
       total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
     };
-  }, [parametros?.data]);
+  }, [
+    parametros?.data?.validar_cpf_cnpj,
+    parametros?.data?.gerar_titulos_automatico,
+    parametros?.data?.titulos_vence_sabado,
+    parametros?.data?.auto_lancamento_titulos,
+    parametros?.data?.total_titulos_financeiro
+  ]);
 
   // Usar hook personalizado para reset do formulário
   useFormReset({

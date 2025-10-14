@@ -701,7 +701,29 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       recebe_whatsapp: cliente.recebe_whatsapp ?? true,
       observacoes: cliente.observacoes || ''
     };
-  }, [cliente]);
+  }, [
+    cliente?.id,
+    cliente?.cnpj,
+    cliente?.razao_social,
+    cliente?.nome_fantasia,
+    cliente?.email,
+    cliente?.telefone,
+    cliente?.whatsapp,
+    cliente?.cep,
+    cliente?.endereco,
+    cliente?.numero,
+    cliente?.complemento,
+    cliente?.bairro,
+    cliente?.cidade,
+    cliente?.estado,
+    cliente?.ativo,
+    cliente?.tipo_cobranca,
+    cliente?.valor_primeiro_titulo,
+    cliente?.recebe_email,
+    cliente?.recebe_sms,
+    cliente?.recebe_whatsapp,
+    cliente?.observacoes
+  ]);
 
   // Usar hook personalizado para reset do formulário
   useFormReset({
