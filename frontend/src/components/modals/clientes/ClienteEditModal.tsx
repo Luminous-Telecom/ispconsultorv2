@@ -119,6 +119,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     enabled: !!clienteId,
   });
 
+  // Debug: Log dos dados do cliente
+  useEffect(() => {
+    console.log('🔍 ClienteEditModal Debug:', {
+      show,
+      clienteId,
+      cliente,
+      isLoadingCliente,
+      customFormData
+    });
+  }, [show, clienteId, cliente, isLoadingCliente, customFormData]);
+
   // Buscar planos
   const { data: planosData } = useQuery({
     queryKey: ['planos'],
@@ -931,6 +942,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       className={`form-control ${errors.cnpj ? 'is-invalid' : ''}`}
                       id="cnpj"
                       name="cnpj"
+                      autoComplete="off"
                       value={formData.cnpj}
                       onChange={(e) => handleInputChange('cnpj', e.target.value)}
                       placeholder="00.000.000/0000-00"
@@ -964,6 +976,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       className="form-control"
                       id="nome_fantasia"
                       name="nome_fantasia"
+                      autoComplete="organization-title"
                       value={formData.nome_fantasia}
                       onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
                       placeholder="Nome fantasia da empresa"

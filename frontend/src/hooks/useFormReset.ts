@@ -29,11 +29,19 @@ export function useFormReset<T>({
   useEffect(() => {
     // Só executa quando show muda
     if (show !== previousShow.current) {
+      console.log('🔄 useFormReset: Modal state changed', {
+        show,
+        hasCustomData: !!customData,
+        customData,
+        initialData
+      });
+      
       hasLoadedCustomData.current = false;
       
       if (show) {
         // Se há dados customizados, carrega eles; senão usa os iniciais
         const dataToLoad = customData || initialData;
+        console.log('📝 useFormReset: Loading data', dataToLoad);
         setFormData(dataToLoad);
         hasLoadedCustomData.current = true;
         if (setErrors) {
@@ -54,6 +62,7 @@ export function useFormReset<T>({
   // Atualizar customData quando ele estiver disponível após o modal abrir
   useEffect(() => {
     if (show && customData && !hasLoadedCustomData.current) {
+      console.log('🔄 useFormReset: Loading custom data after modal opened', customData);
       setFormData(customData);
       hasLoadedCustomData.current = true;
     }
