@@ -68,6 +68,13 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [isInitialized]);
 
+  // Resetar posição quando o modal fechar
+  useEffect(() => {
+    if (!show) {
+      setIsInitialized(false);
+    }
+  }, [show]);
+
   // Funções de drag - só permite arrastar pelo título
   const handleMouseDown = (e: React.MouseEvent) => {
     // Só permite arrastar se clicar diretamente no título ou na área do header (exceto botões)
