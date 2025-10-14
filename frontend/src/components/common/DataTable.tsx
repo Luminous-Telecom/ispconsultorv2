@@ -241,6 +241,8 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
               <input
                 type="text"
                 className="form-control form-control-sm"
+                id={`search-${Math.random().toString(36).substr(2, 9)}`}
+                name="search"
                 placeholder={searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -326,6 +328,8 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
                     <input 
                       type="checkbox" 
                       className="form-check-input"
+                      id={`select-all-${Math.random().toString(36).substr(2, 9)}`}
+                      name="selectAll"
                       checked={selectedItems.length === data.length && data.length > 0}
                       onChange={(e) => {
                         if (e.target.checked) {
@@ -409,6 +413,8 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
                       <input 
                         type="checkbox" 
                         className="form-check-input"
+                        id={`select-${item.id || index}-${Math.random().toString(36).substr(2, 9)}`}
+                        name="selectItem"
                         checked={isSelected}
                         onChange={(e) => handleCheckboxChange(item, e)}
                       />

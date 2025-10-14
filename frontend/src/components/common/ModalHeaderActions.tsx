@@ -80,6 +80,8 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
           <input
             type="text"
             className="form-control form-control-sm"
+            id={`search-header-${Math.random().toString(36).substr(2, 9)}`}
+            name="searchHeader"
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}

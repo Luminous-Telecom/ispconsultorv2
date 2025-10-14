@@ -83,6 +83,8 @@ const TableFilters: React.FC<TableFiltersProps> = ({
               <input
                 type={field.type}
                 className="form-control form-control-sm"
+                id={`filter-${field.key}-${Math.random().toString(36).substr(2, 9)}`}
+                name={`filter-${field.key}`}
                 placeholder={field.placeholder}
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
@@ -116,6 +118,8 @@ const TableFilters: React.FC<TableFiltersProps> = ({
           <input
             type="text"
             className="form-control form-control-sm"
+            id={`search-filter-${Math.random().toString(36).substr(2, 9)}`}
+            name="searchFilter"
             placeholder={searchPlaceholder}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
