@@ -620,6 +620,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label">Data de Início *</label>
             <input
               type="date"
+              id="data_inicio"
+              name="data_inicio"
               className={`form-control ${errors.data_inicio ? 'is-invalid' : ''}`}
               value={formData.data_inicio}
               onChange={(e) => handleInputChange('data_inicio', e.target.value)}
@@ -632,6 +634,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label">Data de Fim</label>
             <input
               type="date"
+              id="data_fim"
+              name="data_fim"
               className="form-control"
               value={formData.data_fim}
               onChange={(e) => handleInputChange('data_fim', e.target.value)}
@@ -643,6 +647,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label">Dia de Vencimento</label>
             <input
               type="number"
+              id="dia_vencimento"
+              name="dia_vencimento"
               className={`form-control ${errors.dia_vencimento ? 'is-invalid' : ''}`}
               value={formData.dia_vencimento}
               onChange={(e) => handleInputChange('dia_vencimento', parseInt(e.target.value))}
@@ -674,6 +680,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label">Desconto Percentual (%)</label>
             <input
               type="number"
+              id="desconto_percentual"
+              name="desconto_percentual"
               className={`form-control ${errors.desconto_percentual ? 'is-invalid' : ''}`}
               value={formData.desconto_percentual}
               onChange={(e) => handleInputChange('desconto_percentual', parseFloat(e.target.value) || 0)}
@@ -689,6 +697,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label">Desconto Valor (R$)</label>
             <input
               type="number"
+              id="desconto_valor"
+              name="desconto_valor"
               className={`form-control ${errors.desconto_valor ? 'is-invalid' : ''}`}
               value={formData.desconto_valor}
               onChange={(e) => handleInputChange('desconto_valor', parseFloat(e.target.value) || 0)}
@@ -703,6 +713,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label">Data Validade Desconto</label>
             <input
               type="date"
+              id="data_validade_desconto"
+              name="data_validade_desconto"
               className="form-control"
               value={formData.data_validade_desconto}
               onChange={(e) => handleInputChange('data_validade_desconto', e.target.value)}
