@@ -268,35 +268,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         }
       `}</style>
       
-      <div 
-        className="modal show d-block" 
-        style={{ 
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          position: 'fixed',
-          top: 0,
-          left: '240px', // Backdrop começa após o menu
-          right: 0,
-          bottom: 0,
-          zIndex: 1050
-        }}
-      >
-        {/* Backdrop transparente sobre o menu para permitir drag */}
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '240px', // Largura do menu
-            height: '100vh',
-            backgroundColor: 'transparent',
-            zIndex: 1051 // Acima do backdrop principal
-          }}
-        />
       <div
         ref={modalRef}
         className={`modal-content ${className}`}
         style={{
-          position: 'absolute',
+          position: 'fixed',
           left: `${position.x}px`,
           top: `${position.y}px`,
           width: `${modalSize.width}px`,
@@ -306,8 +282,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           color: 'var(--text-primary)',
           border: '1px solid var(--border-color)',
           borderRadius: '8px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-          zIndex: 1052, // Garantir que o conteúdo do modal esteja acima do menu
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          zIndex: 1050,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'

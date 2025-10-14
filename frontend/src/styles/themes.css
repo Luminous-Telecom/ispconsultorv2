@@ -114,7 +114,7 @@ p, span, div, label {
   width: 240px;
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
-  z-index: 100;
+  z-index: 1000;
   transition: var(--transition);
   overflow-y: auto;
   border-right: 1px solid var(--border-color);
