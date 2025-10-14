@@ -117,19 +117,19 @@ const Layout: React.FC = () => {
       <ClienteListModal
         show={activeModal === 'clientes'}
         onClose={closeModal}
-        title="Lista de Clientes"
+        title="Clientes"
       />
 
       <PlanoListModal
         show={activeModal === 'planos'}
         onClose={closeModal}
-        title="Lista de Planos"
+        title="Planos"
       />
 
       <BancoListModal
         show={activeModal === 'bancos'}
         onClose={closeModal}
-        title="Lista de Bancos"
+        title="Bancos"
       />
 
       <ContratoListModal

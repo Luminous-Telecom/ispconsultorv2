@@ -20,7 +20,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   show,
   onClose,
   onSelectContrato,
-  title = "Selecionar Contrato"
+  title = "Contratos"
 }) => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);

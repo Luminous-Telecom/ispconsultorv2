@@ -132,7 +132,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       <DraggableModal
         show={show}
         onClose={onClose}
-        title="Dados da Empresa"
+        title="Empresa"
         size="xl"
       >
         <div className="text-center p-4">
