@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../../../services/clienteService';
 import { PlanoService } from '../../../services/planoService';
@@ -676,28 +676,32 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   };
 
   // Dados customizados do cliente (quando editando)
-  const customFormData = cliente && typeof cliente === 'object' ? {
-    cnpj: cliente.cnpj || '',
-    razao_social: cliente.razao_social || '',
-    nome_fantasia: cliente.nome_fantasia || '',
-    email: cliente.email || '',
-    telefone: cliente.telefone || '',
-    whatsapp: cliente.whatsapp || '',
-    cep: cliente.cep || '',
-    endereco: cliente.endereco || '',
-    numero: cliente.numero || '',
-    complemento: cliente.complemento || '',
-    bairro: cliente.bairro || '',
-    cidade: cliente.cidade || '',
-    estado: cliente.estado || '',
-    ativo: cliente.ativo ?? true,
-    tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
-    valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
-    recebe_email: cliente.recebe_email ?? true,
-    recebe_sms: cliente.recebe_sms ?? false,
-    recebe_whatsapp: cliente.recebe_whatsapp ?? true,
-    observacoes: cliente.observacoes || ''
-  } : undefined;
+  const customFormData = useMemo(() => {
+    if (!cliente || typeof cliente !== 'object') return undefined;
+    
+    return {
+      cnpj: cliente.cnpj || '',
+      razao_social: cliente.razao_social || '',
+      nome_fantasia: cliente.nome_fantasia || '',
+      email: cliente.email || '',
+      telefone: cliente.telefone || '',
+      whatsapp: cliente.whatsapp || '',
+      cep: cliente.cep || '',
+      endereco: cliente.endereco || '',
+      numero: cliente.numero || '',
+      complemento: cliente.complemento || '',
+      bairro: cliente.bairro || '',
+      cidade: cliente.cidade || '',
+      estado: cliente.estado || '',
+      ativo: cliente.ativo ?? true,
+      tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
+      valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
+      recebe_email: cliente.recebe_email ?? true,
+      recebe_sms: cliente.recebe_sms ?? false,
+      recebe_whatsapp: cliente.recebe_whatsapp ?? true,
+      observacoes: cliente.observacoes || ''
+    };
+  }, [cliente]);
 
   // Usar hook personalizado para reset do formulário
   useFormReset({
@@ -904,6 +908,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="text"
                       className={`form-control ${errors.cnpj ? 'is-invalid' : ''}`}
                       id="cnpj"
+                      name="cnpj"
                       value={formData.cnpj}
                       onChange={(e) => handleInputChange('cnpj', e.target.value)}
                       placeholder="00.000.000/0000-00"
@@ -919,6 +924,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="text"
                       className={`form-control ${errors.razao_social ? 'is-invalid' : ''}`}
                       id="razao_social"
+                      name="razao_social"
+                      autoComplete="organization"
                       value={formData.razao_social}
                       onChange={(e) => handleInputChange('razao_social', e.target.value)}
                       placeholder="Razão social da empresa"
@@ -934,6 +941,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="text"
                       className="form-control"
                       id="nome_fantasia"
+                      name="nome_fantasia"
                       value={formData.nome_fantasia}
                       onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
                       placeholder="Nome fantasia da empresa"
@@ -946,6 +954,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         className="form-check-input"
                         type="checkbox"
                         id="ativo"
+                        name="ativo"
                         checked={formData.ativo}
                         onChange={(e) => handleInputChange('ativo', e.target.checked)}
                       />
@@ -970,6 +979,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="email"
                       className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                       id="email"
+                      name="email"
+                      autoComplete="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       placeholder="email@exemplo.com"
@@ -983,6 +994,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="text"
                       className="form-control"
                       id="telefone"
+                      name="telefone"
+                      autoComplete="tel"
                       value={formData.telefone}
                       onChange={(e) => handleInputChange('telefone', e.target.value)}
                       placeholder="(00) 0000-0000"
@@ -995,6 +1008,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="text"
                       className="form-control"
                       id="whatsapp"
+                      name="whatsapp"
+                      autoComplete="tel"
                       value={formData.whatsapp}
                       onChange={(e) => handleInputChange('whatsapp', e.target.value)}
                       placeholder="(00) 00000-0000"
@@ -1011,6 +1026,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         className="form-check-input"
                         type="checkbox"
                         id="recebe_email"
+                        name="recebe_email"
                         checked={formData.recebe_email}
                         onChange={(e) => handleInputChange('recebe_email', e.target.checked)}
                       />
@@ -1026,6 +1042,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         className="form-check-input"
                         type="checkbox"
                         id="recebe_sms"
+                        name="recebe_sms"
                         checked={formData.recebe_sms}
                         onChange={(e) => handleInputChange('recebe_sms', e.target.checked)}
                       />
@@ -1041,6 +1058,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         className="form-check-input"
                         type="checkbox"
                         id="recebe_whatsapp"
+                        name="recebe_whatsapp"
                         checked={formData.recebe_whatsapp}
                         onChange={(e) => handleInputChange('recebe_whatsapp', e.target.checked)}
                       />
@@ -1063,6 +1081,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="text"
                       className="form-control"
                       id="cep"
+                      name="cep"
+                      autoComplete="postal-code"
                       value={formData.cep}
                       onChange={(e) => handleInputChange('cep', e.target.value)}
                       placeholder="00000-000"
@@ -1075,6 +1095,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="text"
                       className="form-control"
                       id="endereco"
+                      name="endereco"
+                      autoComplete="street-address"
                       value={formData.endereco}
                       onChange={(e) => handleInputChange('endereco', e.target.value)}
                       placeholder="Rua, Avenida..."
@@ -1089,6 +1111,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           type="text"
                           className="form-control"
                           id="numero"
+                          name="numero"
                           value={formData.numero}
                           onChange={(e) => handleInputChange('numero', e.target.value)}
                           placeholder="123"
@@ -1102,6 +1125,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           type="text"
                           className="form-control"
                           id="complemento"
+                          name="complemento"
                           value={formData.complemento}
                           onChange={(e) => handleInputChange('complemento', e.target.value)}
                           placeholder="Apto, Sala..."
@@ -1118,6 +1142,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       type="text"
                       className="form-control"
                       id="bairro"
+                      name="bairro"
                       value={formData.bairro}
                       onChange={(e) => handleInputChange('bairro', e.target.value)}
                       placeholder="Nome do bairro"
@@ -1132,6 +1157,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           type="text"
                           className="form-control"
                           id="cidade"
+                          name="cidade"
+                          autoComplete="address-level2"
                           value={formData.cidade}
                           onChange={(e) => handleInputChange('cidade', e.target.value)}
                           placeholder="Nome da cidade"
@@ -1145,6 +1172,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           type="text"
                           className="form-control"
                           id="estado"
+                          name="estado"
+                          autoComplete="address-level1"
                           value={formData.estado}
                           onChange={(e) => handleInputChange('estado', e.target.value)}
                           placeholder="UF"
@@ -1726,6 +1755,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     <textarea
                       className="form-control"
                       id="observacoes"
+                      name="observacoes"
                       rows={8}
                       value={formData.observacoes}
                       onChange={(e) => handleInputChange('observacoes', e.target.value)}
