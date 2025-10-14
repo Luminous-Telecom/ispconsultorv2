@@ -182,6 +182,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <select
                 className={`form-select ${errors.cliente_id ? 'is-invalid' : ''}`}
                 id="cliente_id"
+                name="cliente_id"
                 value={formData.cliente_id}
                 onChange={(e) => handleInputChange('cliente_id', parseInt(e.target.value))}
                 disabled={createContratoMutation.isPending}
@@ -203,6 +204,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <select
                 className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
                 id="plano_id"
+                name="plano_id"
                 value={formData.plano_id}
                 onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
                 disabled={createContratoMutation.isPending}
@@ -226,6 +228,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <select
                 className="form-select"
                 id="status"
+                name="status"
                 value={formData.status}
                 onChange={(e) => handleInputChange('status', e.target.value as 'ativo' | 'inativo' | 'suspenso')}
                 disabled={createContratoMutation.isPending}
@@ -244,6 +247,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 type="date"
                 className={`form-control ${errors.data_inicio ? 'is-invalid' : ''}`}
                 id="data_inicio"
+                name="data_inicio"
                 value={formData.data_inicio}
                 onChange={(e) => handleInputChange('data_inicio', e.target.value)}
                 disabled={createContratoMutation.isPending}
