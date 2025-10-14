@@ -1325,6 +1325,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             className="form-check-input" 
                             type="checkbox" 
                             id="showInativosContratos"
+                            name="showInativosContratos"
                             checked={showInativosContratos}
                             onChange={(e) => {
                               e.stopPropagation();
@@ -1614,6 +1615,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             className="form-check-input" 
                             type="checkbox" 
                             id="showCanceled"
+                            name="showCanceled"
                             checked={showCancelados}
                             onChange={(e) => {
                               e.stopPropagation();

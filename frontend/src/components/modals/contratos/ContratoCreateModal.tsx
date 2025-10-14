@@ -370,6 +370,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 type="checkbox"
                 className="form-check-input"
                 id="isento_mensalidade"
+                name="isento_mensalidade"
                 checked={formData.isento_mensalidade}
                 onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
                 disabled={createContratoMutation.isPending}

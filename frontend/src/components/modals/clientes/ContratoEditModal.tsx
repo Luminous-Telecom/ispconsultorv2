@@ -728,6 +728,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 className="form-check-input"
                 type="checkbox"
                 id="isento_mensalidade"
+                name="isento_mensalidade"
                 checked={formData.isento_mensalidade}
                 onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
               />
