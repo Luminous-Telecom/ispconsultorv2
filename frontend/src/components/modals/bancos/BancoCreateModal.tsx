@@ -399,6 +399,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                   type="text"
                   className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
                   id="nome"
+                  name="nome"
                   value={formData.nome}
                   onChange={(e) => handleInputChange('nome', e.target.value)}
                   disabled={createBancoMutation.isPending}
@@ -417,6 +418,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                 <select
                   className={`form-select ${errors.tipo_banco ? 'is-invalid' : ''}`}
                   id="tipo_banco"
+                  name="tipo_banco"
                   value={formData.tipo_banco}
                   onChange={(e) => handleInputChange('tipo_banco', e.target.value)}
                   disabled={createBancoMutation.isPending}
@@ -435,6 +437,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                     className="form-check-input"
                     type="checkbox"
                     id="ativo"
+                    name="ativo"
                     checked={formData.ativo}
                     onChange={(e) => handleInputChange('ativo', e.target.checked)}
                     disabled={createBancoMutation.isPending}
@@ -452,6 +455,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
             <textarea
               className="form-control form-control-sm"
               id="descricao"
+              name="descricao"
               rows={2}
               value={formData.descricao}
               onChange={(e) => handleInputChange('descricao', e.target.value)}

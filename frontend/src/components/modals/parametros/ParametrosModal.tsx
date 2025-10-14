@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ParametrosService } from '../../../services/parametrosService';
@@ -40,13 +40,17 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   });
 
   // Dados customizados dos parâmetros (quando editando)
-  const customFormData = parametros?.data ? {
-    validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
-    gerar_titulos_automatico: parametros.data.gerar_titulos_automatico ?? false,
-    titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
-    auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
-    total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
-  } : undefined;
+  const customFormData = useMemo(() => {
+    if (!parametros?.data) return undefined;
+    
+    return {
+      validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
+      gerar_titulos_automatico: parametros.data.gerar_titulos_automatico ?? false,
+      titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
+      auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
+      total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
+    };
+  }, [parametros?.data]);
 
   // Usar hook personalizado para reset do formulário
   useFormReset({
