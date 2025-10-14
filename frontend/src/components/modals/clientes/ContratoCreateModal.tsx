@@ -255,6 +255,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 max="100"
                 className="form-control"
                 id="desconto_percentual"
+                name="desconto_percentual"
                 value={formData.desconto_percentual || ''}
                 onChange={(e) => handleInputChange('desconto_percentual', parseFloat(e.target.value) || 0)}
                 disabled={createContratoMutation.isPending}
@@ -272,6 +273,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 min="0"
                 className="form-control"
                 id="desconto_valor"
+                name="desconto_valor"
                 value={formData.desconto_valor || ''}
                 onChange={(e) => handleInputChange('desconto_valor', parseFloat(e.target.value) || 0)}
                 disabled={createContratoMutation.isPending}
@@ -291,6 +293,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 max="31"
                 className="form-control"
                 id="dia_vencimento"
+                name="dia_vencimento"
                 value={formData.dia_vencimento || ''}
                 onChange={(e) => handleInputChange('dia_vencimento', parseInt(e.target.value) || 0)}
                 disabled={createContratoMutation.isPending}
@@ -305,6 +308,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <select
                 className="form-select"
                 id="conta_boleto"
+                name="conta_boleto"
                 value={formData.conta_boleto || 0}
                 onChange={(e) => handleInputChange('conta_boleto', parseInt(e.target.value))}
                 disabled={createContratoMutation.isPending}
@@ -328,6 +332,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 type="date"
                 className="form-control"
                 id="data_validade_desconto"
+                name="data_validade_desconto"
                 value={formData.data_validade_desconto}
                 onChange={(e) => handleInputChange('data_validade_desconto', e.target.value)}
                 disabled={createContratoMutation.isPending}
@@ -342,6 +347,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   type="checkbox"
                   className="form-check-input"
                   id="isento_mensalidade"
+                  name="isento_mensalidade"
                   checked={formData.isento_mensalidade}
                   onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
                   disabled={createContratoMutation.isPending}
@@ -359,6 +365,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           <textarea
             className="form-control form-control-sm"
             id="observacoes"
+            name="observacoes"
             rows={3}
             value={formData.observacoes}
             onChange={(e) => handleInputChange('observacoes', e.target.value)}
