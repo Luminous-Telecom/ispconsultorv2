@@ -861,6 +861,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
                       <input
                         type="text"
+                        id="contrato-search"
+                        name="contratoSearch"
                         className="form-control form-control-sm"
                         placeholder="Buscar por ID, carnê, valor..."
                         value={search}
@@ -880,6 +882,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                           className="form-check-input" 
                           type="checkbox" 
                           id="showCanceled"
+                          name="showCanceled"
                           checked={showCancelados}
                           onChange={(e) => {
                             e.stopPropagation();
