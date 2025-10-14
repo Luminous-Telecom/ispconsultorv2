@@ -38,10 +38,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   };
 
-  // Posicionar modal na área restante (excluindo menu)
+  // Posicionar modal na área restante (excluindo menu) - 95% da dashboard
   useEffect(() => {
     if (show) {
-      const { width } = getSizeClasses();
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       
@@ -49,22 +48,20 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       const sidebarWidth = 240;
       const availableWidth = screenWidth - sidebarWidth;
       
-      // Altura: para modais A4, usar altura maior (90%), outros usam padrão
-      const autoHeight = size === 'a4' 
-        ? Math.min(screenHeight - 16, 900) // Altura máxima menos margem pequena
-        : Math.min(screenHeight * 0.9, 800);
+      // Modal ocupa 95% da largura e altura disponíveis
+      const modalWidth = Math.floor(availableWidth * 0.95);
+      const modalHeight = Math.floor(screenHeight * 0.95);
       
-      // Centralizar na área restante (excluindo menu)
-      const centerX = sidebarWidth + Math.max(0, Math.floor((availableWidth - width) / 2));
-      const centerY = Math.max(8, (screenHeight - autoHeight) / 2); // 8px de margem superior
+      // Centralizar na área restante (2.5% de margem em cada lado)
+      const centerX = sidebarWidth + Math.floor(availableWidth * 0.025);
+      const centerY = Math.floor(screenHeight * 0.025);
       
       setPosition({
         x: centerX,
         y: centerY
       });
       
-      // Largura fixa, altura calculada
-      setModalSize({ width, height: autoHeight });
+      setModalSize({ width: modalWidth, height: modalHeight });
     }
   }, [show, size]);
 
