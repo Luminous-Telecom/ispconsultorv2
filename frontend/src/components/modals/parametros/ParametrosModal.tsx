@@ -5,7 +5,7 @@ import { ParametrosService } from '../../../services/parametrosService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface ParametrosModalProps {
-  isOpen: boolean;
+  show: boolean;
   onClose: () => void;
 }
 
@@ -17,7 +17,7 @@ interface ParametrosForm {
   total_titulos_financeiro: number;
 }
 
-const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) => {
+const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -96,7 +96,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ isOpen, onClose }) =>
   if (isLoading) {
     return (
       <DraggableModal
-        show={isOpen}
+        show={show}
         onClose={onClose}
         title="Parâmetros do Sistema"
         size="md"

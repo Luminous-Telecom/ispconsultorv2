@@ -16,25 +16,29 @@ const Layout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  // Estados para controlar modais
-  const [showClienteModal, setShowClienteModal] = useState(false);
-  const [showPlanoModal, setShowPlanoModal] = useState(false);
-  const [showBancoModal, setShowBancoModal] = useState(false);
-  const [showContratoModal, setShowContratoModal] = useState(false);
-  const [showDadosEmpresaModal, setShowDadosEmpresaModal] = useState(false);
-  const [showParametrosModal, setShowParametrosModal] = useState(false);
+  // Estado para controlar qual modal está aberto (apenas um por vez)
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  
+  // Funções helper para abrir/fechar modais
+  const openModal = (modalName: string) => {
+    setActiveModal(modalName);
+  };
+  
+  const closeModal = () => {
+    setActiveModal(null);
+  };
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   const menuItems = [
-    { path: '/clientes', icon: 'bi-people', label: 'Clientes', isModal: true, modalHandler: () => setShowClienteModal(true) },
-    { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => setShowPlanoModal(true) },
-    { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => setShowBancoModal(true) },
-    { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: true, modalHandler: () => setShowContratoModal(true) },
-    { path: '/parametros', icon: 'bi-gear', label: 'Parâmetros', isModal: true, modalHandler: () => setShowParametrosModal(true) },
-    { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => setShowDadosEmpresaModal(true) },
+    { path: '/clientes', icon: 'bi-people', label: 'Clientes', isModal: true, modalHandler: () => openModal('clientes') },
+    { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => openModal('planos') },
+    { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => openModal('bancos') },
+    { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: true, modalHandler: () => openModal('contratos') },
+    { path: '/parametros', icon: 'bi-gear', label: 'Parâmetros', isModal: true, modalHandler: () => openModal('parametros') },
+    { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => openModal('dados-empresa') },
   ];
 
   return (
@@ -109,38 +113,38 @@ const Layout: React.FC = () => {
             onRemove={removeNotification}
           />
 
-      {/* Modais de Listagem */}
+      {/* Modais de Listagem - Apenas um aberto por vez */}
       <ClienteListModal
-        show={showClienteModal}
-        onClose={() => setShowClienteModal(false)}
+        show={activeModal === 'clientes'}
+        onClose={closeModal}
         title="Lista de Clientes"
       />
 
       <PlanoListModal
-        show={showPlanoModal}
-        onClose={() => setShowPlanoModal(false)}
+        show={activeModal === 'planos'}
+        onClose={closeModal}
         title="Lista de Planos"
       />
 
       <BancoListModal
-        show={showBancoModal}
-        onClose={() => setShowBancoModal(false)}
+        show={activeModal === 'bancos'}
+        onClose={closeModal}
         title="Lista de Bancos"
       />
 
       <ContratoListModal
-        show={showContratoModal}
-        onClose={() => setShowContratoModal(false)}
+        show={activeModal === 'contratos'}
+        onClose={closeModal}
       />
 
       <DadosEmpresaModal
-        show={showDadosEmpresaModal}
-        onClose={() => setShowDadosEmpresaModal(false)}
+        show={activeModal === 'dados-empresa'}
+        onClose={closeModal}
       />
 
       <ParametrosModal
-        isOpen={showParametrosModal}
-        onClose={() => setShowParametrosModal(false)}
+        show={activeModal === 'parametros'}
+        onClose={closeModal}
       />
 
     </div>
