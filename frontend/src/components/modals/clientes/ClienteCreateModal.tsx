@@ -156,7 +156,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Novo Cliente"
+      title="Cliente"
     >
       <form onSubmit={handleSubmit}>
         {/* Dados Básicos */}

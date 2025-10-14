@@ -148,7 +148,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Dados da Empresa"
+      title="Empresa"
       size="xl"
     >
       <form onSubmit={handleSubmit}>

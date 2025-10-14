@@ -154,7 +154,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Novo Plano"
+      title="Plano"
     >
         <form onSubmit={handleSubmit}>
           <div className="row g-2">

@@ -114,7 +114,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Parâmetros do Sistema"
+      title="Parâmetros"
       size="md"
     >
       <form onSubmit={handleSubmit}>

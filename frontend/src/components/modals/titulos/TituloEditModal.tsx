@@ -150,7 +150,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
 
   if (isLoadingParcela) {
     return (
-      <DraggableModal show={show} onClose={handleCancel} title="Editando Parcela">
+      <DraggableModal show={show} onClose={handleCancel} title="Título">
         <div className="d-flex justify-content-center p-4">
           <div className="spinner-border" role="status">
             <span className="visually-hidden">Carregando...</span>
@@ -164,7 +164,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Editar Parcela"
+      title="Título"
     >
       <form onSubmit={handleSubmit}>
         <div className="row">

@@ -227,7 +227,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Novo Título"
+      title="Título"
     >
       <form onSubmit={handleSubmit}>
         <div className="row">

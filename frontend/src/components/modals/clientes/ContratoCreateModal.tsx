@@ -149,7 +149,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Novo Contrato"
+      title="Contrato"
       size="lg"
     >
       <form onSubmit={handleSubmit}>

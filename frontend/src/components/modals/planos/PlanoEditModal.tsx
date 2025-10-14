@@ -219,7 +219,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Editar Plano"
+      title="Plano"
     >
       {planoLoading ? (
         <div className="text-center py-4">

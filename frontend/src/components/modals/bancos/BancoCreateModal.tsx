@@ -357,7 +357,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Novo Banco"
+      title="Banco"
     >
       <form onSubmit={handleSubmit}>
         {/* Informações Básicas */}

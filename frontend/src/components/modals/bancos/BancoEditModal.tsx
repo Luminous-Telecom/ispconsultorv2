@@ -439,7 +439,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       <DraggableModal
         show={show}
         onClose={onClose}
-        title="Editar Banco"
+        title="Banco"
       >
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
@@ -455,7 +455,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title={`Editar Banco - ${banco?.nome || 'Carregando...'}`}
+      title="Banco"
       size="xl"
     >
       <form onSubmit={handleSubmit}>
