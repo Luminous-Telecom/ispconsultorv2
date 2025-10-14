@@ -240,6 +240,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
                 type="date"
                 className={`form-control ${errors.data_vencimento ? 'is-invalid' : ''}`}
                 id="data_vencimento"
+                name="data_vencimento"
                 value={formData.data_vencimento}
                 onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
                 disabled={updateParcelaMutation.isPending}
@@ -255,6 +256,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
           <textarea
             className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
             id="observacoes"
+            name="observacoes"
             rows={3}
             value={formData.observacoes}
             onChange={(e) => handleInputChange('observacoes', e.target.value)}

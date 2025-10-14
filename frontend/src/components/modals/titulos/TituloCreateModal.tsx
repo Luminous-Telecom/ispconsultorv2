@@ -319,6 +319,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 max="100"
                 className="form-control"
                 id="desconto_percentual"
+                name="desconto_percentual"
                 value={formData.desconto_percentual}
                 onChange={(e) => handleInputChange('desconto_percentual', parseFloat(e.target.value) || 0)}
                 disabled={createParcelaMutation.isPending}
@@ -335,6 +336,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 min="0"
                 className="form-control"
                 id="desconto_valor"
+                name="desconto_valor"
                 value={formData.desconto_valor}
                 onChange={(e) => handleInputChange('desconto_valor', parseFloat(e.target.value) || 0)}
                 disabled={createParcelaMutation.isPending}
@@ -356,6 +358,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 max="100"
                 className="form-control"
                 id="acrescimo_percentual"
+                name="acrescimo_percentual"
                 value={formData.acrescimo_percentual}
                 onChange={(e) => handleInputChange('acrescimo_percentual', parseFloat(e.target.value) || 0)}
                 disabled={createParcelaMutation.isPending}
@@ -372,6 +375,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 min="0"
                 className="form-control"
                 id="acrescimo_valor"
+                name="acrescimo_valor"
                 value={formData.acrescimo_valor}
                 onChange={(e) => handleInputChange('acrescimo_valor', parseFloat(e.target.value) || 0)}
                 disabled={createParcelaMutation.isPending}
@@ -388,6 +392,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
               <textarea
                 className="form-control"
                 id="observacoes"
+                name="observacoes"
                 rows={3}
                 value={formData.observacoes}
                 onChange={(e) => handleInputChange('observacoes', e.target.value)}
