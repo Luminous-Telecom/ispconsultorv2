@@ -1772,8 +1772,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           setSelectedContratoId(null);
         }}
         onSuccess={() => {
-          setShowContratoEditModal(false);
-          setSelectedContratoId(null);
           // Refetch contratos
         }}
       />
