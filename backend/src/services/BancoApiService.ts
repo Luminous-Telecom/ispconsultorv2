@@ -379,6 +379,15 @@ export class BancoApiService {
         // Atualizar metadados com notification_url
         try {
           const baseUrl = banco.url_retorno || `${process.env.BASE_URL}/webhook/efi`;
+          
+          logger.info('Configurando URL de notificação', {
+            banco_id: banco.id,
+            banco_nome: banco.nome,
+            url_retorno_cadastrada: banco.url_retorno,
+            url_final_usada: baseUrl,
+            titulo_id: titulo.id
+          });
+          
           const metadataEndpoint = `${baseUrlCobranca}/v1/charge/${chargeId}/metadata`;
           const metadataPayload = {
             notification_url: baseUrl,
@@ -466,6 +475,14 @@ export class BancoApiService {
     config: BancoConfig
   ): Promise<any> {
     const baseUrl = banco.url_retorno || `${process.env.BASE_URL}/webhook/efi`;
+    
+    logger.info('Gerando título com URL de notificação', {
+      banco_id: banco.id,
+      banco_nome: banco.nome,
+      url_retorno_cadastrada: banco.url_retorno,
+      url_final_usada: baseUrl,
+      titulo_id: titulo.id
+    });
     
     // Buscar dados da empresa (recebedor)
     const { DadosEmpresa } = await import('../models/DadosEmpresa');
