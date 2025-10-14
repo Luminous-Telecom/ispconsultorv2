@@ -119,17 +119,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     enabled: !!clienteId,
   });
 
-  // Debug: Log dos dados do cliente
-  useEffect(() => {
-    console.log('🔍 ClienteEditModal Debug:', {
-      show,
-      clienteId,
-      cliente,
-      isLoadingCliente,
-      customFormData
-    });
-  }, [show, clienteId, cliente, isLoadingCliente, customFormData]);
-
   // Buscar planos
   const { data: planosData } = useQuery({
     queryKey: ['planos'],
@@ -744,6 +733,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     setErrors,
     customData: customFormData
   });
+
+  // Debug: Log dos dados do cliente
+  useEffect(() => {
+    console.log('🔍 ClienteEditModal Debug:', {
+      show,
+      clienteId,
+      cliente,
+      isLoadingCliente,
+      customFormData
+    });
+  }, [show, clienteId, cliente, isLoadingCliente, customFormData]);
 
   const handleInputChange = (field: keyof ClienteForm, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
