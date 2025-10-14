@@ -47,6 +47,20 @@ interface TableProps<T = any> {
 }
 
 const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
+  // Debug: Log para identificar campos sem id/name
+  useEffect(() => {
+    console.log('🔍 DEBUG ACESSIBILIDADE: Verificando campos no DataTable');
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('input:not([id]):not([name])');
+      if (inputs.length > 0) {
+        console.log('❌ INPUTS SEM ID/NAME no DataTable:', inputs.length);
+        inputs.forEach((input, index) => {
+          console.log(`❌ DataTable Campo ${index + 1}:`, input.outerHTML);
+        });
+      }
+    }, 500);
+  }, [data, isLoading]);
+
   const {
     columns,
     data,
