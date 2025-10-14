@@ -130,7 +130,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [show, onClose]);
 
-  if (!show) return null;
+  // Não retornar null, apenas ocultar com display: none para manter estado
   
 
   return (
@@ -281,7 +281,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           borderRadius: '8px',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           zIndex: 1050,
-          display: 'flex',
+          display: show ? 'flex' : 'none', // Ocultar ao invés de desmontar
           flexDirection: 'column',
           overflow: 'hidden'
         }}
