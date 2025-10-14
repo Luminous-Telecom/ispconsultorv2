@@ -510,7 +510,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       if (onSuccess) {
         onSuccess();
       }
-      onClose();
     } catch (err: any) {
       error(err.response?.data?.message || 'Erro ao atualizar contrato');
     }
