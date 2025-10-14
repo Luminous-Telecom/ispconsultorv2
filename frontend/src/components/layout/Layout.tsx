@@ -18,14 +18,26 @@ const Layout: React.FC = () => {
   
   // Estado para controlar qual modal está aberto (apenas um por vez)
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
-  // Funções helper para abrir/fechar modais
+  // Funções helper para abrir/fechar modais com transição suave
   const openModal = (modalName: string) => {
-    setActiveModal(modalName);
+    if (activeModal && activeModal !== modalName) {
+      // Se há um modal aberto, fazer transição suave
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setActiveModal(modalName);
+        setIsTransitioning(false);
+      }, 100); // Pequeno delay para transição suave
+    } else {
+      // Se não há modal aberto, abrir diretamente
+      setActiveModal(modalName);
+    }
   };
   
   const closeModal = () => {
     setActiveModal(null);
+    setIsTransitioning(false);
   };
 
   const isActive = (path: string) => {
@@ -113,39 +125,43 @@ const Layout: React.FC = () => {
             onRemove={removeNotification}
           />
 
-      {/* Modais de Listagem - Apenas um aberto por vez */}
-      <ClienteListModal
-        show={activeModal === 'clientes'}
-        onClose={closeModal}
-        title="Lista de Clientes"
-      />
+      {/* Modais de Listagem - Apenas um aberto por vez, não renderizar durante transição */}
+      {!isTransitioning && (
+        <>
+          <ClienteListModal
+            show={activeModal === 'clientes'}
+            onClose={closeModal}
+            title="Lista de Clientes"
+          />
 
-      <PlanoListModal
-        show={activeModal === 'planos'}
-        onClose={closeModal}
-        title="Lista de Planos"
-      />
+          <PlanoListModal
+            show={activeModal === 'planos'}
+            onClose={closeModal}
+            title="Lista de Planos"
+          />
 
-      <BancoListModal
-        show={activeModal === 'bancos'}
-        onClose={closeModal}
-        title="Lista de Bancos"
-      />
+          <BancoListModal
+            show={activeModal === 'bancos'}
+            onClose={closeModal}
+            title="Lista de Bancos"
+          />
 
-      <ContratoListModal
-        show={activeModal === 'contratos'}
-        onClose={closeModal}
-      />
+          <ContratoListModal
+            show={activeModal === 'contratos'}
+            onClose={closeModal}
+          />
 
-      <DadosEmpresaModal
-        show={activeModal === 'dados-empresa'}
-        onClose={closeModal}
-      />
+          <DadosEmpresaModal
+            show={activeModal === 'dados-empresa'}
+            onClose={closeModal}
+          />
 
-      <ParametrosModal
-        show={activeModal === 'parametros'}
-        onClose={closeModal}
-      />
+          <ParametrosModal
+            show={activeModal === 'parametros'}
+            onClose={closeModal}
+          />
+        </>
+      )}
 
     </div>
   );
