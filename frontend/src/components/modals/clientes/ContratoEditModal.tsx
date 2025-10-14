@@ -585,8 +585,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <div className="row">
           {/* Plano */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Plano *</label>
+            <label htmlFor="plano_id" className="form-label">Plano *</label>
             <select
+              id="plano_id"
+              name="plano_id"
               className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
               value={formData.plano_id}
               onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
@@ -603,8 +605,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Status */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Status</label>
+            <label htmlFor="status" className="form-label">Status</label>
             <select
+              id="status"
+              name="status"
               className="form-select"
               value={formData.status}
               onChange={(e) => handleInputChange('status', e.target.value as 'ativo' | 'inativo' | 'suspenso')}
@@ -617,7 +621,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Data de Início */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Data de Início *</label>
+            <label htmlFor="data_inicio" className="form-label">Data de Início *</label>
             <input
               type="date"
               id="data_inicio"
@@ -631,7 +635,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Data de Fim */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Data de Fim</label>
+            <label htmlFor="data_fim" className="form-label">Data de Fim</label>
             <input
               type="date"
               id="data_fim"
@@ -644,7 +648,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Dia de Vencimento */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Dia de Vencimento</label>
+            <label htmlFor="dia_vencimento" className="form-label">Dia de Vencimento</label>
             <input
               type="number"
               id="dia_vencimento"
@@ -660,8 +664,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Banco para Boleto */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Banco para Boleto</label>
+            <label htmlFor="conta_boleto" className="form-label">Banco para Boleto</label>
             <select
+              id="conta_boleto"
+              name="conta_boleto"
               className="form-select"
               value={formData.conta_boleto}
               onChange={(e) => handleInputChange('conta_boleto', parseInt(e.target.value))}
@@ -677,7 +683,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Desconto Percentual */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Desconto Percentual (%)</label>
+            <label htmlFor="desconto_percentual" className="form-label">Desconto Percentual (%)</label>
             <input
               type="number"
               id="desconto_percentual"
@@ -694,7 +700,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Desconto Valor */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Desconto Valor (R$)</label>
+            <label htmlFor="desconto_valor" className="form-label">Desconto Valor (R$)</label>
             <input
               type="number"
               id="desconto_valor"
@@ -710,7 +716,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Data Validade Desconto */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Data Validade Desconto</label>
+            <label htmlFor="data_validade_desconto" className="form-label">Data Validade Desconto</label>
             <input
               type="date"
               id="data_validade_desconto"
@@ -740,8 +746,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Observações */}
           <div className="col-12 mb-3">
-            <label className="form-label">Observações</label>
+            <label htmlFor="observacoes" className="form-label">Observações</label>
             <textarea
+              id="observacoes"
+              name="observacoes"
               className="form-control"
               rows={3}
               value={formData.observacoes}
