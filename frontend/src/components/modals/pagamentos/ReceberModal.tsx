@@ -161,6 +161,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                 type="date"
                 className={`form-control ${errors.data_pagamento ? 'is-invalid' : ''}`}
                 id="data_pagamento"
+                name="data_pagamento"
                 value={formData.data_pagamento}
                 onChange={(e) => handleInputChange('data_pagamento', e.target.value)}
                 disabled={marcarPagoMutation.isPending}
@@ -188,6 +189,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                   type="text"
                   className={`form-control ${errors.valor_pago ? 'is-invalid' : ''}`}
                   id="valor_pago"
+                  name="valor_pago"
                   value={formData.valor_pago}
                   onChange={(e) => handleValorChange(e.target.value)}
                   placeholder="0,00"
@@ -208,6 +210,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
           <textarea
             className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
             id="observacoes"
+            name="observacoes"
             rows={3}
             value={formData.observacoes}
             onChange={(e) => handleInputChange('observacoes', e.target.value)}

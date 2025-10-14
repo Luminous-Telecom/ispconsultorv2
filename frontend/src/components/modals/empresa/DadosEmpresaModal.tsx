@@ -234,6 +234,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="razao_social"
+                  name="razao_social"
+                  autoComplete="organization"
                   value={dados.razao_social}
                   onChange={(e) => handleInputChange('razao_social', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -248,6 +250,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="nome_fantasia"
+                  name="nome_fantasia"
                   value={dados.nome_fantasia}
                   onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -264,6 +267,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="cnpj"
+                  name="cnpj"
                   value={dados.cnpj}
                   onChange={(e) => handleInputChange('cnpj', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -278,6 +282,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="inscricao_estadual"
+                  name="inscricao_estadual"
                   value={dados.inscricao_estadual}
                   onChange={(e) => handleInputChange('inscricao_estadual', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -291,6 +296,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="inscricao_municipal"
+                  name="inscricao_municipal"
                   value={dados.inscricao_municipal}
                   onChange={(e) => handleInputChange('inscricao_municipal', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -329,6 +335,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                     type="file"
                     className="form-control"
                     id="logo"
+                    name="logo"
                     accept="image/*"
                     onChange={onLogoChange}
                     disabled={updateDadosMutation.isPending}
@@ -354,6 +361,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="cep"
+                  name="cep"
+                  autoComplete="postal-code"
                   value={dados.cep}
                   onChange={(e) => handleInputChange('cep', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -367,6 +376,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="endereco"
+                  name="endereco"
+                  autoComplete="street-address"
                   value={dados.endereco}
                   onChange={(e) => handleInputChange('endereco', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -380,6 +391,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="numero"
+                  name="numero"
                   value={dados.numero}
                   onChange={(e) => handleInputChange('numero', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -396,6 +408,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="complemento"
+                  name="complemento"
                   value={dados.complemento}
                   onChange={(e) => handleInputChange('complemento', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -409,6 +422,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="bairro"
+                  name="bairro"
                   value={dados.bairro}
                   onChange={(e) => handleInputChange('bairro', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -422,6 +436,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="cidade"
+                  name="cidade"
+                  autoComplete="address-level2"
                   value={dados.cidade}
                   onChange={(e) => handleInputChange('cidade', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -438,6 +454,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="estado"
+                  name="estado"
+                  autoComplete="address-level1"
                   value={dados.estado}
                   onChange={(e) => handleInputChange('estado', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -460,6 +478,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="telefone"
+                  name="telefone"
+                  autoComplete="tel"
                   value={dados.telefone}
                   onChange={(e) => handleInputChange('telefone', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -473,6 +493,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="celular"
+                  name="celular"
+                  autoComplete="tel"
                   value={dados.celular}
                   onChange={(e) => handleInputChange('celular', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -486,6 +508,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="email"
                   className="form-control"
                   id="email"
+                  name="email"
+                  autoComplete="email"
                   value={dados.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -502,6 +526,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="url"
                   className="form-control"
                   id="site"
+                  name="site"
+                  autoComplete="url"
                   value={dados.site}
                   onChange={(e) => handleInputChange('site', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -523,6 +549,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="responsavel_nome"
+                  name="responsavel_nome"
+                  autoComplete="name"
                   value={dados.responsavel_nome}
                   onChange={(e) => handleInputChange('responsavel_nome', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -536,6 +564,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="responsavel_cpf"
+                  name="responsavel_cpf"
                   value={dados.responsavel_cpf}
                   onChange={(e) => handleInputChange('responsavel_cpf', e.target.value)}
                   disabled={updateDadosMutation.isPending}
@@ -549,6 +578,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   type="text"
                   className="form-control"
                   id="responsavel_cargo"
+                  name="responsavel_cargo"
+                  autoComplete="organization-title"
                   value={dados.responsavel_cargo}
                   onChange={(e) => handleInputChange('responsavel_cargo', e.target.value)}
                   disabled={updateDadosMutation.isPending}

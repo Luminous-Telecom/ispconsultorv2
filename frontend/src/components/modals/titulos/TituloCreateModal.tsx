@@ -257,6 +257,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
               <select
                 className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
                 id="plano_id"
+                name="plano_id"
                 value={formData.plano_id}
                 onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
                 disabled={createParcelaMutation.isPending}
@@ -281,6 +282,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 type="date"
                 className={`form-control ${errors.data_vencimento ? 'is-invalid' : ''}`}
                 id="data_vencimento"
+                name="data_vencimento"
                 value={formData.data_vencimento}
                 onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
                 disabled={createParcelaMutation.isPending}
@@ -295,6 +297,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 type="text"
                 className="form-control"
                 id="descricao"
+                name="descricao"
                 value={formData.descricao}
                 onChange={(e) => handleInputChange('descricao', e.target.value)}
                 disabled={createParcelaMutation.isPending}
