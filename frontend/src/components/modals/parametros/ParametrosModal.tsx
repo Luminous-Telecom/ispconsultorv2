@@ -32,7 +32,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   const { data: parametros, isLoading } = useQuery({
     queryKey: ['parametros'],
     queryFn: () => ParametrosService.get(),
-    enabled: isOpen
+    enabled: show
   });
 
   useEffect(() => {
@@ -112,7 +112,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
 
   return (
     <DraggableModal
-      show={isOpen}
+      show={show}
       onClose={onClose}
       title="Parâmetros do Sistema"
       size="md"
