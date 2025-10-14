@@ -194,6 +194,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
               <select
                 className={`form-select ${errors.cliente_id ? 'is-invalid' : ''}`}
                 id="cliente_id"
+                name="cliente_id"
                 value={formData.cliente_id}
                 onChange={(e) => handleInputChange('cliente_id', parseInt(e.target.value))}
                 disabled={updateParcelaMutation.isPending}
@@ -214,6 +215,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
               <select
                 className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
                 id="plano_id"
+                name="plano_id"
                 value={formData.plano_id}
                 onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
                 disabled={updateParcelaMutation.isPending}

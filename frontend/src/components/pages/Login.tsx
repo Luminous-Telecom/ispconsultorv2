@@ -45,6 +45,8 @@ const Login: React.FC = () => {
                       type="email"
                       className="form-control"
                       id="email"
+                      name="email"
+                      autoComplete="username email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -60,6 +62,8 @@ const Login: React.FC = () => {
                       type="password"
                       className="form-control"
                       id="password"
+                      name="password"
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -72,6 +76,7 @@ const Login: React.FC = () => {
                       type="checkbox"
                       className="form-check-input"
                       id="remember"
+                      name="remember"
                     />
                     <label className="form-check-label" htmlFor="remember">
                       Lembrar de mim
