@@ -539,6 +539,25 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       onClose={onClose}
       title={`Contrato - ${contratoData?.plano?.nome_plano || 'Carregando...'}`}
       size="xl"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button 
+            type="button" 
+            className="btn btn-secondary btn-sm" 
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            form="contrato-edit-form"
+            className="btn btn-primary btn-sm"
+            disabled={updateContratoMutation.isPending}
+          >
+            Salvar
+          </button>
+        </div>
+      }
     >
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Navegação por Abas */}
@@ -567,7 +586,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         <div className="tab-content" style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
           {/* Aba Contrato */}
           {activeTab === 'contrato' && (
-            <form onSubmit={handleSubmit}>
+            <form id="contrato-edit-form" onSubmit={handleSubmit}>
               <div className="row">
           {/* Plano */}
           <div className="col-md-6 mb-3">
@@ -722,18 +741,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </div>
         </div>
 
-              <div className="d-flex justify-content-end gap-2">
-                <button type="button" className="btn btn-secondary" onClick={onClose}>
-                  Cancelar
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                  disabled={updateContratoMutation.isPending}
-                >
-                  Salvar
-                </button>
-              </div>
             </form>
           )}
 
