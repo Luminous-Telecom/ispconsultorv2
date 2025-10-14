@@ -374,7 +374,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           {children}
         </div>
       </div>
-    </div>
     </>
   );
 };
