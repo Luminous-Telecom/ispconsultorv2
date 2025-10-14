@@ -197,6 +197,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
                   className="form-check-input"
                   type="checkbox"
                   id="showOnlyErrors"
+                  name="showOnlyErrors"
                   checked={showOnlyErrors}
                   onChange={(e) => setShowOnlyErrors(e.target.checked)}
                 />

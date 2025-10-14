@@ -409,6 +409,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
                   className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
                   id="nome"
                   name="nome"
+                  autoComplete="organization"
                   value={formData.nome}
                   onChange={(e) => handleInputChange('nome', e.target.value)}
                   disabled={createBancoMutation.isPending}

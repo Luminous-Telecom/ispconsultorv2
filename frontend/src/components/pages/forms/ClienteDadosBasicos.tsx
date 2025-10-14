@@ -70,6 +70,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
               type="text"
               id="cliente-razao-social"
               name="razao_social"
+              autoComplete="organization"
               className="form-control form-control-sm"
               value={cliente.razao_social || ''}
               onChange={(e) => handleInputChange('razao_social', e.target.value)}
@@ -83,6 +84,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
               type="text"
               id="cliente-nome-fantasia"
               name="nome_fantasia"
+              autoComplete="organization-title"
               className="form-control form-control-sm"
               value={cliente.nome_fantasia || ''}
               onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
@@ -98,6 +100,7 @@ const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({
               type="text"
               id="cliente-cnpj"
               name="cnpj"
+              autoComplete="off"
               className="form-control form-control-sm"
               value={cliente.cnpj || ''}
               onChange={(e) => handleInputChange('cnpj', e.target.value)}

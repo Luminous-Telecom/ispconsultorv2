@@ -190,6 +190,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-cnpj"
                   name="cnpj"
+                  autoComplete="off"
                   className={`form-control form-control-sm ${errors.cnpj ? 'is-invalid' : ''}`}
                   value={formData.cnpj}
                   onChange={(e) => handleInputChange('cnpj', e.target.value)}
@@ -205,6 +206,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-razao-social"
                   name="razao_social"
+                  autoComplete="organization"
                   className={`form-control form-control-sm ${errors.razao_social ? 'is-invalid' : ''}`}
                   value={formData.razao_social}
                   onChange={(e) => handleInputChange('razao_social', e.target.value)}
@@ -220,6 +222,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-nome-fantasia"
                   name="nome_fantasia"
+                  autoComplete="organization-title"
                   className="form-control form-control-sm"
                   value={formData.nome_fantasia}
                   onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
@@ -234,6 +237,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="email"
                   id="cliente-create-email"
                   name="email"
+                  autoComplete="email"
                   className={`form-control form-control-sm ${errors.email ? 'is-invalid' : ''}`}
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
@@ -249,6 +253,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-telefone"
                   name="telefone"
+                  autoComplete="tel"
                   className={`form-control form-control-sm ${errors.telefone ? 'is-invalid' : ''}`}
                   value={formData.telefone}
                   onChange={(e) => handleInputChange('telefone', e.target.value)}
@@ -264,6 +269,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-whatsapp"
                   name="whatsapp"
+                  autoComplete="tel"
                   className="form-control form-control-sm"
                   value={formData.whatsapp}
                   onChange={(e) => handleInputChange('whatsapp', e.target.value)}
@@ -285,6 +291,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-cep"
                   name="cep"
+                  autoComplete="postal-code"
                   className="form-control form-control-sm"
                   value={formData.cep}
                   onChange={(e) => handleInputChange('cep', e.target.value)}
@@ -299,6 +306,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-endereco"
                   name="endereco"
+                  autoComplete="street-address"
                   className="form-control form-control-sm"
                   value={formData.endereco}
                   onChange={(e) => handleInputChange('endereco', e.target.value)}
@@ -341,6 +349,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-bairro"
                   name="bairro"
+                  autoComplete="address-level3"
                   className="form-control form-control-sm"
                   value={formData.bairro}
                   onChange={(e) => handleInputChange('bairro', e.target.value)}
@@ -355,6 +364,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-cidade"
                   name="cidade"
+                  autoComplete="address-level2"
                   className="form-control form-control-sm"
                   value={formData.cidade}
                   onChange={(e) => handleInputChange('cidade', e.target.value)}
@@ -369,6 +379,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
                   type="text"
                   id="cliente-create-estado"
                   name="estado"
+                  autoComplete="address-level1"
                   className="form-control form-control-sm"
                   value={formData.estado}
                   onChange={(e) => handleInputChange('estado', e.target.value)}

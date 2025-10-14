@@ -44,6 +44,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 type="text"
                 id="cliente-cep"
                 name="cep"
+                autoComplete="postal-code"
                 className="form-control form-control-sm"
                 value={cliente.cep || ''}
                 onChange={(e) => handleInputChange('cep', e.target.value)}
@@ -66,6 +67,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 type="text"
                 id="cliente-endereco"
                 name="endereco"
+                autoComplete="street-address"
                 className="form-control form-control-sm"
                 value={cliente.endereco || ''}
                 onChange={(e) => handleInputChange('endereco', e.target.value)}
@@ -106,6 +108,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
               type="text"
               id="cliente-bairro"
               name="bairro"
+              autoComplete="address-level3"
               className="form-control form-control-sm"
               value={cliente.bairro || ''}
               onChange={(e) => handleInputChange('bairro', e.target.value)}
@@ -120,6 +123,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 type="text"
                 id="cliente-cidade"
                 name="cidade"
+                autoComplete="address-level2"
                 className="form-control form-control-sm"
                 value={cliente.cidade || ''}
                 onChange={(e) => handleInputChange('cidade', e.target.value)}
@@ -134,6 +138,7 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
               type="text"
               id="cliente-estado"
               name="estado"
+              autoComplete="address-level1"
               className="form-control form-control-sm"
               value={cliente.estado || ''}
               onChange={(e) => handleInputChange('estado', e.target.value)}

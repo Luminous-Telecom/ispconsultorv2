@@ -45,6 +45,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
                 type="text"
                 id="cliente-telefone"
                 name="telefone"
+                autoComplete="tel"
                 className="form-control form-control-sm"
                 value={cliente.telefone || ''}
                 onChange={(e) => handleInputChange('telefone', e.target.value)}
@@ -63,6 +64,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
                 type="text"
                 id="cliente-whatsapp"
                 name="whatsapp"
+                autoComplete="tel"
                 className="form-control form-control-sm"
                 value={cliente.whatsapp || ''}
                 onChange={(e) => handleInputChange('whatsapp', e.target.value)}
@@ -84,6 +86,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
                 type="email"
                 id="cliente-email"
                 name="email"
+                autoComplete="email"
                 className="form-control form-control-sm"
                 value={cliente.email || ''}
                 onChange={(e) => handleInputChange('email', e.target.value)}
@@ -120,6 +123,7 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
               type="password"
               id="cliente-senha"
               name="senha"
+              autoComplete="new-password"
               className="form-control form-control-sm"
               value={cliente.senha || ''}
               onChange={(e) => handleInputChange('senha', e.target.value)}
