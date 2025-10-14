@@ -40,9 +40,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   };
 
   // Posicionar modal na área restante (excluindo menu) - 95% da dashboard
-  // Só inicializa uma vez, não reposiciona ao trocar de modal
+  // Recalcula posição toda vez que o modal abrir
   useEffect(() => {
-    if (!isInitialized) {
+    if (show && !isInitialized) {
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       
@@ -65,15 +65,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       
       setModalSize({ width: modalWidth, height: modalHeight });
       setIsInitialized(true);
-    }
-  }, [isInitialized]);
-
-  // Resetar posição quando o modal fechar
-  useEffect(() => {
-    if (!show) {
+    } else if (!show && isInitialized) {
+      // Resetar quando fechar para recalcular na próxima abertura
       setIsInitialized(false);
     }
-  }, [show]);
+  }, [show, isInitialized]);
 
   // Funções de drag - só permite arrastar pelo título
   const handleMouseDown = (e: React.MouseEvent) => {
