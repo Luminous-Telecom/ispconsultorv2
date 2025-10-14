@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface UseFormResetOptions<T> {
   show: boolean;
@@ -23,28 +23,43 @@ export function useFormReset<T>({
   setErrors,
   customData
 }: UseFormResetOptions<T>) {
-  useEffect(() => {
-    if (show) {
-      // Resetar quando modal abrir
-      setFormData(initialData);
-      if (setErrors) {
-        setErrors({});
-      }
-    } else {
-      // Limpar quando modal fechar
-      setFormData(initialData);
-      if (setErrors) {
-        setErrors({});
-      }
-    }
-  }, [show, setFormData, setErrors, initialData]);
+  const previousShow = useRef(show);
 
   useEffect(() => {
-    // Carregar dados customizados após reset (se fornecido)
-    if (show && customData) {
+    // Só executa quando show muda
+    if (show !== previousShow.current) {
+      if (show) {
+        // Resetar quando modal abrir
+        setFormData(initialData);
+        if (setErrors) {
+          setErrors({});
+        }
+        
+        // Se há dados customizados, carrega após reset
+        if (customData) {
+          // Usar setTimeout para garantir que o reset aconteça primeiro
+          setTimeout(() => {
+            setFormData(customData);
+          }, 0);
+        }
+      } else {
+        // Limpar quando modal fechar
+        setFormData(initialData);
+        if (setErrors) {
+          setErrors({});
+        }
+      }
+      
+      previousShow.current = show;
+    }
+  }, [show]);
+  
+  // Atualizar dados customizados quando mudarem (mas modal já está aberto)
+  useEffect(() => {
+    if (show && customData && previousShow.current === show) {
       setFormData(customData);
     }
-  }, [show, customData, setFormData]);
+  }, [customData]);
 }
 
 export default useFormReset;
