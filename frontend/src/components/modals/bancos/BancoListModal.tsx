@@ -160,7 +160,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
 
   const bulkActions = onSelectBanco ? [] : [
     {
-      label: 'Novo Banco',
+      label: 'Novo',
       action: () => {
         setShowCreateModal(true);
       }

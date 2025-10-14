@@ -179,7 +179,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
 
   const bulkActions = onSelectContrato ? [] : [
     {
-      label: 'Novo Contrato',
+      label: 'Novo',
       action: () => setShowCreateModal(true)
     },
     {

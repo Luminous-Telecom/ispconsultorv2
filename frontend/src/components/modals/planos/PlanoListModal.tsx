@@ -199,7 +199,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const bulkActions = onSelectPlano ? [] : [
     {
-      label: 'Novo Plano',
+      label: 'Novo',
       action: () => {
         setShowCreateModal(true);
       }

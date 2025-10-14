@@ -1147,7 +1147,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           }}
                           onMouseDown={(e) => e.stopPropagation()}
                         >
-                          Novo Contrato
+                          Novo
                         </button>
                         
                         <button

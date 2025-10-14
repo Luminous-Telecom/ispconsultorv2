@@ -245,7 +245,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }[];
   }> = [
     {
-      label: 'Novo Título',
+      label: 'Novo',
       action: () => {
         setShowTituloCreateModal(true);
       }
@@ -747,8 +747,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   <div className="d-flex justify-content-start mb-3">
                     <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
                       {bulkActions.map((bulkAction, index) => {
-                        // Botão "Novo Título" sempre habilitado, outros apenas quando há seleção
-                        const isNewButton = bulkAction.label === 'Novo Título';
+                        // Botão "Novo" sempre habilitado, outros apenas quando há seleção
+                        const isNewButton = bulkAction.label === 'Novo';
                         const hasSelection = selectedItems.length > 0;
                         const selectedItem = hasSelection ? selectedItems[0] : null;
                         

@@ -130,7 +130,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
   const bulkActions = onSelectClient ? [] : [
     {
-      label: 'Novo Cliente',
+      label: 'Novo',
       action: () => {
         setShowCreateModal(true);
       }
