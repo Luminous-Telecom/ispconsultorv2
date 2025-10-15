@@ -162,22 +162,31 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   }, [show, onClose, modalId]);
 
   // Estado para controlar transição de fade
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(show);
+  const [shouldRender, setShouldRender] = useState(show);
 
-  // Controlar fade in/out
+  // Controlar fade in/out e renderização
   useEffect(() => {
     if (show) {
-      // Pequeno delay para trigger da animação
+      // Renderizar e depois fazer fade in
+      setShouldRender(true);
       requestAnimationFrame(() => {
-        setIsVisible(true);
+        requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
       });
     } else {
+      // Fade out e depois parar de renderizar
       setIsVisible(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 150); // Tempo da transição
+      return () => clearTimeout(timer);
     }
   }, [show]);
 
-  // Não renderizar se show for false para evitar piscar
-  if (!show) {
+  // Não renderizar se shouldRender for false
+  if (!shouldRender) {
     return null;
   }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import NotificationContainer from '../common/NotificationContainer';
+import DraggableModal from '../common/DraggableModal';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ClienteListModal } from '../modals/clientes';
@@ -113,51 +114,39 @@ const Layout: React.FC = () => {
             onRemove={removeNotification}
           />
 
-      {/* Modais de Listagem - Renderizar apenas o modal ativo */}
-      {activeModal === 'clientes' && (
-        <ClienteListModal
-          show={true}
-          onClose={closeModal}
-          title="Clientes"
-        />
-      )}
+      {/* Renderizar todos os modais, mas mostrar apenas o ativo */}
+      <ClienteListModal
+        show={activeModal === 'clientes'}
+        onClose={closeModal}
+        title="Clientes"
+      />
 
-      {activeModal === 'planos' && (
-        <PlanoListModal
-          show={true}
-          onClose={closeModal}
-          title="Planos"
-        />
-      )}
+      <PlanoListModal
+        show={activeModal === 'planos'}
+        onClose={closeModal}
+        title="Planos"
+      />
 
-      {activeModal === 'bancos' && (
-        <BancoListModal
-          show={true}
-          onClose={closeModal}
-          title="Bancos"
-        />
-      )}
+      <BancoListModal
+        show={activeModal === 'bancos'}
+        onClose={closeModal}
+        title="Bancos"
+      />
 
-      {activeModal === 'contratos' && (
-        <ContratoListModal
-          show={true}
-          onClose={closeModal}
-        />
-      )}
+      <ContratoListModal
+        show={activeModal === 'contratos'}
+        onClose={closeModal}
+      />
 
-      {activeModal === 'dados-empresa' && (
-        <DadosEmpresaModal
-          show={true}
-          onClose={closeModal}
-        />
-      )}
+      <DadosEmpresaModal
+        show={activeModal === 'dados-empresa'}
+        onClose={closeModal}
+      />
 
-      {activeModal === 'parametros' && (
-        <ParametrosModal
-          show={true}
-          onClose={closeModal}
-        />
-      )}
+      <ParametrosModal
+        show={activeModal === 'parametros'}
+        onClose={closeModal}
+      />
 
     </div>
   );
