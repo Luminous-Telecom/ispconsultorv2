@@ -28,8 +28,12 @@ export function useFormReset<T>({
   const previousCustomDataStr = useRef<string>('');
 
   useEffect(() => {
+    // Debug: Log para identificar piscar
+    console.log(`🔄 useFormReset: show=${show}, previousShow=${previousShow.current}, customData=${!!customData}`);
+    
     // Só executa quando show muda
     if (show !== previousShow.current) {
+      console.log(`📝 useFormReset: Modal state changed - show: ${previousShow.current} → ${show}`);
       hasLoadedCustomData.current = false;
       previousCustomDataStr.current = '';
       
@@ -37,10 +41,12 @@ export function useFormReset<T>({
         // Se há dados customizados disponíveis, carrega eles; senão usa os iniciais
         if (customData) {
           const customDataStr = JSON.stringify(customData);
+          console.log(`✅ useFormReset: Loading custom data`, customData);
           setFormData(customData);
           hasLoadedCustomData.current = true;
           previousCustomDataStr.current = customDataStr;
         } else {
+          console.log(`⚠️ useFormReset: Loading initial data (no customData)`);
           // Se não há customData, carrega dados iniciais
           setFormData(initialData);
         }
@@ -49,6 +55,7 @@ export function useFormReset<T>({
           setErrors({});
         }
       } else {
+        console.log(`🧹 useFormReset: Clearing form data (modal closing)`);
         // Limpar quando modal fechar
         setFormData(initialData);
         if (setErrors) {

@@ -21,10 +21,12 @@ const Layout: React.FC = () => {
   
   // Funções helper para abrir/fechar modais
   const openModal = (modalName: string) => {
+    console.log(`🚀 Layout: Opening modal ${modalName}, current: ${activeModal}`);
     setActiveModal(modalName);
   };
   
   const closeModal = () => {
+    console.log(`🚪 Layout: Closing modal ${activeModal}`);
     setActiveModal(null);
   };
 
