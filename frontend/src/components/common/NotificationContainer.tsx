@@ -24,6 +24,7 @@ const NotificationContainer: React.FC<NotificationContainerProps> = ({
           message={notification.message}
           onClose={() => onRemove(notification.id)}
           dismissible={true}
+          duration={notification.duration || 5000}
         />
       ))}
     </div>

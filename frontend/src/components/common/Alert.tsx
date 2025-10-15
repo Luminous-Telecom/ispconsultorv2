@@ -1,13 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface AlertProps {
   type: 'success' | 'error' | 'warning' | 'info';
   message: string;
   onClose?: () => void;
   dismissible?: boolean;
+  duration?: number;
 }
 
-const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = true }) => {
+const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = true, duration = 5000 }) => {
+  const [progress, setProgress] = useState(100);
+
+  // Atualizar barra de progresso
+  useEffect(() => {
+    if (duration <= 0) return;
+
+    const interval = 50; // Atualiza a cada 50ms
+    const decrement = (interval / duration) * 100;
+    
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        const newProgress = prev - decrement;
+        return newProgress <= 0 ? 0 : newProgress;
+      });
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [duration]);
   
   const getAlertClass = () => {
     switch (type) {
@@ -54,25 +73,62 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = tru
         padding: type === 'error' || type === 'success' ? '0.5rem 0.75rem' : '0.75rem',
         fontSize: type === 'error' || type === 'success' ? '0.8rem' : '0.875rem',
         position: 'relative',
-        marginBottom: '0.5rem'
+        marginBottom: '0.5rem',
+        overflow: 'hidden'
       }}
     >
-      <i className={`bi ${getIcon()} me-2`}></i>
-      {message}
-      {dismissible && onClose && (
-        <button
-          type="button"
-          className="btn-close"
-          onClick={onClose}
-          aria-label="Close"
-          style={{ 
-            background: 'none',
-            border: 'none',
-            fontSize: '1.2rem',
-            color: type === 'error' || type === 'success' ? '#ffffff' : 'var(--text-muted)',
-            cursor: 'pointer'
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+          <i className={`bi ${getIcon()} me-2`}></i>
+          <span>{message}</span>
+        </div>
+        {dismissible && onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar notificação"
+            style={{ 
+              background: 'none',
+              border: 'none',
+              fontSize: '1.2rem',
+              color: type === 'error' || type === 'success' ? '#ffffff' : 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '0 0 0 0.5rem',
+              lineHeight: 1,
+              opacity: 0.8,
+              transition: 'opacity 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}
+          >
+            <i className="bi bi-x-lg"></i>
+          </button>
+        )}
+      </div>
+      
+      {/* Barra de progresso */}
+      {duration > 0 && (
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            background: 'rgba(255, 255, 255, 0.3)',
+            overflow: 'hidden'
           }}
-        ></button>
+        >
+          <div 
+            style={{
+              height: '100%',
+              width: `${progress}%`,
+              background: type === 'error' || type === 'success' ? '#ffffff' : 'var(--primary-color)',
+              transition: 'width 50ms linear',
+              boxShadow: '0 0 8px rgba(255, 255, 255, 0.5)'
+            }}
+          />
+        </div>
       )}
     </div>
   );
