@@ -1116,7 +1116,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         contratoId={contratoId!}
         onSuccess={() => {
           setShowTituloCreateModal(false);
-          refetch();
+          refetchTitulos();
         }}
       />
 
@@ -1126,11 +1126,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           setShowTituloEditModal(false);
           setSelectedTituloId(null);
         }}
-        tituloId={selectedTituloId}
+        parcelaId={selectedTituloId!}
         onSuccess={() => {
           setShowTituloEditModal(false);
           setSelectedTituloId(null);
-          refetch();
+          refetchTitulos();
         }}
       />
 
