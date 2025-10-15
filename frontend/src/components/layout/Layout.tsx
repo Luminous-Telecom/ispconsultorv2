@@ -28,52 +28,6 @@ const Layout: React.FC = () => {
     setActiveModal(null);
   };
 
-  // Debug: Verificar IDs duplicados
-  React.useEffect(() => {
-    if (activeModal) {
-      console.log('🔍 DEBUG: Verificando IDs duplicados para modal:', activeModal);
-      setTimeout(() => {
-        const allInputs = document.querySelectorAll('input, select, textarea');
-        const idCounts: { [key: string]: number } = {};
-        const duplicateIds: string[] = [];
-        
-        allInputs.forEach((input: Element) => {
-          const id = (input as HTMLInputElement).id;
-          if (id) {
-            idCounts[id] = (idCounts[id] || 0) + 1;
-            if (idCounts[id] > 1) {
-              if (!duplicateIds.includes(id)) {
-                duplicateIds.push(id);
-              }
-            }
-          }
-        });
-        
-        if (duplicateIds.length > 0) {
-          console.log('❌ IDs DUPLICADOS encontrados:', duplicateIds);
-          duplicateIds.forEach(id => {
-            const elements = document.querySelectorAll(`#${id}`);
-            console.log(`❌ ID "${id}" aparece ${elements.length} vezes:`, elements);
-          });
-        } else {
-          console.log('✅ Nenhum ID duplicado encontrado');
-        }
-        
-        // Também verificar campos sem ID
-        const inputsWithoutId = Array.from(allInputs).filter((input: Element) => {
-          const element = input as HTMLInputElement;
-          return !element.id && (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA');
-        });
-        
-        if (inputsWithoutId.length > 0) {
-          console.log('⚠️ CAMPOS SEM ID encontrados:', inputsWithoutId.length);
-          inputsWithoutId.forEach((input, index) => {
-            console.log(`⚠️ Campo ${index + 1} sem ID:`, input);
-          });
-        }
-      }, 1000); // Aguardar 1 segundo para o modal carregar completamente
-    }
-  }, [activeModal]);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
