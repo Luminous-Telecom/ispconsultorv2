@@ -1108,8 +1108,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
         }}
       />
-
-        </div>
       </form>
 
       <TituloCreateModal
