@@ -308,7 +308,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           {/* Logo da Empresa */}
           <div className="row mt-4 pt-3 border-top">
             <div className="col-md-12">
-              <label className="form-label small fw-bold">Logo da Empresa</label>
+              <label htmlFor="logo" className="form-label small fw-bold">Logo da Empresa</label>
               <div className="d-flex align-items-start gap-3">
                 <div style={{ minWidth: '200px' }}>
                   {dados.logo ? (

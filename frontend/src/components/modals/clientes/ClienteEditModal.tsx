@@ -734,22 +734,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     customData: customFormData
   });
 
-  // Debug: Log para identificar label sem for
-  useEffect(() => {
-    if (show) {
-      console.log('🔍 DEBUG ACESSIBILIDADE: Verificando labels');
-      setTimeout(() => {
-        const labelsWithoutFor = document.querySelectorAll('label:not([for]):not(.form-check-label)');
-        console.log('⚠️ LABELS SEM FOR encontrados:', labelsWithoutFor.length);
-        labelsWithoutFor.forEach((label, index) => {
-          const parent = label.closest('[class*="col-"]') || label.parentElement;
-          const context = parent?.className?.split(' ')[0] || 'unknown';
-          console.log(`⚠️ Label ${index + 1} (contexto: ${context}):`, label.outerHTML.substring(0, 300));
-        });
-      }, 1500);
-    }
-  }, [show]);
-
   const handleInputChange = (field: keyof ClienteForm, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
