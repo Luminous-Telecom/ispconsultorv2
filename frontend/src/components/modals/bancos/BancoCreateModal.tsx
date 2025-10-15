@@ -404,11 +404,11 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
-                <label htmlFor="nome" className="form-label small">Nome *</label>
+                <label htmlFor="banco-create-nome" className="form-label small">Nome *</label>
                 <input
                   type="text"
                   className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
-                  id="nome"
+                  id="banco-create-nome"
                   name="nome"
                   autoComplete="organization"
                   value={formData.nome}

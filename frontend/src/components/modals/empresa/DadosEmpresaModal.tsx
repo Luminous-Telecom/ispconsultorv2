@@ -232,11 +232,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="razao_social" className="form-label small">Razão Social *</label>
+                <label htmlFor="empresa-razao_social" className="form-label small">Razão Social *</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="razao_social"
+                  id="empresa-razao_social"
                   name="razao_social"
                   autoComplete="organization"
                   value={dados.razao_social}
@@ -248,11 +248,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="nome_fantasia" className="form-label small">Nome Fantasia</label>
+                <label htmlFor="empresa-nome_fantasia" className="form-label small">Nome Fantasia</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="nome_fantasia"
+                  id="empresa-nome_fantasia"
                   name="nome_fantasia"
                   value={dados.nome_fantasia}
                   onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
@@ -265,11 +265,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           <div className="row">
             <div className="col-md-4">
               <div className="mb-3">
-                <label htmlFor="cnpj" className="form-label small">CNPJ *</label>
+                <label htmlFor="empresa-cnpj" className="form-label small">CNPJ *</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="cnpj"
+                  id="empresa-cnpj"
                   name="cnpj"
                   value={dados.cnpj}
                   onChange={(e) => handleInputChange('cnpj', e.target.value)}
@@ -359,11 +359,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           <div className="row">
             <div className="col-md-3">
               <div className="mb-3">
-                <label htmlFor="cep" className="form-label small">CEP</label>
+                <label htmlFor="empresa-cep" className="form-label small">CEP</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="cep"
+                  id="empresa-cep"
                   name="cep"
                   autoComplete="postal-code"
                   value={dados.cep}
@@ -374,11 +374,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="endereco" className="form-label small">Endereço</label>
+                <label htmlFor="empresa-endereco" className="form-label small">Endereço</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="endereco"
+                  id="empresa-endereco"
                   name="endereco"
                   autoComplete="street-address"
                   value={dados.endereco}
@@ -389,11 +389,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
             <div className="col-md-3">
               <div className="mb-3">
-                <label htmlFor="numero" className="form-label small">Número</label>
+                <label htmlFor="empresa-numero" className="form-label small">Número</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="numero"
+                  id="empresa-numero"
                   name="numero"
                   value={dados.numero}
                   onChange={(e) => handleInputChange('numero', e.target.value)}
@@ -406,11 +406,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           <div className="row">
             <div className="col-md-4">
               <div className="mb-3">
-                <label htmlFor="complemento" className="form-label small">Complemento</label>
+                <label htmlFor="empresa-complemento" className="form-label small">Complemento</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="complemento"
+                  id="empresa-complemento"
                   name="complemento"
                   value={dados.complemento}
                   onChange={(e) => handleInputChange('complemento', e.target.value)}
@@ -420,11 +420,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
             <div className="col-md-4">
               <div className="mb-3">
-                <label htmlFor="bairro" className="form-label small">Bairro</label>
+                <label htmlFor="empresa-bairro" className="form-label small">Bairro</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="bairro"
+                  id="empresa-bairro"
                   name="bairro"
                   value={dados.bairro}
                   onChange={(e) => handleInputChange('bairro', e.target.value)}
@@ -434,11 +434,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
             <div className="col-md-4">
               <div className="mb-3">
-                <label htmlFor="cidade" className="form-label small">Cidade</label>
+                <label htmlFor="empresa-cidade" className="form-label small">Cidade</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="cidade"
+                  id="empresa-cidade"
                   name="cidade"
                   autoComplete="address-level2"
                   value={dados.cidade}
@@ -452,11 +452,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
           <div className="row">
             <div className="col-md-2">
               <div className="mb-3">
-                <label htmlFor="estado" className="form-label small">Estado</label>
+                <label htmlFor="empresa-estado" className="form-label small">Estado</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="estado"
+                  id="empresa-estado"
                   name="estado"
                   autoComplete="address-level1"
                   value={dados.estado}
@@ -480,7 +480,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 <input
                   type="text"
                   className="form-control"
-                  id="telefone"
+                  id="empresa-telefone"
                   name="telefone"
                   autoComplete="tel"
                   value={dados.telefone}
@@ -506,11 +506,11 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
             </div>
             <div className="col-md-4">
               <div className="mb-3">
-                <label htmlFor="email" className="form-label small">E-mail</label>
+                <label htmlFor="empresa-email" className="form-label small">E-mail</label>
                 <input
                   type="email"
                   className="form-control"
-                  id="email"
+                  id="empresa-email"
                   name="email"
                   autoComplete="email"
                   value={dados.email}
