@@ -122,17 +122,46 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [isDragging, dragStart, position, modalSize]);
 
-  // Fechar modal com ESC
+  // Fechar modal com ESC - apenas o modal no topo da pilha
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && show) {
-        onClose();
+      if (e.key === 'Escape' && show && modalRef.current) {
+        // Verificar se este modal é o mais recente (maior z-index)
+        const allModals = document.querySelectorAll('.draggable-modal-container');
+        if (allModals.length === 0) return;
+        
+        // Filtrar apenas modais visíveis
+        const visibleModals = Array.from(allModals).filter(modal => {
+          const style = window.getComputedStyle(modal);
+          return style.display !== 'none';
+        });
+        
+        if (visibleModals.length === 0) return;
+        
+        // Encontrar o modal com maior z-index
+        let highestZIndex = -1;
+        let topModal: Element | null = null;
+        
+        visibleModals.forEach((modal) => {
+          const zIndex = parseInt(window.getComputedStyle(modal).zIndex || '0');
+          if (zIndex > highestZIndex) {
+            highestZIndex = zIndex;
+            topModal = modal;
+          }
+        });
+        
+        // Só fecha se este modal for o do topo
+        if (topModal === modalRef.current) {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }
       }
     };
 
     if (show) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', handleKeyDown, true); // Use capture phase
+      return () => document.removeEventListener('keydown', handleKeyDown, true);
     }
   }, [show, onClose]);
 
@@ -273,7 +302,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       
       <div
         ref={modalRef}
-        className={`modal-content ${className}`}
+        className={`modal-content draggable-modal-container ${className}`}
         style={{
           position: 'fixed',
           left: `${position.x}px`,
