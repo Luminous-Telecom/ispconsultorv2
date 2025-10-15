@@ -113,70 +113,40 @@ const Layout: React.FC = () => {
             onRemove={removeNotification}
           />
 
-      {/* Renderizar apenas o modal ativo */}
-      {activeModal === 'clientes' && (
-        <div className="modal-backdrop show">
-          <div className="modal show d-block" style={{ zIndex: 1050 }}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Clientes</h5>
-                  <button 
-                    type="button" 
-                    className="btn-close" 
-                    onClick={closeModal}
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <ClienteListModal
-                  show={true}
-                  onClose={closeModal}
-                  title="Clientes"
-                  noWrapper={true}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modais sempre renderizados, apenas mudando show */}
+      <ClienteListModal
+        show={activeModal === 'clientes'}
+        onClose={closeModal}
+        title="Clientes"
+      />
       
-      {activeModal === 'planos' && (
-        <PlanoListModal
-          show={true}
-          onClose={closeModal}
-          title="Planos"
-        />
-      )}
+      <PlanoListModal
+        show={activeModal === 'planos'}
+        onClose={closeModal}
+        title="Planos"
+      />
       
-      {activeModal === 'bancos' && (
-        <BancoListModal
-          show={true}
-          onClose={closeModal}
-          title="Bancos"
-        />
-      )}
+      <BancoListModal
+        show={activeModal === 'bancos'}
+        onClose={closeModal}
+        title="Bancos"
+      />
       
-      {activeModal === 'contratos' && (
-        <ContratoListModal
-          show={true}
-          onClose={closeModal}
-          title="Contratos"
-        />
-      )}
+      <ContratoListModal
+        show={activeModal === 'contratos'}
+        onClose={closeModal}
+        title="Contratos"
+      />
       
-      {activeModal === 'dados-empresa' && (
-        <DadosEmpresaModal
-          show={true}
-          onClose={closeModal}
-        />
-      )}
+      <DadosEmpresaModal
+        show={activeModal === 'dados-empresa'}
+        onClose={closeModal}
+      />
       
-      {activeModal === 'parametros' && (
-        <ParametrosModal
-          show={true}
-          onClose={closeModal}
-        />
-      )}
+      <ParametrosModal
+        show={activeModal === 'parametros'}
+        onClose={closeModal}
+      />
 
     </div>
   );

@@ -21,15 +21,13 @@ interface ClienteListModalProps {
   onClose: () => void;
   onSelectClient?: (cliente: Cliente) => void;
   title?: string;
-  noWrapper?: boolean; // Para usar sem DraggableModal quando renderizado dentro do Layout
 }
 
 const ClienteListModal: React.FC<ClienteListModalProps> = ({ 
   show, 
   onClose, 
   onSelectClient,
-  title = "Selecionar Cliente",
-  noWrapper = false
+  title = "Selecionar Cliente"
 }) => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -173,8 +171,15 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     />
   );
 
-  const content = (
-    <>
+  return (
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title={title}
+      size="lg"
+      headerActions={headerActions}
+      modalId="cliente-list-modal"
+    >
       <div>
         <DataTable
             data={clientesData?.data || []}
@@ -228,25 +233,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
           // Não fechar o modal automaticamente
         }}
       />
-    </>
-  );
-
-  // Se noWrapper=true, renderiza apenas o conteúdo sem DraggableModal
-  if (noWrapper) {
-    return content;
-  }
-
-  // Renderiza com DraggableModal (comportamento padrão)
-  return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title={title}
-      size="lg"
-      headerActions={headerActions}
-      modalId="cliente-list-modal"
-    >
-      {content}
     </DraggableModal>
   );
 };
