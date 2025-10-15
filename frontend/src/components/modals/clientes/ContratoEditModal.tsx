@@ -909,6 +909,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
                       {/* Seletor de linhas por página */}
                       <select 
+                        id="titulos-limit"
+                        name="titulosLimit"
                         className="form-select form-select-sm" 
                         value={limit}
                         onChange={(e) => {
