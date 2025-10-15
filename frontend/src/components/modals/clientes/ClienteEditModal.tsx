@@ -832,6 +832,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           onClose={onClose}
           title="Cliente"
           size="xl"
+          modalId="cliente-edit-modal"
           headerActions={
             <div className="d-flex gap-2">
               <button

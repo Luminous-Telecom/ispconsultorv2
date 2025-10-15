@@ -518,6 +518,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         onClose={onClose}
         title="Carregando..."
         size="lg"
+        modalId="contrato-edit-modal-loading"
       >
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
@@ -534,6 +535,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       onClose={onClose}
       title={`Contrato - ${contratoData?.plano?.nome_plano || 'Carregando...'}`}
       size="xl"
+      modalId="contrato-edit-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button 

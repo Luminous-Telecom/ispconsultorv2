@@ -157,6 +157,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Cliente"
+      modalId="cliente-create-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button
