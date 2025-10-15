@@ -280,8 +280,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         }}
         contratoId={selectedContratoId}
         onSuccess={() => {
-          setShowEditModal(false);
-          setSelectedContratoId(null);
+          // Não fecha o modal para permitir múltiplas edições
           refetch();
         }}
       />
