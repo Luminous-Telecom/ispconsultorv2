@@ -141,6 +141,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         onClose={onClose}
         title="Empresa"
         size="xl"
+        modalId="dados-empresa-modal-loading"
       >
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
@@ -157,6 +158,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       onClose={handleCancel}
       title="Empresa"
       size="xl"
+      modalId="dados-empresa-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button

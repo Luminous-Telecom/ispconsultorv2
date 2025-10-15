@@ -235,6 +235,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       onClose={onClose}
       title={title}
       size="lg"
+      modalId="contrato-list-modal"
       headerActions={headerActions}
     >
       <div>

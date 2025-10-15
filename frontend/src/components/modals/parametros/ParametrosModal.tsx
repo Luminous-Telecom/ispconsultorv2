@@ -119,6 +119,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
         onClose={onClose}
         title="Parâmetros"
         size="md"
+        modalId="parametros-modal-loading"
       >
         <div className="text-center p-4">
           <div className="spinner-border text-primary" role="status">
@@ -135,6 +136,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       onClose={onClose}
       title="Parâmetros"
       size="md"
+      modalId="parametros-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button

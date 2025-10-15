@@ -207,6 +207,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       onClose={onClose}
       title={title}
       size="lg"
+      modalId="banco-list-modal"
       headerActions={headerActions}
     >
       <div>

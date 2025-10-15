@@ -496,6 +496,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
         show={show}
         onClose={onClose}
         title="Banco"
+        modalId="banco-edit-modal-loading"
       >
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
@@ -513,6 +514,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       onClose={handleCancel}
       title="Banco"
       size="xl"
+      modalId="banco-edit-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button

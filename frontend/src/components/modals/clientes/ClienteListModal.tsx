@@ -29,8 +29,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   onSelectClient,
   title = "Selecionar Cliente"
 }) => {
-  // Debug: Log para identificar piscar
-  console.log(`🔄 ClienteListModal: show=${show}, title=${title}`);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);

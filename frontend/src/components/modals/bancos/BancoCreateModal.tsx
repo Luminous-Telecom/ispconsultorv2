@@ -375,6 +375,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Banco"
+      modalId="banco-create-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button

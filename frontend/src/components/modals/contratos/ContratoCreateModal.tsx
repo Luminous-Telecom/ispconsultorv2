@@ -153,6 +153,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       onClose={handleCancel}
       title="Contrato"
       size="lg"
+      modalId="contrato-create-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button

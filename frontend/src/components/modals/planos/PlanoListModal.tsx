@@ -20,8 +20,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   onSelectPlano,
   title = "Selecionar Plano"
 }) => {
-  // Debug: Log para identificar piscar
-  console.log(`🔄 PlanoListModal: show=${show}, title=${title}`);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);

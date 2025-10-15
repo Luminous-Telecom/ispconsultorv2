@@ -161,12 +161,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [show, onClose, modalId]);
 
-  // Debug: Log para identificar piscar
-  console.log(`🔄 DraggableModal ${modalId}: show=${show}, isInitialized=${isInitialized}`);
-
   // Não renderizar se show for false para evitar piscar
   if (!show) {
-    console.log(`❌ DraggableModal ${modalId}: returning null (show=false)`);
     return null;
   }
 
