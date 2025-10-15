@@ -220,6 +220,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Plano"
+      modalId="plano-edit-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button

@@ -166,6 +166,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
       show={show}
       onClose={handleCancel}
       title="Plano"
+      modalId="plano-create-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button
