@@ -734,15 +734,25 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     customData: customFormData
   });
 
-  // Debug: Log para identificar campos sem id/name
+  // Debug: Log para identificar campos sem id/name em TODA A PÁGINA
   useEffect(() => {
     if (show) {
-      console.log('🔍 DEBUG ACESSIBILIDADE: Verificando campos');
+      console.log('🔍 DEBUG ACESSIBILIDADE: Verificando campos em TODA A PÁGINA');
       setTimeout(() => {
         const inputs = document.querySelectorAll('input:not([id]):not([name]), select:not([id]):not([name]), textarea:not([id]):not([name])');
-        console.log('❌ CAMPOS SEM ID/NAME encontrados:', inputs.length);
+        console.log('❌ CAMPOS SEM ID/NAME na página:', inputs.length);
         inputs.forEach((input, index) => {
-          console.log(`❌ Campo ${index + 1}:`, input.outerHTML.substring(0, 300));
+          // Encontrar o elemento pai mais próximo com classe para contexto
+          let parent = input.parentElement;
+          let context = '';
+          while (parent && !context) {
+            if (parent.className && typeof parent.className === 'string') {
+              context = parent.className.split(' ')[0];
+              if (context) break;
+            }
+            parent = parent.parentElement;
+          }
+          console.log(`❌ Campo ${index + 1} (contexto: ${context}):`, input.outerHTML.substring(0, 300));
         });
       }, 1500);
     }
