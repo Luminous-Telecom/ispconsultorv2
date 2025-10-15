@@ -554,34 +554,34 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         </div>
       }
     >
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Navegação por Abas */}
-        <ul className="nav nav-tabs" id="contratoTab" role="tablist">
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
-              type="button"
-              onClick={() => setActiveTab('contrato')}
-            >
-              Contrato
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
-              type="button"
-              onClick={() => setActiveTab('financeiro')}
-            >
-              Financeiro
-            </button>
-          </li>
-        </ul>
+      <form id="contrato-edit-form" onSubmit={handleSubmit}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {/* Navegação por Abas */}
+          <ul className="nav nav-tabs" id="contratoTab" role="tablist">
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('contrato')}
+              >
+                Contrato
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('financeiro')}
+              >
+                Financeiro
+              </button>
+            </li>
+          </ul>
 
-        {/* Conteúdo das Abas */}
-        <div className="tab-content" style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
-          {/* Aba Contrato */}
-          {activeTab === 'contrato' && (
-            <form id="contrato-edit-form" onSubmit={handleSubmit}>
+          {/* Conteúdo das Abas */}
+          <div className="tab-content" style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
+            {/* Aba Contrato */}
+            {activeTab === 'contrato' && (
               <div className="row">
           {/* Plano */}
           <div className="col-md-6 mb-3">
@@ -758,10 +758,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </div>
         </div>
 
-            </form>
-          )}
+            )}
 
-          {/* Aba Financeiro */}
+            {/* Aba Financeiro */}
           {activeTab === 'financeiro' && (
             <div className="row">
               <div className="col-12">
@@ -1107,6 +1106,33 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           setShowTituloEditModal(false);
           setSelectedTituloId(null);
           queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
+        }}
+      />
+
+        </div>
+      </form>
+
+      <TituloCreateModal
+        show={showTituloCreateModal}
+        onClose={() => setShowTituloCreateModal(false)}
+        contratoId={contratoId!}
+        onSuccess={() => {
+          setShowTituloCreateModal(false);
+          refetch();
+        }}
+      />
+
+      <TituloEditModal
+        show={showTituloEditModal}
+        onClose={() => {
+          setShowTituloEditModal(false);
+          setSelectedTituloId(null);
+        }}
+        tituloId={selectedTituloId}
+        onSuccess={() => {
+          setShowTituloEditModal(false);
+          setSelectedTituloId(null);
+          refetch();
         }}
       />
 
