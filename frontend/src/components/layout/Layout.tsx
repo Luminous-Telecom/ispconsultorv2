@@ -114,39 +114,95 @@ const Layout: React.FC = () => {
             onRemove={removeNotification}
           />
 
-      {/* Renderizar todos os modais, mas mostrar apenas o ativo */}
-      <ClienteListModal
-        show={activeModal === 'clientes'}
-        onClose={closeModal}
-        title="Clientes"
-      />
+      {/* Modal Único com Conteúdo Dinâmico */}
+      {activeModal && (
+        <DraggableModal
+          show={true}
+          onClose={closeModal}
+          title={
+            activeModal === 'clientes' ? 'Clientes' :
+            activeModal === 'planos' ? 'Planos' :
+            activeModal === 'bancos' ? 'Bancos' :
+            activeModal === 'contratos' ? 'Contratos' :
+            activeModal === 'dados-empresa' ? 'Empresa' :
+            activeModal === 'parametros' ? 'Parâmetros' :
+            ''
+          }
+          size="xl"
+          modalId="layout-unified-modal"
+        >
+          {/* Renderizar apenas o conteúdo do modal ativo */}
+          <div style={{ height: '100%', overflow: 'auto' }} className="unified-modal-content">
+            <style>{`
+              .unified-modal-content .draggable-modal-container {
+                position: static !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-height: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                background-color: transparent !important;
+                padding: 0 !important;
+                overflow: visible !important;
+              }
+              .unified-modal-content .modal-header-draggable {
+                display: none !important;
+              }
+              .unified-modal-content .modal-content {
+                position: static !important;
+                border: none !important;
+                box-shadow: none !important;
+              }
+            `}</style>
+            
+            {activeModal === 'clientes' && (
+              <ClienteListModal
+                show={true}
+                onClose={closeModal}
+                title="Clientes"
+              />
+            )}
 
-      <PlanoListModal
-        show={activeModal === 'planos'}
-        onClose={closeModal}
-        title="Planos"
-      />
+            {activeModal === 'planos' && (
+              <PlanoListModal
+                show={true}
+                onClose={closeModal}
+                title="Planos"
+              />
+            )}
 
-      <BancoListModal
-        show={activeModal === 'bancos'}
-        onClose={closeModal}
-        title="Bancos"
-      />
+            {activeModal === 'bancos' && (
+              <BancoListModal
+                show={true}
+                onClose={closeModal}
+                title="Bancos"
+              />
+            )}
 
-      <ContratoListModal
-        show={activeModal === 'contratos'}
-        onClose={closeModal}
-      />
+            {activeModal === 'contratos' && (
+              <ContratoListModal
+                show={true}
+                onClose={closeModal}
+              />
+            )}
 
-      <DadosEmpresaModal
-        show={activeModal === 'dados-empresa'}
-        onClose={closeModal}
-      />
+            {activeModal === 'dados-empresa' && (
+              <DadosEmpresaModal
+                show={true}
+                onClose={closeModal}
+              />
+            )}
 
-      <ParametrosModal
-        show={activeModal === 'parametros'}
-        onClose={closeModal}
-      />
+            {activeModal === 'parametros' && (
+              <ParametrosModal
+                show={true}
+                onClose={closeModal}
+              />
+            )}
+          </div>
+        </DraggableModal>
+      )}
 
     </div>
   );
