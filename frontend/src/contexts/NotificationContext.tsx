@@ -30,7 +30,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const addNotification = useCallback((
     type: Notification['type'],
     message: string,
-    duration: number = 5000
+    duration: number = 3000
   ) => {
     let notificationId: string | null = null;
     

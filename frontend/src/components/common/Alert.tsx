@@ -8,7 +8,7 @@ interface AlertProps {
   duration?: number;
 }
 
-const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = true, duration = 5000 }) => {
+const Alert: React.FC<AlertProps> = ({ type, message, onClose, dismissible = true, duration = 3000 }) => {
   const [progress, setProgress] = useState(100);
 
   // Atualizar barra de progresso
