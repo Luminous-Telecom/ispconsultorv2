@@ -924,13 +924,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="mb-3">
-                    <label htmlFor="cnpj" className="form-label">
+                    <label htmlFor="dados-basicos-cnpj" className="form-label">
                       CNPJ <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
                       className={`form-control ${errors.cnpj ? 'is-invalid' : ''}`}
-                      id="cnpj"
+                      id="dados-basicos-cnpj"
                       name="cnpj"
                       autoComplete="off"
                       value={formData.cnpj}
@@ -941,13 +941,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="razao_social" className="form-label">
+                    <label htmlFor="dados-basicos-razao_social" className="form-label">
                       Razão Social <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
                       className={`form-control ${errors.razao_social ? 'is-invalid' : ''}`}
-                      id="razao_social"
+                      id="dados-basicos-razao_social"
                       name="razao_social"
                       autoComplete="organization"
                       value={formData.razao_social}
@@ -960,11 +960,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                 <div className="col-md-6">
                   <div className="mb-3">
-                    <label htmlFor="nome_fantasia" className="form-label">Nome Fantasia</label>
+                    <label htmlFor="dados-basicos-nome_fantasia" className="form-label">Nome Fantasia</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="nome_fantasia"
+                      id="dados-basicos-nome_fantasia"
                       name="nome_fantasia"
                       autoComplete="organization-title"
                       value={formData.nome_fantasia}
@@ -997,13 +997,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="mb-3">
-                    <label htmlFor="email" className="form-label">
+                    <label htmlFor="dados-basicos-email" className="form-label">
                       Email <span className="text-danger">*</span>
                     </label>
                     <input
                       type="email"
                       className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                      id="email"
+                      id="dados-basicos-email"
                       name="email"
                       autoComplete="email"
                       value={formData.email}
@@ -1014,11 +1014,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="telefone" className="form-label">Telefone</label>
+                    <label htmlFor="contato-telefone" className="form-label">Telefone</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="telefone"
+                      id="contato-telefone"
                       name="telefone"
                       autoComplete="tel"
                       value={formData.telefone}
@@ -1028,11 +1028,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="whatsapp" className="form-label">WhatsApp</label>
+                    <label htmlFor="contato-whatsapp" className="form-label">WhatsApp</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="whatsapp"
+                      id="contato-whatsapp"
                       name="whatsapp"
                       autoComplete="tel"
                       value={formData.whatsapp}
@@ -1101,11 +1101,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="mb-3">
-                    <label htmlFor="cep" className="form-label">CEP</label>
+                    <label htmlFor="endereco-cep" className="form-label">CEP</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="cep"
+                      id="endereco-cep"
                       name="cep"
                       autoComplete="postal-code"
                       value={formData.cep}
@@ -1115,11 +1115,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="endereco" className="form-label">Endereço</label>
+                    <label htmlFor="endereco-endereco" className="form-label">Endereço</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="endereco"
+                      id="endereco-endereco"
                       name="endereco"
                       autoComplete="street-address"
                       value={formData.endereco}
@@ -1131,11 +1131,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   <div className="row">
                     <div className="col-md-6">
                       <div className="mb-3">
-                        <label htmlFor="numero" className="form-label">Número</label>
+                        <label htmlFor="endereco-numero" className="form-label">Número</label>
                         <input
                           type="text"
                           className="form-control"
-                          id="numero"
+                          id="endereco-numero"
                           name="numero"
                           value={formData.numero}
                           onChange={(e) => handleInputChange('numero', e.target.value)}
@@ -1145,11 +1145,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                     <div className="col-md-6">
                       <div className="mb-3">
-                        <label htmlFor="complemento" className="form-label">Complemento</label>
+                        <label htmlFor="endereco-complemento" className="form-label">Complemento</label>
                         <input
                           type="text"
                           className="form-control"
-                          id="complemento"
+                          id="endereco-complemento"
                           name="complemento"
                           value={formData.complemento}
                           onChange={(e) => handleInputChange('complemento', e.target.value)}
@@ -1162,11 +1162,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                 <div className="col-md-6">
                   <div className="mb-3">
-                    <label htmlFor="bairro" className="form-label">Bairro</label>
+                    <label htmlFor="endereco-bairro" className="form-label">Bairro</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="bairro"
+                      id="endereco-bairro"
                       name="bairro"
                       value={formData.bairro}
                       onChange={(e) => handleInputChange('bairro', e.target.value)}
@@ -1177,11 +1177,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   <div className="row">
                     <div className="col-md-8">
                       <div className="mb-3">
-                        <label htmlFor="cidade" className="form-label">Cidade</label>
+                        <label htmlFor="endereco-cidade" className="form-label">Cidade</label>
                         <input
                           type="text"
                           className="form-control"
-                          id="cidade"
+                          id="endereco-cidade"
                           name="cidade"
                           autoComplete="address-level2"
                           value={formData.cidade}
@@ -1192,11 +1192,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                     <div className="col-md-4">
                       <div className="mb-3">
-                        <label htmlFor="estado" className="form-label">Estado</label>
+                        <label htmlFor="endereco-estado" className="form-label">Estado</label>
                         <input
                           type="text"
                           className="form-control"
-                          id="estado"
+                          id="endereco-estado"
                           name="estado"
                           autoComplete="address-level1"
                           value={formData.estado}
