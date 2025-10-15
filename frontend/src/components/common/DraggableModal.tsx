@@ -161,6 +161,21 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [show, onClose, modalId]);
 
+  // Estado para controlar transição de fade
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Controlar fade in/out
+  useEffect(() => {
+    if (show) {
+      // Pequeno delay para trigger da animação
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    } else {
+      setIsVisible(false);
+    }
+  }, [show]);
+
   // Não renderizar se show for false para evitar piscar
   if (!show) {
     return null;
@@ -316,7 +331,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           zIndex: 1050,
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? 'scale(1)' : 'scale(0.95)',
+          transition: 'opacity 0.15s ease-out, transform 0.15s ease-out'
         }}
       >
         {/* Header arrastável */}
