@@ -71,7 +71,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     onSuccess: () => {
       success('Parâmetros atualizados com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['parametros'] });
-      onClose();
+      // Não fecha o modal para permitir múltiplas edições
     },
     onError: (err: any) => {
       const message = err?.response?.data?.message || 'Erro ao atualizar parâmetros';
