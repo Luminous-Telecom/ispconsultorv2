@@ -34,13 +34,16 @@ export function useFormReset<T>({
       previousCustomDataStr.current = '';
       
       if (show) {
-        // Se há dados customizados, carrega eles; senão usa os iniciais
-        const dataToLoad = customData || initialData;
-        setFormData(dataToLoad);
-        hasLoadedCustomData.current = !!customData; // Só marca como carregado se customData existir
+        // Se há dados customizados disponíveis, carrega eles; senão usa os iniciais
         if (customData) {
+          setFormData(customData);
+          hasLoadedCustomData.current = true;
           previousCustomDataStr.current = JSON.stringify(customData);
+        } else {
+          // Se não há customData, carrega dados iniciais
+          setFormData(initialData);
         }
+        
         if (setErrors) {
           setErrors({});
         }
@@ -54,13 +57,13 @@ export function useFormReset<T>({
       
       previousShow.current = show;
     }
-  }, [show]);
+  }, [show, customData]);
   
   // Atualizar customData quando ele estiver disponível após o modal abrir
   useEffect(() => {
-    if (show && customData) {
+    if (show && customData && !hasLoadedCustomData.current) {
       const currentCustomDataStr = JSON.stringify(customData);
-      // Só atualiza se o conteúdo realmente mudou
+      // Só atualiza se o conteúdo realmente mudou e ainda não foi carregado
       if (currentCustomDataStr !== previousCustomDataStr.current) {
         setFormData(customData);
         hasLoadedCustomData.current = true;
