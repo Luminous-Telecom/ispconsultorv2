@@ -10,10 +10,10 @@ export const useTitulos = (filters: any = {}) => {
   return useQuery({
     queryKey: ['titulos', filters],
     queryFn: () => TituloService.list(filters),
-    staleTime: 0, // Sempre considerar dados como stale para permitir refresh manual
+    staleTime: 30 * 1000, // 30 segundos - dados ficam fresh por 30s
     gcTime: DEFAULT_CACHE_TIME,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
+    refetchOnMount: false, // Não refetch automático ao montar
     enabled: !!filters.cliente_id, // Só executar se cliente_id estiver definido
   });
 };

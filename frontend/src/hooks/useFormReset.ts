@@ -36,9 +36,10 @@ export function useFormReset<T>({
       if (show) {
         // Se há dados customizados disponíveis, carrega eles; senão usa os iniciais
         if (customData) {
+          const customDataStr = JSON.stringify(customData);
           setFormData(customData);
           hasLoadedCustomData.current = true;
-          previousCustomDataStr.current = JSON.stringify(customData);
+          previousCustomDataStr.current = customDataStr;
         } else {
           // Se não há customData, carrega dados iniciais
           setFormData(initialData);
@@ -57,7 +58,7 @@ export function useFormReset<T>({
       
       previousShow.current = show;
     }
-  }, [show, customData]);
+  }, [show]);
   
   // Atualizar customData quando ele estiver disponível após o modal abrir
   useEffect(() => {

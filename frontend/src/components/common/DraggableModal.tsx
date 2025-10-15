@@ -28,8 +28,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   
-  // ID único para este modal
-  const modalId = useMemo(() => `modal-${Math.random().toString(36).substr(2, 9)}`, []);
+  // ID único para este modal - usar useRef para estabilidade
+  const modalIdRef = useRef<string>(`modal-${Math.random().toString(36).substr(2, 9)}`);
+  const modalId = modalIdRef.current;
 
   // Definir larguras padrão (altura será automática)
   const getSizeClasses = () => {
