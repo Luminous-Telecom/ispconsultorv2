@@ -132,27 +132,44 @@ const Layout: React.FC = () => {
           modalId="layout-unified-modal"
         >
           {/* Renderizar apenas o conteúdo do modal ativo */}
-          <div style={{ height: '100%', overflow: 'auto' }} className="unified-modal-content">
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }} className="unified-modal-content">
             <style>{`
+              /* Ocultar o DraggableModal wrapper dos modais aninhados */
+              .unified-modal-content > div > .modal-backdrop {
+                display: none !important;
+              }
+              
               .unified-modal-content .draggable-modal-container {
                 position: static !important;
                 width: 100% !important;
-                height: 100% !important;
+                height: auto !important;
                 max-height: none !important;
                 border: none !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 background-color: transparent !important;
                 padding: 0 !important;
+                margin: 0 !important;
                 overflow: visible !important;
+                transform: none !important;
+                opacity: 1 !important;
+                transition: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 !important;
               }
+              
+              /* Ocultar apenas o header do modal aninhado */
               .unified-modal-content .modal-header-draggable {
                 display: none !important;
               }
-              .unified-modal-content .modal-content {
-                position: static !important;
-                border: none !important;
-                box-shadow: none !important;
+              
+              /* Garantir que o conteúdo do modal aninhado ocupe todo espaço */
+              .unified-modal-content .draggable-modal-container > div:not(.modal-header-draggable) {
+                flex: 1 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: auto !important;
               }
             `}</style>
             
