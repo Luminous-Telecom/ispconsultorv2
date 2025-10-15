@@ -61,7 +61,9 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
   const { data: plano, isLoading: planoLoading } = useQuery({
     queryKey: ['plano', planoId],
     queryFn: () => PlanoService.getById(planoId!),
-    enabled: !!planoId && show,
+    enabled: !!planoId,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
   // Mutation para atualizar plano

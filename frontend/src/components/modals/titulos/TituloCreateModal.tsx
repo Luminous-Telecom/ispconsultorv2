@@ -54,7 +54,8 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
   const { data: planos } = useQuery({
     queryKey: ['planos-ativos'],
     queryFn: () => PlanoService.list({ status: 'ativo', limit: 100 }),
-    enabled: show,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
   // Buscar cliente para obter plano ativo

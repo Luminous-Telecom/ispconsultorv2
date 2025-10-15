@@ -88,13 +88,15 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
   const { data: planos } = useQuery({
     queryKey: ['planos-ativos'],
     queryFn: () => PlanoService.list({ status: 'ativo', limit: 100 }),
-    enabled: show,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
   const { data: bancos } = useQuery({
     queryKey: ['bancos-ativos'],
     queryFn: () => BancoService.findAtivos(),
-    enabled: show,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
   // Mutation para criar cliente

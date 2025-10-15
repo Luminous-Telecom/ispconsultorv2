@@ -109,7 +109,9 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
   const { data: banco, isLoading } = useQuery({
     queryKey: ['banco', bancoId],
     queryFn: () => BancoService.getById(bancoId!),
-    enabled: !!bancoId && show,
+    enabled: !!bancoId,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
   // Dados iniciais do formulário

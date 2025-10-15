@@ -87,7 +87,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       if (!response.ok) throw new Error('Erro ao buscar contrato');
       return response.json();
     },
-    enabled: show && !!contratoId,
+    enabled: !!contratoId,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
   // Buscar títulos/financeiros do contrato
@@ -98,7 +100,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       if (!response.ok) throw new Error('Erro ao buscar títulos');
       return response.json();
     },
-    enabled: show && !!contratoId,
+    enabled: !!contratoId,
+    staleTime: 30 * 1000,
+    refetchOnMount: false,
   });
 
   // Mutation para atualizar contrato

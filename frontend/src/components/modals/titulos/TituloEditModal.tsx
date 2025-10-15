@@ -41,21 +41,25 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
   const { data: parcela, isLoading: isLoadingParcela } = useQuery({
     queryKey: ['carne-parcela', parcelaId],
     queryFn: () => TituloService.getById(parcelaId),
-    enabled: show && !!parcelaId,
+    enabled: !!parcelaId,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
   // Query para buscar planos ativos
   const { data: planos } = useQuery({
     queryKey: ['planos-ativos'],
     queryFn: () => PlanoService.list({ status: 'ativo', limit: 100 }),
-    enabled: show,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
   // Query para buscar clientes ativos
   const { data: clientes } = useQuery({
     queryKey: ['clientes-ativos'],
     queryFn: () => ClienteService.list({ ativo: true, limit: 100 }),
-    enabled: show,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
   });
 
 
