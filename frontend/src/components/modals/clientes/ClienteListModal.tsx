@@ -168,6 +168,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       pagination={clientesData?.pagination}
       onPageChange={setPage}
       onRefresh={() => refetch()}
+      idPrefix="cliente-list"
     />
   );
 

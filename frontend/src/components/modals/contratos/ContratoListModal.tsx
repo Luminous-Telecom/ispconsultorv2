@@ -227,6 +227,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       pagination={pagination}
       onPageChange={setPage}
       onRefresh={() => refetch()}
+      idPrefix="contrato-list"
     />
   );
 

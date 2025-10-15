@@ -247,6 +247,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       pagination={planosData?.pagination}
       onPageChange={setPage}
       onRefresh={() => refetch()}
+      idPrefix="plano-list"
     />
   );
 

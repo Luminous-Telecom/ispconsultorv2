@@ -198,6 +198,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       pagination={bancosData?.pagination}
       onPageChange={setPage}
       onRefresh={() => refetch()}
+      idPrefix="banco-list"
     />
   );
 

@@ -24,6 +24,7 @@ interface ModalHeaderActionsProps {
   };
   onPageChange: (page: number) => void;
   onRefresh?: () => void;
+  idPrefix?: string; // Para tornar IDs únicos
 }
 
 const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
@@ -36,7 +37,8 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
   onLimitChange,
   pagination,
   onPageChange,
-  onRefresh
+  onRefresh,
+  idPrefix = 'modal-header'
 }) => {
   const goToFirstPage = () => onPageChange(1);
   const goToLastPage = () => onPageChange(pagination?.last_page || 1);
@@ -94,7 +96,7 @@ const ModalHeaderActions: React.FC<ModalHeaderActionsProps> = ({
           {/* Seletor de linhas por página */}
           <select 
             className="form-select form-select-sm" 
-            id="modal-header-limit"
+            id={`${idPrefix}-limit`}
             name="modalHeaderLimit"
             value={limit}
             onChange={(e) => onLimitChange(parseInt(e.target.value))}
