@@ -36,7 +36,8 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   const { data: parametros, isLoading } = useQuery({
     queryKey: ['parametros'],
     queryFn: () => ParametrosService.get(),
-    enabled: show
+    staleTime: 60 * 1000, // 60 segundos
+    refetchOnMount: false,
   });
 
   // Dados customizados dos parâmetros (quando editando)

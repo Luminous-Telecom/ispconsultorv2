@@ -22,7 +22,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const { data: dadosEmpresa, isLoading } = useQuery({
     queryKey: ['dados-empresa'],
     queryFn: () => DadosEmpresaService.get(),
-    enabled: show
+    staleTime: 60 * 1000, // 60 segundos
+    refetchOnMount: false,
   });
 
   // Mutation para atualizar dados da empresa

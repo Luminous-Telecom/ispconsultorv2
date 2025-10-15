@@ -38,7 +38,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const { data: contratos, isLoading, refetch } = useQuery({
     queryKey: ['contratos', 'ativos'],
     queryFn: () => ContratoService.getAtivos(),
-    enabled: show
+    staleTime: 30 * 1000, // 30 segundos
+    refetchOnMount: false,
   });
 
   const deleteContratoMutation = useDeleteContrato();
