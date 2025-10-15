@@ -180,6 +180,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       title={title}
       size="lg"
       headerActions={headerActions}
+      modalId="cliente-list-modal"
     >
       <div>
         <DataTable

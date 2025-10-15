@@ -259,6 +259,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       title={title}
       size="lg"
       headerActions={headerActions}
+      modalId="plano-list-modal"
     >
       <div>
         <DataTable

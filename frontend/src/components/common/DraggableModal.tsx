@@ -9,6 +9,7 @@ interface DraggableModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'a4';
   className?: string;
   headerActions?: React.ReactNode;
+  modalId?: string; // ID opcional para modais específicos
 }
 
 const DraggableModal: React.FC<DraggableModalProps> = ({
@@ -18,7 +19,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   children,
   size = 'lg',
   className = '',
-  headerActions
+  headerActions,
+  modalId: propModalId
 }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 }); // Inicializar com posição válida
   const [isDragging, setIsDragging] = useState(false);
@@ -28,8 +30,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   
-  // ID único para este modal - usar useRef para estabilidade
-  const modalIdRef = useRef<string>(`modal-${Math.random().toString(36).substr(2, 9)}`);
+  // ID único para este modal - usar prop se fornecida, senão gerar um estável
+  const modalIdRef = useRef<string>(propModalId || `modal-${Math.random().toString(36).substr(2, 9)}`);
   const modalId = modalIdRef.current;
 
   // Definir larguras padrão (altura será automática)
