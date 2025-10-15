@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { modalStack } from '../../utils/modalStack';
 
 interface DraggableModalProps {
   show: boolean;
@@ -26,6 +27,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const [isInitialized, setIsInitialized] = useState(false); // Controlar se já foi inicializado
   const modalRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  
+  // ID único para este modal
+  const modalId = useMemo(() => `modal-${Math.random().toString(36).substr(2, 9)}`, []);
 
   // Definir larguras padrão (altura será automática)
   const getSizeClasses = () => {
@@ -38,6 +42,19 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       default: return { width: 1000 }; // Tamanho padrão bom para todos
     }
   };
+
+  // Gerenciar pilha de modais
+  useEffect(() => {
+    if (show) {
+      modalStack.push(modalId);
+    } else {
+      modalStack.remove(modalId);
+    }
+
+    return () => {
+      modalStack.remove(modalId);
+    };
+  }, [show, modalId]);
 
   // Posicionar modal na área restante (excluindo menu) - 95% da dashboard
   // Recalcula posição toda vez que o modal abrir
@@ -125,33 +142,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   // Fechar modal com ESC - apenas o modal no topo da pilha
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && show && modalRef.current) {
-        // Verificar se este modal é o mais recente (maior z-index)
-        const allModals = document.querySelectorAll('.draggable-modal-container');
-        if (allModals.length === 0) return;
-        
-        // Filtrar apenas modais visíveis
-        const visibleModals = Array.from(allModals).filter(modal => {
-          const style = window.getComputedStyle(modal);
-          return style.display !== 'none';
-        });
-        
-        if (visibleModals.length === 0) return;
-        
-        // Encontrar o modal com maior z-index
-        let highestZIndex = -1;
-        let topModal: Element | null = null;
-        
-        visibleModals.forEach((modal) => {
-          const zIndex = parseInt(window.getComputedStyle(modal).zIndex || '0');
-          if (zIndex > highestZIndex) {
-            highestZIndex = zIndex;
-            topModal = modal;
-          }
-        });
-        
-        // Só fecha se este modal for o do topo
-        if (topModal === modalRef.current) {
+      if (e.key === 'Escape' && show) {
+        // Verificar se este modal está no topo da pilha
+        if (modalStack.isTop(modalId)) {
           e.preventDefault();
           e.stopPropagation();
           onClose();
@@ -163,7 +156,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       document.addEventListener('keydown', handleKeyDown, true); // Use capture phase
       return () => document.removeEventListener('keydown', handleKeyDown, true);
     }
-  }, [show, onClose]);
+  }, [show, onClose, modalId]);
 
   // Não retornar null, apenas ocultar com display: none para manter estado
   
