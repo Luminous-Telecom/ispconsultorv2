@@ -104,7 +104,11 @@ export class ClienteController {
         where.estado = estado.toUpperCase();
       }
 
-      const { count, rows: clientes } = await Cliente.findAndCountAll({
+      // Contar total de clientes sem includes para evitar duplicatas
+      const count = await Cliente.count({ where });
+      
+      // Buscar clientes com includes
+      const clientes = await Cliente.findAll({
         where,
         include: [
           { association: 'planos', attributes: ['id', 'nome_plano', 'valor_mensal', 'status'] },

@@ -49,7 +49,11 @@ export class PlanoController {
         }
       }
 
-      const { count, rows: planos } = await Plano.findAndCountAll({
+      // Contar total de planos sem includes para evitar duplicatas
+      const count = await Plano.count({ where });
+      
+      // Buscar planos com includes
+      const planos = await Plano.findAll({
         where,
         attributes: [
           'id', 'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',

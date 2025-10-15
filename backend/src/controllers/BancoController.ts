@@ -57,7 +57,11 @@ export class BancoController {
       
       const offset = (Number(page) - 1) * Number(limit);
       
-      const { count, rows: bancos } = await Banco.findAndCountAll({
+      // Contar total de bancos sem includes para evitar duplicatas
+      const count = await Banco.count({ where });
+      
+      // Buscar bancos com includes
+      const bancos = await Banco.findAll({
         where,
         order: [['nome', 'ASC']],
         limit: Number(limit),
