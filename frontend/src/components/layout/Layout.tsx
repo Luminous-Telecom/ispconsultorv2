@@ -113,40 +113,52 @@ const Layout: React.FC = () => {
             onRemove={removeNotification}
           />
 
-      {/* Modais sempre renderizados, apenas mudando show */}
-      <ClienteListModal
-        show={activeModal === 'clientes'}
-        onClose={closeModal}
-        title="Clientes"
-      />
+      {/* Renderizar apenas o modal ativo */}
+      {activeModal === 'clientes' && (
+        <ClienteListModal
+          show={true}
+          onClose={closeModal}
+          title="Clientes"
+        />
+      )}
       
-      <PlanoListModal
-        show={activeModal === 'planos'}
-        onClose={closeModal}
-        title="Planos"
-      />
+      {activeModal === 'planos' && (
+        <PlanoListModal
+          show={true}
+          onClose={closeModal}
+          title="Planos"
+        />
+      )}
       
-      <BancoListModal
-        show={activeModal === 'bancos'}
-        onClose={closeModal}
-        title="Bancos"
-      />
+      {activeModal === 'bancos' && (
+        <BancoListModal
+          show={true}
+          onClose={closeModal}
+          title="Bancos"
+        />
+      )}
       
-      <ContratoListModal
-        show={activeModal === 'contratos'}
-        onClose={closeModal}
-        title="Contratos"
-      />
+      {activeModal === 'contratos' && (
+        <ContratoListModal
+          show={true}
+          onClose={closeModal}
+          title="Contratos"
+        />
+      )}
       
-      <DadosEmpresaModal
-        show={activeModal === 'dados-empresa'}
-        onClose={closeModal}
-      />
+      {activeModal === 'dados-empresa' && (
+        <DadosEmpresaModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
       
-      <ParametrosModal
-        show={activeModal === 'parametros'}
-        onClose={closeModal}
-      />
+      {activeModal === 'parametros' && (
+        <ParametrosModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
 
     </div>
   );
