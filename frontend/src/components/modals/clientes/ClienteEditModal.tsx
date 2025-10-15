@@ -805,7 +805,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   if (isLoadingCliente) {
     return (
-      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl">
+      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl" modalId="cliente-edit-modal-loading">
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
             <span className="visually-hidden">Carregando...</span>
@@ -818,7 +818,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   if (!cliente) {
     return (
-      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl">
+      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl" modalId="cliente-edit-modal-error">
         <div className="text-center p-4">
           <p>Cliente não encontrado.</p>
         </div>
