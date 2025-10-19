@@ -3,12 +3,18 @@ import { Outlet, useLocation, Link } from 'react-router-dom';
 import NotificationContainer from '../common/NotificationContainer';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import DropdownMenu from '../common/DropdownMenu';
 import { ClienteListModal } from '../modals/clientes';
 import { PlanoListModal } from '../modals/planos';
 import { BancoListModal } from '../modals/bancos';
 import ContratoListModal from '../modals/contratos/ContratoListModal';
 import DadosEmpresaModal from '../modals/empresa/DadosEmpresaModal';
-import ParametrosModal from '../modals/parametros/ParametrosModal';
+import RecursosSistemaModal from '../modals/parametros/RecursosSistemaModal';
+import ServidorEmailModal from '../modals/parametros/ServidorEmailModal';
+import ServidorSmsModal from '../modals/parametros/ServidorSmsModal';
+import ServidorWhatsappModal from '../modals/parametros/ServidorWhatsappModal';
+import DocumentosSistemaModal from '../modals/parametros/DocumentosSistemaModal';
+import DiasVencimentoModal from '../modals/parametros/DiasVencimentoModal';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -38,8 +44,16 @@ const Layout: React.FC = () => {
     { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => openModal('planos') },
     { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => openModal('bancos') },
     { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: true, modalHandler: () => openModal('contratos') },
-    { path: '/parametros', icon: 'bi-gear', label: 'Parâmetros', isModal: true, modalHandler: () => openModal('parametros') },
     { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => openModal('dados-empresa') },
+  ];
+
+  const parametrosDropdownItems = [
+    { id: 'recursos-sistema', label: 'Recursos do Sistema', icon: 'bi-gear', onClick: () => openModal('recursos-sistema') },
+    { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => openModal('servidor-email') },
+    { id: 'servidor-sms', label: 'Servidor de SMS', icon: 'bi-chat-dots', onClick: () => openModal('servidor-sms') },
+    { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', icon: 'bi-whatsapp', onClick: () => openModal('servidor-whatsapp') },
+    { id: 'documentos-sistema', label: 'Documentos do Sistema', icon: 'bi-file-earmark-text', onClick: () => openModal('documentos-sistema') },
+    { id: 'dias-vencimento', label: 'Dias de Vencimento', icon: 'bi-calendar', onClick: () => openModal('dias-vencimento') },
   ];
 
   return (
@@ -67,10 +81,21 @@ const Layout: React.FC = () => {
                   setSidebarOpen(false);
                 }}
               >
-                {item.label}
+                <i className={`bi ${item.icon}`}></i>
+                <span>{item.label}</span>
               </Link>
             </div>
           ))}
+          
+          {/* Menu Dropdown para Parâmetros */}
+          <div className="sidebar-nav-item">
+            <DropdownMenu
+              label="Parâmetros"
+              icon="bi-gear"
+              items={parametrosDropdownItems}
+              className="w-100"
+            />
+          </div>
         </nav>
       </aside>
 
@@ -144,8 +169,34 @@ const Layout: React.FC = () => {
         onClose={closeModal}
       />
       
-      <ParametrosModal
-        show={activeModal === 'parametros'}
+      {/* Modais de Parâmetros */}
+      <RecursosSistemaModal
+        show={activeModal === 'recursos-sistema'}
+        onClose={closeModal}
+      />
+      
+      <ServidorEmailModal
+        show={activeModal === 'servidor-email'}
+        onClose={closeModal}
+      />
+      
+      <ServidorSmsModal
+        show={activeModal === 'servidor-sms'}
+        onClose={closeModal}
+      />
+      
+      <ServidorWhatsappModal
+        show={activeModal === 'servidor-whatsapp'}
+        onClose={closeModal}
+      />
+      
+      <DocumentosSistemaModal
+        show={activeModal === 'documentos-sistema'}
+        onClose={closeModal}
+      />
+      
+      <DiasVencimentoModal
+        show={activeModal === 'dias-vencimento'}
         onClose={closeModal}
       />
 

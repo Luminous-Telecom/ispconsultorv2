@@ -26,6 +26,11 @@ import workerRoutes from './routes/workerRoutes';
 import parametroRoutes from './routes/parametroRoutes';
 import parametrosRoutes from './routes/parametrosRoutes';
 import contratoRoutes from './routes/contratos';
+import servidorEmailRoutes from './routes/servidorEmailRoutes';
+import servidorSMSRoutes from './routes/servidorSMSRoutes';
+import servidorWhatsAppRoutes from './routes/servidorWhatsAppRoutes';
+import documentoSistemaRoutes from './routes/documentoSistemaRoutes';
+import diasVencimentoRoutes from './routes/diasVencimentoRoutes';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -105,6 +110,13 @@ app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/parametro', parametroRoutes);
 app.use('/api/parametros', parametrosRoutes);
+
+// Rotas dos servidores e configurações
+app.use('/api/servidores-email', servidorEmailRoutes);
+app.use('/api/servidores-sms', servidorSMSRoutes);
+app.use('/api/servidores-whatsapp', servidorWhatsAppRoutes);
+app.use('/api/documentos-sistema', documentoSistemaRoutes);
+app.use('/api/dias-vencimento', diasVencimentoRoutes);
 
 // Rotas de webhook
 app.use('/webhook', webhookRoutes);
