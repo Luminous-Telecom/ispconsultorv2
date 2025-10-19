@@ -27,7 +27,6 @@ import parametroRoutes from './routes/parametroRoutes';
 import parametrosRoutes from './routes/parametrosRoutes';
 import contratoRoutes from './routes/contratos';
 import servidorEmailRoutes from './routes/servidorEmailRoutes';
-import servidorSMSRoutes from './routes/servidorSMSRoutes';
 import servidorWhatsAppRoutes from './routes/servidorWhatsAppRoutes';
 import documentoSistemaRoutes from './routes/documentoSistemaRoutes';
 import diasVencimentoRoutes from './routes/diasVencimentoRoutes';
@@ -113,7 +112,6 @@ app.use('/api/parametros', parametrosRoutes);
 
 // Rotas dos servidores e configurações
 app.use('/api/servidores-email', servidorEmailRoutes);
-app.use('/api/servidores-sms', servidorSMSRoutes);
 app.use('/api/servidores-whatsapp', servidorWhatsAppRoutes);
 app.use('/api/documentos-sistema', documentoSistemaRoutes);
 app.use('/api/dias-vencimento', diasVencimentoRoutes);

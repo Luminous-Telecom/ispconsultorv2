@@ -9,7 +9,6 @@ import { DadosEmpresa } from './DadosEmpresa';
 import { ScheduledRoutine } from './ScheduledRoutine';
 import { RoutineExecutionLog } from './RoutineExecutionLog';
 import { ServidorEmail } from './ServidorEmail';
-import { ServidorSMS } from './ServidorSMS';
 import { ServidorWhatsApp } from './ServidorWhatsApp';
 import { DocumentoSistema } from './DocumentoSistema';
 import { DiasVencimento } from './DiasVencimento';

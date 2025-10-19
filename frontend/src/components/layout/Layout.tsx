@@ -11,7 +11,6 @@ import ContratoListModal from '../modals/contratos/ContratoListModal';
 import DadosEmpresaModal from '../modals/empresa/DadosEmpresaModal';
 import RecursosSistemaModal from '../modals/parametros/RecursosSistemaModal';
 import ServidorEmailModal from '../modals/parametros/ServidorEmailModal';
-import ServidorSmsModal from '../modals/parametros/ServidorSmsModal';
 import ServidorWhatsappModal from '../modals/parametros/ServidorWhatsappModal';
 import DocumentosSistemaModal from '../modals/parametros/DocumentosSistemaModal';
 import DiasVencimentoModal from '../modals/parametros/DiasVencimentoModal';
@@ -50,7 +49,6 @@ const Layout: React.FC = () => {
   const parametrosDropdownItems = [
     { id: 'recursos-sistema', label: 'Recursos do Sistema', icon: 'bi-gear', onClick: () => openModal('recursos-sistema') },
     { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => openModal('servidor-email') },
-    { id: 'servidor-sms', label: 'Servidor de SMS', icon: 'bi-chat-dots', onClick: () => openModal('servidor-sms') },
     { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', icon: 'bi-whatsapp', onClick: () => openModal('servidor-whatsapp') },
     { id: 'documentos-sistema', label: 'Documentos do Sistema', icon: 'bi-file-earmark-text', onClick: () => openModal('documentos-sistema') },
     { id: 'dias-vencimento', label: 'Dias de Vencimento', icon: 'bi-calendar', onClick: () => openModal('dias-vencimento') },
@@ -177,11 +175,6 @@ const Layout: React.FC = () => {
       
       <ServidorEmailModal
         show={activeModal === 'servidor-email'}
-        onClose={closeModal}
-      />
-      
-      <ServidorSmsModal
-        show={activeModal === 'servidor-sms'}
         onClose={closeModal}
       />
       
