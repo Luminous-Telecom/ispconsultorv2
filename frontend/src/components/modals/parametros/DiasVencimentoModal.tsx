@@ -34,11 +34,6 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
       }
     >
       <div className="modal-body">
-        <div className="alert alert-info">
-          <i className="bi bi-info-circle me-2"></i>
-          Configurações de dias de vencimento serão implementadas em breve.
-        </div>
-        
         <div className="card">
           <div className="card-header">
             <h6 className="mb-0">Configurações de Vencimento</h6>

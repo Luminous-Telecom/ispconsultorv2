@@ -34,11 +34,6 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       }
     >
       <div className="modal-body">
-        <div className="alert alert-info">
-          <i className="bi bi-info-circle me-2"></i>
-          Gerenciamento de documentos do sistema será implementado em breve.
-        </div>
-        
         <div className="card">
           <div className="card-header">
             <h6 className="mb-0">Configurações de Documentos</h6>
