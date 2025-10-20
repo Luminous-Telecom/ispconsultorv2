@@ -3,8 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import EditarDocumentoModal from './EditarDocumentoModal';
+import CriarDocumentoModal from './CriarDocumentoModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DataTable from '../../common/DataTable';
+import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { Column } from '../../../types/entities';
 
 interface DocumentosSistemaModalProps {
@@ -17,16 +19,21 @@ type TipoDocumento = 'contrato' | 'recibo' | 'carta_cobranca';
 const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose }) => {
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [selectedDocumento, setSelectedDocumento] = useState<DocumentoSistema | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedDocumentoId, setSelectedDocumentoId] = useState<number | null>(null);
   const [selectedItems, setSelectedItems] = useState<DocumentoSistema[]>([]);
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
+  const [sortColumn, setSortColumn] = useState<string>('created_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const queryClient = useQueryClient();
   const { addNotification } = useNotificationContext();
 
   // Query para buscar documentos por tipo
-  const { data: documentos, isLoading } = useQuery({
+  const { data: documentos, isLoading, refetch } = useQuery({
     queryKey: ['documentos-sistema', activeTab],
     queryFn: () => DocumentoSistemaService.getByType(activeTab),
     enabled: show,
@@ -44,19 +51,15 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     }
   });
 
-  const handleEdit = (documento: DocumentoSistema) => {
-    setSelectedDocumento(documento);
-    setShowEditModal(true);
-  };
-
-  const handleDelete = (id: number) => {
+  const handleDelete = async (documentoId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este documento?')) {
-      deleteDocumentoMutation.mutate(id);
+      try {
+        await deleteDocumentoMutation.mutateAsync(documentoId);
+        refetch();
+      } catch (error) {
+        console.error('Erro ao excluir documento:', error);
+      }
     }
-  };
-
-  const handleClose = () => {
-    onClose();
   };
 
   const getTipoLabel = (tipo: TipoDocumento) => {
@@ -113,42 +116,66 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   // Ações em massa
   const bulkActions = [
     {
+      label: 'Novo',
+      variant: 'primary',
+      action: () => {
+        setShowCreateModal(true);
+      }
+    },
+    {
       label: 'Editar',
       action: (selectedItems: DocumentoSistema[]) => {
         if (selectedItems.length > 0) {
-          handleEdit(selectedItems[0]);
+          setSelectedDocumentoId(selectedItems[0].id);
+          setShowEditModal(true);
         }
       }
     },
     {
       label: 'Excluir',
+      variant: 'danger',
       action: (selectedItems: DocumentoSistema[]) => {
-        if (selectedItems.length > 0) {
-          handleDelete(selectedItems[0].id);
+        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} documento(s)?`)) {
+          selectedItems.forEach(item => handleDelete(item.id));
         }
       }
     }
   ];
 
+  // Ações para o header do modal usando componente reutilizável
+  const headerActions = (
+    <ModalHeaderActions
+      bulkActions={bulkActions}
+      selectedItems={selectedItems}
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder={`Buscar ${getTipoLabel(activeTab).toLowerCase()}...`}
+      limit={limit}
+      onLimitChange={setLimit}
+      pagination={{
+        from: 1,
+        to: documentos?.data?.length || 0,
+        total: documentos?.data?.length || 0,
+        current_page: 1,
+        last_page: 1
+      }}
+      onPageChange={setPage}
+      onRefresh={() => refetch()}
+      idPrefix="documentos-sistema"
+    />
+  );
+
   return (
     <>
       <DraggableModal
         show={show}
-        onClose={handleClose}
+        onClose={onClose}
         title="Modelos de Documentos"
-        size="xl"
+        size="lg"
         modalId="documentos-sistema-modal"
-        headerActions={
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={handleClose}
-          >
-            Fechar
-          </button>
-        }
+        headerActions={headerActions}
       >
-        <div className="modal-body p-2">
+        <div>
           {/* Abas */}
           <ul className="nav nav-tabs mb-2">
             <li className="nav-item">
@@ -180,62 +207,60 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             </li>
           </ul>
 
-          {/* Tabela de Documentos */}
-          <div className="card">
-            <div className="card-header py-1 px-2">
-              <small className="fw-bold mb-0">{getTipoLabel(activeTab)} Cadastrados</small>
-            </div>
-            <div className="card-body p-0">
-              <DataTable
-                data={documentos?.data || []}
-                columns={columns}
-                isLoading={isLoading}
-                pagination={{
-                  from: 1,
-                  to: documentos?.data?.length || 0,
-                  total: documentos?.data?.length || 0,
-                  current_page: 1,
-                  last_page: 1
-                }}
-                limit={limit}
-                setLimit={setLimit}
-                setPage={setPage}
-                bulkActions={bulkActions}
-                onSelectionChange={setSelectedItems}
-                searchPlaceholder={`Buscar ${getTipoLabel(activeTab).toLowerCase()}...`}
-                emptyMessage={`Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`}
-                showHeader={false}
-                actions={(item: DocumentoSistema) => (
-                  <div className="btn-group btn-group-sm" role="group">
-                    <button
-                      className="btn btn-outline-primary"
-                      onClick={() => handleEdit(item)}
-                      title="Editar documento"
-                    >
-                      <i className="bi bi-pencil"></i>
-                    </button>
-                    <button
-                      className="btn btn-outline-danger"
-                      onClick={() => handleDelete(item.id)}
-                      disabled={deleteDocumentoMutation.isPending}
-                      title="Excluir documento"
-                    >
-                      <i className="bi bi-trash"></i>
-                    </button>
-                  </div>
-                )}
-              />
-            </div>
-          </div>
+          <DataTable
+            data={documentos?.data || []}
+            columns={columns}
+            isLoading={isLoading}
+            pagination={{
+              from: 1,
+              to: documentos?.data?.length || 0,
+              total: documentos?.data?.length || 0,
+              current_page: 1,
+              last_page: 1
+            }}
+            limit={limit}
+            setLimit={setLimit}
+            setPage={setPage}
+            onSort={(column: string, direction: 'asc' | 'desc') => {
+              setSortColumn(column);
+              setSortDirection(direction);
+            }}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            bulkActions={bulkActions}
+            onSelectionChange={setSelectedItems}
+            searchPlaceholder={`Buscar ${getTipoLabel(activeTab).toLowerCase()}...`}
+            onSearch={setSearch}
+            emptyMessage={`Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`}
+            showHeader={false}
+          />
         </div>
-      </DraggableModal>
 
-      {/* Modal de Edição */}
-      <EditarDocumentoModal
-        show={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        documento={selectedDocumento}
-      />
+        {/* Modal de Criação */}
+        <CriarDocumentoModal
+          show={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            refetch();
+            setShowCreateModal(false);
+          }}
+          tipo={activeTab}
+        />
+
+        {/* Modal de Edição */}
+        <EditarDocumentoModal
+          show={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedDocumentoId(null);
+          }}
+          documento={documentos?.data?.find(d => d.id === selectedDocumentoId) || null}
+          onSuccess={() => {
+            refetch();
+            // Não fechar o modal automaticamente
+          }}
+        />
+      </DraggableModal>
     </>
   );
 };

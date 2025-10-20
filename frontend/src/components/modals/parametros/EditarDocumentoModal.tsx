@@ -9,9 +9,10 @@ interface EditarDocumentoModalProps {
   show: boolean;
   onClose: () => void;
   documento: DocumentoSistema | null;
+  onSuccess?: () => void;
 }
 
-const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClose, documento }) => {
+const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClose, documento, onSuccess }) => {
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -40,6 +41,9 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     onSuccess: () => {
       addNotification('success', 'Documento atualizado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
+      if (onSuccess) {
+        onSuccess();
+      }
       onClose();
     },
     onError: (error: any) => {
