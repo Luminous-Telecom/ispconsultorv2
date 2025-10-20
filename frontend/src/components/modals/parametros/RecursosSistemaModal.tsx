@@ -152,12 +152,12 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
       }
     >
       <form id="recursos-sistema-form" onSubmit={handleSubmit}>
-        <div className="modal-body">
+        <div className="modal-body p-2">
           <div className="card mb-3">
-            <div className="card-header">
-              <h6 className="mb-0">Validações</h6>
+            <div className="card-header py-1 px-2">
+              <small className="fw-bold mb-0">Validações</small>
             </div>
-            <div className="card-body">
+            <div className="card-body p-2">
               <div className="form-check mb-3">
                 <input
                   type="checkbox"
@@ -179,10 +179,10 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
           </div>
 
           <div className="card mb-3">
-            <div className="card-header">
-              <h6 className="mb-0">Geração de Títulos</h6>
+            <div className="card-header py-1 px-2">
+              <small className="fw-bold mb-0">Geração de Títulos</small>
             </div>
-            <div className="card-body">
+            <div className="card-body p-2">
               <div className="form-check mb-3">
                 <input
                   type="checkbox"
@@ -237,13 +237,13 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                 </div>
               </div>
 
-              <div className="mb-3">
-                <label htmlFor="total_titulos_financeiro" className="form-label">
+              <div className="mb-2">
+                <label htmlFor="total_titulos_financeiro" className="form-label small mb-1">
                   Total de Títulos no Financeiro
                 </label>
                 <input
                   type="number"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   id="total_titulos_financeiro"
                   name="total_titulos_financeiro"
                   min="1"

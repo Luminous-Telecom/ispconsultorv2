@@ -220,23 +220,23 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
         </div>
       }
     >
-      <div className="modal-body">
+      <div className="modal-body p-2">
         {/* Formulário de configuração */}
         <form id="servidor-email-form" onSubmit={handleSubmit}>
           <div className="card">
-            <div className="card-header">
-              <h6 className="mb-0">
+            <div className="card-header py-1 px-2">
+              <small className="fw-bold mb-0">
                 {servidorAtivo?.data ? 'Configurações do Servidor' : 'Configurar Servidor de E-Mail'}
-              </h6>
+              </small>
             </div>
-            <div className="card-body">
-              <div className="row">
+            <div className="card-body p-2">
+              <div className="row g-2">
                 <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="host" className="form-label">Host SMTP</label>
+                  <div className="mb-2">
+                    <label htmlFor="host" className="form-label small mb-1">Host SMTP</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="host"
                       value={formData.host}
                       onChange={(e) => setFormData(prev => ({ ...prev, host: e.target.value }))}
@@ -246,11 +246,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="porta" className="form-label">Porta</label>
+                  <div className="mb-2">
+                    <label htmlFor="porta" className="form-label small mb-1">Porta</label>
                     <input
                       type="number"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="porta"
                       value={formData.porta}
                       onChange={(e) => setFormData(prev => ({ ...prev, porta: parseInt(e.target.value) }))}
@@ -261,13 +261,13 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                 </div>
               </div>
               
-              <div className="row">
+              <div className="row g-2">
                 <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="usuario" className="form-label">Usuário/E-mail</label>
+                  <div className="mb-2">
+                    <label htmlFor="usuario" className="form-label small mb-1">Usuário/E-mail</label>
                     <input
                       type="email"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="usuario"
                       value={formData.usuario}
                       onChange={(e) => setFormData(prev => ({ ...prev, usuario: e.target.value }))}
@@ -277,13 +277,13 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="senha" className="form-label">
+                  <div className="mb-2">
+                    <label htmlFor="senha" className="form-label small mb-1">
                       Senha {!servidorAtivo?.data && <span className="text-danger">*</span>}
                     </label>
                     <input
                       type="password"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="senha"
                       value={formData.senha}
                       onChange={(e) => setFormData(prev => ({ ...prev, senha: e.target.value }))}
@@ -299,13 +299,13 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                 </div>
               </div>
 
-              <div className="row">
+              <div className="row g-2">
                 <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="nome_remetente" className="form-label">Nome do Remetente</label>
+                  <div className="mb-2">
+                    <label htmlFor="nome_remetente" className="form-label small mb-1">Nome do Remetente</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="nome_remetente"
                       value={formData.nome_remetente}
                       onChange={(e) => setFormData(prev => ({ ...prev, nome_remetente: e.target.value }))}
@@ -315,11 +315,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="email_remetente" className="form-label">E-mail do Remetente</label>
+                  <div className="mb-2">
+                    <label htmlFor="email_remetente" className="form-label small mb-1">E-mail do Remetente</label>
                     <input
                       type="email"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="email_remetente"
                       value={formData.email_remetente}
                       onChange={(e) => setFormData(prev => ({ ...prev, email_remetente: e.target.value }))}
@@ -330,7 +330,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                 </div>
               </div>
               
-              <div className="row">
+              <div className="row g-2">
                 <div className="col-md-4">
                   <div className="form-check">
                     <input
@@ -360,11 +360,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                   </div>
                 </div>
                 <div className="col-md-4">
-                  <div className="mb-3">
-                    <label htmlFor="timeout" className="form-label">Timeout (ms)</label>
+                  <div className="mb-2">
+                    <label htmlFor="timeout" className="form-label small mb-1">Timeout (ms)</label>
                     <input
                       type="number"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="timeout"
                       value={formData.timeout}
                       onChange={(e) => setFormData(prev => ({ ...prev, timeout: parseInt(e.target.value) }))}
@@ -377,14 +377,14 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
               {servidorAtivo?.data && (
                 <div className="row mt-3">
                   <div className="col-12">
-                    <h6 className="text-primary mb-3">
+                    <small className="fw-bold text-primary mb-3">
                       <i className="bi bi-envelope-check me-2"></i>
                       Enviar E-mail de Teste
-                    </h6>
+                    </small>
                     <div className="input-group">
                       <input
                         type="email"
-                        className="form-control"
+                        className="form-control form-control-sm"
                         placeholder="Digite o e-mail para teste"
                         value={emailTeste}
                         onChange={(e) => setEmailTeste(e.target.value)}

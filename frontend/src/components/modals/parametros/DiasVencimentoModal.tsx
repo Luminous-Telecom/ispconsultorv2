@@ -33,19 +33,19 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
         </div>
       }
     >
-      <div className="modal-body">
+      <div className="modal-body p-2">
         <div className="card">
-          <div className="card-header">
-            <h6 className="mb-0">Configurações de Vencimento</h6>
+          <div className="card-header py-1 px-2">
+            <small className="fw-bold mb-0">Configurações de Vencimento</small>
           </div>
-          <div className="card-body">
-            <div className="row">
+          <div className="card-body p-2">
+            <div className="row g-2">
               <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="vencimento_padrao" className="form-label">Dia Padrão de Vencimento</label>
+                <div className="mb-2">
+                  <label htmlFor="vencimento_padrao" className="form-label small mb-1">Dia Padrão de Vencimento</label>
                   <input
                     type="number"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     id="vencimento_padrao"
                     min="1"
                     max="31"
@@ -55,11 +55,11 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
                 </div>
               </div>
               <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="vencimento_tolerancia" className="form-label">Dias de Tolerância</label>
+                <div className="mb-2">
+                  <label htmlFor="vencimento_tolerancia" className="form-label small mb-1">Dias de Tolerância</label>
                   <input
                     type="number"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     id="vencimento_tolerancia"
                     min="0"
                     max="30"
@@ -70,13 +70,13 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
               </div>
             </div>
             
-            <div className="row">
+            <div className="row g-2">
               <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="vencimento_multa" className="form-label">Percentual de Multa (%)</label>
+                <div className="mb-2">
+                  <label htmlFor="vencimento_multa" className="form-label small mb-1">Percentual de Multa (%)</label>
                   <input
                     type="number"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     id="vencimento_multa"
                     min="0"
                     max="100"
@@ -87,11 +87,11 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
                 </div>
               </div>
               <div className="col-md-6">
-                <div className="mb-3">
-                  <label htmlFor="vencimento_juros" className="form-label">Juros por Dia (%)</label>
+                <div className="mb-2">
+                  <label htmlFor="vencimento_juros" className="form-label small mb-1">Juros por Dia (%)</label>
                   <input
                     type="number"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     id="vencimento_juros"
                     min="0"
                     max="10"

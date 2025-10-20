@@ -194,25 +194,25 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         </div>
       }
     >
-      <div className="modal-body">
+      <div className="modal-body p-2">
         {/* Formulário de configuração */}
         <form id="servidor-whatsapp-form" onSubmit={handleSubmit}>
           <div className="card">
-            <div className="card-header">
-              <h6 className="mb-0">
+            <div className="card-header py-1 px-2">
+              <small className="fw-bold mb-0">
                 {servidorAtivo?.data ? 'Configurações da Evolution API' : 'Configurar Evolution API'}
-              </h6>
+              </small>
             </div>
-            <div className="card-body">
-              <div className="row">
+            <div className="card-body p-2">
+              <div className="row g-2">
                 <div className="col-12">
-                  <div className="mb-3">
-                    <label htmlFor="evolution_api_url" className="form-label">
+                  <div className="mb-2">
+                    <label htmlFor="evolution_api_url" className="form-label small mb-1">
                       Servidor <span className="text-danger">*</span>
                     </label>
                     <input
                       type="url"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="evolution_api_url"
                       value={formData.evolution_api_url}
                       onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_url: e.target.value }))}
@@ -223,15 +223,15 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                 </div>
               </div>
 
-              <div className="row">
+              <div className="row g-2">
                 <div className="col-12">
-                  <div className="mb-3">
-                    <label htmlFor="instance_name" className="form-label">
+                  <div className="mb-2">
+                    <label htmlFor="instance_name" className="form-label small mb-1">
                       Nome da Instância <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="instance_name"
                       value={formData.instance_name}
                       onChange={(e) => setFormData(prev => ({ ...prev, instance_name: e.target.value }))}
@@ -242,15 +242,15 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                 </div>
               </div>
 
-              <div className="row">
+              <div className="row g-2">
                 <div className="col-12">
-                  <div className="mb-3">
-                    <label htmlFor="evolution_api_key" className="form-label">
+                  <div className="mb-2">
+                    <label htmlFor="evolution_api_key" className="form-label small mb-1">
                       Token da Instância {!servidorAtivo?.data && <span className="text-danger">*</span>}
                     </label>
                     <input
                       type="password"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="evolution_api_key"
                       value={formData.evolution_api_key}
                       onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_key: e.target.value }))}
@@ -273,17 +273,17 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         {servidorAtivo?.data && (
           <div className="row mt-3">
             <div className="col-12">
-              <h6 className="text-primary mb-3">
+              <small className="fw-bold text-primary mb-3">
                 <i className="bi bi-chat-dots me-2"></i>
                 Enviar Mensagem de Teste
-              </h6>
-              <div className="row">
+              </small>
+              <div className="row g-2">
                 <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="testPhone" className="form-label">Número do Telefone</label>
+                  <div className="mb-2">
+                    <label htmlFor="testPhone" className="form-label small mb-1">Número do Telefone</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="testPhone"
                       placeholder="5511999999999"
                       value={testPhone}
@@ -295,11 +295,11 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="testMessage" className="form-label">Mensagem</label>
+                  <div className="mb-2">
+                    <label htmlFor="testMessage" className="form-label small mb-1">Mensagem</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id="testMessage"
                       placeholder="Mensagem de teste do sistema CTM Telecom"
                       value={testMessage}
