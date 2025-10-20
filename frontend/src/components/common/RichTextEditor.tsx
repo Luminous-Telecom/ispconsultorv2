@@ -22,6 +22,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const shadowHostRef = useRef<HTMLDivElement>(null);
   const shadowRootRef = useRef<ShadowRoot | null>(null);
 
+  // Filtra estilos permitidos (whitelist)
+  const filterStyleAttribute = (styleValue: string): string => {
+    // Mantém apenas text-align seguro
+    const pairs = styleValue
+      .split(';')
+      .map(s => s.trim())
+      .filter(Boolean);
+    const allowed: string[] = [];
+    for (const pair of pairs) {
+      const [propRaw, valueRaw] = pair.split(':');
+      if (!propRaw || !valueRaw) continue;
+      const prop = propRaw.trim().toLowerCase();
+      const value = valueRaw.trim().toLowerCase();
+      if (prop === 'text-align' && /^(left|center|right|justify|start|end)$/.test(value)) {
+        allowed.push(`${prop}: ${value}`);
+      }
+    }
+    return allowed.join('; ');
+  };
+
   // Função para sanitizar HTML e remover estilos perigosos
   const sanitizeHtml = (html: string): string => {
     // 1) Remove tags perigosas (multi-linha seguro)
@@ -36,10 +56,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       .replace(/<embed[\s\S]*?>/gi, '')
       .replace(/<svg[\s\S]*?>[\s\S]*?<\/svg>/gi, '');
 
-    // 2) Remove atributos perigosos
+    // 2) Remove/filtra atributos perigosos
+    //   2.1) Filtra 'style' mantendo apenas propriedades permitidas
     sanitized = sanitized
-      .replace(/\sstyle\s*=\s*"[^"]*"/gi, '')
-      .replace(/\sstyle\s*=\s*'[^']*'/gi, '')
+      .replace(/\sstyle\s*=\s*"([^"]*)"/gi, (_m, g1) => {
+        const filtered = filterStyleAttribute(g1 || '');
+        return filtered ? ` style="${filtered}"` : '';
+      })
+      .replace(/\sstyle\s*=\s*'([^']*)'/gi, (_m, g1) => {
+        const filtered = filterStyleAttribute(g1 || '');
+        return filtered ? ` style='${filtered}'` : '';
+      })
       .replace(/\sclass\s*=\s*"[^"]*"/gi, '')
       .replace(/\sclass\s*=\s*'[^']*'/gi, '')
       .replace(/\sid\s*=\s*"[^"]*"/gi, '')

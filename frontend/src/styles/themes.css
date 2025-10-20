@@ -1941,10 +1941,8 @@ p, span, div, label {
 }
 
 /* Reset completo de todos os elementos HTML dentro do editor */
+/* Reset seletivo para não quebrar estrutura básica */
 .rte-content * {
-  /* Reset de estilos inline que podem vazar */
-  all: unset;
-  display: revert;
   box-sizing: border-box;
 }
 
@@ -2018,19 +2016,13 @@ p, span, div, label {
 }
 
 /* Previne que estilos inline sobrescrevam */
+/* Neutraliza apenas propriedades críticas; text-align permitido via sanitização */
 .rte-content [style] {
-  /* Remove estilos inline perigosos */
-  background: inherit !important;
-  color: inherit !important;
-  font-family: inherit !important;
   position: static !important;
   z-index: auto !important;
   transform: none !important;
   filter: none !important;
   box-shadow: none !important;
-  border: none !important;
-  margin: inherit !important;
-  padding: inherit !important;
 }
 
 /* Modo claro */
