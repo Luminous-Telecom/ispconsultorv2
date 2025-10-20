@@ -4,6 +4,8 @@ import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import EditarDocumentoModal from './EditarDocumentoModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import DataTable from '../../common/DataTable';
+import { Column } from '../../../types/entities';
 
 interface DocumentosSistemaModalProps {
   show: boolean;
@@ -16,6 +18,9 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [selectedDocumento, setSelectedDocumento] = useState<DocumentoSistema | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<DocumentoSistema[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
 
   const queryClient = useQueryClient();
   const { addNotification } = useNotificationContext();
@@ -62,6 +67,68 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     };
     return labels[tipo];
   };
+
+  // Definir colunas da tabela
+  const columns: Column<DocumentoSistema>[] = [
+    {
+      key: 'nome',
+      label: 'Nome',
+      sortable: true,
+      render: (item: DocumentoSistema) => (
+        <div className="fw-medium">{item.nome}</div>
+      )
+    },
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      sortable: true,
+      render: (item: DocumentoSistema) => (
+        <div className="text-secondary">
+          {item.descricao || '-'}
+        </div>
+      )
+    },
+    {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      render: (item: DocumentoSistema) => (
+        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+          {item.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      )
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      render: (item: DocumentoSistema) => (
+        <span className="text-secondary">
+          {new Date(item.created_at).toLocaleDateString('pt-BR')}
+        </span>
+      )
+    }
+  ];
+
+  // Ações em massa
+  const bulkActions = [
+    {
+      label: 'Editar',
+      action: (selectedItems: DocumentoSistema[]) => {
+        if (selectedItems.length > 0) {
+          handleEdit(selectedItems[0]);
+        }
+      }
+    },
+    {
+      label: 'Excluir',
+      action: (selectedItems: DocumentoSistema[]) => {
+        if (selectedItems.length > 0) {
+          handleDelete(selectedItems[0].id);
+        }
+      }
+    }
+  ];
 
   return (
     <>
@@ -119,73 +186,45 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
               <small className="fw-bold mb-0">{getTipoLabel(activeTab)} Cadastrados</small>
             </div>
             <div className="card-body p-0">
-              {isLoading ? (
-                <div className="text-center py-4">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Carregando...</span>
+              <DataTable
+                data={documentos?.data || []}
+                columns={columns}
+                isLoading={isLoading}
+                pagination={{
+                  from: 1,
+                  to: documentos?.data?.length || 0,
+                  total: documentos?.data?.length || 0,
+                  current_page: 1,
+                  last_page: 1
+                }}
+                limit={limit}
+                setLimit={setLimit}
+                setPage={setPage}
+                bulkActions={bulkActions}
+                onSelectionChange={setSelectedItems}
+                searchPlaceholder={`Buscar ${getTipoLabel(activeTab).toLowerCase()}...`}
+                emptyMessage={`Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`}
+                showHeader={false}
+                actions={(item: DocumentoSistema) => (
+                  <div className="btn-group btn-group-sm" role="group">
+                    <button
+                      className="btn btn-outline-primary"
+                      onClick={() => handleEdit(item)}
+                      title="Editar documento"
+                    >
+                      <i className="bi bi-pencil"></i>
+                    </button>
+                    <button
+                      className="btn btn-outline-danger"
+                      onClick={() => handleDelete(item.id)}
+                      disabled={deleteDocumentoMutation.isPending}
+                      title="Excluir documento"
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
                   </div>
-                </div>
-              ) : documentos?.data?.length === 0 ? (
-                <div className="alert alert-info m-2">
-                  <i className="bi bi-info-circle me-2"></i>
-                  Nenhum modelo de {getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover table-sm mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th className="small">Nome</th>
-                        <th className="small">Descrição</th>
-                        <th className="small">Status</th>
-                        <th className="small">Criado em</th>
-                        <th className="small text-center">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {documentos?.data?.map((documento: DocumentoSistema) => (
-                        <tr key={documento.id}>
-                          <td className="small">
-                            <div className="fw-medium">{documento.nome}</div>
-                          </td>
-                          <td className="small">
-                            <div className="text-secondary">
-                              {documento.descricao || '-'}
-                            </div>
-                          </td>
-                          <td>
-                            <span className={`badge ${documento.ativo ? 'bg-success' : 'bg-secondary'}`}>
-                              {documento.ativo ? 'Ativo' : 'Inativo'}
-                            </span>
-                          </td>
-                          <td className="small text-secondary">
-                            {new Date(documento.created_at).toLocaleDateString('pt-BR')}
-                          </td>
-                          <td className="text-center">
-                            <div className="btn-group btn-group-sm" role="group">
-                              <button
-                                className="btn btn-outline-primary"
-                                onClick={() => handleEdit(documento)}
-                                title="Editar documento"
-                              >
-                                <i className="bi bi-pencil"></i>
-                              </button>
-                              <button
-                                className="btn btn-outline-danger"
-                                onClick={() => handleDelete(documento.id)}
-                                disabled={deleteDocumentoMutation.isPending}
-                                title="Excluir documento"
-                              >
-                                <i className="bi bi-trash"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                )}
+              />
             </div>
           </div>
         </div>
