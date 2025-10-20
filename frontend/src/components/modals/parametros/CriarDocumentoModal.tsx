@@ -197,7 +197,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
             <div className="col-md-8">
               <div className="mb-2">
                 <div className="d-flex justify-content-between align-items-center mb-1">
-                  <label className="form-label small mb-0">
+                  <label htmlFor="conteudo" className="form-label small mb-0">
                     Conteúdo <span className="text-danger">*</span>
                   </label>
                   <div>
