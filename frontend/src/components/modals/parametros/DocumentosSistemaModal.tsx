@@ -65,7 +65,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Tem certeza que deseja excluir este documento?')) {
+    if (window.confirm('Tem certeza que deseja excluir este documento?')) {
       deleteDocumentoMutation.mutate(id);
     }
   };
