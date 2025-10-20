@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import { modalStack } from '../../utils/modalStack';
 
 interface DraggableModalProps {
@@ -190,7 +191,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     return null;
   }
 
-  return (
+  const modalContent = (
     <>
       {/* Estilos CSS para diferenciação de campos */}
       <style>{`
@@ -433,6 +434,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       </div>
     </>
   );
+
+  // Renderizar o modal usando portal para garantir que ele apareça no nível raiz do DOM
+  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default DraggableModal;
