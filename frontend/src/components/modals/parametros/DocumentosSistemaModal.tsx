@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import RichTextEditor from '../../common/RichTextEditor';
 
 interface DocumentosSistemaModalProps {
   show: boolean;
@@ -20,7 +19,6 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     conteudo: '',
   });
   const [editingId, setEditingId] = useState<number | null>(null);
-  const quillRef = React.useRef<ReactQuill>(null);
 
   const queryClient = useQueryClient();
 
@@ -83,17 +81,8 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   };
 
   const insertVariable = (variable: string) => {
-    if (quillRef.current) {
-      const editor = quillRef.current.getEditor();
-      const range = editor.getSelection();
-      if (range) {
-        editor.insertText(range.index, `{${variable}}`);
-      } else {
-        const length = editor.getLength();
-        editor.insertText(length - 1, `{${variable}}`);
-      }
-      editor.focus();
-    }
+    const variableText = `{${variable}}`;
+    document.execCommand('insertText', false, variableText);
   };
 
   const handleClose = () => {
@@ -236,26 +225,12 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
                         Data
                       </button>
                     </div>
-                    <div style={{ height: '300px', marginBottom: '45px' }}>
-                      <ReactQuill
-                        ref={quillRef}
-                        theme="snow"
-                        value={formData.conteudo}
-                        onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
-                        style={{ height: '250px' }}
-                        modules={{
-                          toolbar: [
-                            [{ 'header': [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            [{ 'align': [] }],
-                            ['link'],
-                            ['clean']
-                          ]
-                        }}
-                        placeholder="Digite o conteúdo do documento..."
-                      />
-                    </div>
+                    <RichTextEditor
+                      value={formData.conteudo}
+                      onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
+                      placeholder="Digite o conteúdo do documento..."
+                      height="250px"
+                    />
                   </div>
 
                   <div className="d-flex gap-1">

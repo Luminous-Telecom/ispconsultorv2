@@ -1753,80 +1753,94 @@ p, span, div, label {
   border-color: var(--border-color);
 }
 
-/* Estilos para React Quill no modo escuro */
-[data-theme="dark"] .ql-toolbar.ql-snow {
+/* Rich Text Editor */
+.rich-text-editor {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rte-toolbar {
   background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.rte-toolbar .btn {
+  font-size: 0.85rem;
+  padding: 2px 8px;
   border-color: var(--border-color);
-}
-
-[data-theme="dark"] .ql-container.ql-snow {
-  background-color: var(--bg-secondary);
-  border-color: var(--border-color);
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .ql-editor {
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .ql-editor.ql-blank::before {
   color: var(--text-secondary);
 }
 
-[data-theme="dark"] .ql-snow .ql-stroke {
-  stroke: var(--text-secondary);
-}
-
-[data-theme="dark"] .ql-snow .ql-fill {
-  fill: var(--text-secondary);
-}
-
-[data-theme="dark"] .ql-snow .ql-picker-label {
-  color: var(--text-secondary);
-}
-
-[data-theme="dark"] .ql-toolbar.ql-snow .ql-picker-label:hover,
-[data-theme="dark"] .ql-toolbar.ql-snow .ql-picker-label.ql-active {
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .ql-toolbar.ql-snow button:hover .ql-stroke,
-[data-theme="dark"] .ql-toolbar.ql-snow button.ql-active .ql-stroke {
-  stroke: #4dabf7;
-}
-
-[data-theme="dark"] .ql-toolbar.ql-snow button:hover .ql-fill,
-[data-theme="dark"] .ql-toolbar.ql-snow button.ql-active .ql-fill {
-  fill: #4dabf7;
-}
-
-[data-theme="dark"] .ql-snow.ql-toolbar button:hover,
-[data-theme="dark"] .ql-snow .ql-toolbar button:hover,
-[data-theme="dark"] .ql-snow.ql-toolbar button.ql-active,
-[data-theme="dark"] .ql-snow .ql-toolbar button.ql-active {
+.rte-toolbar .btn:hover {
   background-color: rgba(77, 171, 247, 0.1);
+  border-color: #4dabf7;
+  color: var(--text-primary);
 }
 
-/* Estilos para React Quill no modo claro */
-[data-theme="light"] .ql-toolbar.ql-snow {
+.rte-content {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  outline: none;
+}
+
+.rte-content:empty:before {
+  content: attr(data-placeholder);
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.rte-content h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+.rte-content h2 {
+  font-size: 1.5em;
+  margin: 0.75em 0;
+}
+
+.rte-content h3 {
+  font-size: 1.17em;
+  margin: 0.83em 0;
+}
+
+.rte-content p {
+  margin: 1em 0;
+}
+
+.rte-content ul,
+.rte-content ol {
+  margin: 1em 0;
+  padding-left: 40px;
+}
+
+.rte-content li {
+  margin: 0.5em 0;
+}
+
+/* Modo claro */
+[data-theme="light"] .rte-toolbar {
   background-color: #f8f9fa;
-  border-color: #ced4da;
 }
 
-[data-theme="light"] .ql-container.ql-snow {
+[data-theme="light"] .rte-content {
   background-color: #ffffff;
-  border-color: #ced4da;
-}
-
-[data-theme="light"] .ql-editor {
   color: #000000;
 }
 
-/* Ajuste de altura do editor */
-.ql-container {
-  font-size: 14px;
+[data-theme="light"] .rte-content:empty:before {
+  color: #6c757d;
 }
 
-.ql-editor {
-  min-height: 200px;
+[data-theme="light"] .rte-toolbar .btn {
+  color: #495057;
+  border-color: #ced4da;
 }
