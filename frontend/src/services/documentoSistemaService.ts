@@ -31,7 +31,7 @@ export interface CreateDocumentoSistema {
 
 export interface UpdateDocumentoSistema extends Partial<CreateDocumentoSistema> {}
 
-export class DocumentoSistemaService {
+class DocumentoSistemaService {
   static async list(tipo?: string): Promise<{ success: boolean; data: DocumentoSistema[]; message: string }> {
     const params = tipo ? `?tipo=${tipo}` : '';
     const response = await apiService.get<{ success: boolean; data: DocumentoSistema[]; message: string }>(`/documentos-sistema${params}`);
@@ -73,3 +73,5 @@ export class DocumentoSistemaService {
     return response;
   }
 }
+
+export default DocumentoSistemaService;

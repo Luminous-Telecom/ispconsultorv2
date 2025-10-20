@@ -54,7 +54,7 @@ DocumentoSistema.init(
       allowNull: false,
       validate: {
         notEmpty: true,
-        isIn: [['contrato', 'recibo', 'boleto', 'comprovante', 'outro']],
+        isIn: [['contrato', 'recibo', 'carta_cobranca', 'boleto', 'comprovante', 'outro']],
       },
     },
     conteudo: {

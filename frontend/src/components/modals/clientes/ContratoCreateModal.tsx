@@ -5,6 +5,8 @@ import DraggableModal from '../../common/DraggableModal';
 import { useCreateContrato, CreateContratoData } from '../../../hooks/useContratos';
 import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
+import { useQuery } from '@tanstack/react-query';
+import DocumentoSistemaService from '../../../services/documentoSistemaService';
 
 interface ContratoForm {
   plano_id: number;
@@ -18,6 +20,7 @@ interface ContratoForm {
   dia_vencimento?: number;
   conta_boleto?: number;
   data_validade_desconto?: string;
+  modelo_contrato_id?: number;
 }
 
 interface ContratoCreateModalProps {
@@ -44,7 +47,8 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     isento_mensalidade: false,
     dia_vencimento: 10,
     conta_boleto: 0,
-    data_validade_desconto: ''
+    data_validade_desconto: '',
+    modelo_contrato_id: 0
   });
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
@@ -53,9 +57,15 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
   // Hooks para buscar dados
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
+  const { data: modelosContratoData } = useQuery({
+    queryKey: ['modelos-contrato'],
+    queryFn: () => DocumentoSistemaService.getByType('contrato'),
+    enabled: show,
+  });
   
   const planos = Array.isArray(planosData) ? planosData : (planosData?.data || []);
   const bancos = Array.isArray(bancosData) ? bancosData : (bancosData?.data || []);
+  const modelosContrato = modelosContratoData?.data || [];
   
   // Mutation para criar contrato
   const createContratoMutation = useCreateContrato();
@@ -74,7 +84,8 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         isento_mensalidade: false,
         dia_vencimento: 10,
         conta_boleto: 0,
-        data_validade_desconto: ''
+        data_validade_desconto: '',
+        modelo_contrato_id: 0
       });
       setErrors({});
     }
@@ -126,7 +137,8 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       isento_mensalidade: formData.isento_mensalidade,
       dia_vencimento: formData.dia_vencimento || undefined,
       conta_boleto: formData.conta_boleto || undefined,
-      data_validade_desconto: formData.data_validade_desconto || undefined
+      data_validade_desconto: formData.data_validade_desconto || undefined,
+      modelo_contrato_id: formData.modelo_contrato_id || undefined
     };
 
     createContratoMutation.mutate(contratoData, {
@@ -320,6 +332,32 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-md-12">
+            <div className="mb-3">
+              <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato</label>
+              <select
+                className="form-select"
+                id="modelo_contrato_id"
+                name="modelo_contrato_id"
+                value={formData.modelo_contrato_id || 0}
+                onChange={(e) => handleInputChange('modelo_contrato_id', parseInt(e.target.value))}
+                disabled={createContratoMutation.isPending}
+              >
+                <option value={0}>Selecione um modelo (opcional)</option>
+                {modelosContrato.map((modelo) => (
+                  <option key={modelo.id} value={modelo.id}>
+                    {modelo.nome}
+                  </option>
+                ))}
+              </select>
+              <small className="form-text text-muted">
+                Selecione um modelo de contrato cadastrado no sistema
+              </small>
             </div>
           </div>
         </div>

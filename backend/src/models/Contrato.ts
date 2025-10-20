@@ -31,6 +31,7 @@ export class Contrato extends Model<
   declare dia_vencimento: number | null;
   declare conta_boleto: number | null;
   declare data_validade_desconto: Date | null;
+  declare modelo_contrato_id: number | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -192,6 +193,15 @@ Contrato.init(
       type: DataTypes.DATE,
       allowNull: true,
       comment: 'Data de validade do desconto aplicado'
+    },
+    modelo_contrato_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'ID do modelo de contrato a ser utilizado',
+      references: {
+        model: 'documentos_sistema',
+        key: 'id'
+      }
     },
     created_at: {
       type: DataTypes.DATE,
