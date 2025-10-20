@@ -169,6 +169,25 @@ p, span, div, label {
   position: relative;
   font-size: 0.75rem;
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* Garante que ícones e texto não sejam afetados por outros estilos */
+  gap: 0.5rem;
+}
+
+.sidebar-nav-link i {
+  /* Força o ícone a manter seu tamanho e posição */
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.sidebar-nav-link span {
+  /* Garante que o texto mantenha seu espaçamento */
+  flex: 1;
+  white-space: nowrap;
 }
 
 .sidebar-nav-link:hover {
@@ -1600,6 +1619,25 @@ p, span, div, label {
   font-size: 0.75rem;
   transition: var(--transition);
   cursor: pointer;
+  /* Garante espaçamento correto entre ícone e texto */
+  gap: 0.5rem;
+}
+
+.dropdown-toggle i {
+  /* Força o ícone a manter seu tamanho e posição */
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.dropdown-toggle span {
+  /* Garante que o texto mantenha seu espaçamento */
+  flex: 1;
+  white-space: nowrap;
 }
 
 .dropdown-toggle::after {
@@ -1652,6 +1690,23 @@ p, span, div, label {
   transition: var(--transition);
   cursor: pointer;
   gap: 0.5rem;
+}
+
+.dropdown-item i {
+  /* Força o ícone a manter seu tamanho e posição */
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.dropdown-item span {
+  /* Garante que o texto mantenha seu espaçamento */
+  flex: 1;
+  white-space: nowrap;
 }
 
 .dropdown-item:hover {
@@ -1753,22 +1808,25 @@ p, span, div, label {
   border-color: var(--border-color);
 }
 
-/* Rich Text Editor - Isolamento completo */
+/* Rich Text Editor - Isolamento específico */
 .rich-text-editor {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   overflow: hidden;
-  /* Isolamento completo para evitar interferência com o projeto */
-  all: initial;
+  /* Isolamento específico sem afetar elementos externos */
+  display: block;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-primary);
   background-color: var(--bg-secondary);
-  /* Container isolation */
-  contain: layout style paint;
-  /* Previne vazamento de estilos */
+  /* Container isolation mais específico */
+  contain: layout style;
+  /* Previne vazamento de estilos sem afetar outros elementos */
   isolation: isolate;
+  /* Garante que o editor não interfira com outros elementos */
+  position: relative;
+  z-index: auto;
 }
 
 .rte-toolbar {
@@ -1800,14 +1858,16 @@ p, span, div, label {
   font-size: 14px;
   line-height: 1.6;
   outline: none;
-  /* Isolamento do conteúdo para evitar interferência */
-  contain: layout style paint;
+  /* Isolamento específico do conteúdo */
+  contain: layout style;
   /* Previne que estilos do conteúdo vazem para fora */
   isolation: isolate;
-  /* Reset de estilos que podem vazar */
+  /* Mantém herança de fonte para consistência */
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
+  /* Garante que não afete elementos externos */
+  position: relative;
 }
 
 .rte-content:empty:before {
