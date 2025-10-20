@@ -229,6 +229,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   </div>
                 </div>
                 <RichTextEditor
+                  key={`criar-${tipo}`}
                   value={formData.conteudo}
                   onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
                   placeholder="Digite o conteúdo do documento..."

@@ -16,23 +16,38 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isCodeMode, setIsCodeMode] = useState(false);
+  const isUpdatingRef = useRef(false);
 
   useEffect(() => {
-    if (!isCodeMode && editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
+    // Prevenir loop infinito
+    if (isUpdatingRef.current) {
+      isUpdatingRef.current = false;
+      return;
     }
-    if (isCodeMode && textareaRef.current && textareaRef.current.value !== value) {
-      textareaRef.current.value = value;
+
+    if (!isCodeMode && editorRef.current) {
+      const currentHtml = editorRef.current.innerHTML;
+      // Só atualiza se o valor for diferente (ignorando espaços extras)
+      if (currentHtml.trim() !== value.trim() && value !== currentHtml) {
+        editorRef.current.innerHTML = value;
+      }
+    }
+    if (isCodeMode && textareaRef.current) {
+      if (textareaRef.current.value !== value) {
+        textareaRef.current.value = value;
+      }
     }
   }, [value, isCodeMode]);
 
   const handleInput = () => {
     if (editorRef.current) {
+      isUpdatingRef.current = true;
       onChange(editorRef.current.innerHTML);
     }
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    isUpdatingRef.current = true;
     onChange(e.target.value);
   };
 
@@ -80,7 +95,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 onClick={() => execCommand('bold')}
                 title="Negrito"
               >
-                <strong>B</strong>
+                <i className="bi bi-type-bold"></i>
               </button>
               <button
                 type="button"
@@ -88,7 +103,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 onClick={() => execCommand('italic')}
                 title="Itálico"
               >
-                <em>I</em>
+                <i className="bi bi-type-italic"></i>
               </button>
               <button
                 type="button"
@@ -96,7 +111,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 onClick={() => execCommand('underline')}
                 title="Sublinhado"
               >
-                <u>U</u>
+                <i className="bi bi-type-underline"></i>
               </button>
             </div>
 

@@ -235,6 +235,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                   </div>
                 </div>
                 <RichTextEditor
+                  key={documento?.id}
                   value={formData.conteudo}
                   onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
                   placeholder="Digite o conteúdo do documento..."
