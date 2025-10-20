@@ -1877,6 +1877,7 @@ p, span, div, label {
   font-size: 14px;
   line-height: 1.6;
   font-family: inherit;
+  white-space: normal;
   /* Garante que não afete elementos externos */
   position: relative;
   /* Previne vazamento de estilos */
@@ -2013,6 +2014,67 @@ p, span, div, label {
   font-family: inherit;
   color: inherit;
   background: inherit;
+}
+
+/* Tabelas padrão (para conteúdo importado de Word/HTML) */
+.rte-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.rte-content th,
+.rte-content td {
+  border: 1px solid var(--border-color);
+  padding: 6px 8px;
+  vertical-align: top;
+}
+
+.rte-content th {
+  background: var(--bg-tertiary);
+  font-weight: 600;
+}
+
+/* Imagens nunca ultrapassam o editor */
+.rte-content img {
+  max-width: 100%;
+  height: auto;
+  display: inline-block;
+}
+
+/* Links visíveis e seguros */
+.rte-content a {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+[data-theme="dark"] .rte-content a {
+  color: #66b0ff;
+}
+
+/* Código/Pré-formatado */
+.rte-content pre,
+.rte-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.rte-content pre {
+  background: rgba(0,0,0,0.05);
+  padding: 8px;
+  border-radius: 4px;
+  overflow: auto;
+}
+
+[data-theme="dark"] .rte-content pre {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Citações */
+.rte-content blockquote {
+  border-left: 3px solid var(--border-color);
+  margin: 0.5rem 0;
+  padding: 0.25rem 0.75rem;
+  color: var(--text-secondary);
 }
 
 /* Previne que estilos inline sobrescrevam */
