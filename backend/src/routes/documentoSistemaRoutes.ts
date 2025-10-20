@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { DocumentoSistemaController } from '../controllers/DocumentoSistemaController';
+import { uploadWord } from '../utils/uploadConfig';
 
 const router = Router();
 
@@ -12,5 +13,8 @@ router.get('/:id', DocumentoSistemaController.show);
 router.post('/', DocumentoSistemaController.create);
 router.put('/:id', DocumentoSistemaController.update);
 router.delete('/:id', DocumentoSistemaController.delete);
+
+// Rota para converter arquivo Word para HTML
+router.post('/converter-word', uploadWord.single('file'), DocumentoSistemaController.convertWordToHtml);
 
 export default router;

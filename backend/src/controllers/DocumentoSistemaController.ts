@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { DocumentoSistema } from '../models/DocumentoSistema';
 import { logger } from '../utils/logger';
+import mammoth from 'mammoth';
+import fs from 'fs/promises';
 
 export class DocumentoSistemaController {
   /**
@@ -267,6 +269,52 @@ export class DocumentoSistemaController {
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Converter arquivo Word para HTML
+   */
+  static async convertWordToHtml(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({
+          success: false,
+          message: 'Nenhum arquivo foi enviado'
+        });
+        return;
+      }
+
+      const filePath = req.file.path;
+
+      // Converter .docx para HTML usando mammoth
+      const result = await mammoth.convertToHtml({ path: filePath });
+      const html = result.value;
+
+      // Deletar o arquivo temporário
+      await fs.unlink(filePath);
+
+      res.json({
+        success: true,
+        data: { html },
+        message: 'Arquivo convertido com sucesso'
+      });
+    } catch (error) {
+      logger.error('Erro ao converter arquivo Word:', error);
+      
+      // Tentar deletar o arquivo em caso de erro
+      if (req.file?.path) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (unlinkError) {
+          logger.error('Erro ao deletar arquivo temporário:', unlinkError);
+        }
+      }
+
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao converter arquivo'
       });
     }
   }

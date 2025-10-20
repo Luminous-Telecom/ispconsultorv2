@@ -72,6 +72,24 @@ class DocumentoSistemaService {
     const response = await apiService.delete<{ success: boolean; message: string }>(`/documentos-sistema/${id}`);
     return response;
   }
+
+  static async convertWordToHtml(file: File): Promise<{ success: boolean; data: { html: string }; message: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${(apiService as any).api.defaults.baseURL}/documentos-sistema/converter-word`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erro ao converter arquivo');
+    }
+
+    return response.json();
+  }
 }
 
 export default DocumentoSistemaService;

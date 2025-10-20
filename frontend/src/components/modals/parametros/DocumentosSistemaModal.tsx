@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import RichTextEditor from '../../common/RichTextEditor';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 interface DocumentosSistemaModalProps {
   show: boolean;
@@ -19,8 +20,11 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     conteudo: '',
   });
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const queryClient = useQueryClient();
+  const { addNotification } = useNotification();
 
   // Query para buscar documentos por tipo
   const { data: documentos, isLoading } = useQuery({
@@ -83,6 +87,30 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   const insertVariable = (variable: string) => {
     const variableText = `{${variable}}`;
     document.execCommand('insertText', false, variableText);
+  };
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.docx')) {
+      addNotification('Apenas arquivos .docx são permitidos', 'error');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const result = await DocumentoSistemaService.convertWordToHtml(file);
+      setFormData(prev => ({ ...prev, conteudo: result.data.html }));
+      addNotification('Arquivo importado com sucesso', 'success');
+    } catch (error: any) {
+      addNotification(error.message || 'Erro ao importar arquivo', 'error');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const handleClose = () => {
@@ -187,9 +215,40 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
                   </div>
 
                   <div className="mb-2">
-                    <label htmlFor="conteudo" className="form-label small mb-1">
-                      Conteúdo <span className="text-danger">*</span>
-                    </label>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <label htmlFor="conteudo" className="form-label small mb-0">
+                        Conteúdo <span className="text-danger">*</span>
+                      </label>
+                      <div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".docx"
+                          onChange={handleFileImport}
+                          style={{ display: 'none' }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline-info btn-sm py-0 px-1"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isImporting}
+                          title="Importar de Word (.docx)"
+                          style={{ fontSize: '0.7rem' }}
+                        >
+                          {isImporting ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm me-1" style={{ width: '0.6rem', height: '0.6rem' }}></span>
+                              Importando...
+                            </>
+                          ) : (
+                            <>
+                              <i className="bi bi-file-word me-1"></i>
+                              Importar Word
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                     <div className="mb-1">
                       <small className="text-secondary me-2" style={{ fontSize: '0.7rem' }}>Inserir variável:</small>
                       <button
