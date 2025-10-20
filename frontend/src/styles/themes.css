@@ -1797,6 +1797,28 @@ p, span, div, label {
   opacity: 0.6;
 }
 
+/* Textarea para modo código */
+.rte-code {
+  width: 100%;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: none;
+  padding: 12px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+
+.rte-code::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
 .rte-content h1 {
   font-size: 2em;
   margin: 0.67em 0;
@@ -1843,4 +1865,9 @@ p, span, div, label {
 [data-theme="light"] .rte-toolbar .btn {
   color: #495057;
   border-color: #ced4da;
+}
+
+[data-theme="light"] .rte-code {
+  background-color: #ffffff;
+  color: #000000;
 }
