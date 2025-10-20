@@ -28,6 +28,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const shadowHostRef = useRef<HTMLDivElement>(null);
   const shadowRootRef = useRef<ShadowRoot | null>(null);
 
+  // Ajusta altura da textarea (modo código) para caber o conteúdo
+  const adjustTextareaHeight = () => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    // Calcula altura mínima a partir da prop height (ex.: "400px")
+    const minFromProp = typeof height === 'string' && height.endsWith('px')
+      ? parseInt(height, 10) || 0
+      : 0;
+    // Reseta para calcular scrollHeight corretamente
+    ta.style.height = 'auto';
+    const scrollH = ta.scrollHeight;
+    const currentH = ta.clientHeight;
+    const newH = Math.max(scrollH, minFromProp, currentH);
+    ta.style.height = `${newH}px`;
+  };
+
   // Filtra estilos permitidos (whitelist)
   const filterStyleAttribute = (styleValue: string): string => {
     // Mantém apenas text-align seguro
@@ -106,6 +122,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       if (textareaRef.current.value !== value) {
         textareaRef.current.value = value;
       }
+      // Ajusta altura quando o valor mudar no modo código
+      adjustTextareaHeight();
     }
   }, [value, isCodeMode]);
 
@@ -122,6 +140,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     isUpdatingRef.current = true;
+    adjustTextareaHeight();
     onChange(e.target.value);
   };
 
@@ -138,6 +157,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }
     }
     setIsCodeMode(!isCodeMode);
+    // Próximo frame, ajusta altura caso vá para modo código
+    requestAnimationFrame(() => adjustTextareaHeight());
   };
 
   const execCommand = (command: string, value?: string) => {
