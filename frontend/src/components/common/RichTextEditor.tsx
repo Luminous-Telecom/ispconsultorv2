@@ -343,7 +343,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           onChange={handleTextareaChange}
           placeholder={placeholder}
           // Permite redimensionar livremente no modo código (sem fixar altura)
-        style={{ height: height, overflow: 'auto', resize: 'vertical' }}
+        style={{ minHeight: height, height: 'auto', overflow: 'auto', resize: 'vertical' }}
           spellCheck={false}
         />
       ) : (
