@@ -24,18 +24,33 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Função para sanitizar HTML e remover estilos perigosos
   const sanitizeHtml = (html: string): string => {
-    // Remove estilos inline que podem interferir
+    // 1) Remove tags perigosas (multi-linha seguro)
     let sanitized = html
-      .replace(/style\s*=\s*["'][^"']*["']/gi, '') // Remove style attributes
-      .replace(/class\s*=\s*["'][^"']*["']/gi, '') // Remove class attributes
-      .replace(/id\s*=\s*["'][^"']*["']/gi, '') // Remove id attributes
-      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove event handlers
-      .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove scripts
-      .replace(/<link[^>]*>/gi, '') // Remove link tags
-      .replace(/<meta[^>]*>/gi, '') // Remove meta tags
-      .replace(/<style[^>]*>.*?<\/style>/gi, ''); // Remove style tags
-    
-    return sanitized;
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+      .replace(/<link[\s\S]*?>/gi, '')
+      .replace(/<meta[\s\S]*?>/gi, '')
+      .replace(/<base[\s\S]*?>/gi, '')
+      .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
+      .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, '')
+      .replace(/<embed[\s\S]*?>/gi, '')
+      .replace(/<svg[\s\S]*?>[\s\S]*?<\/svg>/gi, '');
+
+    // 2) Remove atributos perigosos
+    sanitized = sanitized
+      .replace(/\sstyle\s*=\s*"[^"]*"/gi, '')
+      .replace(/\sstyle\s*=\s*'[^']*'/gi, '')
+      .replace(/\sclass\s*=\s*"[^"]*"/gi, '')
+      .replace(/\sclass\s*=\s*'[^']*'/gi, '')
+      .replace(/\sid\s*=\s*"[^"]*"/gi, '')
+      .replace(/\sid\s*=\s*'[^']*'/gi, '')
+      .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '')
+      .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '');
+
+    // 3) Normaliza espaços extras gerados pelos replaces
+    sanitized = sanitized.replace(/\s{2,}/g, ' ');
+
+    return sanitized.trim();
   };
 
   useEffect(() => {
@@ -64,7 +79,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const handleInput = () => {
     if (editorRef.current) {
       isUpdatingRef.current = true;
-      onChange(editorRef.current.innerHTML);
+      const sanitized = sanitizeHtml(editorRef.current.innerHTML);
+      if (sanitized !== editorRef.current.innerHTML) {
+        editorRef.current.innerHTML = sanitized;
+      }
+      onChange(sanitized);
     }
   };
 
@@ -77,12 +96,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (isCodeMode) {
       // Voltando do modo código para visual
       if (textareaRef.current) {
-        onChange(textareaRef.current.value);
+        onChange(sanitizeHtml(textareaRef.current.value));
       }
     } else {
       // Indo para modo código
       if (editorRef.current) {
-        onChange(editorRef.current.innerHTML);
+        onChange(sanitizeHtml(editorRef.current.innerHTML));
       }
     }
     setIsCodeMode(!isCodeMode);
@@ -103,6 +122,28 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       handleInput();
     }
   };
+
+  // Sanitiza colagens para evitar estilos globais
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const onPaste = (e: ClipboardEvent) => {
+      if (!editorRef.current) return;
+      e.preventDefault();
+      const clipboardData = e.clipboardData || (window as any).clipboardData;
+      const pastedHtml = clipboardData?.getData('text/html');
+      const pastedText = clipboardData?.getData('text/plain');
+      const content = pastedHtml ? sanitizeHtml(pastedHtml) : (pastedText || '');
+      document.execCommand('insertHTML', false, content);
+      handleInput();
+    };
+
+    editor.addEventListener('paste', onPaste as any);
+    return () => {
+      editor.removeEventListener('paste', onPaste as any);
+    };
+  }, []);
 
   // Função para inserir variáveis de forma segura
   const insertVariable = (variable: string) => {
