@@ -5,13 +5,15 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   height?: string;
+  onInsertVariable?: (variable: string) => void;
 }
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
   value,
   onChange,
   placeholder = 'Digite aqui...',
-  height = '250px'
+  height = '250px',
+  onInsertVariable
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -67,9 +69,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const execCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
     if (editorRef.current) {
       editorRef.current.focus();
+      document.execCommand(command, false, value);
       handleInput();
     }
   };
@@ -79,6 +81,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       editorRef.current.focus();
       document.execCommand('insertText', false, text);
       handleInput();
+    }
+  };
+
+  // Função para inserir variáveis de forma segura
+  const insertVariable = (variable: string) => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      const variableText = `{${variable}}`;
+      document.execCommand('insertText', false, variableText);
+      handleInput();
+    }
+    if (onInsertVariable) {
+      onInsertVariable(variable);
     }
   };
 

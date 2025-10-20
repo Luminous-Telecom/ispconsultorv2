@@ -55,9 +55,9 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
     });
   };
 
-  const insertVariable = (variable: string) => {
-    const variableText = `{${variable}}`;
-    document.execCommand('insertText', false, variableText);
+  const handleInsertVariable = (variable: string) => {
+    // Esta função será chamada pelo RichTextEditor
+    console.log(`Variável ${variable} inserida`);
   };
 
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,7 +143,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => insertVariable('cliente_nome')}
+                    onClick={() => handleInsertVariable('cliente_nome')}
                     style={{ fontSize: '0.7rem' }}
                   >
                     Nome
@@ -151,7 +151,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => insertVariable('cliente_cpf')}
+                    onClick={() => handleInsertVariable('cliente_cpf')}
                     style={{ fontSize: '0.7rem' }}
                   >
                     CPF
@@ -159,7 +159,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => insertVariable('valor')}
+                    onClick={() => handleInsertVariable('valor')}
                     style={{ fontSize: '0.7rem' }}
                   >
                     Valor
@@ -167,7 +167,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => insertVariable('data')}
+                    onClick={() => handleInsertVariable('data')}
                     style={{ fontSize: '0.7rem' }}
                   >
                     Data
@@ -234,6 +234,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
                   placeholder="Digite o conteúdo do documento..."
                   height="400px"
+                  onInsertVariable={handleInsertVariable}
                 />
               </div>
             </div>
