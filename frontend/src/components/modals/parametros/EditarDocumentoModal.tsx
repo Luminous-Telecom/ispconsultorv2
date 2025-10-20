@@ -201,7 +201,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
             <div className="col-md-8">
               <div className="mb-2">
                 <div className="d-flex justify-content-between align-items-center mb-1">
-                  <label htmlFor="conteudo" className="form-label small mb-0">
+                  <label id="conteudo-label" htmlFor="conteudo" className="form-label small mb-0">
                     Conteúdo <span className="text-danger">*</span>
                   </label>
                   <div>
@@ -238,6 +238,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                   key={documento?.id}
                   id="conteudo"
                   name="conteudo"
+                  ariaLabelledBy="conteudo-label"
                   value={formData.conteudo}
                   onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
                   placeholder="Digite o conteúdo do documento..."

@@ -7,6 +7,7 @@ interface RichTextEditorProps {
   height?: string;
   id?: string; // para associação com <label for="...">
   name?: string; // para compatibilidade com formulários/autofill
+  ariaLabelledBy?: string; // para associar com <label id="...">
   onInsertVariable?: (variable: string) => void;
 }
 
@@ -17,6 +18,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   height = '250px',
   id,
   name,
+  ariaLabelledBy,
   onInsertVariable
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -332,6 +334,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           className="rte-code"
           id={id}
           name={name}
+          aria-labelledby={ariaLabelledBy}
           value={value}
           onChange={handleTextareaChange}
           placeholder={placeholder}
@@ -346,6 +349,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           id={id}
           role="textbox"
           aria-multiline="true"
+          aria-labelledby={ariaLabelledBy}
           contentEditable
           onInput={handleInput}
           onBlur={handleInput}
