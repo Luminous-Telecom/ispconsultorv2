@@ -117,7 +117,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   const bulkActions = [
     {
       label: 'Novo',
-      variant: 'primary',
+      variant: 'primary' as const,
       action: () => {
         setShowCreateModal(true);
       }
@@ -133,7 +133,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     },
     {
       label: 'Excluir',
-      variant: 'danger',
+      variant: 'danger' as const,
       action: (selectedItems: DocumentoSistema[]) => {
         if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} documento(s)?`)) {
           selectedItems.forEach(item => handleDelete(item.id));
