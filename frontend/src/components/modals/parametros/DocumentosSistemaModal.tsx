@@ -94,7 +94,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     if (!file) return;
 
     if (!file.name.endsWith('.docx')) {
-      addNotification('Apenas arquivos .docx são permitidos', 'error');
+      addNotification('error', 'Apenas arquivos .docx são permitidos');
       return;
     }
 
@@ -102,9 +102,9 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     try {
       const result = await DocumentoSistemaService.convertWordToHtml(file);
       setFormData(prev => ({ ...prev, conteudo: result.data.html }));
-      addNotification('Arquivo importado com sucesso', 'success');
+      addNotification('success', 'Arquivo importado com sucesso');
     } catch (error: any) {
-      addNotification(error.message || 'Erro ao importar arquivo', 'error');
+      addNotification('error', error.message || 'Erro ao importar arquivo');
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) {
