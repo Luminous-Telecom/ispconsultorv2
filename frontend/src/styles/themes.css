@@ -1901,7 +1901,7 @@ p, span, div, label {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.5;
-  resize: both; /* Permite redimensionar livremente */
+  resize: vertical; /* Redimensiona altura (experiência consistente) */
   outline: none;
   white-space: pre;
   overflow-wrap: normal;

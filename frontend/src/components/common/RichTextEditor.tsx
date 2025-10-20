@@ -28,21 +28,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const shadowHostRef = useRef<HTMLDivElement>(null);
   const shadowRootRef = useRef<ShadowRoot | null>(null);
 
-  // Ajusta altura da textarea (modo código) para caber o conteúdo
-  const adjustTextareaHeight = () => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    // Calcula altura mínima a partir da prop height (ex.: "400px")
-    const minFromProp = typeof height === 'string' && height.endsWith('px')
-      ? parseInt(height, 10) || 0
-      : 0;
-    // Reseta para calcular scrollHeight corretamente
-    ta.style.height = 'auto';
-    const scrollH = ta.scrollHeight;
-    const currentH = ta.clientHeight;
-    const newH = Math.max(scrollH, minFromProp, currentH);
-    ta.style.height = `${newH}px`;
-  };
+  // (opcional) ajuste automático desativado para permitir redimensionamento manual estável
+  const adjustTextareaHeight = () => {};
 
   // Filtra estilos permitidos (whitelist)
   const filterStyleAttribute = (styleValue: string): string => {
@@ -122,8 +109,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       if (textareaRef.current.value !== value) {
         textareaRef.current.value = value;
       }
-      // Ajusta altura quando o valor mudar no modo código
-      adjustTextareaHeight();
     }
   }, [value, isCodeMode]);
 
@@ -140,7 +125,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     isUpdatingRef.current = true;
-    adjustTextareaHeight();
     onChange(e.target.value);
   };
 
@@ -157,8 +141,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }
     }
     setIsCodeMode(!isCodeMode);
-    // Próximo frame, ajusta altura caso vá para modo código
-    requestAnimationFrame(() => adjustTextareaHeight());
+    // Mantém altura manual estável; sem auto-ajuste
   };
 
   const execCommand = (command: string, value?: string) => {
@@ -360,7 +343,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           onChange={handleTextareaChange}
           placeholder={placeholder}
           // Permite redimensionar livremente no modo código (sem fixar altura)
-          style={{ minHeight: height, height: 'auto', overflow: 'auto', resize: 'vertical' }}
+        style={{ height: height, overflow: 'auto', resize: 'vertical' }}
           spellCheck={false}
         />
       ) : (
