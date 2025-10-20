@@ -99,7 +99,13 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
   };
 
   return (
-    <DraggableModal { show, onClose: handleClose, title={`Novo ${getTipoLabel(tipo)}`, size: 'xl', modalId: `criar-documento-${tipo}-modal` }>
+    <DraggableModal 
+      show={show} 
+      onClose={handleClose} 
+      title={`Novo ${getTipoLabel(tipo)}`} 
+      size="xl" 
+      modalId={`criar-documento-${tipo}-modal`}
+    >
       <div className="p-2">
         <form onSubmit={handleSubmit}>
           <div className="row g-2">
