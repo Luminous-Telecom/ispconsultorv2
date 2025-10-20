@@ -19,6 +19,24 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isCodeMode, setIsCodeMode] = useState(false);
   const isUpdatingRef = useRef(false);
+  const shadowHostRef = useRef<HTMLDivElement>(null);
+  const shadowRootRef = useRef<ShadowRoot | null>(null);
+
+  // Função para sanitizar HTML e remover estilos perigosos
+  const sanitizeHtml = (html: string): string => {
+    // Remove estilos inline que podem interferir
+    let sanitized = html
+      .replace(/style\s*=\s*["'][^"']*["']/gi, '') // Remove style attributes
+      .replace(/class\s*=\s*["'][^"']*["']/gi, '') // Remove class attributes
+      .replace(/id\s*=\s*["'][^"']*["']/gi, '') // Remove id attributes
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove event handlers
+      .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove scripts
+      .replace(/<link[^>]*>/gi, '') // Remove link tags
+      .replace(/<meta[^>]*>/gi, '') // Remove meta tags
+      .replace(/<style[^>]*>.*?<\/style>/gi, ''); // Remove style tags
+    
+    return sanitized;
+  };
 
   useEffect(() => {
     // Prevenir loop infinito
@@ -29,9 +47,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
     if (!isCodeMode && editorRef.current) {
       const currentHtml = editorRef.current.innerHTML;
+      // Sanitiza o HTML antes de inserir
+      const sanitizedValue = sanitizeHtml(value);
       // Só atualiza se o valor for diferente (ignorando espaços extras)
-      if (currentHtml.trim() !== value.trim() && value !== currentHtml) {
-        editorRef.current.innerHTML = value;
+      if (currentHtml.trim() !== sanitizedValue.trim() && sanitizedValue !== currentHtml) {
+        editorRef.current.innerHTML = sanitizedValue;
       }
     }
     if (isCodeMode && textareaRef.current) {

@@ -1808,25 +1808,29 @@ p, span, div, label {
   border-color: var(--border-color);
 }
 
-/* Rich Text Editor - Isolamento específico */
+/* Rich Text Editor - Isolamento completo e robusto */
 .rich-text-editor {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   overflow: hidden;
-  /* Isolamento específico sem afetar elementos externos */
+  /* Isolamento completo */
   display: block;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-primary);
   background-color: var(--bg-secondary);
-  /* Container isolation mais específico */
-  contain: layout style;
-  /* Previne vazamento de estilos sem afetar outros elementos */
+  /* Container isolation completo */
+  contain: layout style paint size;
+  /* Previne vazamento de estilos */
   isolation: isolate;
   /* Garante que o editor não interfira com outros elementos */
   position: relative;
   z-index: auto;
+  /* Reset completo para evitar interferência */
+  all: unset;
+  display: block;
+  box-sizing: border-box;
 }
 
 .rte-toolbar {
@@ -1858,16 +1862,25 @@ p, span, div, label {
   font-size: 14px;
   line-height: 1.6;
   outline: none;
-  /* Isolamento específico do conteúdo */
-  contain: layout style;
+  /* Isolamento completo do conteúdo */
+  contain: layout style paint size;
   /* Previne que estilos do conteúdo vazem para fora */
   isolation: isolate;
-  /* Mantém herança de fonte para consistência */
+  /* Reset completo do conteúdo */
+  all: unset;
+  display: block;
+  box-sizing: border-box;
+  /* Aplica estilos específicos após reset */
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.6;
   font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
   /* Garante que não afete elementos externos */
   position: relative;
+  /* Previne vazamento de estilos */
+  overflow: hidden;
 }
 
 .rte-content:empty:before {
@@ -1925,6 +1938,99 @@ p, span, div, label {
 
 .rte-content li {
   margin: 0.5em 0;
+}
+
+/* Reset completo de todos os elementos HTML dentro do editor */
+.rte-content * {
+  /* Reset de estilos inline que podem vazar */
+  all: unset;
+  display: revert;
+  box-sizing: border-box;
+}
+
+/* Reaplica estilos básicos apenas para elementos específicos */
+.rte-content h1,
+.rte-content h2,
+.rte-content h3,
+.rte-content h4,
+.rte-content h5,
+.rte-content h6 {
+  display: block;
+  font-weight: bold;
+  margin: 0.5em 0;
+  font-family: inherit;
+}
+
+.rte-content h1 { font-size: 2em; }
+.rte-content h2 { font-size: 1.5em; }
+.rte-content h3 { font-size: 1.17em; }
+.rte-content h4 { font-size: 1em; }
+.rte-content h5 { font-size: 0.83em; }
+.rte-content h6 { font-size: 0.67em; }
+
+.rte-content p {
+  display: block;
+  margin: 1em 0;
+  font-family: inherit;
+}
+
+.rte-content ul,
+.rte-content ol {
+  display: block;
+  margin: 1em 0;
+  padding-left: 40px;
+  font-family: inherit;
+}
+
+.rte-content li {
+  display: list-item;
+  margin: 0.5em 0;
+  font-family: inherit;
+}
+
+.rte-content strong,
+.rte-content b {
+  font-weight: bold;
+  font-family: inherit;
+}
+
+.rte-content em,
+.rte-content i {
+  font-style: italic;
+  font-family: inherit;
+}
+
+.rte-content u {
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.rte-content br {
+  display: block;
+  margin: 0.5em 0;
+  line-height: 1;
+}
+
+.rte-content span {
+  font-family: inherit;
+  color: inherit;
+  background: inherit;
+}
+
+/* Previne que estilos inline sobrescrevam */
+.rte-content [style] {
+  /* Remove estilos inline perigosos */
+  background: inherit !important;
+  color: inherit !important;
+  font-family: inherit !important;
+  position: static !important;
+  z-index: auto !important;
+  transform: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin: inherit !important;
+  padding: inherit !important;
 }
 
 /* Modo claro */
