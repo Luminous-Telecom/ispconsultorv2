@@ -88,7 +88,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       <div className="rte-toolbar">
         {!isCodeMode && (
           <>
-            <div className="btn-group btn-group-sm me-1" role="group">
+            <div className="btn-group btn-group-sm me-2" role="group">
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -115,7 +115,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </button>
             </div>
 
-            <div className="btn-group btn-group-sm me-1" role="group">
+            <div className="btn-group btn-group-sm me-2" role="group">
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -142,7 +142,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </button>
             </div>
 
-            <div className="btn-group btn-group-sm me-1" role="group">
+            <div className="btn-group btn-group-sm me-2" role="group">
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -161,7 +161,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </button>
             </div>
 
-            <div className="btn-group btn-group-sm me-1" role="group">
+            <div className="btn-group btn-group-sm me-2" role="group">
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -198,7 +198,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
             <button
               type="button"
-              className="btn btn-outline-secondary btn-sm me-1"
+              className="btn btn-outline-secondary btn-sm me-2"
               onClick={() => execCommand('removeFormat')}
               title="Limpar formatação"
             >
