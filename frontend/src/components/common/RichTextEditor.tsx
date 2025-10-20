@@ -5,6 +5,8 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   height?: string;
+  id?: string; // para associação com <label for="...">
+  name?: string; // para compatibilidade com formulários/autofill
   onInsertVariable?: (variable: string) => void;
 }
 
@@ -13,6 +15,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onChange,
   placeholder = 'Digite aqui...',
   height = '250px',
+  id,
+  name,
   onInsertVariable
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -326,6 +330,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <textarea
           ref={textareaRef}
           className="rte-code"
+          id={id}
+          name={name}
           value={value}
           onChange={handleTextareaChange}
           placeholder={placeholder}
@@ -337,6 +343,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <div
           ref={editorRef}
           className="rte-content"
+          id={id}
+          role="textbox"
+          aria-multiline="true"
           contentEditable
           onInput={handleInput}
           onBlur={handleInput}

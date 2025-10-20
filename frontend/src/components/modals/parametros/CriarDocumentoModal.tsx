@@ -118,6 +118,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   type="text"
                   className="form-control form-control-sm"
                   id="nome"
+                  name="nome"
                   value={formData.nome}
                   onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                   placeholder={`Ex: ${getTipoLabel(tipo)} Padrão`}
@@ -131,6 +132,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   type="text"
                   className="form-control form-control-sm"
                   id="descricao"
+                  name="descricao"
                   value={formData.descricao}
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                   placeholder="Breve descrição"
@@ -230,6 +232,8 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                 </div>
                 <RichTextEditor
                   key={`criar-${tipo}`}
+                  id="conteudo"
+                  name="conteudo"
                   value={formData.conteudo}
                   onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
                   placeholder="Digite o conteúdo do documento..."
