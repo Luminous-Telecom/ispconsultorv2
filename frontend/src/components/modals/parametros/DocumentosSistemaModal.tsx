@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import RichTextEditor from '../../common/RichTextEditor';
-import { useNotification } from '../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
 
 interface DocumentosSistemaModalProps {
   show: boolean;
@@ -24,7 +24,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const queryClient = useQueryClient();
-  const { addNotification } = useNotification();
+  const { addNotification } = useNotificationContext();
 
   // Query para buscar documentos por tipo
   const { data: documentos, isLoading } = useQuery({
