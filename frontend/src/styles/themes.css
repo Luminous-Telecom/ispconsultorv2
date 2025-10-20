@@ -1900,11 +1900,11 @@ p, span, div, label {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.5;
-  resize: none;
+  resize: both; /* Permite redimensionar livremente */
   outline: none;
   white-space: pre;
   overflow-wrap: normal;
-  overflow-x: auto;
+  overflow: auto; /* Scroll nos dois eixos quando necessário */
 }
 
 .rte-code::placeholder {
