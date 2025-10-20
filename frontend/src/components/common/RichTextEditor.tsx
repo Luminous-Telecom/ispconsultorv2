@@ -354,7 +354,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           onInput={handleInput}
           onBlur={handleInput}
           data-placeholder={placeholder}
-          style={{ height, overflowY: 'auto' }}
+          style={{ minHeight: height, overflow: 'auto', resize: 'vertical' }}
         />
       )}
     </div>

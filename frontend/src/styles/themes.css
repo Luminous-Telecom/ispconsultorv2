@@ -1881,7 +1881,8 @@ p, span, div, label {
   /* Garante que não afete elementos externos */
   position: relative;
   /* Previne vazamento de estilos */
-  overflow: hidden;
+  overflow: auto;
+  resize: vertical; /* permite ajustar altura no modo visual */
 }
 
 .rte-content:empty:before {
