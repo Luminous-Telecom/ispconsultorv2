@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 interface DocumentosSistemaModalProps {
   show: boolean;
@@ -18,6 +20,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     conteudo: '',
   });
   const [editingId, setEditingId] = useState<number | null>(null);
+  const quillRef = React.useRef<ReactQuill>(null);
 
   const queryClient = useQueryClient();
 
@@ -77,6 +80,20 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       conteudo: '',
     });
     setEditingId(null);
+  };
+
+  const insertVariable = (variable: string) => {
+    if (quillRef.current) {
+      const editor = quillRef.current.getEditor();
+      const range = editor.getSelection();
+      if (range) {
+        editor.insertText(range.index, `{${variable}}`);
+      } else {
+        const length = editor.getLength();
+        editor.insertText(length - 1, `{${variable}}`);
+      }
+      editor.focus();
+    }
   };
 
   const handleClose = () => {
@@ -184,19 +201,61 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
                     <label htmlFor="conteudo" className="form-label small mb-1">
                       Conteúdo <span className="text-danger">*</span>
                     </label>
-                    <textarea
-                      className="form-control form-control-sm"
-                      id="conteudo"
-                      rows={10}
-                      value={formData.conteudo}
-                      onChange={(e) => setFormData(prev => ({ ...prev, conteudo: e.target.value }))}
-                      placeholder="Conteúdo HTML..."
-                      required
-                      style={{ fontSize: '0.8rem' }}
-                    />
-                    <small className="form-text text-secondary" style={{ fontSize: '0.7rem' }}>
-                      Variáveis: {'{'}cliente_nome{'}'}, {'{'}cliente_cpf{'}'}, {'{'}valor{'}'}, {'{'}data{'}'}
-                    </small>
+                    <div className="mb-1">
+                      <small className="text-secondary me-2" style={{ fontSize: '0.7rem' }}>Inserir variável:</small>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm py-0 px-1 me-1"
+                        onClick={() => insertVariable('cliente_nome')}
+                        style={{ fontSize: '0.7rem' }}
+                      >
+                        Nome
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm py-0 px-1 me-1"
+                        onClick={() => insertVariable('cliente_cpf')}
+                        style={{ fontSize: '0.7rem' }}
+                      >
+                        CPF
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm py-0 px-1 me-1"
+                        onClick={() => insertVariable('valor')}
+                        style={{ fontSize: '0.7rem' }}
+                      >
+                        Valor
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm py-0 px-1 me-1"
+                        onClick={() => insertVariable('data')}
+                        style={{ fontSize: '0.7rem' }}
+                      >
+                        Data
+                      </button>
+                    </div>
+                    <div style={{ height: '300px', marginBottom: '45px' }}>
+                      <ReactQuill
+                        ref={quillRef}
+                        theme="snow"
+                        value={formData.conteudo}
+                        onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
+                        style={{ height: '250px' }}
+                        modules={{
+                          toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            ['link'],
+                            ['clean']
+                          ]
+                        }}
+                        placeholder="Digite o conteúdo do documento..."
+                      />
+                    </div>
                   </div>
 
                   <div className="d-flex gap-1">
