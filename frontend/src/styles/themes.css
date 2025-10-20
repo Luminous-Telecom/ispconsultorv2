@@ -1682,3 +1682,73 @@ p, span, div, label {
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
+
+/* Melhorar contraste de textos no modo escuro */
+[data-theme="dark"] .text-secondary {
+  color: #b8c1c8 !important;
+}
+
+[data-theme="dark"] .small,
+[data-theme="dark"] small {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .form-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: #4dabf7;
+}
+
+[data-theme="dark"] .card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .card-header {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .table {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .nav-tabs {
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .nav-tabs .nav-link {
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+[data-theme="dark"] .nav-tabs .nav-link.active {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color) var(--border-color) transparent;
+}
+
+[data-theme="dark"] .nav-tabs .nav-link:hover {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}

@@ -194,7 +194,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
                       required
                       style={{ fontSize: '0.8rem' }}
                     />
-                    <small className="form-text text-muted" style={{ fontSize: '0.7rem' }}>
+                    <small className="form-text text-secondary" style={{ fontSize: '0.7rem' }}>
                       Variáveis: {'{'}cliente_nome{'}'}, {'{'}cliente_cpf{'}'}, {'{'}valor{'}'}, {'{'}data{'}'}
                     </small>
                   </div>

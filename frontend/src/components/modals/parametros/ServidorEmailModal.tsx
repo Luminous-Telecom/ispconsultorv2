@@ -291,7 +291,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                       required={!servidorAtivo?.data}
                     />
                     {servidorAtivo?.data && (
-                      <small className="form-text text-muted">
+                      <small className="form-text text-secondary">
                         Deixe em branco para manter a senha atual
                       </small>
                     )}
@@ -408,7 +408,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                         )}
                       </button>
                     </div>
-                    <small className="form-text text-muted">
+                    <small className="form-text text-secondary">
                       Digite um e-mail válido para testar o envio através deste servidor
                     </small>
                   </div>

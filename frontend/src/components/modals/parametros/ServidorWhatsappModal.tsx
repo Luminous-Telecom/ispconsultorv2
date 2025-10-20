@@ -258,7 +258,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                       required={!servidorAtivo?.data}
                     />
                     {servidorAtivo?.data && (
-                      <small className="form-text text-muted">
+                      <small className="form-text text-secondary">
                         Deixe em branco para manter o token atual
                       </small>
                     )}
@@ -289,7 +289,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                       value={testPhone}
                       onChange={(e) => setTestPhone(e.target.value)}
                     />
-                    <small className="form-text text-muted">
+                    <small className="form-text text-secondary">
                       Digite o número com código do país (ex: 5511999999999)
                     </small>
                   </div>
