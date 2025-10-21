@@ -7,6 +7,7 @@ const router = Router();
 // Rotas CRUD básicas
 router.get('/', DocumentoSistemaController.list);
 router.get('/tipos', DocumentoSistemaController.getTypes);
+router.get('/variaveis', DocumentoSistemaController.listarVariaveis);
 router.get('/tipo/:tipo', DocumentoSistemaController.getByType);
 router.get('/tipo/:tipo/padrao', DocumentoSistemaController.getDefaultByType);
 router.get('/:id', DocumentoSistemaController.show);

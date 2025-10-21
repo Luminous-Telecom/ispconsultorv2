@@ -4,6 +4,7 @@ import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import VariaveisDocumento from '../../common/VariaveisDocumento';
 
 interface CriarDocumentoModalProps {
   show: boolean;
@@ -138,42 +139,8 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                 />
               </div>
 
-              <div className="mb-1">
-                <small className="text-secondary me-2" style={{ fontSize: '0.7rem' }}>Inserir variável:</small>
-                <div className="d-flex flex-wrap gap-1">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => handleInsertVariable('cliente_nome')}
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    Nome
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => handleInsertVariable('cliente_cpf')}
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    CPF
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => handleInsertVariable('valor')}
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    Valor
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => handleInsertVariable('data')}
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    Data
-                  </button>
-                </div>
+              <div className="mb-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <VariaveisDocumento />
               </div>
 
               <div className="d-flex gap-1">

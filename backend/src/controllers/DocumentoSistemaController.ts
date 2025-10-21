@@ -3,6 +3,7 @@ import { DocumentoSistema } from '../models/DocumentoSistema';
 import { logger } from '../utils/logger';
 import mammoth from 'mammoth';
 import fs from 'fs/promises';
+import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 
 // @ts-ignore
 import * as htmlPdf from 'html-pdf-node';
@@ -400,6 +401,27 @@ export class DocumentoSistemaController {
       res.status(500).json({
         success: false,
         message: 'Erro ao gerar PDF'
+      });
+    }
+  }
+
+  /**
+   * Listar variáveis disponíveis para documentos
+   */
+  static async listarVariaveis(req: Request, res: Response): Promise<void> {
+    try {
+      const variaveis = VariaveisDocumentoService.getVariaveisDisponiveis();
+
+      res.json({
+        success: true,
+        data: variaveis,
+        message: 'Variáveis listadas com sucesso'
+      });
+    } catch (error) {
+      logger.error('Erro ao listar variáveis:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
       });
     }
   }
