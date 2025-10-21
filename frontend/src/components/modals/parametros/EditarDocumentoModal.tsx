@@ -83,7 +83,6 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
 
   const handleInsertVariable = (variable: string) => {
     // Esta função será chamada pelo RichTextEditor
-    console.log(`Variável ${variable} inserida`);
   };
 
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,10 +127,26 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       // Gera o PDF usando a API
       const pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
       
-      // Cria uma URL para o PDF
+      // Verifica se é um Blob válido
+      if (!(pdfBlob instanceof Blob)) {
+        throw new Error('Resposta inválida do servidor');
+      }
+      
+      // Cria uma URL para o PDF e abre em nova aba
       const url = window.URL.createObjectURL(pdfBlob);
-      setPdfUrl(url);
-      setShowPreview(true);
+      
+      const newWindow = window.open(url, '_blank');
+      if (newWindow) {
+        newWindow.focus();
+      } else {
+        addNotification('warning', 'O navegador bloqueou o pop-up. Por favor, permita pop-ups para este site.');
+      }
+
+      // Libera a URL do objeto após um curto período
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+
     } catch (error: any) {
       addNotification('error', error.message || 'Erro ao gerar PDF para preview');
     } finally {
@@ -179,7 +194,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                        type="button"
                        className="btn btn-info btn-sm"
                        onClick={handlePrint}
-                       title="Visualizar PDF do modelo"
+                       title="Abrir PDF do modelo"
                        disabled={isGeneratingPdf}
                      >
                        {isGeneratingPdf ? (
@@ -188,7 +203,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                            Gerando PDF...
                          </>
                        ) : (
-                         <>Visualizar PDF</>
+                         <>Abrir PDF</>
                        )}
                      </button>
       <button
@@ -223,32 +238,34 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
             {/* Campos superiores em linha única */}
             <div className="row g-2 mb-2">
               <div className="col-md-4">
-                <label htmlFor="nome" className="form-label small mb-1">
+                <label htmlFor="editar-doc-nome" className="form-label small mb-1">
                   Nome <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
                   className="form-control form-control-sm"
-                  id="nome"
+                  id="editar-doc-nome"
+                  name="nome"
                   value={formData.nome}
                   onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                   required
                 />
               </div>
               <div className="col-md-4">
-                <label htmlFor="descricao" className="form-label small mb-1">Descrição</label>
+                <label htmlFor="editar-doc-descricao" className="form-label small mb-1">Descrição</label>
                 <input
                   type="text"
                   className="form-control form-control-sm"
-                  id="descricao"
+                  id="editar-doc-descricao"
+                  name="descricao"
                   value={formData.descricao}
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                   placeholder="Breve descrição"
                 />
               </div>
               <div className="col-md-4">
-                <label className="form-label small mb-1">Variáveis</label>
-                <div className="d-flex flex-wrap gap-1">
+                <div className="form-label small mb-1">Variáveis</div>
+                <div className="d-flex flex-wrap gap-1" role="group" aria-label="Botões para inserir variáveis">
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-sm py-0 px-1"
@@ -292,8 +309,11 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                   Conteúdo <span className="text-danger">*</span>
                 </span>
                 <div>
+                  <label htmlFor="import-word-file" className="sr-only">Importar arquivo Word</label>
                   <input
                     ref={fileInputRef}
+                    id="import-word-file"
+                    name="import-word-file"
                     type="file"
                     accept=".docx"
                     onChange={handleFileImport}
@@ -357,17 +377,20 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                    justifyContent: 'center',
                    alignItems: 'flex-start'
                  }}>
-                   {pdfUrl ? (
-                     <iframe
-                       src={pdfUrl}
-                       style={{
-                         width: '100%',
-                         height: '100%',
-                         minHeight: '600px',
-                         border: 'none'
-                       }}
-                       title="Preview do PDF"
-                     />
+                  {pdfUrl ? (
+                    <iframe
+                      id="pdf-preview-iframe"
+                      name="pdf-preview-iframe"
+                      src={pdfUrl}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        minHeight: '600px',
+                        border: 'none'
+                      }}
+                      title="Preview do PDF"
+                      aria-label="Visualização do PDF"
+                    />
                    ) : (
                      <div 
                        className="document-preview"

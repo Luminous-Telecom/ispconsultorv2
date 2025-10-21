@@ -57,7 +57,6 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
 
   const handleInsertVariable = (variable: string) => {
     // Esta função será chamada pelo RichTextEditor
-    console.log(`Variável ${variable} inserida`);
   };
 
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,13 +110,13 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
           <div className="row g-2">
             <div className="col-md-4">
               <div className="mb-2">
-                <label htmlFor="nome" className="form-label small mb-1">
+                <label htmlFor="criar-doc-nome" className="form-label small mb-1">
                   Nome <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
                   className="form-control form-control-sm"
-                  id="nome"
+                  id="criar-doc-nome"
                   name="nome"
                   value={formData.nome}
                   onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
@@ -127,11 +126,11 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
               </div>
 
               <div className="mb-2">
-                <label htmlFor="descricao" className="form-label small mb-1">Descrição</label>
+                <label htmlFor="criar-doc-descricao" className="form-label small mb-1">Descrição</label>
                 <input
                   type="text"
                   className="form-control form-control-sm"
-                  id="descricao"
+                  id="criar-doc-descricao"
                   name="descricao"
                   value={formData.descricao}
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
@@ -201,8 +200,11 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                     Conteúdo <span className="text-danger">*</span>
                   </span>
                   <div>
+                    <label htmlFor="import-word-file-criar" className="sr-only">Importar arquivo Word</label>
                     <input
                       ref={fileInputRef}
+                      id="import-word-file-criar"
+                      name="import-word-file-criar"
                       type="file"
                       accept=".docx"
                       onChange={handleFileImport}

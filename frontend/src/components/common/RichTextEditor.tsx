@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-import {
-  ClassicEditor,
+import { ClassicEditor } from 'ckeditor5';
+import { 
   Bold,
   Essentials,
   Italic,
@@ -10,7 +10,6 @@ import {
   Heading,
   List,
   Link,
-  Table,
   Image,
   ImageUpload,
   ImageResize,
@@ -27,6 +26,12 @@ import {
   IndentBlock,
   FontSize,
   FontFamily
+} from 'ckeditor5';
+import { 
+  Table,
+  TableToolbar,
+  TableProperties,
+  TableCellProperties
 } from 'ckeditor5';
 
 import 'ckeditor5/ckeditor5.css';
@@ -88,6 +93,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                    List,
                    Link,
                    Table,
+                   TableToolbar,
+                   TableProperties,
+                   TableCellProperties,
                    Image,
                    ImageUpload,
                    ImageResize,
@@ -105,18 +113,21 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                    Indent,
                    IndentBlock
                  ],
-          toolbar: [
-            'undo', 'redo', '|',
-            'sourceEditing', '|',
-            'heading', '|',
-            'bold', 'italic', 'underline', '|',
-            'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
-            'alignment', '|',
-            'bulletedList', 'numberedList', '|',
-            'outdent', 'indent', '|',
-            'link', 'insertTable', 'blockQuote', 'horizontalLine', '|',
-            'removeFormat'
-          ],
+          toolbar: {
+            items: [
+              'undo', 'redo', '|',
+              'sourceEditing', '|',
+              'heading', '|',
+              'bold', 'italic', 'underline', '|',
+              'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
+              'alignment', '|',
+              'bulletedList', 'numberedList', '|',
+              'outdent', 'indent', '|',
+              'link', 'insertTable', 'blockQuote', 'horizontalLine', '|',
+              'removeFormat'
+            ],
+            shouldNotGroupWhenFull: true
+          },
           language: 'pt-br',
           heading: {
             options: [
@@ -173,11 +184,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             contentToolbar: [
               'tableColumn',
               'tableRow',
-              'mergeTableCells'
+              'mergeTableCells',
+              'tableProperties',
+              'tableCellProperties'
             ]
           }
         }}
         data={value}
+        id={id}
+        aria-labelledby={ariaLabelledBy}
         onReady={(editor) => {
           editorInstanceRef.current = editor;
           
@@ -185,6 +200,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           const editorElement = editor.ui.view.editable.element;
           if (editorElement) {
             editorElement.style.minHeight = height;
+            // Configurar acessibilidade
+            if (id) editorElement.id = id;
+            if (ariaLabelledBy) editorElement.setAttribute('aria-labelledby', ariaLabelledBy);
+            editorElement.setAttribute('role', 'textbox');
+            editorElement.setAttribute('aria-multiline', 'true');
           }
         }}
         onChange={(event, editor) => {

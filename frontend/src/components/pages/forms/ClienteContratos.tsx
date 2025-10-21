@@ -90,14 +90,14 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   // Funções de ação
   const handleEditarContrato = (selectedItems: any[]) => {
     if (selectedItems.length === 1) {
-      console.log('Editar contrato:', selectedItems[0].id);
+      // Editar contrato
     }
   };
 
   const handleDeletarContrato = (selectedItems: any[]) => {
     if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} contrato(s)?`)) {
       selectedItems.forEach(item => {
-        console.log('Deletar contrato:', item.id);
+        // Deletar contrato
         refetchContratos();
       });
     }
@@ -249,7 +249,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
             label: 'Alteração Wizard',
             action: (selectedItems) => {
               if (selectedItems.length > 0) {
-                console.log('Alteração Wizard:', selectedItems.map(item => item.id));
+                // Alteração Wizard
               }
             }
           },
@@ -257,7 +257,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
             label: 'Imprimir',
             action: (selectedItems) => {
               if (selectedItems.length > 0) {
-                console.log('Imprimir:', selectedItems.map(item => item.id));
+                // Imprimir
               }
             }
           },
@@ -265,7 +265,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
             label: 'Detalhamento Financeiro',
             action: (selectedItems) => {
               if (selectedItems.length > 0) {
-                console.log('Detalhamento Financeiro:', selectedItems.map(item => item.id));
+                // Detalhamento Financeiro
               }
             }
           }

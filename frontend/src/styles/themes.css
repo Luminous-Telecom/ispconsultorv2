@@ -81,17 +81,8 @@ body {
   line-height: 1.4;
 }
 
-/* Títulos e textos */
-h1, h2, h3, h4, h5, h6 {
-  color: var(--text-primary);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
 
-.h1, .h2, .h3, .h4, .h5, .h6 {
-  color: var(--text-primary);
-  font-weight: 600;
-}
+
 
 p, span, div, label {
   color: var(--text-primary);
@@ -1808,129 +1799,132 @@ p, span, div, label {
   border-color: var(--border-color);
 }
 
-/* CKEditor Wrapper */
-.ckeditor-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-}
-
-.ckeditor-wrapper .ck-editor {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.ckeditor-wrapper .ck-editor__main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
+/* CKEditor - Fundo transparente */
 .ckeditor-wrapper .ck-editor__editable {
-  flex: 1;
-  overflow-y: auto;
-  background-color: white;
-  color: #000000;
-  padding: 40px 60px !important;
-  min-height: 400px !important;
-  max-height: none !important;
-  max-width: 900px !important;
-  margin: 0 auto !important;
+  background-color: transparent !important;
 }
 
-/* Modo Source do CKEditor */
+/* CKEditor - Modo Source */
 .ckeditor-wrapper .ck-source-editing-area {
-  flex: 1;
-  overflow-y: auto !important;
-  min-height: 400px !important;
-  max-height: none !important;
+  height: 100% !important;
+  min-height: 500px !important;
 }
 
 .ckeditor-wrapper .ck-source-editing-area textarea {
-  min-height: 400px !important;
-  max-height: none !important;
   height: 100% !important;
-  overflow-y: auto !important;
-  white-space: pre-wrap !important;
-  word-wrap: break-word !important;
+  min-height: 500px !important;
+  resize: vertical !important;
   font-family: 'Courier New', monospace !important;
   font-size: 13px !important;
   line-height: 1.5 !important;
 }
 
-/* Garante que o conteúdo do CKEditor seja visível */
+/* Estilização básica do conteúdo do editor */
 .ckeditor-wrapper .ck-content {
-  font-size: 12px !important;
-  font-weight: normal !important;
+  font-family: Arial, sans-serif;
+  font-size: 9pt;
+  line-height: 1.2;
+  text-align: justify;
 }
 
-.ckeditor-wrapper .ck-content p,
-.ckeditor-wrapper .ck-content div,
-.ckeditor-wrapper .ck-content span,
-.ckeditor-wrapper .ck-content li {
-  font-size: inherit !important;
-  font-weight: normal !important;
+.ckeditor-wrapper .ck-content .text-tiny {
+  font-size: 9pt;
 }
 
-.ckeditor-wrapper .ck-content strong,
-.ckeditor-wrapper .ck-content b {
-  font-weight: bold !important;
+.ckeditor-wrapper .ck-content figure.table {
+  margin: 5px 0;
 }
 
-.ckeditor-wrapper .ck-content * {
-  color: #000000 !important;
-  line-height: 1.4 !important;
-}
-
-.ckeditor-wrapper .ck-content img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Estilos específicos para tabelas */
 .ckeditor-wrapper .ck-content table {
-  border-collapse: collapse;
   width: 100%;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: table !important;
+  border-collapse: collapse;
+  margin: 5px 0;
 }
 
 .ckeditor-wrapper .ck-content table td,
 .ckeditor-wrapper .ck-content table th {
-  border: 1px solid #ddd;
-  padding: 4px;
-  margin: 0 !important;
-  display: table-cell !important;
+  border: 1px solid #000;
+  padding: 3px;
   vertical-align: top;
-  line-height: 1 !important;
-}
-
-.ckeditor-wrapper .ck-content table tr {
-  display: table-row !important;
-}
-
-.ckeditor-wrapper .ck-content table thead {
-  display: table-header-group !important;
-}
-
-.ckeditor-wrapper .ck-content table tbody {
-  display: table-row-group !important;
+  font-size: 9pt;
+  line-height: 1.2;
 }
 
 .ckeditor-wrapper .ck-content table th {
-  background-color: #f2f2f2;
+  font-weight: bold;
+  text-align: left;
+}
+
+.ckeditor-wrapper .ck-content p {
+  margin: 0;
+  padding: 0;
+  text-align: justify;
+  line-height: 1.2;
+}
+
+.ckeditor-wrapper .ck-content div {
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+}
+
+.ckeditor-wrapper .ck-content strong,
+.ckeditor-wrapper .ck-content b {
   font-weight: bold;
 }
 
-/* Garante que divs dentro do conteúdo sejam exibidos */
-.ckeditor-wrapper .ck-content div {
-  display: block !important;
+.ckeditor-wrapper .ck-content [style*="text-align:center"],
+.ckeditor-wrapper .ck-content .text-center {
+  text-align: center !important;
 }
+
+.ckeditor-wrapper .ck-content [style*="text-align:right"],
+.ckeditor-wrapper .ck-content .text-right {
+  text-align: right !important;
+}
+
+.ckeditor-wrapper .ck-content [style*="text-align:left"],
+.ckeditor-wrapper .ck-content .text-left {
+  text-align: left !important;
+}
+
+/* CKEditor - Remover estilos de tabela do Bootstrap */
+.ckeditor-wrapper .ck-content table {
+  background-color: transparent !important;
+}
+
+.ckeditor-wrapper .ck-content table tr {
+  background-color: transparent !important;
+}
+
+.ckeditor-wrapper .ck-content table td,
+.ckeditor-wrapper .ck-content table th {
+  background-color: transparent !important;
+  border: 1px solid #ddd !important;
+  padding: 8px !important;
+}
+
+.ckeditor-wrapper .ck-content table tbody tr:nth-of-type(odd) td,
+.ckeditor-wrapper .ck-content table tbody tr:nth-of-type(odd) th {
+  background-color: transparent !important;
+}
+
+.ckeditor-wrapper .ck-content table tbody tr:nth-of-type(even) td,
+.ckeditor-wrapper .ck-content table tbody tr:nth-of-type(even) th {
+  background-color: transparent !important;
+}
+
+.ckeditor-wrapper .ck-content table tbody tr:hover td,
+.ckeditor-wrapper .ck-content table tbody tr:hover th {
+  background-color: transparent !important;
+}
+
+/* Barra de ferramentas flutuante da tabela */
+.ck.ck-balloon-panel {
+  z-index: 99999 !important;
+  position: fixed !important;
+}
+
 
 /* Rich Text Editor - Isolamento completo e robusto */
 .rich-text-editor {

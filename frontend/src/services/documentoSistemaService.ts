@@ -92,16 +92,22 @@ class DocumentoSistemaService {
   }
 
   static async generatePdf(id: number): Promise<Blob> {
-    const response = await fetch(`${(apiService as any).api.defaults.baseURL}/documentos-sistema/${id}/pdf`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    try {
+      const response = await (apiService as any).api.get(`/documentos-sistema/${id}/pdf`, {
+        responseType: 'blob'
+      });
 
-    if (!response.ok) {
-      throw new Error('Erro ao gerar PDF');
+      // Axios com responseType: 'blob' retorna o blob em response.data
+      const blob = response instanceof Blob ? response : response.data;
+
+      if (!blob || !(blob instanceof Blob)) {
+        throw new Error('Resposta do servidor não é um Blob válido');
+      }
+
+      return blob;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF');
     }
-
-    return response.blob();
   }
 }
 

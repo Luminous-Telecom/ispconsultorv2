@@ -128,6 +128,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    // Garantir que o cursor volte ao normal
+    document.body.style.cursor = '';
   };
 
   // Adicionar listeners para drag
@@ -141,7 +143,22 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, dragStart, position, modalSize]);
+  }, [isDragging]);
+
+  // Limpar estado de dragging quando modal fechar
+  useEffect(() => {
+    if (!show) {
+      setIsDragging(false);
+      // Garantir que o cursor volte ao normal
+      document.body.style.cursor = '';
+    }
+    
+    // Cleanup quando componente desmontar
+    return () => {
+      setIsDragging(false);
+      document.body.style.cursor = '';
+    };
+  }, [show]);
 
   // Fechar modal com ESC - apenas o modal no topo da pilha
   useEffect(() => {

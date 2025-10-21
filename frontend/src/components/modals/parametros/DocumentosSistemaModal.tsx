@@ -57,7 +57,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         await deleteDocumentoMutation.mutateAsync(documentoId);
         refetch();
       } catch (error) {
-        console.error('Erro ao excluir documento:', error);
+        // Erro já é tratado pelo onError da mutation
       }
     }
   };
