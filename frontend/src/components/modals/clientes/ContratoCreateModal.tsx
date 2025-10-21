@@ -20,7 +20,7 @@ interface ContratoForm {
   dia_vencimento?: number;
   conta_boleto?: number;
   data_validade_desconto?: string;
-  modelo_contrato_id?: number;
+  modelo_contrato_id: number;
 }
 
 interface ContratoCreateModalProps {
@@ -110,6 +110,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
     if (!formData.plano_id) newErrors.plano_id = 'Plano é obrigatório';
     if (!formData.data_inicio) newErrors.data_inicio = 'Data de início é obrigatória';
+    if (!formData.modelo_contrato_id || formData.modelo_contrato_id === 0) {
+      newErrors.modelo_contrato_id = 'Modelo de contrato é obrigatório';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -138,7 +141,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       dia_vencimento: formData.dia_vencimento || undefined,
       conta_boleto: formData.conta_boleto || undefined,
       data_validade_desconto: formData.data_validade_desconto || undefined,
-      modelo_contrato_id: formData.modelo_contrato_id || undefined
+      modelo_contrato_id: formData.modelo_contrato_id
     };
 
     createContratoMutation.mutate(contratoData, {
@@ -339,22 +342,23 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-12">
             <div className="mb-3">
-              <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato</label>
+              <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato *</label>
               <select
-                className="form-select"
+                className={`form-select ${errors.modelo_contrato_id ? 'is-invalid' : ''}`}
                 id="modelo_contrato_id"
                 name="modelo_contrato_id"
                 value={formData.modelo_contrato_id || 0}
                 onChange={(e) => handleInputChange('modelo_contrato_id', parseInt(e.target.value))}
                 disabled={createContratoMutation.isPending}
               >
-                <option value={0}>Selecione um modelo (opcional)</option>
+                <option value={0}>Selecione um modelo</option>
                 {modelosContrato.map((modelo) => (
                   <option key={modelo.id} value={modelo.id}>
                     {modelo.nome}
                   </option>
                 ))}
               </select>
+              {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
               <small className="form-text text-muted">
                 Selecione um modelo de contrato cadastrado no sistema
               </small>

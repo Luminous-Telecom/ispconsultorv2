@@ -20,7 +20,7 @@ export class ContratoController {
     dia_vencimento: Joi.number().min(1).max(31).allow(null),
     conta_boleto: Joi.number().integer().min(1).allow(null),
     data_validade_desconto: Joi.date().allow(null, '').optional(),
-    modelo_contrato_id: Joi.number().integer().min(1).allow(null)
+    modelo_contrato_id: Joi.number().integer().min(1).required()
   });
 
   // Schema de validação para atualização
@@ -36,7 +36,7 @@ export class ContratoController {
     dia_vencimento: Joi.number().min(1).max(31).allow(null),
     conta_boleto: Joi.number().integer().min(1).allow(null),
     data_validade_desconto: Joi.date().allow(null, '').optional(),
-    modelo_contrato_id: Joi.number().integer().min(1).allow(null)
+    modelo_contrato_id: Joi.number().integer().min(1).required()
   });
 
   // Listar contratos por cliente

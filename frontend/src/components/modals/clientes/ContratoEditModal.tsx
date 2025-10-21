@@ -26,7 +26,7 @@ interface ContratoForm {
   dia_vencimento: number;
   conta_boleto: number;
   data_validade_desconto: string;
-  modelo_contrato_id?: number;
+  modelo_contrato_id: number;
 }
 
 interface ContratoEditModalProps {
@@ -177,6 +177,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
     if (!formData.plano_id) {
       newErrors.plano_id = 'Plano é obrigatório';
+    }
+
+    if (!formData.modelo_contrato_id || formData.modelo_contrato_id === 0) {
+      newErrors.modelo_contrato_id = 'Modelo de contrato é obrigatório';
     }
 
     if (formData.desconto_percentual < 0 || formData.desconto_percentual > 100) {
@@ -763,22 +767,23 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Modelo de Contrato */}
           <div className="col-md-12 mb-3">
-            <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato</label>
+            <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato *</label>
             <select
-              className="form-select"
+              className={`form-select ${errors.modelo_contrato_id ? 'is-invalid' : ''}`}
               id="modelo_contrato_id"
               name="modelo_contrato_id"
               value={formData.modelo_contrato_id || 0}
               onChange={(e) => handleInputChange('modelo_contrato_id', parseInt(e.target.value))}
               disabled={updateContratoMutation.isPending}
             >
-              <option value={0}>Selecione um modelo (opcional)</option>
+              <option value={0}>Selecione um modelo</option>
               {modelosContrato.map((modelo: any) => (
                 <option key={modelo.id} value={modelo.id}>
                   {modelo.nome}
                 </option>
               ))}
             </select>
+            {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
             <small className="form-text text-muted">
               Selecione um modelo de contrato cadastrado no sistema
             </small>
