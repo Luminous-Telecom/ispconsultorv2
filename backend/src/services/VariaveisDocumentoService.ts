@@ -64,6 +64,13 @@ export class VariaveisDocumentoService {
           { variavel: '#empresa.ie#', descricao: 'Inscrição Estadual' },
           { variavel: '#empresa.im#', descricao: 'Inscrição Municipal' },
           { variavel: '#empresa.endereco#', descricao: 'Endereço completo da empresa' },
+          { variavel: '#empresa.logradouro#', descricao: 'Logradouro da empresa' },
+          { variavel: '#empresa.numero#', descricao: 'Número da empresa' },
+          { variavel: '#empresa.complemento#', descricao: 'Complemento da empresa' },
+          { variavel: '#empresa.bairro#', descricao: 'Bairro da empresa' },
+          { variavel: '#empresa.cidade#', descricao: 'Cidade da empresa' },
+          { variavel: '#empresa.estado#', descricao: 'Estado (UF) da empresa' },
+          { variavel: '#empresa.cep#', descricao: 'CEP da empresa' },
           { variavel: '#empresa.telefone#', descricao: 'Telefone da empresa' },
           { variavel: '#empresa.email#', descricao: 'E-mail da empresa' },
           { variavel: '#empresa.responsavel#', descricao: 'Responsável pela empresa' },
@@ -376,6 +383,17 @@ export class VariaveisDocumentoService {
   private static processarVariaveisEmpresa(conteudo: string): string {
     let resultado = conteudo;
 
+    // Montar endereço completo da empresa
+    const enderecoCompleto = [
+      process.env.EMPRESA_LOGRADOURO,
+      process.env.EMPRESA_NUMERO,
+      process.env.EMPRESA_COMPLEMENTO,
+      process.env.EMPRESA_BAIRRO,
+      process.env.EMPRESA_CIDADE,
+      process.env.EMPRESA_ESTADO,
+      process.env.EMPRESA_CEP
+    ].filter(Boolean).join(', ');
+
     // Dados da empresa (podem vir de variáveis de ambiente ou configuração)
     const substituicoes: Record<string, string> = {
       '#empresa.razao_social#': process.env.EMPRESA_RAZAO_SOCIAL || 'CTM Telecom',
@@ -383,7 +401,14 @@ export class VariaveisDocumentoService {
       '#empresa.cnpj#': process.env.EMPRESA_CNPJ || '',
       '#empresa.ie#': process.env.EMPRESA_IE || '',
       '#empresa.im#': process.env.EMPRESA_IM || '',
-      '#empresa.endereco#': process.env.EMPRESA_ENDERECO || '',
+      '#empresa.endereco#': enderecoCompleto || process.env.EMPRESA_ENDERECO || '',
+      '#empresa.logradouro#': process.env.EMPRESA_LOGRADOURO || '',
+      '#empresa.numero#': process.env.EMPRESA_NUMERO || '',
+      '#empresa.complemento#': process.env.EMPRESA_COMPLEMENTO || '',
+      '#empresa.bairro#': process.env.EMPRESA_BAIRRO || '',
+      '#empresa.cidade#': process.env.EMPRESA_CIDADE || '',
+      '#empresa.estado#': process.env.EMPRESA_ESTADO || '',
+      '#empresa.cep#': process.env.EMPRESA_CEP || '',
       '#empresa.telefone#': process.env.EMPRESA_TELEFONE || '',
       '#empresa.email#': process.env.EMPRESA_EMAIL || '',
       '#empresa.responsavel#': process.env.EMPRESA_RESPONSAVEL || '',

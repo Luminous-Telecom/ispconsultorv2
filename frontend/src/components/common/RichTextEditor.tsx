@@ -314,7 +314,14 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                   { value: '#cliente.email#', text: '#cliente.email#' },
                   { value: '#cliente.telefone#', text: '#cliente.telefone#' },
                   { value: '#cliente.whatsapp#', text: '#cliente.whatsapp#' },
-                  { value: '#cliente.endereco#', text: '#cliente.endereco#' }
+                  { value: '#cliente.endereco#', text: '#cliente.endereco#' },
+                  { value: '#cliente.logradouro#', text: '#cliente.logradouro#' },
+                  { value: '#cliente.numero#', text: '#cliente.numero#' },
+                  { value: '#cliente.complemento#', text: '#cliente.complemento#' },
+                  { value: '#cliente.bairro#', text: '#cliente.bairro#' },
+                  { value: '#cliente.cidade#', text: '#cliente.cidade#' },
+                  { value: '#cliente.estado#', text: '#cliente.estado#' },
+                  { value: '#cliente.cep#', text: '#cliente.cep#' }
                 ]},
                 { group: 'Contrato', options: [
                   { value: '#contrato.plano#', text: '#contrato.plano#' },
@@ -331,6 +338,13 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                   { value: '#empresa.nome_fantasia#', text: '#empresa.nome_fantasia#' },
                   { value: '#empresa.cnpj#', text: '#empresa.cnpj#' },
                   { value: '#empresa.endereco#', text: '#empresa.endereco#' },
+                  { value: '#empresa.logradouro#', text: '#empresa.logradouro#' },
+                  { value: '#empresa.numero#', text: '#empresa.numero#' },
+                  { value: '#empresa.complemento#', text: '#empresa.complemento#' },
+                  { value: '#empresa.bairro#', text: '#empresa.bairro#' },
+                  { value: '#empresa.cidade#', text: '#empresa.cidade#' },
+                  { value: '#empresa.estado#', text: '#empresa.estado#' },
+                  { value: '#empresa.cep#', text: '#empresa.cep#' },
                   { value: '#empresa.telefone#', text: '#empresa.telefone#' },
                   { value: '#empresa.email#', text: '#empresa.email#' },
                   { value: '#empresa.responsavel#', text: '#empresa.responsavel#' }
