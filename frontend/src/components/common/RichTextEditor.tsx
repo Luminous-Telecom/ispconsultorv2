@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import { ClassicEditor } from 'ckeditor5';
 import { 
@@ -114,7 +114,7 @@ interface RichTextEditorProps {
   onInsertVariable?: (variable: string) => void;
 }
 
-const RichTextEditor: React.FC<RichTextEditorProps> = ({
+const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
   value,
   onChange,
   placeholder = 'Digite aqui...',
@@ -123,7 +123,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   name,
   ariaLabelledBy,
   onInsertVariable
-}) => {
+}, ref) => {
   const editorInstanceRef = useRef<any>(null);
 
   // Adiciona as fontes e estilos no head do documento
@@ -161,7 +161,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   // Expose insertVariable para uso externo
-  React.useImperativeHandle(editorInstanceRef, () => ({
+  useImperativeHandle(ref, () => ({
     insertVariable
   }));
 
@@ -302,7 +302,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       />
     </div>
   );
-};
+});
 
 export { RichTextEditor, type RichTextEditorProps };
+RichTextEditor.displayName = 'RichTextEditor';
+
 export default RichTextEditor;
