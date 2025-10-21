@@ -78,7 +78,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       label: 'ID',
       sortable: true,
       render: (item: DocumentoSistema) => (
-        <div className="text-secondary small">#{item.id}</div>
+        <div>#{item.id}</div>
       )
     },
     {
