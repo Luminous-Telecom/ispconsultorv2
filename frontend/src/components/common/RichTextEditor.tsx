@@ -168,90 +168,6 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
 
   return (
     <div className="ckeditor-wrapper" style={{ height: '100%' }}>
-      <style>
-        {`
-          .variables-toolbar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            padding: 8px;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-          }
-          .variables-toolbar select {
-            padding: 6px 12px;
-            border: 2px solid #1976d2;
-            border-radius: 4px;
-            background: #f5f5f5;
-            color: #1976d2;
-            font-weight: 500;
-            min-width: 200px;
-          }
-          .variables-toolbar select:hover {
-            background: #e3f2fd;
-          }
-          .variables-toolbar label {
-            font-weight: 500;
-            color: #333;
-            margin: 0;
-          }
-        `}
-      </style>
-      
-      {/* Dropdown de Variáveis na Toolbar */}
-      <div className="variables-toolbar">
-        <label htmlFor="variables-select">Variáveis:</label>
-        <select 
-          id="variables-select"
-          onChange={(e) => {
-            if (e.target.value) {
-              insertVariable(e.target.value);
-              e.target.value = '';
-            }
-          }}
-        >
-          <option value="">Escolher variável...</option>
-          <optgroup label="Cliente">
-            <option value="#cliente.razao_social#">Razão Social</option>
-            <option value="#cliente.nome_fantasia#">Nome Fantasia</option>
-            <option value="#cliente.cnpj#">CPF/CNPJ</option>
-            <option value="#cliente.email#">E-mail</option>
-            <option value="#cliente.telefone#">Telefone</option>
-            <option value="#cliente.whatsapp#">WhatsApp</option>
-            <option value="#cliente.endereco#">Endereço</option>
-          </optgroup>
-          <optgroup label="Contrato">
-            <option value="#contrato.plano#">Plano</option>
-            <option value="#contrato.data_inicio#">Data Início</option>
-            <option value="#contrato.data_fim#">Data Fim</option>
-            <option value="#contrato.desconto_percentual#">Desconto %</option>
-            <option value="#contrato.desconto_valor#">Desconto R$</option>
-            <option value="#contrato.isento_mensalidade#">Isento Mensalidade</option>
-            <option value="#contrato.dia_vencimento#">Dia Vencimento</option>
-          </optgroup>
-          <optgroup label="Empresa">
-            <option value="#empresa.razao_social#">Razão Social</option>
-            <option value="#empresa.nome_fantasia#">Nome Fantasia</option>
-            <option value="#empresa.cnpj#">CNPJ</option>
-            <option value="#empresa.telefone#">Telefone</option>
-            <option value="#empresa.email#">E-mail</option>
-            <option value="#empresa.responsavel#">Responsável</option>
-          </optgroup>
-          <optgroup label="Financeiro">
-            <option value="#financeiro.total_aberto#">Total Aberto</option>
-            <option value="#financeiro.total_vencido#">Total Vencido</option>
-            <option value="#financeiro.quantidade_titulos_abertos#">Títulos Abertos</option>
-            <option value="#financeiro.maior_atraso_dias#">Maior Atraso (dias)</option>
-          </optgroup>
-          <optgroup label="Sistema">
-            <option value="#sistema.data_atual#">Data Atual</option>
-            <option value="#sistema.hora_atual#">Hora Atual</option>
-          </optgroup>
-        </select>
-      </div>
-      
       <CKEditor
         editor={ClassicEditor}
         config={{
@@ -371,6 +287,128 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             editorElement.setAttribute('role', 'textbox');
             editorElement.setAttribute('aria-multiline', 'true');
           }
+
+          // Adicionar botão de variáveis na toolbar
+          setTimeout(() => {
+            const toolbar = document.querySelector('.ck.ck-toolbar');
+            if (toolbar) {
+              // Criar botão de variáveis
+              const variablesButton = document.createElement('button');
+              variablesButton.innerHTML = '📝 Variáveis';
+              variablesButton.style.cssText = `
+                padding: 6px 12px;
+                margin: 0 4px;
+                border: 1px solid #1976d2;
+                border-radius: 4px;
+                background: #1976d2;
+                color: white;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 500;
+              `;
+              variablesButton.onmouseover = () => {
+                variablesButton.style.background = '#1565c0';
+              };
+              variablesButton.onmouseout = () => {
+                variablesButton.style.background = '#1976d2';
+              };
+
+              // Adicionar dropdown de variáveis
+              const variablesDropdown = document.createElement('select');
+              variablesDropdown.style.cssText = `
+                padding: 4px 8px;
+                margin: 0 4px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background: white;
+                font-size: 12px;
+                display: none;
+              `;
+
+              // Adicionar opções
+              const options = [
+                { value: '', text: 'Escolher variável...' },
+                { group: 'Cliente', options: [
+                  { value: '#cliente.razao_social#', text: 'Razão Social' },
+                  { value: '#cliente.nome_fantasia#', text: 'Nome Fantasia' },
+                  { value: '#cliente.cnpj#', text: 'CPF/CNPJ' },
+                  { value: '#cliente.email#', text: 'E-mail' },
+                  { value: '#cliente.telefone#', text: 'Telefone' },
+                  { value: '#cliente.whatsapp#', text: 'WhatsApp' },
+                  { value: '#cliente.endereco#', text: 'Endereço' }
+                ]},
+                { group: 'Contrato', options: [
+                  { value: '#contrato.plano#', text: 'Plano' },
+                  { value: '#contrato.data_inicio#', text: 'Data Início' },
+                  { value: '#contrato.data_fim#', text: 'Data Fim' },
+                  { value: '#contrato.desconto_percentual#', text: 'Desconto %' },
+                  { value: '#contrato.desconto_valor#', text: 'Desconto R$' },
+                  { value: '#contrato.isento_mensalidade#', text: 'Isento Mensalidade' },
+                  { value: '#contrato.dia_vencimento#', text: 'Dia Vencimento' }
+                ]},
+                { group: 'Empresa', options: [
+                  { value: '#empresa.razao_social#', text: 'Razão Social' },
+                  { value: '#empresa.nome_fantasia#', text: 'Nome Fantasia' },
+                  { value: '#empresa.cnpj#', text: 'CNPJ' },
+                  { value: '#empresa.telefone#', text: 'Telefone' },
+                  { value: '#empresa.email#', text: 'E-mail' },
+                  { value: '#empresa.responsavel#', text: 'Responsável' }
+                ]},
+                { group: 'Financeiro', options: [
+                  { value: '#financeiro.total_aberto#', text: 'Total Aberto' },
+                  { value: '#financeiro.total_vencido#', text: 'Total Vencido' },
+                  { value: '#financeiro.quantidade_titulos_abertos#', text: 'Títulos Abertos' },
+                  { value: '#financeiro.maior_atraso_dias#', text: 'Maior Atraso (dias)' }
+                ]},
+                { group: 'Sistema', options: [
+                  { value: '#sistema.data_atual#', text: 'Data Atual' },
+                  { value: '#sistema.hora_atual#', text: 'Hora Atual' }
+                ]}
+              ];
+
+              options.forEach(item => {
+                if (item.group) {
+                  const optgroup = document.createElement('optgroup');
+                  optgroup.label = item.group;
+                  item.options.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    optgroup.appendChild(opt);
+                  });
+                  variablesDropdown.appendChild(optgroup);
+                } else {
+                  const opt = document.createElement('option');
+                  opt.value = item.value || '';
+                  opt.textContent = item.text || '';
+                  variablesDropdown.appendChild(opt);
+                }
+              });
+
+              // Eventos
+              variablesButton.onclick = () => {
+                variablesDropdown.style.display = variablesDropdown.style.display === 'none' ? 'inline-block' : 'none';
+              };
+
+              variablesDropdown.onchange = (e) => {
+                const target = e.target as HTMLSelectElement;
+                if (target && target.value) {
+                  editor.model.change(writer => {
+                    const insertPosition = editor.model.document.selection.getFirstPosition();
+                    if (insertPosition) {
+                      writer.insertText(target.value, insertPosition);
+                    }
+                  });
+                  target.value = '';
+                  variablesDropdown.style.display = 'none';
+                }
+              };
+
+              // Adicionar à toolbar
+              toolbar.appendChild(variablesButton);
+              toolbar.appendChild(variablesDropdown);
+            }
+          }, 100);
         }}
         onChange={(event, editor) => {
           const data = editor.getData();
