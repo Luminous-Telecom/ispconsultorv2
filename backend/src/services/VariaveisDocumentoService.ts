@@ -107,6 +107,8 @@ export class VariaveisDocumentoService {
           { variavel: '#sistema.data_hora_atual#', descricao: 'Data e hora atual' },
           { variavel: '#sistema.ano_atual#', descricao: 'Ano atual' },
           { variavel: '#sistema.mes_atual#', descricao: 'Mês atual' },
+          { variavel: '#assinatura_consultor#', descricao: 'Assinatura do consultor' },
+          { variavel: '#assinatura_cliente#', descricao: 'Assinatura do cliente' },
         ]
       }
     };
@@ -355,6 +357,8 @@ export class VariaveisDocumentoService {
       '#sistema.data_hora_atual#': this.formatarDataHora(dataRef),
       '#sistema.ano_atual#': String(dataRef.getFullYear()),
       '#sistema.mes_atual#': String(dataRef.getMonth() + 1).padStart(2, '0'),
+      '#assinatura_consultor#': '_'.repeat(50),
+      '#assinatura_cliente#': '_'.repeat(50),
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {

@@ -342,7 +342,9 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 ]},
                 { group: 'Sistema', options: [
                   { value: '#sistema.data_atual#', text: '#sistema.data_atual#' },
-                  { value: '#sistema.hora_atual#', text: '#sistema.hora_atual#' }
+                  { value: '#sistema.hora_atual#', text: '#sistema.hora_atual#' },
+                  { value: '#assinatura_consultor#', text: '#assinatura_consultor#' },
+                  { value: '#assinatura_cliente#', text: '#assinatura_cliente#' }
                 ]}
               ];
 
