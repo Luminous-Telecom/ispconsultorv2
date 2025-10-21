@@ -308,40 +308,40 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               const options = [
                 { value: '', text: 'Escolher variável...' },
                 { group: 'Cliente', options: [
-                  { value: '#cliente.razao_social#', text: 'Razão Social' },
-                  { value: '#cliente.nome_fantasia#', text: 'Nome Fantasia' },
-                  { value: '#cliente.cnpj#', text: 'CPF/CNPJ' },
-                  { value: '#cliente.email#', text: 'E-mail' },
-                  { value: '#cliente.telefone#', text: 'Telefone' },
-                  { value: '#cliente.whatsapp#', text: 'WhatsApp' },
-                  { value: '#cliente.endereco#', text: 'Endereço' }
+                  { value: '#cliente.razao_social#', text: '#cliente.razao_social#' },
+                  { value: '#cliente.nome_fantasia#', text: '#cliente.nome_fantasia#' },
+                  { value: '#cliente.cnpj#', text: '#cliente.cnpj#' },
+                  { value: '#cliente.email#', text: '#cliente.email#' },
+                  { value: '#cliente.telefone#', text: '#cliente.telefone#' },
+                  { value: '#cliente.whatsapp#', text: '#cliente.whatsapp#' },
+                  { value: '#cliente.endereco#', text: '#cliente.endereco#' }
                 ]},
                 { group: 'Contrato', options: [
-                  { value: '#contrato.plano#', text: 'Plano' },
-                  { value: '#contrato.data_inicio#', text: 'Data Início' },
-                  { value: '#contrato.data_fim#', text: 'Data Fim' },
-                  { value: '#contrato.desconto_percentual#', text: 'Desconto %' },
-                  { value: '#contrato.desconto_valor#', text: 'Desconto R$' },
-                  { value: '#contrato.isento_mensalidade#', text: 'Isento Mensalidade' },
-                  { value: '#contrato.dia_vencimento#', text: 'Dia Vencimento' }
+                  { value: '#contrato.plano#', text: '#contrato.plano#' },
+                  { value: '#contrato.data_inicio#', text: '#contrato.data_inicio#' },
+                  { value: '#contrato.data_fim#', text: '#contrato.data_fim#' },
+                  { value: '#contrato.desconto_percentual#', text: '#contrato.desconto_percentual#' },
+                  { value: '#contrato.desconto_valor#', text: '#contrato.desconto_valor#' },
+                  { value: '#contrato.isento_mensalidade#', text: '#contrato.isento_mensalidade#' },
+                  { value: '#contrato.dia_vencimento#', text: '#contrato.dia_vencimento#' }
                 ]},
                 { group: 'Empresa', options: [
-                  { value: '#empresa.razao_social#', text: 'Razão Social' },
-                  { value: '#empresa.nome_fantasia#', text: 'Nome Fantasia' },
-                  { value: '#empresa.cnpj#', text: 'CNPJ' },
-                  { value: '#empresa.telefone#', text: 'Telefone' },
-                  { value: '#empresa.email#', text: 'E-mail' },
-                  { value: '#empresa.responsavel#', text: 'Responsável' }
+                  { value: '#empresa.razao_social#', text: '#empresa.razao_social#' },
+                  { value: '#empresa.nome_fantasia#', text: '#empresa.nome_fantasia#' },
+                  { value: '#empresa.cnpj#', text: '#empresa.cnpj#' },
+                  { value: '#empresa.telefone#', text: '#empresa.telefone#' },
+                  { value: '#empresa.email#', text: '#empresa.email#' },
+                  { value: '#empresa.responsavel#', text: '#empresa.responsavel#' }
                 ]},
                 { group: 'Financeiro', options: [
-                  { value: '#financeiro.total_aberto#', text: 'Total Aberto' },
-                  { value: '#financeiro.total_vencido#', text: 'Total Vencido' },
-                  { value: '#financeiro.quantidade_titulos_abertos#', text: 'Títulos Abertos' },
-                  { value: '#financeiro.maior_atraso_dias#', text: 'Maior Atraso (dias)' }
+                  { value: '#financeiro.total_aberto#', text: '#financeiro.total_aberto#' },
+                  { value: '#financeiro.total_vencido#', text: '#financeiro.total_vencido#' },
+                  { value: '#financeiro.quantidade_titulos_abertos#', text: '#financeiro.quantidade_titulos_abertos#' },
+                  { value: '#financeiro.maior_atraso_dias#', text: '#financeiro.maior_atraso_dias#' }
                 ]},
                 { group: 'Sistema', options: [
-                  { value: '#sistema.data_atual#', text: 'Data Atual' },
-                  { value: '#sistema.hora_atual#', text: 'Hora Atual' }
+                  { value: '#sistema.data_atual#', text: '#sistema.data_atual#' },
+                  { value: '#sistema.hora_atual#', text: '#sistema.hora_atual#' }
                 ]}
               ];
 
