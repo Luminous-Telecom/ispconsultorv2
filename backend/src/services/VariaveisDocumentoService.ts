@@ -138,8 +138,8 @@ export class VariaveisDocumentoService {
   private static processarVariaveisCliente(conteudo: string, cliente: Cliente): string {
     let resultado = conteudo;
 
-    const endereco = [
-      cliente.logradouro,
+    const enderecoCompleto = [
+      cliente.endereco,
       cliente.numero,
       cliente.complemento,
       cliente.bairro,
@@ -151,12 +151,12 @@ export class VariaveisDocumentoService {
       '#cliente.id#': String(cliente.id),
       '#cliente.razao_social#': cliente.razao_social || '',
       '#cliente.nome_fantasia#': cliente.nome_fantasia || '',
-      '#cliente.cpf_cnpj#': cliente.cpf_cnpj || '',
+      '#cliente.cpf_cnpj#': cliente.cnpj || '',
       '#cliente.email#': cliente.email || '',
       '#cliente.telefone#': cliente.telefone || '',
-      '#cliente.celular#': cliente.celular || '',
-      '#cliente.endereco#': endereco,
-      '#cliente.logradouro#': cliente.logradouro || '',
+      '#cliente.celular#': cliente.whatsapp || '',
+      '#cliente.endereco#': enderecoCompleto,
+      '#cliente.logradouro#': cliente.endereco || '',
       '#cliente.numero#': cliente.numero || '',
       '#cliente.complemento#': cliente.complemento || '',
       '#cliente.bairro#': cliente.bairro || '',
@@ -175,12 +175,12 @@ export class VariaveisDocumentoService {
   /**
    * Processar variáveis do contrato
    */
-  private static async processarVariaveisContrato(conteudo: string, contrato: Contrato): Promise<string> {
+  private static async processarVariaveisContrato(conteudo: string, contrato: any): Promise<string> {
     let resultado = conteudo;
 
     // Buscar plano se não estiver carregado
     if (!contrato.plano) {
-      const contratoCompleto = await Contrato.findByPk(contrato.id, {
+      const contratoCompleto: any = await Contrato.findByPk(contrato.id, {
         include: [{ model: Plano, as: 'plano' }]
       });
       if (contratoCompleto) {
@@ -214,22 +214,26 @@ export class VariaveisDocumentoService {
   private static processarVariaveisTitulo(conteudo: string, titulo: Titulo, dataRef: Date): string {
     let resultado = conteudo;
 
-    const diasAtraso = titulo.vencimento && new Date(titulo.vencimento) < dataRef
-      ? Math.floor((dataRef.getTime() - new Date(titulo.vencimento).getTime()) / (1000 * 60 * 60 * 24))
+    const diasAtraso = titulo.data_vencimento && new Date(titulo.data_vencimento) < dataRef
+      ? Math.floor((dataRef.getTime() - new Date(titulo.data_vencimento).getTime()) / (1000 * 60 * 60 * 24))
       : 0;
+
+    // Calcular juros e multa (se não existir no modelo)
+    const juros = (titulo.acrescimo_percentual || 0) > 0 ? (titulo.valor * (titulo.acrescimo_percentual || 0) / 100) : 0;
+    const multa = (titulo.acrescimo_valor || 0) || 0;
 
     const substituicoes: Record<string, string> = {
       '#titulo.id#': String(titulo.id),
-      '#titulo.numero#': titulo.numero_documento || String(titulo.id),
+      '#titulo.numero#': titulo.numero_titulo || String(titulo.id),
       '#titulo.valor#': this.formatarMoeda(titulo.valor || 0),
       '#titulo.valor_pago#': this.formatarMoeda(titulo.valor_pago || 0),
       '#titulo.saldo#': this.formatarMoeda((titulo.valor || 0) - (titulo.valor_pago || 0)),
-      '#titulo.vencimento#': titulo.vencimento ? this.formatarData(new Date(titulo.vencimento)) : '',
+      '#titulo.vencimento#': titulo.data_vencimento ? this.formatarData(new Date(titulo.data_vencimento)) : '',
       '#titulo.pagamento#': titulo.data_pagamento ? this.formatarData(new Date(titulo.data_pagamento)) : '',
       '#titulo.status#': titulo.status || '',
       '#titulo.dias_atraso#': String(diasAtraso),
-      '#titulo.juros#': this.formatarMoeda(titulo.juros || 0),
-      '#titulo.multa#': this.formatarMoeda(titulo.multa || 0),
+      '#titulo.juros#': this.formatarMoeda(juros),
+      '#titulo.multa#': this.formatarMoeda(multa),
       '#titulo.descricao#': titulo.descricao || '',
     };
 
@@ -278,7 +282,7 @@ export class VariaveisDocumentoService {
         totalAberto += saldo;
         quantidadeAbertos++;
 
-        const vencimento = titulo.vencimento ? new Date(titulo.vencimento) : null;
+        const vencimento = titulo.data_vencimento ? new Date(titulo.data_vencimento) : null;
         if (vencimento && vencimento < dataRef) {
           totalVencido += saldo;
           quantidadeVencidos++;
@@ -289,8 +293,11 @@ export class VariaveisDocumentoService {
           }
         }
 
-        totalJuros += titulo.juros || 0;
-        totalMulta += titulo.multa || 0;
+        // Calcular juros e multa
+        const juros = (titulo.acrescimo_percentual || 0) > 0 ? (valor * (titulo.acrescimo_percentual || 0) / 100) : 0;
+        const multa = (titulo.acrescimo_valor || 0) || 0;
+        totalJuros += juros;
+        totalMulta += multa;
       }
     }
 
