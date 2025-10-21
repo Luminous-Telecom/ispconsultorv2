@@ -42,6 +42,7 @@ export class VariaveisDocumentoService {
         variaveis: [
           { variavel: '#contrato.id#', descricao: 'ID do contrato' },
           { variavel: '#contrato.plano#', descricao: 'Nome do plano' },
+          { variavel: '#contrato.valor_contrato#', descricao: 'Valor do contrato' },
           { variavel: '#contrato.valor_mensal#', descricao: 'Valor mensal do plano' },
           { variavel: '#contrato.valor_final#', descricao: 'Valor final com descontos' },
           { variavel: '#contrato.desconto_percentual#', descricao: 'Desconto percentual (%)' },
@@ -212,6 +213,7 @@ export class VariaveisDocumentoService {
     const substituicoes: Record<string, string> = {
       '#contrato.id#': String(contrato.id),
       '#contrato.plano#': contrato.plano?.nome_plano || '',
+      '#contrato.valor_contrato#': this.formatarMoeda(contrato.valor_contrato || 0),
       '#contrato.valor_mensal#': this.formatarMoeda(contrato.plano?.valor_mensal || 0),
       '#contrato.valor_final#': this.formatarMoeda(contrato.valor_final || 0),
       '#contrato.desconto_percentual#': String(contrato.desconto_percentual || 0) + '%',

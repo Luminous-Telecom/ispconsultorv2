@@ -318,6 +318,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 ]},
                 { group: 'Contrato', options: [
                   { value: '#contrato.plano#', text: '#contrato.plano#' },
+                  { value: '#contrato.valor_contrato#', text: '#contrato.valor_contrato#' },
                   { value: '#contrato.data_inicio#', text: '#contrato.data_inicio#' },
                   { value: '#contrato.data_fim#', text: '#contrato.data_fim#' },
                   { value: '#contrato.desconto_percentual#', text: '#contrato.desconto_percentual#' },
