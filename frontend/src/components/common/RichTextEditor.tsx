@@ -297,14 +297,6 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             shouldNotGroupWhenFull: true
           },
           language: 'pt-br',
-          heading: {
-            options: [
-              { model: 'paragraph', title: 'Choose heading', class: 'ck-heading_paragraph' },
-              { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-              { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-              { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
-            ]
-          },
           fontSize: {
             options: [
               9, 11, 13, 'default', 17, 19, 21, 24, 28, 32, 36, 48, 72
