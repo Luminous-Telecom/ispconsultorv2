@@ -44,12 +44,28 @@ export class VariaveisDocumentoService {
           { variavel: '#contrato.plano#', descricao: 'Nome do plano' },
           { variavel: '#contrato.valor_mensal#', descricao: 'Valor mensal do plano' },
           { variavel: '#contrato.valor_final#', descricao: 'Valor final com descontos' },
-          { variavel: '#contrato.desconto_percentual#', descricao: 'Desconto percentual' },
-          { variavel: '#contrato.desconto_valor#', descricao: 'Desconto em valor' },
-          { variavel: '#contrato.data_inicio#', descricao: 'Data de início' },
-          { variavel: '#contrato.data_fim#', descricao: 'Data de fim' },
+          { variavel: '#contrato.desconto_percentual#', descricao: 'Desconto percentual (%)' },
+          { variavel: '#contrato.desconto_valor#', descricao: 'Desconto em valor (R$)' },
+          { variavel: '#contrato.data_inicio#', descricao: 'Data de início do contrato' },
+          { variavel: '#contrato.data_fim#', descricao: 'Data de fim do contrato' },
+          { variavel: '#contrato.data_validade_desconto#', descricao: 'Validade do desconto' },
           { variavel: '#contrato.status#', descricao: 'Status do contrato' },
           { variavel: '#contrato.dia_vencimento#', descricao: 'Dia de vencimento' },
+          { variavel: '#contrato.isento_mensalidade#', descricao: 'Isento de mensalidade (Sim/Não)' },
+        ]
+      },
+      empresa: {
+        titulo: 'Dados da Empresa',
+        variaveis: [
+          { variavel: '#empresa.razao_social#', descricao: 'Razão Social da empresa' },
+          { variavel: '#empresa.nome_fantasia#', descricao: 'Nome Fantasia da empresa' },
+          { variavel: '#empresa.cnpj#', descricao: 'CNPJ da empresa' },
+          { variavel: '#empresa.ie#', descricao: 'Inscrição Estadual' },
+          { variavel: '#empresa.im#', descricao: 'Inscrição Municipal' },
+          { variavel: '#empresa.endereco#', descricao: 'Endereço completo da empresa' },
+          { variavel: '#empresa.telefone#', descricao: 'Telefone da empresa' },
+          { variavel: '#empresa.email#', descricao: 'E-mail da empresa' },
+          { variavel: '#empresa.responsavel#', descricao: 'Responsável pela empresa' },
         ]
       },
       financeiro: {
@@ -129,6 +145,9 @@ export class VariaveisDocumentoService {
     // Processar variáveis do sistema
     resultado = this.processarVariaveisSistema(resultado, dataRef);
 
+    // Processar variáveis da empresa
+    resultado = this.processarVariaveisEmpresa(resultado);
+
     return resultado;
   }
 
@@ -193,12 +212,14 @@ export class VariaveisDocumentoService {
       '#contrato.plano#': contrato.plano?.nome_plano || '',
       '#contrato.valor_mensal#': this.formatarMoeda(contrato.plano?.valor_mensal || 0),
       '#contrato.valor_final#': this.formatarMoeda(contrato.valor_final || 0),
-      '#contrato.desconto_percentual#': String(contrato.desconto_percentual || 0),
+      '#contrato.desconto_percentual#': String(contrato.desconto_percentual || 0) + '%',
       '#contrato.desconto_valor#': this.formatarMoeda(contrato.desconto_valor || 0),
       '#contrato.data_inicio#': contrato.data_inicio ? this.formatarData(new Date(contrato.data_inicio)) : '',
       '#contrato.data_fim#': contrato.data_fim ? this.formatarData(new Date(contrato.data_fim)) : '',
+      '#contrato.data_validade_desconto#': contrato.data_validade_desconto ? this.formatarData(new Date(contrato.data_validade_desconto)) : '',
       '#contrato.status#': contrato.status || '',
       '#contrato.dia_vencimento#': String(contrato.dia_vencimento || ''),
+      '#contrato.isento_mensalidade#': contrato.isento_mensalidade ? 'Sim' : 'Não',
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
@@ -334,6 +355,32 @@ export class VariaveisDocumentoService {
       '#sistema.data_hora_atual#': this.formatarDataHora(dataRef),
       '#sistema.ano_atual#': String(dataRef.getFullYear()),
       '#sistema.mes_atual#': String(dataRef.getMonth() + 1).padStart(2, '0'),
+    };
+
+    for (const [variavel, valor] of Object.entries(substituicoes)) {
+      resultado = resultado.replace(new RegExp(variavel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), valor);
+    }
+
+    return resultado;
+  }
+
+  /**
+   * Processar variáveis da empresa
+   */
+  private static processarVariaveisEmpresa(conteudo: string): string {
+    let resultado = conteudo;
+
+    // Dados da empresa (podem vir de variáveis de ambiente ou configuração)
+    const substituicoes: Record<string, string> = {
+      '#empresa.razao_social#': process.env.EMPRESA_RAZAO_SOCIAL || 'CTM Telecom',
+      '#empresa.nome_fantasia#': process.env.EMPRESA_NOME_FANTASIA || 'CTM Telecom',
+      '#empresa.cnpj#': process.env.EMPRESA_CNPJ || '',
+      '#empresa.ie#': process.env.EMPRESA_IE || '',
+      '#empresa.im#': process.env.EMPRESA_IM || '',
+      '#empresa.endereco#': process.env.EMPRESA_ENDERECO || '',
+      '#empresa.telefone#': process.env.EMPRESA_TELEFONE || '',
+      '#empresa.email#': process.env.EMPRESA_EMAIL || '',
+      '#empresa.responsavel#': process.env.EMPRESA_RESPONSAVEL || '',
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
