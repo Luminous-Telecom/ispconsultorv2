@@ -17,4 +17,7 @@ router.delete('/:id', DocumentoSistemaController.delete);
 // Rota para converter arquivo Word para HTML
 router.post('/converter-word', uploadWord.single('file'), DocumentoSistemaController.convertWordToHtml);
 
+// Rota para gerar PDF do documento
+router.get('/:id/pdf', DocumentoSistemaController.generatePdf);
+
 export default router;

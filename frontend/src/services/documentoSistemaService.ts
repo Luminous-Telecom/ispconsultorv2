@@ -90,6 +90,19 @@ class DocumentoSistemaService {
 
     return response.json();
   }
+
+  static async generatePdf(id: number): Promise<Blob> {
+    const response = await fetch(`${(apiService as any).api.defaults.baseURL}/documentos-sistema/${id}/pdf`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao gerar PDF');
+    }
+
+    return response.blob();
+  }
 }
 
 export default DocumentoSistemaService;
