@@ -4,7 +4,6 @@ import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import VariaveisDocumento from '../../common/VariaveisDocumento';
 
 interface CriarDocumentoModalProps {
   show: boolean;
@@ -113,7 +112,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
       <div className="p-2">
         <form onSubmit={handleSubmit}>
           <div className="row g-2">
-            <div className="col-md-4">
+            <div className="col-12">
               <div className="mb-2">
                 <label htmlFor="criar-doc-nome" className="form-label small mb-1">
                   Nome <span className="text-danger">*</span>
@@ -143,11 +142,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                 />
               </div>
 
-              <div className="mb-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                <VariaveisDocumento onInserirVariavel={handleInsertVariable} />
-              </div>
-
-              <div className="d-flex gap-1">
+              <div className="d-flex gap-1 mb-2">
                 <button
                   type="submit"
                   className="btn btn-primary btn-sm"
@@ -164,7 +159,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                 </button>
               </div>
             </div>
-            <div className="col-md-8">
+            <div className="col-12">
               <div className="mb-2">
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <span id="conteudo-label" className="form-label small mb-0">

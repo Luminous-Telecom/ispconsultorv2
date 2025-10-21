@@ -4,7 +4,6 @@ import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import VariaveisDocumento from '../../common/VariaveisDocumento';
 
 interface EditarDocumentoModalProps {
   show: boolean;
@@ -242,7 +241,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
           <form onSubmit={handleSubmit}>
             {/* Campos superiores em linha única */}
             <div className="row g-2 mb-2">
-              <div className="col-md-4">
+              <div className="col-md-6">
                 <label htmlFor="editar-doc-nome" className="form-label small mb-1">
                   Nome <span className="text-danger">*</span>
                 </label>
@@ -256,7 +255,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                   required
                 />
               </div>
-              <div className="col-md-4">
+              <div className="col-md-6">
                 <label htmlFor="editar-doc-descricao" className="form-label small mb-1">Descrição</label>
                 <input
                   type="text"
@@ -267,12 +266,6 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                   placeholder="Breve descrição"
                 />
-              </div>
-              <div className="col-md-4">
-                <div className="form-label small mb-1">Variáveis</div>
-                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                  <VariaveisDocumento onInserirVariavel={handleInsertVariable} />
-                </div>
               </div>
             </div>
 
