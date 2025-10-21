@@ -74,6 +74,14 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   // Definir colunas da tabela
   const columns: Column<DocumentoSistema>[] = [
     {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      render: (item: DocumentoSistema) => (
+        <div className="text-secondary small">#{item.id}</div>
+      )
+    },
+    {
       key: 'nome',
       label: 'Nome',
       sortable: true,

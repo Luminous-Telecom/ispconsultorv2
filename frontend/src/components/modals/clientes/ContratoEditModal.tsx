@@ -787,7 +787,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <option value={0}>Selecione um modelo</option>
               {modelosContrato.map((modelo: any) => (
                 <option key={modelo.id} value={modelo.id}>
-                  {modelo.nome}
+                  #{modelo.id} - {modelo.nome}
                 </option>
               ))}
             </select>
