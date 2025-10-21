@@ -186,8 +186,84 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
           .ck.ck-heading-dropdown:hover {
             background: #e3f2fd;
           }
+          .variables-dropdown {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .variables-dropdown select {
+            padding: 6px 12px;
+            border: 2px solid #1976d2;
+            border-radius: 4px;
+            background: #f5f5f5;
+            color: #1976d2;
+            font-weight: 500;
+            min-width: 140px;
+          }
+          .variables-dropdown select:hover {
+            background: #e3f2fd;
+          }
+          .variables-dropdown label {
+            font-weight: 500;
+            color: #333;
+            margin: 0;
+          }
         `}
       </style>
+      
+      {/* Dropdown de Variáveis */}
+      <div className="variables-dropdown">
+        <label htmlFor="variables-select">Variáveis:</label>
+        <select 
+          id="variables-select"
+          onChange={(e) => {
+            if (e.target.value) {
+              insertVariable(e.target.value);
+              e.target.value = '';
+            }
+          }}
+        >
+          <option value="">Escolher variável...</option>
+          <optgroup label="Cliente">
+            <option value="#cliente.razao_social#">Razão Social</option>
+            <option value="#cliente.nome_fantasia#">Nome Fantasia</option>
+            <option value="#cliente.cnpj#">CPF/CNPJ</option>
+            <option value="#cliente.email#">E-mail</option>
+            <option value="#cliente.telefone#">Telefone</option>
+            <option value="#cliente.whatsapp#">WhatsApp</option>
+            <option value="#cliente.endereco#">Endereço</option>
+          </optgroup>
+          <optgroup label="Contrato">
+            <option value="#contrato.plano#">Plano</option>
+            <option value="#contrato.data_inicio#">Data Início</option>
+            <option value="#contrato.data_fim#">Data Fim</option>
+            <option value="#contrato.desconto_percentual#">Desconto %</option>
+            <option value="#contrato.desconto_valor#">Desconto R$</option>
+            <option value="#contrato.isento_mensalidade#">Isento Mensalidade</option>
+            <option value="#contrato.dia_vencimento#">Dia Vencimento</option>
+          </optgroup>
+          <optgroup label="Empresa">
+            <option value="#empresa.razao_social#">Razão Social</option>
+            <option value="#empresa.nome_fantasia#">Nome Fantasia</option>
+            <option value="#empresa.cnpj#">CNPJ</option>
+            <option value="#empresa.telefone#">Telefone</option>
+            <option value="#empresa.email#">E-mail</option>
+            <option value="#empresa.responsavel#">Responsável</option>
+          </optgroup>
+          <optgroup label="Financeiro">
+            <option value="#financeiro.total_aberto#">Total Aberto</option>
+            <option value="#financeiro.total_vencido#">Total Vencido</option>
+            <option value="#financeiro.quantidade_titulos_abertos#">Títulos Abertos</option>
+            <option value="#financeiro.maior_atraso_dias#">Maior Atraso (dias)</option>
+          </optgroup>
+          <optgroup label="Sistema">
+            <option value="#sistema.data_atual#">Data Atual</option>
+            <option value="#sistema.hora_atual#">Hora Atual</option>
+          </optgroup>
+        </select>
+      </div>
+      
       <CKEditor
         editor={ClassicEditor}
         config={{
@@ -240,13 +316,13 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
           language: 'pt-br',
           heading: {
             options: [
-              { model: 'paragraph', title: 'Choose heading', class: 'ck-heading_paragraph' },
-              { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-              { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-              { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
-              { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
-              { model: 'heading5', view: 'h5', title: 'Heading 5', class: 'ck-heading_heading5' },
-              { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading6' }
+              { model: 'paragraph', title: 'Parágrafo', class: 'ck-heading_paragraph' },
+              { model: 'heading1', view: 'h1', title: 'Título 1', class: 'ck-heading_heading1' },
+              { model: 'heading2', view: 'h2', title: 'Título 2', class: 'ck-heading_heading2' },
+              { model: 'heading3', view: 'h3', title: 'Título 3', class: 'ck-heading_heading3' },
+              { model: 'heading4', view: 'h4', title: 'Título 4', class: 'ck-heading_heading4' },
+              { model: 'heading5', view: 'h5', title: 'Título 5', class: 'ck-heading_heading5' },
+              { model: 'heading6', view: 'h6', title: 'Título 6', class: 'ck-heading_heading6' }
             ]
           },
           fontSize: {
