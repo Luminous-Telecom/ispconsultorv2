@@ -292,26 +292,6 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
           setTimeout(() => {
             const toolbar = document.querySelector('.ck.ck-toolbar');
             if (toolbar) {
-              // Criar botão de variáveis
-              const variablesButton = document.createElement('button');
-              variablesButton.innerHTML = '📝 Variáveis';
-              variablesButton.style.cssText = `
-                padding: 6px 12px;
-                margin: 0 4px;
-                border: 1px solid #1976d2;
-                border-radius: 4px;
-                background: #1976d2;
-                color: white;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: 500;
-              `;
-              variablesButton.onmouseover = () => {
-                variablesButton.style.background = '#1565c0';
-              };
-              variablesButton.onmouseout = () => {
-                variablesButton.style.background = '#1976d2';
-              };
 
               // Adicionar dropdown de variáveis
               const variablesDropdown = document.createElement('select');
@@ -322,7 +302,6 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 border-radius: 4px;
                 background: white;
                 font-size: 12px;
-                display: none;
               `;
 
               // Adicionar opções
@@ -385,11 +364,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 }
               });
 
-              // Eventos
-              variablesButton.onclick = () => {
-                variablesDropdown.style.display = variablesDropdown.style.display === 'none' ? 'inline-block' : 'none';
-              };
-
+              // Evento do dropdown
               variablesDropdown.onchange = (e) => {
                 const target = e.target as HTMLSelectElement;
                 if (target && target.value) {
@@ -400,12 +375,10 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                     }
                   });
                   target.value = '';
-                  variablesDropdown.style.display = 'none';
                 }
               };
 
-              // Adicionar à toolbar
-              toolbar.appendChild(variablesButton);
+              // Adicionar apenas o dropdown à toolbar
               toolbar.appendChild(variablesDropdown);
             }
           }, 100);
