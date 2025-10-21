@@ -167,6 +167,27 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
 
   return (
     <div className="ckeditor-wrapper" style={{ height: '100%' }}>
+      <style>
+        {`
+          .ck.ck-heading-dropdown .ck-button__label {
+            font-weight: 500;
+            color: #1976d2;
+          }
+          .ck.ck-heading-dropdown {
+            border: 2px solid #1976d2;
+            border-radius: 4px;
+            background: #f5f5f5;
+            min-width: 140px;
+          }
+          .ck.ck-heading-dropdown .ck-button__label {
+            color: #1976d2;
+            font-size: 14px;
+          }
+          .ck.ck-heading-dropdown:hover {
+            background: #e3f2fd;
+          }
+        `}
+      </style>
       <CKEditor
         editor={ClassicEditor}
         config={{
@@ -219,10 +240,13 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
           language: 'pt-br',
           heading: {
             options: [
-              { model: 'paragraph', title: 'Parágrafo', class: 'ck-heading_paragraph' },
-              { model: 'heading1', view: 'h1', title: 'Título 1', class: 'ck-heading_heading1' },
-              { model: 'heading2', view: 'h2', title: 'Título 2', class: 'ck-heading_heading2' },
-              { model: 'heading3', view: 'h3', title: 'Título 3', class: 'ck-heading_heading3' }
+              { model: 'paragraph', title: 'Choose heading', class: 'ck-heading_paragraph' },
+              { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+              { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+              { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+              { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+              { model: 'heading5', view: 'h5', title: 'Heading 5', class: 'ck-heading_heading5' },
+              { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading6' }
             ]
           },
           fontSize: {
