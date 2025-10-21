@@ -175,11 +175,6 @@ p, span, div, label {
   font-size: 14px;
 }
 
-.sidebar-nav-link span {
-  /* Garante que o texto mantenha seu espaçamento */
-  flex: 1;
-  white-space: nowrap;
-}
 
 .sidebar-nav-link:hover {
   background: var(--sidebar-hover) !important;
@@ -1625,11 +1620,6 @@ p, span, div, label {
   font-size: 14px;
 }
 
-.dropdown-toggle span {
-  /* Garante que o texto mantenha seu espaçamento */
-  flex: 1;
-  white-space: nowrap;
-}
 
 .dropdown-toggle::after {
   display: none !important;

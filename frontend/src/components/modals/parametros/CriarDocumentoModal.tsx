@@ -56,8 +56,12 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
     });
   };
 
+  const editorRef = useRef<any>(null);
+
   const handleInsertVariable = (variable: string) => {
-    // Esta função será chamada pelo RichTextEditor
+    if (editorRef.current && editorRef.current.insertVariable) {
+      editorRef.current.insertVariable(variable);
+    }
   };
 
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +144,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
               </div>
 
               <div className="mb-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                <VariaveisDocumento />
+                <VariaveisDocumento onInserirVariavel={handleInsertVariable} />
               </div>
 
               <div className="d-flex gap-1">
@@ -200,6 +204,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   </div>
                 </div>
                 <RichTextEditor
+                  ref={editorRef}
                   key={`criar-${tipo}`}
                   id="conteudo"
                   name="conteudo"

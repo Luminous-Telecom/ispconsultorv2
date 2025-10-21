@@ -151,7 +151,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const insertVariable = (variable: string) => {
     if (editorInstanceRef.current) {
       const editor = editorInstanceRef.current;
-      const viewFragment = editor.data.processor.toView(`{${variable}}`);
+      const viewFragment = editor.data.processor.toView(variable);
       const modelFragment = editor.data.toModel(viewFragment);
       editor.model.insertContent(modelFragment);
     }

@@ -4,6 +4,7 @@ import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import VariaveisDocumento from '../../common/VariaveisDocumento';
 
 interface EditarDocumentoModalProps {
   show: boolean;
@@ -81,8 +82,12 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     }
   };
 
+  const editorRef = useRef<any>(null);
+
   const handleInsertVariable = (variable: string) => {
-    // Esta função será chamada pelo RichTextEditor
+    if (editorRef.current && editorRef.current.insertVariable) {
+      editorRef.current.insertVariable(variable);
+    }
   };
 
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,39 +270,8 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
               </div>
               <div className="col-md-4">
                 <div className="form-label small mb-1">Variáveis</div>
-                <div className="d-flex flex-wrap gap-1" role="group" aria-label="Botões para inserir variáveis">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => handleInsertVariable('cliente_nome')}
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    Nome
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => handleInsertVariable('cliente_cpf')}
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    CPF
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => handleInsertVariable('valor')}
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    Valor
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm py-0 px-1"
-                    onClick={() => handleInsertVariable('data')}
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    Data
-                  </button>
+                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  <VariaveisDocumento onInserirVariavel={handleInsertVariable} />
                 </div>
               </div>
             </div>
@@ -339,6 +313,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                 </div>
               </div>
               <RichTextEditor
+                ref={editorRef}
                 key={documento?.id}
                 id="conteudo"
                 name="conteudo"
