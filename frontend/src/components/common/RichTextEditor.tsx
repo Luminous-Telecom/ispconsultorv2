@@ -36,6 +36,73 @@ import {
 
 import 'ckeditor5/ckeditor5.css';
 
+// CSS para garantir que as fontes funcionem na impressão
+const editorStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+  
+  /* Garante que as fontes inline sejam respeitadas na impressão em TODO o documento */
+  @media print {
+    html, body {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    /* Mapeia fontes específicas para garantir renderização - case insensitive */
+    *[style*="courier" i],
+    *[style*="Courier" i] {
+      font-family: 'Courier New', Courier, monospace !important;
+    }
+    
+    *[style*="arial" i],
+    *[style*="Arial" i],
+    *[style*="helvetica" i],
+    *[style*="Helvetica" i] {
+      font-family: Arial, Helvetica, sans-serif !important;
+    }
+    
+    *[style*="times" i],
+    *[style*="Times" i] {
+      font-family: 'Times New Roman', Times, serif !important;
+    }
+    
+    *[style*="georgia" i],
+    *[style*="Georgia" i] {
+      font-family: Georgia, serif !important;
+    }
+    
+    *[style*="tahoma" i],
+    *[style*="Tahoma" i] {
+      font-family: Tahoma, Geneva, sans-serif !important;
+    }
+    
+    *[style*="trebuchet" i],
+    *[style*="Trebuchet" i] {
+      font-family: 'Trebuchet MS', Helvetica, sans-serif !important;
+    }
+    
+    *[style*="verdana" i],
+    *[style*="Verdana" i] {
+      font-family: Verdana, Geneva, sans-serif !important;
+    }
+    
+    *[style*="roboto" i],
+    *[style*="Roboto" i] {
+      font-family: Roboto, sans-serif !important;
+    }
+  }
+  
+  /* Também aplica as fontes na tela para garantir consistência */
+  *[style*="courier" i],
+  *[style*="Courier" i] {
+    font-family: 'Courier New', Courier, monospace;
+  }
+  
+  *[style*="roboto" i],
+  *[style*="Roboto" i] {
+    font-family: Roboto, sans-serif;
+  }
+`;
+
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -58,6 +125,27 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onInsertVariable
 }) => {
   const editorInstanceRef = useRef<any>(null);
+
+  // Adiciona as fontes e estilos no head do documento
+  React.useEffect(() => {
+    const styleId = 'ckeditor-print-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = editorStyles;
+      document.head.appendChild(style);
+    }
+
+    // Carrega as fontes do Google
+    const linkId = 'google-fonts-roboto';
+    if (!document.getElementById(linkId)) {
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap';
+      document.head.appendChild(link);
+    }
+  }, []);
 
   // Função para inserir variáveis
   const insertVariable = (variable: string) => {
@@ -149,11 +237,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               'Arial, Helvetica, sans-serif',
               'Courier New, Courier, monospace',
               'Georgia, serif',
-              'Lucida Sans Unicode, Lucida Grande, sans-serif',
               'Tahoma, Geneva, sans-serif',
               'Times New Roman, Times, serif',
               'Trebuchet MS, Helvetica, sans-serif',
-              'Verdana, Geneva, sans-serif'
+              'Verdana, Geneva, sans-serif',
+              'Roboto, sans-serif'
             ],
             supportAllValues: true
           },

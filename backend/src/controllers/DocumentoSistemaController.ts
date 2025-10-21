@@ -8,6 +8,18 @@ import 'pdfkit-table';
 
 export class DocumentoSistemaController {
   /**
+   * Sanitiza o conteúdo HTML removendo apenas tags problemáticas
+   */
+  private static sanitizeHtmlContent(html: string): string {
+    let sanitized = html;
+    
+    // Remove apenas spans vazios ou genéricos, mas preserva spans com font-family
+    sanitized = sanitized.replace(/<span\s*>(.*?)<\/span>/gi, '$1');
+    
+    return sanitized;
+  }
+
+  /**
    * Listar todos os documentos do sistema
    */
   static async list(req: Request, res: Response): Promise<void> {
@@ -85,6 +97,11 @@ export class DocumentoSistemaController {
         return;
       }
 
+      // TEMPORÁRIO: Não sanitizar para testar se a fonte está sendo salva
+      // if (documentoData.conteudo) {
+      //   documentoData.conteudo = DocumentoSistemaController.sanitizeHtmlContent(documentoData.conteudo);
+      // }
+
       const documento = await DocumentoSistema.create(documentoData);
 
       res.status(201).json({
@@ -127,6 +144,11 @@ export class DocumentoSistemaController {
           message: 'Documento não encontrado'
         });
         return;
+      }
+
+      // Sanitiza apenas spans vazios, preservando fontes
+      if (documentoData.conteudo) {
+        documentoData.conteudo = DocumentoSistemaController.sanitizeHtmlContent(documentoData.conteudo);
       }
 
       await documento.update(documentoData);
@@ -357,14 +379,38 @@ export class DocumentoSistemaController {
       doc.pipe(res);
 
       // Processar HTML do CKEditor preservando formatação
-      const htmlContent = documento.conteudo
-        // Converte entidades HTML
+      let htmlContent = documento.conteudo
         .replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
+        .replace(/&#39;/g, "'")
+        // Corrige tags malformadas
+        .replace(/([^<])(span\s+style="[^"]*">)/gi, '$1<$2')
+        .replace(/(<\/span)([^>])/gi, '$1>$2')
+        // Remove spans vazios
+        .replace(/<span\s*>(.*?)<\/span>/gi, '$1');
+      
+      // Função auxiliar para limpar texto de tags HTML
+      const cleanHtmlText = (text: string): string => {
+        return text
+          .replace(/span\s+style="[^"]*">/gi, ' ')
+          .replace(/\/span>/gi, ' ')
+          .replace(/<\/?span[^>]*>/gi, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      };
+      
+      // Função para mapear nome de fonte para PDFKit
+      const mapFontToPdfKit = (fontName: string): string => {
+        const normalized = fontName.replace(/['"]/g, '').toLowerCase().trim();
+        
+        if (normalized.includes('courier')) return 'Courier';
+        if (normalized.includes('times') || normalized.includes('georgia')) return 'Times-Roman';
+        
+        return 'Helvetica'; // Padrão
+      };
 
       // Função para extrair texto e formatação de HTML preservando a ordem e estrutura
       const processHtmlBlock = (html: string) => {
@@ -378,6 +424,7 @@ export class DocumentoSistemaController {
           indent?: number; 
           align?: 'left' | 'center' | 'right' | 'justify';
           fontSize?: number;
+          fontFamily?: string;
           isEmpty?: boolean;
           isTable?: boolean;
           tableData?: {
@@ -411,62 +458,37 @@ export class DocumentoSistemaController {
           return match ? parseInt(match[1]) : undefined;
         };
         
-        // Função auxiliar para processar conteúdo interno (negrito, itálico, etc)
-        const processInlineFormatting = (content: string): { text: string; bold: boolean; italic: boolean; underline: boolean } => {
-          // Remove tags HTML para obter o texto puro
-          const text = content.replace(/<[^>]*>/g, '').trim();
+        // Função auxiliar para extrair família de fonte
+        const extractFontFamily = (tag: string): string | undefined => {
+          const match = tag.match(/font-family:\s*['"]*([^;'"]+)['"]*[;"]*/i);
+          return match ? match[1].split(',')[0].trim().replace(/['"]/g, '') : undefined;
+        };
+        
+        // Função auxiliar para processar conteúdo interno
+        const processInlineFormatting = (content: string): { text: string; bold: boolean; italic: boolean; underline: boolean; fontFamily?: string } => {
+          // Extrai fontFamily
+          const spanMatch = content.match(/<span[^>]*style="[^"]*font-family:\s*([^;"']+)[^"]*"[^>]*>/i);
+          const fontFamily = spanMatch ? spanMatch[1].split(',')[0].trim().replace(/['"]/g, '') : undefined;
           
-          // Se não há texto, retorna false para tudo
+          // Remove tags preservando espaços
+          let text = content
+            .replace(/<\/[^>]+>/g, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/span\s+style="[^"]*">/gi, ' ')
+            .replace(/\/span>/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          
           if (!text) {
-            return {
-              text: '',
-              bold: false,
-              italic: false,
-              underline: false
-            };
+            return { text: '', bold: false, italic: false, underline: false, fontFamily };
           }
           
-          // Verifica se há tags de formatação no conteúdo
-          const hasBold = /<(strong|b)(\s[^>]*)?>/i.test(content);
-          const hasItalic = /<(em|i)(\s[^>]*)?>/i.test(content);
-          const hasUnderline = /<u(\s[^>]*)?>/i.test(content);
+          // Verifica formatação
+          const bold = /<(strong|b)(\s[^>]*)?>/i.test(content);
+          const italic = /<(em|i)(\s[^>]*)?>/i.test(content);
+          const underline = /<u(\s[^>]*)?>/i.test(content);
           
-          // Conta quantos caracteres estão dentro de tags de formatação vs total
-          // Se a maioria do texto está formatado, considera como formatado
-          const totalChars = text.length;
-          
-          // Extrai texto dentro de tags strong/b
-          const boldTextMatches = content.match(/<(strong|b)(\s[^>]*)?>(.*?)<\/(strong|b)>/gi) || [];
-          const boldChars = boldTextMatches.reduce((sum, match) => {
-            const innerText = match.replace(/<[^>]*>/g, '');
-            return sum + innerText.length;
-          }, 0);
-          
-          // Extrai texto dentro de tags em/i
-          const italicTextMatches = content.match(/<(em|i)(\s[^>]*)?>(.*?)<\/(em|i)>/gi) || [];
-          const italicChars = italicTextMatches.reduce((sum, match) => {
-            const innerText = match.replace(/<[^>]*>/g, '');
-            return sum + innerText.length;
-          }, 0);
-          
-          // Extrai texto dentro de tags u
-          const underlineTextMatches = content.match(/<u(\s[^>]*)?>(.*?)<\/u>/gi) || [];
-          const underlineChars = underlineTextMatches.reduce((sum, match) => {
-            const innerText = match.replace(/<[^>]*>/g, '');
-            return sum + innerText.length;
-          }, 0);
-          
-          // Se mais de 50% do texto está formatado, considera como formatado
-          const isBold = hasBold && (boldChars / totalChars) > 0.5;
-          const isItalic = hasItalic && (italicChars / totalChars) > 0.5;
-          const isUnderline = hasUnderline && (underlineChars / totalChars) > 0.5;
-          
-          return {
-            text,
-            bold: isBold,
-            italic: isItalic,
-            underline: isUnderline
-          };
+          return { text, bold, italic, underline, fontFamily };
         };
         
         // Primeiro processa tabelas separadamente (pois podem ter conteúdo complexo)
@@ -520,6 +542,7 @@ export class DocumentoSistemaController {
             // Parágrafo
             const align = extractAlign(fullTag);
             const fontSize = extractFontSize(fullTag);
+            const fontFamily = extractFontFamily(fullTag);
             
             // Se o parágrafo está vazio ou só tem &nbsp;, adiciona espaço
             if (!content.trim() || content.trim() === '&nbsp;') {
@@ -544,6 +567,7 @@ export class DocumentoSistemaController {
                     underline: formatted.underline,
                     align,
                     fontSize,
+                    fontFamily: fontFamily || formatted.fontFamily,
                     position
                   });
                 } else if (i < lines.length - 1) {
@@ -597,6 +621,7 @@ export class DocumentoSistemaController {
             // Div - trata como parágrafo
             const align = extractAlign(fullTag);
             const fontSize = extractFontSize(fullTag);
+            const fontFamily = extractFontFamily(fullTag);
             
             // Se o div está vazio ou só tem &nbsp;, adiciona espaço
             if (!content.trim() || content.trim() === '&nbsp;') {
@@ -621,6 +646,7 @@ export class DocumentoSistemaController {
                     underline: formatted.underline,
                     align,
                     fontSize,
+                    fontFamily: fontFamily || formatted.fontFamily,
                     position
                   });
                 } else if (i < lines.length - 1) {
@@ -767,14 +793,34 @@ export class DocumentoSistemaController {
           continue;
         }
 
+        // Define fonte base a partir do fontFamily ou usa Helvetica como padrão
+        let baseFont = 'Helvetica';
+        if (block.fontFamily) {
+          baseFont = mapFontToPdfKit(block.fontFamily);
+        }
+        
         // Define fonte baseado na formatação
-        let font = 'Helvetica';
+        let font = baseFont;
         if (block.bold && block.italic) {
-          font = 'Helvetica-BoldOblique';
+          font = `${baseFont}-BoldOblique`;
+          // Fallback para fontes que não têm todas as variantes
+          if (!['Helvetica', 'Times-Roman', 'Courier'].includes(baseFont)) {
+            font = baseFont;
+          }
         } else if (block.bold) {
-          font = 'Helvetica-Bold';
+          font = `${baseFont}-Bold`;
+          if (!['Helvetica', 'Times-Roman', 'Courier'].includes(baseFont)) {
+            font = baseFont;
+          }
         } else if (block.italic) {
-          font = 'Helvetica-Oblique';
+          font = `${baseFont}-Oblique`;
+          if (baseFont === 'Times-Roman') {
+            font = 'Times-Italic';
+          } else if (baseFont === 'Courier') {
+            font = 'Courier-Oblique';
+          } else if (!['Helvetica'].includes(baseFont)) {
+            font = baseFont;
+          }
         }
 
         // Define fonte e tamanho baseado no tipo de bloco
@@ -906,7 +952,11 @@ export class DocumentoSistemaController {
                 
                 // Processa o HTML com tags inline
                 const parts: Array<{ text: string; bold: boolean; italic: boolean }> = [];
-                const textWithTags = divContent.replace(/&nbsp;/g, ' ');
+                let textWithTags = divContent.replace(/&nbsp;/g, ' ');
+                
+                // Adiciona espaços ao redor das tags para garantir separação
+                textWithTags = textWithTags.replace(/(<\/(?:strong|b|em|i|span)>)(\S)/gi, '$1 $2');
+                textWithTags = textWithTags.replace(/(\S)(<(?:strong|b|em|i|span)[^>]*>)/gi, '$1 $2');
                 
                 // Regex para capturar texto com e sem tags
                 const inlineRegex = /<(strong|b)(?:\s[^>]*)?>([^<]*)<\/\1>|<(em|i)(?:\s[^>]*)?>([^<]*)<\/\3>|([^<]+)/gi;
@@ -915,14 +965,23 @@ export class DocumentoSistemaController {
                 while ((inlineMatch = inlineRegex.exec(textWithTags)) !== null) {
                   if (inlineMatch[1] && inlineMatch[2]) {
                     // Tag strong ou b
-                    parts.push({ text: inlineMatch[2], bold: true, italic: false });
+                    const text = inlineMatch[2];
+                    if (text) {
+                      parts.push({ text: text, bold: true, italic: false });
+                    }
                   } else if (inlineMatch[3] && inlineMatch[4]) {
                     // Tag em ou i
-                    parts.push({ text: inlineMatch[4], bold: false, italic: true });
+                    const text = inlineMatch[4];
+                    if (text) {
+                      parts.push({ text: text, bold: false, italic: true });
+                    }
                   } else if (inlineMatch[5]) {
-                    // Texto sem tag (preserva espaços)
-                    const text = inlineMatch[5].replace(/<[^>]*>/g, '');
-                    if (text.trim()) { // Verifica se tem conteúdo, mas mantém os espaços originais
+                    // Texto sem tag
+                    let text = inlineMatch[5]
+                      .replace(/<\/[^>]+>/g, ' ')
+                      .replace(/<[^>]+>/g, ' ');
+                    text = cleanHtmlText(text);
+                    if (text) {
                       parts.push({ text: text, bold: false, italic: false });
                     }
                   }
@@ -932,16 +991,34 @@ export class DocumentoSistemaController {
                 parts.forEach((part, index) => {
                   if (!part.text) return;
                   
-                  let partFont = 'Helvetica';
+                  const cleanText = cleanHtmlText(part.text);
+                  if (!cleanText) return;
+                  
+                  // Usa a fonte base do bloco (ex: Courier) ao invés de sempre Helvetica
+                  let partFont = baseFont;
                   if (part.bold && part.italic) {
-                    partFont = 'Helvetica-BoldOblique';
+                    partFont = `${baseFont}-BoldOblique`;
+                    // Fallback para fontes que não têm todas as variantes
+                    if (!['Helvetica', 'Times-Roman', 'Courier'].includes(baseFont)) {
+                      partFont = baseFont;
+                    }
                   } else if (part.bold) {
-                    partFont = 'Helvetica-Bold';
+                    partFont = `${baseFont}-Bold`;
+                    if (!['Helvetica', 'Times-Roman', 'Courier'].includes(baseFont)) {
+                      partFont = baseFont;
+                    }
                   } else if (part.italic) {
-                    partFont = 'Helvetica-Oblique';
+                    partFont = `${baseFont}-Oblique`;
+                    if (baseFont === 'Times-Roman') {
+                      partFont = 'Times-Italic';
+                    } else if (baseFont === 'Courier') {
+                      partFont = 'Courier-Oblique';
+                    } else if (!['Helvetica'].includes(baseFont)) {
+                      partFont = baseFont;
+                    }
                   }
                   
-                  doc.font(partFont).text(part.text, {
+                  doc.font(partFont).text(cleanText, {
                     continued: index < parts.length - 1,
                     align: index === 0 ? (block.align || 'left') : undefined
                   });
@@ -956,7 +1033,8 @@ export class DocumentoSistemaController {
           
           // Tenta renderizar com formatação inline, senão usa método simples
           if (!renderWithInlineFormatting()) {
-            doc.font(font).text(block.text, { 
+            const cleanText = cleanHtmlText(block.text);
+            doc.font(font).text(cleanText, { 
               align: block.align || 'left',
               continued: false
             });
