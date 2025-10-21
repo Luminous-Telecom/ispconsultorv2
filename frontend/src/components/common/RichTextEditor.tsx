@@ -329,6 +329,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                   { value: '#empresa.razao_social#', text: '#empresa.razao_social#' },
                   { value: '#empresa.nome_fantasia#', text: '#empresa.nome_fantasia#' },
                   { value: '#empresa.cnpj#', text: '#empresa.cnpj#' },
+                  { value: '#empresa.endereco#', text: '#empresa.endereco#' },
                   { value: '#empresa.telefone#', text: '#empresa.telefone#' },
                   { value: '#empresa.email#', text: '#empresa.email#' },
                   { value: '#empresa.responsavel#', text: '#empresa.responsavel#' }
