@@ -138,8 +138,8 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       status: formData.status,
       observacoes: formData.observacoes || undefined,
       isento_mensalidade: formData.isento_mensalidade,
-      dia_vencimento: formData.dia_vencimento || undefined,
-      conta_boleto: formData.conta_boleto || undefined,
+      dia_vencimento: formData.dia_vencimento,
+      conta_boleto: formData.conta_boleto,
       data_validade_desconto: formData.data_validade_desconto || undefined,
       modelo_contrato_id: formData.modelo_contrato_id
     };
