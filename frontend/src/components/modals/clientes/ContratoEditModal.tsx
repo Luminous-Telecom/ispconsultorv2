@@ -12,6 +12,7 @@ import { useFormReset } from '../../../hooks/useFormReset';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
+import DocumentoSistemaService from '../../../services/documentoSistemaService';
 
 interface ContratoForm {
   plano_id: number;
@@ -25,6 +26,7 @@ interface ContratoForm {
   dia_vencimento: number;
   conta_boleto: number;
   data_validade_desconto: string;
+  modelo_contrato_id?: number;
 }
 
 interface ContratoEditModalProps {
@@ -51,7 +53,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     isento_mensalidade: false,
     dia_vencimento: 10,
     conta_boleto: 0,
-    data_validade_desconto: ''
+    data_validade_desconto: '',
+    modelo_contrato_id: 0
   });
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
@@ -75,9 +78,15 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   // Hooks para buscar dados
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
+  const { data: modelosContratoData } = useQuery({
+    queryKey: ['modelos-contrato'],
+    queryFn: () => DocumentoSistemaService.getByType('contrato'),
+    enabled: show,
+  });
   
   const planos = Array.isArray(planosData) ? planosData : (planosData?.data || []);
   const bancos = Array.isArray(bancosData) ? bancosData : (bancosData?.data || []);
+  const modelosContrato = modelosContratoData?.data || [];
   
   // Buscar dados do contrato
   const { data: contratoData, isLoading } = useQuery({
@@ -120,7 +129,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     isento_mensalidade: false,
     dia_vencimento: 10,
     conta_boleto: 0,
-    data_validade_desconto: ''
+    data_validade_desconto: '',
+    modelo_contrato_id: 0
   };
 
   // Dados customizados do contrato (quando editando)
@@ -135,7 +145,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     isento_mensalidade: contratoData.isento_mensalidade || false,
     dia_vencimento: contratoData.dia_vencimento || 10,
     conta_boleto: contratoData.conta_boleto || 0,
-    data_validade_desconto: contratoData.data_validade_desconto ? contratoData.data_validade_desconto.split('T')[0] : ''
+    data_validade_desconto: contratoData.data_validade_desconto ? contratoData.data_validade_desconto.split('T')[0] : '',
+    modelo_contrato_id: contratoData.modelo_contrato_id || 0
   } : undefined;
 
   // Usar hook personalizado para reset do formulário
@@ -748,6 +759,29 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 Isento de Mensalidade
               </label>
             </div>
+          </div>
+
+          {/* Modelo de Contrato */}
+          <div className="col-md-12 mb-3">
+            <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato</label>
+            <select
+              className="form-select"
+              id="modelo_contrato_id"
+              name="modelo_contrato_id"
+              value={formData.modelo_contrato_id || 0}
+              onChange={(e) => handleInputChange('modelo_contrato_id', parseInt(e.target.value))}
+              disabled={updateContratoMutation.isPending}
+            >
+              <option value={0}>Selecione um modelo (opcional)</option>
+              {modelosContrato.map((modelo: any) => (
+                <option key={modelo.id} value={modelo.id}>
+                  {modelo.nome}
+                </option>
+              ))}
+            </select>
+            <small className="form-text text-muted">
+              Selecione um modelo de contrato cadastrado no sistema
+            </small>
           </div>
 
           {/* Observações */}

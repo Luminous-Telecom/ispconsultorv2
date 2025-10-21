@@ -201,6 +201,7 @@ export interface Contrato extends BaseEntity {
   dia_vencimento?: number;
   conta_boleto?: number;
   data_validade_desconto?: string;
+  modelo_contrato_id?: number;
   
   // Relacionamentos
   cliente?: Cliente;

@@ -16,6 +16,7 @@ export interface Contrato {
   dia_vencimento: number | null;
   conta_boleto: number | null;
   data_validade_desconto: string | null;
+  modelo_contrato_id: number | null;
   created_at: string;
   updated_at: string;
   cliente?: {

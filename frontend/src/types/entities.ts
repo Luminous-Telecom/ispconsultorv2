@@ -116,6 +116,7 @@ export interface Contrato {
   dia_vencimento?: number;
   conta_boleto?: number;
   data_validade_desconto?: string;
+  modelo_contrato_id?: number;
   created_at: string;
   updated_at?: string;
   
