@@ -20,77 +20,77 @@ export class VariaveisDocumentoService {
       cliente: {
         titulo: 'Dados do Cliente',
         variaveis: [
-          { variavel: '{{cliente.id}}', descricao: 'ID do cliente' },
-          { variavel: '{{cliente.razao_social}}', descricao: 'Razão Social' },
-          { variavel: '{{cliente.nome_fantasia}}', descricao: 'Nome Fantasia' },
-          { variavel: '{{cliente.cpf_cnpj}}', descricao: 'CPF/CNPJ' },
-          { variavel: '{{cliente.email}}', descricao: 'E-mail' },
-          { variavel: '{{cliente.telefone}}', descricao: 'Telefone' },
-          { variavel: '{{cliente.celular}}', descricao: 'Celular' },
-          { variavel: '{{cliente.endereco}}', descricao: 'Endereço completo' },
-          { variavel: '{{cliente.logradouro}}', descricao: 'Logradouro' },
-          { variavel: '{{cliente.numero}}', descricao: 'Número' },
-          { variavel: '{{cliente.complemento}}', descricao: 'Complemento' },
-          { variavel: '{{cliente.bairro}}', descricao: 'Bairro' },
-          { variavel: '{{cliente.cidade}}', descricao: 'Cidade' },
-          { variavel: '{{cliente.estado}}', descricao: 'Estado' },
-          { variavel: '{{cliente.cep}}', descricao: 'CEP' },
+          { variavel: '#cliente.id#', descricao: 'ID do cliente' },
+          { variavel: '#cliente.razao_social#', descricao: 'Razão Social' },
+          { variavel: '#cliente.nome_fantasia#', descricao: 'Nome Fantasia' },
+          { variavel: '#cliente.cpf_cnpj#', descricao: 'CPF/CNPJ' },
+          { variavel: '#cliente.email#', descricao: 'E-mail' },
+          { variavel: '#cliente.telefone#', descricao: 'Telefone' },
+          { variavel: '#cliente.celular#', descricao: 'Celular' },
+          { variavel: '#cliente.endereco#', descricao: 'Endereço completo' },
+          { variavel: '#cliente.logradouro#', descricao: 'Logradouro' },
+          { variavel: '#cliente.numero#', descricao: 'Número' },
+          { variavel: '#cliente.complemento#', descricao: 'Complemento' },
+          { variavel: '#cliente.bairro#', descricao: 'Bairro' },
+          { variavel: '#cliente.cidade#', descricao: 'Cidade' },
+          { variavel: '#cliente.estado#', descricao: 'Estado' },
+          { variavel: '#cliente.cep#', descricao: 'CEP' },
         ]
       },
       contrato: {
         titulo: 'Dados do Contrato',
         variaveis: [
-          { variavel: '{{contrato.id}}', descricao: 'ID do contrato' },
-          { variavel: '{{contrato.plano}}', descricao: 'Nome do plano' },
-          { variavel: '{{contrato.valor_mensal}}', descricao: 'Valor mensal do plano' },
-          { variavel: '{{contrato.valor_final}}', descricao: 'Valor final com descontos' },
-          { variavel: '{{contrato.desconto_percentual}}', descricao: 'Desconto percentual' },
-          { variavel: '{{contrato.desconto_valor}}', descricao: 'Desconto em valor' },
-          { variavel: '{{contrato.data_inicio}}', descricao: 'Data de início' },
-          { variavel: '{{contrato.data_fim}}', descricao: 'Data de fim' },
-          { variavel: '{{contrato.status}}', descricao: 'Status do contrato' },
-          { variavel: '{{contrato.dia_vencimento}}', descricao: 'Dia de vencimento' },
+          { variavel: '#contrato.id#', descricao: 'ID do contrato' },
+          { variavel: '#contrato.plano#', descricao: 'Nome do plano' },
+          { variavel: '#contrato.valor_mensal#', descricao: 'Valor mensal do plano' },
+          { variavel: '#contrato.valor_final#', descricao: 'Valor final com descontos' },
+          { variavel: '#contrato.desconto_percentual#', descricao: 'Desconto percentual' },
+          { variavel: '#contrato.desconto_valor#', descricao: 'Desconto em valor' },
+          { variavel: '#contrato.data_inicio#', descricao: 'Data de início' },
+          { variavel: '#contrato.data_fim#', descricao: 'Data de fim' },
+          { variavel: '#contrato.status#', descricao: 'Status do contrato' },
+          { variavel: '#contrato.dia_vencimento#', descricao: 'Dia de vencimento' },
         ]
       },
       financeiro: {
         titulo: 'Dados Financeiros',
         variaveis: [
-          { variavel: '{{financeiro.total_aberto}}', descricao: 'Total de valores em aberto' },
-          { variavel: '{{financeiro.total_vencido}}', descricao: 'Total de valores vencidos' },
-          { variavel: '{{financeiro.total_pago}}', descricao: 'Total já pago' },
-          { variavel: '{{financeiro.quantidade_titulos_abertos}}', descricao: 'Quantidade de títulos em aberto' },
-          { variavel: '{{financeiro.quantidade_titulos_vencidos}}', descricao: 'Quantidade de títulos vencidos' },
-          { variavel: '{{financeiro.maior_atraso_dias}}', descricao: 'Maior atraso em dias' },
-          { variavel: '{{financeiro.total_juros}}', descricao: 'Total de juros acumulados' },
-          { variavel: '{{financeiro.total_multa}}', descricao: 'Total de multa acumulada' },
-          { variavel: '{{financeiro.valor_com_juros_multa}}', descricao: 'Valor total com juros e multa' },
+          { variavel: '#financeiro.total_aberto#', descricao: 'Total de valores em aberto' },
+          { variavel: '#financeiro.total_vencido#', descricao: 'Total de valores vencidos' },
+          { variavel: '#financeiro.total_pago#', descricao: 'Total já pago' },
+          { variavel: '#financeiro.quantidade_titulos_abertos#', descricao: 'Quantidade de títulos em aberto' },
+          { variavel: '#financeiro.quantidade_titulos_vencidos#', descricao: 'Quantidade de títulos vencidos' },
+          { variavel: '#financeiro.maior_atraso_dias#', descricao: 'Maior atraso em dias' },
+          { variavel: '#financeiro.total_juros#', descricao: 'Total de juros acumulados' },
+          { variavel: '#financeiro.total_multa#', descricao: 'Total de multa acumulada' },
+          { variavel: '#financeiro.valor_com_juros_multa#', descricao: 'Valor total com juros e multa' },
         ]
       },
       titulo: {
         titulo: 'Dados do Título/Parcela',
         variaveis: [
-          { variavel: '{{titulo.id}}', descricao: 'ID do título' },
-          { variavel: '{{titulo.numero}}', descricao: 'Número do título' },
-          { variavel: '{{titulo.valor}}', descricao: 'Valor do título' },
-          { variavel: '{{titulo.valor_pago}}', descricao: 'Valor pago' },
-          { variavel: '{{titulo.saldo}}', descricao: 'Saldo devedor' },
-          { variavel: '{{titulo.vencimento}}', descricao: 'Data de vencimento' },
-          { variavel: '{{titulo.pagamento}}', descricao: 'Data de pagamento' },
-          { variavel: '{{titulo.status}}', descricao: 'Status do título' },
-          { variavel: '{{titulo.dias_atraso}}', descricao: 'Dias em atraso' },
-          { variavel: '{{titulo.juros}}', descricao: 'Valor de juros' },
-          { variavel: '{{titulo.multa}}', descricao: 'Valor de multa' },
-          { variavel: '{{titulo.descricao}}', descricao: 'Descrição do título' },
+          { variavel: '#titulo.id#', descricao: 'ID do título' },
+          { variavel: '#titulo.numero#', descricao: 'Número do título' },
+          { variavel: '#titulo.valor#', descricao: 'Valor do título' },
+          { variavel: '#titulo.valor_pago#', descricao: 'Valor pago' },
+          { variavel: '#titulo.saldo#', descricao: 'Saldo devedor' },
+          { variavel: '#titulo.vencimento#', descricao: 'Data de vencimento' },
+          { variavel: '#titulo.pagamento#', descricao: 'Data de pagamento' },
+          { variavel: '#titulo.status#', descricao: 'Status do título' },
+          { variavel: '#titulo.dias_atraso#', descricao: 'Dias em atraso' },
+          { variavel: '#titulo.juros#', descricao: 'Valor de juros' },
+          { variavel: '#titulo.multa#', descricao: 'Valor de multa' },
+          { variavel: '#titulo.descricao#', descricao: 'Descrição do título' },
         ]
       },
       sistema: {
         titulo: 'Dados do Sistema',
         variaveis: [
-          { variavel: '{{sistema.data_atual}}', descricao: 'Data atual' },
-          { variavel: '{{sistema.hora_atual}}', descricao: 'Hora atual' },
-          { variavel: '{{sistema.data_hora_atual}}', descricao: 'Data e hora atual' },
-          { variavel: '{{sistema.ano_atual}}', descricao: 'Ano atual' },
-          { variavel: '{{sistema.mes_atual}}', descricao: 'Mês atual' },
+          { variavel: '#sistema.data_atual#', descricao: 'Data atual' },
+          { variavel: '#sistema.hora_atual#', descricao: 'Hora atual' },
+          { variavel: '#sistema.data_hora_atual#', descricao: 'Data e hora atual' },
+          { variavel: '#sistema.ano_atual#', descricao: 'Ano atual' },
+          { variavel: '#sistema.mes_atual#', descricao: 'Mês atual' },
         ]
       }
     };
@@ -148,21 +148,21 @@ export class VariaveisDocumentoService {
     ].filter(Boolean).join(', ');
 
     const substituicoes: Record<string, string> = {
-      '{{cliente.id}}': String(cliente.id),
-      '{{cliente.razao_social}}': cliente.razao_social || '',
-      '{{cliente.nome_fantasia}}': cliente.nome_fantasia || '',
-      '{{cliente.cpf_cnpj}}': cliente.cpf_cnpj || '',
-      '{{cliente.email}}': cliente.email || '',
-      '{{cliente.telefone}}': cliente.telefone || '',
-      '{{cliente.celular}}': cliente.celular || '',
-      '{{cliente.endereco}}': endereco,
-      '{{cliente.logradouro}}': cliente.logradouro || '',
-      '{{cliente.numero}}': cliente.numero || '',
-      '{{cliente.complemento}}': cliente.complemento || '',
-      '{{cliente.bairro}}': cliente.bairro || '',
-      '{{cliente.cidade}}': cliente.cidade || '',
-      '{{cliente.estado}}': cliente.estado || '',
-      '{{cliente.cep}}': cliente.cep || '',
+      '#cliente.id#': String(cliente.id),
+      '#cliente.razao_social#': cliente.razao_social || '',
+      '#cliente.nome_fantasia#': cliente.nome_fantasia || '',
+      '#cliente.cpf_cnpj#': cliente.cpf_cnpj || '',
+      '#cliente.email#': cliente.email || '',
+      '#cliente.telefone#': cliente.telefone || '',
+      '#cliente.celular#': cliente.celular || '',
+      '#cliente.endereco#': endereco,
+      '#cliente.logradouro#': cliente.logradouro || '',
+      '#cliente.numero#': cliente.numero || '',
+      '#cliente.complemento#': cliente.complemento || '',
+      '#cliente.bairro#': cliente.bairro || '',
+      '#cliente.cidade#': cliente.cidade || '',
+      '#cliente.estado#': cliente.estado || '',
+      '#cliente.cep#': cliente.cep || '',
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
@@ -189,16 +189,16 @@ export class VariaveisDocumentoService {
     }
 
     const substituicoes: Record<string, string> = {
-      '{{contrato.id}}': String(contrato.id),
-      '{{contrato.plano}}': contrato.plano?.nome_plano || '',
-      '{{contrato.valor_mensal}}': this.formatarMoeda(contrato.plano?.valor_mensal || 0),
-      '{{contrato.valor_final}}': this.formatarMoeda(contrato.valor_final || 0),
-      '{{contrato.desconto_percentual}}': String(contrato.desconto_percentual || 0),
-      '{{contrato.desconto_valor}}': this.formatarMoeda(contrato.desconto_valor || 0),
-      '{{contrato.data_inicio}}': contrato.data_inicio ? this.formatarData(new Date(contrato.data_inicio)) : '',
-      '{{contrato.data_fim}}': contrato.data_fim ? this.formatarData(new Date(contrato.data_fim)) : '',
-      '{{contrato.status}}': contrato.status || '',
-      '{{contrato.dia_vencimento}}': String(contrato.dia_vencimento || ''),
+      '#contrato.id#': String(contrato.id),
+      '#contrato.plano#': contrato.plano?.nome_plano || '',
+      '#contrato.valor_mensal#': this.formatarMoeda(contrato.plano?.valor_mensal || 0),
+      '#contrato.valor_final#': this.formatarMoeda(contrato.valor_final || 0),
+      '#contrato.desconto_percentual#': String(contrato.desconto_percentual || 0),
+      '#contrato.desconto_valor#': this.formatarMoeda(contrato.desconto_valor || 0),
+      '#contrato.data_inicio#': contrato.data_inicio ? this.formatarData(new Date(contrato.data_inicio)) : '',
+      '#contrato.data_fim#': contrato.data_fim ? this.formatarData(new Date(contrato.data_fim)) : '',
+      '#contrato.status#': contrato.status || '',
+      '#contrato.dia_vencimento#': String(contrato.dia_vencimento || ''),
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
@@ -219,18 +219,18 @@ export class VariaveisDocumentoService {
       : 0;
 
     const substituicoes: Record<string, string> = {
-      '{{titulo.id}}': String(titulo.id),
-      '{{titulo.numero}}': titulo.numero_documento || String(titulo.id),
-      '{{titulo.valor}}': this.formatarMoeda(titulo.valor || 0),
-      '{{titulo.valor_pago}}': this.formatarMoeda(titulo.valor_pago || 0),
-      '{{titulo.saldo}}': this.formatarMoeda((titulo.valor || 0) - (titulo.valor_pago || 0)),
-      '{{titulo.vencimento}}': titulo.vencimento ? this.formatarData(new Date(titulo.vencimento)) : '',
-      '{{titulo.pagamento}}': titulo.data_pagamento ? this.formatarData(new Date(titulo.data_pagamento)) : '',
-      '{{titulo.status}}': titulo.status || '',
-      '{{titulo.dias_atraso}}': String(diasAtraso),
-      '{{titulo.juros}}': this.formatarMoeda(titulo.juros || 0),
-      '{{titulo.multa}}': this.formatarMoeda(titulo.multa || 0),
-      '{{titulo.descricao}}': titulo.descricao || '',
+      '#titulo.id#': String(titulo.id),
+      '#titulo.numero#': titulo.numero_documento || String(titulo.id),
+      '#titulo.valor#': this.formatarMoeda(titulo.valor || 0),
+      '#titulo.valor_pago#': this.formatarMoeda(titulo.valor_pago || 0),
+      '#titulo.saldo#': this.formatarMoeda((titulo.valor || 0) - (titulo.valor_pago || 0)),
+      '#titulo.vencimento#': titulo.vencimento ? this.formatarData(new Date(titulo.vencimento)) : '',
+      '#titulo.pagamento#': titulo.data_pagamento ? this.formatarData(new Date(titulo.data_pagamento)) : '',
+      '#titulo.status#': titulo.status || '',
+      '#titulo.dias_atraso#': String(diasAtraso),
+      '#titulo.juros#': this.formatarMoeda(titulo.juros || 0),
+      '#titulo.multa#': this.formatarMoeda(titulo.multa || 0),
+      '#titulo.descricao#': titulo.descricao || '',
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
@@ -297,15 +297,15 @@ export class VariaveisDocumentoService {
     const valorComJurosMulta = totalAberto + totalJuros + totalMulta;
 
     const substituicoes: Record<string, string> = {
-      '{{financeiro.total_aberto}}': this.formatarMoeda(totalAberto),
-      '{{financeiro.total_vencido}}': this.formatarMoeda(totalVencido),
-      '{{financeiro.total_pago}}': this.formatarMoeda(totalPago),
-      '{{financeiro.quantidade_titulos_abertos}}': String(quantidadeAbertos),
-      '{{financeiro.quantidade_titulos_vencidos}}': String(quantidadeVencidos),
-      '{{financeiro.maior_atraso_dias}}': String(maiorAtraso),
-      '{{financeiro.total_juros}}': this.formatarMoeda(totalJuros),
-      '{{financeiro.total_multa}}': this.formatarMoeda(totalMulta),
-      '{{financeiro.valor_com_juros_multa}}': this.formatarMoeda(valorComJurosMulta),
+      '#financeiro.total_aberto#': this.formatarMoeda(totalAberto),
+      '#financeiro.total_vencido#': this.formatarMoeda(totalVencido),
+      '#financeiro.total_pago#': this.formatarMoeda(totalPago),
+      '#financeiro.quantidade_titulos_abertos#': String(quantidadeAbertos),
+      '#financeiro.quantidade_titulos_vencidos#': String(quantidadeVencidos),
+      '#financeiro.maior_atraso_dias#': String(maiorAtraso),
+      '#financeiro.total_juros#': this.formatarMoeda(totalJuros),
+      '#financeiro.total_multa#': this.formatarMoeda(totalMulta),
+      '#financeiro.valor_com_juros_multa#': this.formatarMoeda(valorComJurosMulta),
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
@@ -322,11 +322,11 @@ export class VariaveisDocumentoService {
     let resultado = conteudo;
 
     const substituicoes: Record<string, string> = {
-      '{{sistema.data_atual}}': this.formatarData(dataRef),
-      '{{sistema.hora_atual}}': this.formatarHora(dataRef),
-      '{{sistema.data_hora_atual}}': this.formatarDataHora(dataRef),
-      '{{sistema.ano_atual}}': String(dataRef.getFullYear()),
-      '{{sistema.mes_atual}}': String(dataRef.getMonth() + 1).padStart(2, '0'),
+      '#sistema.data_atual#': this.formatarData(dataRef),
+      '#sistema.hora_atual#': this.formatarHora(dataRef),
+      '#sistema.data_hora_atual#': this.formatarDataHora(dataRef),
+      '#sistema.ano_atual#': String(dataRef.getFullYear()),
+      '#sistema.mes_atual#': String(dataRef.getMonth() + 1).padStart(2, '0'),
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
