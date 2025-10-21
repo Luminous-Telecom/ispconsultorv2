@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useCreateContrato, CreateContratoData } from '../../../hooks/useContratos';
 import { useClientes } from '../../../hooks/useClientes';
 import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
+import DocumentoSistemaService from '../../../services/documentoSistemaService';
 
 interface ContratoForm {
   cliente_id: number;
@@ -17,9 +18,10 @@ interface ContratoForm {
   status: 'ativo' | 'inativo' | 'suspenso';
   observacoes?: string;
   isento_mensalidade: boolean;
-  dia_vencimento?: number;
-  conta_boleto?: number;
+  dia_vencimento: number;
+  conta_boleto: number;
   data_validade_desconto?: string;
+  modelo_contrato_id: number;
 }
 
 interface ContratoCreateModalProps {
@@ -45,9 +47,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     status: 'ativo',
     observacoes: '',
     isento_mensalidade: false,
-    dia_vencimento: 10,
+    dia_vencimento: 0,
     conta_boleto: 0,
-    data_validade_desconto: ''
+    data_validade_desconto: '',
+    modelo_contrato_id: 0
   });
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
@@ -57,10 +60,16 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
   const { data: clientesData } = useClientes();
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
+  const { data: modelosContratoData } = useQuery({
+    queryKey: ['modelos-contrato'],
+    queryFn: () => DocumentoSistemaService.getByType('contrato'),
+    enabled: show,
+  });
   
   const clientes = Array.isArray(clientesData) ? clientesData : (clientesData?.data || []);
   const planos = Array.isArray(planosData) ? planosData : (planosData?.data || []);
   const bancos = Array.isArray(bancosData) ? bancosData : (bancosData?.data || []);
+  const modelosContrato = modelosContratoData?.data || [];
   
   // Mutation para criar contrato
   const createContratoMutation = useCreateContrato();
@@ -78,9 +87,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         status: 'ativo',
         observacoes: '',
         isento_mensalidade: false,
-        dia_vencimento: 10,
+        dia_vencimento: 0,
         conta_boleto: 0,
-        data_validade_desconto: ''
+        data_validade_desconto: '',
+        modelo_contrato_id: 0
       });
       setErrors({});
     }
@@ -106,6 +116,15 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     if (!formData.cliente_id) newErrors.cliente_id = 'Cliente é obrigatório';
     if (!formData.plano_id) newErrors.plano_id = 'Plano é obrigatório';
     if (!formData.data_inicio) newErrors.data_inicio = 'Data de início é obrigatória';
+    if (!formData.dia_vencimento || formData.dia_vencimento === 0) {
+      newErrors.dia_vencimento = 'Dia de vencimento é obrigatório';
+    }
+    if (!formData.conta_boleto || formData.conta_boleto === 0) {
+      newErrors.conta_boleto = 'Banco para boleto é obrigatório';
+    }
+    if (!formData.modelo_contrato_id || formData.modelo_contrato_id === 0) {
+      newErrors.modelo_contrato_id = 'Modelo de contrato é obrigatório';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -126,9 +145,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       status: formData.status,
       observacoes: formData.observacoes || undefined,
       isento_mensalidade: formData.isento_mensalidade,
-      dia_vencimento: formData.dia_vencimento || undefined,
-      conta_boleto: formData.conta_boleto || undefined,
-      data_validade_desconto: formData.data_validade_desconto || undefined
+      dia_vencimento: formData.dia_vencimento,
+      conta_boleto: formData.conta_boleto,
+      data_validade_desconto: formData.data_validade_desconto || undefined,
+      modelo_contrato_id: formData.modelo_contrato_id
     };
 
     createContratoMutation.mutate(contratoData, {
@@ -225,9 +245,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="status" className="form-label small">Status</label>
+              <label htmlFor="status" className="form-label small">Status *</label>
               <select
-                className="form-select"
+                className={`form-select ${errors.status ? 'is-invalid' : ''}`}
                 id="status"
                 name="status"
                 value={formData.status}
@@ -238,6 +258,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 <option value="inativo">Inativo</option>
                 <option value="suspenso">Suspenso</option>
               </select>
+              {errors.status && <div className="invalid-feedback">{errors.status}</div>}
             </div>
           </div>
 
@@ -312,18 +333,19 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="dia_vencimento" className="form-label small">Dia de Vencimento</label>
+              <label htmlFor="dia_vencimento" className="form-label small">Dia de Vencimento *</label>
               <input
                 type="number"
                 min="1"
                 max="31"
-                className="form-control"
+                className={`form-control ${errors.dia_vencimento ? 'is-invalid' : ''}`}
                 id="dia_vencimento"
                 value={formData.dia_vencimento || ''}
                 onChange={(e) => handleInputChange('dia_vencimento', parseInt(e.target.value) || 0)}
                 disabled={createContratoMutation.isPending}
-                placeholder="10"
+                placeholder="Ex: 10"
               />
+              {errors.dia_vencimento && <div className="invalid-feedback">{errors.dia_vencimento}</div>}
             </div>
           </div>
         </div>
@@ -331,9 +353,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="conta_boleto" className="form-label small">Banco para Boleto</label>
+              <label htmlFor="conta_boleto" className="form-label small">Banco para Boleto *</label>
               <select
-                className="form-select"
+                className={`form-select ${errors.conta_boleto ? 'is-invalid' : ''}`}
                 id="conta_boleto"
                 value={formData.conta_boleto || 0}
                 onChange={(e) => handleInputChange('conta_boleto', parseInt(e.target.value))}
@@ -346,6 +368,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   </option>
                 ))}
               </select>
+              {errors.conta_boleto && <div className="invalid-feedback">{errors.conta_boleto}</div>}
             </div>
           </div>
 
@@ -360,6 +383,33 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 onChange={(e) => handleInputChange('data_validade_desconto', e.target.value)}
                 disabled={createContratoMutation.isPending}
               />
+            </div>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-md-12">
+            <div className="mb-3">
+              <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato *</label>
+              <select
+                className={`form-select ${errors.modelo_contrato_id ? 'is-invalid' : ''}`}
+                id="modelo_contrato_id"
+                name="modelo_contrato_id"
+                value={formData.modelo_contrato_id || 0}
+                onChange={(e) => handleInputChange('modelo_contrato_id', parseInt(e.target.value))}
+                disabled={createContratoMutation.isPending}
+              >
+                <option value={0}>Selecione um modelo</option>
+                {modelosContrato.map((modelo: any) => (
+                  <option key={modelo.id} value={modelo.id}>
+                    {modelo.nome}
+                  </option>
+                ))}
+              </select>
+              {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
+              <small className="form-text text-muted">
+                Selecione um modelo de contrato cadastrado no sistema
+              </small>
             </div>
           </div>
         </div>

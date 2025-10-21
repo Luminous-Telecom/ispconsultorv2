@@ -45,8 +45,8 @@ export interface CreateContratoData {
   status?: 'ativo' | 'inativo' | 'suspenso';
   observacoes?: string;
   isento_mensalidade?: boolean;
-  dia_vencimento?: number;
-  conta_boleto?: number;
+  dia_vencimento: number;
+  conta_boleto: number;
   data_validade_desconto?: string;
   modelo_contrato_id: number;
 }

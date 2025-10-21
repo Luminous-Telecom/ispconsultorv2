@@ -183,16 +183,22 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       newErrors.modelo_contrato_id = 'Modelo de contrato é obrigatório';
     }
 
+    if (!formData.dia_vencimento || formData.dia_vencimento === 0) {
+      newErrors.dia_vencimento = 'Dia de vencimento é obrigatório';
+    } else if (formData.dia_vencimento < 1 || formData.dia_vencimento > 31) {
+      newErrors.dia_vencimento = 'Dia de vencimento deve estar entre 1 e 31';
+    }
+
+    if (!formData.conta_boleto || formData.conta_boleto === 0) {
+      newErrors.conta_boleto = 'Banco para boleto é obrigatório';
+    }
+
     if (formData.desconto_percentual < 0 || formData.desconto_percentual > 100) {
       newErrors.desconto_percentual = 'Desconto percentual deve estar entre 0 e 100';
     }
 
     if (formData.desconto_valor < 0) {
       newErrors.desconto_valor = 'Desconto valor não pode ser negativo';
-    }
-
-    if (formData.dia_vencimento < 1 || formData.dia_vencimento > 31) {
-      newErrors.dia_vencimento = 'Dia de vencimento deve estar entre 1 e 31';
     }
 
     if (!formData.data_inicio) {
@@ -626,11 +632,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Status */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="status" className="form-label">Status</label>
+            <label htmlFor="status" className="form-label">Status *</label>
             <select
               id="status"
               name="status"
-              className="form-select"
+              className={`form-select ${errors.status ? 'is-invalid' : ''}`}
               value={formData.status}
               onChange={(e) => handleInputChange('status', e.target.value as 'ativo' | 'inativo' | 'suspenso')}
             >
@@ -638,6 +644,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <option value="inativo">Inativo</option>
               <option value="suspenso">Suspenso</option>
             </select>
+            {errors.status && <div className="invalid-feedback">{errors.status}</div>}
           </div>
 
           {/* Data de Início */}
@@ -669,7 +676,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Dia de Vencimento */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="dia_vencimento" className="form-label">Dia de Vencimento</label>
+            <label htmlFor="dia_vencimento" className="form-label">Dia de Vencimento *</label>
             <input
               type="number"
               id="dia_vencimento"
@@ -685,11 +692,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Banco para Boleto */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="conta_boleto" className="form-label">Banco para Boleto</label>
+            <label htmlFor="conta_boleto" className="form-label">Banco para Boleto *</label>
             <select
               id="conta_boleto"
               name="conta_boleto"
-              className="form-select"
+              className={`form-select ${errors.conta_boleto ? 'is-invalid' : ''}`}
               value={formData.conta_boleto}
               onChange={(e) => handleInputChange('conta_boleto', parseInt(e.target.value))}
             >
@@ -700,6 +707,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 </option>
               ))}
             </select>
+            {errors.conta_boleto && <div className="invalid-feedback">{errors.conta_boleto}</div>}
           </div>
 
           {/* Desconto Percentual */}

@@ -17,8 +17,8 @@ export class ContratoController {
     status: Joi.string().valid('ativo', 'inativo', 'suspenso').default('ativo'),
     observacoes: Joi.string().allow(null, ''),
     isento_mensalidade: Joi.boolean().default(false),
-    dia_vencimento: Joi.number().min(1).max(31).allow(null),
-    conta_boleto: Joi.number().integer().min(1).allow(null),
+    dia_vencimento: Joi.number().integer().min(1).max(31).required(),
+    conta_boleto: Joi.number().integer().min(1).required(),
     data_validade_desconto: Joi.date().allow(null, '').optional(),
     modelo_contrato_id: Joi.number().integer().min(1).required()
   });
@@ -33,8 +33,8 @@ export class ContratoController {
     status: Joi.string().valid('ativo', 'inativo', 'suspenso'),
     observacoes: Joi.string().allow(null, ''),
     isento_mensalidade: Joi.boolean(),
-    dia_vencimento: Joi.number().min(1).max(31).allow(null),
-    conta_boleto: Joi.number().integer().min(1).allow(null),
+    dia_vencimento: Joi.number().integer().min(1).max(31).required(),
+    conta_boleto: Joi.number().integer().min(1).required(),
     data_validade_desconto: Joi.date().allow(null, '').optional(),
     modelo_contrato_id: Joi.number().integer().min(1).required()
   });
