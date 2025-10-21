@@ -18,12 +18,10 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     descricao: '',
     conteudo: '',
   });
-  const [isImporting, setIsImporting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const queryClient = useQueryClient();
   const { addNotification } = useNotificationContext();
@@ -89,29 +87,6 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     }
   };
 
-  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.name.endsWith('.docx')) {
-      addNotification('error', 'Apenas arquivos .docx são permitidos');
-      return;
-    }
-
-    setIsImporting(true);
-    try {
-      const result = await DocumentoSistemaService.convertWordToHtml(file);
-      setFormData(prev => ({ ...prev, conteudo: result.data.html }));
-      addNotification('success', 'Arquivo importado com sucesso');
-    } catch (error: any) {
-      addNotification('error', error.message || 'Erro ao importar arquivo');
-    } finally {
-      setIsImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
 
   const handleClose = () => {
     handleReset();
@@ -275,35 +250,6 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                 <span id="conteudo-label" className="form-label small mb-0">
                   Conteúdo <span className="text-danger">*</span>
                 </span>
-                <div>
-                  <label htmlFor="import-word-file" className="sr-only">Importar arquivo Word</label>
-                  <input
-                    ref={fileInputRef}
-                    id="import-word-file"
-                    name="import-word-file"
-                    type="file"
-                    accept=".docx"
-                    onChange={handleFileImport}
-                    style={{ display: 'none' }}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-outline-info btn-sm py-0 px-1"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isImporting}
-                    title="Importar de Word (.docx)"
-                    style={{ fontSize: '0.7rem' }}
-                  >
-                    {isImporting ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-1" style={{ width: '0.6rem', height: '0.6rem' }}></span>
-                        Importando...
-                      </>
-                    ) : (
-                      <>Importar Word</>
-                    )}
-                  </button>
-                </div>
               </div>
               <RichTextEditor
                 ref={editorRef}
