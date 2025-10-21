@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import mammoth from 'mammoth';
 import fs from 'fs/promises';
 import PDFDocument from 'pdfkit';
+import 'pdfkit-table';
 
 export class DocumentoSistemaController {
   /**
@@ -365,17 +366,6 @@ export class DocumentoSistemaController {
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'");
 
-      // Log do HTML original
-      logger.info('=== INÍCIO DO PROCESSAMENTO PDF ===');
-      logger.info(`Documento: ${documento.nome}`);
-      logger.info(`Tamanho do HTML: ${htmlContent.length} caracteres`);
-      
-      // Log de amostra do HTML para debug
-      const firstParagraphs = htmlContent.match(/<p[^>]*>.*?<\/p>/gi);
-      if (firstParagraphs && firstParagraphs.length > 0) {
-        logger.info(`Exemplo de parágrafo HTML: ${firstParagraphs[0].substring(0, 200)}`);
-      }
-
       // Função para extrair texto e formatação de HTML preservando a ordem e estrutura
       const processHtmlBlock = (html: string) => {
         const blocks: Array<{ 
@@ -389,6 +379,12 @@ export class DocumentoSistemaController {
           align?: 'left' | 'center' | 'right' | 'justify';
           fontSize?: number;
           isEmpty?: boolean;
+          isTable?: boolean;
+          tableData?: {
+            headers: Array<{ text: string; fontSize?: number; align?: 'left' | 'center' | 'right' | 'justify' }>;
+            rows: Array<Array<{ text: string; fontSize?: number; align?: 'left' | 'center' | 'right' | 'justify' }>>;
+          };
+          position?: number;
         }> = [];
         
         // Remove comentários HTML
@@ -417,14 +413,74 @@ export class DocumentoSistemaController {
         
         // Função auxiliar para processar conteúdo interno (negrito, itálico, etc)
         const processInlineFormatting = (content: string): { text: string; bold: boolean; italic: boolean; underline: boolean } => {
+          // Remove tags HTML para obter o texto puro
           const text = content.replace(/<[^>]*>/g, '').trim();
+          
+          // Se não há texto, retorna false para tudo
+          if (!text) {
+            return {
+              text: '',
+              bold: false,
+              italic: false,
+              underline: false
+            };
+          }
+          
+          // Verifica se há tags de formatação no conteúdo
+          const hasBold = /<(strong|b)(\s[^>]*)?>/i.test(content);
+          const hasItalic = /<(em|i)(\s[^>]*)?>/i.test(content);
+          const hasUnderline = /<u(\s[^>]*)?>/i.test(content);
+          
+          // Conta quantos caracteres estão dentro de tags de formatação vs total
+          // Se a maioria do texto está formatado, considera como formatado
+          const totalChars = text.length;
+          
+          // Extrai texto dentro de tags strong/b
+          const boldTextMatches = content.match(/<(strong|b)(\s[^>]*)?>(.*?)<\/(strong|b)>/gi) || [];
+          const boldChars = boldTextMatches.reduce((sum, match) => {
+            const innerText = match.replace(/<[^>]*>/g, '');
+            return sum + innerText.length;
+          }, 0);
+          
+          // Extrai texto dentro de tags em/i
+          const italicTextMatches = content.match(/<(em|i)(\s[^>]*)?>(.*?)<\/(em|i)>/gi) || [];
+          const italicChars = italicTextMatches.reduce((sum, match) => {
+            const innerText = match.replace(/<[^>]*>/g, '');
+            return sum + innerText.length;
+          }, 0);
+          
+          // Extrai texto dentro de tags u
+          const underlineTextMatches = content.match(/<u(\s[^>]*)?>(.*?)<\/u>/gi) || [];
+          const underlineChars = underlineTextMatches.reduce((sum, match) => {
+            const innerText = match.replace(/<[^>]*>/g, '');
+            return sum + innerText.length;
+          }, 0);
+          
+          // Se mais de 50% do texto está formatado, considera como formatado
+          const isBold = hasBold && (boldChars / totalChars) > 0.5;
+          const isItalic = hasItalic && (italicChars / totalChars) > 0.5;
+          const isUnderline = hasUnderline && (underlineChars / totalChars) > 0.5;
+          
           return {
             text,
-            bold: /<strong>|<b>/.test(content),
-            italic: /<em>|<i>/.test(content),
-            underline: /<u>/.test(content)
+            bold: isBold,
+            italic: isItalic,
+            underline: isUnderline
           };
         };
+        
+        // Primeiro processa tabelas separadamente (pois podem ter conteúdo complexo)
+        const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+        let tableMatch;
+        const tablePositions: Array<{ start: number; end: number; content: string }> = [];
+        
+        while ((tableMatch = tableRegex.exec(html)) !== null) {
+          tablePositions.push({
+            start: tableMatch.index,
+            end: tableMatch.index + tableMatch[0].length,
+            content: tableMatch[0]
+          });
+        }
         
         // Processa o HTML sequencialmente para manter a ordem
         // Regex para capturar todos os elementos na ordem (incluindo divs)
@@ -432,10 +488,16 @@ export class DocumentoSistemaController {
         let match;
         
         while ((match = elementRegex.exec(html)) !== null) {
+          // Verifica se esta posição está dentro de uma tabela
+          const matchPos = match.index;
+          const isInsideTable = tablePositions.some(t => matchPos >= t.start && matchPos < t.end);
+          if (isInsideTable) continue; // Pula elementos dentro de tabelas
+          
           const tagName = match[1].toLowerCase();
           const attrs = match[2];
           const content = match[3];
           const fullTag = match[0];
+          const position = matchPos; // Guarda posição para ordenar depois
           
           if (tagName.startsWith('h')) {
             // Heading
@@ -450,7 +512,8 @@ export class DocumentoSistemaController {
                 bold: true,
                 italic: formatted.italic,
                 underline: formatted.underline,
-                align
+                align,
+                position
               });
             }
           } else if (tagName === 'p') {
@@ -463,7 +526,8 @@ export class DocumentoSistemaController {
               blocks.push({
                 text: '',
                 isEmpty: true,
-                align
+                align,
+                position
               });
             } else {
               // Processa <br> como quebras de linha dentro do parágrafo
@@ -479,14 +543,16 @@ export class DocumentoSistemaController {
                     italic: formatted.italic,
                     underline: formatted.underline,
                     align,
-                    fontSize
+                    fontSize,
+                    position
                   });
                 } else if (i < lines.length - 1) {
                   // Linha vazia entre <br> tags
                   blocks.push({
                     text: '',
                     isEmpty: true,
-                    align
+                    align,
+                    position
                   });
                 }
               }
@@ -503,7 +569,8 @@ export class DocumentoSistemaController {
                   listItem: true,
                   bold: formatted.bold,
                   italic: formatted.italic,
-                  underline: formatted.underline
+                  underline: formatted.underline,
+                  position
                 });
               }
             }
@@ -520,7 +587,8 @@ export class DocumentoSistemaController {
                   listItem: true,
                   bold: formatted.bold,
                   italic: formatted.italic,
-                  underline: formatted.underline
+                  underline: formatted.underline,
+                  position
                 });
                 orderCounter++;
               }
@@ -535,7 +603,8 @@ export class DocumentoSistemaController {
               blocks.push({
                 text: '',
                 isEmpty: true,
-                align
+                align,
+                position
               });
             } else {
               // Processa <br> como quebras de linha dentro do div
@@ -551,18 +620,92 @@ export class DocumentoSistemaController {
                     italic: formatted.italic,
                     underline: formatted.underline,
                     align,
-                    fontSize
+                    fontSize,
+                    position
                   });
                 } else if (i < lines.length - 1) {
                   // Linha vazia entre <br> tags
                   blocks.push({
                     text: '',
                     isEmpty: true,
-                    align
+                    align,
+                    position
                   });
                 }
               }
             }
+          }
+        }
+        
+        // Processa tabelas encontradas e insere nos blocos na ordem correta
+        for (const tablePos of tablePositions) {
+          const tableHtml = tablePos.content;
+          
+          const headers: Array<{ text: string; fontSize?: number; align?: 'left' | 'center' | 'right' | 'justify' }> = [];
+          const rows: Array<Array<{ text: string; fontSize?: number; align?: 'left' | 'center' | 'right' | 'justify' }>> = [];
+          let isFirstRow = true;
+          
+          // Extrai linhas da tabela
+          const trRegex = /<tr[^>]*>(.*?)<\/tr>/gis;
+          let trMatch;
+          
+          while ((trMatch = trRegex.exec(tableHtml)) !== null) {
+            const rowContent = trMatch[1];
+            
+            // Verifica se é header (th) ou células normais (td)
+            const hasHeaders = /<th[^>]*>/i.test(rowContent);
+            
+            // Extrai células da linha
+            const cellRegex = /<(td|th)([^>]*)>(.*?)<\/\1>/gis;
+            let cellMatch;
+            const cells: Array<{ text: string; fontSize?: number; align?: 'left' | 'center' | 'right' | 'justify' }> = [];
+            
+            while ((cellMatch = cellRegex.exec(rowContent)) !== null) {
+              const cellTag = cellMatch[0];
+              let cellContent = cellMatch[3];
+              const fontSize = extractFontSize(cellTag);
+              const align = extractAlign(cellTag);
+              
+              // Preserva quebras de linha convertendo <p>, <br> em \n
+              let cellText = cellContent
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/p>\s*<p[^>]*>/gi, '\n')
+                .replace(/<p[^>]*>/gi, '')
+                .replace(/<\/p>/gi, '\n')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/<[^>]*>/g, '') // Remove todas as outras tags
+                .trim();
+              
+              cells.push({
+                text: cellText,
+                fontSize,
+                align
+              });
+            }
+            
+            // Se tem th ou é a primeira linha, trata como header
+            if ((hasHeaders || isFirstRow) && headers.length === 0) {
+              headers.push(...cells);
+              isFirstRow = false;
+            } else {
+              if (cells.length > 0) {
+                rows.push(cells);
+              }
+            }
+          }
+          
+          // Adiciona tabela completa como bloco
+          if (headers.length > 0 || rows.length > 0) {
+            blocks.push({
+              text: '', // Não usado para tabelas
+              isTable: true,
+              tableData: {
+                headers: headers.length > 0 ? headers : (rows.length > 0 ? rows.shift()! : []),
+                rows
+              },
+              align: 'left' as const,
+              position: tablePos.start // Guarda posição para ordenar depois
+            });
           }
         }
         
@@ -597,25 +740,18 @@ export class DocumentoSistemaController {
           }
         }
         
+        // Ordena blocos por posição no HTML original (se tiverem posição definida)
+        blocks.sort((a, b) => {
+          if (a.position !== undefined && b.position !== undefined) {
+            return a.position - b.position;
+          }
+          return 0; // Mantém ordem original se não tiver posição
+        });
+        
         return blocks;
       };
 
       const blocks = processHtmlBlock(htmlContent);
-      
-      // Log dos blocos processados
-      logger.info(`Total de blocos processados: ${blocks.length}`);
-      blocks.forEach((block, index) => {
-        logger.info(`Bloco ${index + 1}: ${JSON.stringify({
-          text: block.text.substring(0, 50) + (block.text.length > 50 ? '...' : ''),
-          heading: block.heading,
-          bold: block.bold,
-          italic: block.italic,
-          align: block.align,
-          fontSize: block.fontSize,
-          listItem: block.listItem,
-          isEmpty: block.isEmpty
-        })}`);
-      });
       
       doc.fontSize(10).font('Helvetica');
 
@@ -663,25 +799,175 @@ export class DocumentoSistemaController {
                align: block.align || 'left'
              });
           doc.moveDown(0.2);
-        } else {
-          // Texto normal com formatação
-          const size = block.fontSize || 10;
+        } else if (block.isTable && block.tableData) {
+          // Renderiza tabela com células lado a lado
+          const { headers, rows } = block.tableData;
           
-          doc.font(font)
-             .fontSize(size)
-             .text(block.text, { 
-               align: block.align || 'left',
-               continued: false
-             });
+          doc.moveDown(0.5);
+          
+          // Calcula largura das colunas
+          const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+          const numCols = Math.max(headers.length, ...rows.map(r => r.length));
+          const colWidth = pageWidth / numCols;
+          
+          // Renderiza headers
+          if (headers.length > 0) {
+            const startY = doc.y;
+            let maxHeight = 0;
+            
+            headers.forEach((header, colIndex) => {
+              if (header.text && header.text.trim()) {
+                const x = doc.page.margins.left + (colIndex * colWidth);
+                const fontSize = header.fontSize || 10;
+                const align = header.align || 'left';
+                
+                doc.font('Helvetica-Bold')
+                   .fontSize(fontSize)
+                   .text(header.text.trim(), x, startY, {
+                     width: colWidth - 10,
+                     align: align,
+                     lineBreak: true
+                   });
+                
+                const cellHeight = doc.y - startY;
+                if (cellHeight > maxHeight) maxHeight = cellHeight;
+                
+                // Restaura Y para não afetar próximo header
+                doc.y = startY;
+              }
+            });
+            
+            // Move Y para depois do header mais alto
+            doc.y = startY + maxHeight;
+            doc.moveDown(0.5);
+          }
+          
+          // Renderiza linhas
+          rows.forEach((row) => {
+            const startY = doc.y;
+            let maxHeight = 0;
+            
+            row.forEach((cell, colIndex) => {
+              if (cell.text && cell.text.trim()) {
+                const x = doc.page.margins.left + (colIndex * colWidth);
+                const fontSize = cell.fontSize || 10;
+                const align = cell.align || 'left';
+                
+                // Processa quebras de linha dentro da célula
+                const cellLines = cell.text.split('\n').filter(line => line.trim());
+                const cellText = cellLines.join('\n');
+                
+                // Salva posição Y atual antes de escrever
+                const currentY = doc.y;
+                
+                doc.font('Helvetica')
+                   .fontSize(fontSize)
+                   .text(cellText, x, startY, {
+                     width: colWidth - 10,
+                     align: align,
+                     lineBreak: true
+                   });
+                
+                const cellHeight = doc.y - startY;
+                if (cellHeight > maxHeight) maxHeight = cellHeight;
+                
+                // Restaura Y para não afetar próxima célula da mesma linha
+                doc.y = startY;
+              }
+            });
+            
+            // Move Y para depois da linha mais alta
+            doc.y = startY + maxHeight;
+            doc.moveDown(0.3);
+          });
+          
+          // Garante que voltamos para margem esquerda e move um pouco para baixo
+          doc.x = doc.page.margins.left;
+          doc.moveDown(0.5);
+        } else {
+          // Texto normal - processa formatação inline (strong, em, etc)
+          const size = block.fontSize || 10;
+          doc.fontSize(size);
+          
+          // Tenta encontrar o HTML original deste bloco para processar tags inline
+          const renderWithInlineFormatting = () => {
+            // Procura divs no HTML original
+            const divRegex = /<div[^>]*>([\s\S]*?)<\/div>/gi;
+            let divMatch;
+            let foundMatch = false;
+            
+            while ((divMatch = divRegex.exec(htmlContent)) !== null) {
+              const divContent = divMatch[1];
+              const plainText = divContent.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+              
+              // Verifica se este div corresponde ao nosso bloco
+              if (plainText === block.text) {
+                foundMatch = true;
+                
+                // Processa o HTML com tags inline
+                const parts: Array<{ text: string; bold: boolean; italic: boolean }> = [];
+                const textWithTags = divContent.replace(/&nbsp;/g, ' ');
+                
+                // Regex para capturar texto com e sem tags
+                const inlineRegex = /<(strong|b)(?:\s[^>]*)?>([^<]*)<\/\1>|<(em|i)(?:\s[^>]*)?>([^<]*)<\/\3>|([^<]+)/gi;
+                let inlineMatch;
+                
+                while ((inlineMatch = inlineRegex.exec(textWithTags)) !== null) {
+                  if (inlineMatch[1] && inlineMatch[2]) {
+                    // Tag strong ou b
+                    parts.push({ text: inlineMatch[2], bold: true, italic: false });
+                  } else if (inlineMatch[3] && inlineMatch[4]) {
+                    // Tag em ou i
+                    parts.push({ text: inlineMatch[4], bold: false, italic: true });
+                  } else if (inlineMatch[5]) {
+                    // Texto sem tag (preserva espaços)
+                    const text = inlineMatch[5].replace(/<[^>]*>/g, '');
+                    if (text.trim()) { // Verifica se tem conteúdo, mas mantém os espaços originais
+                      parts.push({ text: text, bold: false, italic: false });
+                    }
+                  }
+                }
+                
+                // Renderiza cada parte
+                parts.forEach((part, index) => {
+                  if (!part.text) return;
+                  
+                  let partFont = 'Helvetica';
+                  if (part.bold && part.italic) {
+                    partFont = 'Helvetica-BoldOblique';
+                  } else if (part.bold) {
+                    partFont = 'Helvetica-Bold';
+                  } else if (part.italic) {
+                    partFont = 'Helvetica-Oblique';
+                  }
+                  
+                  doc.font(partFont).text(part.text, {
+                    continued: index < parts.length - 1,
+                    align: index === 0 ? (block.align || 'left') : undefined
+                  });
+                });
+                
+                break;
+              }
+            }
+            
+            return foundMatch;
+          };
+          
+          // Tenta renderizar com formatação inline, senão usa método simples
+          if (!renderWithInlineFormatting()) {
+            doc.font(font).text(block.text, { 
+              align: block.align || 'left',
+              continued: false
+            });
+          }
+          
           doc.moveDown(0.5);
         }
       }
 
       // Finalizar o PDF
       doc.end();
-
-      logger.info(`=== PDF FINALIZADO ===`);
-      logger.info(`PDF gerado para documento: ${documento.nome}`);
     } catch (error) {
       logger.error('Erro ao gerar PDF:', error);
       res.status(500).json({
