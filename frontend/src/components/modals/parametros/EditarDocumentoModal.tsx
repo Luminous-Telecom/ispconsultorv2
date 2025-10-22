@@ -31,7 +31,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
   // Buscar lista de clientes para teste
   const { data: clientesData } = useQuery({
     queryKey: ['clientes'],
-    queryFn: () => ClienteService.getAll()
+    queryFn: () => ClienteService.list({ limit: 100 })
   });
 
   // Carregar dados do documento quando o modal abrir
