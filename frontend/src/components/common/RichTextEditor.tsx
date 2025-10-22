@@ -2,39 +2,10 @@ import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import { ClassicEditor } from 'ckeditor5';
 import { 
-  Bold,
   Essentials,
+  Bold,
   Italic,
-  Paragraph,
-  Undo,
-  Heading,
-  List,
-  Link,
-  Image,
-  ImageUpload,
-  ImageResize,
-  ImageInsert,
-  Alignment,
-  Font,
-  RemoveFormat,
-  SourceEditing,
-  GeneralHtmlSupport,
-  Underline,
-  BlockQuote,
-  Code,
-  HorizontalLine,
-  Indent,
-  IndentBlock,
-  FontSize,
-  FontFamily,
-  Base64UploadAdapter,
-  Style
-} from 'ckeditor5';
-import { 
-  Table,
-  TableToolbar,
-  TableProperties,
-  TableCellProperties
+  Paragraph
 } from 'ckeditor5';
 
 import 'ckeditor5/ckeditor5.css';
@@ -363,98 +334,15 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Essentials,
             Bold,
             Italic,
-            Paragraph,
-            Heading,
-            Undo,
-            SourceEditing
+            Paragraph
           ],
           toolbar: {
             items: [
-              'undo', 'redo', '|',
-              'sourceEditing', '|',
-              'heading', '|',
               'bold', 'italic'
             ],
             shouldNotGroupWhenFull: true
           },
-          language: 'pt-br',
-          fontSize: {
-            options: [
-              9, 11, 13, 'default', 17, 19, 21, 24, 28, 32, 36, 48, 72
-            ],
-            supportAllValues: true
-          },
-          fontFamily: {
-            options: [
-              'default',
-              'Arial, Helvetica, sans-serif',
-              'Courier New, Courier, monospace',
-              'Georgia, serif',
-              'Tahoma, Geneva, sans-serif',
-              'Times New Roman, Times, serif',
-              'Trebuchet MS, Helvetica, sans-serif',
-              'Verdana, Geneva, sans-serif',
-              'Roboto, sans-serif'
-            ],
-            supportAllValues: true
-          },
-          style: {
-            definitions: [
-              {
-                name: 'Espaçamento Simples (1.0)',
-                element: 'p',
-                classes: ['line-height-1']
-              },
-              {
-                name: 'Espaçamento Compacto (1.15)',
-                element: 'p',
-                classes: ['line-height-115']
-              },
-              {
-                name: 'Espaçamento Normal (1.2)',
-                element: 'p',
-                classes: ['line-height-12']
-              },
-              {
-                name: 'Espaçamento Médio (1.5)',
-                element: 'p',
-                classes: ['line-height-15']
-              },
-              {
-                name: 'Espaçamento Duplo (2.0)',
-                element: 'p',
-                classes: ['line-height-2']
-              }
-            ]
-          },
-          placeholder: placeholder,
-          htmlSupport: {
-            allow: [
-              {
-                name: /.*/,
-                attributes: true,
-                classes: true,
-                styles: true
-              }
-            ],
-            disallow: []
-          },
-          // Permite todo tipo de HTML sem filtragem
-          htmlEmbed: {
-            showPreviews: true
-          },
-          image: {
-            resizeUnit: 'px'
-          },
-          table: {
-            contentToolbar: [
-              'tableColumn',
-              'tableRow',
-              'mergeTableCells',
-              'tableProperties',
-              'tableCellProperties'
-            ]
-          }
+          language: 'pt-br'
         }}
         data={value}
         id={id}
