@@ -530,6 +530,9 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 padding: 4px 8px;
                 margin: 0 4px;
                 font-size: 12px;
+                background-color: white !important;
+                color: #333 !important;
+                border: 1px solid #ccc !important;
               `;
 
               // Adicionar opções
@@ -598,10 +601,19 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 if (item.group) {
                   const optgroup = document.createElement('optgroup');
                   optgroup.label = item.group;
+                  optgroup.style.cssText = `
+                    background-color: #f0f0f0;
+                    color: #333;
+                    font-weight: bold;
+                  `;
                   item.options.forEach(option => {
                     const opt = document.createElement('option');
                     opt.value = option.value;
                     opt.textContent = option.text;
+                    opt.style.cssText = `
+                      background-color: white;
+                      color: #333;
+                    `;
                     optgroup.appendChild(opt);
                   });
                   variablesDropdown.appendChild(optgroup);
@@ -609,6 +621,10 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                   const opt = document.createElement('option');
                   opt.value = item.value || '';
                   opt.textContent = item.text || '';
+                  opt.style.cssText = `
+                    background-color: white;
+                    color: #333;
+                  `;
                   variablesDropdown.appendChild(opt);
                 }
               });
