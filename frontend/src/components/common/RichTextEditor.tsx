@@ -1,7 +1,6 @@
 import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import { ClassicEditor } from 'ckeditor5';
-import VariablePlugin from './VariablePlugin';
 import { 
   Bold,
   Essentials,
@@ -364,47 +363,17 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Essentials,
             Bold,
             Italic,
-            Underline,
             Paragraph,
             Heading,
-            List,
-            Link,
-            Table,
-            TableToolbar,
-            TableProperties,
-            TableCellProperties,
-            Image,
-            ImageUpload,
-            ImageResize,
-            ImageInsert,
-            Base64UploadAdapter,
-            Alignment,
-            Font,
-            FontSize,
-            FontFamily,
-            Style,
-            RemoveFormat,
             Undo,
-            SourceEditing,
-            GeneralHtmlSupport,
-            BlockQuote,
-            Code,
-            HorizontalLine,
-            Indent,
-            IndentBlock
+            SourceEditing
           ],
           toolbar: {
             items: [
               'undo', 'redo', '|',
               'sourceEditing', '|',
-              'heading', 'style', '|',
-              'bold', 'italic', 'underline', '|',
-              'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
-              'alignment', '|',
-              'bulletedList', 'numberedList', '|',
-              'outdent', 'indent', '|',
-              'link', 'insertImage', 'insertTable', 'blockQuote', 'horizontalLine', '|',
-              'removeFormat'
+              'heading', '|',
+              'bold', 'italic'
             ],
             shouldNotGroupWhenFull: true
           },
