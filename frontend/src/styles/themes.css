@@ -1767,7 +1767,7 @@ body {
    CONTAINER DA ÁREA SOURCE
    ======================================== */
 .ckeditor-wrapper .ck-source-editing-area {
-  min-height: 200px !important;
+  /* Sem altura fixa - se ajusta ao conteúdo */
 }
 
 /* ========================================
@@ -1783,7 +1783,6 @@ body {
   line-height: 1.4 !important;
   padding: 8px !important;
   resize: none !important;
-  min-height: 200px !important;
   width: 100% !important;
   max-width: 100% !important;
   overflow-y: auto !important;
