@@ -21,4 +21,7 @@ router.post('/converter-word', uploadWord.single('file'), DocumentoSistemaContro
 // Rota para gerar PDF do documento
 router.get('/:id/pdf', DocumentoSistemaController.generatePdf);
 
+// Rota para gerar PDF de teste com dados de um cliente
+router.get('/:id/pdf-teste', DocumentoSistemaController.generateTestPdf);
+
 export default router;

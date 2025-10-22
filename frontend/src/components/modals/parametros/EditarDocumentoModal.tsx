@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import ClienteService from '../../../services/clienteService';
 
 interface EditarDocumentoModalProps {
   show: boolean;
@@ -22,9 +23,16 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
   const [zoomLevel, setZoomLevel] = useState(100);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [clienteTesteId, setClienteTesteId] = useState<number>(0);
 
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { addNotification} = useNotificationContext();
+
+  // Buscar lista de clientes para teste
+  const { data: clientesData } = useQuery({
+    queryKey: ['clientes'],
+    queryFn: () => ClienteService.getAll()
+  });
 
   // Carregar dados do documento quando o modal abrir
   useEffect(() => {
@@ -166,25 +174,77 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
 
   if (!documento) return null;
 
+  // Função para gerar PDF de teste com cliente
+  const handleTestPdf = async () => {
+    if (!documento || !clienteTesteId) {
+      addNotification('warning', 'Selecione um cliente para teste');
+      return;
+    }
+
+    try {
+      setIsGeneratingPdf(true);
+      const blob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
+      const url = window.URL.createObjectURL(blob);
+      
+      if (pdfUrl) {
+        window.URL.revokeObjectURL(pdfUrl);
+      }
+      
+      setPdfUrl(url);
+      setShowPreview(true);
+      addNotification('success', 'PDF de teste gerado com sucesso');
+    } catch (error: any) {
+      addNotification('error', error.message || 'Erro ao gerar PDF de teste');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   // Ações para o header do modal
   const headerActions = (
-    <div className="d-flex gap-1">
-                     <button
-                       type="button"
-                       className="btn btn-info btn-sm"
-                       onClick={handlePrint}
-                       title="Abrir PDF do modelo"
-                       disabled={isGeneratingPdf}
-                     >
-                       {isGeneratingPdf ? (
-                         <>
-                           <span className="spinner-border spinner-border-sm me-1" style={{ width: '0.8rem', height: '0.8rem' }}></span>
-                           Gerando PDF...
-                         </>
-                       ) : (
-                         <>Abrir PDF</>
-                       )}
-                     </button>
+    <div className="d-flex gap-1 align-items-center">
+      {/* Select de cliente para teste */}
+      <select
+        className="form-select form-select-sm"
+        style={{ width: 'auto', fontSize: '0.875rem' }}
+        value={clienteTesteId}
+        onChange={(e) => setClienteTesteId(Number(e.target.value))}
+        title="Selecionar cliente para teste"
+      >
+        <option value={0}>Selecionar cliente...</option>
+        {clientesData?.data?.map((cliente: any) => (
+          <option key={cliente.id} value={cliente.id}>
+            {cliente.razao_social}
+          </option>
+        ))}
+      </select>
+      
+      <button
+        type="button"
+        className="btn btn-success btn-sm"
+        onClick={handleTestPdf}
+        title="Testar PDF com dados do cliente"
+        disabled={isGeneratingPdf || !clienteTesteId}
+      >
+        {isGeneratingPdf ? 'Testando...' : 'Testar com Cliente'}
+      </button>
+      
+      <button
+        type="button"
+        className="btn btn-info btn-sm"
+        onClick={handlePrint}
+        title="Abrir PDF do modelo"
+        disabled={isGeneratingPdf}
+      >
+        {isGeneratingPdf ? (
+          <>
+            <span className="spinner-border spinner-border-sm me-1" style={{ width: '0.8rem', height: '0.8rem' }}></span>
+            Gerando PDF...
+          </>
+        ) : (
+          <>Abrir PDF</>
+        )}
+      </button>
       <button
         type="button"
         className="btn btn-primary btn-sm"
