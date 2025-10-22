@@ -524,12 +524,11 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               const variablesDropdown = document.createElement('select');
               variablesDropdown.id = 'ckeditor-variables-select';
               variablesDropdown.name = 'ckeditor-variables';
+              variablesDropdown.className = 'form-select form-select-sm';
               variablesDropdown.setAttribute('aria-label', 'Selecionar variável para inserir no documento');
               variablesDropdown.style.cssText = `
                 padding: 4px 8px;
                 margin: 0 4px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
                 font-size: 12px;
               `;
 
