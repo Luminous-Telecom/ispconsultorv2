@@ -1789,17 +1789,6 @@ p, span, div, label {
   border-color: var(--border-color);
 }
 
-/* CKEditor - Esconder tooltips e overlays indesejados */
-.ck-balloon-panel.ck-tooltip,
-.ck.ck-tooltip,
-[data-cke-tooltip-text],
-.ck-inspector-wrapper {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
 /* CKEditor - Garantir que botões sejam clicáveis */
 .ck-button,
 .ck-toolbar__items .ck-button,
