@@ -10,7 +10,7 @@ export default class VariablePlugin extends Plugin {
     const editor = this.editor;
 
     // Adiciona o botão de variáveis à barra de ferramentas
-    editor.ui.componentFactory.add('variablesDropdown', locale => {
+    editor.ui.componentFactory.add('variables', locale => {
       const buttonView = new ButtonView(locale);
 
       // Configurar o botão principal
