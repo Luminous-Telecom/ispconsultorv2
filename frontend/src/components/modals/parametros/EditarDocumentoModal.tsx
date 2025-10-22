@@ -221,29 +221,22 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       
       <button
         type="button"
-        className="btn btn-success btn-sm"
+        className="btn btn-primary btn-sm"
         onClick={handleTestPdf}
         title="Testar PDF com dados do cliente"
         disabled={isGeneratingPdf || !clienteTesteId}
       >
-        {isGeneratingPdf ? 'Testando...' : 'Testar com Cliente'}
+        Testar
       </button>
       
       <button
         type="button"
-        className="btn btn-info btn-sm"
+        className="btn btn-primary btn-sm"
         onClick={handlePrint}
-        title="Abrir PDF do modelo"
+        title="Imprimir documento"
         disabled={isGeneratingPdf}
       >
-        {isGeneratingPdf ? (
-          <>
-            <span className="spinner-border spinner-border-sm me-1" style={{ width: '0.8rem', height: '0.8rem' }}></span>
-            Gerando PDF...
-          </>
-        ) : (
-          <>Abrir PDF</>
-        )}
+        {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
       </button>
       <button
         type="button"
@@ -255,10 +248,10 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       </button>
       <button
         type="button"
-        className="btn btn-secondary btn-sm"
+        className="btn btn-primary btn-sm"
         onClick={handleClose}
       >
-        Cancelar
+        Fechar
       </button>
     </div>
   );

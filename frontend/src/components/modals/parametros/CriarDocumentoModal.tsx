@@ -123,11 +123,11 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   className="btn btn-primary btn-sm"
                   disabled={createDocumentoMutation.isPending}
                 >
-                  {createDocumentoMutation.isPending ? 'Criando...' : 'Criar'}
+                  {createDocumentoMutation.isPending ? 'Salvando...' : 'Novo'}
                 </button>
                 <button
                   type="button"
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-primary btn-sm"
                   onClick={handleReset}
                 >
                   Limpar

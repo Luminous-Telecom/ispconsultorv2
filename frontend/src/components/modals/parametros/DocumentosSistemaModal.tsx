@@ -140,10 +140,10 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       }
     },
     {
-      label: 'Excluir',
-      variant: 'danger' as const,
+      label: 'Deletar',
+      variant: 'primary' as const,
       action: (selectedItems: DocumentoSistema[]) => {
-        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} documento(s)?`)) {
+        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} documento(s)?`)) {
           selectedItems.forEach(item => handleDelete(item.id));
         }
       }
