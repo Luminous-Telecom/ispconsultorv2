@@ -24,6 +24,10 @@ router.get('/:id/pdf', ModeloContratoController.generatePdf);
 // Rota para gerar PDF de teste com dados de um cliente
 router.get('/:id/pdf-teste', ModeloContratoController.generateTestPdf);
 
+// Rotas para gerar PDF com conteúdo específico
+router.post('/:id/pdf-conteudo', ModeloContratoController.generatePdfWithContent);
+router.post('/:id/pdf-teste-conteudo', ModeloContratoController.generateTestPdfWithContent);
+
 // Rotas para modelos específicos
 router.post('/modelo-contrato-conteudo', ModeloContratoController.saveModeloContratoConteudo);
 router.post('/modelo-termo-adesao', ModeloContratoController.saveModeloTermoAdesao);

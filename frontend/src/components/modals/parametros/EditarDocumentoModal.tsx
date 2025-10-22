@@ -327,8 +327,13 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
           case 'contrato':
             // Para contratos, usar o documento específico selecionado
             const conteudoParaImprimir = getConteudoParaImprimir(tipoDocumento);
-            // Por enquanto, usar o método padrão até implementar no backend
-            pdfBlob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
+            if (conteudoParaImprimir) {
+              // Usar o conteúdo específico do tipo de documento
+              pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(documento.id, clienteTesteId, conteudoParaImprimir);
+            } else {
+              // Fallback para método padrão
+              pdfBlob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
+            }
             break;
           case 'recibo':
             pdfBlob = await ModeloReciboService.generateTestPdf(documento.id, clienteTesteId);
@@ -344,8 +349,13 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
           case 'contrato':
             // Para contratos, usar o documento específico selecionado
             const conteudoParaImprimir = getConteudoParaImprimir(tipoDocumento);
-            // Por enquanto, usar o método padrão até implementar no backend
-            pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
+            if (conteudoParaImprimir) {
+              // Usar o conteúdo específico do tipo de documento
+              pdfBlob = await DocumentoSistemaService.generatePdfWithContent(documento.id, conteudoParaImprimir);
+            } else {
+              // Fallback para método padrão
+              pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
+            }
             break;
           case 'recibo':
             pdfBlob = await ModeloReciboService.generatePdf(documento.id);
