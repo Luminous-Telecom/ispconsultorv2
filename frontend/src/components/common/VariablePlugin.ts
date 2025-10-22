@@ -16,7 +16,7 @@ export default class VariablePlugin extends Plugin {
       // Configurar o botão principal
       buttonView.set({
         label: 'Variáveis',
-        icon: '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L3 7v11h14V7l-7-5zM10 4.5L15 8H5l5-3.5zM4 9h12v8H4V9z"/></svg>',
+        withText: true,
         tooltip: true,
         isToggleable: false
       });

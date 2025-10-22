@@ -398,15 +398,14 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             items: [
               'undo', 'redo', '|',
               'sourceEditing', '|',
-              'heading', 'style', '|',
+              'heading', 'style', 'variablesDropdown', '|',
               'bold', 'italic', 'underline', '|',
               'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
               'alignment', '|',
               'bulletedList', 'numberedList', '|',
               'outdent', 'indent', '|',
               'link', 'insertImage', 'insertTable', 'blockQuote', 'horizontalLine', '|',
-              'removeFormat', '|',
-              'variablesDropdown'
+              'removeFormat'
             ],
             shouldNotGroupWhenFull: true
           },
