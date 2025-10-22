@@ -1764,10 +1764,12 @@ body {
 }
 
 /* ========================================
-   CONTAINER DA ÁREA SOURCE
+   CONTAINER DA ÁREA SOURCE - TOTALMENTE FLEXÍVEL
    ======================================== */
 .ckeditor-wrapper .ck-source-editing-area {
-  /* Sem altura fixa - se ajusta ao conteúdo */
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
 }
 
 /* ========================================
@@ -1783,6 +1785,9 @@ body {
   line-height: 1.4 !important;
   padding: 8px !important;
   resize: none !important;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
   width: 100% !important;
   max-width: 100% !important;
   overflow-y: auto !important;
