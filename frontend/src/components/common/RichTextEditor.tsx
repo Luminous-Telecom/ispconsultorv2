@@ -478,24 +478,26 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
 
           // Corrigir associação do label do CKEditor
           setTimeout(() => {
-            const ckLabels = document.querySelectorAll('.ck-voice-label');
-            ckLabels.forEach(label => {
-              const labelElement = label as HTMLLabelElement;
-              if (labelElement.id) {
-                // Encontrar o editor editável
-                const editable = editor.ui.view.editable.element;
-                if (editable) {
-                  // Garantir que o editable tem o mesmo id que passamos
-                  if (id && !editable.id) {
-                    editable.id = id;
-                  }
-                  // Associar label ao editable
-                  if (editable.id) {
-                    labelElement.htmlFor = editable.id;
-                  }
-                }
+            // Encontrar o editor editável específico deste editor
+            const editable = editor.ui.view.editable.element;
+            
+            if (editable) {
+              // Garantir que o editable tem um id único
+              if (!editable.id) {
+                editable.id = id || `ckeditor-${Date.now()}`;
               }
-            });
+              
+              // Encontrar labels do CKEditor associados a este editor
+              const editorRoot = editable.closest('.ck-editor');
+              if (editorRoot) {
+                const ckLabels = editorRoot.querySelectorAll('.ck-voice-label');
+                ckLabels.forEach(label => {
+                  const labelElement = label as HTMLLabelElement;
+                  // Associar label ao editable usando o id correto
+                  labelElement.htmlFor = editable.id;
+                });
+              }
+            }
           }, 100);
 
           // Adicionar botão de variáveis na toolbar
