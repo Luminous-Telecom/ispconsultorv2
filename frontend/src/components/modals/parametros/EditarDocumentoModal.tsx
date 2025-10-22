@@ -154,13 +154,8 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       return;
     }
 
-    // Se for contrato, verificar se pelo menos um conteúdo está preenchido
-    if (tipo === 'contrato') {
-      if (!formData.conteudo_contrato && !formData.conteudo_adesao && !formData.conteudo_permanencia) {
-        addNotification('error', 'Pelo menos um conteúdo deve ser preenchido');
-        return;
-      }
-    } else {
+    // Se não for contrato, validar conteúdo obrigatório
+    if (tipo !== 'contrato') {
       if (!formData.conteudo) {
         addNotification('error', 'Conteúdo é obrigatório');
         return;
@@ -169,20 +164,17 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
 
     try {
       if (tipo === 'contrato') {
-        // Salvar cada modelo em sua respectiva tabela
+        // Salvar cada modelo em sua respectiva tabela (sempre, mesmo que vazio)
         const promises = [];
         
-        if (formData.conteudo_contrato) {
-          promises.push(DocumentoSistemaService.saveModeloContratoConteudo(documento!.id, formData.conteudo_contrato));
-        }
+        // Sempre salvar modelo contrato conteúdo (pode ser vazio)
+        promises.push(DocumentoSistemaService.saveModeloContratoConteudo(documento!.id, formData.conteudo_contrato || ''));
         
-        if (formData.conteudo_adesao) {
-          promises.push(DocumentoSistemaService.saveModeloTermoAdesao(documento!.id, formData.conteudo_adesao));
-        }
+        // Sempre salvar termo de adesão (pode ser vazio)
+        promises.push(DocumentoSistemaService.saveModeloTermoAdesao(documento!.id, formData.conteudo_adesao || ''));
         
-        if (formData.conteudo_permanencia) {
-          promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, formData.conteudo_permanencia));
-        }
+        // Sempre salvar contrato permanência (pode ser vazio)
+        promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, formData.conteudo_permanencia || ''));
 
         await Promise.all(promises);
         

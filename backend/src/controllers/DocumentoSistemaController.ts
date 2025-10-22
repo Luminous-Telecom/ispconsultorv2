@@ -1106,7 +1106,7 @@ export class ModeloContratoController {
     try {
       const { modelo_contrato_id, modelo } = req.body;
 
-      if (!modelo_contrato_id || !modelo) {
+      if (!modelo_contrato_id || modelo === undefined || modelo === null) {
         res.status(400).json({
           success: false,
           message: 'ID do modelo de contrato e modelo são obrigatórios'
@@ -1150,7 +1150,7 @@ export class ModeloContratoController {
     try {
       const { modelo_contrato_id, modelo } = req.body;
 
-      if (!modelo_contrato_id || !modelo) {
+      if (!modelo_contrato_id || modelo === undefined || modelo === null) {
         res.status(400).json({
           success: false,
           message: 'ID do modelo de contrato e modelo são obrigatórios'
@@ -1194,7 +1194,7 @@ export class ModeloContratoController {
     try {
       const { modelo_contrato_id, modelo } = req.body;
 
-      if (!modelo_contrato_id || !modelo) {
+      if (!modelo_contrato_id || modelo === undefined || modelo === null) {
         res.status(400).json({
           success: false,
           message: 'ID do modelo de contrato e modelo são obrigatórios'
