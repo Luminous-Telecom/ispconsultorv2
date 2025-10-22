@@ -304,7 +304,7 @@ interface RichTextEditorProps {
   onInsertVariable?: (variable: string) => void;
 }
 
-const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
+const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorProps> = ({
   value,
   onChange,
   placeholder = 'Digite aqui...',
@@ -597,8 +597,12 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               attrObserver.observe(textarea, { attributes: true, attributeFilter: ['style', 'rows'] });
 
               // ResizeObserver para quando fonte/toolbar/layout mudarem
-              const resizeObserver = new (window as any).ResizeObserver?.(() => adjustTextareaHeight(textarea));
-              if (resizeObserver) resizeObserver.observe(textarea);
+              let resizeObserver: ResizeObserver | null = null;
+              const RO = (window as any).ResizeObserver;
+              if (RO) {
+                resizeObserver = new RO(() => adjustTextareaHeight(textarea));
+                resizeObserver.observe(textarea);
+              }
 
               // Loop leve com requestAnimationFrame para garantir sync enquanto digita rapidamente
               let rafId: number | null = null;
@@ -643,7 +647,9 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
       />
     </div>
   );
-});
+};
+
+const RichTextEditor = forwardRef(RichTextEditorInner);
 
 export { RichTextEditor, type RichTextEditorProps };
 RichTextEditor.displayName = 'RichTextEditor';
