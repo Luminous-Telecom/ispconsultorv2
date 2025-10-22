@@ -27,8 +27,7 @@ import {
   IndentBlock,
   FontSize,
   FontFamily,
-  Base64UploadAdapter,
-  Style
+  Base64UploadAdapter
 } from 'ckeditor5';
 import { 
   Table,
@@ -381,7 +380,6 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Font,
             FontSize,
             FontFamily,
-            Style,
             RemoveFormat,
             Undo,
             SourceEditing,
@@ -396,7 +394,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             items: [
               'undo', 'redo', '|',
               'sourceEditing', '|',
-              'heading', 'style', '|',
+              'heading', '|',
               'bold', 'italic', 'underline', '|',
               'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
               'alignment', '|',
