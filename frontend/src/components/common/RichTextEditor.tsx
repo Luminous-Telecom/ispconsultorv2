@@ -481,8 +481,9 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             const toolbar = document.querySelector('.ck.ck-toolbar');
             if (toolbar) {
 
-              // Criar label que conterá o dropdown (nested approach)
+              // Criar label que conterá o dropdown (nested + explicit for)
               const variablesLabel = document.createElement('label');
+              variablesLabel.htmlFor = 'ckeditor-variables-select';
               variablesLabel.style.cssText = `
                 display: inline-flex;
                 align-items: center;
@@ -505,8 +506,9 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 border-width: 0;
               `;
 
-              // Adicionar dropdown de variáveis (será nested no label)
+              // Adicionar dropdown de variáveis (nested + id matching)
               const variablesDropdown = document.createElement('select');
+              variablesDropdown.id = 'ckeditor-variables-select';
               variablesDropdown.name = 'ckeditor-variables';
               variablesDropdown.setAttribute('aria-label', 'Selecionar variável para inserir no documento');
               variablesDropdown.style.cssText = `
