@@ -63,6 +63,7 @@ export class VariaveisDocumentoService {
           { variavel: '#empresa.cnpj#', descricao: 'CNPJ da empresa' },
           { variavel: '#empresa.ie#', descricao: 'Inscrição Estadual' },
           { variavel: '#empresa.im#', descricao: 'Inscrição Municipal' },
+          { variavel: '#empresa.logo#', descricao: 'Logo da empresa (URL ou caminho)' },
           { variavel: '#empresa.endereco#', descricao: 'Endereço completo da empresa' },
           { variavel: '#empresa.logradouro#', descricao: 'Logradouro da empresa' },
           { variavel: '#empresa.numero#', descricao: 'Número da empresa' },
@@ -395,12 +396,16 @@ export class VariaveisDocumentoService {
     ].filter(Boolean).join(', ');
 
     // Dados da empresa (podem vir de variáveis de ambiente ou configuração)
+    const logoUrl = process.env.EMPRESA_LOGO || '';
+    const logoHtml = logoUrl ? `<img src="${logoUrl}" alt="Logo da Empresa" style="max-width: 200px; height: auto;" />` : '';
+    
     const substituicoes: Record<string, string> = {
       '#empresa.razao_social#': process.env.EMPRESA_RAZAO_SOCIAL || 'CTM Telecom',
       '#empresa.nome_fantasia#': process.env.EMPRESA_NOME_FANTASIA || 'CTM Telecom',
       '#empresa.cnpj#': process.env.EMPRESA_CNPJ || '',
       '#empresa.ie#': process.env.EMPRESA_IE || '',
       '#empresa.im#': process.env.EMPRESA_IM || '',
+      '#empresa.logo#': logoHtml,
       '#empresa.endereco#': enderecoCompleto || process.env.EMPRESA_ENDERECO || '',
       '#empresa.logradouro#': process.env.EMPRESA_LOGRADOURO || '',
       '#empresa.numero#': process.env.EMPRESA_NUMERO || '',
