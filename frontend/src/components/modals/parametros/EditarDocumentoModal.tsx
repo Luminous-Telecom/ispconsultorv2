@@ -4,7 +4,7 @@ import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import ClienteService from '../../../services/clienteService';
+import { ClienteService } from '../../../services/clienteService';
 
 interface EditarDocumentoModalProps {
   show: boolean;
