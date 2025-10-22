@@ -42,24 +42,16 @@ import 'ckeditor5/ckeditor5.css';
 const editorStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
   
-  /* Garante que imagens mantenham seu tamanho */
+  /* Estilos base para imagens */
   img {
+    display: block;
+    object-fit: contain;
+  }
+  
+  /* Apenas aplicar max-width em imagens SEM dimensões inline */
+  img:not([style*="width"]):not([style*="height"]) {
     max-width: 100%;
-  }
-  
-  /* Preservar dimensões inline de imagens */
-  img[style*="width"][style*="height"] {
-    /* Se tem width e height, preservar ambos */
-  }
-  
-  img[style*="width"]:not([style*="height"]) {
-    /* Se tem apenas width, ajustar altura proporcionalmente */
-    height: auto !important;
-  }
-  
-  img[style*="height"]:not([style*="width"]) {
-    /* Se tem apenas height, ajustar largura proporcionalmente */
-    width: auto !important;
+    height: auto;
   }
   
   /* Garante que as fontes inline sejam respeitadas na impressão em TODO o documento */
@@ -71,26 +63,15 @@ const editorStyles = `
     
     /* Preservar dimensões de imagens na impressão */
     img {
-      max-width: 100% !important;
+      display: block !important;
       page-break-inside: avoid !important;
+      object-fit: contain !important;
     }
     
-    /* Se tem width e height, preservar ambos */
-    img[style*="width"][style*="height"] {
-      /* Dimensões já definidas inline, apenas garantir display */
-      display: block !important;
-    }
-    
-    /* Se tem apenas width, ajustar altura proporcionalmente */
-    img[style*="width"]:not([style*="height"]) {
+    /* Apenas aplicar max-width em imagens SEM dimensões inline */
+    img:not([style*="width"]):not([style*="height"]) {
+      max-width: 100% !important;
       height: auto !important;
-      display: block !important;
-    }
-    
-    /* Se tem apenas height, ajustar largura proporcionalmente */
-    img[style*="height"]:not([style*="width"]) {
-      width: auto !important;
-      display: block !important;
     }
     
     /* Mapeia fontes específicas para garantir renderização - case insensitive */

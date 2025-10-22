@@ -352,26 +352,17 @@ export class DocumentoSistemaController {
               padding: 0;
             }
             
-            /* Estilos para imagens */
+            /* Estilos para imagens - preservar dimensões inline */
             img {
-              max-width: 100% !important;
               display: block;
               page-break-inside: avoid;
+              object-fit: contain;
             }
             
-            /* Preservar ambas dimensões quando definidas inline */
-            img[style*="width"][style*="height"] {
-              /* Mantém width e height do style inline */
-            }
-            
-            /* Se tem apenas width, ajustar altura proporcionalmente */
-            img[style*="width"]:not([style*="height"]) {
-              height: auto !important;
-            }
-            
-            /* Se tem apenas height, ajustar largura proporcionalmente */
-            img[style*="height"]:not([style*="width"]) {
-              width: auto !important;
+            /* NÃO forçar auto se a imagem tem dimensões inline */
+            img:not([style*="width"]):not([style*="height"]) {
+              max-width: 100%;
+              height: auto;
             }
             
             /* Estilos para tabelas */
