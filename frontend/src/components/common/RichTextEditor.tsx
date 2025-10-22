@@ -297,10 +297,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 label: '75%',
                 value: '75'
               }
-            ],
-            insert: {
-              integrations: ['insertImageViaUrl']
-            }
+            ]
           },
           table: {
             contentToolbar: [
