@@ -350,6 +350,17 @@ export class DocumentoSistemaController {
         <head>
           <meta charset="UTF-8">
           <style>
+            /* Numeração de páginas */
+            @page {
+              margin: 2cm 1.5cm 3cm 1.5cm;
+              @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 10px;
+                color: #666;
+              }
+            }
+            
             body {
               margin: 0;
               padding: 0;
@@ -549,6 +560,17 @@ export class DocumentoSistemaController {
         <head>
           <meta charset="UTF-8">
           <style>
+            /* Numeração de páginas */
+            @page {
+              margin: 2cm 1.5cm 3cm 1.5cm;
+              @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 10px;
+                color: #666;
+              }
+            }
+            
             body {
               margin: 0;
               padding: 0;

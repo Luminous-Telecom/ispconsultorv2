@@ -126,6 +126,17 @@ const editorStyles = `
       print-color-adjust: exact !important;
     }
     
+    /* Numeração de páginas */
+    @page {
+      margin: 2cm 1.5cm 3cm 1.5cm;
+      @bottom-center {
+        content: "Página " counter(page) " de " counter(pages);
+        font-family: Arial, sans-serif;
+        font-size: 10px;
+        color: #666;
+      }
+    }
+    
     /* Preservar dimensões de imagens na impressão */
     img {
       display: block !important;
