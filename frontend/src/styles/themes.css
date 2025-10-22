@@ -1745,191 +1745,102 @@ body {
 }
 
 /* ========================================
-   EDITOR PRINCIPAL - TEMA CLARO
+   EDITOR PRINCIPAL - RESPONSIVO E INTEGRADO
    ======================================== */
-[data-theme="light"] .ckeditor-wrapper .ck-editor__editable {
-  background-color: #ffffff !important;
-  color: #212529 !important;
-  border: 1px solid #dee2e6 !important;
-  border-radius: 6px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+.ckeditor-wrapper .ck-editor__editable {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 4px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 300px !important;
+  transition: border-color 0.15s ease-in-out !important;
 }
 
-[data-theme="light"] .ckeditor-wrapper .ck-editor__editable:focus {
-  border-color: #86b7fe !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+.ckeditor-wrapper .ck-editor__editable:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
   outline: 0 !important;
 }
 
 /* ========================================
-   EDITOR PRINCIPAL - TEMA ESCURO
+   ÁREA DE EDIÇÃO SOURCE - INTEGRADA AO SISTEMA
    ======================================== */
-[data-theme="dark"] .ckeditor-wrapper .ck-editor__editable {
-  background-color: #1a1a1a !important;
-  color: #e9ecef !important;
-  border: 1px solid #495057 !important;
-  border-radius: 6px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-editor__editable:focus {
-  border-color: #6ea8fe !important;
-  box-shadow: 0 0 0 0.25rem rgba(110, 168, 254, 0.25) !important;
-  outline: 0 !important;
-}
-
-/* ========================================
-   ÁREA DE EDIÇÃO SOURCE - TEMA CLARO
-   ======================================== */
-[data-theme="light"] .ckeditor-wrapper .ck-source-editing-area textarea {
-  background-color: #ffffff !important;
-  color: #212529 !important;
-  border: 1px solid #dee2e6 !important;
-  border-radius: 6px !important;
+.ckeditor-wrapper .ck-source-editing-area textarea {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 4px !important;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
   font-size: 13px !important;
   line-height: 1.5 !important;
   padding: 12px !important;
   resize: vertical !important;
-  min-height: 500px !important;
+  min-height: 300px !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
-[data-theme="light"] .ckeditor-wrapper .ck-source-editing-area textarea:focus {
-  border-color: #86b7fe !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+.ckeditor-wrapper .ck-source-editing-area textarea:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
   outline: 0 !important;
 }
 
 /* ========================================
-   ÁREA DE EDIÇÃO SOURCE - TEMA ESCURO
+   CONTEÚDO DO EDITOR - INTEGRADO AO SISTEMA
    ======================================== */
-[data-theme="dark"] .ckeditor-wrapper .ck-source-editing-area textarea {
-  background-color: #1a1a1a !important;
-  color: #e9ecef !important;
-  border: 1px solid #495057 !important;
-  border-radius: 6px !important;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-  font-size: 13px !important;
-  line-height: 1.5 !important;
+.ckeditor-wrapper .ck-content {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
   padding: 12px !important;
-  resize: vertical !important;
-  min-height: 500px !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-source-editing-area textarea:focus {
-  border-color: #6ea8fe !important;
-  box-shadow: 0 0 0 0.25rem rgba(110, 168, 254, 0.25) !important;
-  outline: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* ========================================
-   CONTEÚDO DO EDITOR - TEMA CLARO
+   TABELAS - INTEGRADAS AO SISTEMA
    ======================================== */
-[data-theme="light"] .ckeditor-wrapper .ck-content {
-  background-color: #ffffff !important;
-  color: #212529 !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-  font-size: 14px !important;
-  line-height: 1.6 !important;
-  padding: 16px !important;
-}
-
-/* ========================================
-   CONTEÚDO DO EDITOR - TEMA ESCURO
-   ======================================== */
-[data-theme="dark"] .ckeditor-wrapper .ck-content {
-  background-color: #1a1a1a !important;
-  color: #e9ecef !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-  font-size: 14px !important;
-  line-height: 1.6 !important;
-  padding: 16px !important;
-}
-
-/* ========================================
-   TABELAS - TEMA CLARO
-   ======================================== */
-[data-theme="light"] .ckeditor-wrapper .ck-content table {
-  background-color: #ffffff !important;
+.ckeditor-wrapper .ck-content table {
+  background-color: var(--bg-primary) !important;
   border-collapse: collapse !important;
   width: 100% !important;
-  margin: 16px 0 !important;
-  border: 1px solid #dee2e6 !important;
-  border-radius: 6px !important;
+  margin: 12px 0 !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 4px !important;
   overflow: hidden !important;
 }
 
-[data-theme="light"] .ckeditor-wrapper .ck-content table td,
-[data-theme="light"] .ckeditor-wrapper .ck-content table th {
-  background-color: #ffffff !important;
-  color: #212529 !important;
-  border: 1px solid #dee2e6 !important;
-  padding: 12px !important;
+.ckeditor-wrapper .ck-content table td,
+.ckeditor-wrapper .ck-content table th {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 8px !important;
   vertical-align: top !important;
   font-size: 14px !important;
   line-height: 1.4 !important;
 }
 
-[data-theme="light"] .ckeditor-wrapper .ck-content table th {
-  background-color: #f8f9fa !important;
-  color: #495057 !important;
+.ckeditor-wrapper .ck-content table th {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
   font-weight: 600 !important;
   text-align: left !important;
 }
 
-[data-theme="light"] .ckeditor-wrapper .ck-content table tbody tr:nth-child(even) {
-  background-color: #f8f9fa !important;
+.ckeditor-wrapper .ck-content table tbody tr:nth-child(even) {
+  background-color: var(--bg-secondary) !important;
 }
 
-[data-theme="light"] .ckeditor-wrapper .ck-content table tbody tr:hover {
-  background-color: #e9ecef !important;
+.ckeditor-wrapper .ck-content table tbody tr:hover {
+  background-color: var(--bg-tertiary) !important;
 }
 
-/* ========================================
-   TABELAS - TEMA ESCURO
-   ======================================== */
-[data-theme="dark"] .ckeditor-wrapper .ck-content table {
-  background-color: #1a1a1a !important;
-  border-collapse: collapse !important;
-  width: 100% !important;
-  margin: 16px 0 !important;
-  border: 1px solid #495057 !important;
-  border-radius: 6px !important;
-  overflow: hidden !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table td,
-[data-theme="dark"] .ckeditor-wrapper .ck-content table th {
-  background-color: #1a1a1a !important;
-  color: #e9ecef !important;
-  border: 1px solid #495057 !important;
-  padding: 12px !important;
-  vertical-align: top !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table th {
-  background-color: #2d3748 !important;
-  color: #f7fafc !important;
-  font-weight: 600 !important;
-  text-align: left !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table tbody tr:nth-child(even) {
-  background-color: #2d3748 !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table tbody tr:hover {
-  background-color: #4a5568 !important;
-}
-
-/* Tema escuro - cores específicas */
-[data-theme="dark"] .ckeditor-wrapper .ck-content table {
-  background-color: #2d3748 !important;
-}
 
 
 /* Barra de ferramentas flutuante */
