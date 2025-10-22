@@ -10,7 +10,9 @@ import { ScheduledRoutine } from './ScheduledRoutine';
 import { RoutineExecutionLog } from './RoutineExecutionLog';
 import { ServidorEmail } from './ServidorEmail';
 import { ServidorWhatsApp } from './ServidorWhatsApp';
-import { DocumentoSistema } from './DocumentoSistema';
+import { ModeloContrato } from './ModeloContrato';
+import { ModeloRecibo } from './ModeloRecibo';
+import { ModeloCarta } from './ModeloCarta';
 import { DiasVencimento } from './DiasVencimento';
 
 // Configurar relacionamentos
@@ -131,5 +133,11 @@ export {
   Contrato,
   DadosEmpresa,
   ScheduledRoutine,
-  RoutineExecutionLog
+  RoutineExecutionLog,
+  ServidorEmail,
+  ServidorWhatsApp,
+  ModeloContrato,
+  ModeloRecibo,
+  ModeloCarta,
+  DiasVencimento
 };

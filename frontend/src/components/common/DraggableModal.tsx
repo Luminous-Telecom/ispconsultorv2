@@ -227,7 +227,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           border-color: #ced4da !important;
           color: #000000 !important;
           height: 30px !important;
-          padding: 4px 8px !important;
+          padding: 4px 2.5rem 4px 8px !important;
           font-size: 13px !important;
         }
         
@@ -260,7 +260,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           border-color: #4a5568 !important;
           color: #ffffff !important;
           height: 30px !important;
-          padding: 4px 8px !important;
+          padding: 4px 2.5rem 4px 8px !important;
           font-size: 13px !important;
         }
         
@@ -324,7 +324,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           color: #718096 !important;
           cursor: not-allowed !important;
           height: 30px !important;
-          padding: 4px 8px !important;
+          padding: 4px 2.5rem 4px 8px !important;
           font-size: 13px !important;
         }
         

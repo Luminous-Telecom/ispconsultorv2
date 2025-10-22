@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
-interface DocumentoSistemaAttributes {
+interface ModeloContratoAttributes {
   id: number;
   nome: string;
   tipo: string;
@@ -17,9 +17,9 @@ interface DocumentoSistemaAttributes {
   updated_at?: Date;
 }
 
-interface DocumentoSistemaCreationAttributes extends Optional<DocumentoSistemaAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface ModeloContratoCreationAttributes extends Optional<ModeloContratoAttributes, 'id' | 'created_at' | 'updated_at'> {}
 
-export class DocumentoSistema extends Model<DocumentoSistemaAttributes, DocumentoSistemaCreationAttributes> implements DocumentoSistemaAttributes {
+export class ModeloContrato extends Model<ModeloContratoAttributes, ModeloContratoCreationAttributes> implements ModeloContratoAttributes {
   public id!: number;
   public nome!: string;
   public tipo!: string;
@@ -35,7 +35,7 @@ export class DocumentoSistema extends Model<DocumentoSistemaAttributes, Document
   public readonly updated_at!: Date;
 }
 
-DocumentoSistema.init(
+ModeloContrato.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -54,7 +54,7 @@ DocumentoSistema.init(
       allowNull: false,
       validate: {
         notEmpty: true,
-        isIn: [['contrato', 'recibo', 'carta_cobranca', 'boleto', 'comprovante', 'outro']],
+        isIn: [['contrato', 'boleto', 'comprovante', 'outro']],
       },
     },
     conteudo: {
@@ -112,7 +112,7 @@ DocumentoSistema.init(
   },
   {
     sequelize,
-    tableName: 'documentos_sistema',
+    tableName: 'modelo_contrato',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',

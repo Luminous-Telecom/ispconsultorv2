@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
+import ModeloReciboService, { ModeloRecibo } from '../../../services/modeloReciboService';
+import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 
@@ -24,7 +26,18 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
 
   // Mutation para criar documento
   const createDocumentoMutation = useMutation({
-    mutationFn: (data: any) => DocumentoSistemaService.create({ ...data, tipo }),
+    mutationFn: async (data: any) => {
+      switch (tipo) {
+        case 'contrato':
+          return DocumentoSistemaService.create({ ...data, tipo });
+        case 'recibo':
+          return ModeloReciboService.create(data);
+        case 'carta_cobranca':
+          return ModeloCartaService.create(data);
+        default:
+          return DocumentoSistemaService.create({ ...data, tipo });
+      }
+    },
     onSuccess: () => {
       addNotification('success', 'Documento criado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });

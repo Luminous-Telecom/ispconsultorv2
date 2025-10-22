@@ -34,42 +34,42 @@ export interface UpdateDocumentoSistema extends Partial<CreateDocumentoSistema> 
 class DocumentoSistemaService {
   static async list(tipo?: string): Promise<{ success: boolean; data: DocumentoSistema[]; message: string }> {
     const params = tipo ? `?tipo=${tipo}` : '';
-    const response = await apiService.get<{ success: boolean; data: DocumentoSistema[]; message: string }>(`/documentos-sistema${params}`);
+    const response = await apiService.get<{ success: boolean; data: DocumentoSistema[]; message: string }>(`/modelos-contrato${params}`);
     return response;
   }
 
   static async getById(id: number): Promise<{ success: boolean; data: DocumentoSistema; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: DocumentoSistema; message: string }>(`/documentos-sistema/${id}`);
+    const response = await apiService.get<{ success: boolean; data: DocumentoSistema; message: string }>(`/modelos-contrato/${id}`);
     return response;
   }
 
   static async getByType(tipo: string): Promise<{ success: boolean; data: DocumentoSistema[]; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: DocumentoSistema[]; message: string }>(`/documentos-sistema/tipo/${tipo}`);
+    const response = await apiService.get<{ success: boolean; data: DocumentoSistema[]; message: string }>(`/modelos-contrato/tipo/${tipo}`);
     return response;
   }
 
   static async getDefaultByType(tipo: string): Promise<{ success: boolean; data: DocumentoSistema; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: DocumentoSistema; message: string }>(`/documentos-sistema/tipo/${tipo}/padrao`);
+    const response = await apiService.get<{ success: boolean; data: DocumentoSistema; message: string }>(`/modelos-contrato/tipo/${tipo}/padrao`);
     return response;
   }
 
   static async getTypes(): Promise<{ success: boolean; data: string[]; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: string[]; message: string }>('/documentos-sistema/tipos');
+    const response = await apiService.get<{ success: boolean; data: string[]; message: string }>('/modelos-contrato/tipos');
     return response;
   }
 
   static async create(data: CreateDocumentoSistema): Promise<{ success: boolean; data: DocumentoSistema; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: DocumentoSistema; message: string }>('/documentos-sistema', data);
+    const response = await apiService.post<{ success: boolean; data: DocumentoSistema; message: string }>('/modelos-contrato', data);
     return response;
   }
 
   static async update(id: number, data: UpdateDocumentoSistema): Promise<{ success: boolean; data: DocumentoSistema; message: string }> {
-    const response = await apiService.put<{ success: boolean; data: DocumentoSistema; message: string }>(`/documentos-sistema/${id}`, data);
+    const response = await apiService.put<{ success: boolean; data: DocumentoSistema; message: string }>(`/modelos-contrato/${id}`, data);
     return response;
   }
 
   static async delete(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.delete<{ success: boolean; message: string }>(`/documentos-sistema/${id}`);
+    const response = await apiService.delete<{ success: boolean; message: string }>(`/modelos-contrato/${id}`);
     return response;
   }
 
@@ -77,7 +77,7 @@ class DocumentoSistemaService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${(apiService as any).api.defaults.baseURL}/documentos-sistema/converter-word`, {
+    const response = await fetch(`${(apiService as any).api.defaults.baseURL}/modelos-contrato/converter-word`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -93,7 +93,7 @@ class DocumentoSistemaService {
 
   static async generatePdf(id: number): Promise<Blob> {
     try {
-      const response = await (apiService as any).api.get(`/documentos-sistema/${id}/pdf`, {
+      const response = await (apiService as any).api.get(`/modelos-contrato/${id}/pdf`, {
         responseType: 'blob'
       });
 
@@ -112,7 +112,7 @@ class DocumentoSistemaService {
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
     try {
-      const response = await (apiService as any).api.get(`/documentos-sistema/${id}/pdf-teste?cliente_id=${clienteId}`, {
+      const response = await (apiService as any).api.get(`/modelos-contrato/${id}/pdf-teste?cliente_id=${clienteId}`, {
         responseType: 'blob'
       });
 

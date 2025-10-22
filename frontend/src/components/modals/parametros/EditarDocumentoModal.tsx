@@ -2,18 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
+import ModeloReciboService, { ModeloRecibo } from '../../../services/modeloReciboService';
+import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ClienteService } from '../../../services/clienteService';
 
+type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta;
+
 interface EditarDocumentoModalProps {
   show: boolean;
   onClose: () => void;
-  documento: DocumentoSistema | null;
+  documento: DocumentoUnion | null;
+  tipo: 'contrato' | 'recibo' | 'carta_cobranca';
   onSuccess?: () => void;
 }
 
-const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClose, documento, onSuccess }) => {
+const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClose, documento, tipo, onSuccess }) => {
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -55,7 +60,18 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
 
   // Mutation para atualizar documento
   const updateDocumentoMutation = useMutation({
-    mutationFn: (data: any) => DocumentoSistemaService.update(documento!.id, data),
+    mutationFn: async (data: any) => {
+      switch (tipo) {
+        case 'contrato':
+          return DocumentoSistemaService.update(documento!.id, data);
+        case 'recibo':
+          return ModeloReciboService.update(documento!.id, data);
+        case 'carta_cobranca':
+          return ModeloCartaService.update(documento!.id, data);
+        default:
+          return DocumentoSistemaService.update(documento!.id, data);
+      }
+    },
     onSuccess: () => {
       addNotification('success', 'Documento salvo com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
@@ -116,9 +132,33 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       // Se tiver cliente selecionado, gera PDF com dados do cliente
       // Se não, gera PDF do modelo sem preencher variáveis
       if (clienteTesteId) {
-        pdfBlob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
+        switch (tipo) {
+          case 'contrato':
+            pdfBlob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
+            break;
+          case 'recibo':
+            pdfBlob = await ModeloReciboService.generateTestPdf(documento.id, clienteTesteId);
+            break;
+          case 'carta_cobranca':
+            pdfBlob = await ModeloCartaService.generateTestPdf(documento.id, clienteTesteId);
+            break;
+          default:
+            pdfBlob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
+        }
       } else {
-        pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
+        switch (tipo) {
+          case 'contrato':
+            pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
+            break;
+          case 'recibo':
+            pdfBlob = await ModeloReciboService.generatePdf(documento.id);
+            break;
+          case 'carta_cobranca':
+            pdfBlob = await ModeloCartaService.generatePdf(documento.id);
+            break;
+          default:
+            pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
+        }
       }
       
       // Verifica se é um Blob válido

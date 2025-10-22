@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { DocumentoSistema } from '../models/DocumentoSistema';
+import { ModeloContrato } from '../models/ModeloContrato';
 import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
@@ -11,7 +11,7 @@ import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService
 // @ts-ignore
 import * as htmlPdf from 'html-pdf-node';
 
-export class DocumentoSistemaController {
+export class ModeloContratoController {
   /**
    * Listar todos os documentos do sistema
    */
@@ -24,7 +24,7 @@ export class DocumentoSistemaController {
         whereClause.tipo = tipo;
       }
 
-      const documentos = await DocumentoSistema.findAll({
+      const documentos = await ModeloContrato.findAll({
         where: whereClause,
         order: [['created_at', 'DESC']],
       });
@@ -50,7 +50,7 @@ export class DocumentoSistemaController {
     try {
       const { id } = req.params;
 
-      const documento = await DocumentoSistema.findByPk(id);
+      const documento = await ModeloContrato.findByPk(id);
 
       if (!documento) {
         res.status(404).json({
@@ -124,7 +124,7 @@ export class DocumentoSistemaController {
       const { id } = req.params;
       const documentoData = req.body;
 
-      const documento = await DocumentoSistema.findByPk(id);
+      const documento = await ModeloContrato.findByPk(id);
 
       if (!documento) {
         res.status(404).json({
@@ -167,7 +167,7 @@ export class DocumentoSistemaController {
     try {
       const { id } = req.params;
 
-      const documento = await DocumentoSistema.findByPk(id);
+      const documento = await ModeloContrato.findByPk(id);
 
       if (!documento) {
         res.status(404).json({
@@ -199,7 +199,7 @@ export class DocumentoSistemaController {
     try {
       const { tipo } = req.params;
 
-      const documentos = await DocumentoSistema.findAll({
+      const documentos = await ModeloContrato.findAll({
         where: { tipo, ativo: true },
         order: [['nome', 'ASC']],
       });
@@ -333,7 +333,7 @@ export class DocumentoSistemaController {
     try {
       const { id } = req.params;
 
-      const documento = await DocumentoSistema.findByPk(id);
+      const documento = await ModeloContrato.findByPk(id);
 
       if (!documento) {
         res.status(404).json({
@@ -343,45 +343,22 @@ export class DocumentoSistemaController {
         return;
       }
 
-      // Prepara o HTML completo sem CSS que interfira na formatação original
+      // Prepara o HTML completo com estilos básicos
       const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
           <style>
-            /* Numeração de páginas */
-            @page {
-              margin: 2cm 1.5cm 3cm 1.5cm;
-            }
-            
-            /* Adicionar numeração via CSS */
             body {
-              counter-reset: page;
-            }
-            
-            body::after {
-              content: "Página " counter(page) " de " counter(pages);
-              position: fixed;
-              bottom: 1cm;
-              left: 50%;
-              transform: translateX(-50%);
               font-family: Arial, sans-serif;
-              font-size: 10px;
-              color: #666;
-              z-index: 1000;
-            }
-            
-            /* Incrementar contador a cada página */
-            @page {
-              counter-increment: page;
-            }
-            
-            body {
+              font-size: 12px;
+              color: #333;
               margin: 0;
               padding: 0;
               line-height: 1.2;
             }
+            
             
             /* Estilos para imagens - preservar dimensões inline */
             img {
@@ -493,7 +470,7 @@ export class DocumentoSistemaController {
           </style>
         </head>
         <body>
-          ${documento.conteudo}
+          <div>${documento.conteudo}</div>
         </body>
         </html>
       `;
@@ -529,7 +506,7 @@ export class DocumentoSistemaController {
       const { id } = req.params;
       const { cliente_id } = req.query;
 
-      const documento = await DocumentoSistema.findByPk(id);
+      const documento = await ModeloContrato.findByPk(id);
 
       if (!documento) {
         res.status(404).json({
@@ -569,55 +546,45 @@ export class DocumentoSistemaController {
         );
       }
 
-      // Prepara o HTML completo
+      // Prepara o HTML completo com estilos básicos
       const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
           <style>
-            /* Numeração de páginas */
-            @page {
-              margin: 2cm 1.5cm 3cm 1.5cm;
-            }
-            
-            /* Adicionar numeração via CSS */
             body {
-              counter-reset: page;
-            }
-            
-            body::after {
-              content: "Página " counter(page) " de " counter(pages);
-              position: fixed;
-              bottom: 1cm;
-              left: 50%;
-              transform: translateX(-50%);
               font-family: Arial, sans-serif;
-              font-size: 10px;
-              color: #666;
-              z-index: 1000;
-            }
-            
-            /* Incrementar contador a cada página */
-            @page {
-              counter-increment: page;
-            }
-            
-            body {
+              font-size: 12px;
+              color: #333;
               margin: 0;
               padding: 0;
               line-height: 1.2;
             }
+            
             
             /* Estilos para imagens - preservar dimensões inline */
             img {
               display: block;
               page-break-inside: avoid;
               object-fit: contain;
+              max-width: 100% !important;
             }
             
-            /* NÃO forçar auto se a imagem tem dimensões inline */
-            img:not([style*="width"]):not([style*="height"]) {
+            /* Limitar imagens muito grandes (largura > 800px) */
+            img[width] {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            
+            /* Se tem style inline com dimensões, preservar proporções */
+            img[style*="width"] {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            
+            /* NÃO forçar auto se a imagem tem dimensões inline razoáveis */
+            img:not([style*="width"]):not([style*="height"]):not([width]):not([height]) {
               max-width: 100%;
               height: auto;
             }
@@ -706,7 +673,7 @@ export class DocumentoSistemaController {
           </style>
         </head>
         <body>
-          ${conteudoProcessado}
+          <div>${conteudoProcessado}</div>
         </body>
         </html>
       `;
