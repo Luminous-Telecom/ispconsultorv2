@@ -180,7 +180,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
   const headerActions = (
     <div className="d-flex gap-1 align-items-center">
       {/* Select de cliente para teste */}
-      <label style={{ margin: 0, display: 'inline-flex', alignItems: 'center' }}>
+      <label htmlFor="select-cliente-teste" style={{ margin: 0, display: 'inline-flex', alignItems: 'center' }}>
         <span style={{
           position: 'absolute',
           width: '1px',
@@ -195,11 +195,13 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
           Selecionar cliente para teste:
         </span>
         <select
+          id="select-cliente-teste"
+          name="cliente-teste"
           className="form-select form-select-sm"
           style={{ width: 'auto', fontSize: '0.875rem' }}
           value={clienteTesteId}
           onChange={(e) => setClienteTesteId(Number(e.target.value))}
-          title="Selecionar cliente para teste"
+          aria-label="Selecionar cliente para teste"
         >
           <option value={0}>Selecionar cliente...</option>
           {clientesData?.data?.map((cliente: any) => (
