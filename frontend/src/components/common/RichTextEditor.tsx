@@ -591,6 +591,29 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               const handleResize = () => adjustTextareaHeight(textarea);
               textarea.addEventListener('input', handleResize);
               textarea.addEventListener('change', handleResize);
+
+              // Observer para mudanças de atributos (CKEditor pode setar height/rows inline)
+              const attrObserver = new MutationObserver(() => adjustTextareaHeight(textarea));
+              attrObserver.observe(textarea, { attributes: true, attributeFilter: ['style', 'rows'] });
+
+              // ResizeObserver para quando fonte/toolbar/layout mudarem
+              const resizeObserver = new (window as any).ResizeObserver?.(() => adjustTextareaHeight(textarea));
+              if (resizeObserver) resizeObserver.observe(textarea);
+
+              // Loop leve com requestAnimationFrame para garantir sync enquanto digita rapidamente
+              let rafId: number | null = null;
+              const rafLoop = () => {
+                adjustTextareaHeight(textarea);
+                rafId = window.requestAnimationFrame(rafLoop);
+              };
+              rafId = window.requestAnimationFrame(rafLoop);
+
+              // Limpeza ao destruir editor
+              editor.on('destroy', () => {
+                attrObserver.disconnect();
+                if (resizeObserver) resizeObserver.disconnect?.();
+                if (rafId) window.cancelAnimationFrame(rafId);
+              });
             };
 
             const tryAttachToTextarea = () => {
