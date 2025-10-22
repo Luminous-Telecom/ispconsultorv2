@@ -571,6 +571,8 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
             const editorRoot = editable ? editable.closest('.ck-editor') as HTMLElement | null : null;
             if (!editorRoot) return;
 
+            const boundTextareas = new WeakSet<HTMLTextAreaElement>();
+
             const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
               textarea.removeAttribute('rows');
               textarea.style.overflowY = 'hidden';
@@ -587,6 +589,8 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
             };
 
             const bindTextareaHandlers = (textarea: HTMLTextAreaElement) => {
+              if (boundTextareas.has(textarea)) return;
+              boundTextareas.add(textarea);
               adjustTextareaHeight(textarea);
               const handleResize = () => adjustTextareaHeight(textarea);
               textarea.addEventListener('input', handleResize);
@@ -605,21 +609,12 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
                 resizeObserver = ro;
               }
 
-              // Loop leve com requestAnimationFrame para garantir sync enquanto digita rapidamente
-              let rafId: number | null = null;
-              const rafLoop = () => {
-                adjustTextareaHeight(textarea);
-                rafId = window.requestAnimationFrame(rafLoop);
-              };
-              rafId = window.requestAnimationFrame(rafLoop);
-
               // Limpeza ao destruir editor
               editor.on('destroy', () => {
                 attrObserver.disconnect();
                 if (resizeObserver) {
                   resizeObserver.disconnect();
                 }
-                if (rafId) window.cancelAnimationFrame(rafId);
               });
             };
 
