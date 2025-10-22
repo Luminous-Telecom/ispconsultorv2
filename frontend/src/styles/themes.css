@@ -414,18 +414,9 @@ body {
   color: var(--text-primary);
 }
 
-/* Tabelas modernas */
-.table {
-  background: var(--bg-primary);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  font-size: 0.875rem;
-}
-
 .table thead th {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  color: var(--text-primary);
   font-weight: 600;
   padding: 0.75rem;
   font-size: 0.875rem;
@@ -510,7 +501,6 @@ body {
 
 .table thead th {
   background: var(--bg-tertiary);
-  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.875rem;
   letter-spacing: 0.5px;
@@ -1220,12 +1210,6 @@ body {
   color: #3b82f6;
 }
 
-/* Sobrescrever classes Bootstrap para tema escuro - Mais específico */
-[data-theme="dark"] .table,
-[data-theme="dark"] .table-striped {
-  background-color: #2a3a42 !important;
-}
-
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td,
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > th {
   background-color: #2a3a42 !important;
@@ -1326,12 +1310,6 @@ body {
 [data-theme="dark"] .table-responsive {
   background-color: #2a3a42 !important;
   border-color: var(--border-color) !important;
-}
-
-/* Sobrescrever qualquer estilo inline ou Bootstrap que force fundo branco */
-[data-theme="dark"] .table,
-[data-theme="dark"] .table * {
-  background-color: inherit !important;
 }
 
 [data-theme="dark"] .table tbody td,
@@ -1735,12 +1713,6 @@ body {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .table th,
-[data-theme="dark"] .table td {
-  color: var(--text-primary);
-  border-color: var(--border-color);
-}
-
 [data-theme="dark"] .nav-tabs {
   border-color: var(--border-color);
 }
@@ -1763,136 +1735,195 @@ body {
 }
 
 /* CKEditor - Apenas o essencial */
+/* ========================================
+   CKEDITOR - ESTILOS COMPLETOS E ORGANIZADOS
+   ======================================== */
+
+/* Ocultar elementos de debug */
 .ck-inspector-wrapper {
-  display: none;
+  display: none !important;
 }
 
-
-
-.ckeditor-wrapper .ck-source-editing-area {
-  height: 100%;
-  min-height: 500px;
+/* ========================================
+   EDITOR PRINCIPAL - TEMA CLARO
+   ======================================== */
+[data-theme="light"] .ckeditor-wrapper .ck-editor__editable {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
 }
 
-/* Modo source - Tema claro */
+[data-theme="light"] .ckeditor-wrapper .ck-editor__editable:focus {
+  border-color: #86b7fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+  outline: 0 !important;
+}
+
+/* ========================================
+   EDITOR PRINCIPAL - TEMA ESCURO
+   ======================================== */
+[data-theme="dark"] .ckeditor-wrapper .ck-editor__editable {
+  background-color: #1a1a1a !important;
+  color: #e9ecef !important;
+  border: 1px solid #495057 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+[data-theme="dark"] .ckeditor-wrapper .ck-editor__editable:focus {
+  border-color: #6ea8fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(110, 168, 254, 0.25) !important;
+  outline: 0 !important;
+}
+
+/* ========================================
+   ÁREA DE EDIÇÃO SOURCE - TEMA CLARO
+   ======================================== */
 [data-theme="light"] .ckeditor-wrapper .ck-source-editing-area textarea {
-  height: 100%;
-  min-height: 500px;
-  resize: vertical;
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  color: #000000;
-
-  border: 1px solid #ced4da;
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 6px !important;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  padding: 12px !important;
+  resize: vertical !important;
+  min-height: 500px !important;
 }
 
-/* Modo source - Tema escuro */
+[data-theme="light"] .ckeditor-wrapper .ck-source-editing-area textarea:focus {
+  border-color: #86b7fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+  outline: 0 !important;
+}
+
+/* ========================================
+   ÁREA DE EDIÇÃO SOURCE - TEMA ESCURO
+   ======================================== */
 [data-theme="dark"] .ckeditor-wrapper .ck-source-editing-area textarea {
-  height: 100%;
-  min-height: 500px;
-  resize: vertical;
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  color: #ffffff;
-  background-color: #2d3748;
-  border: 1px solid #4a5568;
+  background-color: #1a1a1a !important;
+  color: #e9ecef !important;
+  border: 1px solid #495057 !important;
+  border-radius: 6px !important;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  padding: 12px !important;
+  resize: vertical !important;
+  min-height: 500px !important;
 }
 
-/* Conteúdo do editor - Tema claro */
+[data-theme="dark"] .ckeditor-wrapper .ck-source-editing-area textarea:focus {
+  border-color: #6ea8fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(110, 168, 254, 0.25) !important;
+  outline: 0 !important;
+}
+
+/* ========================================
+   CONTEÚDO DO EDITOR - TEMA CLARO
+   ======================================== */
 [data-theme="light"] .ckeditor-wrapper .ck-content {
-  font-family: Arial, sans-serif;
-  font-size: 9pt;
-  line-height: 1.2;
-  text-align: justify;
-  color: #000000;
-  background-color: #ffffff;
-  padding: 10px;
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  padding: 16px !important;
 }
 
-/* Conteúdo do editor - Tema escuro */
+/* ========================================
+   CONTEÚDO DO EDITOR - TEMA ESCURO
+   ======================================== */
 [data-theme="dark"] .ckeditor-wrapper .ck-content {
-  font-family: Arial, sans-serif;
-  font-size: 9pt;
-  line-height: 1.2;
-  text-align: justify;
-  background-color: #2d3748;
-  padding: 10px;
+  background-color: #1a1a1a !important;
+  color: #e9ecef !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  padding: 16px !important;
 }
 
-
-/* ISOLAMENTO TOTAL DAS TABELAS DO CKEDITOR - REGRAS MAIS ESPECÍFICAS */
-.ckeditor-wrapper .ck-content table,
-.ckeditor-wrapper .ck-content table *,
-.ckeditor-wrapper .ck-content table td,
-.ckeditor-wrapper .ck-content table th,
-.ckeditor-wrapper .ck-content table tr,
-.ckeditor-wrapper .ck-content table tbody,
-.ckeditor-wrapper .ck-content table thead,
-.ckeditor-wrapper .ck-content table tfoot {
-  /* Resetar TODOS os estilos do sistema */
-  all: unset !important;
-  display: revert !important;
-  box-sizing: border-box !important;
-}
-
-/* Reaplicar apenas os estilos necessários para tabelas do editor */
-.ckeditor-wrapper .ck-content table {
-  display: table !important;
-  width: 100% !important;
-  border-collapse: collapse !important;
-  margin: 5px 0 !important;
-  font-size: 9pt !important;
-}
-
-.ckeditor-wrapper .ck-content table td,
-.ckeditor-wrapper .ck-content table th {
-  display: table-cell !important;
-  padding: 8px !important;
-  vertical-align: top !important;
-  font-size: 9pt !important;
-  line-height: 1.2 !important;
-  font-weight: normal !important;
-  text-align: left !important;
-  border: 1px solid !important;
-}
-
-.ckeditor-wrapper .ck-content table th {
-  font-weight: bold !important;
-}
-
-.ckeditor-wrapper .ck-content table tr {
-  display: table-row !important;
-}
-
-.ckeditor-wrapper .ck-content table tbody {
-  display: table-row-group !important;
-}
-
-.ckeditor-wrapper .ck-content table thead {
-  display: table-header-group !important;
-}
-
-.ckeditor-wrapper .ck-content table tfoot {
-  display: table-footer-group !important;
-}
-
-/* Tema claro - cores específicas */
+/* ========================================
+   TABELAS - TEMA CLARO
+   ======================================== */
 [data-theme="light"] .ckeditor-wrapper .ck-content table {
   background-color: #ffffff !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 16px 0 !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
 }
 
 [data-theme="light"] .ckeditor-wrapper .ck-content table td,
 [data-theme="light"] .ckeditor-wrapper .ck-content table th {
   background-color: #ffffff !important;
-  color: #000000 !important;
-  border-color: #ced4da !important;
+  color: #212529 !important;
+  border: 1px solid #dee2e6 !important;
+  padding: 12px !important;
+  vertical-align: top !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
 }
 
 [data-theme="light"] .ckeditor-wrapper .ck-content table th {
   background-color: #f8f9fa !important;
-  color: #000000 !important;
+  color: #495057 !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+}
+
+[data-theme="light"] .ckeditor-wrapper .ck-content table tbody tr:nth-child(even) {
+  background-color: #f8f9fa !important;
+}
+
+[data-theme="light"] .ckeditor-wrapper .ck-content table tbody tr:hover {
+  background-color: #e9ecef !important;
+}
+
+/* ========================================
+   TABELAS - TEMA ESCURO
+   ======================================== */
+[data-theme="dark"] .ckeditor-wrapper .ck-content table {
+  background-color: #1a1a1a !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 16px 0 !important;
+  border: 1px solid #495057 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+}
+
+[data-theme="dark"] .ckeditor-wrapper .ck-content table td,
+[data-theme="dark"] .ckeditor-wrapper .ck-content table th {
+  background-color: #1a1a1a !important;
+  color: #e9ecef !important;
+  border: 1px solid #495057 !important;
+  padding: 12px !important;
+  vertical-align: top !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+[data-theme="dark"] .ckeditor-wrapper .ck-content table th {
+  background-color: #2d3748 !important;
+  color: #f7fafc !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+}
+
+[data-theme="dark"] .ckeditor-wrapper .ck-content table tbody tr:nth-child(even) {
+  background-color: #2d3748 !important;
+}
+
+[data-theme="dark"] .ckeditor-wrapper .ck-content table tbody tr:hover {
+  background-color: #4a5568 !important;
 }
 
 /* Tema escuro - cores específicas */
@@ -1900,17 +1931,6 @@ body {
   background-color: #2d3748 !important;
 }
 
-[data-theme="dark"] .ckeditor-wrapper .ck-content table td,
-[data-theme="dark"] .ckeditor-wrapper .ck-content table th {
-  background-color: #2d3748 !important;
-  color: #ffffff !important;
-  border-color: #4a5568 !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table th {
-  background-color: #1a202c !important;
-  color: #ffffff !important;
-}
 
 /* Barra de ferramentas flutuante */
 .ck.ck-balloon-panel {
