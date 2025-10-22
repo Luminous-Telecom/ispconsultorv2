@@ -476,6 +476,21 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             editorElement.setAttribute('aria-multiline', 'true');
           }
 
+          // Corrigir associação do label do CKEditor
+          setTimeout(() => {
+            const ckLabels = document.querySelectorAll('.ck-voice-label');
+            ckLabels.forEach(label => {
+              const labelElement = label as HTMLLabelElement;
+              if (labelElement.id && !labelElement.htmlFor) {
+                // Encontrar o editor associado e associar o label
+                const editable = document.querySelector('.ck-editor__editable');
+                if (editable && editable.id) {
+                  labelElement.htmlFor = editable.id;
+                }
+              }
+            });
+          }, 100);
+
           // Adicionar botão de variáveis na toolbar
           setTimeout(() => {
             const toolbar = document.querySelector('.ck.ck-toolbar');
