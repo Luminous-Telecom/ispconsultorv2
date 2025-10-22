@@ -1418,8 +1418,8 @@ p, span, div, label {
 
 [data-theme="light"] .nav-tabs .nav-link:hover {
   color: #495057 !important;
-  background-color: #f8f9fa !important;
-  border-color: #e9ecef #e9ecef #ced4da !important;
+  background-color: rgba(248, 249, 250, 0.5) !important;
+  border-color: transparent transparent #ced4da !important;
 }
 
 [data-theme="light"] .nav-tabs .nav-link.active {
@@ -1429,9 +1429,8 @@ p, span, div, label {
 }
 
 [data-theme="light"] .nav-tabs .nav-link:focus {
+  outline: none !important;
   color: #495057 !important;
-  background-color: #f8f9fa !important;
-  border-color: #e9ecef #e9ecef #ced4da !important;
 }
 
 /* Estilos para abas de navegação - modo escuro */
@@ -1448,9 +1447,9 @@ p, span, div, label {
 }
 
 [data-theme="dark"] .nav-tabs .nav-link:hover {
-  color: #ffffff !important;
-  background-color: #4a5568 !important;
-  border-color: #4a5568 #4a5568 #4a5568 !important;
+  color: #e2e8f0 !important;
+  background-color: rgba(74, 85, 104, 0.3) !important;
+  border-color: transparent transparent #4a5568 !important;
 }
 
 [data-theme="dark"] .nav-tabs .nav-link.active {
@@ -1460,9 +1459,8 @@ p, span, div, label {
 }
 
 [data-theme="dark"] .nav-tabs .nav-link:focus {
-  color: #ffffff !important;
-  background-color: #4a5568 !important;
-  border-color: #4a5568 #4a5568 #4a5568 !important;
+  outline: none !important;
+  color: #e2e8f0 !important;
 }
 
 /* Estilos para menus e dropdowns - modo claro */
@@ -1785,8 +1783,9 @@ p, span, div, label {
 }
 
 [data-theme="dark"] .nav-tabs .nav-link:hover {
-  color: var(--text-primary);
-  border-color: var(--border-color);
+  color: #e2e8f0;
+  background-color: rgba(74, 85, 104, 0.3);
+  border-color: transparent transparent var(--border-color);
 }
 
 /* CKEditor - Garantir que botões sejam clicáveis */
