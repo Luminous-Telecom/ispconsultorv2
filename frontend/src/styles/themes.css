@@ -1784,32 +1784,12 @@ body {
   font-size: 12px !important;
   line-height: 1.5 !important;
   padding: 10px !important;
-  resize: none !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
+  resize: vertical !important;
+  min-height: 400px !important;
   width: 100% !important;
   max-width: 100% !important;
   overflow-y: auto !important;
   white-space: pre-wrap !important;
-}
-
-/* ========================================
-   FORÇAR ALTURA DINÂMICA - REGRAS MAIS ESPECÍFICAS
-   ======================================== */
-.ckeditor-wrapper .ck-source-editing-area textarea,
-.ckeditor-wrapper .ck-source-editing-area textarea[rows],
-.ckeditor-wrapper .ck-source-editing-area textarea[style*="height"] {
-  height: auto !important;
-  min-height: auto !important;
-  max-height: none !important;
-  rows: auto !important;
-}
-
-/* Neutralizar qualquer altura inline do CKEditor */
-.ckeditor-wrapper .ck-source-editing-area textarea[style] {
-  height: auto !important;
-  min-height: auto !important;
 }
 
 .ckeditor-wrapper .ck-source-editing-area textarea:focus {
