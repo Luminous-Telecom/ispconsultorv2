@@ -2,6 +2,7 @@ import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Titulo } from '../models/Titulo';
 import { Plano } from '../models/Plano';
+import { DadosEmpresa } from '../models/DadosEmpresa';
 import { Op } from 'sequelize';
 import axios from 'axios';
 import * as fs from 'fs';
@@ -427,19 +428,29 @@ export class VariaveisDocumentoService {
   private static async processarVariaveisEmpresa(conteudo: string): Promise<string> {
     let resultado = conteudo;
 
+    // Buscar dados da empresa do banco de dados
+    const empresa = await DadosEmpresa.findOne({
+      order: [['id', 'DESC']] // Pega o registro mais recente
+    });
+
+    if (!empresa) {
+      // Se não houver empresa cadastrada, retornar conteúdo sem processar
+      return resultado;
+    }
+
     // Montar endereço completo da empresa
     const enderecoCompleto = [
-      process.env.EMPRESA_LOGRADOURO,
-      process.env.EMPRESA_NUMERO,
-      process.env.EMPRESA_COMPLEMENTO,
-      process.env.EMPRESA_BAIRRO,
-      process.env.EMPRESA_CIDADE,
-      process.env.EMPRESA_ESTADO,
-      process.env.EMPRESA_CEP
+      empresa.endereco,
+      empresa.numero,
+      empresa.complemento,
+      empresa.bairro,
+      empresa.cidade,
+      empresa.estado,
+      empresa.cep
     ].filter(Boolean).join(', ');
 
     // Converter logo para base64 se existir
-    const logoUrl = process.env.EMPRESA_LOGO || '';
+    const logoUrl = empresa.logo || '';
     let logoHtml = '';
     if (logoUrl) {
       const logoBase64 = await this.imagemParaBase64(logoUrl);
@@ -449,23 +460,23 @@ export class VariaveisDocumentoService {
     }
     
     const substituicoes: Record<string, string> = {
-      '#empresa.razao_social#': process.env.EMPRESA_RAZAO_SOCIAL || 'CTM Telecom',
-      '#empresa.nome_fantasia#': process.env.EMPRESA_NOME_FANTASIA || 'CTM Telecom',
-      '#empresa.cnpj#': process.env.EMPRESA_CNPJ || '',
-      '#empresa.ie#': process.env.EMPRESA_IE || '',
-      '#empresa.im#': process.env.EMPRESA_IM || '',
+      '#empresa.razao_social#': empresa.razao_social || '',
+      '#empresa.nome_fantasia#': empresa.nome_fantasia || '',
+      '#empresa.cnpj#': empresa.cnpj || '',
+      '#empresa.ie#': empresa.inscricao_estadual || '',
+      '#empresa.im#': empresa.inscricao_municipal || '',
       '#empresa.logo#': logoHtml,
-      '#empresa.endereco#': enderecoCompleto || process.env.EMPRESA_ENDERECO || '',
-      '#empresa.logradouro#': process.env.EMPRESA_LOGRADOURO || '',
-      '#empresa.numero#': process.env.EMPRESA_NUMERO || '',
-      '#empresa.complemento#': process.env.EMPRESA_COMPLEMENTO || '',
-      '#empresa.bairro#': process.env.EMPRESA_BAIRRO || '',
-      '#empresa.cidade#': process.env.EMPRESA_CIDADE || '',
-      '#empresa.estado#': process.env.EMPRESA_ESTADO || '',
-      '#empresa.cep#': process.env.EMPRESA_CEP || '',
-      '#empresa.telefone#': process.env.EMPRESA_TELEFONE || '',
-      '#empresa.email#': process.env.EMPRESA_EMAIL || '',
-      '#empresa.responsavel#': process.env.EMPRESA_RESPONSAVEL || '',
+      '#empresa.endereco#': enderecoCompleto,
+      '#empresa.logradouro#': empresa.endereco || '',
+      '#empresa.numero#': empresa.numero || '',
+      '#empresa.complemento#': empresa.complemento || '',
+      '#empresa.bairro#': empresa.bairro || '',
+      '#empresa.cidade#': empresa.cidade || '',
+      '#empresa.estado#': empresa.estado || '',
+      '#empresa.cep#': empresa.cep || '',
+      '#empresa.telefone#': empresa.telefone || '',
+      '#empresa.email#': empresa.email || '',
+      '#empresa.responsavel#': empresa.responsavel_nome || '',
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
