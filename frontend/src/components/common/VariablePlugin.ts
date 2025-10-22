@@ -136,8 +136,9 @@ export default class VariablePlugin extends Plugin {
                 color: #333;
                 border-bottom: 1px solid #f0f0f0;
                 transition: background-color 0.2s;
+                font-family: 'Courier New', monospace;
               `;
-              item.textContent = variable.label;
+              item.textContent = variable.value;
 
               // Hover effect
               item.addEventListener('mouseenter', () => {
