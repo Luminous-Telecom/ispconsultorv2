@@ -22,7 +22,7 @@ export class ModeloContratoPermanencia extends Model<ModeloContratoPermanenciaAt
   public readonly updated_at!: Date;
 }
 
-ConteudoContratoPermanencia.init(
+ModeloContratoPermanencia.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -40,6 +40,16 @@ ConteudoContratoPermanencia.init(
     modelo: {
       type: DataTypes.TEXT('long'),
       allowNull: false,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   },
   {

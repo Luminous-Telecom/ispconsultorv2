@@ -22,7 +22,7 @@ export class ModeloTermoAdesao extends Model<ModeloTermoAdesaoAttributes, Modelo
   public readonly updated_at!: Date;
 }
 
-ConteudoTermoAdesao.init(
+ModeloTermoAdesao.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -40,6 +40,16 @@ ConteudoTermoAdesao.init(
     modelo: {
       type: DataTypes.TEXT('long'),
       allowNull: false,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   },
   {

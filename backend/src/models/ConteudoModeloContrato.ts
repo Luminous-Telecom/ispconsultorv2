@@ -22,7 +22,7 @@ export class ModeloContratoConteudo extends Model<ModeloContratoConteudoAttribut
   public readonly updated_at!: Date;
 }
 
-ConteudoModeloContrato.init(
+ModeloContratoConteudo.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -40,6 +40,16 @@ ConteudoModeloContrato.init(
     modelo: {
       type: DataTypes.TEXT('long'),
       allowNull: false,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   },
   {
