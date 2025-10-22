@@ -350,6 +350,7 @@ export class DocumentoSistemaController {
             body {
               margin: 0;
               padding: 0;
+              line-height: 1.2;
             }
             
             /* Estilos para imagens - preservar dimensões inline */
@@ -413,7 +414,7 @@ export class DocumentoSistemaController {
             p {
               margin: 0 !important;
               padding: 0 !important;
-              line-height: 1.5 !important;
+              line-height: 1.2 !important;
             }
             
             p:empty {
@@ -425,12 +426,21 @@ export class DocumentoSistemaController {
             }
             
             br {
+              display: block !important;
+              margin: 0 !important;
+              padding: 0 !important;
               line-height: 1 !important;
+              height: 0.5em !important;
             }
             
             /* Adicionar pequeno espaço apenas entre parágrafos consecutivos */
             p + p {
-              margin-top: 0.3em !important;
+              margin-top: 0.2em !important;
+            }
+            
+            /* Espaçamento do body */
+            body {
+              line-height: 1.2 !important;
             }
             
             /* Espaçamento entre tabelas */

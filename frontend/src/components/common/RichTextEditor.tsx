@@ -71,7 +71,7 @@ const editorStyles = `
   p {
     margin: 0;
     padding: 0;
-    line-height: 1.5;
+    line-height: 1.2;
   }
   
   p:empty {
@@ -83,12 +83,16 @@ const editorStyles = `
   }
   
   br {
+    display: block;
+    margin: 0;
+    padding: 0;
     line-height: 1;
+    height: 0.5em;
   }
   
   /* Adicionar pequeno espaço apenas entre parágrafos consecutivos */
   p + p {
-    margin-top: 0.3em;
+    margin-top: 0.2em;
   }
   
   /* Espaçamento entre tabelas */
@@ -141,10 +145,14 @@ const editorStyles = `
     }
     
     /* Controlar espaçamento entre elementos na impressão */
+    body {
+      line-height: 1.2 !important;
+    }
+    
     p {
       margin: 0 !important;
       padding: 0 !important;
-      line-height: 1.5 !important;
+      line-height: 1.2 !important;
     }
     
     p:empty {
@@ -156,12 +164,16 @@ const editorStyles = `
     }
     
     br {
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
       line-height: 1 !important;
+      height: 0.5em !important;
     }
     
     /* Adicionar pequeno espaço apenas entre parágrafos consecutivos */
     p + p {
-      margin-top: 0.3em !important;
+      margin-top: 0.2em !important;
     }
     
     /* Espaçamento entre tabelas */
