@@ -231,6 +231,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           height: 30px !important;
           padding: 4px 2.5rem 4px 8px !important;
           font-size: 13px !important;
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 0.75rem center !important;
+          background-size: 16px 12px !important;
         }
         
         [data-theme="light"] .modal-content textarea.form-control:not(:disabled) {
@@ -264,6 +268,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           height: 30px !important;
           padding: 4px 2.5rem 4px 8px !important;
           font-size: 13px !important;
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 0.75rem center !important;
+          background-size: 16px 12px !important;
         }
         
         [data-theme="dark"] .modal-content textarea.form-control:not(:disabled) {
@@ -328,6 +336,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           height: 30px !important;
           padding: 4px 2.5rem 4px 8px !important;
           font-size: 13px !important;
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 0.75rem center !important;
+          background-size: 16px 12px !important;
         }
         
         .modal-content .form-control:focus:not(:disabled) {
