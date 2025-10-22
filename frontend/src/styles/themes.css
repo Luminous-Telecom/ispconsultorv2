@@ -1821,122 +1821,95 @@ body {
   padding: 10px;
 }
 
-/* Tabelas no editor - Tema claro - ISOLADAS dos estilos do sistema */
-[data-theme="light"] .ckeditor-wrapper .ck-content table {
+
+/* ISOLAMENTO TOTAL DAS TABELAS DO CKEDITOR - REGRAS MAIS ESPECÍFICAS */
+.ckeditor-wrapper .ck-content table,
+.ckeditor-wrapper .ck-content table *,
+.ckeditor-wrapper .ck-content table td,
+.ckeditor-wrapper .ck-content table th,
+.ckeditor-wrapper .ck-content table tr,
+.ckeditor-wrapper .ck-content table tbody,
+.ckeditor-wrapper .ck-content table thead,
+.ckeditor-wrapper .ck-content table tfoot {
+  /* Resetar TODOS os estilos do sistema */
+  all: unset !important;
+  display: revert !important;
+  box-sizing: border-box !important;
+}
+
+/* Reaplicar apenas os estilos necessários para tabelas do editor */
+.ckeditor-wrapper .ck-content table {
+  display: table !important;
   width: 100% !important;
   border-collapse: collapse !important;
   margin: 5px 0 !important;
-  background-color: #ffffff !important;
-  box-shadow: none !important;
-  overflow: visible !important;
   font-size: 9pt !important;
+}
+
+.ckeditor-wrapper .ck-content table td,
+.ckeditor-wrapper .ck-content table th {
+  display: table-cell !important;
+  padding: 8px !important;
+  vertical-align: top !important;
+  font-size: 9pt !important;
+  line-height: 1.2 !important;
+  font-weight: normal !important;
+  text-align: left !important;
+  border: 1px solid !important;
+}
+
+.ckeditor-wrapper .ck-content table th {
+  font-weight: bold !important;
+}
+
+.ckeditor-wrapper .ck-content table tr {
+  display: table-row !important;
+}
+
+.ckeditor-wrapper .ck-content table tbody {
+  display: table-row-group !important;
+}
+
+.ckeditor-wrapper .ck-content table thead {
+  display: table-header-group !important;
+}
+
+.ckeditor-wrapper .ck-content table tfoot {
+  display: table-footer-group !important;
+}
+
+/* Tema claro - cores específicas */
+[data-theme="light"] .ckeditor-wrapper .ck-content table {
+  background-color: #ffffff !important;
 }
 
 [data-theme="light"] .ckeditor-wrapper .ck-content table td,
 [data-theme="light"] .ckeditor-wrapper .ck-content table th {
-  border: 1px solid #ced4da !important;
-  padding: 8px !important;
-  vertical-align: top !important;
-  font-size: 9pt !important;
-  line-height: 1.2 !important;
   background-color: #ffffff !important;
   color: #000000 !important;
-  transition: none !important;
-  cursor: default !important;
-  font-weight: normal !important;
+  border-color: #ced4da !important;
 }
 
 [data-theme="light"] .ckeditor-wrapper .ck-content table th {
-  font-weight: bold !important;
-  text-align: left !important;
   background-color: #f8f9fa !important;
   color: #000000 !important;
 }
 
-[data-theme="light"] .ckeditor-wrapper .ck-content table tbody tr {
-  background-color: #ffffff !important;
-  transition: none !important;
-  cursor: default !important;
-}
-
-[data-theme="light"] .ckeditor-wrapper .ck-content table tbody tr:hover {
-  background-color: #ffffff !important;
-}
-
-[data-theme="light"] .ckeditor-wrapper .ck-content table tbody tr:nth-child(even) {
-  background-color: #ffffff !important;
-}
-
-[data-theme="light"] .ckeditor-wrapper .ck-content table tbody tr:nth-child(even):hover {
-  background-color: #ffffff !important;
-}
-
-[data-theme="light"] .ckeditor-wrapper .ck-content table thead th {
-  background-color: #f8f9fa !important;
-  border-bottom: 1px solid #ced4da !important;
-  color: #000000 !important;
-  font-weight: bold !important;
-  padding: 8px !important;
-  font-size: 9pt !important;
-}
-
-/* Tabelas no editor - Tema escuro - ISOLADAS dos estilos do sistema */
+/* Tema escuro - cores específicas */
 [data-theme="dark"] .ckeditor-wrapper .ck-content table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  margin: 5px 0 !important;
   background-color: #2d3748 !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-  font-size: 9pt !important;
 }
 
 [data-theme="dark"] .ckeditor-wrapper .ck-content table td,
 [data-theme="dark"] .ckeditor-wrapper .ck-content table th {
-  border: 1px solid #4a5568 !important;
-  padding: 8px !important;
-  vertical-align: top !important;
-  font-size: 9pt !important;
-  line-height: 1.2 !important;
   background-color: #2d3748 !important;
   color: #ffffff !important;
-  transition: none !important;
-  cursor: default !important;
-  font-weight: normal !important;
+  border-color: #4a5568 !important;
 }
 
 [data-theme="dark"] .ckeditor-wrapper .ck-content table th {
-  font-weight: bold !important;
-  text-align: left !important;
   background-color: #1a202c !important;
   color: #ffffff !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table tbody tr {
-  background-color: #2d3748 !important;
-  transition: none !important;
-  cursor: default !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table tbody tr:hover {
-  background-color: #2d3748 !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table tbody tr:nth-child(even) {
-  background-color: #2d3748 !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table tbody tr:nth-child(even):hover {
-  background-color: #2d3748 !important;
-}
-
-[data-theme="dark"] .ckeditor-wrapper .ck-content table thead th {
-  background-color: #1a202c !important;
-  border-bottom: 1px solid #4a5568 !important;
-  color: #ffffff !important;
-  font-weight: bold !important;
-  padding: 8px !important;
-  font-size: 9pt !important;
 }
 
 /* Barra de ferramentas flutuante */
