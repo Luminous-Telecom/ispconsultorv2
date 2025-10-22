@@ -21,6 +21,30 @@ export default class VariablePlugin extends Plugin {
         isToggleable: false
       });
 
+      // Adicionar classes CSS corretas do CKEditor5 após renderização
+      buttonView.on('render', () => {
+        const buttonElement = buttonView.element;
+        if (buttonElement) {
+          // Adicionar classes CSS do CKEditor5 para ficar igual aos outros botões
+          buttonElement.classList.add('ck-button', 'ck-dropdown__button');
+          
+          // Adicionar setinha de dropdown
+          const arrow = document.createElement('span');
+          arrow.className = 'ck-button__arrow';
+          arrow.innerHTML = '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5 7l5 5 5-5z" fill="currentColor"/></svg>';
+          arrow.style.cssText = `
+            margin-left: 4px;
+            display: inline-block;
+            vertical-align: middle;
+            width: 12px;
+            height: 12px;
+          `;
+          
+          // Adicionar a setinha ao botão
+          buttonElement.appendChild(arrow);
+        }
+      });
+
       // Lista de variáveis disponíveis
       const variables = [
         { label: 'Nome do Cliente', value: '{{cliente.nome}}' },
