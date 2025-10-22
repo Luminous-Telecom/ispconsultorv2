@@ -1825,6 +1825,16 @@ p, span, div, label {
   cursor: pointer !important;
 }
 
+/* CKEditor - Remover painel de debug/inspector */
+.ck.ck-balloon-panel.ck-balloon-panel_with-arrow,
+.ck-inspector-wrapper,
+.ck-inspector,
+[data-cke-tooltip-text],
+.ck-balloon-panel {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 /* CKEditor - Fundo transparente */
 .ckeditor-wrapper .ck-editor__editable {
   background-color: transparent !important;
