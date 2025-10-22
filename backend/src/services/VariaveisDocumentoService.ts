@@ -39,7 +39,8 @@ export class VariaveisDocumentoService {
           { variavel: '#cliente.complemento#', descricao: 'Complemento' },
           { variavel: '#cliente.bairro#', descricao: 'Bairro' },
           { variavel: '#cliente.cidade#', descricao: 'Cidade' },
-          { variavel: '#cliente.estado#', descricao: 'Estado' },
+          { variavel: '#cliente.estado#', descricao: 'Estado (nome completo)' },
+          { variavel: '#cliente.uf#', descricao: 'UF (sigla do estado)' },
           { variavel: '#cliente.cep#', descricao: 'CEP' },
         ]
       },
@@ -76,7 +77,8 @@ export class VariaveisDocumentoService {
           { variavel: '#empresa.complemento#', descricao: 'Complemento da empresa' },
           { variavel: '#empresa.bairro#', descricao: 'Bairro da empresa' },
           { variavel: '#empresa.cidade#', descricao: 'Cidade da empresa' },
-          { variavel: '#empresa.estado#', descricao: 'Estado (UF) da empresa' },
+          { variavel: '#empresa.estado#', descricao: 'Estado (nome completo) da empresa' },
+          { variavel: '#empresa.uf#', descricao: 'UF (sigla) da empresa' },
           { variavel: '#empresa.cep#', descricao: 'CEP da empresa' },
           { variavel: '#empresa.telefone#', descricao: 'Telefone da empresa' },
           { variavel: '#empresa.email#', descricao: 'E-mail da empresa' },
@@ -169,6 +171,43 @@ export class VariaveisDocumentoService {
   }
 
   /**
+   * Converter UF para nome completo do estado
+   */
+  private static obterNomeEstado(uf: string): string {
+    const estados: Record<string, string> = {
+      'AC': 'Acre',
+      'AL': 'Alagoas',
+      'AP': 'Amapá',
+      'AM': 'Amazonas',
+      'BA': 'Bahia',
+      'CE': 'Ceará',
+      'DF': 'Distrito Federal',
+      'ES': 'Espírito Santo',
+      'GO': 'Goiás',
+      'MA': 'Maranhão',
+      'MT': 'Mato Grosso',
+      'MS': 'Mato Grosso do Sul',
+      'MG': 'Minas Gerais',
+      'PA': 'Pará',
+      'PB': 'Paraíba',
+      'PR': 'Paraná',
+      'PE': 'Pernambuco',
+      'PI': 'Piauí',
+      'RJ': 'Rio de Janeiro',
+      'RN': 'Rio Grande do Norte',
+      'RS': 'Rio Grande do Sul',
+      'RO': 'Rondônia',
+      'RR': 'Roraima',
+      'SC': 'Santa Catarina',
+      'SP': 'São Paulo',
+      'SE': 'Sergipe',
+      'TO': 'Tocantins'
+    };
+    
+    return estados[uf.toUpperCase()] || uf;
+  }
+
+  /**
    * Processar variáveis do cliente
    */
   private static processarVariaveisCliente(conteudo: string, cliente: Cliente): string {
@@ -199,7 +238,8 @@ export class VariaveisDocumentoService {
       '#cliente.complemento#': cliente.complemento || '',
       '#cliente.bairro#': cliente.bairro || '',
       '#cliente.cidade#': cliente.cidade || '',
-      '#cliente.estado#': cliente.estado || '',
+      '#cliente.estado#': cliente.estado ? this.obterNomeEstado(cliente.estado) : '',
+      '#cliente.uf#': cliente.estado || '',
       '#cliente.cep#': cliente.cep || '',
     };
 
@@ -479,7 +519,8 @@ export class VariaveisDocumentoService {
       '#empresa.complemento#': empresa.complemento || '',
       '#empresa.bairro#': empresa.bairro || '',
       '#empresa.cidade#': empresa.cidade || '',
-      '#empresa.estado#': empresa.estado || '',
+      '#empresa.estado#': empresa.estado ? this.obterNomeEstado(empresa.estado) : '',
+      '#empresa.uf#': empresa.estado || '',
       '#empresa.cep#': empresa.cep || '',
       '#empresa.telefone#': empresa.telefone || '',
       '#empresa.email#': empresa.email || '',

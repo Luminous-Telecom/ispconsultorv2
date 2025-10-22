@@ -538,6 +538,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                   { value: '#cliente.bairro#', text: '#cliente.bairro#' },
                   { value: '#cliente.cidade#', text: '#cliente.cidade#' },
                   { value: '#cliente.estado#', text: '#cliente.estado#' },
+                  { value: '#cliente.uf#', text: '#cliente.uf#' },
                   { value: '#cliente.cep#', text: '#cliente.cep#' }
                 ]},
                 { group: 'Contrato', options: [
@@ -562,6 +563,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                   { value: '#empresa.bairro#', text: '#empresa.bairro#' },
                   { value: '#empresa.cidade#', text: '#empresa.cidade#' },
                   { value: '#empresa.estado#', text: '#empresa.estado#' },
+                  { value: '#empresa.uf#', text: '#empresa.uf#' },
                   { value: '#empresa.cep#', text: '#empresa.cep#' },
                   { value: '#empresa.telefone#', text: '#empresa.telefone#' },
                   { value: '#empresa.email#', text: '#empresa.email#' },
