@@ -481,11 +481,18 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             const ckLabels = document.querySelectorAll('.ck-voice-label');
             ckLabels.forEach(label => {
               const labelElement = label as HTMLLabelElement;
-              if (labelElement.id && !labelElement.htmlFor) {
-                // Encontrar o editor associado e associar o label
-                const editable = document.querySelector('.ck-editor__editable');
-                if (editable && editable.id) {
-                  labelElement.htmlFor = editable.id;
+              if (labelElement.id) {
+                // Encontrar o editor editável
+                const editable = editor.ui.view.editable.element;
+                if (editable) {
+                  // Garantir que o editable tem o mesmo id que passamos
+                  if (id && !editable.id) {
+                    editable.id = id;
+                  }
+                  // Associar label ao editable
+                  if (editable.id) {
+                    labelElement.htmlFor = editable.id;
+                  }
                 }
               }
             });
