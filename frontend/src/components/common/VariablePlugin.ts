@@ -1,6 +1,20 @@
 import { Plugin } from 'ckeditor5';
 import { ButtonView } from 'ckeditor5';
 
+interface Variavel {
+  variavel: string;
+  descricao: string;
+}
+
+interface CategoriaVariaveis {
+  titulo: string;
+  variaveis: Variavel[];
+}
+
+interface VariaveisData {
+  [key: string]: CategoriaVariaveis;
+}
+
 export default class VariablePlugin extends Plugin {
   static get pluginName() {
     return 'VariablePlugin';
@@ -9,6 +23,16 @@ export default class VariablePlugin extends Plugin {
   init() {
     const editor = this.editor;
     let currentDropdown: HTMLElement | null = null;
+
+    // Função para buscar variáveis do backend
+    const buscarVariaveis = async (): Promise<VariaveisData> => {
+      const response = await fetch('/api/modelos-contrato/variaveis');
+      if (!response.ok) {
+        throw new Error('Erro ao buscar variáveis do backend');
+      }
+      const result = await response.json();
+      return result.data; // O backend retorna { success: true, data: variaveis }
+    };
 
     // Adiciona o botão de variáveis à barra de ferramentas
     editor.ui.componentFactory.add('variables', locale => {
@@ -22,29 +46,6 @@ export default class VariablePlugin extends Plugin {
         isToggleable: true
       });
 
-      // Lista de variáveis disponíveis
-      const variables = [
-        { label: 'Nome do Cliente', value: '{{cliente.nome}}' },
-        { label: 'Razão Social', value: '{{cliente.razao_social}}' },
-        { label: 'CPF/CNPJ', value: '{{cliente.cpf_cnpj}}' },
-        { label: 'Endereço', value: '{{cliente.endereco}}' },
-        { label: 'Cidade', value: '{{cliente.cidade}}' },
-        { label: 'Estado', value: '{{cliente.estado}}' },
-        { label: 'CEP', value: '{{cliente.cep}}' },
-        { label: 'Telefone', value: '{{cliente.telefone}}' },
-        { label: 'Email', value: '{{cliente.email}}' },
-        { label: 'Número do Contrato', value: '{{contrato.numero}}' },
-        { label: 'Data de Início', value: '{{contrato.data_inicio}}' },
-        { label: 'Data de Fim', value: '{{contrato.data_fim}}' },
-        { label: 'Valor do Contrato', value: '{{contrato.valor}}' },
-        { label: 'Status do Contrato', value: '{{contrato.status}}' },
-        { label: 'Nome do Plano', value: '{{plano.nome}}' },
-        { label: 'Descrição do Plano', value: '{{plano.descricao}}' },
-        { label: 'Valor do Plano', value: '{{plano.valor}}' },
-        { label: 'Data Atual', value: '{{data_atual}}' },
-        { label: 'Hora Atual', value: '{{hora_atual}}' },
-        { label: 'Nome do Usuário', value: '{{usuario.nome}}' }
-      ];
 
       // Adicionar setinha após o botão ser renderizado
       buttonView.on('render', () => {
@@ -74,7 +75,7 @@ export default class VariablePlugin extends Plugin {
       });
 
       // Ação ao clicar no botão - criar dropdown que se parece com o "Choose heading"
-      buttonView.on('execute', () => {
+      buttonView.on('execute', async () => {
         // Se já existe um dropdown aberto, fechar
         if (currentDropdown) {
           currentDropdown.remove();
@@ -84,6 +85,16 @@ export default class VariablePlugin extends Plugin {
         }
 
         buttonView.isOn = true;
+
+        // Buscar variáveis do backend
+        let variaveisData: VariaveisData;
+        try {
+          variaveisData = await buscarVariaveis();
+        } catch (error) {
+          console.error('Erro ao buscar variáveis:', error);
+          buttonView.isOn = false;
+          return;
+        }
 
         // Criar um dropdown que se parece exatamente com o "Choose heading"
         const dropdown = document.createElement('div');
@@ -102,16 +113,11 @@ export default class VariablePlugin extends Plugin {
           overflow-y: auto;
         `;
 
-        // Adicionar variáveis organizadas por categoria
-        const categories = {
-          'Cliente': variables.filter(v => v.value.includes('cliente')),
-          'Contrato': variables.filter(v => v.value.includes('contrato')),
-          'Plano': variables.filter(v => v.value.includes('plano')),
-          'Sistema': variables.filter(v => !v.value.includes('cliente') && !v.value.includes('contrato') && !v.value.includes('plano'))
-        };
+        // Usar dados do backend diretamente
+        const categories = variaveisData;
 
-        Object.entries(categories).forEach(([category, vars]) => {
-          if (vars.length > 0) {
+        Object.entries(categories).forEach(([categoryKey, categoryData]: [string, CategoriaVariaveis]) => {
+          if (categoryData.variaveis && categoryData.variaveis.length > 0) {
             // Adicionar categoria
             const categoryDiv = document.createElement('div');
             categoryDiv.style.cssText = `
@@ -122,11 +128,11 @@ export default class VariablePlugin extends Plugin {
               text-transform: uppercase;
               letter-spacing: 0.5px;
             `;
-            categoryDiv.textContent = category;
+            categoryDiv.textContent = categoryData.titulo;
             dropdown.appendChild(categoryDiv);
 
             // Adicionar variáveis da categoria
-            vars.forEach(variable => {
+            categoryData.variaveis.forEach((variable: Variavel) => {
               const item = document.createElement('div');
               item.className = 'ck-dropdown__item';
               item.style.cssText = `
@@ -138,7 +144,7 @@ export default class VariablePlugin extends Plugin {
                 transition: background-color 0.2s;
                 font-family: 'Courier New', monospace;
               `;
-              item.textContent = variable.value;
+              item.textContent = variable.variavel;
 
               // Hover effect
               item.addEventListener('mouseenter', () => {
@@ -153,7 +159,7 @@ export default class VariablePlugin extends Plugin {
                 editor.model.change(writer => {
                   const insertPosition = editor.model.document.selection.getFirstPosition();
                   if (insertPosition) {
-                    writer.insertText(variable.value, insertPosition);
+                    writer.insertText(variable.variavel, insertPosition);
                   }
                 });
                 dropdown.remove();
