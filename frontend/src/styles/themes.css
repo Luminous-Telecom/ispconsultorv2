@@ -1793,6 +1793,24 @@ body {
   overflow-y: auto !important;
 }
 
+/* ========================================
+   FORÇAR ALTURA DINÂMICA - REGRAS MAIS ESPECÍFICAS
+   ======================================== */
+.ckeditor-wrapper .ck-source-editing-area textarea,
+.ckeditor-wrapper .ck-source-editing-area textarea[rows],
+.ckeditor-wrapper .ck-source-editing-area textarea[style*="height"] {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  rows: auto !important;
+}
+
+/* Neutralizar qualquer altura inline do CKEditor */
+.ckeditor-wrapper .ck-source-editing-area textarea[style] {
+  height: auto !important;
+  min-height: auto !important;
+}
+
 .ckeditor-wrapper .ck-source-editing-area textarea:focus {
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
