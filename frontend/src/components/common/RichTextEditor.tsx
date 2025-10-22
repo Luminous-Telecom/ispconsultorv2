@@ -13,6 +13,10 @@ import {
   Image,
   ImageUpload,
   ImageResize,
+  ImageInsert,
+  ImageToolbar,
+  ImageCaption,
+  ImageStyle,
   Alignment,
   Font,
   RemoveFormat,
@@ -25,7 +29,8 @@ import {
   Indent,
   IndentBlock,
   FontSize,
-  FontFamily
+  FontFamily,
+  Base64UploadAdapter
 } from 'ckeditor5';
 import { 
   Table,
@@ -188,6 +193,11 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Image,
             ImageUpload,
             ImageResize,
+            ImageInsert,
+            ImageToolbar,
+            ImageCaption,
+            ImageStyle,
+            Base64UploadAdapter,
             Alignment,
             Font,
             FontSize,
@@ -212,7 +222,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               'alignment', '|',
               'bulletedList', 'numberedList', '|',
               'outdent', 'indent', '|',
-              'link', 'insertTable', 'blockQuote', 'horizontalLine', '|',
+              'link', 'insertImage', 'insertTable', 'blockQuote', 'horizontalLine', '|',
               'removeFormat'
             ],
             shouldNotGroupWhenFull: true
@@ -257,9 +267,40 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
           image: {
             toolbar: [
               'imageTextAlternative',
+              'toggleImageCaption',
+              '|',
+              'imageStyle:inline',
+              'imageStyle:block',
+              'imageStyle:side',
+              '|',
               'imageResize'
             ],
-            resizeUnit: 'px'
+            resizeUnit: 'px',
+            resizeOptions: [
+              {
+                name: 'resizeImage:original',
+                label: 'Original',
+                value: null
+              },
+              {
+                name: 'resizeImage:25',
+                label: '25%',
+                value: '25'
+              },
+              {
+                name: 'resizeImage:50',
+                label: '50%',
+                value: '50'
+              },
+              {
+                name: 'resizeImage:75',
+                label: '75%',
+                value: '75'
+              }
+            ],
+            insert: {
+              integrations: ['insertImageViaUrl']
+            }
           },
           table: {
             contentToolbar: [
