@@ -180,20 +180,35 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
   const headerActions = (
     <div className="d-flex gap-1 align-items-center">
       {/* Select de cliente para teste */}
-      <select
-        className="form-select form-select-sm"
-        style={{ width: 'auto', fontSize: '0.875rem' }}
-        value={clienteTesteId}
-        onChange={(e) => setClienteTesteId(Number(e.target.value))}
-        title="Selecionar cliente para teste"
-      >
-        <option value={0}>Selecionar cliente...</option>
-        {clientesData?.data?.map((cliente: any) => (
-          <option key={cliente.id} value={cliente.id}>
-            {cliente.razao_social}
-          </option>
-        ))}
-      </select>
+      <label style={{ margin: 0, display: 'inline-flex', alignItems: 'center' }}>
+        <span style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          borderWidth: 0
+        }}>
+          Selecionar cliente para teste:
+        </span>
+        <select
+          className="form-select form-select-sm"
+          style={{ width: 'auto', fontSize: '0.875rem' }}
+          value={clienteTesteId}
+          onChange={(e) => setClienteTesteId(Number(e.target.value))}
+          title="Selecionar cliente para teste"
+        >
+          <option value={0}>Selecionar cliente...</option>
+          {clientesData?.data?.map((cliente: any) => (
+            <option key={cliente.id} value={cliente.id}>
+              {cliente.razao_social}
+            </option>
+          ))}
+        </select>
+      </label>
       
       <button
         type="button"
