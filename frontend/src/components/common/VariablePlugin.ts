@@ -45,30 +45,44 @@ export default class VariablePlugin extends Plugin {
         { label: 'Nome do Usuário', value: '{{usuario.nome}}' }
       ];
 
-      // Ação ao clicar no botão - criar dropdown customizado
+      // Ação ao clicar no botão - criar dropdown nativo do CKEditor5
       buttonView.on('execute', () => {
-        // Criar um select HTML customizado que funciona como dropdown
-        const select = document.createElement('select');
-        select.style.cssText = `
+        // Criar um dropdown que se parece com o "Choose heading"
+        const dropdown = document.createElement('div');
+        dropdown.className = 'ck-dropdown ck-dropdown_open';
+        dropdown.style.cssText = `
           position: absolute;
           top: 100%;
           left: 0;
           z-index: 1000;
           background: white;
-          border: 1px solid #ccc;
+          border: 1px solid #c4c4c4;
           border-radius: 4px;
-          padding: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
           min-width: 200px;
           max-height: 300px;
           overflow-y: auto;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         `;
 
-        // Adicionar opção padrão
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Escolher variável...';
-        select.appendChild(defaultOption);
+        // Adicionar header do dropdown
+        const header = document.createElement('div');
+        header.className = 'ck-dropdown__panel';
+        header.style.cssText = `
+          padding: 8px 0;
+          border-bottom: 1px solid #e0e0e0;
+          background: #f8f9fa;
+        `;
+        
+        const headerText = document.createElement('div');
+        headerText.textContent = 'Escolher variável...';
+        headerText.style.cssText = `
+          padding: 4px 12px;
+          font-size: 12px;
+          color: #666;
+          font-weight: 500;
+        `;
+        header.appendChild(headerText);
+        dropdown.appendChild(header);
 
         // Adicionar variáveis organizadas por categoria
         const categories = {
@@ -80,51 +94,72 @@ export default class VariablePlugin extends Plugin {
 
         Object.entries(categories).forEach(([category, vars]) => {
           if (vars.length > 0) {
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = category;
+            // Adicionar categoria
+            const categoryDiv = document.createElement('div');
+            categoryDiv.style.cssText = `
+              padding: 8px 12px 4px 12px;
+              font-size: 11px;
+              font-weight: 600;
+              color: #999;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            `;
+            categoryDiv.textContent = category;
+            dropdown.appendChild(categoryDiv);
+
+            // Adicionar variáveis da categoria
             vars.forEach(variable => {
-              const option = document.createElement('option');
-              option.value = variable.value;
-              option.textContent = variable.label;
-              optgroup.appendChild(option);
+              const item = document.createElement('div');
+              item.className = 'ck-dropdown__item';
+              item.style.cssText = `
+                padding: 6px 12px;
+                cursor: pointer;
+                font-size: 13px;
+                color: #333;
+                border-bottom: 1px solid #f0f0f0;
+                transition: background-color 0.2s;
+              `;
+              item.textContent = variable.label;
+
+              // Hover effect
+              item.addEventListener('mouseenter', () => {
+                item.style.backgroundColor = '#f0f0f0';
+              });
+              item.addEventListener('mouseleave', () => {
+                item.style.backgroundColor = 'transparent';
+              });
+
+              // Click event
+              item.addEventListener('click', () => {
+                editor.model.change(writer => {
+                  const insertPosition = editor.model.document.selection.getFirstPosition();
+                  if (insertPosition) {
+                    writer.insertText(variable.value, insertPosition);
+                  }
+                });
+                dropdown.remove();
+              });
+
+              dropdown.appendChild(item);
             });
-            select.appendChild(optgroup);
           }
         });
 
-        // Posicionar o select próximo ao botão
+        // Posicionar o dropdown próximo ao botão
         const buttonElement = buttonView.element;
         if (buttonElement) {
           buttonElement.style.position = 'relative';
-          buttonElement.appendChild(select);
+          buttonElement.appendChild(dropdown);
 
-          // Focar no select
-          select.focus();
-
-          // Evento de mudança
-          select.addEventListener('change', (e) => {
-            const target = e.target as HTMLSelectElement;
-            if (target.value) {
-              editor.model.change(writer => {
-                const insertPosition = editor.model.document.selection.getFirstPosition();
-                if (insertPosition) {
-                  writer.insertText(target.value, insertPosition);
-                }
-              });
-            }
-            // Remover o select após uso
-            select.remove();
-          });
-
-          // Remover o select ao clicar fora
-          const removeSelect = (e: MouseEvent) => {
-            if (!select.contains(e.target as Node) && !buttonElement.contains(e.target as Node)) {
-              select.remove();
-              document.removeEventListener('click', removeSelect);
+          // Remover o dropdown ao clicar fora
+          const removeDropdown = (e: MouseEvent) => {
+            if (!dropdown.contains(e.target as Node) && !buttonElement.contains(e.target as Node)) {
+              dropdown.remove();
+              document.removeEventListener('click', removeDropdown);
             }
           };
           setTimeout(() => {
-            document.addEventListener('click', removeSelect);
+            document.addEventListener('click', removeDropdown);
           }, 100);
         }
       });
