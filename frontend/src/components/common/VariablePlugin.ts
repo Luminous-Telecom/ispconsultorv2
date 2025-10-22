@@ -45,23 +45,87 @@ export default class VariablePlugin extends Plugin {
         { label: 'Nome do Usuário', value: '{{usuario.nome}}' }
       ];
 
-      // Ação ao clicar no botão - mostrar lista de variáveis
+      // Ação ao clicar no botão - criar dropdown customizado
       buttonView.on('execute', () => {
-        // Criar uma lista HTML simples para seleção
-        const variableList = variables.map(v => `${v.label}: ${v.value}`).join('\n');
-        const selectedVariable = prompt(
-          `Variáveis disponíveis:\n\n${variableList}\n\nDigite o nome da variável (ex: cliente.nome):`,
-          ''
-        );
-        
-        if (selectedVariable) {
-          const variableValue = `{{${selectedVariable}}}`;
-          editor.model.change(writer => {
-            const insertPosition = editor.model.document.selection.getFirstPosition();
-            if (insertPosition) {
-              writer.insertText(variableValue, insertPosition);
+        // Criar um select HTML customizado que funciona como dropdown
+        const select = document.createElement('select');
+        select.style.cssText = `
+          position: absolute;
+          top: 100%;
+          left: 0;
+          z-index: 1000;
+          background: white;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          padding: 8px;
+          min-width: 200px;
+          max-height: 300px;
+          overflow-y: auto;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        `;
+
+        // Adicionar opção padrão
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Escolher variável...';
+        select.appendChild(defaultOption);
+
+        // Adicionar variáveis organizadas por categoria
+        const categories = {
+          'Cliente': variables.filter(v => v.value.includes('cliente')),
+          'Contrato': variables.filter(v => v.value.includes('contrato')),
+          'Plano': variables.filter(v => v.value.includes('plano')),
+          'Sistema': variables.filter(v => !v.value.includes('cliente') && !v.value.includes('contrato') && !v.value.includes('plano'))
+        };
+
+        Object.entries(categories).forEach(([category, vars]) => {
+          if (vars.length > 0) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = category;
+            vars.forEach(variable => {
+              const option = document.createElement('option');
+              option.value = variable.value;
+              option.textContent = variable.label;
+              optgroup.appendChild(option);
+            });
+            select.appendChild(optgroup);
+          }
+        });
+
+        // Posicionar o select próximo ao botão
+        const buttonElement = buttonView.element;
+        if (buttonElement) {
+          buttonElement.style.position = 'relative';
+          buttonElement.appendChild(select);
+
+          // Focar no select
+          select.focus();
+
+          // Evento de mudança
+          select.addEventListener('change', (e) => {
+            const target = e.target as HTMLSelectElement;
+            if (target.value) {
+              editor.model.change(writer => {
+                const insertPosition = editor.model.document.selection.getFirstPosition();
+                if (insertPosition) {
+                  writer.insertText(target.value, insertPosition);
+                }
+              });
             }
+            // Remover o select após uso
+            select.remove();
           });
+
+          // Remover o select ao clicar fora
+          const removeSelect = (e: MouseEvent) => {
+            if (!select.contains(e.target as Node) && !buttonElement.contains(e.target as Node)) {
+              select.remove();
+              document.removeEventListener('click', removeSelect);
+            }
+          };
+          setTimeout(() => {
+            document.addEventListener('click', removeSelect);
+          }, 100);
         }
       });
 
