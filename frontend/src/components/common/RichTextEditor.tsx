@@ -68,11 +68,6 @@ const editorStyles = `
     height: auto;
   }
   
-  /* Ocultar label interno do CKEditor que causa avisos de acessibilidade */
-  .ck-voice-label {
-    display: none !important;
-  }
-
   /* Controlar espaçamento entre elementos */
   p {
     margin: 0;
@@ -480,6 +475,20 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             editorElement.setAttribute('role', 'textbox');
             editorElement.setAttribute('aria-multiline', 'true');
           }
+
+          // Remover label interno do CKEditor do DOM (causa avisos de acessibilidade)
+          setTimeout(() => {
+            const editable = editor.ui.view.editable.element;
+            if (editable) {
+              const editorRoot = editable.closest('.ck-editor');
+              if (editorRoot) {
+                const ckLabels = editorRoot.querySelectorAll('.ck-voice-label');
+                ckLabels.forEach(label => {
+                  label.remove(); // Remove completamente do DOM
+                });
+              }
+            }
+          }, 100);
 
           // Adicionar botão de variáveis na toolbar
           setTimeout(() => {
