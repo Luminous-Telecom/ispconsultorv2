@@ -14,9 +14,6 @@ import {
   ImageUpload,
   ImageResize,
   ImageInsert,
-  ImageToolbar,
-  ImageCaption,
-  ImageStyle,
   Alignment,
   Font,
   RemoveFormat,
@@ -194,9 +191,6 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             ImageUpload,
             ImageResize,
             ImageInsert,
-            ImageToolbar,
-            ImageCaption,
-            ImageStyle,
             Base64UploadAdapter,
             Alignment,
             Font,
@@ -265,39 +259,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             showPreviews: true
           },
           image: {
-            toolbar: [
-              'imageTextAlternative',
-              'toggleImageCaption',
-              '|',
-              'imageStyle:inline',
-              'imageStyle:block',
-              'imageStyle:side',
-              '|',
-              'imageResize'
-            ],
-            resizeUnit: 'px',
-            resizeOptions: [
-              {
-                name: 'resizeImage:original',
-                label: 'Original',
-                value: null
-              },
-              {
-                name: 'resizeImage:25',
-                label: '25%',
-                value: '25'
-              },
-              {
-                name: 'resizeImage:50',
-                label: '50%',
-                value: '50'
-              },
-              {
-                name: 'resizeImage:75',
-                label: '75%',
-                value: '75'
-              }
-            ]
+            resizeUnit: 'px'
           },
           table: {
             contentToolbar: [
