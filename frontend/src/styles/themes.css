@@ -1833,6 +1833,17 @@ body {
   text-align: left !important;
 }
 
+/* Garantir alinhamento correto das células */
+.ckeditor-wrapper .ck-content table td {
+  text-align: left !important;
+}
+
+/* Neutralizar qualquer herança de alinhamento central */
+.ckeditor-wrapper .ck-content table,
+.ckeditor-wrapper .ck-content table * {
+  text-align: left !important;
+}
+
 .ckeditor-wrapper .ck-content table tbody tr:nth-child(even) {
   background-color: var(--bg-secondary) !important;
 }
