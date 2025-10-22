@@ -1767,7 +1767,6 @@ body {
    CONTAINER DA ÁREA SOURCE
    ======================================== */
 .ckeditor-wrapper .ck-source-editing-area {
-  height: 100% !important;
   min-height: 200px !important;
 }
 
@@ -1783,11 +1782,11 @@ body {
   font-size: 11px !important;
   line-height: 1.4 !important;
   padding: 8px !important;
-  resize: vertical !important;
-  height: 100% !important;
+  resize: none !important;
   min-height: 200px !important;
   width: 100% !important;
   max-width: 100% !important;
+  overflow-y: auto !important;
 }
 
 .ckeditor-wrapper .ck-source-editing-area textarea:focus {
