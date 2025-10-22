@@ -476,25 +476,19 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             editorElement.setAttribute('aria-multiline', 'true');
           }
 
-          // Corrigir associação do label do CKEditor
+          // Remover atributo for dos labels do CKEditor (não necessário, causa avisos)
           setTimeout(() => {
-            // Encontrar o editor editável específico deste editor
+            // Encontrar labels do CKEditor associados a este editor
             const editable = editor.ui.view.editable.element;
-            
             if (editable) {
-              // Garantir que o editable tem um id único
-              if (!editable.id) {
-                editable.id = id || `ckeditor-${Date.now()}`;
-              }
-              
-              // Encontrar labels do CKEditor associados a este editor
               const editorRoot = editable.closest('.ck-editor');
               if (editorRoot) {
                 const ckLabels = editorRoot.querySelectorAll('.ck-voice-label');
                 ckLabels.forEach(label => {
                   const labelElement = label as HTMLLabelElement;
-                  // Associar label ao editable usando o id correto
-                  labelElement.htmlFor = editable.id;
+                  // Remover htmlFor que o CKEditor adiciona automaticamente
+                  // O label é apenas para screen readers, não precisa de associação for/id
+                  labelElement.removeAttribute('for');
                 });
               }
             }
