@@ -558,6 +558,13 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 background-color: white !important;
                 color: #333 !important;
                 border: 1px solid #ccc !important;
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
+                background-repeat: no-repeat !important;
+                background-position: right 0.5rem center !important;
+                background-size: 12px 9px !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                appearance: none !important;
               `;
 
               // Adicionar opções
