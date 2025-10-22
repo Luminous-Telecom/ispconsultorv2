@@ -1775,6 +1775,7 @@ p, span, div, label {
 
 .ckeditor-wrapper .ck-editor__editable {
   background-color: transparent;
+  color: var(--text-primary);
 }
 
 .ckeditor-wrapper .ck-source-editing-area {
@@ -1789,6 +1790,9 @@ p, span, div, label {
   font-family: 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
 }
 
 /* Conteúdo básico do editor */
@@ -1797,6 +1801,8 @@ p, span, div, label {
   font-size: 9pt;
   line-height: 1.2;
   text-align: justify;
+  color: var(--text-primary);
+  background-color: transparent;
 }
 
 /* Tabelas no editor */
@@ -1804,20 +1810,24 @@ p, span, div, label {
   width: 100%;
   border-collapse: collapse;
   margin: 5px 0;
+  background-color: transparent;
 }
 
 .ckeditor-wrapper .ck-content table td,
 .ckeditor-wrapper .ck-content table th {
-  border: 1px solid #000;
+  border: 1px solid var(--border-color);
   padding: 3px;
   vertical-align: top;
   font-size: 9pt;
   line-height: 1.2;
+  background-color: transparent;
+  color: var(--text-primary);
 }
 
 .ckeditor-wrapper .ck-content table th {
   font-weight: bold;
   text-align: left;
+  background-color: var(--bg-tertiary);
 }
 
 /* Barra de ferramentas flutuante */
