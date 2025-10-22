@@ -564,6 +564,54 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               }
             }
           }, 100);
+
+          // Autosize do textarea no modo SourceEditing
+          const setupSourceAutosize = () => {
+            const editable = editor.ui.view.editable.element;
+            const editorRoot = editable ? editable.closest('.ck-editor') as HTMLElement | null : null;
+            if (!editorRoot) return;
+
+            const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
+              textarea.removeAttribute('rows');
+              textarea.style.overflowY = 'hidden';
+              textarea.style.display = 'block';
+              textarea.style.width = '100%';
+              textarea.style.maxWidth = '100%';
+              textarea.style.minHeight = '0';
+              textarea.style.maxHeight = 'none';
+              textarea.style.boxSizing = 'border-box';
+              // Recalcular altura baseada no conteúdo
+              textarea.style.height = 'auto';
+              const newHeight = textarea.scrollHeight;
+              textarea.style.height = `${newHeight}px`;
+            };
+
+            const bindTextareaHandlers = (textarea: HTMLTextAreaElement) => {
+              adjustTextareaHeight(textarea);
+              const handleResize = () => adjustTextareaHeight(textarea);
+              textarea.addEventListener('input', handleResize);
+              textarea.addEventListener('change', handleResize);
+            };
+
+            const tryAttachToTextarea = () => {
+              const ta = editorRoot.querySelector('.ck-source-editing-area textarea') as HTMLTextAreaElement | null;
+              if (ta) bindTextareaHandlers(ta);
+            };
+
+            // Observar inserção/remoção do textarea do SourceEditing
+            const observer = new MutationObserver(() => {
+              tryAttachToTextarea();
+            });
+            observer.observe(editorRoot, { childList: true, subtree: true });
+
+            // Tenta ligar imediatamente (caso já esteja em modo source)
+            tryAttachToTextarea();
+
+            // Encerrar observer quando editor for destruído
+            editor.on('destroy', () => observer.disconnect());
+          };
+
+          setupSourceAutosize();
         }}
         onChange={(event, editor) => {
           const data = editor.getData();
