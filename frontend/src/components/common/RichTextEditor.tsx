@@ -542,6 +542,11 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
         onReady={(editor) => {
           editorInstanceRef.current = editor;
           
+          // Se o editor estiver vazio, adicionar um parágrafo vazio para ativar os botões
+          if (!value || value.trim() === '') {
+            editor.setData('<p>&nbsp;</p>');
+          }
+          
           // Ajusta altura do editor
           const editorElement = editor.ui.view.editable.element;
           if (editorElement) {
