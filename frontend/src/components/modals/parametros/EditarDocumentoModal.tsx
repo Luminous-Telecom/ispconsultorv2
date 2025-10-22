@@ -466,7 +466,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                  aria-expanded={openImprimirDropdown}
                >
                  {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
-                 <span className="ms-1">▼</span>
+                 <i className="bi bi-chevron-down ms-1"></i>
                </button>
         {openImprimirDropdown && (
           <div 

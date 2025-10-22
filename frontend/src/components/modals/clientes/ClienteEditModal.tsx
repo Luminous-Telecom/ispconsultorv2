@@ -1655,7 +1655,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   onMouseDown={(e) => e.stopPropagation()}
                                 >
                                   {bulkAction.label}
-                                  <span className="ms-1">▼</span>
+                                  <i className="bi bi-chevron-down ms-1"></i>
                                 </button>
                                 {openDropdown === index && (
                                   <ul 

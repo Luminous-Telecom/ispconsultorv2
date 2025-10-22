@@ -206,7 +206,7 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
                         onClick={() => setOpenDropdown(openDropdown === index ? null : index)}
                       >
                         {bulkAction.label}
-                        <span className="ms-1">▼</span>
+                        <i className="bi bi-chevron-down ms-1"></i>
                       </button>
                       {openDropdown === index && (
                         <div 
