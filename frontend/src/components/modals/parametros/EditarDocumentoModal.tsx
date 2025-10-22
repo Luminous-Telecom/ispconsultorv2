@@ -111,8 +111,15 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     
     setIsGeneratingPdf(true);
     try {
-      // Gera o PDF usando a API
-      const pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
+      let pdfBlob: Blob;
+      
+      // Se tiver cliente selecionado, gera PDF com dados do cliente
+      // Se não, gera PDF do modelo sem preencher variáveis
+      if (clienteTesteId) {
+        pdfBlob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
+      } else {
+        pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
+      }
       
       // Verifica se é um Blob válido
       if (!(pdfBlob instanceof Blob)) {
@@ -130,7 +137,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       setShowPreview(true);
 
     } catch (error: any) {
-      addNotification('error', error.message || 'Erro ao gerar PDF para preview');
+      addNotification('error', error.message || 'Erro ao gerar PDF');
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -169,32 +176,6 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
 
   if (!documento) return null;
 
-  // Função para gerar PDF de teste com cliente
-  const handleTestPdf = async () => {
-    if (!documento || !clienteTesteId) {
-      addNotification('warning', 'Selecione um cliente para teste');
-      return;
-    }
-
-    try {
-      setIsGeneratingPdf(true);
-      const blob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
-      const url = window.URL.createObjectURL(blob);
-      
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
-      }
-      
-      setPdfUrl(url);
-      setShowPreview(true);
-      addNotification('success', 'PDF de teste gerado com sucesso');
-    } catch (error: any) {
-      addNotification('error', error.message || 'Erro ao gerar PDF de teste');
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
-
   // Ações para o header do modal
   const headerActions = (
     <div className="d-flex gap-1 align-items-center">
@@ -217,18 +198,8 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       <button
         type="button"
         className="btn btn-primary btn-sm"
-        onClick={handleTestPdf}
-        title="Testar PDF com dados do cliente"
-        disabled={isGeneratingPdf || !clienteTesteId}
-      >
-        Testar
-      </button>
-      
-      <button
-        type="button"
-        className="btn btn-primary btn-sm"
         onClick={handlePrint}
-        title="Imprimir documento"
+        title={clienteTesteId ? 'Imprimir com dados do cliente' : 'Imprimir modelo sem dados'}
         disabled={isGeneratingPdf}
       >
         {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
