@@ -1789,6 +1789,21 @@ p, span, div, label {
   border-color: var(--border-color);
 }
 
+/* CKEditor - Garantir que botões sejam clicáveis */
+.ck-button,
+.ck-toolbar__items .ck-button,
+.ck-dropdown__button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.ck-button:not(.ck-disabled):hover,
+.ck-toolbar__items .ck-button:not(.ck-disabled):hover,
+.ck-dropdown__button:not(.ck-disabled):hover {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
 /* CKEditor - Fundo transparente */
 .ckeditor-wrapper .ck-editor__editable {
   background-color: transparent !important;
