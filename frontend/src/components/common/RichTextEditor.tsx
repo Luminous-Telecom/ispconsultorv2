@@ -1,7 +1,6 @@
 import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import { ClassicEditor } from 'ckeditor5';
-import VariablePlugin from './VariablePlugin';
 import { 
   Bold,
   Essentials,
@@ -395,14 +394,13 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Code,
             HorizontalLine,
             Indent,
-            IndentBlock,
-            VariablePlugin
+            IndentBlock
           ],
           toolbar: {
             items: [
               'undo', 'redo', '|',
               'sourceEditing', '|',
-              'heading', 'style', 'variablesDropdown', '|',
+              'heading', 'style', '|',
               'bold', 'italic', 'underline', '|',
               'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
               'alignment', '|',
