@@ -119,20 +119,15 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
         throw new Error('Resposta inválida do servidor');
       }
       
-      // Cria uma URL para o PDF e abre em nova aba
+      // Cria uma URL para o PDF e abre no modal de preview
       const url = window.URL.createObjectURL(pdfBlob);
       
-      const newWindow = window.open(url, '_blank');
-      if (newWindow) {
-        newWindow.focus();
-      } else {
-        addNotification('warning', 'O navegador bloqueou o pop-up. Por favor, permita pop-ups para este site.');
+      if (pdfUrl) {
+        window.URL.revokeObjectURL(pdfUrl);
       }
-
-      // Libera a URL do objeto após um curto período
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-      }, 1000);
+      
+      setPdfUrl(url);
+      setShowPreview(true);
 
     } catch (error: any) {
       addNotification('error', error.message || 'Erro ao gerar PDF para preview');
