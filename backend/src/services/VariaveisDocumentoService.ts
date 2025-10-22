@@ -16,6 +16,9 @@ interface DadosVariaveis {
 }
 
 export class VariaveisDocumentoService {
+  // Cache para logo da empresa (evita conversões repetidas)
+  private static logoCache: { url: string; base64: string } | null = null;
+
   /**
    * Lista de todas as variáveis disponíveis
    */
@@ -156,8 +159,8 @@ export class VariaveisDocumentoService {
       resultado = this.processarVariaveisTitulo(resultado, dados.titulo, dataRef);
     }
 
-    // Processar variáveis financeiras
-    if (dados.cliente) {
+    // Processar variáveis financeiras (só se houver variáveis no conteúdo)
+    if (dados.cliente && resultado.includes('#financeiro.')) {
       resultado = await this.processarVariaveisFinanceiro(resultado, dados.cliente, dataRef);
     }
 
@@ -430,17 +433,27 @@ export class VariaveisDocumentoService {
   }
 
   /**
-   * Converter imagem para base64
+   * Converter imagem para base64 com cache
    */
   private static async imagemParaBase64(logoUrl: string): Promise<string> {
+    // Verificar cache
+    if (this.logoCache && this.logoCache.url === logoUrl) {
+      return this.logoCache.base64;
+    }
+
     try {
+      let base64Result = '';
+      
       // Verificar se é URL ou caminho local
       if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
-        // Baixar imagem da URL
-        const response = await axios.get(logoUrl, { responseType: 'arraybuffer' });
+        // Baixar imagem da URL com timeout
+        const response = await axios.get(logoUrl, { 
+          responseType: 'arraybuffer',
+          timeout: 5000 // 5 segundos de timeout
+        });
         const base64 = Buffer.from(response.data, 'binary').toString('base64');
         const contentType = response.headers['content-type'] || 'image/png';
-        return `data:${contentType};base64,${base64}`;
+        base64Result = `data:${contentType};base64,${base64}`;
       } else {
         // Ler arquivo local
         const absolutePath = path.isAbsolute(logoUrl) 
@@ -460,8 +473,14 @@ export class VariaveisDocumentoService {
             '.webp': 'image/webp'
           };
           const contentType = mimeTypes[ext] || 'image/png';
-          return `data:${contentType};base64,${base64}`;
+          base64Result = `data:${contentType};base64,${base64}`;
         }
+      }
+      
+      // Armazenar no cache se obteve sucesso
+      if (base64Result) {
+        this.logoCache = { url: logoUrl, base64: base64Result };
+        return base64Result;
       }
     } catch (error) {
       console.error('Erro ao converter logo para base64:', error);
@@ -496,10 +515,10 @@ export class VariaveisDocumentoService {
       empresa.cep
     ].filter(Boolean).join(', ');
 
-    // Converter logo para base64 se existir
+    // Converter logo para base64 se existir e se a variável estiver no conteúdo
     const logoUrl = empresa.logo || '';
     let logoHtml = '';
-    if (logoUrl) {
+    if (logoUrl && conteudo.includes('#empresa.logo#')) {
       const logoBase64 = await this.imagemParaBase64(logoUrl);
       if (logoBase64) {
         logoHtml = `<img src="${logoBase64}" alt="Logo da Empresa" style="max-width: 200px; height: auto;" />`;
