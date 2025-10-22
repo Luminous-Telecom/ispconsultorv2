@@ -21,27 +21,6 @@ export default class VariablePlugin extends Plugin {
         isToggleable: false
       });
 
-      // Adicionar setinha de dropdown após o texto
-      buttonView.on('render', () => {
-        const buttonElement = buttonView.element;
-        if (buttonElement) {
-          // Criar elemento da setinha
-          const arrow = document.createElement('span');
-          arrow.className = 'ck-button__arrow';
-          arrow.innerHTML = '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5 7l5 5 5-5z" fill="currentColor"/></svg>';
-          arrow.style.cssText = `
-            margin-left: 4px;
-            display: inline-block;
-            vertical-align: middle;
-            width: 12px;
-            height: 12px;
-          `;
-          
-          // Adicionar a setinha ao botão
-          buttonElement.appendChild(arrow);
-        }
-      });
-
       // Lista de variáveis disponíveis
       const variables = [
         { label: 'Nome do Cliente', value: '{{cliente.nome}}' },
@@ -66,9 +45,9 @@ export default class VariablePlugin extends Plugin {
         { label: 'Nome do Usuário', value: '{{usuario.nome}}' }
       ];
 
-      // Ação ao clicar no botão - criar dropdown nativo do CKEditor5
+      // Ação ao clicar no botão - criar dropdown que se parece com o "Choose heading"
       buttonView.on('execute', () => {
-        // Criar um dropdown que se parece com o "Choose heading"
+        // Criar um dropdown que se parece exatamente com o "Choose heading"
         const dropdown = document.createElement('div');
         dropdown.className = 'ck-dropdown ck-dropdown_open';
         dropdown.style.cssText = `
@@ -84,26 +63,6 @@ export default class VariablePlugin extends Plugin {
           max-height: 300px;
           overflow-y: auto;
         `;
-
-        // Adicionar header do dropdown
-        const header = document.createElement('div');
-        header.className = 'ck-dropdown__panel';
-        header.style.cssText = `
-          padding: 8px 0;
-          border-bottom: 1px solid #e0e0e0;
-          background: #f8f9fa;
-        `;
-        
-        const headerText = document.createElement('div');
-        headerText.textContent = 'Escolher variável...';
-        headerText.style.cssText = `
-          padding: 4px 12px;
-          font-size: 12px;
-          color: #666;
-          font-weight: 500;
-        `;
-        header.appendChild(headerText);
-        dropdown.appendChild(header);
 
         // Adicionar variáveis organizadas por categoria
         const categories = {
