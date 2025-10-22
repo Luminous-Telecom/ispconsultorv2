@@ -331,8 +331,27 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             const toolbar = document.querySelector('.ck.ck-toolbar');
             if (toolbar) {
 
+              // Criar label para o dropdown (visualmente oculto mas acessível)
+              const variablesLabel = document.createElement('label');
+              variablesLabel.textContent = 'Variáveis disponíveis';
+              variablesLabel.htmlFor = 'ckeditor-variables-dropdown';
+              variablesLabel.style.cssText = `
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+              `;
+
               // Adicionar dropdown de variáveis
               const variablesDropdown = document.createElement('select');
+              variablesDropdown.id = 'ckeditor-variables-dropdown';
+              variablesDropdown.name = 'variables';
+              variablesDropdown.setAttribute('aria-label', 'Selecionar variável para inserir no documento');
               variablesDropdown.style.cssText = `
                 padding: 4px 8px;
                 margin: 0 4px;
@@ -435,7 +454,8 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 }
               };
 
-              // Adicionar apenas o dropdown à toolbar
+              // Adicionar label e dropdown à toolbar
+              toolbar.appendChild(variablesLabel);
               toolbar.appendChild(variablesDropdown);
             }
           }, 100);
