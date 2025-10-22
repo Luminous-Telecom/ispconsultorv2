@@ -63,10 +63,7 @@ ModeloContrato.init(
     },
     conteudo: {
       type: DataTypes.TEXT('long'),
-      allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
+      allowNull: true,
     },
     conteudo_adesao: {
       type: DataTypes.TEXT('long'),
