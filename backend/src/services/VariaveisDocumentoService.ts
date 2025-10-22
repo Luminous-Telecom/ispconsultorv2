@@ -3,6 +3,9 @@ import { Contrato } from '../models/Contrato';
 import { Titulo } from '../models/Titulo';
 import { Plano } from '../models/Plano';
 import { Op } from 'sequelize';
+import axios from 'axios';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface DadosVariaveis {
   cliente?: Cliente;
@@ -157,7 +160,7 @@ export class VariaveisDocumentoService {
     resultado = this.processarVariaveisSistema(resultado, dataRef);
 
     // Processar variáveis da empresa
-    resultado = this.processarVariaveisEmpresa(resultado);
+    resultado = await this.processarVariaveisEmpresa(resultado);
 
     return resultado;
   }
@@ -379,9 +382,49 @@ export class VariaveisDocumentoService {
   }
 
   /**
+   * Converter imagem para base64
+   */
+  private static async imagemParaBase64(logoUrl: string): Promise<string> {
+    try {
+      // Verificar se é URL ou caminho local
+      if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+        // Baixar imagem da URL
+        const response = await axios.get(logoUrl, { responseType: 'arraybuffer' });
+        const base64 = Buffer.from(response.data, 'binary').toString('base64');
+        const contentType = response.headers['content-type'] || 'image/png';
+        return `data:${contentType};base64,${base64}`;
+      } else {
+        // Ler arquivo local
+        const absolutePath = path.isAbsolute(logoUrl) 
+          ? logoUrl 
+          : path.join(process.cwd(), logoUrl);
+        
+        if (fs.existsSync(absolutePath)) {
+          const imageBuffer = fs.readFileSync(absolutePath);
+          const base64 = imageBuffer.toString('base64');
+          const ext = path.extname(absolutePath).toLowerCase();
+          const mimeTypes: Record<string, string> = {
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.webp': 'image/webp'
+          };
+          const contentType = mimeTypes[ext] || 'image/png';
+          return `data:${contentType};base64,${base64}`;
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao converter logo para base64:', error);
+    }
+    return '';
+  }
+
+  /**
    * Processar variáveis da empresa
    */
-  private static processarVariaveisEmpresa(conteudo: string): string {
+  private static async processarVariaveisEmpresa(conteudo: string): Promise<string> {
     let resultado = conteudo;
 
     // Montar endereço completo da empresa
@@ -395,9 +438,15 @@ export class VariaveisDocumentoService {
       process.env.EMPRESA_CEP
     ].filter(Boolean).join(', ');
 
-    // Dados da empresa (podem vir de variáveis de ambiente ou configuração)
+    // Converter logo para base64 se existir
     const logoUrl = process.env.EMPRESA_LOGO || '';
-    const logoHtml = logoUrl ? `<img src="${logoUrl}" alt="Logo da Empresa" style="max-width: 200px; height: auto;" />` : '';
+    let logoHtml = '';
+    if (logoUrl) {
+      const logoBase64 = await this.imagemParaBase64(logoUrl);
+      if (logoBase64) {
+        logoHtml = `<img src="${logoBase64}" alt="Logo da Empresa" style="max-width: 200px; height: auto;" />`;
+      }
+    }
     
     const substituicoes: Record<string, string> = {
       '#empresa.razao_social#': process.env.EMPRESA_RAZAO_SOCIAL || 'CTM Telecom',
