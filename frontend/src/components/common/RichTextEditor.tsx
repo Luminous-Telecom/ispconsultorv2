@@ -598,10 +598,11 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
 
               // ResizeObserver para quando fonte/toolbar/layout mudarem
               let resizeObserver: ResizeObserver | null = null;
-              const RO = (window as any).ResizeObserver;
-              if (RO) {
-                resizeObserver = new RO(() => adjustTextareaHeight(textarea));
-                resizeObserver.observe(textarea);
+              const ResizeObsCtor = (window as any).ResizeObserver as (new (cb: ResizeObserverCallback) => ResizeObserver) | undefined;
+              if (ResizeObsCtor) {
+                const ro = new ResizeObsCtor(() => adjustTextareaHeight(textarea));
+                ro.observe(textarea);
+                resizeObserver = ro;
               }
 
               // Loop leve com requestAnimationFrame para garantir sync enquanto digita rapidamente
@@ -615,7 +616,9 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
               // Limpeza ao destruir editor
               editor.on('destroy', () => {
                 attrObserver.disconnect();
-                if (resizeObserver) resizeObserver.disconnect?.();
+                if (resizeObserver) {
+                  resizeObserver.disconnect();
+                }
                 if (rafId) window.cancelAnimationFrame(rafId);
               });
             };
