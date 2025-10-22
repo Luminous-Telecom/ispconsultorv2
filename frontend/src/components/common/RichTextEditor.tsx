@@ -530,9 +530,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 margin: 0 4px;
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                background: white;
                 font-size: 12px;
-                cursor: pointer;
               `;
 
               // Adicionar opções
