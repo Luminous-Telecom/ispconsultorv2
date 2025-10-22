@@ -45,16 +45,21 @@ const editorStyles = `
   /* Garante que imagens mantenham seu tamanho */
   img {
     max-width: 100%;
+  }
+  
+  /* Preservar dimensões inline de imagens */
+  img[style*="width"][style*="height"] {
+    /* Se tem width e height, preservar ambos */
+  }
+  
+  img[style*="width"]:not([style*="height"]) {
+    /* Se tem apenas width, ajustar altura proporcionalmente */
     height: auto !important;
   }
   
-  /* Preservar tamanho de imagens com dimensões inline */
-  img[style*="width"] {
+  img[style*="height"]:not([style*="width"]) {
+    /* Se tem apenas height, ajustar largura proporcionalmente */
     width: auto !important;
-  }
-  
-  img[style*="height"] {
-    height: auto !important;
   }
   
   /* Garante que as fontes inline sejam respeitadas na impressão em TODO o documento */
@@ -67,12 +72,24 @@ const editorStyles = `
     /* Preservar dimensões de imagens na impressão */
     img {
       max-width: 100% !important;
-      height: auto !important;
       page-break-inside: avoid !important;
     }
     
-    /* Imagens com width inline devem manter o tamanho */
-    img[style*="width"] {
+    /* Se tem width e height, preservar ambos */
+    img[style*="width"][style*="height"] {
+      /* Dimensões já definidas inline, apenas garantir display */
+      display: block !important;
+    }
+    
+    /* Se tem apenas width, ajustar altura proporcionalmente */
+    img[style*="width"]:not([style*="height"]) {
+      height: auto !important;
+      display: block !important;
+    }
+    
+    /* Se tem apenas height, ajustar largura proporcionalmente */
+    img[style*="height"]:not([style*="width"]) {
+      width: auto !important;
       display: block !important;
     }
     

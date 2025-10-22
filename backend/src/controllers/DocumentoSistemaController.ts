@@ -355,18 +355,23 @@ export class DocumentoSistemaController {
             /* Estilos para imagens */
             img {
               max-width: 100% !important;
-              height: auto !important;
               display: block;
               page-break-inside: avoid;
             }
             
-            /* Preservar dimensões específicas de imagens */
-            img[width] {
-              width: attr(width px) !important;
+            /* Preservar ambas dimensões quando definidas inline */
+            img[style*="width"][style*="height"] {
+              /* Mantém width e height do style inline */
             }
             
-            img[height] {
-              height: attr(height px) !important;
+            /* Se tem apenas width, ajustar altura proporcionalmente */
+            img[style*="width"]:not([style*="height"]) {
+              height: auto !important;
+            }
+            
+            /* Se tem apenas height, ajustar largura proporcionalmente */
+            img[style*="height"]:not([style*="width"]) {
+              width: auto !important;
             }
             
             /* Estilos para tabelas */
