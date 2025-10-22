@@ -27,7 +27,8 @@ import {
   IndentBlock,
   FontSize,
   FontFamily,
-  Base64UploadAdapter
+  Base64UploadAdapter,
+  Style
 } from 'ckeditor5';
 import { 
   Table,
@@ -73,6 +74,13 @@ const editorStyles = `
     padding: 0;
     line-height: 1.2;
   }
+  
+  /* Classes de espaçamento entre linhas */
+  .line-height-1 { line-height: 1.0 !important; }
+  .line-height-115 { line-height: 1.15 !important; }
+  .line-height-12 { line-height: 1.2 !important; }
+  .line-height-15 { line-height: 1.5 !important; }
+  .line-height-2 { line-height: 2.0 !important; }
   
   p:empty {
     margin: 0;
@@ -154,6 +162,13 @@ const editorStyles = `
       padding: 0 !important;
       line-height: 1.2 !important;
     }
+    
+    /* Classes de espaçamento entre linhas */
+    .line-height-1 { line-height: 1.0 !important; }
+    .line-height-115 { line-height: 1.15 !important; }
+    .line-height-12 { line-height: 1.2 !important; }
+    .line-height-15 { line-height: 1.5 !important; }
+    .line-height-2 { line-height: 2.0 !important; }
     
     p:empty {
       margin: 0 !important;
@@ -339,6 +354,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Font,
             FontSize,
             FontFamily,
+            Style,
             RemoveFormat,
             Undo,
             SourceEditing,
@@ -353,7 +369,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             items: [
               'undo', 'redo', '|',
               'sourceEditing', '|',
-              'heading', '|',
+              'heading', 'style', '|',
               'bold', 'italic', 'underline', '|',
               'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
               'alignment', '|',
@@ -384,6 +400,35 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               'Roboto, sans-serif'
             ],
             supportAllValues: true
+          },
+          style: {
+            definitions: [
+              {
+                name: 'Espaçamento Simples (1.0)',
+                element: 'p',
+                classes: ['line-height-1']
+              },
+              {
+                name: 'Espaçamento Compacto (1.15)',
+                element: 'p',
+                classes: ['line-height-115']
+              },
+              {
+                name: 'Espaçamento Normal (1.2)',
+                element: 'p',
+                classes: ['line-height-12']
+              },
+              {
+                name: 'Espaçamento Médio (1.5)',
+                element: 'p',
+                classes: ['line-height-15']
+              },
+              {
+                name: 'Espaçamento Duplo (2.0)',
+                element: 'p',
+                classes: ['line-height-2']
+              }
+            ]
           },
           placeholder: placeholder,
           htmlSupport: {

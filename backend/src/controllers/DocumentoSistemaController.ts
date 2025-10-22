@@ -417,6 +417,13 @@ export class DocumentoSistemaController {
               line-height: 1.2 !important;
             }
             
+            /* Classes de espaçamento entre linhas */
+            .line-height-1 { line-height: 1.0 !important; }
+            .line-height-115 { line-height: 1.15 !important; }
+            .line-height-12 { line-height: 1.2 !important; }
+            .line-height-15 { line-height: 1.5 !important; }
+            .line-height-2 { line-height: 2.0 !important; }
+            
             p:empty {
               margin: 0 !important;
               padding: 0 !important;
