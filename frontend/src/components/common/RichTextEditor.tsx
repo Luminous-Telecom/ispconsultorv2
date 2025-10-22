@@ -1,6 +1,7 @@
 import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import { ClassicEditor } from 'ckeditor5';
+import VariablePlugin from './VariablePlugin';
 import { 
   Bold,
   Essentials,
@@ -390,7 +391,8 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Code,
             HorizontalLine,
             Indent,
-            IndentBlock
+            IndentBlock,
+            VariablePlugin
           ],
           toolbar: {
             items: [
@@ -403,7 +405,8 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               'bulletedList', 'numberedList', '|',
               'outdent', 'indent', '|',
               'link', 'insertImage', 'insertTable', 'blockQuote', 'horizontalLine', '|',
-              'removeFormat'
+              'removeFormat', '|',
+              'variablesDropdown'
             ],
             shouldNotGroupWhenFull: true
           },
