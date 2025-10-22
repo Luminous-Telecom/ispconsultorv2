@@ -391,14 +391,13 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Code,
             HorizontalLine,
             Indent,
-            IndentBlock,
-            VariablePlugin
+            IndentBlock
           ],
           toolbar: {
             items: [
               'undo', 'redo', '|',
               'sourceEditing', '|',
-              'heading', 'style', 'variablesDropdown', '|',
+              'heading', 'style', '|',
               'bold', 'italic', 'underline', '|',
               'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
               'alignment', '|',
