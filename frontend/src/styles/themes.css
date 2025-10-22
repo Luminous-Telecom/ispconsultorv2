@@ -1826,11 +1826,9 @@ p, span, div, label {
 }
 
 /* CKEditor - Remover painel de debug/inspector */
-.ck.ck-balloon-panel.ck-balloon-panel_with-arrow,
 .ck-inspector-wrapper,
 .ck-inspector,
-[data-cke-tooltip-text],
-.ck-balloon-panel {
+.ck-balloon-panel.ck-inspector {
   display: none !important;
   visibility: hidden !important;
 }
