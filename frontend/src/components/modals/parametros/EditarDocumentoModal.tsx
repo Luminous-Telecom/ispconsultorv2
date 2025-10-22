@@ -177,13 +177,6 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
         promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, formData.conteudo_permanencia || ''));
 
         await Promise.all(promises);
-        
-        // Atualizar o documento principal também
-        await updateDocumentoMutation.mutateAsync({
-          nome: formData.nome,
-          descricao: formData.descricao,
-          conteudo: formData.conteudo_contrato || formData.conteudo_adesao || formData.conteudo_permanencia
-        });
       } else {
         await updateDocumentoMutation.mutateAsync({
           nome: formData.nome,
