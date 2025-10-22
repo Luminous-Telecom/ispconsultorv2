@@ -1810,27 +1810,9 @@ p, span, div, label {
   border-color: transparent transparent var(--border-color);
 }
 
-/* CKEditor - Garantir que botões sejam clicáveis */
-.ck-button,
-.ck-toolbar__items .ck-button,
-.ck-dropdown__button {
-  pointer-events: auto !important;
-  cursor: pointer !important;
-}
-
-.ck-button:not(.ck-disabled):hover,
-.ck-toolbar__items .ck-button:not(.ck-disabled):hover,
-.ck-dropdown__button:not(.ck-disabled):hover {
-  pointer-events: auto !important;
-  cursor: pointer !important;
-}
-
-/* CKEditor - Remover painel de debug/inspector */
-.ck-inspector-wrapper,
-.ck-inspector,
-.ck-balloon-panel.ck-inspector {
+/* CKEditor - Remover apenas painel de debug */
+.ck-inspector-wrapper {
   display: none !important;
-  visibility: hidden !important;
 }
 
 /* CKEditor - Fundo transparente */
