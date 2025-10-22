@@ -411,17 +411,26 @@ export class DocumentoSistemaController {
             
             /* Remover espaçamento excessivo entre elementos */
             p {
-              margin: 0.5em 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              line-height: 1.5 !important;
             }
             
             p:empty {
               margin: 0 !important;
+              padding: 0 !important;
               line-height: 0 !important;
               height: 0 !important;
+              display: none !important;
             }
             
             br {
-              line-height: 1.2 !important;
+              line-height: 1 !important;
+            }
+            
+            /* Adicionar pequeno espaço apenas entre parágrafos consecutivos */
+            p + p {
+              margin-top: 0.3em !important;
             }
             
             /* Espaçamento entre tabelas */
