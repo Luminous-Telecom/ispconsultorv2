@@ -17,6 +17,8 @@ import {
   ImageInsert,
   Alignment,
   Font,
+  FontColor,
+  FontBackgroundColor,
   RemoveFormat,
   SourceEditing,
   GeneralHtmlSupport,
@@ -382,6 +384,8 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             Font,
             FontSize,
             FontFamily,
+            FontColor,
+            FontBackgroundColor,
             Style,
             RemoveFormat,
             Undo,
@@ -429,6 +433,50 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
               'Roboto, sans-serif'
             ],
             supportAllValues: true
+          },
+          fontColor: {
+            colors: [
+              { color: 'hsl(0, 0%, 0%)', label: 'Black' },
+              { color: 'hsl(0, 0%, 30%)', label: 'Dim grey' },
+              { color: 'hsl(0, 0%, 60%)', label: 'Grey' },
+              { color: 'hsl(0, 0%, 90%)', label: 'Light grey' },
+              { color: 'hsl(0, 0%, 100%)', label: 'White', hasBorder: true },
+              { color: 'hsl(0, 75%, 60%)', label: 'Red' },
+              { color: 'hsl(25, 75%, 60%)', label: 'Orange' },
+              { color: 'hsl(50, 75%, 60%)', label: 'Yellow' },
+              { color: 'hsl(75, 75%, 60%)', label: 'Light green' },
+              { color: 'hsl(100, 75%, 60%)', label: 'Green' },
+              { color: 'hsl(125, 75%, 60%)', label: 'Aquamarine' },
+              { color: 'hsl(150, 75%, 60%)', label: 'Turquoise' },
+              { color: 'hsl(175, 75%, 60%)', label: 'Light blue' },
+              { color: 'hsl(200, 75%, 60%)', label: 'Blue' },
+              { color: 'hsl(225, 75%, 60%)', label: 'Dark blue' },
+              { color: 'hsl(250, 75%, 60%)', label: 'Purple' },
+              { color: 'hsl(275, 75%, 60%)', label: 'Pink' },
+              { color: 'hsl(300, 75%, 60%)', label: 'Crimson' }
+            ]
+          },
+          fontBackgroundColor: {
+            colors: [
+              { color: 'hsl(0, 0%, 0%)', label: 'Black' },
+              { color: 'hsl(0, 0%, 30%)', label: 'Dim grey' },
+              { color: 'hsl(0, 0%, 60%)', label: 'Grey' },
+              { color: 'hsl(0, 0%, 90%)', label: 'Light grey' },
+              { color: 'hsl(0, 0%, 100%)', label: 'White', hasBorder: true },
+              { color: 'hsl(0, 75%, 60%)', label: 'Red' },
+              { color: 'hsl(25, 75%, 60%)', label: 'Orange' },
+              { color: 'hsl(50, 75%, 60%)', label: 'Yellow' },
+              { color: 'hsl(75, 75%, 60%)', label: 'Light green' },
+              { color: 'hsl(100, 75%, 60%)', label: 'Green' },
+              { color: 'hsl(125, 75%, 60%)', label: 'Aquamarine' },
+              { color: 'hsl(150, 75%, 60%)', label: 'Turquoise' },
+              { color: 'hsl(175, 75%, 60%)', label: 'Light blue' },
+              { color: 'hsl(200, 75%, 60%)', label: 'Blue' },
+              { color: 'hsl(225, 75%, 60%)', label: 'Dark blue' },
+              { color: 'hsl(250, 75%, 60%)', label: 'Purple' },
+              { color: 'hsl(275, 75%, 60%)', label: 'Pink' },
+              { color: 'hsl(300, 75%, 60%)', label: 'Crimson' }
+            ]
           },
           style: {
             definitions: [
