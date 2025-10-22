@@ -1773,10 +1773,19 @@ p, span, div, label {
   display: none;
 }
 
-.ckeditor-wrapper .ck-editor__editable {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+/* CKEditor - Tema claro */
+[data-theme="light"] .ckeditor-wrapper .ck-editor__editable {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+/* CKEditor - Tema escuro */
+[data-theme="dark"] .ckeditor-wrapper .ck-editor__editable {
+  background-color: #2d3748;
+  color: #ffffff;
+  border: 1px solid #4a5568;
   border-radius: 4px;
 }
 
@@ -1785,53 +1794,104 @@ p, span, div, label {
   min-height: 500px;
 }
 
-.ckeditor-wrapper .ck-source-editing-area textarea {
+/* Modo source - Tema claro */
+[data-theme="light"] .ckeditor-wrapper .ck-source-editing-area textarea {
   height: 100%;
   min-height: 500px;
   resize: vertical;
   font-family: 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text-primary);
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  color: #000000;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
 }
 
-/* Conteúdo básico do editor */
-.ckeditor-wrapper .ck-content {
+/* Modo source - Tema escuro */
+[data-theme="dark"] .ckeditor-wrapper .ck-source-editing-area textarea {
+  height: 100%;
+  min-height: 500px;
+  resize: vertical;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #ffffff;
+  background-color: #2d3748;
+  border: 1px solid #4a5568;
+}
+
+/* Conteúdo do editor - Tema claro */
+[data-theme="light"] .ckeditor-wrapper .ck-content {
   font-family: Arial, sans-serif;
   font-size: 9pt;
   line-height: 1.2;
   text-align: justify;
-  color: var(--text-primary);
-  background-color: var(--bg-secondary);
+  color: #000000;
+  background-color: #ffffff;
   padding: 10px;
 }
 
-/* Tabelas no editor */
-.ckeditor-wrapper .ck-content table {
+/* Conteúdo do editor - Tema escuro */
+[data-theme="dark"] .ckeditor-wrapper .ck-content {
+  font-family: Arial, sans-serif;
+  font-size: 9pt;
+  line-height: 1.2;
+  text-align: justify;
+  color: #ffffff;
+  background-color: #2d3748;
+  padding: 10px;
+}
+
+/* Tabelas no editor - Tema claro */
+[data-theme="light"] .ckeditor-wrapper .ck-content table {
   width: 100%;
   border-collapse: collapse;
   margin: 5px 0;
-  background-color: var(--bg-secondary);
+  background-color: #ffffff;
 }
 
-.ckeditor-wrapper .ck-content table td,
-.ckeditor-wrapper .ck-content table th {
-  border: 1px solid var(--border-color);
+[data-theme="light"] .ckeditor-wrapper .ck-content table td,
+[data-theme="light"] .ckeditor-wrapper .ck-content table th {
+  border: 1px solid #ced4da;
   padding: 8px;
   vertical-align: top;
   font-size: 9pt;
   line-height: 1.2;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
+  background-color: #ffffff;
+  color: #000000;
 }
 
-.ckeditor-wrapper .ck-content table th {
+[data-theme="light"] .ckeditor-wrapper .ck-content table th {
   font-weight: bold;
   text-align: left;
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+  background-color: #f8f9fa;
+  color: #000000;
+}
+
+/* Tabelas no editor - Tema escuro */
+[data-theme="dark"] .ckeditor-wrapper .ck-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 5px 0;
+  background-color: #2d3748;
+}
+
+[data-theme="dark"] .ckeditor-wrapper .ck-content table td,
+[data-theme="dark"] .ckeditor-wrapper .ck-content table th {
+  border: 1px solid #4a5568;
+  padding: 8px;
+  vertical-align: top;
+  font-size: 9pt;
+  line-height: 1.2;
+  background-color: #2d3748;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .ckeditor-wrapper .ck-content table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: #1a202c;
+  color: #ffffff;
 }
 
 /* Barra de ferramentas flutuante */
