@@ -1768,32 +1768,30 @@ p, span, div, label {
   border-color: transparent transparent var(--border-color);
 }
 
-/* CKEditor - Remover apenas painel de debug */
+/* CKEditor - Apenas o essencial */
 .ck-inspector-wrapper {
-  display: none !important;
+  display: none;
 }
 
-/* CKEditor - Fundo transparente */
 .ckeditor-wrapper .ck-editor__editable {
-  background-color: transparent !important;
+  background-color: transparent;
 }
 
-/* CKEditor - Modo Source */
 .ckeditor-wrapper .ck-source-editing-area {
-  height: 100% !important;
-  min-height: 500px !important;
+  height: 100%;
+  min-height: 500px;
 }
 
 .ckeditor-wrapper .ck-source-editing-area textarea {
-  height: 100% !important;
-  min-height: 500px !important;
-  resize: vertical !important;
-  font-family: 'Courier New', monospace !important;
-  font-size: 13px !important;
-  line-height: 1.5 !important;
+  height: 100%;
+  min-height: 500px;
+  resize: vertical;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-/* Estilização básica do conteúdo do editor */
+/* Conteúdo básico do editor */
 .ckeditor-wrapper .ck-content {
   font-family: Arial, sans-serif;
   font-size: 9pt;
@@ -1801,14 +1799,7 @@ p, span, div, label {
   text-align: justify;
 }
 
-.ckeditor-wrapper .ck-content .text-tiny {
-  font-size: 9pt;
-}
-
-.ckeditor-wrapper .ck-content figure.table {
-  margin: 5px 0;
-}
-
+/* Tabelas no editor */
 .ckeditor-wrapper .ck-content table {
   width: 100%;
   border-collapse: collapse;
@@ -1829,74 +1820,10 @@ p, span, div, label {
   text-align: left;
 }
 
-.ckeditor-wrapper .ck-content p {
-  margin: 0;
-  padding: 0;
-  text-align: justify;
-  line-height: 1.2;
-}
-
-.ckeditor-wrapper .ck-content div {
-  margin: 0;
-  padding: 0;
-  line-height: 1.2;
-}
-
-.ckeditor-wrapper .ck-content strong,
-.ckeditor-wrapper .ck-content b {
-  font-weight: bold;
-}
-
-.ckeditor-wrapper .ck-content [style*="text-align:center"],
-.ckeditor-wrapper .ck-content .text-center {
-  text-align: center !important;
-}
-
-.ckeditor-wrapper .ck-content [style*="text-align:right"],
-.ckeditor-wrapper .ck-content .text-right {
-  text-align: right !important;
-}
-
-.ckeditor-wrapper .ck-content [style*="text-align:left"],
-.ckeditor-wrapper .ck-content .text-left {
-  text-align: left !important;
-}
-
-/* CKEditor - Remover estilos de tabela do Bootstrap */
-.ckeditor-wrapper .ck-content table {
-  background-color: transparent !important;
-}
-
-.ckeditor-wrapper .ck-content table tr {
-  background-color: transparent !important;
-}
-
-.ckeditor-wrapper .ck-content table td,
-.ckeditor-wrapper .ck-content table th {
-  background-color: transparent !important;
-  border: 1px solid #ddd !important;
-  padding: 8px !important;
-}
-
-.ckeditor-wrapper .ck-content table tbody tr:nth-of-type(odd) td,
-.ckeditor-wrapper .ck-content table tbody tr:nth-of-type(odd) th {
-  background-color: transparent !important;
-}
-
-.ckeditor-wrapper .ck-content table tbody tr:nth-of-type(even) td,
-.ckeditor-wrapper .ck-content table tbody tr:nth-of-type(even) th {
-  background-color: transparent !important;
-}
-
-.ckeditor-wrapper .ck-content table tbody tr:hover td,
-.ckeditor-wrapper .ck-content table tbody tr:hover th {
-  background-color: transparent !important;
-}
-
-/* Barra de ferramentas flutuante da tabela */
+/* Barra de ferramentas flutuante */
 .ck.ck-balloon-panel {
-  z-index: 99999 !important;
-  position: fixed !important;
+  z-index: 99999;
+  position: fixed;
 }
 
 
