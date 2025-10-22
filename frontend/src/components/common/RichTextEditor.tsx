@@ -575,6 +575,8 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
 
             const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
               textarea.removeAttribute('rows');
+              // Esconde o scroll enquanto recalcula
+              const previousOverflow = textarea.style.overflowY;
               textarea.style.overflowY = 'hidden';
               textarea.style.display = 'block';
               textarea.style.width = '100%';
@@ -586,6 +588,8 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
               textarea.style.height = 'auto';
               const newHeight = textarea.scrollHeight;
               textarea.style.height = `${newHeight}px`;
+              // Restaura overflow para permitir scroll quando necessário
+              textarea.style.overflowY = previousOverflow || 'auto';
             };
 
             const bindTextareaHandlers = (textarea: HTMLTextAreaElement) => {
@@ -595,10 +599,6 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
               const handleResize = () => adjustTextareaHeight(textarea);
               textarea.addEventListener('input', handleResize);
               textarea.addEventListener('change', handleResize);
-
-              // Observer para mudanças de atributos (CKEditor pode setar height/rows inline)
-              const attrObserver = new MutationObserver(() => adjustTextareaHeight(textarea));
-              attrObserver.observe(textarea, { attributes: true, attributeFilter: ['style', 'rows'] });
 
               // ResizeObserver para quando fonte/toolbar/layout mudarem
               let resizeObserver: ResizeObserver | null = null;
@@ -611,29 +611,39 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
 
               // Limpeza ao destruir editor
               editor.on('destroy', () => {
-                attrObserver.disconnect();
                 if (resizeObserver) {
                   resizeObserver.disconnect();
                 }
               });
             };
 
-            const tryAttachToTextarea = () => {
+            const attachOnce = () => {
               const ta = editorRoot.querySelector('.ck-source-editing-area textarea') as HTMLTextAreaElement | null;
-              if (ta) bindTextareaHandlers(ta);
+              if (ta) {
+                bindTextareaHandlers(ta);
+                // Ajuste adicional após render completo
+                setTimeout(() => adjustTextareaHeight(ta), 0);
+              }
             };
 
-            // Observar inserção/remoção do textarea do SourceEditing
-            const observer = new MutationObserver(() => {
-              tryAttachToTextarea();
-            });
-            observer.observe(editorRoot, { childList: true, subtree: true });
+            // Usar o plugin SourceEditing para detectar toggle do modo
+            try {
+              const sourceEditingPlugin: any = (editor as any).plugins.get('SourceEditing');
+              if (sourceEditingPlugin && typeof sourceEditingPlugin.on === 'function') {
+                sourceEditingPlugin.on('change:isSourceEditingMode', (_evt: any, _name: any, value: boolean) => {
+                  if (value) {
+                    // Entrou no modo source -> anexar
+                    setTimeout(attachOnce, 0);
+                  }
+                });
+              }
+            } catch (_e) {
+              // Fallback: tenta anexar após pequeno atraso
+              setTimeout(attachOnce, 0);
+            }
 
-            // Tenta ligar imediatamente (caso já esteja em modo source)
-            tryAttachToTextarea();
-
-            // Encerrar observer quando editor for destruído
-            editor.on('destroy', () => observer.disconnect());
+            // Caso já esteja no modo source ao iniciar
+            setTimeout(attachOnce, 0);
           };
 
           setupSourceAutosize();
