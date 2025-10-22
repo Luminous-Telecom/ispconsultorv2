@@ -625,14 +625,20 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
               });
             };
 
+            const getTextarea = (): HTMLTextAreaElement | null => {
+              return editorRoot.querySelector('.ck-source-editing-area textarea') as HTMLTextAreaElement | null;
+            };
+
             const attachOnce = () => {
-              const ta = editorRoot.querySelector('.ck-source-editing-area textarea') as HTMLTextAreaElement | null;
+              const ta = getTextarea();
               if (ta) {
                 bindTextareaHandlers(ta);
                 // Ajustes adicionais pós-render e próximo frame
                 setTimeout(() => adjustTextareaHeight(ta), 0);
                 requestAnimationFrame(() => adjustTextareaHeight(ta));
+                return true;
               }
+              return false;
             };
 
             // Usar o plugin SourceEditing para detectar toggle do modo
@@ -653,6 +659,15 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
 
             // Caso já esteja no modo source ao iniciar
             setTimeout(attachOnce, 0);
+
+            // Observa o DOM apenas até encontrar o textarea, depois desconecta
+            const attachObserver = new MutationObserver(() => {
+              if (attachOnce()) {
+                attachObserver.disconnect();
+              }
+            });
+            attachObserver.observe(editorRoot, { childList: true, subtree: true });
+            editor.on('destroy', () => attachObserver.disconnect());
           };
 
           setupSourceAutosize();
