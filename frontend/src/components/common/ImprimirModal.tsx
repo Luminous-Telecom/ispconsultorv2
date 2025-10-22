@@ -17,7 +17,6 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
   modalId = "imprimir-modal"
 }) => {
   const handleClose = () => {
-    // Garantir que apenas este modal seja fechado
     onClose();
   };
 

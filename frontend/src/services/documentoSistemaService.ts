@@ -128,6 +128,74 @@ class DocumentoSistemaService {
       throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF de teste');
     }
   }
+
+  static async generatePdfWithContent(id: number, conteudo: string): Promise<Blob> {
+    try {
+      const response = await (apiService as any).api.post(`/modelos-contrato/${id}/pdf-conteudo`, 
+        { conteudo },
+        { responseType: 'blob' }
+      );
+
+      const blob = response instanceof Blob ? response : response.data;
+
+      if (!blob || !(blob instanceof Blob)) {
+        throw new Error('Resposta do servidor não é um Blob válido');
+      }
+
+      return blob;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF com conteúdo');
+    }
+  }
+
+  static async generateTestPdfWithContent(id: number, clienteId: number, conteudo: string): Promise<Blob> {
+    try {
+      const response = await (apiService as any).api.post(`/modelos-contrato/${id}/pdf-teste-conteudo`, 
+        { cliente_id: clienteId, conteudo },
+        { responseType: 'blob' }
+      );
+
+      const blob = response instanceof Blob ? response : response.data;
+
+      if (!blob || !(blob instanceof Blob)) {
+        throw new Error('Resposta do servidor não é um Blob válido');
+      }
+
+      return blob;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF de teste com conteúdo');
+    }
+  }
+
+  // Métodos para modelos específicos
+  static async saveModeloContratoConteudo(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: any; message: string }> {
+    const response = await apiService.post<{ success: boolean; data: any; message: string }>('/modelos-contrato/modelo-contrato-conteudo', {
+      modelo_contrato_id: modeloContratoId,
+      modelo
+    });
+    return response;
+  }
+
+  static async saveModeloTermoAdesao(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: any; message: string }> {
+    const response = await apiService.post<{ success: boolean; data: any; message: string }>('/modelos-contrato/modelo-termo-adesao', {
+      modelo_contrato_id: modeloContratoId,
+      modelo
+    });
+    return response;
+  }
+
+  static async saveModeloContratoPermanencia(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: any; message: string }> {
+    const response = await apiService.post<{ success: boolean; data: any; message: string }>('/modelos-contrato/modelo-contrato-permanencia', {
+      modelo_contrato_id: modeloContratoId,
+      modelo
+    });
+    return response;
+  }
+
+  static async getModelosByModeloContrato(id: number): Promise<{ success: boolean; data: any; message: string }> {
+    const response = await apiService.get<{ success: boolean; data: any; message: string }>(`/modelos-contrato/${id}/modelos`);
+    return response;
+  }
 }
 
 export default DocumentoSistemaService;

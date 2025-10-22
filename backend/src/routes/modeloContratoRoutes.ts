@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ModeloContratoController } from '../controllers/ModeloContratoController';
+import { ModeloContratoController } from '../controllers/DocumentoSistemaController';
 import { uploadWord } from '../utils/uploadConfig';
 
 const router = Router();
@@ -23,5 +23,11 @@ router.get('/:id/pdf', ModeloContratoController.generatePdf);
 
 // Rota para gerar PDF de teste com dados de um cliente
 router.get('/:id/pdf-teste', ModeloContratoController.generateTestPdf);
+
+// Rotas para modelos específicos
+router.post('/modelo-contrato-conteudo', ModeloContratoController.saveModeloContratoConteudo);
+router.post('/modelo-termo-adesao', ModeloContratoController.saveModeloTermoAdesao);
+router.post('/modelo-contrato-permanencia', ModeloContratoController.saveModeloContratoPermanencia);
+router.get('/:id/modelos', ModeloContratoController.getModelosByModeloContrato);
 
 export default router;

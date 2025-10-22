@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
 import { ModeloContrato } from '../models/ModeloContrato';
+import ModeloContratoConteudo from '../models/ModeloContratoConteudo';
+import ModeloTermoAdesao from '../models/ModeloTermoAdesao';
+import ModeloContratoPermanencia from '../models/ModeloContratoPermanencia';
 import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
@@ -90,7 +93,7 @@ export class ModeloContratoController {
         return;
       }
 
-      const documento = await DocumentoSistema.create(documentoData);
+      const documento = await ModeloContrato.create(documentoData);
 
       res.status(201).json({
         success: true,
@@ -225,7 +228,7 @@ export class ModeloContratoController {
     try {
       const { tipo } = req.params;
 
-      const documento = await DocumentoSistema.findOne({
+      const documento = await ModeloContrato.findOne({
         where: { tipo, ativo: true },
         order: [['created_at', 'ASC']], // Pega o primeiro criado como padrão
       });
@@ -257,14 +260,14 @@ export class ModeloContratoController {
    */
   static async getTypes(req: Request, res: Response): Promise<void> {
     try {
-      const tipos = await DocumentoSistema.findAll({
+      const tipos = await ModeloContrato.findAll({
         attributes: ['tipo'],
         group: ['tipo'],
         where: { ativo: true },
         order: [['tipo', 'ASC']],
       });
 
-      const tiposList = tipos.map(doc => doc.tipo);
+      const tiposList = tipos.map((doc: any) => doc.tipo);
 
       res.json({
         success: true,
@@ -715,6 +718,192 @@ export class ModeloContratoController {
       });
     } catch (error) {
       logger.error('Erro ao listar variáveis:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Salvar modelo específico do modelo de contrato
+   */
+  static async saveModeloContratoConteudo(req: Request, res: Response): Promise<void> {
+    try {
+      const { modelo_contrato_id, modelo } = req.body;
+
+      if (!modelo_contrato_id || !modelo) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do modelo de contrato e modelo são obrigatórios'
+        });
+        return;
+      }
+
+      // Verificar se já existe um registro
+      const existingModel = await ModeloContratoConteudo.findOne({
+        where: { modelo_contrato_id }
+      });
+
+      let result;
+      if (existingModel) {
+        result = await existingModel.update({ modelo });
+      } else {
+        result = await ModeloContratoConteudo.create({
+          modelo_contrato_id,
+          modelo
+        });
+      }
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Modelo de contrato salvo com sucesso'
+      });
+    } catch (error) {
+      logger.error('Erro ao salvar modelo de contrato:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Salvar modelo específico do termo de adesão
+   */
+  static async saveModeloTermoAdesao(req: Request, res: Response): Promise<void> {
+    try {
+      const { modelo_contrato_id, modelo } = req.body;
+
+      if (!modelo_contrato_id || !modelo) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do modelo de contrato e modelo são obrigatórios'
+        });
+        return;
+      }
+
+      // Verificar se já existe um registro
+      const existingModel = await ModeloTermoAdesao.findOne({
+        where: { modelo_contrato_id }
+      });
+
+      let result;
+      if (existingModel) {
+        result = await existingModel.update({ modelo });
+      } else {
+        result = await ModeloTermoAdesao.create({
+          modelo_contrato_id,
+          modelo
+        });
+      }
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Modelo de termo de adesão salvo com sucesso'
+      });
+    } catch (error) {
+      logger.error('Erro ao salvar modelo de termo de adesão:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Salvar modelo específico do contrato de permanência
+   */
+  static async saveModeloContratoPermanencia(req: Request, res: Response): Promise<void> {
+    try {
+      const { modelo_contrato_id, modelo } = req.body;
+
+      if (!modelo_contrato_id || !modelo) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do modelo de contrato e modelo são obrigatórios'
+        });
+        return;
+      }
+
+      // Verificar se já existe um registro
+      const existingModel = await ModeloContratoPermanencia.findOne({
+        where: { modelo_contrato_id }
+      });
+
+      let result;
+      if (existingModel) {
+        result = await existingModel.update({ modelo });
+      } else {
+        result = await ModeloContratoPermanencia.create({
+          modelo_contrato_id,
+          modelo
+        });
+      }
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Modelo de contrato de permanência salvo com sucesso'
+      });
+    } catch (error) {
+      logger.error('Erro ao salvar modelo de contrato de permanência:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Buscar todos os modelos de um modelo de contrato
+   */
+  static async getModelosByModeloContrato(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const modeloContrato = await ModeloContrato.findByPk(id, {
+        include: [
+          {
+            model: ModeloContratoConteudo,
+            as: 'modeloContratoConteudo',
+            required: false
+          },
+          {
+            model: ModeloTermoAdesao,
+            as: 'modeloTermoAdesao',
+            required: false
+          },
+          {
+            model: ModeloContratoPermanencia,
+            as: 'modeloContratoPermanencia',
+            required: false
+          }
+        ]
+      });
+
+      if (!modeloContrato) {
+        res.status(404).json({
+          success: false,
+          message: 'Modelo de contrato não encontrado'
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: {
+          modelo_contrato: modeloContrato,
+          modelo_contrato_conteudo: modeloContrato.modeloContratoConteudo?.modelo || '',
+          modelo_termo_adesao: modeloContrato.modeloTermoAdesao?.modelo || '',
+          modelo_contrato_permanencia: modeloContrato.modeloContratoPermanencia?.modelo || ''
+        },
+        message: 'Modelos do modelo de contrato recuperados com sucesso'
+      });
+    } catch (error) {
+      logger.error('Erro ao buscar modelos do modelo de contrato:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

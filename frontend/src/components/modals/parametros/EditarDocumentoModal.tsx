@@ -24,11 +24,16 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     nome: '',
     descricao: '',
     conteudo: '',
+    conteudo_contrato: '',
+    conteudo_adesao: '',
+    conteudo_permanencia: '',
   });
   const [showPreview, setShowPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [clienteTesteId, setClienteTesteId] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<'contrato' | 'adesao' | 'permanencia'>('contrato');
+  const [openImprimirDropdown, setOpenImprimirDropdown] = useState(false);
 
   const queryClient = useQueryClient();
   const { addNotification} = useNotificationContext();
@@ -42,13 +47,54 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
   // Carregar dados do documento quando o modal abrir
   useEffect(() => {
     if (documento && show) {
-      setFormData({
-        nome: documento.nome,
-        descricao: documento.descricao || '',
-        conteudo: documento.conteudo,
-      });
+      // Se for contrato, buscar modelos específicos das tabelas separadas
+      if (tipo === 'contrato') {
+        DocumentoSistemaService.getModelosByModeloContrato(documento.id)
+          .then(response => {
+            if (response.success) {
+              setFormData({
+                nome: documento.nome,
+                descricao: documento.descricao || '',
+                conteudo: documento.conteudo,
+                conteudo_contrato: response.data.modelo_contrato_conteudo || '',
+                conteudo_adesao: response.data.modelo_termo_adesao || '',
+                conteudo_permanencia: response.data.modelo_contrato_permanencia || '',
+              });
+            } else {
+              // Fallback para dados padrão
+              setFormData({
+                nome: documento.nome,
+                descricao: documento.descricao || '',
+                conteudo: documento.conteudo,
+                conteudo_contrato: documento.conteudo,
+                conteudo_adesao: '',
+                conteudo_permanencia: '',
+              });
+            }
+          })
+          .catch(() => {
+            // Fallback para dados padrão em caso de erro
+            setFormData({
+              nome: documento.nome,
+              descricao: documento.descricao || '',
+              conteudo: documento.conteudo,
+              conteudo_contrato: documento.conteudo,
+              conteudo_adesao: '',
+              conteudo_permanencia: '',
+            });
+          });
+      } else {
+        setFormData({
+          nome: documento.nome,
+          descricao: documento.descricao || '',
+          conteudo: documento.conteudo,
+          conteudo_contrato: '',
+          conteudo_adesao: '',
+          conteudo_permanencia: '',
+        });
+      }
     }
-  }, [documento, show]);
+  }, [documento, show, tipo]);
 
   // Limpar PDF URL quando o modal for fechado
   useEffect(() => {
@@ -57,6 +103,23 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       setPdfUrl(null);
     }
   }, [show, pdfUrl]);
+
+  // Fechar dropdown quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openImprimirDropdown) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.dropdown')) {
+          setOpenImprimirDropdown(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openImprimirDropdown]);
 
   // Mutation para atualizar documento
   const updateDocumentoMutation = useMutation({
@@ -84,22 +147,114 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nome || !formData.conteudo) {
-      addNotification('error', 'Nome e conteúdo são obrigatórios');
+    if (!formData.nome) {
+      addNotification('error', 'Nome é obrigatório');
       return;
     }
-    updateDocumentoMutation.mutate(formData);
+
+    // Se for contrato, verificar se pelo menos um conteúdo está preenchido
+    if (tipo === 'contrato') {
+      if (!formData.conteudo_contrato && !formData.conteudo_adesao && !formData.conteudo_permanencia) {
+        addNotification('error', 'Pelo menos um conteúdo deve ser preenchido');
+        return;
+      }
+    } else {
+      if (!formData.conteudo) {
+        addNotification('error', 'Conteúdo é obrigatório');
+        return;
+      }
+    }
+
+    try {
+      if (tipo === 'contrato') {
+        // Salvar cada modelo em sua respectiva tabela
+        const promises = [];
+        
+        if (formData.conteudo_contrato) {
+          promises.push(DocumentoSistemaService.saveModeloContratoConteudo(documento!.id, formData.conteudo_contrato));
+        }
+        
+        if (formData.conteudo_adesao) {
+          promises.push(DocumentoSistemaService.saveModeloTermoAdesao(documento!.id, formData.conteudo_adesao));
+        }
+        
+        if (formData.conteudo_permanencia) {
+          promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, formData.conteudo_permanencia));
+        }
+
+        await Promise.all(promises);
+        
+        // Atualizar o documento principal também
+        await updateDocumentoMutation.mutateAsync({
+          nome: formData.nome,
+          descricao: formData.descricao,
+          conteudo: formData.conteudo_contrato || formData.conteudo_adesao || formData.conteudo_permanencia
+        });
+      } else {
+        await updateDocumentoMutation.mutateAsync({
+          nome: formData.nome,
+          descricao: formData.descricao,
+          conteudo: formData.conteudo
+        });
+      }
+      
+      addNotification('success', 'Documento salvo com sucesso');
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error: any) {
+      addNotification('error', error.message || 'Erro ao salvar documento');
+    }
   };
 
   const handleReset = () => {
     if (documento) {
-      setFormData({
-        nome: documento.nome,
-        descricao: documento.descricao || '',
-        conteudo: documento.conteudo,
-      });
+      if (tipo === 'contrato') {
+        // Recarregar dados das tabelas separadas
+        DocumentoSistemaService.getModelosByModeloContrato(documento.id)
+          .then(response => {
+            if (response.success) {
+              setFormData({
+                nome: documento.nome,
+                descricao: documento.descricao || '',
+                conteudo: documento.conteudo,
+                conteudo_contrato: response.data.modelo_contrato_conteudo || '',
+                conteudo_adesao: response.data.modelo_termo_adesao || '',
+                conteudo_permanencia: response.data.modelo_contrato_permanencia || '',
+              });
+            } else {
+              setFormData({
+                nome: documento.nome,
+                descricao: documento.descricao || '',
+                conteudo: documento.conteudo,
+                conteudo_contrato: documento.conteudo,
+                conteudo_adesao: '',
+                conteudo_permanencia: '',
+              });
+            }
+          })
+          .catch(() => {
+            setFormData({
+              nome: documento.nome,
+              descricao: documento.descricao || '',
+              conteudo: documento.conteudo,
+              conteudo_contrato: documento.conteudo,
+              conteudo_adesao: '',
+              conteudo_permanencia: '',
+            });
+          });
+      } else {
+        setFormData({
+          nome: documento.nome,
+          descricao: documento.descricao || '',
+          conteudo: documento.conteudo,
+          conteudo_contrato: '',
+          conteudo_adesao: '',
+          conteudo_permanencia: '',
+        });
+      }
     }
   };
 
@@ -108,6 +263,42 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
   const handleInsertVariable = (variable: string) => {
     if (editorRef.current && editorRef.current.insertVariable) {
       editorRef.current.insertVariable(variable);
+    }
+  };
+
+  // Função para obter o conteúdo atual baseado na aba ativa
+  const getCurrentContent = () => {
+    if (tipo === 'contrato') {
+      switch (activeTab) {
+        case 'contrato':
+          return formData.conteudo_contrato;
+        case 'adesao':
+          return formData.conteudo_adesao;
+        case 'permanencia':
+          return formData.conteudo_permanencia;
+        default:
+          return formData.conteudo_contrato;
+      }
+    }
+    return formData.conteudo;
+  };
+
+  // Função para atualizar o conteúdo baseado na aba ativa
+  const updateCurrentContent = (value: string) => {
+    if (tipo === 'contrato') {
+      switch (activeTab) {
+        case 'contrato':
+          setFormData(prev => ({ ...prev, conteudo_contrato: value }));
+          break;
+        case 'adesao':
+          setFormData(prev => ({ ...prev, conteudo_adesao: value }));
+          break;
+        case 'permanencia':
+          setFormData(prev => ({ ...prev, conteudo_permanencia: value }));
+          break;
+      }
+    } else {
+      setFormData(prev => ({ ...prev, conteudo: value }));
     }
   };
 
@@ -122,7 +313,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     onClose();
   };
 
-  const handlePrint = async () => {
+  const handlePrint = async (tipoDocumento?: 'contrato' | 'adesao' | 'permanencia' | 'documento') => {
     if (!documento) return;
     
     setIsGeneratingPdf(true);
@@ -134,6 +325,9 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       if (clienteTesteId) {
         switch (tipo) {
           case 'contrato':
+            // Para contratos, usar o documento específico selecionado
+            const conteudoParaImprimir = getConteudoParaImprimir(tipoDocumento);
+            // Por enquanto, usar o método padrão até implementar no backend
             pdfBlob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
             break;
           case 'recibo':
@@ -148,6 +342,9 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       } else {
         switch (tipo) {
           case 'contrato':
+            // Para contratos, usar o documento específico selecionado
+            const conteudoParaImprimir = getConteudoParaImprimir(tipoDocumento);
+            // Por enquanto, usar o método padrão até implementar no backend
             pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
             break;
           case 'recibo':
@@ -181,6 +378,23 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     } finally {
       setIsGeneratingPdf(false);
     }
+  };
+
+  // Função para obter o conteúdo específico para impressão
+  const getConteudoParaImprimir = (tipoDocumento?: 'contrato' | 'adesao' | 'permanencia' | 'documento') => {
+    if (tipo === 'contrato') {
+      switch (tipoDocumento) {
+        case 'contrato':
+          return formData.conteudo_contrato;
+        case 'adesao':
+          return formData.conteudo_adesao;
+        case 'permanencia':
+          return formData.conteudo_permanencia;
+        default:
+          return formData.conteudo_contrato;
+      }
+    }
+    return formData.conteudo;
   };
 
 
@@ -232,15 +446,80 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
         </select>
       </label>
       
-      <button
-        type="button"
-        className="btn btn-primary btn-sm"
-        onClick={handlePrint}
-        title={clienteTesteId ? 'Imprimir com dados do cliente' : 'Imprimir modelo sem dados'}
-        disabled={isGeneratingPdf}
-      >
-        {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
-      </button>
+      {/* Dropdown de impressão no padrão DataTable */}
+      <div className="dropdown" style={{ position: 'relative' }}>
+        <button
+          className="btn btn-sm btn-primary dropdown-toggle"
+          type="button"
+          onClick={() => setOpenImprimirDropdown(!openImprimirDropdown)}
+          disabled={isGeneratingPdf}
+        >
+          {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
+        </button>
+        {openImprimirDropdown && (
+          <div 
+            className="dropdown-menu show" 
+            style={{ 
+              position: 'absolute', 
+              top: '100%', 
+              left: 0, 
+              zIndex: 1050,
+              display: 'block',
+              minWidth: '200px'
+            }}
+          >
+            {tipo === 'contrato' ? (
+              <>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    handlePrint('contrato');
+                    setOpenImprimirDropdown(false);
+                  }}
+                  disabled={isGeneratingPdf}
+                  style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                >
+                  Modelo Contrato
+                </button>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    handlePrint('adesao');
+                    setOpenImprimirDropdown(false);
+                  }}
+                  disabled={isGeneratingPdf}
+                  style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                >
+                  Termo Adesão
+                </button>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    handlePrint('permanencia');
+                    setOpenImprimirDropdown(false);
+                  }}
+                  disabled={isGeneratingPdf}
+                  style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                >
+                  Contrato Permanência
+                </button>
+              </>
+            ) : (
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  handlePrint('documento');
+                  setOpenImprimirDropdown(false);
+                }}
+                disabled={isGeneratingPdf}
+                style={{ display: 'block', width: '100%', textAlign: 'left' }}
+              >
+                {tipo === 'recibo' ? 'Recibo' : tipo === 'carta_cobranca' ? 'Carta de Cobrança' : 'Documento'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
       <button
         type="button"
         className="btn btn-primary btn-sm"
@@ -304,18 +583,52 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
             <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <span id="conteudo-label" className="form-label small mb-0">
-                  Conteúdo <span className="text-danger">*</span>
+                  {tipo === 'contrato' ? 'Conteúdo do Contrato' : 'Conteúdo'} <span className="text-danger">*</span>
                 </span>
               </div>
+              
+              {/* Abas para contratos */}
+              {tipo === 'contrato' && (
+                <ul className="nav nav-tabs mb-2" role="tablist">
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
+                      type="button"
+                      onClick={() => setActiveTab('contrato')}
+                    >
+                      Modelo Contrato
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${activeTab === 'adesao' ? 'active' : ''}`}
+                      type="button"
+                      onClick={() => setActiveTab('adesao')}
+                    >
+                      Termo Adesão
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${activeTab === 'permanencia' ? 'active' : ''}`}
+                      type="button"
+                      onClick={() => setActiveTab('permanencia')}
+                    >
+                      Contrato Permanência
+                    </button>
+                  </li>
+                </ul>
+              )}
+              
               <RichTextEditor
                 ref={editorRef}
-                key={documento?.id}
+                key={`${documento?.id}-${activeTab}`}
                 id="conteudo"
                 name="conteudo"
                 ariaLabelledBy="conteudo-label"
-                value={formData.conteudo}
-                onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
-                placeholder="Digite o conteúdo do documento..."
+                value={getCurrentContent()}
+                onChange={updateCurrentContent}
+                placeholder={`Digite o conteúdo ${tipo === 'contrato' ? `do ${activeTab === 'contrato' ? 'modelo de contrato' : activeTab === 'adesao' ? 'termo de adesão' : 'contrato de permanência'}` : 'do documento'}...`}
                 height="100%"
                 onInsertVariable={handleInsertVariable}
               />

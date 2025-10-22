@@ -126,3 +126,6 @@ ModeloContrato.init(
     ],
   }
 );
+
+// Associações serão definidas após todos os modelos serem carregados
+export default ModeloContrato;

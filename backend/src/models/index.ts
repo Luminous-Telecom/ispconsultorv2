@@ -15,6 +15,9 @@ import { ModeloRecibo } from './ModeloRecibo';
 import { ModeloCarta } from './ModeloCarta';
 import { DiasVencimento } from './DiasVencimento';
 
+// Importar associações específicas
+import './associations';
+
 // Configurar relacionamentos
 
 // Cliente

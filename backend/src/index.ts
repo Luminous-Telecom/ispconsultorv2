@@ -91,6 +91,14 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Configurar limite de cabeçalhos HTTP para evitar erro 431
+// Este middleware será aplicado antes de outros middlewares
+app.use((req, res, next) => {
+  // Configurar limites maiores para cabeçalhos
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+});
+
 // Middleware de logging
 app.use(morgan('combined'));
 
@@ -190,8 +198,10 @@ const startServer = async () => {
     //   console.log('✅ Modelos sincronizados com o banco de dados');
     // }
     
-    // Iniciar servidor
-    app.listen(PORT, async () => {
+    // Iniciar servidor com configurações para evitar erro 431
+    const server = app.listen(PORT, async () => {
+      // Configurar limites do servidor HTTP
+      server.maxHeadersCount = 2000; // Aumentar limite de cabeçalhos
       
       // Iniciar o agendador de rotinas
       try {

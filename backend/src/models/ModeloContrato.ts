@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model, Optional, HasOneGetAssociationMixin, HasOneSetAssociationMixin, HasOneCreateAssociationMixin } from 'sequelize';
 import { sequelize } from '../config/database';
 
 interface ModeloContratoAttributes {
@@ -33,6 +33,11 @@ export class ModeloContrato extends Model<ModeloContratoAttributes, ModeloContra
   public criptografia!: boolean;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
+
+  // Declarações de associação
+  public modeloContratoConteudo?: any;
+  public modeloTermoAdesao?: any;
+  public modeloContratoPermanencia?: any;
 }
 
 ModeloContrato.init(
