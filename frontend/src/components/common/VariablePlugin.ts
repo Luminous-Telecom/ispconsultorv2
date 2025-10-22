@@ -56,6 +56,7 @@ export default class VariablePlugin extends Plugin {
           // Criar a setinha
           const arrow = document.createElement('span');
           arrow.className = 'ck-button__arrow';
+          arrow.style.cssText = 'margin-left: 8px; display: inline-flex; align-items: center;';
           
           // SVG da setinha (igual ao do CKEditor)
           const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
