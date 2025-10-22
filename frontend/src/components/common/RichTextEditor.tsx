@@ -545,6 +545,11 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             editor.setData('<p>&nbsp;</p>');
           }
           
+          // Dar foco ao editor para ativar os botões
+          setTimeout(() => {
+            editor.editing.view.focus();
+          }, 100);
+          
           // Ajusta altura do editor
           const editorElement = editor.ui.view.editable.element;
           if (editorElement) {
