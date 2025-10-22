@@ -1752,7 +1752,6 @@ body {
   color: var(--text-primary) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: 4px !important;
-  width: 100% !important;
   max-width: 100% !important;
   min-height: 200px !important;
   transition: border-color 0.15s ease-in-out !important;
@@ -1762,6 +1761,14 @@ body {
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
   outline: 0 !important;
+}
+
+/* ========================================
+   CONTAINER DA ÁREA SOURCE
+   ======================================== */
+.ckeditor-wrapper .ck-source-editing-area {
+  height: 100% !important;
+  min-height: 200px !important;
 }
 
 /* ========================================
@@ -1777,6 +1784,7 @@ body {
   line-height: 1.4 !important;
   padding: 8px !important;
   resize: vertical !important;
+  height: 100% !important;
   min-height: 200px !important;
   width: 100% !important;
   max-width: 100% !important;
