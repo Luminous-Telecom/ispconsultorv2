@@ -456,16 +456,18 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
         </select>
       </label>
       
-      {/* Dropdown de impressão no padrão DataTable */}
-      <div className="dropdown" style={{ position: 'relative' }}>
-        <button
-          className="btn btn-sm btn-primary dropdown-toggle"
-          type="button"
-          onClick={() => setOpenImprimirDropdown(!openImprimirDropdown)}
-          disabled={isGeneratingPdf}
-        >
-          {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
-        </button>
+             {/* Dropdown de impressão no padrão DataTable */}
+             <div className="dropdown" style={{ position: 'relative' }}>
+               <button
+                 className="btn btn-sm btn-primary dropdown-toggle"
+                 type="button"
+                 onClick={() => setOpenImprimirDropdown(!openImprimirDropdown)}
+                 disabled={isGeneratingPdf}
+                 aria-expanded={openImprimirDropdown}
+               >
+                 {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
+                 <span className="ms-1">▼</span>
+               </button>
         {openImprimirDropdown && (
           <div 
             className="dropdown-menu show" 
