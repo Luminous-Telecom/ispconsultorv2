@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
+import ImprimirModal from '../../common/ImprimirModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import ModeloReciboService, { ModeloRecibo } from '../../../services/modeloReciboService';
 import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaService';
@@ -25,7 +26,6 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     conteudo: '',
   });
   const [showPreview, setShowPreview] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(100);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [clienteTesteId, setClienteTesteId] = useState<number>(0);
@@ -183,26 +183,6 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     }
   };
 
-  const handleConfirmPrint = () => {
-    if (pdfUrl) {
-      // Abre o PDF em uma nova janela para impressão
-      const printWindow = window.open(pdfUrl, '_blank');
-      if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print();
-        };
-      }
-    }
-    setShowPreview(false);
-  };
-
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 25, 200));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 25, 50));
-  };
 
   const handleDownload = () => {
     const element = document.createElement('a');
@@ -344,58 +324,20 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
         </div>
       </DraggableModal>
 
-             {/* Modal de Visualização para Impressão */}
-             <DraggableModal
-               show={showPreview}
-               onClose={() => setShowPreview(false)}
-               title=""
-               size="xl"
-               headerActions={null}
-             >
-               <div style={{ 
-                 height: '100%',
-                 display: 'flex',
-                 flexDirection: 'column',
-                 padding: '0'
-               }}>
-                 {/* Área do documento - sem barras */}
-                 <div style={{ 
-                   flex: 1,
-                   overflow: 'auto',
-                   backgroundColor: 'white',
-                   display: 'flex',
-                   justifyContent: 'center',
-                   alignItems: 'flex-start'
-                 }}>
-                  {pdfUrl ? (
-                    <iframe
-                      id="pdf-preview-iframe"
-                      name="pdf-preview-iframe"
-                      src={pdfUrl}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        minHeight: '600px',
-                        border: 'none'
-                      }}
-                      title="Preview do PDF"
-                      aria-label="Visualização do PDF"
-                    />
-                   ) : (
-                     <div 
-                       className="document-preview"
-                       style={{ 
-                         padding: '20px',
-                         minHeight: '100%',
-                         backgroundColor: 'white',
-                         width: '100%'
-                       }}
-                       dangerouslySetInnerHTML={{ __html: formData.conteudo }} 
-                     />
-                   )}
-                 </div>
-               </div>
-             </DraggableModal>
+      {/* Modal de impressão */}
+      <ImprimirModal
+        show={showPreview}
+        onClose={() => {
+          setShowPreview(false);
+          if (pdfUrl) {
+            window.URL.revokeObjectURL(pdfUrl);
+            setPdfUrl(null);
+          }
+        }}
+        pdfUrl={pdfUrl}
+        title="Visualizar Documento"
+        modalId="editar-documento-imprimir-modal"
+      />
     </>
   );
 };

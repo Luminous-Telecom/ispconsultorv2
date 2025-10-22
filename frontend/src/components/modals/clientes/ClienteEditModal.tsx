@@ -4,10 +4,12 @@ import { ClienteService } from '../../../services/clienteService';
 import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
 import { TituloService } from '../../../services/tituloService';
+import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { Cliente, CarneParcela, Contrato, Titulo } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
+import ImprimirModal from '../../common/ImprimirModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import { useContratos, useDeleteContrato } from '../../../hooks/useContratos';
@@ -89,6 +91,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [showReceberModal, setShowReceberModal] = useState(false);
   const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
   const [showContratoEditModal, setShowContratoEditModal] = useState(false);
+  const [showImprimirModal, setShowImprimirModal] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [showImprimirDropdown, setShowImprimirDropdown] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
@@ -110,6 +115,23 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [openDropdown]);
+
+  // Fechar dropdown de impressão ao clicar fora
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown')) {
+        setShowImprimirDropdown(false);
+      }
+    };
+
+    if (showImprimirDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showImprimirDropdown]);
 
 
   // Buscar dados do cliente
@@ -1281,6 +1303,113 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         >
                           Deletar
                         </button>
+                        
+                        <div className="dropdown" style={{ position: 'relative' }}>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary dropdown-toggle"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowImprimirDropdown(!showImprimirDropdown);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                          >
+                            Imprimir
+                          </button>
+                          {showImprimirDropdown && (
+                            <div 
+                              className="dropdown-menu show" 
+                              style={{ 
+                                position: 'absolute', 
+                                top: '100%', 
+                                left: 0, 
+                                zIndex: 1050,
+                                display: 'block',
+                                minWidth: '200px'
+                              }}
+                            >
+                              <button
+                                className="dropdown-item"
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setShowImprimirDropdown(false);
+                                  if (selectedContratosItems.length > 0) {
+                                    try {
+                                      // Buscar o modelo de contrato padrão
+                                      const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
+                                      
+                                      if (modeloContrato.success && modeloContrato.data) {
+                                        // Gerar PDF com dados do cliente
+                                        const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                                          modeloContrato.data.id, 
+                                          clienteId || 0
+                                        );
+                                        
+                                        // Criar URL e abrir modal
+                                        const url = window.URL.createObjectURL(pdfBlob);
+                                        setPdfUrl(url);
+                                        setShowImprimirModal(true);
+                                        
+                                        showNotification('Contrato gerado com sucesso!', 'success');
+                                      } else {
+                                        showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
+                                      }
+                                    } catch (error: any) {
+                                      console.error('Erro ao gerar contrato:', error);
+                                      const errorMessage = error?.response?.data?.message || 
+                                                         error?.message || 
+                                                         'Erro ao gerar contrato';
+                                      showNotification(errorMessage, 'error');
+                                    }
+                                  }
+                                }}
+                                style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                              >
+                                Imprimir Selecionados ({selectedContratosItems.length})
+                              </button>
+                              <button
+                                className="dropdown-item"
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setShowImprimirDropdown(false);
+                                  try {
+                                    // Buscar o modelo de contrato padrão
+                                    const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
+                                    
+                                    if (modeloContrato.success && modeloContrato.data) {
+                                      // Gerar PDF com dados do cliente
+                                      const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                                        modeloContrato.data.id, 
+                                        clienteId || 0
+                                      );
+                                      
+                                      // Criar URL e abrir modal
+                                      const url = window.URL.createObjectURL(pdfBlob);
+                                      setPdfUrl(url);
+                                      setShowImprimirModal(true);
+                                      
+                                      showNotification('Contrato gerado com sucesso!', 'success');
+                                    } else {
+                                      showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
+                                    }
+                                  } catch (error: any) {
+                                    console.error('Erro ao gerar contrato:', error);
+                                    const errorMessage = error?.response?.data?.message || 
+                                                       error?.message || 
+                                                       'Erro ao gerar contrato';
+                                    showNotification(errorMessage, 'error');
+                                  }
+                                }}
+                                style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                              >
+                                Imprimir Todos Ativos
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -1869,6 +1998,21 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         onSuccess={() => {
           // Refetch contratos
         }}
+      />
+
+      {/* Modal de impressão - renderizado fora do modal principal */}
+      <ImprimirModal
+        show={showImprimirModal}
+        onClose={() => {
+          setShowImprimirModal(false);
+          if (pdfUrl) {
+            window.URL.revokeObjectURL(pdfUrl);
+            setPdfUrl(null);
+          }
+        }}
+        pdfUrl={pdfUrl}
+        title="Visualizar Contrato"
+        modalId="cliente-imprimir-modal"
       />
 
     </DraggableModal>

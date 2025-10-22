@@ -70,6 +70,21 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
+  // Fechar dropdown ao clicar fora
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown')) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Limpar seleção quando os dados mudarem
   React.useEffect(() => {
     if (selectedItems.length > 0 && data.length > 0) {
@@ -176,7 +191,8 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
               {bulkActions.map((bulkAction, index) => {
                 // Novo sempre habilitado, outros só quando há seleção
                 const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
-                const isDisabledBySelection = !isNewButton && selectedItems.length === 0;
+                const isImprimirButton = bulkAction.label.toLowerCase().includes('imprimir');
+                const isDisabledBySelection = !isNewButton && !isImprimirButton && selectedItems.length === 0;
                 const isDisabledByCondition = bulkAction.disabled ? bulkAction.disabled(selectedItems) : false;
                 const isDisabled = isDisabledBySelection || isDisabledByCondition;
                 
@@ -192,24 +208,31 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
                         {bulkAction.label}
                       </button>
                       {openDropdown === index && (
-                        <ul 
+                        <div 
                           className="dropdown-menu show" 
-                          style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
+                          style={{ 
+                            position: 'absolute', 
+                            top: '100%', 
+                            left: 0, 
+                            zIndex: 1050,
+                            display: 'block',
+                            minWidth: '200px'
+                          }}
                         >
                           {bulkAction.dropdown.map((item: { label: string; action: () => void }, itemIndex: number) => (
-                            <li key={itemIndex}>
-                              <button
-                                className="dropdown-item"
-                                onClick={() => {
-                                  item.action();
-                                  setOpenDropdown(null);
-                                }}
-                              >
-                                {item.label}
-                              </button>
-                            </li>
+                            <button
+                              key={itemIndex}
+                              className="dropdown-item"
+                              onClick={() => {
+                                item.action();
+                                setOpenDropdown(null);
+                              }}
+                              style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                            >
+                              {item.label}
+                            </button>
                           ))}
-                        </ul>
+                        </div>
                       )}
                     </div>
                   );

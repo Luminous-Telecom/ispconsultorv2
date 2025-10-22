@@ -3,15 +3,15 @@ import DataTable from '../../common/DataTable';
 import { ContratoCreateModal } from '../../modals/contratos';
 import { useContratos } from '../../../hooks/useContratos';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { useImprimir } from '../../../hooks/useImprimir';
+import { createImprimirDropdown } from '../../common/ImprimirDropdown';
 
 interface ClienteContratosProps {
   cliente: any;
-  onDataChange: (field: string, value: any) => void;
 }
 
 const ClienteContratos: React.FC<ClienteContratosProps> = ({ 
-  cliente, 
-  onDataChange 
+  cliente
 }) => {
   const [sortColumn, setSortColumn] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -19,34 +19,21 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const { addNotification } = useNotificationContext();
 
-  const showNotification = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
-    addNotification(type, message);
-  };
+
+  // Hook para impressão
+  const { handleImprimirSelecionados, handleImprimirTodos } = useImprimir({
+    itemType: 'contrato',
+    filterCondition: (c: any) => c.status === 'ativo',
+    filterLabel: 'Todos Ativos'
+  });
 
   // Buscar contratos reais do cliente
-  const { data: contratosData, isLoading: contratosLoading, refetch: refetchContratos } = useContratos();
-  const contratosReais = contratosData?.filter((contrato: any) => contrato.cliente_id === cliente?.id) || [];
+  const { data: contratosData, isLoading: contratosLoading, refetch: refetchContratos } = useContratos(cliente?.id);
+  const contratosReais = contratosData || [];
   
-  // Dados mock temporários para demonstração (remover quando dados reais estiverem funcionando)
-  const mockContratos = [
-    {
-      id: 12,
-      cliente_id: cliente?.id || 1,
-      plano: { nome_plano: 'Plano Full Core', valor_mensal: 1518.00 },
-      status: 'ativo',
-      desconto_percentual: '0.00',
-      desconto_valor: '0.00',
-      valor_final: 89.90,
-      data_inicio: '2025-09-29',
-      data_fim: null,
-      isento_mensalidade: false,
-      dia_vencimento: 20,
-      bancoBoleto: { nome: 'EFI-PJ-TESTE' }
-    }
-  ];
-  
-  // Usar dados reais se disponíveis, senão usar mock
-  const contratos = contratosReais.length > 0 ? contratosReais : mockContratos;
+  const contratos = contratosReais;
+
+  const contratosAtivos = (contratos as any[]).filter((c: any) => c.status === 'ativo');
 
   // Funções de ordenação
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
@@ -87,12 +74,6 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
     });
   };
 
-  // Funções de ação
-  const handleEditarContrato = (selectedItems: any[]) => {
-    if (selectedItems.length === 1) {
-      // Editar contrato
-    }
-  };
 
   const handleDeletarContrato = (selectedItems: any[]) => {
     if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} contrato(s)?`)) {
@@ -238,36 +219,35 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
             action: () => setShowContratoCreateModal(true)
           },
           {
-            label: 'Editar',
-            action: handleEditarContrato
-          },
-          {
             label: 'Deletar',
             action: handleDeletarContrato
           },
           {
-            label: 'Alteração Wizard',
-            action: (selectedItems) => {
-              if (selectedItems.length > 0) {
-                // Alteração Wizard
-              }
-            }
-          },
-          {
             label: 'Imprimir',
-            action: (selectedItems) => {
-              if (selectedItems.length > 0) {
-                // Imprimir
+            dropdown: [
+              {
+                label: `Imprimir Selecionados (${selectedItems.length})`,
+                action: () => {
+                  if (selectedItems.length > 0) {
+                    const ids = selectedItems.map(item => item.id);
+                    const idsParam = ids.join(',');
+                    handleImprimirSelecionados(idsParam);
+                  }
+                }
+              },
+              {
+                label: `Imprimir Todos Ativos`,
+                action: () => {
+                  if (contratosAtivos.length > 0) {
+                    const ids = contratosAtivos.map(item => item.id);
+                    const idsParam = ids.join(',');
+                    handleImprimirTodos(idsParam);
+                  }
+                }
               }
-            }
-          },
-          {
-            label: 'Detalhamento Financeiro',
-            action: (selectedItems) => {
-              if (selectedItems.length > 0) {
-                // Detalhamento Financeiro
-              }
-            }
+            ],
+            disabled: () => false,
+            variant: 'primary'
           }
         ]}
         onSort={handleSort}

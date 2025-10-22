@@ -8,6 +8,8 @@ import { getApiUrl } from '../../../config/api';
 import { TituloEditModal, TituloCreateModal } from '../../modals/titulos';
 import { TituloService } from '../../../services/tituloService';
 import { Cliente, CarneParcela } from '../../../types';
+import { useImprimir } from '../../../hooks/useImprimir';
+import { createImprimirDropdown } from '../../common/ImprimirDropdown';
 
 interface ClienteFinanceiroProps {
   cliente: Cliente;
@@ -31,6 +33,13 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const showNotification = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     addNotification(type, message);
   };
+
+  // Hook para impressão
+  const { handleImprimirSelecionados, handleImprimirTodos } = useImprimir({
+    itemType: 'titulo',
+    filterCondition: (p: CarneParcela) => p.status === 'pendente' || p.status === 'vencido',
+    filterLabel: 'Todos em Aberto'
+  });
 
   const handleTabChange = (tabIndex: number) => {
     setActiveTab(tabIndex);
@@ -90,32 +99,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
       refetchParcelas();
     } catch (error) {
       console.error('Erro ao marcar parcelas como pagas:', error);
-    }
-  };
-
-  const handleImprimirSelecionados = () => {
-    if (selectedItems.length > 0) {
-      const ids = selectedItems.map(item => item.id);
-      const idsParam = ids.join(',');
-      const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
-      window.open(url, '_blank');
-    } else {
-      showNotification('Nenhum título selecionado', 'info');
-    }
-  };
-
-  const handleImprimirTodosEmAberto = () => {
-    const titulosEmAberto = parcelas.filter((p: CarneParcela) => 
-      p.status === 'pendente' || p.status === 'vencido'
-    );
-    
-    if (titulosEmAberto.length > 0) {
-      const ids = titulosEmAberto.map((item: CarneParcela) => item.id);
-      const idsParam = ids.join(',');
-      const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
-      window.open(url, '_blank');
-    } else {
-      showNotification('Não há títulos em aberto para imprimir', 'info');
     }
   };
 
@@ -281,19 +264,13 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     return selectedItems.every(item => item.status !== 'pago' && item.status !== 'pago_atraso');
                   }
                 },
-                {
-                  label: 'Imprimir',
-                  dropdown: [
-                    {
-                      label: `Imprimir Selecionados (${selectedItems.length})`,
-                      action: handleImprimirSelecionados
-                    },
-                    {
-                      label: 'Imprimir Todos em Aberto',
-                      action: handleImprimirTodosEmAberto
-                    }
-                  ]
-                }
+                createImprimirDropdown({
+                  selectedItems,
+                  totalItems: parcelas.filter((p: CarneParcela) => p.status === 'pendente' || p.status === 'vencido'),
+                  onImprimirSelecionados: handleImprimirSelecionados,
+                  onImprimirTodos: handleImprimirTodos,
+                  filterLabel: 'Todos em Aberto'
+                }),
               ]}
               onSort={handleSortParcelas}
               sortColumn={sortColumnParcelas}

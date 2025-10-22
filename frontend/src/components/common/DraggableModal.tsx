@@ -168,13 +168,15 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         if (modalStack.isTop(modalId)) {
           e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
           onClose();
         }
       }
     };
 
     if (show) {
-      document.addEventListener('keydown', handleKeyDown, true); // Use capture phase
+      // Usar capture phase para interceptar antes de outros modais
+      document.addEventListener('keydown', handleKeyDown, true);
       return () => document.removeEventListener('keydown', handleKeyDown, true);
     }
   }, [show, onClose, modalId]);
