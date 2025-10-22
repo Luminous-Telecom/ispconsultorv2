@@ -575,7 +575,6 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
 
             const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
               textarea.removeAttribute('rows');
-              // Esconde o scroll enquanto recalcula
               const previousOverflow = textarea.style.overflowY;
               textarea.style.overflowY = 'hidden';
               textarea.style.display = 'block';
@@ -584,11 +583,20 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
               textarea.style.minHeight = '0';
               textarea.style.maxHeight = 'none';
               textarea.style.boxSizing = 'border-box';
+              textarea.style.whiteSpace = 'pre-wrap';
               // Recalcular altura baseada no conteúdo
               textarea.style.height = 'auto';
-              const newHeight = textarea.scrollHeight;
+              // Calcular altura mínima de ~12 linhas visíveis
+              const cs = window.getComputedStyle(textarea);
+              const lineHeight = parseFloat(cs.lineHeight) || 16;
+              const paddingTop = parseFloat(cs.paddingTop) || 0;
+              const paddingBottom = parseFloat(cs.paddingBottom) || 0;
+              const borderTop = parseFloat(cs.borderTopWidth) || 0;
+              const borderBottom = parseFloat(cs.borderBottomWidth) || 0;
+              const minLines = 12;
+              const minHeightPx = Math.ceil(minLines * lineHeight + paddingTop + paddingBottom + borderTop + borderBottom);
+              const newHeight = Math.max(textarea.scrollHeight, minHeightPx);
               textarea.style.height = `${newHeight}px`;
-              // Restaura overflow para permitir scroll quando necessário
               textarea.style.overflowY = previousOverflow || 'auto';
             };
 
@@ -621,8 +629,9 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
               const ta = editorRoot.querySelector('.ck-source-editing-area textarea') as HTMLTextAreaElement | null;
               if (ta) {
                 bindTextareaHandlers(ta);
-                // Ajuste adicional após render completo
+                // Ajustes adicionais pós-render e próximo frame
                 setTimeout(() => adjustTextareaHeight(ta), 0);
+                requestAnimationFrame(() => adjustTextareaHeight(ta));
               }
             };
 
