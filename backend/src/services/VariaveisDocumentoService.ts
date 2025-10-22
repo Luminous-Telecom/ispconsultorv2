@@ -226,10 +226,13 @@ export class VariaveisDocumentoService {
       }
     }
 
+    // Calcular valor do contrato (valor_final ou valor_mensal do plano)
+    const valorContrato = contrato.valor_final || contrato.plano?.valor_mensal || 0;
+    
     const substituicoes: Record<string, string> = {
       '#contrato.id#': String(contrato.id),
       '#contrato.plano#': contrato.plano?.nome_plano || '',
-      '#contrato.valor_contrato#': this.formatarMoeda(contrato.valor_contrato || 0),
+      '#contrato.valor_contrato#': this.formatarMoeda(valorContrato),
       '#contrato.valor_mensal#': this.formatarMoeda(contrato.plano?.valor_mensal || 0),
       '#contrato.valor_final#': this.formatarMoeda(contrato.valor_final || 0),
       '#contrato.desconto_percentual#': String(contrato.desconto_percentual || 0) + '%',
