@@ -2181,34 +2181,42 @@ body {
   display: block;
 }
 
-/* Controle de tamanho das imagens no CKEditor */
+/* Controle de tamanho das imagens no CKEditor - TAMANHOS REDUZIDOS */
 .ckeditor-wrapper .ck-content img {
-  max-width: 100% !important;
+  max-width: 200px !important; /* Reduzido de 100% para 200px */
   height: auto !important;
   display: block !important;
   margin: 5px auto !important;
   object-fit: contain !important;
-  max-height: 300px !important; /* Limitar altura máxima */
+  max-height: 120px !important; /* Reduzido de 300px para 120px */
 }
 
 /* Imagens específicas do CKEditor com dimensões inline */
 .ckeditor-wrapper .ck-content img[width],
 .ckeditor-wrapper .ck-content img[style*="width"] {
-  max-width: 100% !important;
+  max-width: 200px !important;
   height: auto !important;
 }
 
-/* Imagens muito grandes - forçar redimensionamento */
+/* Imagens muito grandes - forçar redimensionamento menor */
 .ckeditor-wrapper .ck-content img[width="129px"],
 .ckeditor-wrapper .ck-content img[style*="width:129px"] {
-  width: 80px !important;
+  width: 60px !important; /* Reduzido de 80px para 60px */
   height: auto !important;
 }
 
-/* Imagens base64 específicas */
+/* Imagens base64 específicas - tamanhos menores */
 .ckeditor-wrapper .ck-content img[src^="data:image"] {
-  max-width: 150px !important;
-  max-height: 150px !important;
+  max-width: 100px !important; /* Reduzido de 150px para 100px */
+  max-height: 100px !important; /* Reduzido de 150px para 100px */
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Qualquer imagem dentro do editor - limite geral */
+.ckeditor-wrapper .ck-content img {
+  max-width: 200px !important;
+  max-height: 120px !important;
   width: auto !important;
   height: auto !important;
 }
