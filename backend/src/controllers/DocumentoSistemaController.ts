@@ -385,22 +385,54 @@ export class DocumentoSistemaController {
               margin: 0 !important;
               margin-inline-start: 0 !important;
               margin-inline-end: 0 !important;
+              margin-top: 0 !important;
+              margin-bottom: 0.5em !important;
             }
+            
             table {
               border-collapse: collapse;
               width: 100% !important;
               table-layout: auto !important;
+              margin: 0 !important;
             }
+            
             table colgroup,
             table colgroup col {
               width: auto !important;
             }
+            
             table td, table th {
               border: none;
               width: auto !important;
               max-width: none !important;
               min-width: 0 !important;
               padding: 0 !important;
+            }
+            
+            /* Remover espaçamento excessivo entre elementos */
+            p {
+              margin: 0.5em 0 !important;
+            }
+            
+            p:empty {
+              margin: 0 !important;
+              line-height: 0 !important;
+              height: 0 !important;
+            }
+            
+            br {
+              line-height: 1.2 !important;
+            }
+            
+            /* Espaçamento entre tabelas */
+            figure.table + figure.table {
+              margin-top: 0.5em !important;
+            }
+            
+            /* Remover espaço entre parágrafos vazios e tabelas */
+            p:empty + figure.table,
+            figure.table + p:empty {
+              margin: 0 !important;
             }
           </style>
         </head>

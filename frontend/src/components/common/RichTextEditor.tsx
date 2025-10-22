@@ -67,6 +67,37 @@ const editorStyles = `
     height: auto;
   }
   
+  /* Controlar espaçamento entre elementos */
+  p {
+    margin: 0.5em 0;
+  }
+  
+  p:empty {
+    margin: 0;
+    line-height: 0;
+    height: 0;
+  }
+  
+  br {
+    line-height: 1.2;
+  }
+  
+  /* Espaçamento entre tabelas */
+  figure.table {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+  }
+  
+  figure.table + figure.table {
+    margin-top: 0.5em;
+  }
+  
+  /* Remover espaço entre parágrafos vazios e tabelas */
+  p:empty + figure.table,
+  figure.table + p:empty {
+    margin: 0;
+  }
+  
   /* Garante que as fontes inline sejam respeitadas na impressão em TODO o documento */
   @media print {
     html, body {
@@ -98,6 +129,37 @@ const editorStyles = `
     img:not([style*="width"]):not([style*="height"]):not([width]):not([height]) {
       max-width: 100% !important;
       height: auto !important;
+    }
+    
+    /* Controlar espaçamento entre elementos na impressão */
+    p {
+      margin: 0.5em 0 !important;
+    }
+    
+    p:empty {
+      margin: 0 !important;
+      line-height: 0 !important;
+      height: 0 !important;
+    }
+    
+    br {
+      line-height: 1.2 !important;
+    }
+    
+    /* Espaçamento entre tabelas */
+    figure.table {
+      margin-top: 0 !important;
+      margin-bottom: 0.5em !important;
+    }
+    
+    figure.table + figure.table {
+      margin-top: 0.5em !important;
+    }
+    
+    /* Remover espaço entre parágrafos vazios e tabelas */
+    p:empty + figure.table,
+    figure.table + p:empty {
+      margin: 0 !important;
     }
     
     /* Mapeia fontes específicas para garantir renderização - case insensitive */
