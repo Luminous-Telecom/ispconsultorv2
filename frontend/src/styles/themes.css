@@ -1774,8 +1774,10 @@ p, span, div, label {
 }
 
 .ckeditor-wrapper .ck-editor__editable {
-  background-color: transparent;
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
 }
 
 .ckeditor-wrapper .ck-source-editing-area {
@@ -1802,7 +1804,8 @@ p, span, div, label {
   line-height: 1.2;
   text-align: justify;
   color: var(--text-primary);
-  background-color: transparent;
+  background-color: var(--bg-secondary);
+  padding: 10px;
 }
 
 /* Tabelas no editor */
@@ -1810,17 +1813,17 @@ p, span, div, label {
   width: 100%;
   border-collapse: collapse;
   margin: 5px 0;
-  background-color: transparent;
+  background-color: var(--bg-secondary);
 }
 
 .ckeditor-wrapper .ck-content table td,
 .ckeditor-wrapper .ck-content table th {
   border: 1px solid var(--border-color);
-  padding: 3px;
+  padding: 8px;
   vertical-align: top;
   font-size: 9pt;
   line-height: 1.2;
-  background-color: transparent;
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
 }
 
@@ -1828,6 +1831,7 @@ p, span, div, label {
   font-weight: bold;
   text-align: left;
   background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 /* Barra de ferramentas flutuante */
