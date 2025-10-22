@@ -353,12 +353,19 @@ export class DocumentoSistemaController {
             /* Numeração de páginas */
             @page {
               margin: 2cm 1.5cm 3cm 1.5cm;
-              @bottom-center {
-                content: "Página " counter(page) " de " counter(pages);
-                font-family: Arial, sans-serif;
-                font-size: 10px;
-                color: #666;
-              }
+            }
+            
+            /* Adicionar numeração via pseudo-elemento */
+            body::after {
+              content: "Página " counter(page) " de " counter(pages);
+              position: fixed;
+              bottom: 1cm;
+              left: 50%;
+              transform: translateX(-50%);
+              font-family: Arial, sans-serif;
+              font-size: 10px;
+              color: #666;
+              counter-increment: page;
             }
             
             body {
@@ -563,12 +570,19 @@ export class DocumentoSistemaController {
             /* Numeração de páginas */
             @page {
               margin: 2cm 1.5cm 3cm 1.5cm;
-              @bottom-center {
-                content: "Página " counter(page) " de " counter(pages);
-                font-family: Arial, sans-serif;
-                font-size: 10px;
-                color: #666;
-              }
+            }
+            
+            /* Adicionar numeração via pseudo-elemento */
+            body::after {
+              content: "Página " counter(page) " de " counter(pages);
+              position: fixed;
+              bottom: 1cm;
+              left: 50%;
+              transform: translateX(-50%);
+              font-family: Arial, sans-serif;
+              font-size: 10px;
+              color: #666;
+              counter-increment: page;
             }
             
             body {
