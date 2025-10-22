@@ -331,20 +331,19 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
             const toolbar = document.querySelector('.ck.ck-toolbar');
             if (toolbar) {
 
-              // Criar container para label + dropdown
-              const variablesContainer = document.createElement('div');
-              variablesContainer.style.cssText = `
+              // Criar label que conterá o dropdown (nested approach)
+              const variablesLabel = document.createElement('label');
+              variablesLabel.style.cssText = `
                 display: inline-flex;
                 align-items: center;
-                position: relative;
+                margin: 0;
+                cursor: pointer;
               `;
 
-              // Criar label para o dropdown (visualmente oculto mas acessível)
-              const variablesLabel = document.createElement('label');
-              variablesLabel.textContent = 'Variáveis disponíveis';
-              variablesLabel.htmlFor = 'ckeditor-variables-dropdown';
-              variablesLabel.className = 'sr-only';
-              variablesLabel.style.cssText = `
+              // Criar span sr-only dentro do label
+              const labelText = document.createElement('span');
+              labelText.textContent = 'Variáveis disponíveis: ';
+              labelText.style.cssText = `
                 position: absolute;
                 width: 1px;
                 height: 1px;
@@ -356,7 +355,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 border-width: 0;
               `;
 
-              // Adicionar dropdown de variáveis
+              // Adicionar dropdown de variáveis (será nested no label)
               const variablesDropdown = document.createElement('select');
               variablesDropdown.id = 'ckeditor-variables-dropdown';
               variablesDropdown.name = 'variables';
@@ -368,6 +367,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 border-radius: 4px;
                 background: white;
                 font-size: 12px;
+                cursor: pointer;
               `;
 
               // Adicionar opções
@@ -463,12 +463,12 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
                 }
               };
 
-              // Adicionar label e dropdown ao container
-              variablesContainer.appendChild(variablesLabel);
-              variablesContainer.appendChild(variablesDropdown);
+              // Adicionar texto sr-only e dropdown ao label (nested approach)
+              variablesLabel.appendChild(labelText);
+              variablesLabel.appendChild(variablesDropdown);
               
-              // Adicionar container à toolbar
-              toolbar.appendChild(variablesContainer);
+              // Adicionar label à toolbar
+              toolbar.appendChild(variablesLabel);
             }
           }, 100);
         }}
