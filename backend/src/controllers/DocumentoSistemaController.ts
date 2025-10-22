@@ -1,8 +1,5 @@
 import { Request, Response } from 'express';
 import { ModeloContrato } from '../models/ModeloContrato';
-import ModeloContratoConteudo from '../models/ModeloContratoConteudo';
-import ModeloTermoAdesao from '../models/ModeloTermoAdesao';
-import ModeloContratoPermanencia from '../models/ModeloContratoPermanencia';
 import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
@@ -1114,24 +1111,22 @@ export class ModeloContratoController {
         return;
       }
 
-      // Verificar se já existe um registro
-      const existingModel = await ModeloContratoConteudo.findOne({
-        where: { modelo_contrato_id }
-      });
-
-      let result;
-      if (existingModel) {
-        result = await existingModel.update({ modelo });
-      } else {
-        result = await ModeloContratoConteudo.create({
-          modelo_contrato_id,
-          modelo
+      // Atualizar diretamente na tabela modelo_contrato
+      const modeloContrato = await ModeloContrato.findByPk(modelo_contrato_id);
+      
+      if (!modeloContrato) {
+        res.status(404).json({
+          success: false,
+          message: 'Modelo de contrato não encontrado'
         });
+        return;
       }
+
+      await modeloContrato.update({ conteudo: modelo });
 
       res.json({
         success: true,
-        data: result,
+        data: modeloContrato,
         message: 'Modelo de contrato salvo com sucesso'
       });
     } catch (error) {
@@ -1158,24 +1153,22 @@ export class ModeloContratoController {
         return;
       }
 
-      // Verificar se já existe um registro
-      const existingModel = await ModeloTermoAdesao.findOne({
-        where: { modelo_contrato_id }
-      });
-
-      let result;
-      if (existingModel) {
-        result = await existingModel.update({ modelo });
-      } else {
-        result = await ModeloTermoAdesao.create({
-          modelo_contrato_id,
-          modelo
+      // Atualizar diretamente na tabela modelo_contrato
+      const modeloContrato = await ModeloContrato.findByPk(modelo_contrato_id);
+      
+      if (!modeloContrato) {
+        res.status(404).json({
+          success: false,
+          message: 'Modelo de contrato não encontrado'
         });
+        return;
       }
+
+      await modeloContrato.update({ conteudo_adesao: modelo });
 
       res.json({
         success: true,
-        data: result,
+        data: modeloContrato,
         message: 'Modelo de termo de adesão salvo com sucesso'
       });
     } catch (error) {
@@ -1202,24 +1195,22 @@ export class ModeloContratoController {
         return;
       }
 
-      // Verificar se já existe um registro
-      const existingModel = await ModeloContratoPermanencia.findOne({
-        where: { modelo_contrato_id }
-      });
-
-      let result;
-      if (existingModel) {
-        result = await existingModel.update({ modelo });
-      } else {
-        result = await ModeloContratoPermanencia.create({
-          modelo_contrato_id,
-          modelo
+      // Atualizar diretamente na tabela modelo_contrato
+      const modeloContrato = await ModeloContrato.findByPk(modelo_contrato_id);
+      
+      if (!modeloContrato) {
+        res.status(404).json({
+          success: false,
+          message: 'Modelo de contrato não encontrado'
         });
+        return;
       }
+
+      await modeloContrato.update({ conteudo_permanencia: modelo });
 
       res.json({
         success: true,
-        data: result,
+        data: modeloContrato,
         message: 'Modelo de contrato de permanência salvo com sucesso'
       });
     } catch (error) {
@@ -1238,25 +1229,7 @@ export class ModeloContratoController {
     try {
       const { id } = req.params;
 
-      const modeloContrato = await ModeloContrato.findByPk(id, {
-        include: [
-          {
-            model: ModeloContratoConteudo,
-            as: 'modeloContratoConteudo',
-            required: false
-          },
-          {
-            model: ModeloTermoAdesao,
-            as: 'modeloTermoAdesao',
-            required: false
-          },
-          {
-            model: ModeloContratoPermanencia,
-            as: 'modeloContratoPermanencia',
-            required: false
-          }
-        ]
-      });
+      const modeloContrato = await ModeloContrato.findByPk(id);
 
       if (!modeloContrato) {
         res.status(404).json({
@@ -1270,9 +1243,9 @@ export class ModeloContratoController {
         success: true,
         data: {
           modelo_contrato: modeloContrato,
-          modelo_contrato_conteudo: modeloContrato.modeloContratoConteudo?.modelo || '',
-          modelo_termo_adesao: modeloContrato.modeloTermoAdesao?.modelo || '',
-          modelo_contrato_permanencia: modeloContrato.modeloContratoPermanencia?.modelo || ''
+          modelo_contrato_conteudo: modeloContrato.conteudo || '',
+          modelo_termo_adesao: modeloContrato.conteudo_adesao || '',
+          modelo_contrato_permanencia: modeloContrato.conteudo_permanencia || ''
         },
         message: 'Modelos do modelo de contrato recuperados com sucesso'
       });

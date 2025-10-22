@@ -6,6 +6,8 @@ interface ModeloContratoAttributes {
   nome: string;
   tipo: string;
   conteudo: string;
+  conteudo_adesao?: string;
+  conteudo_permanencia?: string;
   descricao?: string;
   ativo: boolean;
   tamanho_maximo: number;
@@ -24,6 +26,8 @@ export class ModeloContrato extends Model<ModeloContratoAttributes, ModeloContra
   public nome!: string;
   public tipo!: string;
   public conteudo!: string;
+  public conteudo_adesao?: string;
+  public conteudo_permanencia?: string;
   public descricao?: string;
   public ativo!: boolean;
   public tamanho_maximo!: number;
@@ -33,11 +37,6 @@ export class ModeloContrato extends Model<ModeloContratoAttributes, ModeloContra
   public criptografia!: boolean;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
-
-  // Declarações de associação
-  public modeloContratoConteudo?: any;
-  public modeloTermoAdesao?: any;
-  public modeloContratoPermanencia?: any;
 }
 
 ModeloContrato.init(
@@ -68,6 +67,14 @@ ModeloContrato.init(
       validate: {
         notEmpty: true,
       },
+    },
+    conteudo_adesao: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
+    conteudo_permanencia: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
     },
     descricao: {
       type: DataTypes.TEXT,
