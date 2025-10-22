@@ -351,6 +351,25 @@ export class DocumentoSistemaController {
               margin: 0;
               padding: 0;
             }
+            
+            /* Estilos para imagens */
+            img {
+              max-width: 100% !important;
+              height: auto !important;
+              display: block;
+              page-break-inside: avoid;
+            }
+            
+            /* Preservar dimensões específicas de imagens */
+            img[width] {
+              width: attr(width px) !important;
+            }
+            
+            img[height] {
+              height: attr(height px) !important;
+            }
+            
+            /* Estilos para tabelas */
             figure.table {
               width: 100% !important;
               float: none !important;

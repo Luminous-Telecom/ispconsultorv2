@@ -42,11 +42,38 @@ import 'ckeditor5/ckeditor5.css';
 const editorStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
   
+  /* Garante que imagens mantenham seu tamanho */
+  img {
+    max-width: 100%;
+    height: auto !important;
+  }
+  
+  /* Preservar tamanho de imagens com dimensões inline */
+  img[style*="width"] {
+    width: auto !important;
+  }
+  
+  img[style*="height"] {
+    height: auto !important;
+  }
+  
   /* Garante que as fontes inline sejam respeitadas na impressão em TODO o documento */
   @media print {
     html, body {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+    }
+    
+    /* Preservar dimensões de imagens na impressão */
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+      page-break-inside: avoid !important;
+    }
+    
+    /* Imagens com width inline devem manter o tamanho */
+    img[style*="width"] {
+      display: block !important;
     }
     
     /* Mapeia fontes específicas para garantir renderização - case insensitive */
