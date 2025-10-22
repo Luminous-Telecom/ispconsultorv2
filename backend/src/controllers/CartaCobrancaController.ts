@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CartaCobranca } from '../models/ModeloCarta';
+import { ModeloCarta } from '../models/ModeloCarta';
 import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
@@ -17,7 +17,7 @@ export class ModeloCartaController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const cartas = await CartaCobranca.findAll({
+      const cartas = await ModeloCarta.findAll({
         order: [['created_at', 'DESC']],
       });
 
@@ -42,7 +42,7 @@ export class ModeloCartaController {
     try {
       const { id } = req.params;
 
-      const carta = await CartaCobranca.findByPk(id);
+      const carta = await ModeloCarta.findByPk(id);
 
       if (!carta) {
         res.status(404).json({
@@ -73,7 +73,7 @@ export class ModeloCartaController {
     try {
       const { nome, conteudo, descricao, ativo, tamanho_maximo, tipos_permitidos, retencao_dias, auto_backup, criptografia } = req.body;
 
-      const carta = await CartaCobranca.create({
+      const carta = await ModeloCarta.create({
         nome,
         conteudo,
         descricao,
@@ -107,7 +107,7 @@ export class ModeloCartaController {
       const { id } = req.params;
       const updateData = req.body;
 
-      const carta = await CartaCobranca.findByPk(id);
+      const carta = await ModeloCarta.findByPk(id);
 
       if (!carta) {
         res.status(404).json({
@@ -140,7 +140,7 @@ export class ModeloCartaController {
     try {
       const { id } = req.params;
 
-      const carta = await CartaCobranca.findByPk(id);
+      const carta = await ModeloCarta.findByPk(id);
 
       if (!carta) {
         res.status(404).json({
@@ -172,7 +172,7 @@ export class ModeloCartaController {
     try {
       const { id } = req.params;
 
-      const carta = await CartaCobranca.findByPk(id);
+      const carta = await ModeloCarta.findByPk(id);
 
       if (!carta) {
         res.status(404).json({
@@ -344,7 +344,7 @@ export class ModeloCartaController {
       const { id } = req.params;
       const { cliente_id } = req.query;
 
-      const carta = await CartaCobranca.findByPk(id);
+      const carta = await ModeloCarta.findByPk(id);
 
       if (!carta) {
         res.status(404).json({

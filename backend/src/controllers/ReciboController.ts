@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Recibo } from '../models/ModeloRecibo';
+import { ModeloRecibo } from '../models/ModeloRecibo';
 import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
@@ -17,7 +17,7 @@ export class ModeloReciboController {
    */
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const recibos = await Recibo.findAll({
+      const recibos = await ModeloRecibo.findAll({
         order: [['created_at', 'DESC']],
       });
 
@@ -42,7 +42,7 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await Recibo.findByPk(id);
+      const recibo = await ModeloRecibo.findByPk(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -73,7 +73,7 @@ export class ModeloReciboController {
     try {
       const { nome, conteudo, descricao, ativo, tamanho_maximo, tipos_permitidos, retencao_dias, auto_backup, criptografia } = req.body;
 
-      const recibo = await Recibo.create({
+      const recibo = await ModeloRecibo.create({
         nome,
         conteudo,
         descricao,
@@ -107,7 +107,7 @@ export class ModeloReciboController {
       const { id } = req.params;
       const updateData = req.body;
 
-      const recibo = await Recibo.findByPk(id);
+      const recibo = await ModeloRecibo.findByPk(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -140,7 +140,7 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await Recibo.findByPk(id);
+      const recibo = await ModeloRecibo.findByPk(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -172,7 +172,7 @@ export class ModeloReciboController {
     try {
       const { id } = req.params;
 
-      const recibo = await Recibo.findByPk(id);
+      const recibo = await ModeloRecibo.findByPk(id);
 
       if (!recibo) {
         res.status(404).json({
@@ -344,7 +344,7 @@ export class ModeloReciboController {
       const { id } = req.params;
       const { cliente_id } = req.query;
 
-      const recibo = await Recibo.findByPk(id);
+      const recibo = await ModeloRecibo.findByPk(id);
 
       if (!recibo) {
         res.status(404).json({

@@ -269,7 +269,7 @@ export class SchedulerService {
 
   public async createRoutine(data: {
     nome: string;
-    tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
+    tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'outros';
     descricao?: string;
     configuracao: any;
     frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';

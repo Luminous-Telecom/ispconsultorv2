@@ -4,7 +4,7 @@ import { sequelize } from '../config/database';
 export interface ScheduledRoutineAttributes {
   id: number;
   nome: string;
-  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'outros';
   descricao?: string;
   configuracao: any;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -27,7 +27,7 @@ export interface ScheduledRoutineCreationAttributes extends Optional<ScheduledRo
 export class ScheduledRoutine extends Model<ScheduledRoutineAttributes, ScheduledRoutineCreationAttributes> implements ScheduledRoutineAttributes {
   public id!: number;
   public nome!: string;
-  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
+  public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'outros';
   public descricao?: string;
   public configuracao!: any;
   public frequencia!: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
@@ -63,7 +63,7 @@ ScheduledRoutine.init({
     allowNull: false
   },
   tipo: {
-    type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'outros'),
+    type: DataTypes.ENUM('geracao_titulos', 'envio_boletos', 'remessa_bancaria', 'verificar_vencimentos', 'outros'),
     allowNull: false
   },
   descricao: {

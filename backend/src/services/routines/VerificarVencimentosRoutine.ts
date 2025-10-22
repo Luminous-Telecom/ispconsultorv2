@@ -51,8 +51,8 @@ export class VerificarVencimentosRoutine {
             titulo_id: titulo.id,
             numero_titulo: titulo.numero_titulo,
             data_vencimento: titulo.data_vencimento,
-            cliente: titulo.cliente?.razao_social,
-            plano: titulo.plano?.nome_plano
+            cliente: titulo.getCliente ? (await titulo.getCliente())?.razao_social : 'N/A',
+            plano: titulo.getPlano ? (await titulo.getPlano())?.nome_plano : 'N/A'
           });
 
         } catch (error: any) {
