@@ -507,8 +507,7 @@ const RichTextEditor = forwardRef<any, RichTextEditorProps>(({
 
               // Adicionar dropdown de variáveis (será nested no label)
               const variablesDropdown = document.createElement('select');
-              variablesDropdown.id = 'ckeditor-variables-dropdown';
-              variablesDropdown.name = 'variables';
+              variablesDropdown.name = 'ckeditor-variables';
               variablesDropdown.setAttribute('aria-label', 'Selecionar variável para inserir no documento');
               variablesDropdown.style.cssText = `
                 padding: 4px 8px;
