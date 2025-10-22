@@ -46,10 +46,23 @@ const editorStyles = `
   img {
     display: block;
     object-fit: contain;
+    max-width: 100% !important;
+  }
+  
+  /* Limitar imagens com atributos width/height muito grandes */
+  img[width] {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Se tem style inline com dimensões, preservar proporções */
+  img[style*="width"] {
+    max-width: 100% !important;
+    height: auto !important;
   }
   
   /* Apenas aplicar max-width em imagens SEM dimensões inline */
-  img:not([style*="width"]):not([style*="height"]) {
+  img:not([style*="width"]):not([style*="height"]):not([width]):not([height]) {
     max-width: 100%;
     height: auto;
   }
@@ -66,10 +79,23 @@ const editorStyles = `
       display: block !important;
       page-break-inside: avoid !important;
       object-fit: contain !important;
+      max-width: 100% !important;
+    }
+    
+    /* Limitar imagens com atributos width/height muito grandes */
+    img[width] {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+    
+    /* Se tem style inline com dimensões, preservar proporções */
+    img[style*="width"] {
+      max-width: 100% !important;
+      height: auto !important;
     }
     
     /* Apenas aplicar max-width em imagens SEM dimensões inline */
-    img:not([style*="width"]):not([style*="height"]) {
+    img:not([style*="width"]):not([style*="height"]):not([width]):not([height]) {
       max-width: 100% !important;
       height: auto !important;
     }

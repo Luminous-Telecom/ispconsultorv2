@@ -357,10 +357,23 @@ export class DocumentoSistemaController {
               display: block;
               page-break-inside: avoid;
               object-fit: contain;
+              max-width: 100% !important;
             }
             
-            /* NÃO forçar auto se a imagem tem dimensões inline */
-            img:not([style*="width"]):not([style*="height"]) {
+            /* Limitar imagens muito grandes (largura > 800px) */
+            img[width] {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            
+            /* Se tem style inline com dimensões, preservar proporções */
+            img[style*="width"] {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            
+            /* NÃO forçar auto se a imagem tem dimensões inline razoáveis */
+            img:not([style*="width"]):not([style*="height"]):not([width]):not([height]) {
               max-width: 100%;
               height: auto;
             }
