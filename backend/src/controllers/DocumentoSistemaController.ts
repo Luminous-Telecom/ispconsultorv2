@@ -355,7 +355,11 @@ export class DocumentoSistemaController {
               margin: 2cm 1.5cm 3cm 1.5cm;
             }
             
-            /* Adicionar numeração via pseudo-elemento */
+            /* Adicionar numeração via CSS */
+            body {
+              counter-reset: page;
+            }
+            
             body::after {
               content: "Página " counter(page) " de " counter(pages);
               position: fixed;
@@ -365,6 +369,11 @@ export class DocumentoSistemaController {
               font-family: Arial, sans-serif;
               font-size: 10px;
               color: #666;
+              z-index: 1000;
+            }
+            
+            /* Incrementar contador a cada página */
+            @page {
               counter-increment: page;
             }
             
@@ -572,7 +581,11 @@ export class DocumentoSistemaController {
               margin: 2cm 1.5cm 3cm 1.5cm;
             }
             
-            /* Adicionar numeração via pseudo-elemento */
+            /* Adicionar numeração via CSS */
+            body {
+              counter-reset: page;
+            }
+            
             body::after {
               content: "Página " counter(page) " de " counter(pages);
               position: fixed;
@@ -582,6 +595,11 @@ export class DocumentoSistemaController {
               font-family: Arial, sans-serif;
               font-size: 10px;
               color: #666;
+              z-index: 1000;
+            }
+            
+            /* Incrementar contador a cada página */
+            @page {
               counter-increment: page;
             }
             
