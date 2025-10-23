@@ -1563,12 +1563,16 @@ textarea {
 
 /* Garantir que ícones manuais apareçam em botões dropdown */
 .btn.dropdown-toggle i,
-.btn.dropdown-toggle .bi {
+.btn.dropdown-toggle .bi,
+button.dropdown-toggle i,
+button.dropdown-toggle .bi {
   display: inline-flex !important;
   align-items: center;
-  font-size: inherit;
-  line-height: inherit;
-  margin-left: 0.25rem;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  margin-left: 0.25rem !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .dropdown-toggle:not(.btn):hover {
