@@ -1391,8 +1391,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                         const modelosVinculados = await DocumentoSistemaService.getModelosByModeloContrato(modeloContratoId);
                                         
                                         if (modelosVinculados.success && modelosVinculados.data) {
-                                          console.log('Modelos vinculados:', modelosVinculados.data);
-                                          
                                           // Verificar se existe modelo_termo_adesao
                                           if (modelosVinculados.data.modelo_termo_adesao) {
                                             // Gerar PDF com dados do cliente usando o modelo de contrato
@@ -1448,8 +1446,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                         const modelosVinculados = await DocumentoSistemaService.getModelosByModeloContrato(modeloContratoId);
                                         
                                         if (modelosVinculados.success && modelosVinculados.data) {
-                                          console.log('Modelos vinculados:', modelosVinculados.data);
-                                          
                                           // Verificar se existe modelo_contrato_permanencia
                                           if (modelosVinculados.data.modelo_contrato_permanencia) {
                                             // Gerar PDF com dados do cliente usando o modelo de contrato
