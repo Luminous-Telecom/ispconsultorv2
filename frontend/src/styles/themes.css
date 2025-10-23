@@ -1218,11 +1218,16 @@ body {
 }
 
 
-/*[data-theme="dark"] .table thead th {
+[data-theme="dark"] .table thead th {
   background-color: #1b272c !important;
   color: #ffffff !important;
   border-bottom: 2px solid #007bff !important;
-}*/
+}
+
+/* Garantir que cabeçalhos de tabela tenham texto claro no tema escuro */
+[data-theme="dark"] .table th {
+  color: #ffffff !important;
+}
 
 [data-theme="dark"] .table tbody tr {
   background-color: #2a3a42 !important;
