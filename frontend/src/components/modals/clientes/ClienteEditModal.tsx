@@ -1321,6 +1321,21 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             Imprimir
                             <i className="bi bi-chevron-down ms-1"></i>
                           </button>
+                          
+                          {/* Botão de refresh */}
+                          <button 
+                            className="btn btn-outline-secondary btn-sm ms-2"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              refetchContratos();
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            title="Recarregar dados"
+                          >
+                            <i className="bi bi-arrow-clockwise"></i>
+                          </button>
+                          
                           {showImprimirDropdown && (
                             <div 
                               className="dropdown-menu show" 
