@@ -6,13 +6,22 @@ interface ImprimirDropdownConfig {
   filterLabel?: string;
 }
 
+interface ImprimirDropdownReturn {
+  label: string;
+  variant: 'success';
+  dropdown: {
+    label: string;
+    action: () => void;
+  }[];
+}
+
 export const createImprimirDropdown = ({
   selectedItems,
   totalItems,
   onImprimirSelecionados,
   onImprimirTodos,
   filterLabel = 'Todos'
-}: ImprimirDropdownConfig) => {
+}: ImprimirDropdownConfig): ImprimirDropdownReturn => {
   const handleImprimirSelecionados = () => {
     if (selectedItems.length > 0) {
       const ids = selectedItems.map(item => item.id);

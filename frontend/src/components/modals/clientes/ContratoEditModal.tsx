@@ -259,6 +259,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const bulkActions: Array<{
     label: string;
     action?: (selectedItems: Titulo[]) => void;
+    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
     disabled?: (selectedItems: Titulo[]) => boolean;
     dropdown?: {
       label: string;

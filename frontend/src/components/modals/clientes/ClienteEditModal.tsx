@@ -300,6 +300,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const bulkActions: Array<{
     label: string;
     action?: (selectedItems: CarneParcela[]) => void;
+    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
     disabled?: (selectedItems: CarneParcela[]) => boolean;
     dropdown?: {
       label: string;
