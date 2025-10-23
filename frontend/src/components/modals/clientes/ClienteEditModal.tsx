@@ -1391,8 +1391,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                         const modelosVinculados = await DocumentoSistemaService.getModelosByModeloContrato(modeloContratoId);
                                         
                                         if (modelosVinculados.success && modelosVinculados.data) {
+                                          console.log('Modelos vinculados:', modelosVinculados.data);
+                                          
+                                          // Verificar se data é um array
+                                          const dataArray = Array.isArray(modelosVinculados.data) ? modelosVinculados.data : [];
+                                          
                                           // Encontrar o modelo de termo de adesão
-                                          const modeloAdesao = modelosVinculados.data.find((modelo: any) => modelo.tipo === 'adesao');
+                                          const modeloAdesao = dataArray.find((modelo: any) => modelo.tipo === 'adesao');
                                           
                                           if (modeloAdesao) {
                                             // Gerar PDF com dados do cliente
@@ -1447,8 +1452,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                         const modelosVinculados = await DocumentoSistemaService.getModelosByModeloContrato(modeloContratoId);
                                         
                                         if (modelosVinculados.success && modelosVinculados.data) {
+                                          console.log('Modelos vinculados:', modelosVinculados.data);
+                                          
+                                          // Verificar se data é um array
+                                          const dataArray = Array.isArray(modelosVinculados.data) ? modelosVinculados.data : [];
+                                          
                                           // Encontrar o modelo de contrato de permanência
-                                          const modeloPermanencia = modelosVinculados.data.find((modelo: any) => modelo.tipo === 'permanencia');
+                                          const modeloPermanencia = dataArray.find((modelo: any) => modelo.tipo === 'permanencia');
                                           
                                           if (modeloPermanencia) {
                                             // Gerar PDF com dados do cliente
