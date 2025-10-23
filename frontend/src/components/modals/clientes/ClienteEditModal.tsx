@@ -1343,6 +1343,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   if (selectedContratosItems.length > 0) {
                                     setIsGeneratingPdf(true);
                                     try {
+                                      // Usar requestIdleCallback para melhorar performance
+                                      await new Promise(resolve => {
+                                        if (window.requestIdleCallback) {
+                                          window.requestIdleCallback(resolve);
+                                        } else {
+                                          setTimeout(resolve, 0);
+                                        }
+                                      });
+                                      
                                       // Buscar o modelo de contrato padrão
                                       const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
                                       
@@ -1387,6 +1396,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   if (selectedContratosItems.length > 0) {
                                     setIsGeneratingPdf(true);
                                     try {
+                                      // Usar requestIdleCallback para melhorar performance
+                                      await new Promise(resolve => {
+                                        if (window.requestIdleCallback) {
+                                          window.requestIdleCallback(resolve);
+                                        } else {
+                                          setTimeout(resolve, 0);
+                                        }
+                                      });
+                                      
                                       // Buscar o modelo de termo de adesão vinculado ao modelo de contrato
                                       const contratoSelecionado = selectedContratosItems[0];
                                       const modeloContratoId = contratoSelecionado.modelo_contrato_id;
@@ -1445,6 +1463,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   if (selectedContratosItems.length > 0) {
                                     setIsGeneratingPdf(true);
                                     try {
+                                      // Usar requestIdleCallback para melhorar performance
+                                      await new Promise(resolve => {
+                                        if (window.requestIdleCallback) {
+                                          window.requestIdleCallback(resolve);
+                                        } else {
+                                          setTimeout(resolve, 0);
+                                        }
+                                      });
+                                      
                                       // Buscar o modelo de contrato de permanência vinculado ao modelo de contrato
                                       const contratoSelecionado = selectedContratosItems[0];
                                       const modeloContratoId = contratoSelecionado.modelo_contrato_id;
