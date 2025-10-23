@@ -444,7 +444,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
              {/* Dropdown de impressão no padrão DataTable */}
              <div className="dropdown" style={{ position: 'relative' }}>
                <button
-                 className="btn btn-sm btn-primary dropdown-toggle"
+                 className="btn btn-sm btn-success dropdown-toggle"
                  type="button"
                  onClick={() => setOpenImprimirDropdown(!openImprimirDropdown)}
                  disabled={isGeneratingPdf}
