@@ -198,10 +198,11 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
                 
                 // Se tem dropdown, renderizar como dropdown
                 if (bulkAction.dropdown) {
+                  const variantClass = bulkAction.variant || 'primary';
                   return (
                     <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
                       <button
-                        className="btn btn-sm btn-primary dropdown-toggle"
+                        className={`btn btn-sm btn-${variantClass} dropdown-toggle`}
                         type="button"
                         onClick={() => setOpenDropdown(openDropdown === index ? null : index)}
                       >
