@@ -20,9 +20,6 @@
   --text-primary: #212529;
   --text-secondary: #6c757d;
   --text-muted: #868e96;
-  
-  /* Cores de borda */
-  --border-color: #dee2e6;
   --border-light: #f1f3f4;
   
   /* Sombras */
@@ -54,9 +51,6 @@
   --text-primary: #ffffff;
   --text-secondary: #e0e6ea;
   --text-muted: #a0a6aa;
-  
-  /* Cores de borda */
-  --border-color: #505050;
   --border-light: #505050;
   
   /* Sombras */
