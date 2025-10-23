@@ -47,10 +47,20 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
   // Carregar dados do documento quando o modal abrir
   useEffect(() => {
     if (documento && show) {
-      // Se for contrato, buscar modelos específicos das tabelas separadas
-      if (tipo === 'contrato') {
-        DocumentoSistemaService.getModelosByModeloContrato(documento.id)
-          .then(response => {
+      // Usar requestIdleCallback para melhorar performance
+      const loadData = async () => {
+        await new Promise(resolve => {
+          if (window.requestIdleCallback) {
+            window.requestIdleCallback(resolve);
+          } else {
+            setTimeout(resolve, 0);
+          }
+        });
+        
+        // Se for contrato, buscar modelos específicos das tabelas separadas
+        if (tipo === 'contrato') {
+          DocumentoSistemaService.getModelosByModeloContrato(documento.id)
+            .then(response => {
             if (response.success) {
               setFormData({
                 nome: documento.nome,
@@ -83,16 +93,19 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
               conteudo_permanencia: '',
             });
           });
-      } else {
-        setFormData({
-          nome: documento.nome,
-          descricao: documento.descricao || '',
-          conteudo: documento.conteudo,
-          conteudo_contrato: '',
-          conteudo_adesao: '',
-          conteudo_permanencia: '',
-        });
-      }
+        } else {
+          setFormData({
+            nome: documento.nome,
+            descricao: documento.descricao || '',
+            conteudo: documento.conteudo,
+            conteudo_contrato: '',
+            conteudo_adesao: '',
+            conteudo_permanencia: '',
+          });
+        }
+      };
+      
+      loadData();
     }
   }, [documento, show, tipo]);
 
@@ -303,6 +316,15 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     
     setIsGeneratingPdf(true);
     try {
+      // Usar requestIdleCallback para melhorar performance
+      await new Promise(resolve => {
+        if (window.requestIdleCallback) {
+          window.requestIdleCallback(resolve);
+        } else {
+          setTimeout(resolve, 0);
+        }
+      });
+      
       let pdfBlob: Blob;
       
       // Se tiver cliente selecionado, gera PDF com dados do cliente
