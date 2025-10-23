@@ -94,6 +94,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [showImprimirModal, setShowImprimirModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [showImprimirDropdown, setShowImprimirDropdown] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
@@ -1316,9 +1317,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                               setShowImprimirDropdown(!showImprimirDropdown);
                             }}
                             onMouseDown={(e) => e.stopPropagation()}
-                            disabled={selectedContratosItems.length === 0}
+                            disabled={selectedContratosItems.length === 0 || isGeneratingPdf}
                           >
-                            Imprimir
+                            {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
                             <i className="bi bi-chevron-down ms-1"></i>
                           </button>
                           
@@ -1355,6 +1356,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   e.stopPropagation();
                                   setShowImprimirDropdown(false);
                                   if (selectedContratosItems.length > 0) {
+                                    setIsGeneratingPdf(true);
                                     try {
                                       // Buscar o modelo de contrato padrão
                                       const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
@@ -1381,11 +1383,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                                          error?.message || 
                                                          'Erro ao gerar contrato';
                                       showNotification(errorMessage, 'error');
+                                    } finally {
+                                      setIsGeneratingPdf(false);
                                     }
                                   }
                                 }}
                                 style={{ display: 'block', width: '100%', textAlign: 'left' }}
-                                disabled={selectedContratosItems.length === 0}
+                                disabled={selectedContratosItems.length === 0 || isGeneratingPdf}
                               >
                                 Contrato
                               </button>
@@ -1396,6 +1400,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   e.stopPropagation();
                                   setShowImprimirDropdown(false);
                                   if (selectedContratosItems.length > 0) {
+                                    setIsGeneratingPdf(true);
                                     try {
                                       // Buscar o modelo de termo de adesão vinculado ao modelo de contrato
                                       const contratoSelecionado = selectedContratosItems[0];
@@ -1436,11 +1441,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                                          error?.message || 
                                                          'Erro ao gerar termo de adesão';
                                       showNotification(errorMessage, 'error');
+                                    } finally {
+                                      setIsGeneratingPdf(false);
                                     }
                                   }
                                 }}
                                 style={{ display: 'block', width: '100%', textAlign: 'left' }}
-                                disabled={selectedContratosItems.length === 0}
+                                disabled={selectedContratosItems.length === 0 || isGeneratingPdf}
                               >
                                 Termo de Adesão
                               </button>
@@ -1451,6 +1458,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   e.stopPropagation();
                                   setShowImprimirDropdown(false);
                                   if (selectedContratosItems.length > 0) {
+                                    setIsGeneratingPdf(true);
                                     try {
                                       // Buscar o modelo de contrato de permanência vinculado ao modelo de contrato
                                       const contratoSelecionado = selectedContratosItems[0];
@@ -1491,11 +1499,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                                          error?.message || 
                                                          'Erro ao gerar contrato de permanência';
                                       showNotification(errorMessage, 'error');
+                                    } finally {
+                                      setIsGeneratingPdf(false);
                                     }
                                   }
                                 }}
                                 style={{ display: 'block', width: '100%', textAlign: 'left' }}
-                                disabled={selectedContratosItems.length === 0}
+                                disabled={selectedContratosItems.length === 0 || isGeneratingPdf}
                               >
                                 Contrato Permanência
                               </button>
