@@ -1393,17 +1393,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                         if (modelosVinculados.success && modelosVinculados.data) {
                                           console.log('Modelos vinculados:', modelosVinculados.data);
                                           
-                                          // Verificar se data é um array
-                                          const dataArray = Array.isArray(modelosVinculados.data) ? modelosVinculados.data : [];
-                                          
-                                          // Encontrar o modelo de termo de adesão
-                                          const modeloAdesao = dataArray.find((modelo: any) => modelo.tipo === 'adesao');
-                                          
-                                          if (modeloAdesao) {
-                                            // Gerar PDF com dados do cliente
-                                            const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-                                              modeloAdesao.id, 
-                                              clienteId || 0
+                                          // Verificar se existe modelo_termo_adesao
+                                          if (modelosVinculados.data.modelo_termo_adesao) {
+                                            // Gerar PDF com dados do cliente usando o modelo de contrato
+                                            const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
+                                              contratoSelecionado.modelo_contrato_id, 
+                                              clienteId || 0,
+                                              modelosVinculados.data.modelo_termo_adesao
                                             );
                                             
                                             // Criar URL e abrir modal
@@ -1454,17 +1450,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                         if (modelosVinculados.success && modelosVinculados.data) {
                                           console.log('Modelos vinculados:', modelosVinculados.data);
                                           
-                                          // Verificar se data é um array
-                                          const dataArray = Array.isArray(modelosVinculados.data) ? modelosVinculados.data : [];
-                                          
-                                          // Encontrar o modelo de contrato de permanência
-                                          const modeloPermanencia = dataArray.find((modelo: any) => modelo.tipo === 'permanencia');
-                                          
-                                          if (modeloPermanencia) {
-                                            // Gerar PDF com dados do cliente
-                                            const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-                                              modeloPermanencia.id, 
-                                              clienteId || 0
+                                          // Verificar se existe modelo_contrato_permanencia
+                                          if (modelosVinculados.data.modelo_contrato_permanencia) {
+                                            // Gerar PDF com dados do cliente usando o modelo de contrato
+                                            const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
+                                              contratoSelecionado.modelo_contrato_id, 
+                                              clienteId || 0,
+                                              modelosVinculados.data.modelo_contrato_permanencia
                                             );
                                             
                                             // Criar URL e abrir modal
