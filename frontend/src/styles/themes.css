@@ -1556,8 +1556,19 @@ textarea {
   font-size: 14px;
 }
 
-.dropdown-toggle::after {
+/* Ocultar ::after apenas para dropdowns que não são botões (sidebar) */
+.dropdown-toggle:not(.btn)::after {
   display: none !important;
+}
+
+/* Garantir que ícones apareçam em botões dropdown */
+.btn.dropdown-toggle i,
+.btn.dropdown-toggle .bi {
+  display: inline-flex !important;
+  align-items: center;
+  font-size: inherit;
+  line-height: inherit;
+  margin-left: 0.25rem;
 }
 
 .dropdown-toggle:not(.btn):hover {
