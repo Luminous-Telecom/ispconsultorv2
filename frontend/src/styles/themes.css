@@ -340,6 +340,28 @@ body {
   border-color: #dc2626;
 }
 
+.btn-info {
+  background: #3b82f6;
+  color: white;
+  border: 1px solid #3b82f6;
+}
+
+.btn-info:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+  border: 1px solid #f59e0b;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+  border-color: #d97706;
+}
+
 .form-label {
   color: var(--text-primary);
   font-weight: 500;
@@ -369,6 +391,9 @@ body {
   color: var(--text-primary);
   transition: var(--transition);
   font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+  height: auto;
+  line-height: 1.25;
 }
 
 .form-select:focus {
@@ -1424,6 +1449,21 @@ body {
   border-top: 1px solid #4a5568;
 }
 
+/* Padronizar altura de todos os inputs e selects com os botões */
+.form-control,
+.form-control-sm,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+textarea {
+  padding: 0.375rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25 !important;
+}
+
 /* Estilos para modo claro */
 [data-theme="light"] .form-control,
 [data-theme="light"] .form-control:focus,
@@ -1811,7 +1851,10 @@ select,
   background-repeat: no-repeat !important;
   background-position: right 0.75rem center !important;
   background-size: 12px 12px !important;
-  padding-right: 2.5rem !important;
+  padding: 0.375rem 2.5rem 0.375rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25 !important;
+  height: auto !important;
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
   appearance: none !important;
