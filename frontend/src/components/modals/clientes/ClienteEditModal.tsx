@@ -1387,24 +1387,31 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                       const modeloContratoId = contratoSelecionado.modelo_contrato_id;
                                       
                                       if (modeloContratoId) {
-                                        // Buscar o modelo de termo de adesão vinculado ao modelo de contrato
-                                        const modeloAdesao = await DocumentoSistemaService.getByModeloContratoId(modeloContratoId, 'adesao');
+                                        // Buscar todos os modelos vinculados ao modelo de contrato
+                                        const modelosVinculados = await DocumentoSistemaService.getModelosByModeloContrato(modeloContratoId);
                                         
-                                        if (modeloAdesao.success && modeloAdesao.data) {
-                                          // Gerar PDF com dados do cliente
-                                          const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-                                            modeloAdesao.data.id, 
-                                            clienteId || 0
-                                          );
+                                        if (modelosVinculados.success && modelosVinculados.data) {
+                                          // Encontrar o modelo de termo de adesão
+                                          const modeloAdesao = modelosVinculados.data.find((modelo: any) => modelo.tipo === 'adesao');
                                           
-                                          // Criar URL e abrir modal
-                                          const url = window.URL.createObjectURL(pdfBlob);
-                                          setPdfUrl(url);
-                                          setShowImprimirModal(true);
-                                          
-                                          showNotification('Termo de Adesão gerado com sucesso!', 'success');
+                                          if (modeloAdesao) {
+                                            // Gerar PDF com dados do cliente
+                                            const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                                              modeloAdesao.id, 
+                                              clienteId || 0
+                                            );
+                                            
+                                            // Criar URL e abrir modal
+                                            const url = window.URL.createObjectURL(pdfBlob);
+                                            setPdfUrl(url);
+                                            setShowImprimirModal(true);
+                                            
+                                            showNotification('Termo de Adesão gerado com sucesso!', 'success');
+                                          } else {
+                                            showNotification('Nenhum modelo de termo de adesão vinculado a este contrato encontrado.', 'error');
+                                          }
                                         } else {
-                                          showNotification('Nenhum modelo de termo de adesão vinculado a este contrato encontrado.', 'error');
+                                          showNotification('Erro ao buscar modelos vinculados ao contrato.', 'error');
                                         }
                                       } else {
                                         showNotification('Contrato selecionado não possui modelo vinculado.', 'error');
@@ -1436,24 +1443,31 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                       const modeloContratoId = contratoSelecionado.modelo_contrato_id;
                                       
                                       if (modeloContratoId) {
-                                        // Buscar o modelo de contrato de permanência vinculado ao modelo de contrato
-                                        const modeloPermanencia = await DocumentoSistemaService.getByModeloContratoId(modeloContratoId, 'permanencia');
+                                        // Buscar todos os modelos vinculados ao modelo de contrato
+                                        const modelosVinculados = await DocumentoSistemaService.getModelosByModeloContrato(modeloContratoId);
                                         
-                                        if (modeloPermanencia.success && modeloPermanencia.data) {
-                                          // Gerar PDF com dados do cliente
-                                          const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-                                            modeloPermanencia.data.id, 
-                                            clienteId || 0
-                                          );
+                                        if (modelosVinculados.success && modelosVinculados.data) {
+                                          // Encontrar o modelo de contrato de permanência
+                                          const modeloPermanencia = modelosVinculados.data.find((modelo: any) => modelo.tipo === 'permanencia');
                                           
-                                          // Criar URL e abrir modal
-                                          const url = window.URL.createObjectURL(pdfBlob);
-                                          setPdfUrl(url);
-                                          setShowImprimirModal(true);
-                                          
-                                          showNotification('Contrato de Permanência gerado com sucesso!', 'success');
+                                          if (modeloPermanencia) {
+                                            // Gerar PDF com dados do cliente
+                                            const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                                              modeloPermanencia.id, 
+                                              clienteId || 0
+                                            );
+                                            
+                                            // Criar URL e abrir modal
+                                            const url = window.URL.createObjectURL(pdfBlob);
+                                            setPdfUrl(url);
+                                            setShowImprimirModal(true);
+                                            
+                                            showNotification('Contrato de Permanência gerado com sucesso!', 'success');
+                                          } else {
+                                            showNotification('Nenhum modelo de contrato de permanência vinculado a este contrato encontrado.', 'error');
+                                          }
                                         } else {
-                                          showNotification('Nenhum modelo de contrato de permanência vinculado a este contrato encontrado.', 'error');
+                                          showNotification('Erro ao buscar modelos vinculados ao contrato.', 'error');
                                         }
                                       } else {
                                         showNotification('Contrato selecionado não possui modelo vinculado.', 'error');
