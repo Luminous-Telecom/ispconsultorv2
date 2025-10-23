@@ -1530,7 +1530,7 @@ textarea {
   position: relative;
 }
 
-.dropdown-toggle {
+.dropdown-toggle:not(.btn) {
   position: relative;
   display: flex;
   align-items: center;
@@ -1543,12 +1543,10 @@ textarea {
   font-size: 0.75rem;
   transition: var(--transition);
   cursor: pointer;
-  /* Garante espaçamento correto entre ícone e texto */
   gap: 0.5rem;
 }
 
-.dropdown-toggle i {
-  /* Força o ícone a manter seu tamanho e posição */
+.dropdown-toggle:not(.btn) i {
   width: 16px;
   height: 16px;
   display: inline-flex;
@@ -1558,17 +1556,16 @@ textarea {
   font-size: 14px;
 }
 
-
 .dropdown-toggle::after {
   display: none !important;
 }
 
-.dropdown-toggle:hover {
+.dropdown-toggle:not(.btn):hover {
   background: var(--sidebar-hover) !important;
   color: var(--sidebar-text) !important;
 }
 
-.dropdown-toggle.active {
+.dropdown-toggle:not(.btn).active {
   background: var(--sidebar-active) !important;
   color: #ffffff !important;
 }
