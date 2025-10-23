@@ -31,6 +31,7 @@ export const createImprimirDropdown = ({
 
   return {
     label: 'Imprimir',
+    variant: 'success',
     dropdown: [
       {
         label: `Imprimir Selecionados (${selectedItems.length})`,

@@ -408,6 +408,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       label: 'Imprimir',
+      variant: 'success',
       dropdown: [
         {
           label: `Imprimir Selecionados (${selectedItems.length})`,
