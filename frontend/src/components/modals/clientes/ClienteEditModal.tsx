@@ -1309,7 +1309,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <div className="dropdown" style={{ position: 'relative' }}>
                           <button
                             type="button"
-                            className="btn btn-sm btn-primary dropdown-toggle"
+                            className="btn btn-sm btn-success dropdown-toggle"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -1318,6 +1318,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             onMouseDown={(e) => e.stopPropagation()}
                           >
                             Imprimir
+                            <i className="bi bi-chevron-down ms-1"></i>
                           </button>
                           {showImprimirDropdown && (
                             <div 
