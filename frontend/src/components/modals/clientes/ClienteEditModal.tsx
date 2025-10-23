@@ -1316,6 +1316,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                               setShowImprimirDropdown(!showImprimirDropdown);
                             }}
                             onMouseDown={(e) => e.stopPropagation()}
+                            disabled={selectedContratosItems.length === 0}
                           >
                             Imprimir
                             <i className="bi bi-chevron-down ms-1"></i>
@@ -1338,35 +1339,38 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   e.preventDefault();
                                   e.stopPropagation();
                                   setShowImprimirDropdown(false);
-                                  try {
-                                    // Buscar o modelo de contrato padrão
-                                    const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
-                                    
-                                    if (modeloContrato.success && modeloContrato.data) {
-                                      // Gerar PDF com dados do cliente
-                                      const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-                                        modeloContrato.data.id, 
-                                        clienteId || 0
-                                      );
+                                  if (selectedContratosItems.length > 0) {
+                                    try {
+                                      // Buscar o modelo de contrato padrão
+                                      const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
                                       
-                                      // Criar URL e abrir modal
-                                      const url = window.URL.createObjectURL(pdfBlob);
-                                      setPdfUrl(url);
-                                      setShowImprimirModal(true);
-                                      
-                                      showNotification('Contrato gerado com sucesso!', 'success');
-                                    } else {
-                                      showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
+                                      if (modeloContrato.success && modeloContrato.data) {
+                                        // Gerar PDF com dados do cliente
+                                        const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                                          modeloContrato.data.id, 
+                                          clienteId || 0
+                                        );
+                                        
+                                        // Criar URL e abrir modal
+                                        const url = window.URL.createObjectURL(pdfBlob);
+                                        setPdfUrl(url);
+                                        setShowImprimirModal(true);
+                                        
+                                        showNotification('Contrato gerado com sucesso!', 'success');
+                                      } else {
+                                        showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
+                                      }
+                                    } catch (error: any) {
+                                      console.error('Erro ao gerar contrato:', error);
+                                      const errorMessage = error?.response?.data?.message || 
+                                                         error?.message || 
+                                                         'Erro ao gerar contrato';
+                                      showNotification(errorMessage, 'error');
                                     }
-                                  } catch (error: any) {
-                                    console.error('Erro ao gerar contrato:', error);
-                                    const errorMessage = error?.response?.data?.message || 
-                                                       error?.message || 
-                                                       'Erro ao gerar contrato';
-                                    showNotification(errorMessage, 'error');
                                   }
                                 }}
                                 style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                                disabled={selectedContratosItems.length === 0}
                               >
                                 Contrato
                               </button>
@@ -1376,35 +1380,38 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   e.preventDefault();
                                   e.stopPropagation();
                                   setShowImprimirDropdown(false);
-                                  try {
-                                    // Buscar o modelo de termo de adesão
-                                    const modeloAdesao = await DocumentoSistemaService.getDefaultByType('adesao');
-                                    
-                                    if (modeloAdesao.success && modeloAdesao.data) {
-                                      // Gerar PDF com dados do cliente
-                                      const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-                                        modeloAdesao.data.id, 
-                                        clienteId || 0
-                                      );
+                                  if (selectedContratosItems.length > 0) {
+                                    try {
+                                      // Buscar o modelo de termo de adesão
+                                      const modeloAdesao = await DocumentoSistemaService.getDefaultByType('adesao');
                                       
-                                      // Criar URL e abrir modal
-                                      const url = window.URL.createObjectURL(pdfBlob);
-                                      setPdfUrl(url);
-                                      setShowImprimirModal(true);
-                                      
-                                      showNotification('Termo de Adesão gerado com sucesso!', 'success');
-                                    } else {
-                                      showNotification('Nenhum modelo de termo de adesão encontrado. Cadastre um modelo primeiro.', 'error');
+                                      if (modeloAdesao.success && modeloAdesao.data) {
+                                        // Gerar PDF com dados do cliente
+                                        const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                                          modeloAdesao.data.id, 
+                                          clienteId || 0
+                                        );
+                                        
+                                        // Criar URL e abrir modal
+                                        const url = window.URL.createObjectURL(pdfBlob);
+                                        setPdfUrl(url);
+                                        setShowImprimirModal(true);
+                                        
+                                        showNotification('Termo de Adesão gerado com sucesso!', 'success');
+                                      } else {
+                                        showNotification('Nenhum modelo de termo de adesão encontrado. Cadastre um modelo primeiro.', 'error');
+                                      }
+                                    } catch (error: any) {
+                                      console.error('Erro ao gerar termo de adesão:', error);
+                                      const errorMessage = error?.response?.data?.message || 
+                                                         error?.message || 
+                                                         'Erro ao gerar termo de adesão';
+                                      showNotification(errorMessage, 'error');
                                     }
-                                  } catch (error: any) {
-                                    console.error('Erro ao gerar termo de adesão:', error);
-                                    const errorMessage = error?.response?.data?.message || 
-                                                       error?.message || 
-                                                       'Erro ao gerar termo de adesão';
-                                    showNotification(errorMessage, 'error');
                                   }
                                 }}
                                 style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                                disabled={selectedContratosItems.length === 0}
                               >
                                 Termo de Adesão
                               </button>
@@ -1414,35 +1421,38 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                                   e.preventDefault();
                                   e.stopPropagation();
                                   setShowImprimirDropdown(false);
-                                  try {
-                                    // Buscar o modelo de contrato de permanência
-                                    const modeloPermanencia = await DocumentoSistemaService.getDefaultByType('permanencia');
-                                    
-                                    if (modeloPermanencia.success && modeloPermanencia.data) {
-                                      // Gerar PDF com dados do cliente
-                                      const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-                                        modeloPermanencia.data.id, 
-                                        clienteId || 0
-                                      );
+                                  if (selectedContratosItems.length > 0) {
+                                    try {
+                                      // Buscar o modelo de contrato de permanência
+                                      const modeloPermanencia = await DocumentoSistemaService.getDefaultByType('permanencia');
                                       
-                                      // Criar URL e abrir modal
-                                      const url = window.URL.createObjectURL(pdfBlob);
-                                      setPdfUrl(url);
-                                      setShowImprimirModal(true);
-                                      
-                                      showNotification('Contrato de Permanência gerado com sucesso!', 'success');
-                                    } else {
-                                      showNotification('Nenhum modelo de contrato de permanência encontrado. Cadastre um modelo primeiro.', 'error');
+                                      if (modeloPermanencia.success && modeloPermanencia.data) {
+                                        // Gerar PDF com dados do cliente
+                                        const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                                          modeloPermanencia.data.id, 
+                                          clienteId || 0
+                                        );
+                                        
+                                        // Criar URL e abrir modal
+                                        const url = window.URL.createObjectURL(pdfBlob);
+                                        setPdfUrl(url);
+                                        setShowImprimirModal(true);
+                                        
+                                        showNotification('Contrato de Permanência gerado com sucesso!', 'success');
+                                      } else {
+                                        showNotification('Nenhum modelo de contrato de permanência encontrado. Cadastre um modelo primeiro.', 'error');
+                                      }
+                                    } catch (error: any) {
+                                      console.error('Erro ao gerar contrato de permanência:', error);
+                                      const errorMessage = error?.response?.data?.message || 
+                                                         error?.message || 
+                                                         'Erro ao gerar contrato de permanência';
+                                      showNotification(errorMessage, 'error');
                                     }
-                                  } catch (error: any) {
-                                    console.error('Erro ao gerar contrato de permanência:', error);
-                                    const errorMessage = error?.response?.data?.message || 
-                                                       error?.message || 
-                                                       'Erro ao gerar contrato de permanência';
-                                    showNotification(errorMessage, 'error');
                                   }
                                 }}
                                 style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                                disabled={selectedContratosItems.length === 0}
                               >
                                 Contrato Permanência
                               </button>
