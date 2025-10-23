@@ -253,8 +253,6 @@ body {
   padding: 1rem;
 }
 
-/* Card hover removido para evitar efeitos visuais */
-
 .card-header h1,
 .card-header h2,
 .card-header h3,
@@ -285,7 +283,6 @@ body {
 }
 
 .btn:hover {
-  transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
 
@@ -342,34 +339,6 @@ body {
   background: #dc2626;
   border-color: #dc2626;
 }
-
-/* Formulários modernos - removido para evitar conflito com temas */
-/* .form-control {
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  transition: var(--transition);
-  font-size: 0.875rem;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
-  outline: none;
-  background: var(--bg-secondary);
-}
-
-.form-control::placeholder {
-  color: var(--text-muted);
-}
-
-.form-control:disabled {
-  background: var(--bg-tertiary);
-  color: var(--text-muted);
-  cursor: not-allowed;
-} */
 
 .form-label {
   color: var(--text-primary);
@@ -1014,8 +983,6 @@ body {
   font-size: 0.875rem;
 }
 
-/* Removido hover da tabela */
-
 /* Modo Escuro */
 [data-theme="dark"] .metric-card,
 [data-theme="dark"] .revenue-card,
@@ -1318,25 +1285,6 @@ body {
   color: var(--text-primary) !important;
 }
 
-/* Regras duplicadas removidas - usando apenas as regras baseadas em variáveis CSS */
-
-.btn {
-  border-radius: 6px !important;
-  font-weight: 500 !important;
-  border: 1px solid transparent !important;
-}
-
-.btn-sm {
-  border-radius: 4px !important;
-  font-weight: 500 !important;
-  padding: 0.375rem 0.75rem !important;
-}
-
-/* Badges limpos */
-.badge {
-  border-radius: 4px !important;
-  font-weight: 500 !important;
-}
 
 /* Estilos para abas de navegação - modo claro */
 [data-theme="light"] .nav-tabs {
@@ -1734,19 +1682,18 @@ body {
   border-color: transparent transparent var(--border-color);
 }
 
-/* CKEditor - Apenas o essencial */
-/* ========================================
-   CKEDITOR - ESTILOS COMPLETOS E ORGANIZADOS
-   ======================================== */
-
-/* Ocultar elementos de debug */
+/* CKEditor - Isolamento completo */
 .ck-inspector-wrapper {
   display: none !important;
 }
 
-/* ========================================
-   EDITOR PRINCIPAL - RESPONSIVO E INTEGRADO
-   ======================================== */
+/* Resetar interferências em botões do CKEditor */
+.ck-editor *,
+.ck-toolbar *,
+[class*="ck-"] {
+  transform: none !important;
+}
+
 .ckeditor-wrapper .ck-editor__editable {
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
@@ -1763,18 +1710,11 @@ body {
   outline: 0 !important;
 }
 
-/* ========================================
-   CONTAINER DA ÁREA SOURCE - TOTALMENTE FLEXÍVEL
-   ======================================== */
 .ckeditor-wrapper .ck-source-editing-area {
   height: auto !important;
   min-height: auto !important;
   max-height: none !important;
 }
-
-/* ========================================
-   ÁREA DE EDIÇÃO SOURCE - INTEGRADA AO SISTEMA
-   ======================================== */
 .ckeditor-wrapper .ck-source-editing-area textarea {
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
@@ -1798,9 +1738,6 @@ body {
   outline: 0 !important;
 }
 
-/* ========================================
-   CONTEÚDO DO EDITOR - INTEGRADO AO SISTEMA
-   ======================================== */
 .ckeditor-wrapper .ck-content {
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
@@ -1812,9 +1749,6 @@ body {
   max-width: 100% !important;
 }
 
-/* ========================================
-   TABELAS - INTEGRADAS AO SISTEMA
-   ======================================== */
 .ckeditor-wrapper .ck-content table {
   background-color: var(--bg-primary) !important;
   border-collapse: collapse !important;
@@ -1850,385 +1784,23 @@ body {
   background-color: var(--bg-tertiary) !important;
 }
 
-
-
-/* Barra de ferramentas flutuante */
 .ck.ck-balloon-panel {
   z-index: 99999;
   position: fixed;
 }
 
-
-/* Rich Text Editor - Isolamento completo e robusto */
-.rich-text-editor {
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  overflow: hidden;
-  /* Suporte a ocupar a altura do contêiner */
-  flex-direction: column;
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-primary);
-  background-color: var(--bg-secondary);
-  /* Container isolation */
-  contain: content;
-  /* Previne vazamento de estilos */
-  isolation: isolate;
-  /* Garante que o editor não interfira com outros elementos */
-  position: relative;
-  z-index: auto;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.rte-toolbar {
-  background-color: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
-  padding: 6px 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  flex: 0 0 auto;
-}
-
-.rte-toolbar .btn {
-  font-size: 0.85rem;
-  padding: 2px 8px;
-  border-color: var(--border-color);
-  color: var(--text-secondary);
-}
-
-.rte-toolbar .btn:hover {
-  background-color: rgba(77, 171, 247, 0.1);
-  border-color: #4dabf7;
-  color: var(--text-primary);
-}
-
-.rte-content {
-  background-color: white;
-  color: #000000 !important;
-  padding: 12px;
-  font-size: 14px;
-  line-height: 1.6;
-  outline: none;
-  /* Ocupar o restante do espaço disponível */
-  flex: 1 1 auto;
-  min-height: 0;
-  /* Estilos básicos sem reset agressivo */
-  display: block !important;
-  box-sizing: border-box;
-  font-family: inherit;
-  white-space: normal;
-  /* Garante que não afete elementos externos */
-  position: relative;
-  /* Previne vazamento de estilos */
-  overflow: auto;
-  resize: vertical; /* permite ajustar altura no modo visual */
-  /* Garante que conteúdo grande seja visível */
-  max-height: none;
-  height: auto;
-  min-height: 200px;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.rte-content:empty:before {
-  content: attr(data-placeholder);
-  color: var(--text-secondary);
-  opacity: 0.6;
-}
-
-/* Textarea para modo código */
-.rte-code {
-  width: 100%;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  border: none;
-  padding: 12px;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  min-height: 400px; /* altura mínima padrão para melhor usabilidade */
-  resize: vertical; /* Redimensiona altura (experiência consistente) */
-  outline: none;
-  white-space: pre-wrap; /* permite quebrar linhas longas para exibir todo o conteúdo */
-  word-break: break-word; /* quebra palavras muito longas */
-  overflow-wrap: anywhere; /* quebra em qualquer ponto se necessário */
-  overflow: auto; /* Scroll nos dois eixos quando necessário */
-  /* Permite ocupar o restante do espaço disponível quando o contêiner tem altura */
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.rte-code::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.6;
-}
-
-.rte-content h1 {
-  font-size: 2em;
-  margin: 0.67em 0;
-}
-
-.rte-content h2 {
-  font-size: 1.5em;
-  margin: 0.75em 0;
-}
-
-.rte-content h3 {
-  font-size: 1.17em;
-  margin: 0.83em 0;
-}
-
-.rte-content p {
-  margin: 1em 0;
-}
-
-.rte-content ul,
-.rte-content ol {
-  margin: 1em 0;
-  padding-left: 40px;
-}
-
-.rte-content li {
-  margin: 0.5em 0;
-}
-
-/* Reset seletivo para não quebrar estrutura básica */
-.rte-content * {
-  box-sizing: border-box;
-  color: #000000 !important;
-  font-family: inherit;
-}
-
-/* Garante que todos os elementos sejam visíveis */
-.rte-content div,
-.rte-content p,
-.rte-content span,
-.rte-content h1,
-.rte-content h2,
-.rte-content h3,
-.rte-content h4,
-.rte-content h5,
-.rte-content h6 {
-  display: block !important;
-  color: #000000 !important;
-}
-
-/* Reaplica estilos básicos apenas para elementos específicos */
-.rte-content h1,
-.rte-content h2,
-.rte-content h3,
-.rte-content h4,
-.rte-content h5,
-.rte-content h6 {
-  display: block;
-  font-weight: bold;
-  margin: 0.5em 0;
-  font-family: inherit;
-}
-
-.rte-content h1 { font-size: 2em; }
-.rte-content h2 { font-size: 1.5em; }
-.rte-content h3 { font-size: 1.17em; }
-.rte-content h4 { font-size: 1em; }
-.rte-content h5 { font-size: 0.83em; }
-.rte-content h6 { font-size: 0.67em; }
-
-.rte-content p {
-  display: block;
-  margin: 1em 0;
-  font-family: inherit;
-}
-
-.rte-content ul,
-.rte-content ol {
-  display: block;
-  margin: 1em 0;
-  padding-left: 40px;
-  font-family: inherit;
-}
-
-.rte-content li {
-  display: list-item;
-  margin: 0.5em 0;
-  font-family: inherit;
-}
-
-.rte-content strong,
-.rte-content b {
-  font-weight: bold;
-  font-family: inherit;
-}
-
-.rte-content em,
-.rte-content i {
-  font-style: italic;
-  font-family: inherit;
-}
-
-.rte-content u {
-  text-decoration: underline;
-  font-family: inherit;
-}
-
-.rte-content br {
-  display: block;
-  margin: 0.5em 0;
-  line-height: 1;
-}
-
-.rte-content span {
-  font-family: inherit;
-  color: inherit;
-  background: inherit;
-}
-
-/* Tabelas padrão (para conteúdo importado de Word/HTML) */
-.rte-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.5rem 0;
-}
-
-.rte-content th,
-.rte-content td {
-  border: 1px solid var(--border-color);
-  padding: 6px 8px;
-  vertical-align: top;
-}
-
-.rte-content th {
-  background: var(--bg-tertiary);
-  font-weight: 600;
-}
-
-/* Imagens nunca ultrapassam o editor */
-.rte-content img {
-  max-width: 100% !important;
-  height: auto !important;
-  display: block !important;
-  /* Garante que imagens base64 sejam exibidas corretamente */
-  object-fit: contain;
-  vertical-align: top;
-  margin: 0 auto;
-}
-
-/* Garante que divs aninhados sejam exibidos corretamente */
-.rte-content div {
-  display: block;
-}
-
-/* Controle de tamanho das imagens no CKEditor - TAMANHOS REDUZIDOS */
 .ckeditor-wrapper .ck-content img {
-  max-width: 200px !important; /* Reduzido de 100% para 200px */
+  max-width: 200px !important;
+  max-height: 120px !important;
   height: auto !important;
   display: block !important;
   margin: 5px auto !important;
   object-fit: contain !important;
-  max-height: 120px !important; /* Reduzido de 300px para 120px */
 }
 
-/* Imagens específicas do CKEditor com dimensões inline */
-.ckeditor-wrapper .ck-content img[width],
-.ckeditor-wrapper .ck-content img[style*="width"] {
-  max-width: 200px !important;
-  height: auto !important;
-}
-
-/* Imagens muito grandes - forçar redimensionamento menor */
-.ckeditor-wrapper .ck-content img[width="129px"],
-.ckeditor-wrapper .ck-content img[style*="width:129px"] {
-  width: 60px !important; /* Reduzido de 80px para 60px */
-  height: auto !important;
-}
-
-/* Imagens base64 específicas - tamanhos menores */
 .ckeditor-wrapper .ck-content img[src^="data:image"] {
-  max-width: 100px !important; /* Reduzido de 150px para 100px */
-  max-height: 100px !important; /* Reduzido de 150px para 100px */
-  width: auto !important;
-  height: auto !important;
-}
-
-/* Qualquer imagem dentro do editor - limite geral */
-.ckeditor-wrapper .ck-content img {
-  max-width: 200px !important;
-  max-height: 120px !important;
-  width: auto !important;
-  height: auto !important;
-}
-
-
-/* Links visíveis e seguros */
-.rte-content a {
-  color: #0d6efd;
-  text-decoration: underline;
-}
-
-[data-theme="dark"] .rte-content a {
-  color: #66b0ff;
-}
-
-/* Código/Pré-formatado */
-.rte-content pre,
-.rte-content code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-.rte-content pre {
-  background: rgba(0,0,0,0.05);
-  padding: 8px;
-  border-radius: 4px;
-  overflow: auto;
-}
-
-[data-theme="dark"] .rte-content pre {
-  background: rgba(255,255,255,0.08);
-}
-
-/* Citações */
-.rte-content blockquote {
-  border-left: 3px solid var(--border-color);
-  margin: 0.5rem 0;
-  padding: 0.25rem 0.75rem;
-  color: var(--text-secondary);
-}
-
-/* Previne que estilos inline sobrescrevam */
-/* Neutraliza apenas propriedades críticas; text-align permitido via sanitização */
-.rte-content [style] {
-  position: static !important;
-  z-index: auto !important;
-  transform: none !important;
-  filter: none !important;
-  box-shadow: none !important;
-}
-
-/* Modo claro */
-[data-theme="light"] .rte-toolbar {
-  background-color: #f8f9fa;
-}
-
-[data-theme="light"] .rte-content {
-  background-color: #ffffff;
-  color: #000000;
-}
-
-[data-theme="light"] .rte-content:empty:before {
-  color: #6c757d;
-}
-
-[data-theme="light"] .rte-toolbar .btn {
-  color: #495057;
-  border-color: #ced4da;
-}
-
-[data-theme="light"] .rte-code {
-  background-color: #ffffff;
-  color: #000000;
+  max-width: 100px !important;
+  max-height: 100px !important;
 }
 
 /* Estilos padronizados para todos os selects */
