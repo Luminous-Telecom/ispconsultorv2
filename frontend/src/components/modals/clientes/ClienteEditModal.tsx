@@ -409,7 +409,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       label: 'Imprimir',
-      variant: 'success',
+      variant: 'primary',
       dropdown: [
         {
           label: `Imprimir Selecionados (${selectedItems.length})`,
@@ -1309,7 +1309,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         <div className="dropdown" style={{ position: 'relative' }}>
                           <button
                             type="button"
-                            className="btn btn-sm btn-success dropdown-toggle"
+                            className="btn btn-sm btn-primary dropdown-toggle"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();

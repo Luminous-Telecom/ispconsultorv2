@@ -8,7 +8,7 @@ interface ImprimirDropdownConfig {
 
 interface ImprimirDropdownReturn {
   label: string;
-  variant: 'success';
+  variant: 'primary';
   dropdown: {
     label: string;
     action: () => void;
@@ -40,7 +40,7 @@ export const createImprimirDropdown = ({
 
   return {
     label: 'Imprimir',
-    variant: 'success',
+    variant: 'primary',
     dropdown: [
       {
         label: `Imprimir Selecionados (${selectedItems.length})`,

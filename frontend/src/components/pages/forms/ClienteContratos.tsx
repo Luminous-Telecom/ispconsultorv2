@@ -224,7 +224,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
           },
           {
             label: 'Imprimir',
-            variant: 'success',
+            variant: 'primary',
             dropdown: [
               {
                 label: `Imprimir Selecionados (${selectedItems.length})`,

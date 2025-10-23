@@ -1568,13 +1568,20 @@ button.dropdown-toggle i,
 button.dropdown-toggle .bi,
 .bi-chevron-down {
   display: inline-flex !important;
-  align-items: center;
+  align-items: center !important;
+  justify-content: center !important;
   font-size: inherit !important;
-  line-height: inherit !important;
+  line-height: 1 !important;
   margin-left: 0.25rem !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
   visibility: visible !important;
   opacity: 1 !important;
   color: inherit !important;
+  height: auto !important;
+  width: auto !important;
 }
 
 /* Regra específica para garantir que ícones apareçam em todos os contextos */
@@ -1582,11 +1589,20 @@ button.dropdown-toggle .bi,
 button.dropdown-toggle .bi-chevron-down,
 [class*="btn"].dropdown-toggle .bi-chevron-down {
   display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   visibility: visible !important;
   opacity: 1 !important;
   color: inherit !important;
   font-size: 0.875rem !important;
   margin-left: 0.25rem !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+  height: auto !important;
+  width: auto !important;
 }
 
 .dropdown-toggle:not(.btn):hover {

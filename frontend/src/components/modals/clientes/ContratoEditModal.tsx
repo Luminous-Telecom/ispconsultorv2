@@ -371,7 +371,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     },
     {
       label: 'Imprimir',
-      variant: 'success',
+      variant: 'primary',
       dropdown: [
         {
           label: `Imprimir Selecionados (${selectedItems.length})`,
