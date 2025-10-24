@@ -1005,7 +1005,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               size="md"
               value={formData.dia_vencimento}
               onChange={(e: any) => handleInputChange('dia_vencimento', parseInt(e.value))}
-              error={errors.dia_vencimento}
+              error={errors.dia_vencimento?.toString()}
               isInvalid={!!errors.dia_vencimento}
               min={1}
               max={31}
@@ -1042,7 +1042,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               size="md"
               value={formData.desconto_percentual}
               onChange={(e: any) => handleInputChange('desconto_percentual', parseFloat(e.value) || 0)}
-              error={errors.desconto_percentual}
+              error={errors.desconto_percentual?.toString()}
               isInvalid={!!errors.desconto_percentual}
               min={0}
               max={100}
@@ -1060,7 +1060,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               size="md"
               value={formData.desconto_valor}
               onChange={(e: any) => handleInputChange('desconto_valor', parseFloat(e.value) || 0)}
-              error={errors.desconto_valor}
+              error={errors.desconto_valor?.toString()}
               isInvalid={!!errors.desconto_valor}
               min={0}
               step={0.01}
