@@ -138,26 +138,6 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         </div>
       )
     },
-    // Coluna específica para termos
-    ...(activeTab === 'termo' ? [{
-      key: 'tipo_termo',
-      label: 'Tipo',
-      sortable: true,
-      render: (item: DocumentoUnion) => {
-        const termo = item as ModeloTermo;
-        const tipoLabels: { [key: string]: string } = {
-          'adesao': 'Adesão',
-          'permanencia': 'Permanência',
-          'cancelamento': 'Cancelamento',
-          'alteracao': 'Alteração'
-        };
-        return (
-          <span className="badge bg-info">
-            {tipoLabels[termo.tipo_termo] || termo.tipo_termo}
-          </span>
-        );
-      }
-    }] : []),
     {
       key: 'ativo',
       label: 'Status',
