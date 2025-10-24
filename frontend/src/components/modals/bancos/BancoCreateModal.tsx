@@ -467,8 +467,16 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
       <div className="mb-4">
         <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
         <Form
+          key={`banco-form-${formData.nome}-${formData.codigo}`}
           config={bancoFormConfig}
-          initialValues={formData}
+          initialValues={{
+            nome: formData.nome,
+            codigo: formData.codigo,
+            descricao: formData.descricao,
+            tipo_banco: formData.tipo_banco,
+            ativo: formData.ativo,
+            sandbox: formData.sandbox
+          }}
           onSubmit={(data) => {
             // Atualizar apenas os campos principais
             handleInputChange('nome', data.nome);

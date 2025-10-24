@@ -390,6 +390,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
       }
     >
       <Form
+        key={`cliente-create-${formData.cnpj}-${formData.razao_social}`}
         config={formConfig}
         initialValues={formData}
         onSubmit={(data) => {
