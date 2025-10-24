@@ -6,7 +6,7 @@ interface SelectProps extends BaseComponentProps, ValidationProps, TooltipProps 
   value?: string | number;
   defaultValue?: string | number;
   name?: string;
-  onChange?: (event: ChangeEvent) => void;
+  onChange?: (event: ChangeEvent<string | string[]>) => void;
   onBlur?: (event: React.FocusEvent<HTMLSelectElement>) => void;
   onFocus?: (event: React.FocusEvent<HTMLSelectElement>) => void;
   options: SelectOption[];

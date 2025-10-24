@@ -39,6 +39,12 @@ interface FormFieldProps extends BaseComponentProps, ValidationProps, TooltipPro
   inline?: boolean;
   switch?: boolean;
   indeterminate?: boolean;
+  // Props adicionais para compatibilidade
+  error?: string;
+  icon?: string;
+  iconPosition?: 'left' | 'right';
+  iconSize?: 'sm' | 'md' | 'lg';
+  isInvalid?: boolean;
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -83,6 +89,11 @@ const FormField: React.FC<FormFieldProps> = ({
   tooltipPosition = 'top',
   id,
   'data-testid': dataTestId,
+  // Props adicionais
+  error,
+  icon,
+  iconPosition = 'left',
+  iconSize = 'md',
 }) => {
   // Gerar ID único se não fornecido
   const fieldId = id || `field-${name}`;
@@ -140,9 +151,9 @@ const FormField: React.FC<FormFieldProps> = ({
       disabled,
       size,
       className,
-      isValid,
-      isInvalid,
-      validationMessage,
+      isValid: isValid || (!error && !isInvalid),
+      isInvalid: isInvalid || !!error,
+      validationMessage: validationMessage || error,
       validationStatus,
       tooltip,
       tooltipPosition,
@@ -215,6 +226,9 @@ const FormField: React.FC<FormFieldProps> = ({
             autoComplete={autoComplete}
             autoFocus={autoFocus}
             readOnly={readOnly}
+            icon={icon}
+            iconPosition={iconPosition}
+            iconSize={iconSize}
           />
         );
     }

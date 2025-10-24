@@ -50,7 +50,7 @@ export interface SelectOption {
 }
 
 // Interface para eventos de mudança
-export interface ChangeEvent<T = string> {
+export interface ChangeEvent<T = string | string[]> {
   value: T;
   name?: string;
   event?: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>;
