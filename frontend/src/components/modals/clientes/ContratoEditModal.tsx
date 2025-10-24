@@ -2067,23 +2067,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             </table>
           </div>
           
-          {termoSelecionado && (
-            <div className="mt-3">
-              <h6>Conteúdo do Termo Selecionado:</h6>
-              <div 
-                className="border rounded p-3" 
-                style={{ 
-                  maxHeight: '200px', 
-                  overflowY: 'auto',
-                  backgroundColor: 'var(--bg-secondary)',
-                  fontSize: '0.875rem'
-                }}
-                dangerouslySetInnerHTML={{ 
-                  __html: termoSelecionado.conteudo || 'Nenhum conteúdo disponível' 
-                }}
-              />
-            </div>
-          )}
         </div>
       </DraggableModal>
     </DraggableModal>
