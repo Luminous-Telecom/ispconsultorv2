@@ -9,8 +9,8 @@ router.get('/:id', ModeloTermoController.getById);
 router.post('/', ModeloTermoController.create);
 router.put('/:id', ModeloTermoController.update);
 router.delete('/:id', ModeloTermoController.delete);
+router.post('/:id/pdf/contrato/:contratoId', ModeloTermoController.generatePdfWithContrato);
 router.get('/:id/pdf', ModeloTermoController.generatePdf);
 router.post('/:id/pdf/test', ModeloTermoController.generateTestPdf);
-router.post('/:id/pdf/contrato/:contratoId', ModeloTermoController.generatePdfWithContrato);
 
 export default router;
