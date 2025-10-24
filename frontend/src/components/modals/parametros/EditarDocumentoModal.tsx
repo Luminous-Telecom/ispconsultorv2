@@ -5,17 +5,18 @@ import ImprimirModal from '../../common/ImprimirModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import ModeloReciboService, { ModeloRecibo } from '../../../services/modeloReciboService';
 import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaService';
+import ModeloTermoService, { ModeloTermo } from '../../../services/modeloTermoService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ClienteService } from '../../../services/clienteService';
 
-type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta;
+type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta | ModeloTermo;
 
 interface EditarDocumentoModalProps {
   show: boolean;
   onClose: () => void;
   documento: DocumentoUnion | null;
-  tipo: 'contrato' | 'recibo' | 'carta_cobranca';
+  tipo: 'contrato' | 'recibo' | 'carta_cobranca' | 'termo';
   onSuccess?: () => void;
 }
 
@@ -37,6 +38,17 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
 
   const queryClient = useQueryClient();
   const { addNotification} = useNotificationContext();
+
+  // Função para obter o label do tipo
+  const getTipoLabel = (tipo: string) => {
+    const labels = {
+      contrato: 'Contrato',
+      recibo: 'Recibo',
+      carta_cobranca: 'Carta de Cobrança',
+      termo: 'Termo',
+    };
+    return labels[tipo as keyof typeof labels] || 'Documento';
+  };
 
   // Buscar lista de clientes para teste
   const { data: clientesData } = useQuery({
@@ -144,6 +156,8 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
           return ModeloReciboService.update(documento!.id, data);
         case 'carta_cobranca':
           return ModeloCartaService.update(documento!.id, data);
+        case 'termo':
+          return ModeloTermoService.update(documento!.id, data);
         default:
           return DocumentoSistemaService.update(documento!.id, data);
       }
@@ -303,6 +317,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
 
   const handleClose = () => {
     handleReset();
+    setClienteTesteId(0); // Limpar cliente selecionado
     // Limpa a URL do PDF
     if (pdfUrl) {
       window.URL.revokeObjectURL(pdfUrl);
@@ -348,6 +363,9 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
           case 'carta_cobranca':
             pdfBlob = await ModeloCartaService.generateTestPdf(documento.id, clienteTesteId);
             break;
+          case 'termo':
+            pdfBlob = await ModeloTermoService.generateTestPdf(documento.id, clienteTesteId);
+            break;
           default:
             pdfBlob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
         }
@@ -369,6 +387,9 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
             break;
           case 'carta_cobranca':
             pdfBlob = await ModeloCartaService.generatePdf(documento.id);
+            break;
+          case 'termo':
+            pdfBlob = await ModeloTermoService.generatePdf(documento.id);
             break;
           default:
             pdfBlob = await DocumentoSistemaService.generatePdf(documento.id);
@@ -533,7 +554,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
                 disabled={isGeneratingPdf}
                 style={{ display: 'block', width: '100%', textAlign: 'left' }}
               >
-                {tipo === 'recibo' ? 'Recibo' : tipo === 'carta_cobranca' ? 'Carta de Cobrança' : 'Documento'}
+                {tipo === 'recibo' ? 'Recibo' : tipo === 'carta_cobranca' ? 'Carta de Cobrança' : tipo === 'termo' ? 'Termo' : 'Documento'}
               </button>
             )}
           </div>
@@ -562,7 +583,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       <DraggableModal
         show={show}
         onClose={handleClose}
-        title={`Editar ${documento.nome}`}
+        title={`Editar ${getTipoLabel(tipo)}`}
         size="xl"
         headerActions={headerActions}
       >

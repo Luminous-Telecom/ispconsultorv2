@@ -322,6 +322,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
   const handleClose = () => {
     handleReset();
+    setClienteTesteId(0); // Limpar cliente selecionado
     onClose();
   };
 
