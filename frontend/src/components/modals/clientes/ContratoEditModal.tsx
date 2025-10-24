@@ -2007,25 +2007,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   </button>
                 </div>
                 
-                {termoFormData.termoCadastradoId > 0 && (
-                  <div className="mt-2">
-                    <small className="text-muted">
-                      <strong>Conteúdo:</strong>
-                    </small>
-                    <div 
-                      className="border rounded p-2 mt-1" 
-                      style={{ 
-                        maxHeight: '200px', 
-                        overflowY: 'auto',
-                        backgroundColor: 'var(--bg-secondary)',
-                        fontSize: '0.875rem'
-                      }}
-                      dangerouslySetInnerHTML={{ 
-                        __html: termosSistema?.data?.find((t: any) => t.id === termoFormData.termoCadastradoId)?.conteudo || '' 
-                      }}
-                    />
-                  </div>
-                )}
               </div>
             )}
 
