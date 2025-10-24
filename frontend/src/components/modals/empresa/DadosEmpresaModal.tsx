@@ -4,6 +4,8 @@ import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '../../../
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
+import { FormField } from '../../ui';
+import { AddressFields } from '../../forms';
 
 interface DadosEmpresaModalProps {
   show: boolean;
@@ -231,80 +233,69 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         <div className="mb-4">
           <div className="row">
             <div className="col-md-6">
-              <div className="mb-3">
-                <label htmlFor="empresa-razao_social" className="form-label small">Razão Social *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-razao_social"
-                  name="razao_social"
-                  autoComplete="organization"
-                  value={dados.razao_social}
-                  onChange={(e) => handleInputChange('razao_social', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                  required
-                />
-              </div>
+              <FormField
+                name="razao_social"
+                type="text"
+                label="Razão Social"
+                placeholder="Nome da empresa"
+                required={true}
+                size="md"
+                value={dados.razao_social}
+                onChange={(e) => handleInputChange('razao_social', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
             <div className="col-md-6">
-              <div className="mb-3">
-                <label htmlFor="empresa-nome_fantasia" className="form-label small">Nome Fantasia</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-nome_fantasia"
-                  name="nome_fantasia"
-                  value={dados.nome_fantasia}
-                  onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="nome_fantasia"
+                type="text"
+                label="Nome Fantasia"
+                placeholder="Nome fantasia da empresa"
+                size="md"
+                value={dados.nome_fantasia}
+                onChange={(e) => handleInputChange('nome_fantasia', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
           </div>
 
           <div className="row">
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="empresa-cnpj" className="form-label small">CNPJ *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-cnpj"
-                  name="cnpj"
-                  value={dados.cnpj}
-                  onChange={(e) => handleInputChange('cnpj', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                  required
-                />
-              </div>
+              <FormField
+                name="cnpj"
+                type="text"
+                label="CNPJ"
+                placeholder="00.000.000/0000-00"
+                required={true}
+                size="md"
+                value={dados.cnpj}
+                onChange={(e) => handleInputChange('cnpj', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="inscricao_estadual" className="form-label small">Inscrição Estadual</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="inscricao_estadual"
-                  name="inscricao_estadual"
-                  value={dados.inscricao_estadual}
-                  onChange={(e) => handleInputChange('inscricao_estadual', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="inscricao_estadual"
+                type="text"
+                label="Inscrição Estadual"
+                placeholder="Inscrição estadual"
+                size="md"
+                value={dados.inscricao_estadual}
+                onChange={(e) => handleInputChange('inscricao_estadual', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="inscricao_municipal" className="form-label small">Inscrição Municipal</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="inscricao_municipal"
-                  name="inscricao_municipal"
-                  value={dados.inscricao_municipal}
-                  onChange={(e) => handleInputChange('inscricao_municipal', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="inscricao_municipal"
+                type="text"
+                label="Inscrição Municipal"
+                placeholder="Inscrição municipal"
+                size="md"
+                value={dados.inscricao_municipal}
+                onChange={(e) => handleInputChange('inscricao_municipal', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
           </div>
 
@@ -356,117 +347,13 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         {/* Aba de Endereço */}
         {activeTab === 'endereco' && (
         <div className="mb-4">
-          <div className="row">
-            <div className="col-md-3">
-              <div className="mb-3">
-                <label htmlFor="empresa-cep" className="form-label small">CEP</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-cep"
-                  name="cep"
-                  autoComplete="postal-code"
-                  value={dados.cep}
-                  onChange={(e) => handleInputChange('cep', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="mb-3">
-                <label htmlFor="empresa-endereco" className="form-label small">Endereço</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-endereco"
-                  name="endereco"
-                  autoComplete="street-address"
-                  value={dados.endereco}
-                  onChange={(e) => handleInputChange('endereco', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="mb-3">
-                <label htmlFor="empresa-numero" className="form-label small">Número</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-numero"
-                  name="numero"
-                  value={dados.numero}
-                  onChange={(e) => handleInputChange('numero', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="row">
-            <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="empresa-complemento" className="form-label small">Complemento</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-complemento"
-                  name="complemento"
-                  value={dados.complemento}
-                  onChange={(e) => handleInputChange('complemento', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="empresa-bairro" className="form-label small">Bairro</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-bairro"
-                  name="bairro"
-                  value={dados.bairro}
-                  onChange={(e) => handleInputChange('bairro', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="empresa-cidade" className="form-label small">Cidade</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-cidade"
-                  name="cidade"
-                  autoComplete="address-level2"
-                  value={dados.cidade}
-                  onChange={(e) => handleInputChange('cidade', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="row">
-            <div className="col-md-2">
-              <div className="mb-3">
-                <label htmlFor="empresa-estado" className="form-label small">Estado</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-estado"
-                  name="estado"
-                  autoComplete="address-level1"
-                  value={dados.estado}
-                  onChange={(e) => handleInputChange('estado', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                  maxLength={2}
-                />
-              </div>
-            </div>
-          </div>
+          <AddressFields 
+            required={false}
+            size="md"
+            formData={dados}
+            onChange={(name: string, value: any) => handleInputChange(name as keyof DadosEmpresaType, value)}
+            errors={{}}
+          />
         </div>
         )}
 
@@ -475,67 +362,55 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         <div className="mb-4">
           <div className="row">
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="telefone" className="form-label small">Telefone</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="empresa-telefone"
-                  name="telefone"
-                  autoComplete="tel"
-                  value={dados.telefone}
-                  onChange={(e) => handleInputChange('telefone', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="telefone"
+                type="tel"
+                label="Telefone"
+                placeholder="(11) 3333-4444"
+                size="md"
+                value={dados.telefone}
+                onChange={(e) => handleInputChange('telefone', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="celular" className="form-label small">Celular</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="celular"
-                  name="celular"
-                  autoComplete="tel"
-                  value={dados.celular}
-                  onChange={(e) => handleInputChange('celular', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="celular"
+                type="tel"
+                label="Celular"
+                placeholder="(11) 99999-9999"
+                size="md"
+                value={dados.celular}
+                onChange={(e) => handleInputChange('celular', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="empresa-email" className="form-label small">E-mail</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="empresa-email"
-                  name="email"
-                  autoComplete="email"
-                  value={dados.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="email"
+                type="email"
+                label="E-mail"
+                placeholder="email@empresa.com"
+                size="md"
+                value={dados.email}
+                onChange={(e) => handleInputChange('email', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
           </div>
 
           <div className="row">
             <div className="col-md-12">
-              <div className="mb-3">
-                <label htmlFor="site" className="form-label small">Site</label>
-                <input
-                  type="url"
-                  className="form-control"
-                  id="site"
-                  name="site"
-                  autoComplete="url"
-                  value={dados.site}
-                  onChange={(e) => handleInputChange('site', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="site"
+                type="url"
+                label="Site"
+                placeholder="https://www.empresa.com"
+                size="md"
+                value={dados.site}
+                onChange={(e) => handleInputChange('site', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
           </div>
         </div>
@@ -546,48 +421,40 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         <div className="mb-4">
           <div className="row">
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="responsavel_nome" className="form-label small">Nome</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="responsavel_nome"
-                  name="responsavel_nome"
-                  autoComplete="name"
-                  value={dados.responsavel_nome}
-                  onChange={(e) => handleInputChange('responsavel_nome', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="responsavel_nome"
+                type="text"
+                label="Nome"
+                placeholder="Nome do responsável"
+                size="md"
+                value={dados.responsavel_nome}
+                onChange={(e) => handleInputChange('responsavel_nome', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="responsavel_cpf" className="form-label small">CPF</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="responsavel_cpf"
-                  name="responsavel_cpf"
-                  value={dados.responsavel_cpf}
-                  onChange={(e) => handleInputChange('responsavel_cpf', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="responsavel_cpf"
+                type="text"
+                label="CPF"
+                placeholder="000.000.000-00"
+                size="md"
+                value={dados.responsavel_cpf}
+                onChange={(e) => handleInputChange('responsavel_cpf', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
             <div className="col-md-4">
-              <div className="mb-3">
-                <label htmlFor="responsavel_cargo" className="form-label small">Cargo</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="responsavel_cargo"
-                  name="responsavel_cargo"
-                  autoComplete="organization-title"
-                  value={dados.responsavel_cargo}
-                  onChange={(e) => handleInputChange('responsavel_cargo', e.target.value)}
-                  disabled={updateDadosMutation.isPending}
-                />
-              </div>
+              <FormField
+                name="responsavel_cargo"
+                type="text"
+                label="Cargo"
+                placeholder="Cargo do responsável"
+                size="md"
+                value={dados.responsavel_cargo}
+                onChange={(e) => handleInputChange('responsavel_cargo', e.value)}
+                disabled={updateDadosMutation.isPending}
+              />
             </div>
           </div>
         </div>
