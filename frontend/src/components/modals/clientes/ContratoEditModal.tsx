@@ -1946,17 +1946,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             )}
           </div>
           
-          <div className="mb-3">
-            <label htmlFor="observacoes" className="form-label">Observações</label>
-            <textarea
-              id="observacoes"
-              className="form-control"
-              rows={3}
-              value={termoFormData.observacoes}
-              onChange={(e) => setTermoFormData({ ...termoFormData, observacoes: e.target.value })}
-              placeholder="Observações adicionais (opcional)..."
-            />
-          </div>
 
           <div className="d-flex justify-content-end gap-2 mt-4">
             <button 
