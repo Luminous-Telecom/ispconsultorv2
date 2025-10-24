@@ -14,6 +14,8 @@ import { ModeloContrato } from './ModeloContrato';
 import { ModeloRecibo } from './ModeloRecibo';
 import { ModeloCarta } from './ModeloCarta';
 import { DiasVencimento } from './DiasVencimento';
+import { TermoContrato } from './TermoContrato';
+import { ModeloTermo } from './ModeloTermo';
 
 // Importar associações específicas
 import './associations';
@@ -108,6 +110,17 @@ Contrato.belongsTo(Banco, {
   as: 'bancoBoleto'
 });
 
+// TermoContrato
+Contrato.hasMany(TermoContrato, {
+  foreignKey: 'contrato_id',
+  as: 'termos'
+});
+
+TermoContrato.belongsTo(Contrato, {
+  foreignKey: 'contrato_id',
+  as: 'contrato'
+});
+
 // BancoConfiguracao
 BancoConfiguracao.belongsTo(Banco, {
   foreignKey: 'banco_id',
@@ -142,5 +155,7 @@ export {
   ModeloContrato,
   ModeloRecibo,
   ModeloCarta,
-  DiasVencimento
+  DiasVencimento,
+  TermoContrato,
+  ModeloTermo
 };

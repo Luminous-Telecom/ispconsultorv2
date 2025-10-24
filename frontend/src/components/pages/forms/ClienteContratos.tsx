@@ -5,6 +5,7 @@ import { useContratos } from '../../../hooks/useContratos';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { useImprimir } from '../../../hooks/useImprimir';
 import { createImprimirDropdown } from '../../common/ImprimirDropdown';
+import TermosContrato from './TermosContrato';
 
 interface ClienteContratosProps {
   cliente: any;
@@ -13,6 +14,7 @@ interface ClienteContratosProps {
 const ClienteContratos: React.FC<ClienteContratosProps> = ({ 
   cliente
 }) => {
+  const [activeTab, setActiveTab] = useState<'contratos' | 'termos'>('contratos');
   const [sortColumn, setSortColumn] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
@@ -192,70 +194,139 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
         Contratos do Cliente
       </small>
 
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="mb-0">Contratos ({contratos.length})</h6>
-      </div>
+      {/* Navegação por Abas */}
+      <ul className="nav nav-tabs mb-3" role="tablist">
+        <li className="nav-item" role="presentation">
+          <button
+            className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('contratos')}
+          >
+            Contratos ({contratos.length})
+          </button>
+        </li>
+        <li className="nav-item" role="presentation">
+          <button
+            className={`nav-link ${activeTab === 'termos' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setActiveTab('termos')}
+          >
+            Termos
+          </button>
+        </li>
+      </ul>
 
-      <DataTable
-        data={getSortedContratos()}
-        columns={contratosColumns}
-        isLoading={contratosLoading}
-        pagination={{
-          from: 1,
-          to: contratos.length,
-          total: contratos.length,
-          current_page: 1,
-          last_page: 1
-        }}
-        limit={10}
-        setLimit={() => {}}
-        setPage={() => {}}
-        emptyMessage="Nenhum contrato encontrado"
-        searchPlaceholder="Buscar contratos..."
-        onSearch={() => {}}
-        bulkActions={[
-          {
-            label: 'Novo Contrato',
-            action: () => setShowContratoCreateModal(true)
-          },
-          {
-            label: 'Deletar',
-            action: handleDeletarContrato
-          },
-          {
-            label: 'Imprimir',
-            variant: 'primary',
-            dropdown: [
-              {
-                label: `Imprimir Selecionados (${selectedItems.length})`,
-                action: () => {
-                  if (selectedItems.length > 0) {
-                    const ids = selectedItems.map(item => item.id);
-                    const idsParam = ids.join(',');
-                    handleImprimirSelecionados(idsParam);
-                  }
+      {/* Conteúdo das Abas */}
+      <div className="tab-content">
+        {activeTab === 'contratos' && (
+          <div className="tab-pane active">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="mb-0">Contratos ({contratos.length})</h6>
+            </div>
+
+            <DataTable
+              data={getSortedContratos()}
+              columns={contratosColumns}
+              isLoading={contratosLoading}
+              pagination={{
+                from: 1,
+                to: contratos.length,
+                total: contratos.length,
+                current_page: 1,
+                last_page: 1
+              }}
+              limit={10}
+              setLimit={() => {}}
+              setPage={() => {}}
+              emptyMessage="Nenhum contrato encontrado"
+              searchPlaceholder="Buscar contratos..."
+              onSearch={() => {}}
+              bulkActions={[
+                {
+                  label: 'Novo Contrato',
+                  action: () => setShowContratoCreateModal(true)
+                },
+                {
+                  label: 'Deletar',
+                  action: handleDeletarContrato
+                },
+                {
+                  label: 'Imprimir',
+                  variant: 'primary',
+                  dropdown: [
+                    {
+                      label: `Imprimir Selecionados (${selectedItems.length})`,
+                      action: () => {
+                        if (selectedItems.length > 0) {
+                          const ids = selectedItems.map(item => item.id);
+                          const idsParam = ids.join(',');
+                          handleImprimirSelecionados(idsParam);
+                        }
+                      }
+                    },
+                    {
+                      label: `Imprimir Todos Ativos`,
+                      action: () => {
+                        if (contratosAtivos.length > 0) {
+                          const ids = contratosAtivos.map(item => item.id);
+                          const idsParam = ids.join(',');
+                          handleImprimirTodos(idsParam);
+                        }
+                      }
+                    }
+                  ],
+                  disabled: () => false
                 }
-              },
-              {
-                label: `Imprimir Todos Ativos`,
-                action: () => {
-                  if (contratosAtivos.length > 0) {
-                    const ids = contratosAtivos.map(item => item.id);
-                    const idsParam = ids.join(',');
-                    handleImprimirTodos(idsParam);
-                  }
-                }
-              }
-            ],
-            disabled: () => false
-          }
-        ]}
-        onSort={handleSort}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-        onRefresh={refetchContratos}
-        onSelectionChange={setSelectedItems}
-      />
+              ]}
+              onSort={handleSort}
+              sortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onRefresh={refetchContratos}
+              onSelectionChange={setSelectedItems}
+            />
+          </div>
+        )}
+
+        {activeTab === 'termos' && (
+          <div className="tab-pane active">
+            {contratos.length > 0 ? (
+              <div>
+                <div className="mb-3">
+                  <h6 className="mb-0">Selecione um contrato para visualizar os termos:</h6>
+                </div>
+                <div className="row">
+                  {contratos.map((contrato: any) => (
+                    <div key={contrato.id} className="col-md-6 mb-3">
+                      <div className="card">
+                        <div className="card-header d-flex justify-content-between align-items-center">
+                          <h6 className="mb-0">Contrato #{contrato.id}</h6>
+                          <span className={`badge ${
+                            contrato.status === 'ativo' ? 'bg-success' :
+                            contrato.status === 'inativo' ? 'bg-danger' :
+                            'bg-warning'
+                          }`}>
+                            {contrato.status}
+                          </span>
+                        </div>
+                        <div className="card-body">
+                          <p className="mb-2"><strong>Plano:</strong> {contrato.plano?.nome_plano || '-'}</p>
+                          <p className="mb-2"><strong>Valor:</strong> {contrato.plano?.valor_mensal ? `R$ ${contrato.plano.valor_mensal}` : '-'}</p>
+                          <p className="mb-3"><strong>Data Início:</strong> {contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'}</p>
+                          <TermosContrato contratoId={contrato.id} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="alert alert-info">
+                Nenhum contrato encontrado para este cliente.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Modal de criação de contrato */}
       <ContratoCreateModal
@@ -267,8 +338,8 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
         }}
         clienteId={cliente?.id}
       />
-       </div>
-     );
+    </div>
+  );
    };
    
    export default ClienteContratos;

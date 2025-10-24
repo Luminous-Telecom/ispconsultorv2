@@ -6,12 +6,23 @@ import {
   InferCreationAttributes,
   BelongsToGetAssociationMixin,
   BelongsToSetAssociationMixin,
-  BelongsToCreateAssociationMixin
+  BelongsToCreateAssociationMixin,
+  HasManyGetAssociationsMixin,
+  HasManySetAssociationsMixin,
+  HasManyAddAssociationMixin,
+  HasManyAddAssociationsMixin,
+  HasManyCreateAssociationMixin,
+  HasManyRemoveAssociationMixin,
+  HasManyRemoveAssociationsMixin,
+  HasManyHasAssociationMixin,
+  HasManyHasAssociationsMixin,
+  HasManyCountAssociationsMixin
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
+import { TermoContrato } from './TermoContrato';
 
 export class Contrato extends Model<
   InferAttributes<Contrato>,
@@ -47,6 +58,18 @@ export class Contrato extends Model<
   declare getBancoBoleto: BelongsToGetAssociationMixin<Banco>;
   declare setBancoBoleto: BelongsToSetAssociationMixin<Banco, number>;
   declare createBancoBoleto: BelongsToCreateAssociationMixin<Banco>;
+
+  // Relacionamentos com Termos
+  declare getTermos: HasManyGetAssociationsMixin<TermoContrato>;
+  declare setTermos: HasManySetAssociationsMixin<TermoContrato, number>;
+  declare addTermo: HasManyAddAssociationMixin<TermoContrato, number>;
+  declare addTermos: HasManyAddAssociationsMixin<TermoContrato, number>;
+  declare createTermo: HasManyCreateAssociationMixin<TermoContrato>;
+  declare removeTermo: HasManyRemoveAssociationMixin<TermoContrato, number>;
+  declare removeTermos: HasManyRemoveAssociationsMixin<TermoContrato, number>;
+  declare hasTermo: HasManyHasAssociationMixin<TermoContrato, number>;
+  declare hasTermos: HasManyHasAssociationsMixin<TermoContrato, number>;
+  declare countTermos: HasManyCountAssociationsMixin;
 
   // Métodos de instância
   static async findAtivos(): Promise<Contrato[]> {
@@ -103,6 +126,21 @@ export class Contrato extends Model<
     const dias = Math.ceil(diferenca / (1000 * 60 * 60 * 24));
     
     return dias > 0 ? dias : 0;
+  }
+
+  // Métodos para gerenciar termos
+  async getTermosAtivos(): Promise<TermoContrato[]> {
+    return TermoContrato.findAtivosByContrato(this.id);
+  }
+
+  async adicionarTermo(tipoTermo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao', conteudo: string, observacoes?: string): Promise<TermoContrato> {
+    return this.createTermo({
+      contrato_id: this.id,
+      tipo_termo: tipoTermo,
+      conteudo,
+      observacoes,
+      ativo: true
+    });
   }
 }
 

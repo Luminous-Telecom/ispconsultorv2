@@ -4,6 +4,7 @@ import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import ModeloReciboService, { ModeloRecibo } from '../../../services/modeloReciboService';
 import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaService';
+import ModeloTermoService, { ModeloTermo } from '../../../services/modeloTermoService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 
@@ -11,7 +12,7 @@ interface CriarDocumentoModalProps {
   show: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  tipo: 'contrato' | 'recibo' | 'carta_cobranca';
+  tipo: 'contrato' | 'recibo' | 'carta_cobranca' | 'termo';
 }
 
 const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose, onSuccess, tipo }) => {
@@ -34,6 +35,8 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
           return ModeloReciboService.create(data);
         case 'carta_cobranca':
           return ModeloCartaService.create(data);
+        case 'termo':
+          return ModeloTermoService.create(data);
         default:
           return DocumentoSistemaService.create({ ...data, tipo });
       }
@@ -42,7 +45,6 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
       addNotification('success', 'Documento criado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
       onSuccess();
-      onClose();
     },
     onError: (error: any) => {
       addNotification('error', error.message || 'Erro ao criar documento');
@@ -85,9 +87,31 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
       contrato: 'Contrato',
       recibo: 'Recibo',
       carta_cobranca: 'Carta de Cobrança',
+      termo: 'Termo',
     };
     return labels[tipo as keyof typeof labels];
   };
+
+  // Ações para o header do modal
+  const headerActions = (
+    <div className="d-flex gap-2">
+      <button
+        type="button"
+        className="btn btn-primary btn-sm"
+        onClick={handleSubmit}
+        disabled={createDocumentoMutation.isPending}
+      >
+        {createDocumentoMutation.isPending ? 'Salvando...' : 'Salvar'}
+      </button>
+      <button
+        type="button"
+        className="btn btn-secondary btn-sm"
+        onClick={handleClose}
+      >
+        Cancelar
+      </button>
+    </div>
+  );
 
   return (
     <DraggableModal 
@@ -96,6 +120,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
       title={`Novo ${getTipoLabel(tipo)}`} 
       size="xl" 
       modalId={`criar-documento-${tipo}-modal`}
+      headerActions={headerActions}
     >
       <div className="p-2">
         <form onSubmit={handleSubmit}>
@@ -128,23 +153,6 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
                   onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                   placeholder="Breve descrição"
                 />
-              </div>
-
-              <div className="d-flex gap-1 mb-2">
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-sm"
-                  disabled={createDocumentoMutation.isPending}
-                >
-                  {createDocumentoMutation.isPending ? 'Salvando...' : 'Novo'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={handleReset}
-                >
-                  Limpar
-                </button>
               </div>
             </div>
             <div className="col-12">

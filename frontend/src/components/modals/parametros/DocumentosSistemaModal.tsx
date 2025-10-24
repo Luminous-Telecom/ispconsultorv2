@@ -4,8 +4,8 @@ import DraggableModal from '../../common/DraggableModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import ModeloReciboService, { ModeloRecibo } from '../../../services/modeloReciboService';
 import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaService';
-import EditarDocumentoModal from './EditarDocumentoModal';
-import CriarDocumentoModal from './CriarDocumentoModal';
+import ModeloTermoService, { ModeloTermo } from '../../../services/modeloTermoService';
+import DocumentoModal from './DocumentoModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DataTable from '../../common/DataTable';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
@@ -16,15 +16,15 @@ interface DocumentosSistemaModalProps {
   onClose: () => void;
 }
 
-type TipoDocumento = 'contrato' | 'recibo' | 'carta_cobranca';
+type TipoDocumento = 'contrato' | 'recibo' | 'carta_cobranca' | 'termo';
 
-type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta;
+type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta | ModeloTermo;
 
 const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose }) => {
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [selectedDocumento, setSelectedDocumento] = useState<DocumentoUnion | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDocumentoModal, setShowDocumentoModal] = useState(false);
+  const [documentoModalMode, setDocumentoModalMode] = useState<'create' | 'edit'>('create');
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<number | null>(null);
   const [selectedItems, setSelectedItems] = useState<DocumentoUnion[]>([]);
   const [search, setSearch] = useState('');
@@ -47,6 +47,8 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
           return ModeloReciboService.list();
         case 'carta_cobranca':
           return ModeloCartaService.list();
+        case 'termo':
+          return ModeloTermoService.list();
         default:
           return DocumentoSistemaService.getByType('contrato');
       }
@@ -64,6 +66,8 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
           return ModeloReciboService.delete(id);
         case 'carta_cobranca':
           return ModeloCartaService.delete(id);
+        case 'termo':
+          return ModeloTermoService.delete(id);
         default:
           return DocumentoSistemaService.delete(id);
       }
@@ -93,8 +97,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     // Limpar seleções quando mudar de aba
     setSelectedDocumentoId(null);
     setSelectedItems([]);
-    setShowEditModal(false);
-    setShowCreateModal(false);
+    setShowDocumentoModal(false);
   };
 
   const getTipoLabel = (tipo: TipoDocumento) => {
@@ -102,6 +105,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       contrato: 'Contratos',
       recibo: 'Recibos',
       carta_cobranca: 'Cartas de Cobrança',
+      termo: 'Termos',
     };
     return labels[tipo];
   };
@@ -134,6 +138,26 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         </div>
       )
     },
+    // Coluna específica para termos
+    ...(activeTab === 'termo' ? [{
+      key: 'tipo_termo',
+      label: 'Tipo',
+      sortable: true,
+      render: (item: DocumentoUnion) => {
+        const termo = item as ModeloTermo;
+        const tipoLabels: { [key: string]: string } = {
+          'adesao': 'Adesão',
+          'permanencia': 'Permanência',
+          'cancelamento': 'Cancelamento',
+          'alteracao': 'Alteração'
+        };
+        return (
+          <span className="badge bg-info">
+            {tipoLabels[termo.tipo_termo] || termo.tipo_termo}
+          </span>
+        );
+      }
+    }] : []),
     {
       key: 'ativo',
       label: 'Status',
@@ -162,24 +186,33 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       label: 'Novo',
       variant: 'primary' as const,
       action: () => {
-        setShowCreateModal(true);
+        setDocumentoModalMode('create');
+        setSelectedDocumentoId(null);
+        setShowDocumentoModal(true);
       }
     },
     {
       label: 'Editar',
       action: (selectedItems: DocumentoUnion[]) => {
-        if (selectedItems.length > 0) {
+        if (selectedItems.length === 1) {
+          setDocumentoModalMode('edit');
           setSelectedDocumentoId(selectedItems[0].id);
-          setShowEditModal(true);
+          setShowDocumentoModal(true);
         }
       }
     },
     {
       label: 'Deletar',
       variant: 'primary' as const,
-      action: (selectedItems: DocumentoUnion[]) => {
+      action: async (selectedItems: DocumentoUnion[]) => {
         if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja deletar ${selectedItems.length} documento(s)?`)) {
-          selectedItems.forEach(item => handleDelete(item.id));
+          try {
+            // Deletar todos os itens selecionados sem confirmação adicional
+            await Promise.all(selectedItems.map(item => deleteDocumentoMutation.mutateAsync(item.id)));
+            refetch();
+          } catch (error) {
+            // Erro já é tratado pelo onError da mutation
+          }
         }
       }
     }
@@ -248,10 +281,19 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
                 Cartas de Cobrança
               </button>
             </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link py-1 px-2 small ${activeTab === 'termo' ? 'active' : ''}`}
+                onClick={() => handleTabChange('termo')}
+              >
+                <i className="bi bi-file-text me-1"></i>
+                Termos
+              </button>
+            </li>
           </ul>
 
           <DataTable
-            data={documentos?.data || []}
+            data={documentos?.data as DocumentoUnion[] || []}
             columns={columns}
             isLoading={isLoading}
             pagination={{
@@ -279,29 +321,17 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
           />
         </div>
 
-        {/* Modal de Criação */}
-        <CriarDocumentoModal
-          show={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            refetch();
-            setShowCreateModal(false);
-          }}
-          tipo={activeTab}
-        />
-
-        {/* Modal de Edição */}
-        <EditarDocumentoModal
-          show={showEditModal}
+        {/* Modal Unificado */}
+        <DocumentoModal
+          show={showDocumentoModal}
           onClose={() => {
-            setShowEditModal(false);
+            setShowDocumentoModal(false);
             setSelectedDocumentoId(null);
           }}
-          documento={documentos?.data?.find(d => d.id === selectedDocumentoId) || null}
+          documento={documentoModalMode === 'edit' ? (documentos?.data as DocumentoUnion[])?.find((d: DocumentoUnion) => d.id === selectedDocumentoId) || null : null}
           tipo={activeTab}
           onSuccess={() => {
             refetch();
-            // Não fechar o modal automaticamente
           }}
         />
       </DraggableModal>

@@ -4,6 +4,7 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import { useCreateContrato, useUpdateContrato } from '../../../hooks/useContratos';
+import { useTermosContrato, useCreateTermoContrato, useUpdateTermoContrato, useDeactivateTermoContrato } from '../../../hooks/useTermosContrato';
 import { TituloService } from '../../../services/tituloService';
 import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
@@ -60,13 +61,23 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
   const [activeTab, setActiveTab] = useState('contrato');
   const [showCancelados, setShowCancelados] = useState(false);
+  const [showInativos, setShowInativos] = useState(false);
+  const [showTermoModal, setShowTermoModal] = useState(false);
+  const [termoFormData, setTermoFormData] = useState({
+    tipo_termo: 'adesao' as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
+    conteudo: '',
+    observacoes: '',
+    assinado: false
+  });
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [selectedTermosItems, setSelectedTermosItems] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [searchTermos, setSearchTermos] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [sortColumn, setSortColumn] = useState<string>('id');
@@ -87,6 +98,15 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const planos = Array.isArray(planosData) ? planosData : (planosData?.data || []);
   const bancos = Array.isArray(bancosData) ? bancosData : (bancosData?.data || []);
   const modelosContrato = modelosContratoData?.data || [];
+  
+  // Hooks para termos
+  const { data: termosData, isLoading: isLoadingTermos, refetch: refetchTermos } = useTermosContrato(contratoId || 0);
+  const createTermoMutation = useCreateTermoContrato();
+  const updateTermoMutation = useUpdateTermoContrato();
+  const deactivateTermoMutation = useDeactivateTermoContrato();
+
+  // Garantir que termosData seja sempre um array
+  const termosArray = Array.isArray(termosData) ? termosData : [];
   
   // Buscar dados do contrato
   const { data: contratoData, isLoading } = useQuery({
@@ -385,6 +405,81 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   ];
 
+  // Bulk actions para termos
+  const termosBulkActions: Array<{
+    label: string;
+    action?: (selectedItems: any[]) => void;
+    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
+    disabled?: (selectedItems: any[]) => boolean;
+    dropdown?: {
+      label: string;
+      action: () => void;
+    }[];
+  }> = [
+    {
+      label: 'Novo',
+      action: () => {
+        setTermoFormData({
+          tipo_termo: 'adesao',
+          conteudo: '',
+          observacoes: '',
+          assinado: false
+        });
+        setShowTermoModal(true);
+      }
+    },
+    {
+      label: 'Editar',
+      action: (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          console.log('Editar termo:', item);
+        }
+      }
+    },
+    {
+      label: 'Deletar',
+      variant: 'danger',
+      action: async (selectedItems: any[]) => {
+        if (selectedItems.length > 0) {
+          const confirmMessage = selectedItems.length === 1 
+            ? 'Tem certeza que deseja deletar este termo?'
+            : `Tem certeza que deseja deletar ${selectedItems.length} termos?`;
+            
+          if (window.confirm(confirmMessage)) {
+            try {
+              for (const item of selectedItems) {
+                await deactivateTermoMutation.mutateAsync(item.id);
+              }
+              success('Termo(s) deletado(s) com sucesso!');
+              queryClient.invalidateQueries({ queryKey: ['termos-contrato', contratoId] });
+            } catch (err: any) {
+              error('Erro ao deletar termo(s)');
+            }
+          }
+        }
+      }
+    },
+    {
+      label: 'Imprimir',
+      variant: 'primary',
+      dropdown: [
+        {
+          label: `Imprimir Selecionados (${selectedTermosItems.length})`,
+          action: () => {
+            console.log('Imprimir termos selecionados');
+          }
+        },
+        {
+          label: 'Imprimir Todos Ativos',
+          action: () => {
+            console.log('Imprimir todos os termos ativos');
+          }
+        }
+      ]
+    }
+  ];
+
   // Colunas para o DataTable
   const columns = [
     {
@@ -462,7 +557,75 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   ];
 
-  // Funções para filtrar e paginar dados (igual ao ClienteEditModal)
+  // Colunas para o DataTable de termos
+  const termosColumns = [
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+    },
+    {
+      key: 'tipo_termo',
+      label: 'Tipo',
+      sortable: true,
+      render: (item: any) => {
+        const tipoLabels: { [key: string]: string } = {
+          'adesao': 'Adesão',
+          'permanencia': 'Permanência',
+          'cancelamento': 'Cancelamento',
+          'alteracao': 'Alteração'
+        };
+        return tipoLabels[item.tipo_termo] || item.tipo_termo;
+      }
+    },
+    {
+      key: 'conteudo',
+      label: 'Conteúdo',
+      sortable: true,
+      render: (item: any) => {
+        const conteudo = item.conteudo || '';
+        return conteudo.length > 50 ? conteudo.substring(0, 50) + '...' : conteudo;
+      }
+    },
+    {
+      key: 'data_aceite',
+      label: 'Data Aceite',
+      sortable: true,
+      render: (item: any) => {
+        return item.data_aceite ? new Date(item.data_aceite).toLocaleDateString('pt-BR') : '-';
+      }
+    },
+    {
+      key: 'aceito_por',
+      label: 'Aceito Por',
+      sortable: true,
+      render: (item: any) => {
+        return item.aceito_por || '-';
+      }
+    },
+    {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      render: (item: any) => {
+        return (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? 'Ativo' : 'Inativo'}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      render: (item: any) => {
+        return new Date(item.created_at).toLocaleDateString('pt-BR');
+      }
+    }
+  ];
+
+  // Funções para filtrar e paginar dados dos títulos
   const getFilteredData = () => {
     if (!titulosData?.data) return [];
     
@@ -496,7 +659,40 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     return allData;
   };
 
+  // Funções para filtrar e paginar dados dos termos
+  const getFilteredTermosData = () => {
+    if (!termosArray) return [];
+    
+    let allData = [...termosArray];
+
+    // Filtro para mostrar/ocultar inativos
+    if (!showInativos) {
+      allData = allData.filter((termo: any) => termo.ativo);
+    }
+
+    // Aplicar filtro de busca
+    if (searchTermos.trim()) {
+      const searchTerm = searchTermos.toLowerCase().trim();
+      return allData.filter((termo: any) => {
+        const id = termo.id?.toString() || '';
+        const tipoTermo = termo.tipo_termo || '';
+        const conteudo = termo.conteudo || '';
+        const aceitoPor = termo.aceito_por || '';
+        
+        return (
+          id.includes(searchTerm) ||
+          tipoTermo.toLowerCase().includes(searchTerm) ||
+          conteudo.toLowerCase().includes(searchTerm) ||
+          aceitoPor.toLowerCase().includes(searchTerm)
+        );
+      });
+    }
+
+    return allData;
+  };
+
   const filteredData = getFilteredData();
+  const filteredTermosData = getFilteredTermosData();
 
   const sortedData = [...filteredData].sort((a: Titulo, b: Titulo) => {
     if (!sortColumn) return 0;
@@ -510,7 +706,20 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   });
 
+  const sortedTermosData = [...filteredTermosData].sort((a: any, b: any) => {
+    if (!sortColumn) return 0;
+    const aVal = a[sortColumn] ?? '';
+    const bVal = b[sortColumn] ?? '';
+    
+    if (sortDirection === 'asc') {
+      return aVal > bVal ? 1 : -1;
+    } else {
+      return aVal < bVal ? 1 : -1;
+    }
+  });
+
   const paginatedData = sortedData.slice((page - 1) * limit, page * limit);
+  const paginatedTermosData = sortedTermosData.slice((page - 1) * limit, page * limit);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -594,6 +803,15 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 onClick={() => setActiveTab('contrato')}
               >
                 Contrato
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'termos' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('termos')}
+              >
+                Termos
               </button>
             </li>
             <li className="nav-item" role="presentation">
@@ -814,6 +1032,277 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         </div>
 
             )}
+
+        {/* Aba Termos */}
+        {activeTab === 'termos' && (
+          <div className="row">
+            <div className="col-12">
+              {/* Cabeçalho fixo - não rola */}
+              <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
+                {/* Botões de Ação - Linha 1 */}
+                <div className="d-flex justify-content-start mb-3">
+                  <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
+                    {termosBulkActions.map((bulkAction, index) => {
+                      // Botão "Novo" sempre habilitado, outros apenas quando há seleção
+                      const isNewButton = bulkAction.label === 'Novo';
+                      const isImprimirButton = bulkAction.label === 'Imprimir';
+                      const hasSelection = selectedTermosItems.length > 0;
+                      const selectedItem = hasSelection ? selectedTermosItems[0] : null;
+                      
+                      // Lógica de desabilitação baseada no status
+                      let isDisabled = !isNewButton && !isImprimirButton && !hasSelection;
+                      
+                      if (hasSelection && selectedItem) {
+                        if (bulkAction.label === 'Editar' && !selectedItem.ativo) {
+                          isDisabled = true; // Não pode editar termo inativo
+                        }
+                        if (bulkAction.label === 'Deletar' && !selectedItem.ativo) {
+                          isDisabled = true; // Não pode deletar termo já inativo
+                        }
+                      }
+
+                      // Usar a função disabled do bulkAction se existir
+                      if (bulkAction.disabled) {
+                        isDisabled = isDisabled || bulkAction.disabled(selectedTermosItems);
+                      }
+
+                      // Se tem dropdown, renderizar dropdown
+                      if (bulkAction.dropdown) {
+                        return (
+                          <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
+                            <button
+                              className={`btn btn-sm btn-${bulkAction.variant || 'primary'} dropdown-toggle`}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setOpenDropdown(openDropdown === index ? null : index);
+                              }}
+                            >
+                              {bulkAction.label}
+                              <i className="bi bi-chevron-down ms-1"></i>
+                            </button>
+                            {openDropdown === index && (
+                              <div 
+                                className="dropdown-menu show" 
+                                style={{ 
+                                  position: 'absolute', 
+                                  top: '100%', 
+                                  left: 0, 
+                                  zIndex: 1050,
+                                  display: 'block',
+                                  minWidth: '200px'
+                                }}
+                              >
+                                {bulkAction.dropdown.map((item: { label: string; action: () => void }, itemIndex: number) => (
+                                  <button
+                                    key={itemIndex}
+                                    className="dropdown-item"
+                                    onClick={() => {
+                                      item.action();
+                                      setOpenDropdown(null);
+                                    }}
+                                    style={{ display: 'block', width: '100%', textAlign: 'left' }}
+                                  >
+                                    {item.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      // Botão normal
+                      return (
+                        <button
+                          key={index}
+                          className="btn btn-sm btn-primary"
+                          onClick={(event) => {
+                            if (!isDisabled && bulkAction.action) {
+                              bulkAction.action(selectedTermosItems);
+                            }
+                          }}
+                          disabled={isDisabled}
+                          style={{ flexShrink: 0 }}
+                        >
+                          {bulkAction.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Busca, Filtros e Paginação - Linha 2 */}
+                <div className="d-flex mb-3">
+                  {/* Busca à esquerda */}
+                  <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
+                    <input
+                      type="text"
+                      id="termos-search"
+                      name="termosSearch"
+                      className="form-control form-control-sm"
+                      placeholder="Buscar por tipo, conteúdo..."
+                      value={searchTermos}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setSearchTermos(e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ width: '300px', height: '32px' }}
+                    />
+                  </div>
+
+                  {/* Filtros após a busca */}
+                  <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
+                    <div className="form-check">
+                      <input 
+                        className="form-check-input" 
+                        type="checkbox" 
+                        id="showInactive"
+                        name="showInactive"
+                        checked={showInativos}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setShowInativos(e.target.checked);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <label className="form-check-label small" htmlFor="showInactive">
+                        Mostrar inativos
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Paginação à direita */}
+                  <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
+                    {/* Seletor de linhas por página */}
+                    <select 
+                      id="termos-limit"
+                      name="termosLimit"
+                      className="form-select form-select-sm" 
+                      value={limit}
+                      onChange={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setLimit(parseInt(e.target.value));
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{ width: '80px', height: '32px', cursor: 'pointer' }}
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={15}>15</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+
+                    {/* Paginação compacta */}
+                    <div className="d-flex gap-1">
+                      <button 
+                        className="btn btn-outline-secondary btn-sm" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setPage(1);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        disabled={page <= 1}
+                        style={{ height: '32px', width: '32px', padding: '0' }}
+                      >
+                        <i className="bi bi-chevron-double-left"></i>
+                      </button>
+                      <button 
+                        className="btn btn-outline-secondary btn-sm" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setPage(Math.max(1, page - 1));
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        disabled={page <= 1}
+                        style={{ height: '32px', width: '32px', padding: '0' }}
+                      >
+                        <i className="bi bi-chevron-left"></i>
+                      </button>
+                      
+                      <span className="d-flex align-items-center px-2 small text-muted" style={{ height: '32px' }}>
+                        {sortedTermosData.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, sortedTermosData.length)} / {sortedTermosData.length}
+                      </span>
+                      
+                      <button 
+                        className="btn btn-outline-secondary btn-sm" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setPage(Math.min(Math.ceil(sortedTermosData.length / limit), page + 1));
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        disabled={page >= Math.ceil(sortedTermosData.length / limit)}
+                        style={{ height: '32px', width: '32px', padding: '0' }}
+                      >
+                        <i className="bi bi-chevron-right"></i>
+                      </button>
+                      <button 
+                        className="btn btn-outline-secondary btn-sm" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setPage(Math.ceil(sortedTermosData.length / limit));
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        disabled={page >= Math.ceil(sortedTermosData.length / limit)}
+                        style={{ height: '32px', width: '32px', padding: '0' }}
+                      >
+                        <i className="bi bi-chevron-double-right"></i>
+                      </button>
+                    </div>
+
+                    {/* Botão de refresh */}
+                    <button 
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        refetchTermos();
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      title="Recarregar dados"
+                    >
+                      <i className="bi bi-arrow-clockwise"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conteúdo rolável - apenas a tabela */}
+              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <DataTable
+                  data={paginatedTermosData}
+                  columns={termosColumns}
+                  isLoading={isLoadingTermos}
+                  showHeader={false}
+                  onSelectionChange={setSelectedTermosItems}
+                  onSort={(column: string, direction: 'asc' | 'desc') => {
+                    setSortColumn(column);
+                    setSortDirection(direction);
+                  }}
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  limit={limit}
+                  setLimit={setLimit}
+                  setPage={setPage}
+                  emptyMessage="Este contrato ainda não possui termos cadastrados."
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
             {/* Aba Financeiro */}
           {activeTab === 'financeiro' && (
@@ -1198,6 +1687,141 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           setSelectedParcela(null);
         }}
       />
+
+      {/* Modal para criar/editar termo */}
+      <DraggableModal
+        show={showTermoModal}
+        onClose={() => setShowTermoModal(false)}
+        title="Novo Termo"
+        size="lg"
+      >
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            await createTermoMutation.mutateAsync({
+              contratoId: contratoId!,
+              data: {
+                tipo_termo: termoFormData.tipo_termo,
+                conteudo: termoFormData.conteudo,
+                observacoes: termoFormData.observacoes
+              }
+            });
+            setShowTermoModal(false);
+            setTermoFormData({
+              tipo_termo: 'adesao',
+              conteudo: '',
+              observacoes: '',
+              assinado: false
+            });
+          } catch (error) {
+            console.error('Erro ao criar termo:', error);
+          }
+        }}>
+          <div className="row">
+            <div className="col-md-6">
+              <div className="mb-3">
+                <label htmlFor="tipoTermo" className="form-label">
+                  Tipo de Termo <span className="text-danger">*</span>
+                </label>
+                <select
+                  id="tipoTermo"
+                  className="form-select"
+                  value={termoFormData.tipo_termo}
+                  onChange={(e) => setTermoFormData({
+                    ...termoFormData,
+                    tipo_termo: e.target.value as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao'
+                  })}
+                  required
+                >
+                  <option value="adesao">Adesão</option>
+                  <option value="permanencia">Permanência</option>
+                  <option value="cancelamento">Cancelamento</option>
+                  <option value="alteracao">Alteração</option>
+                </select>
+              </div>
+            </div>
+            <div className="col-md-6">
+              <div className="mb-3">
+                <label htmlFor="assinado" className="form-label">Assinado</label>
+                <div className="d-flex gap-3 mt-2">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="assinado"
+                      id="assinadoSim"
+                      value="true"
+                      checked={termoFormData.assinado === true}
+                      onChange={() => setTermoFormData({ ...termoFormData, assinado: true })}
+                    />
+                    <label className="form-check-label" htmlFor="assinadoSim">
+                      Sim
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="assinado"
+                      id="assinadoNao"
+                      value="false"
+                      checked={termoFormData.assinado === false}
+                      onChange={() => setTermoFormData({ ...termoFormData, assinado: false })}
+                    />
+                    <label className="form-check-label" htmlFor="assinadoNao">
+                      Não
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mb-3">
+            <label htmlFor="conteudo" className="form-label">
+              Conteúdo do Termo <span className="text-danger">*</span>
+            </label>
+            <textarea
+              id="conteudo"
+              className="form-control"
+              rows={8}
+              value={termoFormData.conteudo}
+              onChange={(e) => setTermoFormData({ ...termoFormData, conteudo: e.target.value })}
+              placeholder="Digite o conteúdo do termo..."
+              required
+            />
+          </div>
+          
+          <div className="mb-3">
+            <label htmlFor="observacoes" className="form-label">Observações</label>
+            <textarea
+              id="observacoes"
+              className="form-control"
+              rows={3}
+              value={termoFormData.observacoes}
+              onChange={(e) => setTermoFormData({ ...termoFormData, observacoes: e.target.value })}
+              placeholder="Observações adicionais (opcional)..."
+            />
+          </div>
+
+          <div className="d-flex justify-content-end gap-2 mt-4">
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              onClick={() => setShowTermoModal(false)}
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={createTermoMutation.isPending}
+            >
+              {createTermoMutation.isPending ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
+        </form>
+      </DraggableModal>
     </DraggableModal>
   );
 };
