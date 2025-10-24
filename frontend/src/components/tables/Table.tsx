@@ -101,6 +101,13 @@ const Table = <T extends { id: number | string }>({
     }
   }, [searchTerm, state.searchTerm, tableActions]);
 
+  // Conectar busca com callback externo
+  useEffect(() => {
+    if (onSearch && searchTerm !== state.searchTerm) {
+      onSearch(searchTerm);
+    }
+  }, [searchTerm, onSearch, state.searchTerm]);
+
   // Construir classes da tabela
   const getTableClasses = () => {
     const classes = ['table'];
@@ -363,6 +370,126 @@ const Table = <T extends { id: number | string }>({
 
   return (
     <div className={className}>
+      {/* Header com botões de ação e filtros */}
+      <div className="card-header py-2 border-bottom">
+        {/* Primeira linha: Botões de ação */}
+        <div className="d-flex align-items-center mb-2">
+          <div className="d-flex" style={{ gap: '8px' }}>
+            {bulkActions.map((bulkAction, index) => {
+              // Novo sempre habilitado, outros só quando há seleção
+              const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
+              const isImprimirButton = bulkAction.label.toLowerCase().includes('imprimir');
+              const isDisabledBySelection = !isNewButton && !isImprimirButton && state.selectedItems.length === 0;
+              const isDisabledByCondition = bulkAction.disabled && typeof bulkAction.disabled === 'function' ? bulkAction.disabled(state.selectedItems) : false;
+              const isDisabled = isDisabledBySelection || isDisabledByCondition;
+              
+              // Botão normal
+              return (
+                <button
+                  key={index}
+                  className="btn btn-sm btn-primary"
+                  onClick={(event) => {
+                    if (!isDisabled && bulkAction.onClick) {
+                      bulkAction.onClick(state.selectedItems);
+                    }
+                  }}
+                  disabled={isDisabled}
+                  style={{ flexShrink: 0 }}
+                >
+                  {bulkAction.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Segunda linha: Busca centralizada */}
+        {searchable && (
+          <div className="d-flex justify-content-center mb-2">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              id={`search-${Math.random().toString(36).substr(2, 9)}`}
+              name="search"
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: '400px', height: '32px' }}
+            />
+          </div>
+        )}
+
+        {/* Terceira linha: Paginação e controles */}
+        {pagination && (
+          <div className="d-flex align-items-center justify-content-center gap-2">
+            {/* Seletor de linhas por página */}
+            <select 
+              className="form-select form-select-sm" 
+              id="data-table-limit"
+              name="dataTableLimit"
+              value={pagination.per_page}
+              onChange={(e) => onPageSizeChange?.(parseInt(e.target.value))}
+              style={{ width: '80px', height: '32px', cursor: 'pointer' }}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={15}>15</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+
+            {/* Paginação compacta */}
+            <div className="d-flex align-items-center gap-1">
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={() => onPageChange?.(1)}
+                disabled={pagination.current_page <= 1}
+              >
+                <i className="bi bi-chevron-double-left"></i>
+              </button>
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={() => onPageChange?.(pagination.current_page - 1)}
+                disabled={pagination.current_page <= 1}
+              >
+                <i className="bi bi-chevron-left"></i>
+              </button>
+              
+              <span className="small text-muted mx-2">
+                {pagination.from || 0} - {pagination.to || 0} / {pagination.total || 0}
+              </span>
+              
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={() => onPageChange?.(pagination.current_page + 1)}
+                disabled={pagination.current_page >= pagination.last_page}
+              >
+                <i className="bi bi-chevron-right"></i>
+              </button>
+              <button 
+                className="btn btn-outline-secondary btn-sm" 
+                onClick={() => onPageChange?.(pagination.last_page)}
+                disabled={pagination.current_page >= pagination.last_page}
+              >
+                <i className="bi bi-chevron-double-right"></i>
+              </button>
+            </div>
+
+            {/* Botão de refresh */}
+            {onRefresh && (
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={onRefresh}
+                title="Recarregar dados"
+              >
+                <i className="bi bi-arrow-clockwise"></i>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Tabela */}
       <div className="table-responsive">
         <table className="table table-striped table-sm">
