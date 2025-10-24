@@ -5,6 +5,7 @@ import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import puppeteer from 'puppeteer';
+import * as htmlPdf from 'html-pdf-node';
 
 export class ModeloTermoController {
   // Listar todos os modelos de termo
@@ -750,8 +751,20 @@ export class ModeloTermoController {
         </html>
       `;
 
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.send(htmlContent);
+      // Configurações para geração de PDF
+      const options = {
+        format: 'A4',
+        margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+        printBackground: true
+      };
+
+      const file = { content: htmlContent };
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+
+      // Configurar headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="termo-contrato-${contratoId}.pdf"`);
+      res.send(pdfBuffer);
     } catch (error: any) {
       console.error('Erro ao gerar PDF do termo:', error);
       res.status(500).json({
