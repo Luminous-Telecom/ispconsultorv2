@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
-import DataTable from '../../common/DataTable';
-import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
-import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { PlanoCreateModal, PlanoEditModal } from './index';
 import { Plano } from '../../../types';
+import { Table, TableConfig } from '../../tables';
 
 interface PlanoListModalProps {
   show: boolean;
@@ -40,6 +38,160 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   });
 
   const deletePlanoMutation = useDeletePlano();
+
+  // Configuração da tabela unificada
+  const tableConfig: TableConfig = {
+    data: planosData?.data || [],
+    loading: isLoading,
+    columns: [
+      {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        width: '80px',
+        render: (item: Plano) => <span>{item.id}</span>
+      },
+      {
+        key: 'nome_plano',
+        label: 'Nome do Plano',
+        sortable: true,
+        render: (item: Plano) => (
+          <div className="fw-bold">{item.nome_plano}</div>
+        )
+      },
+      {
+        key: 'descricao',
+        label: 'Descrição',
+        sortable: false,
+        render: (item: Plano) => item.descricao || '-'
+      },
+      {
+        key: 'tipo_servico',
+        label: 'Tipo de Serviço',
+        sortable: true,
+        width: '150px',
+        render: (item: Plano) => (
+          <span className="badge bg-info">
+            {getTipoServicoLabel(item.tipo_servico)}
+          </span>
+        )
+      },
+      {
+        key: 'valor_mensal',
+        label: 'Valor Mensal',
+        sortable: true,
+        width: '120px',
+        render: (item: Plano) => (
+          <span className="fw-bold text-success">
+            R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
+          </span>
+        )
+      },
+      {
+        key: 'quantidade_usuarios',
+        label: 'Usuários',
+        sortable: true,
+        width: '100px',
+        render: (item: Plano) => (
+          <span>{item.quantidade_usuarios || '-'}</span>
+        )
+      },
+      {
+        key: 'periodicidade',
+        label: 'Periodicidade',
+        sortable: true,
+        width: '120px',
+        render: (item: Plano) => (
+          <span className="text-capitalize">{item.periodicidade || '-'}</span>
+        )
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        sortable: true,
+        width: '100px',
+        render: (item: Plano) => (
+          <span className={`badge ${getStatusBadgeClass(item.status)}`}>
+            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          </span>
+        )
+      }
+    ],
+    pagination: {
+      current_page: page,
+      last_page: planosData?.pagination?.last_page || 1,
+      per_page: limit,
+      total: planosData?.pagination?.total || 0,
+      from: planosData?.pagination?.from || (page - 1) * limit + 1,
+      to: planosData?.pagination?.to || Math.min(page * limit, planosData?.pagination?.total || 0)
+    },
+    actions: onSelectPlano ? [
+      {
+        key: 'select',
+        label: 'Selecionar',
+        icon: 'check',
+        variant: 'primary',
+        onClick: (item: Plano) => handleRowClick(item)
+      }
+    ] : [
+      {
+        key: 'edit',
+        label: 'Editar',
+        icon: 'pencil',
+        variant: 'primary',
+        onClick: (item: Plano) => {
+          setSelectedPlanoId(item.id);
+          setShowEditModal(true);
+        }
+      },
+      {
+        key: 'delete',
+        label: 'Excluir',
+        icon: 'trash',
+        variant: 'danger',
+        onClick: (item: Plano) => handleDelete(item.id)
+      }
+    ],
+    bulkActions: onSelectPlano ? [] : [
+      {
+        key: 'create',
+        label: 'Novo',
+        icon: 'plus',
+        variant: 'primary',
+        onClick: () => setShowCreateModal(true)
+      },
+      {
+        key: 'edit',
+        label: 'Editar',
+        icon: 'pencil',
+        variant: 'primary',
+        onClick: (selectedItems: Plano[]) => {
+          if (selectedItems.length === 1) {
+            setSelectedPlanoId(selectedItems[0].id);
+            setShowEditModal(true);
+          }
+        },
+        disabled: (selectedItems: Plano[]) => selectedItems.length !== 1
+      },
+      {
+        key: 'delete',
+        label: 'Excluir',
+        icon: 'trash',
+        variant: 'danger',
+        onClick: (selectedItems: Plano[]) => {
+          if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} plano(s)?`)) {
+            selectedItems.forEach(item => handleDelete(item.id));
+          }
+        }
+      }
+    ],
+    searchable: true,
+    searchPlaceholder: 'Buscar por nome do plano...',
+    sortable: true,
+    selectable: !onSelectPlano,
+    multiSelect: !onSelectPlano,
+    emptyMessage: 'Nenhum plano encontrado'
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -234,22 +386,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
   ];
 
-  // Ações para o header do modal usando componente reutilizável
-  const headerActions = (
-    <ModalHeaderActions
-      bulkActions={bulkActions}
-      selectedItems={selectedItems}
-      search={search}
-      onSearchChange={setSearch}
-      searchPlaceholder="Buscar por nome do plano..."
-      limit={limit}
-      onLimitChange={setLimit}
-      pagination={planosData?.pagination}
-      onPageChange={setPage}
-      onRefresh={() => refetch()}
-      idPrefix="plano-list"
-    />
-  );
 
   return (
     <DraggableModal
@@ -257,38 +393,19 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       onClose={onClose}
       title={title}
       size="lg"
-      headerActions={headerActions}
       modalId="plano-list-modal"
     >
       <div>
-        <DataTable
-            data={getSortedData()}
-            columns={columns}
-            isLoading={isLoading}
-            pagination={{
-              from: planosData?.pagination?.from || (page - 1) * limit + 1,
-              to: planosData?.pagination?.to || Math.min(page * limit, planosData?.pagination?.total || 0),
-              total: planosData?.pagination?.total || 0,
-              current_page: planosData?.pagination?.current_page || page,
-              last_page: planosData?.pagination?.last_page || 1
-            }}
-            limit={limit}
-            setLimit={setLimit}
-            setPage={setPage}
-            onSort={(column: string, direction: 'asc' | 'desc') => {
-              setSortColumn(column);
-              setSortDirection(direction);
-            }}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            bulkActions={bulkActions}
-            onSelectionChange={setSelectedItems}
-            searchPlaceholder="Buscar por nome do plano..."
-            onSearch={setSearch}
-            emptyMessage="Nenhum plano encontrado"
-            showHeader={false}
-          />
-        </div>
+        <Table
+          config={tableConfig}
+          onSort={(column: string, direction: 'asc' | 'desc') => {
+            setSortColumn(column);
+            setSortDirection(direction);
+          }}
+          onSelectionChange={setSelectedItems}
+          className="plano-list-table"
+        />
+      </div>
 
       {/* Modal de Criação */}
       <PlanoCreateModal
