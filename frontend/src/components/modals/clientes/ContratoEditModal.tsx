@@ -1217,7 +1217,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                           disabled={isDisabled}
                           style={{ flexShrink: 0 }}
                         >
-                          {bulkAction.label}
+                          {isImprimirButton && isGeneratingPdf ? 'Gerando...' : bulkAction.label}
                         </button>
                       );
                     })}
