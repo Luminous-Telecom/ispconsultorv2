@@ -14,7 +14,7 @@ import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
-import { ModeloTermoService } from '../../../services/modeloTermoService';
+import ModeloTermoService from '../../../services/modeloTermoService';
 
 interface ContratoForm {
   plano_id: number;
@@ -95,6 +95,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     queryFn: () => ModeloTermoService.list(),
     enabled: showTermoModal
   });
+  const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
   const { data: modelosContratoData } = useQuery({
     queryKey: ['modelos-contrato'],
@@ -430,7 +431,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           tipo_termo: 'adesao',
           conteudo: '',
           observacoes: '',
-          assinado: false
+          assinado: false,
+          usarTermoCadastrado: false,
+          termoCadastradoId: 0
         });
         setShowTermoModal(true);
       }
