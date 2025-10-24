@@ -668,6 +668,33 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       sortable: true,
     },
     {
+      key: 'nome_termo',
+      label: 'Nome do Termo',
+      sortable: true,
+      render: (item: any) => {
+        return item.modeloTermo?.nome || '-';
+      }
+    },
+    {
+      key: 'tipo_termo',
+      label: 'Tipo',
+      sortable: true,
+      render: (item: any) => {
+        if (!item.modeloTermo?.tipo_termo) return '-';
+        const tipoLabels: { [key: string]: string } = {
+          'adesao': 'Adesão',
+          'permanencia': 'Permanência',
+          'cancelamento': 'Cancelamento',
+          'alteracao': 'Alteração'
+        };
+        return (
+          <span className="badge bg-info">
+            {tipoLabels[item.modeloTermo.tipo_termo] || item.modeloTermo.tipo_termo}
+          </span>
+        );
+      }
+    },
+    {
       key: 'assinado',
       label: 'Assinado',
       sortable: true,

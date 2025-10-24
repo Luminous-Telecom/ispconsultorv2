@@ -34,6 +34,12 @@ export class TermoContrato extends Model<
   static async findByContrato(contratoId: number): Promise<TermoContrato[]> {
     return this.findAll({
       where: { contrato_id: contratoId },
+      include: [
+        {
+          association: 'modeloTermo',
+          attributes: ['id', 'nome', 'tipo_termo']
+        }
+      ],
       order: [['created_at', 'DESC']]
     });
   }

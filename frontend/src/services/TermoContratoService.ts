@@ -12,6 +12,11 @@ export interface TermoContrato {
   created_at: Date;
   updated_at: Date;
   contrato?: any;
+  modeloTermo?: {
+    id: number;
+    nome: string;
+    tipo_termo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao';
+  };
 }
 
 export interface CreateTermoContratoData {

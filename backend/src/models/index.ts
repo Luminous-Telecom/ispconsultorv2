@@ -121,6 +121,16 @@ TermoContrato.belongsTo(Contrato, {
   as: 'contrato'
 });
 
+TermoContrato.belongsTo(ModeloTermo, {
+  foreignKey: 'modelo_termo_id',
+  as: 'modeloTermo'
+});
+
+ModeloTermo.hasMany(TermoContrato, {
+  foreignKey: 'modelo_termo_id',
+  as: 'termosContrato'
+});
+
 // BancoConfiguracao
 BancoConfiguracao.belongsTo(Banco, {
   foreignKey: 'banco_id',
