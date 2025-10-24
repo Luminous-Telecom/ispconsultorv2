@@ -15,6 +15,7 @@ import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import ModeloTermoService from '../../../services/modeloTermoService';
+import DataTable from '../../common/DataTable';
 
 interface ContratoForm {
   plano_id: number;
@@ -66,6 +67,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [showTermoModal, setShowTermoModal] = useState(false);
   const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
   const [termoSelecionado, setTermoSelecionado] = useState<any>(null);
+  const [searchTermos, setSearchTermos] = useState('');
+  const [pageTermos, setPageTermos] = useState(1);
+  const [limitTermos, setLimitTermos] = useState(10);
+  const [sortColumnTermos, setSortColumnTermos] = useState<string>('id');
+  const [sortDirectionTermos, setSortDirectionTermos] = useState<'asc' | 'desc'>('desc');
   const [termoFormData, setTermoFormData] = useState({
     tipo_termo: 'adesao' as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
     conteudo: '',
@@ -95,8 +101,104 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const { data: termosSistema } = useQuery({
     queryKey: ['termos-sistema'],
     queryFn: () => ModeloTermoService.list(),
-    enabled: showTermoModal
+    enabled: showSelecionarTermoModal
   });
+
+  // Filtrar e ordenar termos
+  const filteredTermos = React.useMemo(() => {
+    if (!termosSistema?.data) return [];
+    
+    let filtered = [...termosSistema.data];
+    
+    // Aplicar busca
+    if (searchTermos) {
+      const searchLower = searchTermos.toLowerCase();
+      filtered = filtered.filter(t => 
+        t.nome?.toLowerCase().includes(searchLower) ||
+        t.tipo_termo?.toLowerCase().includes(searchLower) ||
+        t.id?.toString().includes(searchLower)
+      );
+    }
+    
+    // Aplicar ordenação
+    filtered.sort((a, b) => {
+      let aVal: any = a[sortColumnTermos as keyof typeof a];
+      let bVal: any = b[sortColumnTermos as keyof typeof b];
+      
+      if (aVal === bVal) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      
+      const comparison = aVal < bVal ? -1 : 1;
+      return sortDirectionTermos === 'asc' ? comparison : -comparison;
+    });
+    
+    return filtered;
+  }, [termosSistema?.data, searchTermos, sortColumnTermos, sortDirectionTermos]);
+
+  // Paginar termos
+  const paginatedTermos = React.useMemo(() => {
+    const startIndex = (pageTermos - 1) * limitTermos;
+    return filteredTermos.slice(startIndex, startIndex + limitTermos);
+  }, [filteredTermos, pageTermos, limitTermos]);
+
+  // Criar paginação manual para client-side
+  const paginationTermos = {
+    from: (pageTermos - 1) * limitTermos + 1,
+    to: Math.min(pageTermos * limitTermos, filteredTermos.length),
+    total: filteredTermos.length,
+    current_page: pageTermos,
+    last_page: Math.ceil(filteredTermos.length / limitTermos)
+  };
+
+  // Definir colunas da tabela de termos
+  const columnsTermos = [
+    {
+      key: 'selecao',
+      label: '',
+      sortable: false,
+      render: (termo: any) => (
+        <input
+          type="radio"
+          name="termoSelecionado"
+          checked={termoSelecionado?.id === termo.id}
+          onChange={() => setTermoSelecionado(termo)}
+        />
+      )
+    },
+    {
+      key: 'id',
+      label: 'ID',
+      sortable: true,
+      render: (termo: any) => termo.id
+    },
+    {
+      key: 'nome',
+      label: 'Nome',
+      sortable: true,
+      render: (termo: any) => termo.nome
+    },
+    {
+      key: 'tipo_termo',
+      label: 'Tipo',
+      sortable: true,
+      render: (termo: any) => (
+        <span className="badge bg-info">
+          {termo.tipo_termo}
+        </span>
+      )
+    },
+    {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      render: (termo: any) => (
+        <span className={`badge ${termo.ativo ? 'bg-success' : 'bg-secondary'}`}>
+          {termo.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      )
+    }
+  ];
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
   const { data: modelosContratoData } = useQuery({
@@ -2011,62 +2113,32 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         }
       >
         <div className="p-2">
-          <div className="mb-3">
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="Buscar termos..."
-              onChange={(e) => {
-                // Implementar busca se necessário
-              }}
-            />
-          </div>
-          
-          <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            <table className="table table-sm table-hover">
-              <thead className="table-dark sticky-top">
-                <tr>
-                  <th style={{ width: '50px' }}></th>
-                  <th>ID</th>
-                  <th>Nome</th>
-                  <th>Tipo</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {termosSistema?.data?.map((termo: any) => (
-                  <tr 
-                    key={termo.id}
-                    className={termoSelecionado?.id === termo.id ? 'table-primary' : ''}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setTermoSelecionado(termo)}
-                  >
-                    <td>
-                      <input
-                        type="radio"
-                        name="termoSelecionado"
-                        checked={termoSelecionado?.id === termo.id}
-                        onChange={() => setTermoSelecionado(termo)}
-                      />
-                    </td>
-                    <td>{termo.id}</td>
-                    <td>{termo.nome}</td>
-                    <td>
-                      <span className="badge bg-info">
-                        {termo.tipo_termo}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge ${termo.ativo ? 'bg-success' : 'bg-secondary'}`}>
-                        {termo.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
+          <DataTable
+            data={paginatedTermos}
+            columns={columnsTermos}
+            isLoading={false}
+            pagination={paginationTermos}
+            limit={limitTermos}
+            setLimit={setLimitTermos}
+            setPage={setPageTermos}
+            onSort={(column: string, direction: 'asc' | 'desc') => {
+              setSortColumnTermos(column);
+              setSortDirectionTermos(direction);
+            }}
+            sortColumn={sortColumnTermos}
+            sortDirection={sortDirectionTermos}
+            onSearch={(value: string) => {
+              setSearchTermos(value);
+              setPageTermos(1);
+            }}
+            searchPlaceholder="Buscar termos..."
+            emptyMessage="Nenhum termo encontrado"
+            onSelectionChange={(selectedItems: any[]) => {
+              if (selectedItems.length > 0) {
+                setTermoSelecionado(selectedItems[0]);
+              }
+            }}
+          />
         </div>
       </DraggableModal>
     </DraggableModal>
