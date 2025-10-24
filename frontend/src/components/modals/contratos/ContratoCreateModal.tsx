@@ -7,6 +7,7 @@ import { useClientes } from '../../../hooks/useClientes';
 import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
+import FormField from '../../ui/FormField';
 
 interface ContratoForm {
   cliente_id: number;
@@ -264,50 +265,17 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="data_inicio" className="form-label small">Data de Início *</label>
-              <input
-                type="date"
-                className={`form-control ${errors.data_inicio ? 'is-invalid' : ''}`}
-                id="data_inicio"
+              <FormField
                 name="data_inicio"
-                value={formData.data_inicio}
-                onChange={(e) => handleInputChange('data_inicio', e.target.value)}
-                disabled={createContratoMutation.isPending}
-              />
-              {errors.data_inicio && <div className="invalid-feedback">{errors.data_inicio}</div>}
-            </div>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="data_fim" className="form-label small">Data de Fim</label>
-              <input
                 type="date"
-                className="form-control"
-                id="data_fim"
-                value={formData.data_fim}
-                onChange={(e) => handleInputChange('data_fim', e.target.value)}
+                label="Data de Início"
+                required={true}
+                size="md"
+                value={formData.data_inicio}
+                onChange={(e: any) => handleInputChange('data_inicio', e.value)}
+                error={errors.data_inicio}
+                isInvalid={!!errors.data_inicio}
                 disabled={createContratoMutation.isPending}
-              />
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="desconto_percentual" className="form-label small">Desconto %</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                className="form-control"
-                id="desconto_percentual"
-                value={formData.desconto_percentual || ''}
-                onChange={(e) => handleInputChange('desconto_percentual', parseFloat(e.target.value) || 0)}
-                disabled={createContratoMutation.isPending}
-                placeholder="0.00"
               />
             </div>
           </div>
@@ -316,36 +284,72 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="desconto_valor" className="form-label small">Desconto R$</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                className="form-control"
-                id="desconto_valor"
-                value={formData.desconto_valor || ''}
-                onChange={(e) => handleInputChange('desconto_valor', parseFloat(e.target.value) || 0)}
+              <FormField
+                name="data_fim"
+                type="date"
+                label="Data de Fim"
+                size="md"
+                value={formData.data_fim}
+                onChange={(e: any) => handleInputChange('data_fim', e.value)}
                 disabled={createContratoMutation.isPending}
-                placeholder="0.00"
               />
             </div>
           </div>
 
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="dia_vencimento" className="form-label small">Dia de Vencimento *</label>
-              <input
+              <FormField
+                name="desconto_percentual"
                 type="number"
-                min="1"
-                max="31"
-                className={`form-control ${errors.dia_vencimento ? 'is-invalid' : ''}`}
-                id="dia_vencimento"
-                value={formData.dia_vencimento || ''}
-                onChange={(e) => handleInputChange('dia_vencimento', parseInt(e.target.value) || 0)}
+                label="Desconto %"
+                placeholder="0.00"
+                size="md"
+                value={formData.desconto_percentual || ''}
+                onChange={(e: any) => handleInputChange('desconto_percentual', parseFloat(e.value) || 0)}
                 disabled={createContratoMutation.isPending}
-                placeholder="Ex: 10"
+                step={0.01}
+                min={0}
+                max={100}
               />
-              {errors.dia_vencimento && <div className="invalid-feedback">{errors.dia_vencimento}</div>}
+            </div>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <FormField
+                name="desconto_valor"
+                type="number"
+                label="Desconto R$"
+                placeholder="0.00"
+                size="md"
+                value={formData.desconto_valor || ''}
+                onChange={(e: any) => handleInputChange('desconto_valor', parseFloat(e.value) || 0)}
+                disabled={createContratoMutation.isPending}
+                step={0.01}
+                min={0}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="mb-3">
+              <FormField
+                name="dia_vencimento"
+                type="number"
+                label="Dia de Vencimento"
+                placeholder="Ex: 10"
+                required={true}
+                size="md"
+                value={formData.dia_vencimento || ''}
+                onChange={(e: any) => handleInputChange('dia_vencimento', parseInt(e.value) || 0)}
+                error={errors.dia_vencimento}
+                isInvalid={!!errors.dia_vencimento}
+                disabled={createContratoMutation.isPending}
+                min={1}
+                max={31}
+              />
             </div>
           </div>
         </div>
@@ -374,13 +378,13 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="data_validade_desconto" className="form-label small">Validade do Desconto</label>
-              <input
+              <FormField
+                name="data_validade_desconto"
                 type="date"
-                className="form-control"
-                id="data_validade_desconto"
+                label="Validade do Desconto"
+                size="md"
                 value={formData.data_validade_desconto}
-                onChange={(e) => handleInputChange('data_validade_desconto', e.target.value)}
+                onChange={(e: any) => handleInputChange('data_validade_desconto', e.value)}
                 disabled={createContratoMutation.isPending}
               />
             </div>
@@ -434,16 +438,17 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         </div>
 
         <div className="mb-3">
-          <label htmlFor="observacoes" className="form-label small">Observações</label>
-          <textarea
-            className="form-control form-control-sm"
-            id="observacoes"
-            rows={3}
-            value={formData.observacoes}
-            onChange={(e) => handleInputChange('observacoes', e.target.value)}
-            disabled={createContratoMutation.isPending}
+          <FormField
+            name="observacoes"
+            type="textarea"
+            label="Observações"
             placeholder="Observações adicionais sobre o contrato"
-          ></textarea>
+            size="sm"
+            value={formData.observacoes}
+            onChange={(e: any) => handleInputChange('observacoes', e.value)}
+            disabled={createContratoMutation.isPending}
+            rows={3}
+          />
         </div>
 
       </form>

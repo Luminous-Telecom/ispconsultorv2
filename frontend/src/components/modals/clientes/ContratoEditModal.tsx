@@ -8,6 +8,7 @@ import { useTermosContrato, useCreateTermoContrato, useUpdateTermoContrato, useD
 import { TermoContrato } from '../../../services/TermoContratoService';
 import { useModelosTermo } from '../../../hooks/useModelosTermo';
 import { TituloService } from '../../../services/tituloService';
+import FormField from '../../ui/FormField';
 import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
@@ -968,45 +969,47 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Data de Início */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="data_inicio" className="form-label">Data de Início *</label>
-            <input
-              type="date"
-              id="data_inicio"
+            <FormField
               name="data_inicio"
-              className={`form-control ${errors.data_inicio ? 'is-invalid' : ''}`}
+              type="date"
+              label="Data de Início"
+              required={true}
+              size="md"
               value={formData.data_inicio}
-              onChange={(e) => handleInputChange('data_inicio', e.target.value)}
+              onChange={(e: any) => handleInputChange('data_inicio', e.value)}
+              error={errors.data_inicio}
+              isInvalid={!!errors.data_inicio}
             />
-            {errors.data_inicio && <div className="invalid-feedback">{errors.data_inicio}</div>}
           </div>
 
           {/* Data de Fim */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="data_fim" className="form-label">Data de Fim</label>
-            <input
-              type="date"
-              id="data_fim"
+            <FormField
               name="data_fim"
-              className="form-control"
+              type="date"
+              label="Data de Fim"
+              size="md"
               value={formData.data_fim}
-              onChange={(e) => handleInputChange('data_fim', e.target.value)}
+              onChange={(e: any) => handleInputChange('data_fim', e.value)}
             />
           </div>
 
           {/* Dia de Vencimento */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="dia_vencimento" className="form-label">Dia de Vencimento *</label>
-            <input
-              type="number"
-              id="dia_vencimento"
+            <FormField
               name="dia_vencimento"
-              className={`form-control ${errors.dia_vencimento ? 'is-invalid' : ''}`}
+              type="number"
+              label="Dia de Vencimento"
+              placeholder="Ex: 10"
+              required={true}
+              size="md"
               value={formData.dia_vencimento}
-              onChange={(e) => handleInputChange('dia_vencimento', parseInt(e.target.value))}
-              min="1"
-              max="31"
+              onChange={(e: any) => handleInputChange('dia_vencimento', parseInt(e.value))}
+              error={errors.dia_vencimento}
+              isInvalid={!!errors.dia_vencimento}
+              min={1}
+              max={31}
             />
-            {errors.dia_vencimento && <div className="invalid-feedback">{errors.dia_vencimento}</div>}
           </div>
 
           {/* Banco para Boleto */}
@@ -1031,47 +1034,48 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Desconto Percentual */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="desconto_percentual" className="form-label">Desconto Percentual (%)</label>
-            <input
-              type="number"
-              id="desconto_percentual"
+            <FormField
               name="desconto_percentual"
-              className={`form-control ${errors.desconto_percentual ? 'is-invalid' : ''}`}
+              type="number"
+              label="Desconto Percentual (%)"
+              placeholder="0.00"
+              size="md"
               value={formData.desconto_percentual}
-              onChange={(e) => handleInputChange('desconto_percentual', parseFloat(e.target.value) || 0)}
-              min="0"
-              max="100"
-              step="0.01"
+              onChange={(e: any) => handleInputChange('desconto_percentual', parseFloat(e.value) || 0)}
+              error={errors.desconto_percentual}
+              isInvalid={!!errors.desconto_percentual}
+              min={0}
+              max={100}
+              step={0.01}
             />
-            {errors.desconto_percentual && <div className="invalid-feedback">{errors.desconto_percentual}</div>}
           </div>
 
           {/* Desconto Valor */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="desconto_valor" className="form-label">Desconto Valor (R$)</label>
-            <input
-              type="number"
-              id="desconto_valor"
+            <FormField
               name="desconto_valor"
-              className={`form-control ${errors.desconto_valor ? 'is-invalid' : ''}`}
+              type="number"
+              label="Desconto Valor (R$)"
+              placeholder="0.00"
+              size="md"
               value={formData.desconto_valor}
-              onChange={(e) => handleInputChange('desconto_valor', parseFloat(e.target.value) || 0)}
-              min="0"
-              step="0.01"
+              onChange={(e: any) => handleInputChange('desconto_valor', parseFloat(e.value) || 0)}
+              error={errors.desconto_valor}
+              isInvalid={!!errors.desconto_valor}
+              min={0}
+              step={0.01}
             />
-            {errors.desconto_valor && <div className="invalid-feedback">{errors.desconto_valor}</div>}
           </div>
 
           {/* Data Validade Desconto */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="data_validade_desconto" className="form-label">Data Validade Desconto</label>
-            <input
-              type="date"
-              id="data_validade_desconto"
+            <FormField
               name="data_validade_desconto"
-              className="form-control"
+              type="date"
+              label="Data Validade Desconto"
+              size="md"
               value={formData.data_validade_desconto}
-              onChange={(e) => handleInputChange('data_validade_desconto', e.target.value)}
+              onChange={(e: any) => handleInputChange('data_validade_desconto', e.value)}
             />
           </div>
 
@@ -1118,14 +1122,14 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Observações */}
           <div className="col-12 mb-3">
-            <label htmlFor="observacoes" className="form-label">Observações</label>
-            <textarea
-              id="observacoes"
+            <FormField
               name="observacoes"
-              className="form-control"
-              rows={3}
+              type="textarea"
+              label="Observações"
+              size="md"
               value={formData.observacoes}
-              onChange={(e) => handleInputChange('observacoes', e.target.value)}
+              onChange={(e: any) => handleInputChange('observacoes', e.value)}
+              rows={3}
             />
           </div>
         </div>
