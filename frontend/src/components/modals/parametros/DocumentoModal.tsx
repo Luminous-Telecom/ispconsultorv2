@@ -221,7 +221,9 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       }
     },
     onSuccess: () => {
+      console.log('DocumentoModal - Mutation onSuccess chamada para tipo:', tipo);
       addNotification('success', 'Documento salvo com sucesso');
+      console.log('DocumentoModal - Notificação adicionada');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       if (onSuccess) {
@@ -251,27 +253,15 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     try {
       if (isEditing) {
         // Atualizar documento existente
-        if (tipo === 'contrato') {
-          // Salvar cada modelo em sua respectiva tabela (sempre, mesmo que vazio)
-          const promises = [];
-          
-          // Sempre salvar modelo contrato conteúdo (pode ser vazio)
-          promises.push(DocumentoSistemaService.saveModeloContratoConteudo(documento!.id, formData.conteudo_contrato || ''));
-          
-          // Sempre salvar termo de adesão (pode ser vazio)
-          promises.push(DocumentoSistemaService.saveModeloTermoAdesao(documento!.id, formData.conteudo_adesao || ''));
-          
-          // Sempre salvar contrato permanência (pode ser vazio)
-          promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, formData.conteudo_permanencia || ''));
-
-          await Promise.all(promises);
-        } else {
-          await updateDocumentoMutation.mutateAsync({
-            nome: formData.nome,
-            descricao: formData.descricao,
-            conteudo: formData.conteudo
-          });
-        }
+        // Usar a mutation para garantir notificações
+        await updateDocumentoMutation.mutateAsync({
+          nome: formData.nome,
+          descricao: formData.descricao,
+          conteudo: formData.conteudo,
+          conteudo_contrato: formData.conteudo_contrato,
+          conteudo_adesao: formData.conteudo_adesao,
+          conteudo_permanencia: formData.conteudo_permanencia
+        });
       } else {
         // Criar novo documento
         await createDocumentoMutation.mutateAsync({
