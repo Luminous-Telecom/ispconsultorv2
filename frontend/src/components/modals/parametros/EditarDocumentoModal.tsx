@@ -204,17 +204,19 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
         promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, formData.conteudo_permanencia || ''));
 
         await Promise.all(promises);
+        
+        // Invalidar queries após salvar contratos
+        queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
+        addNotification('success', 'Documento salvo com sucesso');
+        if (onSuccess) {
+          onSuccess();
+        }
       } else {
         await updateDocumentoMutation.mutateAsync({
           nome: formData.nome,
           descricao: formData.descricao,
           conteudo: formData.conteudo
         });
-      }
-      
-      addNotification('success', 'Documento salvo com sucesso');
-      if (onSuccess) {
-        onSuccess();
       }
     } catch (error: any) {
       addNotification('error', error.message || 'Erro ao salvar documento');
