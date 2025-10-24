@@ -64,6 +64,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [showCancelados, setShowCancelados] = useState(false);
   const [showInativos, setShowInativos] = useState(false);
   const [showTermoModal, setShowTermoModal] = useState(false);
+  const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
+  const [termoSelecionado, setTermoSelecionado] = useState<any>(null);
   const [termoFormData, setTermoFormData] = useState({
     tipo_termo: 'adesao' as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
     conteudo: '',
@@ -1881,8 +1883,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     className="btn btn-outline-secondary"
                     title="Abrir listagem de registros"
                     onClick={() => {
-                      // Implementar modal de seleção de termos
-                      console.log('Abrir listagem de termos');
+                      setShowSelecionarTermoModal(true);
                     }}
                   >
                     <i className="fa fa-search" style={{ transform: 'rotate(90deg)' }}></i>
@@ -1964,6 +1965,126 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             </button>
           </div>
         </form>
+      </DraggableModal>
+
+      {/* Modal para selecionar termo cadastrado */}
+      <DraggableModal
+        show={showSelecionarTermoModal}
+        onClose={() => {
+          setShowSelecionarTermoModal(false);
+          setTermoSelecionado(null);
+        }}
+        title="Selecionar Termo Cadastrado"
+        size="lg"
+        modalId="selecionar-termo-modal"
+        headerActions={
+          <div className="d-flex gap-2">
+            <button 
+              type="button" 
+              className="btn btn-secondary btn-sm" 
+              onClick={() => {
+                setShowSelecionarTermoModal(false);
+                setTermoSelecionado(null);
+              }}
+            >
+              Cancelar
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-primary btn-sm"
+              disabled={!termoSelecionado}
+              onClick={() => {
+                if (termoSelecionado) {
+                  setTermoFormData({ 
+                    ...termoFormData, 
+                    termoCadastradoId: termoSelecionado.id,
+                    conteudo: termoSelecionado.conteudo || ''
+                  });
+                  setShowSelecionarTermoModal(false);
+                  setTermoSelecionado(null);
+                }
+              }}
+            >
+              Inserir
+            </button>
+          </div>
+        }
+      >
+        <div className="p-2">
+          <div className="mb-3">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder="Buscar termos..."
+              onChange={(e) => {
+                // Implementar busca se necessário
+              }}
+            />
+          </div>
+          
+          <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <table className="table table-sm table-hover">
+              <thead className="table-dark sticky-top">
+                <tr>
+                  <th style={{ width: '50px' }}></th>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>Tipo</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {termosSistema?.data?.map((termo: any) => (
+                  <tr 
+                    key={termo.id}
+                    className={termoSelecionado?.id === termo.id ? 'table-primary' : ''}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setTermoSelecionado(termo)}
+                  >
+                    <td>
+                      <input
+                        type="radio"
+                        name="termoSelecionado"
+                        checked={termoSelecionado?.id === termo.id}
+                        onChange={() => setTermoSelecionado(termo)}
+                      />
+                    </td>
+                    <td>{termo.id}</td>
+                    <td>{termo.nome}</td>
+                    <td>
+                      <span className="badge bg-info">
+                        {termo.tipo_termo}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${termo.ativo ? 'bg-success' : 'bg-secondary'}`}>
+                        {termo.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {termoSelecionado && (
+            <div className="mt-3">
+              <h6>Conteúdo do Termo Selecionado:</h6>
+              <div 
+                className="border rounded p-3" 
+                style={{ 
+                  maxHeight: '200px', 
+                  overflowY: 'auto',
+                  backgroundColor: 'var(--bg-secondary)',
+                  fontSize: '0.875rem'
+                }}
+                dangerouslySetInnerHTML={{ 
+                  __html: termoSelecionado.conteudo || 'Nenhum conteúdo disponível' 
+                }}
+              />
+            </div>
+          )}
+        </div>
       </DraggableModal>
     </DraggableModal>
   );
