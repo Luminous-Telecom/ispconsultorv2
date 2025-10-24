@@ -16,6 +16,7 @@ import { useContratos, useDeleteContrato } from '../../../hooks/useContratos';
 import ContratoCreateModal from './ContratoCreateModal';
 import ContratoEditModal from './ContratoEditModal';
 import { useFormReset } from '../../../hooks/useFormReset';
+import { Form, FormConfig } from '../../forms';
 
 interface ClienteForm {
   cnpj: string;
@@ -166,6 +167,52 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     queryFn: () => TituloService.list({ cliente_id: clienteId!, limit: 100 }),
     enabled: !!clienteId,
   });
+
+  // Configuração do formulário unificado para dados básicos
+  const dadosBasicosFormConfig: FormConfig = {
+    fields: [
+      {
+        name: 'cnpj',
+        type: 'text',
+        label: 'CNPJ',
+        placeholder: '00.000.000/0000-00',
+        required: true,
+        size: 'md',
+        validation: [
+          { type: 'required', message: 'CNPJ é obrigatório' },
+          { type: 'pattern', value: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, message: 'CNPJ inválido' }
+        ]
+      },
+      {
+        name: 'razao_social',
+        type: 'text',
+        label: 'Razão Social',
+        placeholder: 'Razão social da empresa',
+        required: true,
+        size: 'md',
+        validation: [
+          { type: 'required', message: 'Razão Social é obrigatória' }
+        ]
+      },
+      {
+        name: 'nome_fantasia',
+        type: 'text',
+        label: 'Nome Fantasia',
+        placeholder: 'Nome fantasia da empresa',
+        size: 'md'
+      },
+      {
+        name: 'ativo',
+        type: 'checkbox',
+        label: 'Cliente Ativo',
+        description: 'Cliente está ativo no sistema',
+        switch: false
+      }
+    ],
+    layout: 'vertical',
+    columns: 2,
+    spacing: 'md'
+  };
 
   // Filtrar e agrupar dados baseado nos checkboxes
   const getFilteredData = () => {
@@ -946,75 +993,26 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           <form id="cliente-form" onSubmit={handleSubmit}>
             {/* Aba Dados Básicos */}
             {activeTab === 'dados-basicos' && (
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="dados-basicos-cnpj" className="form-label">
-                      CNPJ <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className={`form-control ${errors.cnpj ? 'is-invalid' : ''}`}
-                      id="dados-basicos-cnpj"
-                      name="cnpj"
-                      autoComplete="off"
-                      value={formData.cnpj}
-                      onChange={(e) => handleInputChange('cnpj', e.target.value)}
-                      placeholder="00.000.000/0000-00"
-                    />
-                    {errors.cnpj && <div className="invalid-feedback">{errors.cnpj}</div>}
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="dados-basicos-razao_social" className="form-label">
-                      Razão Social <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className={`form-control ${errors.razao_social ? 'is-invalid' : ''}`}
-                      id="dados-basicos-razao_social"
-                      name="razao_social"
-                      autoComplete="organization"
-                      value={formData.razao_social}
-                      onChange={(e) => handleInputChange('razao_social', e.target.value)}
-                      placeholder="Razão social da empresa"
-                    />
-                    {errors.razao_social && <div className="invalid-feedback">{errors.razao_social}</div>}
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="dados-basicos-nome_fantasia" className="form-label">Nome Fantasia</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="dados-basicos-nome_fantasia"
-                      name="nome_fantasia"
-                      autoComplete="organization-title"
-                      value={formData.nome_fantasia}
-                      onChange={(e) => handleInputChange('nome_fantasia', e.target.value)}
-                      placeholder="Nome fantasia da empresa"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="ativo"
-                        name="ativo"
-                        checked={formData.ativo}
-                        onChange={(e) => handleInputChange('ativo', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="ativo">
-                        Cliente Ativo
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Form
+                config={dadosBasicosFormConfig}
+                initialValues={formData}
+                onSubmit={(data) => {
+                  // Manter apenas os campos da aba dados básicos
+                  const dadosBasicos = {
+                    cnpj: data.cnpj,
+                    razao_social: data.razao_social,
+                    nome_fantasia: data.nome_fantasia,
+                    ativo: data.ativo
+                  };
+                  handleInputChange('cnpj', dadosBasicos.cnpj);
+                  handleInputChange('razao_social', dadosBasicos.razao_social);
+                  handleInputChange('nome_fantasia', dadosBasicos.nome_fantasia);
+                  handleInputChange('ativo', dadosBasicos.ativo);
+                }}
+                showSubmitButton={false}
+                showResetButton={false}
+                className="dados-basicos-form"
+              />
             )}
 
             {/* Aba Contato */}

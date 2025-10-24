@@ -4,6 +4,7 @@ import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
+import { Form, FormConfig } from '../../forms';
 
 interface BancoForm {
   nome: string;
@@ -144,6 +145,71 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
       }));
     }
   }, [formData.tipo_banco]);
+
+  // Configuração do formulário unificado para campos principais
+  const bancoFormConfig: FormConfig = {
+    fields: [
+      {
+        name: 'nome',
+        type: 'text',
+        label: 'Nome do Banco',
+        placeholder: 'Nome do banco',
+        required: true,
+        size: 'md',
+        validation: [
+          { type: 'required', message: 'Nome é obrigatório' }
+        ]
+      },
+      {
+        name: 'codigo',
+        type: 'text',
+        label: 'Código',
+        placeholder: 'Código do banco',
+        required: true,
+        size: 'md',
+        validation: [
+          { type: 'required', message: 'Código é obrigatório' }
+        ]
+      },
+      {
+        name: 'descricao',
+        type: 'textarea',
+        label: 'Descrição',
+        placeholder: 'Descrição do banco',
+        rows: 3,
+        size: 'md'
+      },
+      {
+        name: 'tipo_banco',
+        type: 'select',
+        label: 'Tipo de Banco',
+        options: [
+          { value: 'efi', label: 'EFI' },
+          { value: 'asaas', label: 'ASAAS' },
+          { value: 'bancario', label: 'Bancário' },
+          { value: 'outros', label: 'Outros' }
+        ],
+        size: 'md'
+      },
+      {
+        name: 'ativo',
+        type: 'checkbox',
+        label: 'Ativo',
+        description: 'Banco está ativo no sistema',
+        switch: true
+      },
+      {
+        name: 'sandbox',
+        type: 'checkbox',
+        label: 'Sandbox',
+        description: 'Usar ambiente de teste',
+        switch: true
+      }
+    ],
+    layout: 'vertical',
+    columns: 2,
+    spacing: 'md'
+  };
 
   const handleInputChange = (field: keyof BancoForm, value: string | boolean | number) => {
     setFormData(prev => ({
@@ -401,79 +467,22 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
         {/* Informações Básicas */}
         <div className="mb-4">
           <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
-          <div className="row">
-            <div className="col-md-12">
-              <div className="mb-3">
-                <label htmlFor="banco-create-nome" className="form-label small">Nome *</label>
-                <input
-                  type="text"
-                  className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
-                  id="banco-create-nome"
-                  name="nome"
-                  autoComplete="organization"
-                  value={formData.nome}
-                  onChange={(e) => handleInputChange('nome', e.target.value)}
-                  disabled={createBancoMutation.isPending}
-                  placeholder="Ex: EFI - Conta Principal"
-                />
-                {errors.nome && <div className="invalid-feedback">{errors.nome}</div>}
-                <small className="text-secondary text-secondary">Nome para identificar esta conta do banco</small>
-              </div>
-            </div>
-          </div>
-
-          <div className="row">
-            <div className="col-md-6">
-              <div className="mb-3">
-                <label htmlFor="tipo_banco" className="form-label small">Tipo de Banco *</label>
-                <select
-                  className={`form-select ${errors.tipo_banco ? 'is-invalid' : ''}`}
-                  id="tipo_banco"
-                  name="tipo_banco"
-                  value={formData.tipo_banco}
-                  onChange={(e) => handleInputChange('tipo_banco', e.target.value)}
-                  disabled={createBancoMutation.isPending}
-                >
-                <option value="efi">EFI (Código: 364)</option>
-                <option value="asaas">Asaas (Código: 461)</option>
-                </select>
-                {errors.tipo_banco && <div className="invalid-feedback">{errors.tipo_banco}</div>}
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className="mb-3">
-                <div className="form-check mt-4">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="ativo"
-                    name="ativo"
-                    checked={formData.ativo}
-                    onChange={(e) => handleInputChange('ativo', e.target.checked)}
-                    disabled={createBancoMutation.isPending}
-                  />
-                  <label className="form-check-label" htmlFor="ativo">
-                    Banco Ativo
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="descricao" className="form-label small">Descrição</label>
-            <textarea
-              className="form-control form-control-sm"
-              id="descricao"
-              name="descricao"
-              rows={2}
-              value={formData.descricao}
-              onChange={(e) => handleInputChange('descricao', e.target.value)}
-              disabled={createBancoMutation.isPending}
-              placeholder="Descrição do banco"
-            ></textarea>
-          </div>
+          <Form
+            config={bancoFormConfig}
+            initialValues={formData}
+            onSubmit={(data) => {
+              // Atualizar apenas os campos principais
+              handleInputChange('nome', data.nome);
+              handleInputChange('codigo', data.codigo);
+              handleInputChange('descricao', data.descricao);
+              handleInputChange('tipo_banco', data.tipo_banco);
+              handleInputChange('ativo', data.ativo);
+              handleInputChange('sandbox', data.sandbox);
+            }}
+            showSubmitButton={false}
+            showResetButton={false}
+            className="banco-form"
+          />
         </div>
 
         {/* Configurações da API */}
