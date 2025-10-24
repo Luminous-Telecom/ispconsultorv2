@@ -12,6 +12,8 @@ import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
+import ImprimirModal from '../../common/ImprimirModal';
+import ModeloTermoService from '../../../services/modeloTermoService';
 import { useFormReset } from '../../../hooks/useFormReset';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
@@ -87,6 +89,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [selectedParcela, setSelectedParcela] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [selectedTermosItems, setSelectedTermosItems] = useState<any[]>([]);
+  
+  // Estados para modal de impressão
+  const [showPreview, setShowPreview] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  
   const [search, setSearch] = useState('');
   const [searchTermos, setSearchTermos] = useState('');
   const [page, setPage] = useState(1);
@@ -553,18 +561,21 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       label: 'Imprimir',
       variant: 'primary',
       disabled: () => selectedTermosItems.length === 0,
-      action: () => {
+      action: async () => {
         if (selectedTermosItems.length > 0) {
           const termo = selectedTermosItems[0];
           if (termo.modelo_termo_id && contratoId) {
-            // Fazer download direto do termo
-            const url = `/api/modelos-termo/${termo.modelo_termo_id}/pdf/contrato/${contratoId}`;
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `termo-${termo.modelo_termo_id}-contrato-${contratoId}.html`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            setIsGeneratingPdf(true);
+            try {
+              const url = await ModeloTermoService.generatePdfWithContrato(termo.modelo_termo_id, contratoId);
+              setPdfUrl(url);
+              setShowPreview(true);
+            } catch (error: any) {
+              console.error('Erro ao gerar PDF:', error);
+              error('Erro ao gerar documento para impressão');
+            } finally {
+              setIsGeneratingPdf(false);
+            }
           }
         }
       }
@@ -2043,6 +2054,18 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           />
         </div>
       </DraggableModal>
+
+      {/* Modal de impressão */}
+      <ImprimirModal
+        show={showPreview}
+        onClose={() => {
+          setShowPreview(false);
+          setPdfUrl(null);
+        }}
+        pdfUrl={pdfUrl}
+        title="Visualizar Termo"
+        modalId="termo-imprimir-modal"
+      />
     </DraggableModal>
   );
 };

@@ -73,6 +73,10 @@ class ModeloTermoService {
     );
     return response.data;
   }
+
+  static async generatePdfWithContrato(id: number, contratoId: number): Promise<string> {
+    return `${this.baseUrl}/${id}/pdf/contrato/${contratoId}`;
+  }
 }
 
 export default ModeloTermoService;
