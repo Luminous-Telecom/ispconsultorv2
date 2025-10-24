@@ -163,6 +163,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
       }
     },
     onSuccess: () => {
+      console.log('Mutation onSuccess chamada para tipo:', tipo);
       addNotification('success', 'Documento salvo com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
@@ -191,8 +192,11 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     }
 
     try {
+      console.log('Salvando documento:', { tipo, formData });
+      
       if (tipo === 'contrato') {
         // Para contratos, usar a mutation para garantir tratamento correto de erros e notificações
+        console.log('Chamando updateDocumentoMutation para contrato');
         await updateDocumentoMutation.mutateAsync({
           nome: formData.nome,
           descricao: formData.descricao,
@@ -201,14 +205,18 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
           conteudo_adesao: formData.conteudo_adesao,
           conteudo_permanencia: formData.conteudo_permanencia
         });
+        console.log('Mutation de contrato concluída');
       } else {
+        console.log('Chamando updateDocumentoMutation para', tipo);
         await updateDocumentoMutation.mutateAsync({
           nome: formData.nome,
           descricao: formData.descricao,
           conteudo: formData.conteudo
         });
+        console.log('Mutation concluída');
       }
     } catch (error: any) {
+      console.error('Erro ao salvar documento:', error);
       addNotification('error', error.message || 'Erro ao salvar documento');
     }
   };
