@@ -17,11 +17,9 @@ export class TermoContrato extends Model<
 > {
   declare id: CreationOptional<number>;
   declare contrato_id: number;
-  declare tipo_termo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao';
-  declare conteudo: string;
+  declare modelo_termo_id: number | null;
   declare data_aceite: Date | null;
   declare aceito_por: string | null;
-  declare observacoes: string | null;
   declare ativo: boolean;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -71,13 +69,13 @@ TermoContrato.init(
         key: 'id'
       }
     },
-    tipo_termo: {
-      type: DataTypes.ENUM('adesao', 'permanencia', 'cancelamento', 'alteracao'),
-      allowNull: false
-    },
-    conteudo: {
-      type: DataTypes.TEXT('long'),
-      allowNull: false
+    modelo_termo_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'modelos_termo',
+        key: 'id'
+      }
     },
     data_aceite: {
       type: DataTypes.DATE,
@@ -85,10 +83,6 @@ TermoContrato.init(
     },
     aceito_por: {
       type: DataTypes.STRING(255),
-      allowNull: true
-    },
-    observacoes: {
-      type: DataTypes.TEXT,
       allowNull: true
     },
     ativo: {
@@ -118,14 +112,10 @@ TermoContrato.init(
         fields: ['contrato_id']
       },
       {
-        fields: ['tipo_termo']
+        fields: ['modelo_termo_id']
       },
       {
         fields: ['ativo']
-      },
-      {
-        fields: ['contrato_id', 'tipo_termo'],
-        unique: true
       }
     ]
   }

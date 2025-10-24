@@ -64,13 +64,22 @@ export class TermoContratoController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
-      const { tipo_termo, conteudo, observacoes } = req.body;
+      const { modelo_termo_id } = req.body;
 
       // Validações
-      if (!contratoId || !tipo_termo || !conteudo) {
+      if (!contratoId) {
         res.status(400).json({
           success: false,
-          message: 'Contrato ID, tipo do termo e conteúdo são obrigatórios'
+          message: 'Contrato ID é obrigatório'
+        });
+        return;
+      }
+
+      // Se não há modelo_termo_id, retornar erro
+      if (!modelo_termo_id) {
+        res.status(400).json({
+          success: false,
+          message: 'É obrigatório selecionar um modelo de termo'
         });
         return;
       }
@@ -85,28 +94,9 @@ export class TermoContratoController {
         return;
       }
 
-      // Verificar se já existe um termo ativo do mesmo tipo para este contrato
-      const termoExistente = await TermoContrato.findOne({
-        where: {
-          contrato_id: contratoId,
-          tipo_termo,
-          ativo: true
-        }
-      });
-
-      if (termoExistente) {
-        res.status(400).json({
-          success: false,
-          message: `Já existe um termo ativo do tipo "${tipo_termo}" para este contrato`
-        });
-        return;
-      }
-
       const termo = await TermoContrato.create({
         contrato_id: parseInt(contratoId),
-        tipo_termo,
-        conteudo,
-        observacoes,
+        modelo_termo_id: modelo_termo_id,
         ativo: true
       });
 
@@ -128,7 +118,7 @@ export class TermoContratoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { conteudo, observacoes, ativo } = req.body;
+      const { ativo, modelo_termo_id } = req.body;
 
       const termo = await TermoContrato.findByPk(id);
       
@@ -141,9 +131,8 @@ export class TermoContratoController {
       }
 
       // Atualizar apenas campos permitidos
-      if (conteudo !== undefined) termo.conteudo = conteudo;
-      if (observacoes !== undefined) termo.observacoes = observacoes;
       if (ativo !== undefined) termo.ativo = ativo;
+      if (modelo_termo_id !== undefined) termo.modelo_termo_id = modelo_termo_id;
 
       await termo.save();
 
