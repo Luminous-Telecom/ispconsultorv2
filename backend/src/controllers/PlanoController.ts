@@ -153,9 +153,6 @@ export class PlanoController {
     try {
       const { id } = req.params;
       
-      console.log('Dados recebidos para atualização:', req.body);
-      console.log('ID do plano:', id);
-      
       // Verificar se o plano existe
       const existingPlano = await Plano.findByPk(id);
       if (!existingPlano) {
@@ -203,8 +200,6 @@ export class PlanoController {
           }
         }
       });
-      
-      console.log('Dados filtrados para atualização:', updateData);
       
       const [updatedRowsCount] = await Plano.update(updateData, {
         where: { id }

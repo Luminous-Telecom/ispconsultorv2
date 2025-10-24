@@ -33,18 +33,13 @@ export class SchedulerService {
       return;
     }
 
-    console.log('Parando SchedulerService...');
-    
     // Parar todos os cron jobs
     this.cronJobs.forEach((job, routineId) => {
       job.destroy();
-      console.log(`Cron job parado para rotina ID: ${routineId}`);
     });
 
     this.cronJobs.clear();
     this.isRunning = false;
-    
-    console.log('SchedulerService parado');
   }
 
   private async loadRoutinesFromDatabase(): Promise<void> {
@@ -93,7 +88,6 @@ export class SchedulerService {
     if (job) {
       job.destroy();
       this.cronJobs.delete(routineId);
-      console.log(`Rotina removida do agendamento: ID ${routineId}`);
     }
   }
 
@@ -129,17 +123,13 @@ export class SchedulerService {
     let executionLog: RoutineExecutionLog | null = null;
 
     try {
-      console.log(`Executando rotina: ${routine.nome} (ID: ${routine.id})`);
-
       // Criar log de execução
-      console.log('Criando log de execução para rotina:', routine.id);
       executionLog = await RoutineExecutionLog.create({
         routine_id: routine.id,
         status: 'executando',
         data_inicio: startTime,
         created_at: new Date()
       });
-      console.log('Log de execução criado com ID:', executionLog.id);
 
       // Executar a rotina baseada no tipo
       const resultado = await this.executeRoutineByType(routine);
@@ -171,20 +161,15 @@ export class SchedulerService {
 
       if (temErros) {
         statusFinal = 'erro';
-        console.log('Rotina executada com erros:', routine.nome);
-      } else {
-        console.log('Rotina executada com sucesso:', routine.nome);
       }
 
       // Atualizar log com status correto
-      console.log('Atualizando log com status:', statusFinal, executionLog.id);
       await executionLog.update({
         status: statusFinal as 'sucesso' | 'erro',
         data_fim: endTime,
         duracao_ms: duration,
         resultado: resultado
       });
-      console.log('Log atualizado com status:', statusFinal);
 
       // Atualizar contadores da rotina
       await routine.increment('total_execucoes');
@@ -194,8 +179,6 @@ export class SchedulerService {
         await routine.increment('execucoes_com_erro');
       }
       await routine.update({ ultima_execucao: endTime });
-
-      console.log(`Rotina ${statusFinal}: ${routine.nome} (${duration}ms)`);
 
     } catch (error: any) {
       console.error(`Erro ao executar rotina ${routine.nome}:`, error);
@@ -237,7 +220,7 @@ export class SchedulerService {
   }
 
   private async executeGeracaoTitulos(routine: ScheduledRoutine): Promise<any> {
-    console.log('Geração de títulos não está mais disponível - funcionalidade de carnê foi removida');
+    // Geração de títulos não está mais disponível - funcionalidade de carnê foi removida
     
     return {
       success: false,
@@ -247,7 +230,6 @@ export class SchedulerService {
 
   private async executeEnvioBoletos(routine: ScheduledRoutine): Promise<any> {
     // Implementar lógica de envio de boletos
-    console.log('Executando envio de boletos...');
     
     return {
       boletos_enviados: 0,
@@ -258,7 +240,6 @@ export class SchedulerService {
 
   private async executeRemessaBancaria(routine: ScheduledRoutine): Promise<any> {
     // Implementar lógica de remessa bancária
-    console.log('Executando remessa bancária...');
     
     return {
       remessas_geradas: 0,
@@ -284,7 +265,6 @@ export class SchedulerService {
       proxima_execucao: this.calculateNextExecution(data)
     });
 
-    console.log(`Rotina criada: ${routine.nome} (ID: ${routine.id})`);
     return routine;
   }
 
@@ -294,7 +274,6 @@ export class SchedulerService {
       throw new Error('Rotina não encontrada');
     }
 
-    console.log(`📝 Atualizando rotina ${id}:`, {
       hora_execucao_atual: routine.hora_execucao,
       hora_execucao_nova: data.hora_execucao,
       frequencia_atual: routine.frequencia,
@@ -309,7 +288,6 @@ export class SchedulerService {
       data.dia_execucao !== undefined || 
       data.dia_semana !== undefined;
 
-    console.log(`🔄 Deve recalcular próxima execução:`, shouldRecalculateNextExecution);
 
     if (shouldRecalculateNextExecution) {
       // Usar os novos dados ou os existentes para recalcular
@@ -319,7 +297,6 @@ export class SchedulerService {
       };
       data.proxima_execucao = this.calculateNextExecution(updatedData);
       
-      console.log(`🕐 Nova próxima execução calculada:`, {
         hora_execucao: updatedData.hora_execucao,
         frequencia: updatedData.frequencia,
         proxima_execucao: data.proxima_execucao
@@ -353,7 +330,6 @@ export class SchedulerService {
     // Deletar rotina
     await routine.destroy();
 
-    console.log(`Rotina deletada: ${routine.nome} (ID: ${id})`);
   }
 
   public async toggleRoutine(id: number, ativo: boolean): Promise<ScheduledRoutine> {
@@ -370,7 +346,6 @@ export class SchedulerService {
       this.unscheduleRoutine(id);
     }
 
-    console.log(`Rotina ${ativo ? 'ativada' : 'desativada'}: ${routine.nome} (ID: ${id})`);
     return routine;
   }
 
@@ -380,7 +355,6 @@ export class SchedulerService {
       throw new Error('Rotina não encontrada');
     }
 
-    console.log(`Executando rotina manualmente: ${routine.nome} (ID: ${id})`);
     
     // Usar runRoutine para criar logs completos - isso já executa a rotina
     await this.runRoutine(routine);
@@ -391,7 +365,6 @@ export class SchedulerService {
 
 
   private calculateNextExecution(routine: any): Date {
-    console.log('🧮 Calculando próxima execução para:', {
       hora_execucao: routine.hora_execucao,
       frequencia: routine.frequencia
     });
@@ -402,7 +375,6 @@ export class SchedulerService {
     let nextExecution = new Date();
     nextExecution.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    console.log('⏰ Hora configurada:', {
       hours: parseInt(hours),
       minutes: parseInt(minutes),
       nextExecutionTime: nextExecution.toISOString(),
@@ -433,7 +405,6 @@ export class SchedulerService {
           nextExecution.setDate(nextExecution.getDate() + 1);
       }
       
-      console.log('📅 Avançando data:', {
         frequencia: routine.frequencia,
         de: `${oldDate}/${oldMonth + 1}/${oldYear}`,
         para: `${nextExecution.getDate()}/${nextExecution.getMonth() + 1}/${nextExecution.getFullYear()}`
@@ -510,14 +481,12 @@ export class SchedulerService {
   }
 
   public async getExecutionLogs(routineId?: number): Promise<any[]> {
-    console.log('Buscando logs de execução para rotina:', routineId);
     
     const where: any = {};
     if (routineId) {
       where.routine_id = routineId;
     }
 
-    console.log('Query where clause:', where);
 
     try {
       const logs = await RoutineExecutionLog.findAll({
@@ -531,7 +500,6 @@ export class SchedulerService {
         limit: 100
       });
 
-      console.log('Logs encontrados:', logs.length);
       return logs;
     } catch (error) {
       console.error('Erro ao buscar logs:', error);

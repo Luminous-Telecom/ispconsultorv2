@@ -39,7 +39,6 @@ export class WorkerManager extends EventEmitter {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      console.log('WorkerManager já está em execução');
       return;
     }
 
@@ -70,7 +69,6 @@ export class WorkerManager extends EventEmitter {
     }
 
     this.isRunning = false;
-    console.log('🛑 Parando WorkerManager...');
 
     // Parar verificação periódica
     if (this.checkInterval) {
@@ -81,7 +79,6 @@ export class WorkerManager extends EventEmitter {
     // Aguardar execuções ativas terminarem
     const activePromises = Array.from(this.activeExecutions.values());
     if (activePromises.length > 0) {
-      console.log(`Aguardando ${activePromises.length} execuções ativas terminarem...`);
       await Promise.allSettled(activePromises);
     }
 
@@ -109,8 +106,6 @@ export class WorkerManager extends EventEmitter {
       order: [['proxima_execucao', 'ASC']]
     });
 
-    console.log(`📋 Encontradas ${routines.length} rotinas para execução`);
-
     for (const routine of routines) {
       try {
         await this.executeRoutine(routine);
@@ -136,7 +131,6 @@ export class WorkerManager extends EventEmitter {
     });
 
     if (routines.length > 0) {
-      console.log(`🔄 Processando ${routines.length} rotinas pendentes`);
       for (const routine of routines) {
         try {
           await this.executeRoutine(routine);
@@ -153,18 +147,14 @@ export class WorkerManager extends EventEmitter {
   async executeRoutine(routine: ScheduledRoutine): Promise<void> {
     // Verificar se já está sendo executada
     if (this.activeExecutions.has(routine.id)) {
-      console.log(`⏳ Rotina ${routine.id} já está sendo executada`);
       return;
     }
 
     // Verificar limite de workers
     const workersStatus = SchedulerWorker.getWorkersStatus();
     if (workersStatus.active >= this.config.maxWorkers) {
-      console.log(`⚠️ Limite de workers atingido (${workersStatus.active}/${this.config.maxWorkers})`);
       return;
     }
-
-    console.log(`🎯 Executando rotina: ${routine.nome} (ID: ${routine.id})`);
 
     const executionPromise = this.executeWithRetry(routine);
     this.activeExecutions.set(routine.id, executionPromise);
@@ -187,7 +177,6 @@ export class WorkerManager extends EventEmitter {
 
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
-        console.log(`🔄 Tentativa ${attempt}/${this.config.retryAttempts} para rotina ${routine.id}`);
         
         await SchedulerWorker.executeRoutine(routine.id, routine.configuracao);
         
@@ -201,7 +190,6 @@ export class WorkerManager extends EventEmitter {
         console.error(`❌ Tentativa ${attempt} falhou para rotina ${routine.id}:`, error.message);
 
         if (attempt < this.config.retryAttempts) {
-          console.log(`⏳ Aguardando ${this.config.retryDelay}ms antes da próxima tentativa...`);
           await this.delay(this.config.retryDelay);
         }
       }
@@ -248,8 +236,7 @@ export class WorkerManager extends EventEmitter {
       proxima_execucao: nextExecution
     });
 
-    console.log(`📅 Próxima execução da rotina ${routine.id}: ${nextExecution.toISOString()}`);
-  }
+    // Atualizar próxima execução
 
   /**
    * Executa rotina manualmente

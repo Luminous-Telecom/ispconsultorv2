@@ -176,7 +176,7 @@ export class Titulo extends Model<
         if (!resultado.success) {
           console.warn('Falha ao liquidar título no banco externo:', resultado.message);
         } else {
-          console.log('Título liquidado com sucesso no banco externo');
+          // Título liquidado com sucesso no banco externo
         }
       } catch (error) {
         console.error('Erro ao integrar com banco externo:', error);

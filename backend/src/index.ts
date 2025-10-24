@@ -224,12 +224,10 @@ const startServer = async () => {
 
 // Tratamento de sinais para graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM recebido, encerrando servidor...');
   try {
     const { SchedulerService } = await import('./services/SchedulerService');
     const schedulerService = SchedulerService.getInstance();
     schedulerService.stop();
-    console.log('⏰ Agendador de rotinas parado');
   } catch (error) {
     console.error('Erro ao parar agendador:', error);
   }
@@ -238,12 +236,10 @@ process.on('SIGTERM', async () => {
 });
 
 process.on('SIGINT', async () => {
-  console.log('SIGINT recebido, encerrando servidor...');
   try {
     const { SchedulerService } = await import('./services/SchedulerService');
     const schedulerService = SchedulerService.getInstance();
     schedulerService.stop();
-    console.log('⏰ Agendador de rotinas parado');
   } catch (error) {
     console.error('Erro ao parar agendador:', error);
   }

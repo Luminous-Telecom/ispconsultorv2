@@ -219,9 +219,6 @@ export class ContratoController {
     try {
       const { id } = req.params;
       
-      // Log do body recebido para debug
-      console.log('Update contrato - Body recebido:', JSON.stringify(req.body, null, 2));
-      
       const { error, value } = ContratoController.updateSchema.validate(req.body, {
         stripUnknown: true // Ignorar campos não definidos no schema (como 'id')
       });

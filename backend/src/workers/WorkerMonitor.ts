@@ -63,7 +63,6 @@ export class WorkerMonitor extends EventEmitter {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      console.log('WorkerMonitor já está em execução');
       return;
     }
 
@@ -104,7 +103,6 @@ export class WorkerMonitor extends EventEmitter {
     }
 
     this.isRunning = false;
-    console.log('🛑 Parando WorkerMonitor...');
 
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
@@ -264,7 +262,6 @@ export class WorkerMonitor extends EventEmitter {
       });
 
       if (deletedCount > 0) {
-        console.log(`🧹 Limpeza de logs: ${deletedCount} registros removidos`);
         this.emit('logsCleaned', { deletedCount });
       }
     } catch (error) {
