@@ -5,6 +5,27 @@ import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import puppeteer from 'puppeteer';
+
+// Declaração de tipos para html-pdf-node
+declare module 'html-pdf-node' {
+  export interface Options {
+    format?: string;
+    margin?: {
+      top?: string;
+      right?: string;
+      bottom?: string;
+      left?: string;
+    };
+    printBackground?: boolean;
+  }
+
+  export interface File {
+    content: string;
+  }
+
+  export function generatePdf(file: File, options?: Options): Promise<Buffer>;
+}
+
 import * as htmlPdf from 'html-pdf-node';
 
 export class ModeloTermoController {
