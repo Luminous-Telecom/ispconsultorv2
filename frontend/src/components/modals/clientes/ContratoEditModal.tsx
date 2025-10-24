@@ -14,6 +14,7 @@ import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
+import { ModeloTermoService } from '../../../services/modeloTermoService';
 
 interface ContratoForm {
   plano_id: number;
@@ -67,7 +68,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     tipo_termo: 'adesao' as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
     conteudo: '',
     observacoes: '',
-    assinado: false
+    assinado: false,
+    usarTermoCadastrado: false,
+    termoCadastradoId: 0
   });
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
@@ -86,8 +89,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   
-  // Hooks para buscar dados
-  const { data: planosData } = usePlanos();
+  // Buscar termos cadastrados no sistema
+  const { data: termosSistema } = useQuery({
+    queryKey: ['termos-sistema'],
+    queryFn: () => ModeloTermoService.list(),
+    enabled: showTermoModal
+  });
   const { data: bancosData } = useBancos();
   const { data: modelosContratoData } = useQuery({
     queryKey: ['modelos-contrato'],
@@ -1711,7 +1718,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               tipo_termo: 'adesao',
               conteudo: '',
               observacoes: '',
-              assinado: false
+              assinado: false,
+              usarTermoCadastrado: false,
+              termoCadastradoId: 0
             });
           } catch (error) {
             console.error('Erro ao criar termo:', error);
@@ -1778,18 +1787,115 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </div>
           
           <div className="mb-3">
-            <label htmlFor="conteudo" className="form-label">
+            <label className="form-label">
               Conteúdo do Termo <span className="text-danger">*</span>
             </label>
-            <textarea
-              id="conteudo"
-              className="form-control"
-              rows={8}
-              value={termoFormData.conteudo}
-              onChange={(e) => setTermoFormData({ ...termoFormData, conteudo: e.target.value })}
-              placeholder="Digite o conteúdo do termo..."
-              required
-            />
+            
+            {/* Opção de escolha */}
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="tipoConteudo"
+                  id="termoCadastrado"
+                  checked={termoFormData.usarTermoCadastrado}
+                  onChange={() => setTermoFormData({ 
+                    ...termoFormData, 
+                    usarTermoCadastrado: true,
+                    conteudo: '' // Limpar conteúdo personalizado
+                  })}
+                />
+                <label className="form-check-label" htmlFor="termoCadastrado">
+                  Usar termo cadastrado no sistema
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="tipoConteudo"
+                  id="conteudoPersonalizado"
+                  checked={!termoFormData.usarTermoCadastrado}
+                  onChange={() => setTermoFormData({ 
+                    ...termoFormData, 
+                    usarTermoCadastrado: false,
+                    termoCadastradoId: 0 // Limpar seleção de termo
+                  })}
+                />
+                <label className="form-check-label" htmlFor="conteudoPersonalizado">
+                  Digitar conteúdo personalizado
+                </label>
+              </div>
+            </div>
+
+            {/* Campo de seleção de termo cadastrado */}
+            {termoFormData.usarTermoCadastrado && (
+              <div className="mb-3">
+                <label htmlFor="termoCadastradoSelect" className="form-label">
+                  Selecionar Termo Cadastrado
+                </label>
+                <select
+                  id="termoCadastradoSelect"
+                  className="form-select"
+                  value={termoFormData.termoCadastradoId}
+                  onChange={(e) => {
+                    const termoId = parseInt(e.target.value);
+                    const termoSelecionado = termosSistema?.data?.find((t: any) => t.id === termoId);
+                    setTermoFormData({ 
+                      ...termoFormData, 
+                      termoCadastradoId: termoId,
+                      conteudo: termoSelecionado?.conteudo || ''
+                    });
+                  }}
+                  required={termoFormData.usarTermoCadastrado}
+                >
+                  <option value={0}>Selecione um termo...</option>
+                  {termosSistema?.data?.map((termo: any) => (
+                    <option key={termo.id} value={termo.id}>
+                      {termo.nome} - {termo.tipo_termo}
+                    </option>
+                  ))}
+                </select>
+                {termoFormData.termoCadastradoId > 0 && (
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      <strong>Conteúdo:</strong>
+                    </small>
+                    <div 
+                      className="border rounded p-2 mt-1" 
+                      style={{ 
+                        maxHeight: '200px', 
+                        overflowY: 'auto',
+                        backgroundColor: 'var(--bg-secondary)',
+                        fontSize: '0.875rem'
+                      }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: termosSistema?.data?.find((t: any) => t.id === termoFormData.termoCadastradoId)?.conteudo || '' 
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Campo de conteúdo personalizado */}
+            {!termoFormData.usarTermoCadastrado && (
+              <div className="mb-3">
+                <label htmlFor="conteudo" className="form-label">
+                  Conteúdo Personalizado
+                </label>
+                <textarea
+                  id="conteudo"
+                  className="form-control"
+                  rows={8}
+                  value={termoFormData.conteudo}
+                  onChange={(e) => setTermoFormData({ ...termoFormData, conteudo: e.target.value })}
+                  placeholder="Digite o conteúdo do termo..."
+                  required={!termoFormData.usarTermoCadastrado}
+                />
+              </div>
+            )}
           </div>
           
           <div className="mb-3">
