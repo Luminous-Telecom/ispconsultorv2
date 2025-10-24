@@ -5,6 +5,7 @@ import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import { useCreateContrato, useUpdateContrato } from '../../../hooks/useContratos';
 import { useTermosContrato, useCreateTermoContrato, useUpdateTermoContrato, useDeactivateTermoContrato, useDeleteTermoContrato } from '../../../hooks/useTermosContrato';
+import { TermoContrato } from '../../../services/TermoContratoService';
 import { useModelosTermo } from '../../../hooks/useModelosTermo';
 import { TituloService } from '../../../services/tituloService';
 import { Titulo, Plano } from '../../../types';
@@ -66,6 +67,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [showTermoModal, setShowTermoModal] = useState(false);
   const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
   const [termoSelecionado, setTermoSelecionado] = useState<any>(null);
+  const [editingTermo, setEditingTermo] = useState<TermoContrato | null>(null);
   const [searchTermosModal, setSearchTermosModal] = useState('');
   const [pageTermosModal, setPageTermosModal] = useState(1);
   const [limitTermosModal, setLimitTermosModal] = useState(10);
@@ -501,6 +503,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     {
       label: 'Novo',
       action: () => {
+        setEditingTermo(null);
         setTermoFormData({
           assinado: 'NAO',
           termoCadastradoId: 0
@@ -512,8 +515,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       label: 'Editar',
       action: (selectedItems: any[]) => {
         if (selectedItems.length > 0) {
-          const item = selectedItems[0];
-          console.log('Editar termo:', item);
+          const termo = selectedItems[0];
+          setEditingTermo(termo);
+          setTermoFormData({
+            assinado: termo.assinado,
+            termoCadastradoId: termo.modelo_termo_id || 0
+          });
+          setShowTermoModal(true);
         }
       }
     },
@@ -1758,8 +1766,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       {/* Modal para criar/editar termo */}
       <DraggableModal
         show={showTermoModal}
-        onClose={() => setShowTermoModal(false)}
-        title="Novo Termo"
+        onClose={() => {
+          setShowTermoModal(false);
+          setEditingTermo(null);
+        }}
+        title={editingTermo ? "Editar Termo" : "Novo Termo"}
         size="lg"
       >
         <form onSubmit={async (e) => {
@@ -1771,14 +1782,28 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               return;
             }
             
-            await createTermoMutation.mutateAsync({
-              contratoId: contratoId!,
-              data: {
-                modelo_termo_id: termoFormData.termoCadastradoId,
-                assinado: termoFormData.assinado
-              }
-            });
+            if (editingTermo) {
+              // Atualizar termo existente
+              await updateTermoMutation.mutateAsync({
+                id: editingTermo.id,
+                data: {
+                  modelo_termo_id: termoFormData.termoCadastradoId,
+                  assinado: termoFormData.assinado
+                }
+              });
+            } else {
+              // Criar novo termo
+              await createTermoMutation.mutateAsync({
+                contratoId: contratoId!,
+                data: {
+                  modelo_termo_id: termoFormData.termoCadastradoId,
+                  assinado: termoFormData.assinado
+                }
+              });
+            }
+            
             setShowTermoModal(false);
+            setEditingTermo(null);
             setTermoFormData({
               assinado: 'NAO',
               termoCadastradoId: 0
@@ -1910,16 +1935,22 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <button 
               type="button" 
               className="btn btn-secondary" 
-              onClick={() => setShowTermoModal(false)}
+              onClick={() => {
+                setShowTermoModal(false);
+                setEditingTermo(null);
+              }}
             >
               Cancelar
             </button>
             <button 
               type="submit" 
               className="btn btn-primary"
-              disabled={createTermoMutation.isPending}
+              disabled={createTermoMutation.isPending || updateTermoMutation.isPending}
             >
-              {createTermoMutation.isPending ? 'Salvando...' : 'Salvar'}
+              {(createTermoMutation.isPending || updateTermoMutation.isPending) 
+                ? 'Salvando...' 
+                : (editingTermo ? 'Atualizar' : 'Salvar')
+              }
             </button>
           </div>
         </form>
