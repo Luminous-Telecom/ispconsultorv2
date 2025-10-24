@@ -1902,7 +1902,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     className="btn btn-outline-secondary"
                     title="Abrir listagem de registros"
                     onClick={() => {
+                      console.log('Clicando no botão de busca, showSelecionarTermoModal:', showSelecionarTermoModal);
                       setShowSelecionarTermoModal(true);
+                      console.log('Após setShowSelecionarTermoModal(true)');
                     }}
                   >
                     <i className="fa fa-search" style={{ transform: 'rotate(90deg)' }}></i>
@@ -1960,12 +1962,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       <DraggableModal
         show={showSelecionarTermoModal}
         onClose={() => {
+          console.log('Fechando modal de seleção');
           setShowSelecionarTermoModal(false);
           setTermoSelecionado(null);
         }}
         title="Selecionar Termo Cadastrado"
         size="lg"
-        modalId={`selecionar-termo-modal-${contratoId || 'new'}`}
+        modalId="selecionar-termo-modal"
         headerActions={
           <div className="d-flex gap-2">
             <button 

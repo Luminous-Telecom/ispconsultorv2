@@ -49,14 +49,15 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
 
   // Gerenciar pilha de modais
   useEffect(() => {
+    const currentModalId = modalId || `modal-${Date.now()}`;
     if (show) {
-      modalStack.push(modalId);
+      modalStack.push(currentModalId);
     } else {
-      modalStack.remove(modalId);
+      modalStack.remove(currentModalId);
     }
 
     return () => {
-      modalStack.remove(modalId);
+      modalStack.remove(currentModalId);
     };
   }, [show, modalId]);
 
@@ -164,8 +165,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && show) {
+        const currentModalId = modalId || `modal-${Date.now()}`;
         // Verificar se este modal está no topo da pilha
-        if (modalStack.isTop(modalId)) {
+        if (modalStack.isTop(currentModalId)) {
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
