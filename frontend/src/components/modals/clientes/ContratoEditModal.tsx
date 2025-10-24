@@ -1838,28 +1838,82 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 <label htmlFor="termoCadastradoSelect" className="form-label">
                   Selecionar Termo Cadastrado
                 </label>
-                <select
-                  id="termoCadastradoSelect"
-                  className="form-select"
-                  value={termoFormData.termoCadastradoId}
-                  onChange={(e) => {
-                    const termoId = parseInt(e.target.value);
-                    const termoSelecionado = termosSistema?.data?.find((t: any) => t.id === termoId);
-                    setTermoFormData({ 
-                      ...termoFormData, 
-                      termoCadastradoId: termoId,
-                      conteudo: termoSelecionado?.conteudo || ''
-                    });
-                  }}
-                  required={termoFormData.usarTermoCadastrado}
-                >
-                  <option value={0}>Selecione um termo...</option>
-                  {termosSistema?.data?.map((termo: any) => (
-                    <option key={termo.id} value={termo.id}>
-                      {termo.nome} - {termo.tipo_termo}
-                    </option>
-                  ))}
-                </select>
+                <div className="input-group">
+                  <input
+                    type="text"
+                    id="termoCadastradoSelect"
+                    className="form-control"
+                    value={termoFormData.termoCadastradoId > 0 ? 
+                      termosSistema?.data?.find((t: any) => t.id === termoFormData.termoCadastradoId)?.nome || '' : 
+                      ''
+                    }
+                    placeholder="Digite para buscar ou selecione um termo..."
+                    readOnly
+                    onClick={() => {
+                      // Abrir dropdown personalizado ou modal de seleção
+                      const selectElement = document.getElementById('termoCadastradoSelect') as HTMLSelectElement;
+                      if (selectElement) {
+                        selectElement.focus();
+                      }
+                    }}
+                    required={termoFormData.usarTermoCadastrado}
+                  />
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={() => {
+                      // Implementar busca/filtro
+                      console.log('Buscar termos');
+                    }}
+                    title="Buscar termos"
+                  >
+                    <i className="bi bi-search"></i>
+                  </button>
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={() => {
+                      // Implementar visualização externa
+                      if (termoFormData.termoCadastradoId > 0) {
+                        const termo = termosSistema?.data?.find((t: any) => t.id === termoFormData.termoCadastradoId);
+                        if (termo) {
+                          // Abrir modal ou nova aba com detalhes do termo
+                          console.log('Visualizar termo:', termo);
+                        }
+                      }
+                    }}
+                    title="Visualizar termo"
+                    disabled={termoFormData.termoCadastradoId === 0}
+                  >
+                    <i className="bi bi-box-arrow-up-right"></i>
+                  </button>
+                </div>
+                
+                {/* Dropdown de seleção */}
+                <div className="mt-2">
+                  <select
+                    className="form-select form-select-sm"
+                    value={termoFormData.termoCadastradoId}
+                    onChange={(e) => {
+                      const termoId = parseInt(e.target.value);
+                      const termoSelecionado = termosSistema?.data?.find((t: any) => t.id === termoId);
+                      setTermoFormData({ 
+                        ...termoFormData, 
+                        termoCadastradoId: termoId,
+                        conteudo: termoSelecionado?.conteudo || ''
+                      });
+                    }}
+                    style={{ fontSize: '0.875rem' }}
+                  >
+                    <option value={0}>Selecione um termo...</option>
+                    {termosSistema?.data?.map((termo: any) => (
+                      <option key={termo.id} value={termo.id}>
+                        {termo.nome} - {termo.tipo_termo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
                 {termoFormData.termoCadastradoId > 0 && (
                   <div className="mt-2">
                     <small className="text-muted">
