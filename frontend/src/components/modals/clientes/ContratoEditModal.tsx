@@ -15,7 +15,6 @@ import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import ModeloTermoService from '../../../services/modeloTermoService';
-import DataTable from '../../common/DataTable';
 
 interface ContratoForm {
   plano_id: number;
@@ -67,11 +66,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [showTermoModal, setShowTermoModal] = useState(false);
   const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
   const [termoSelecionado, setTermoSelecionado] = useState<any>(null);
-  const [searchTermos, setSearchTermos] = useState('');
-  const [pageTermos, setPageTermos] = useState(1);
-  const [limitTermos, setLimitTermos] = useState(10);
-  const [sortColumnTermos, setSortColumnTermos] = useState<string>('id');
-  const [sortDirectionTermos, setSortDirectionTermos] = useState<'asc' | 'desc'>('desc');
+  const [searchTermosModal, setSearchTermosModal] = useState('');
+  const [pageTermosModal, setPageTermosModal] = useState(1);
+  const [limitTermosModal, setLimitTermosModal] = useState(10);
+  const [sortColumnTermosModal, setSortColumnTermosModal] = useState<string>('id');
+  const [sortDirectionTermosModal, setSortDirectionTermosModal] = useState<'asc' | 'desc'>('desc');
   const [termoFormData, setTermoFormData] = useState({
     tipo_termo: 'adesao' as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
     conteudo: '',
@@ -111,8 +110,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     let filtered = [...termosSistema.data];
     
     // Aplicar busca
-    if (searchTermos) {
-      const searchLower = searchTermos.toLowerCase();
+    if (searchTermosModal) {
+      const searchLower = searchTermosModal.toLowerCase();
       filtered = filtered.filter(t => 
         t.nome?.toLowerCase().includes(searchLower) ||
         t.tipo_termo?.toLowerCase().includes(searchLower) ||
@@ -122,33 +121,33 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     
     // Aplicar ordenação
     filtered.sort((a, b) => {
-      let aVal: any = a[sortColumnTermos as keyof typeof a];
-      let bVal: any = b[sortColumnTermos as keyof typeof b];
+      let aVal: any = a[sortColumnTermosModal as keyof typeof a];
+      let bVal: any = b[sortColumnTermosModal as keyof typeof b];
       
       if (aVal === bVal) return 0;
       if (aVal == null) return 1;
       if (bVal == null) return -1;
       
       const comparison = aVal < bVal ? -1 : 1;
-      return sortDirectionTermos === 'asc' ? comparison : -comparison;
+      return sortDirectionTermosModal === 'asc' ? comparison : -comparison;
     });
     
     return filtered;
-  }, [termosSistema?.data, searchTermos, sortColumnTermos, sortDirectionTermos]);
+  }, [termosSistema?.data, searchTermosModal, sortColumnTermosModal, sortDirectionTermosModal]);
 
   // Paginar termos
   const paginatedTermos = React.useMemo(() => {
-    const startIndex = (pageTermos - 1) * limitTermos;
-    return filteredTermos.slice(startIndex, startIndex + limitTermos);
-  }, [filteredTermos, pageTermos, limitTermos]);
+    const startIndex = (pageTermosModal - 1) * limitTermosModal;
+    return filteredTermos.slice(startIndex, startIndex + limitTermosModal);
+  }, [filteredTermos, pageTermosModal, limitTermosModal]);
 
   // Criar paginação manual para client-side
   const paginationTermos = {
-    from: (pageTermos - 1) * limitTermos + 1,
-    to: Math.min(pageTermos * limitTermos, filteredTermos.length),
+    from: (pageTermosModal - 1) * limitTermosModal + 1,
+    to: Math.min(pageTermosModal * limitTermosModal, filteredTermos.length),
     total: filteredTermos.length,
-    current_page: pageTermos,
-    last_page: Math.ceil(filteredTermos.length / limitTermos)
+    current_page: pageTermosModal,
+    last_page: Math.ceil(filteredTermos.length / limitTermosModal)
   };
 
   // Definir colunas da tabela de termos
@@ -2118,18 +2117,18 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             columns={columnsTermos}
             isLoading={false}
             pagination={paginationTermos}
-            limit={limitTermos}
-            setLimit={setLimitTermos}
-            setPage={setPageTermos}
+            limit={limitTermosModal}
+            setLimit={setLimitTermosModal}
+            setPage={setPageTermosModal}
             onSort={(column: string, direction: 'asc' | 'desc') => {
-              setSortColumnTermos(column);
-              setSortDirectionTermos(direction);
+              setSortColumnTermosModal(column);
+              setSortDirectionTermosModal(direction);
             }}
-            sortColumn={sortColumnTermos}
-            sortDirection={sortDirectionTermos}
+            sortColumn={sortColumnTermosModal}
+            sortDirection={sortDirectionTermosModal}
             onSearch={(value: string) => {
-              setSearchTermos(value);
-              setPageTermos(1);
+              setSearchTermosModal(value);
+              setPageTermosModal(1);
             }}
             searchPlaceholder="Buscar termos..."
             emptyMessage="Nenhum termo encontrado"
