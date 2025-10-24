@@ -11,6 +11,7 @@ import { TituloService } from '../../../services/tituloService';
 import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
+import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { useFormReset } from '../../../hooks/useFormReset';
 import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
@@ -1968,86 +1969,96 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         size="lg"
         modalId="selecionar-termo-modal"
         headerActions={
-          <div className="d-flex gap-2">
-            <button 
-              type="button" 
-              className="btn btn-secondary btn-sm" 
-              onClick={() => {
-                setShowSelecionarTermoModal(false);
-                setTermoSelecionado(null);
-              }}
-            >
-              Cancelar
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-primary btn-sm"
-              disabled={!termoSelecionado}
-              onClick={() => {
-                if (termoSelecionado) {
-                  setTermoFormData({
-                    ...termoFormData, 
-                    termoCadastradoId: termoSelecionado.id
-                  });
+          <ModalHeaderActions
+            bulkActions={[
+              {
+                label: 'Cancelar',
+                variant: 'secondary',
+                action: () => {
                   setShowSelecionarTermoModal(false);
                   setTermoSelecionado(null);
                 }
-              }}
-            >
-              Inserir
-            </button>
-          </div>
+              },
+              {
+                label: 'Inserir',
+                variant: 'primary',
+                disabled: () => !termoSelecionado,
+                action: () => {
+                  if (termoSelecionado) {
+                    setTermoFormData({
+                      ...termoFormData, 
+                      termoCadastradoId: termoSelecionado.id
+                    });
+                    setShowSelecionarTermoModal(false);
+                    setTermoSelecionado(null);
+                  }
+                }
+              }
+            ]}
+            selectedItems={termoSelecionado ? [termoSelecionado] : []}
+            search={searchTermosModal}
+            onSearchChange={setSearchTermosModal}
+            searchPlaceholder="Buscar termos..."
+            limit={limitTermosModal}
+            onLimitChange={setLimitTermosModal}
+            pagination={paginationTermos}
+            onPageChange={setPageTermosModal}
+            onRefresh={() => {
+              // Refetch dos termos do sistema
+              queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
+            }}
+            idPrefix="selecionar-termo"
+          />
         }
       >
-        <DataTable
-          data={paginatedTermos}
-          columns={columnsTermos}
-          isLoading={isLoadingTermos}
-          pagination={paginationTermos}
-          limit={limitTermosModal}
-          setLimit={setLimitTermosModal}
-          setPage={setPageTermosModal}
-          onSort={(column: string, direction: 'asc' | 'desc') => {
-            setSortColumnTermosModal(column);
-            setSortDirectionTermosModal(direction);
-          }}
-          sortColumn={sortColumnTermosModal}
-          sortDirection={sortDirectionTermosModal}
-          onSearch={(value: string) => {
-            setSearchTermosModal(value);
-            setPageTermosModal(1);
-          }}
-          searchPlaceholder="Buscar termos..."
-          emptyMessage="Nenhum termo encontrado"
-          onSelectionChange={(selectedItems: any[]) => {
-            // Permitir apenas uma seleção (como radio buttons)
-            if (selectedItems.length > 1) {
-              setTermoSelecionado(selectedItems[selectedItems.length - 1]);
-            } else if (selectedItems.length === 1) {
-              const currentItem = selectedItems[0];
-              const currentTime = Date.now();
-              
-              // Verificar se é duplo clique (mesmo item clicado em menos de 300ms)
-              if (lastClickedItem?.id === currentItem.id && (currentTime - lastClickTime) < 300) {
-                // Inserir termo ao clicar duas vezes
-                setTermoFormData({
-                  ...termoFormData, 
-                  termoCadastradoId: currentItem.id
-                });
-                setShowSelecionarTermoModal(false);
-                setTermoSelecionado(null);
-                setLastClickTime(0);
-                setLastClickedItem(null);
+        <div>
+          <DataTable
+            data={paginatedTermos}
+            columns={columnsTermos}
+            isLoading={isLoadingTermos}
+            pagination={paginationTermos}
+            limit={limitTermosModal}
+            setLimit={setLimitTermosModal}
+            setPage={setPageTermosModal}
+            onSort={(column: string, direction: 'asc' | 'desc') => {
+              setSortColumnTermosModal(column);
+              setSortDirectionTermosModal(direction);
+            }}
+            sortColumn={sortColumnTermosModal}
+            sortDirection={sortDirectionTermosModal}
+            onSelectionChange={(selectedItems: any[]) => {
+              // Permitir apenas uma seleção (como radio buttons)
+              if (selectedItems.length > 1) {
+                setTermoSelecionado(selectedItems[selectedItems.length - 1]);
+              } else if (selectedItems.length === 1) {
+                const currentItem = selectedItems[0];
+                const currentTime = Date.now();
+                
+                // Verificar se é duplo clique (mesmo item clicado em menos de 300ms)
+                if (lastClickedItem?.id === currentItem.id && (currentTime - lastClickTime) < 300) {
+                  // Inserir termo ao clicar duas vezes
+                  setTermoFormData({
+                    ...termoFormData, 
+                    termoCadastradoId: currentItem.id
+                  });
+                  setShowSelecionarTermoModal(false);
+                  setTermoSelecionado(null);
+                  setLastClickTime(0);
+                  setLastClickedItem(null);
+                } else {
+                  setTermoSelecionado(currentItem);
+                  setLastClickTime(currentTime);
+                  setLastClickedItem(currentItem);
+                }
               } else {
-                setTermoSelecionado(currentItem);
-                setLastClickTime(currentTime);
-                setLastClickedItem(currentItem);
+                setTermoSelecionado(null);
               }
-            } else {
-              setTermoSelecionado(null);
-            }
-          }}
-        />
+            }}
+            searchPlaceholder="Buscar termos..."
+            emptyMessage="Nenhum termo encontrado"
+            showHeader={false}
+          />
+        </div>
       </DraggableModal>
     </DraggableModal>
   );
