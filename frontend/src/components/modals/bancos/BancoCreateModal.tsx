@@ -463,27 +463,26 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
         </div>
       }
     >
-      <form id="banco-create-form" onSubmit={handleSubmit}>
-        {/* Informações Básicas */}
-        <div className="mb-4">
-          <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
-          <Form
-            config={bancoFormConfig}
-            initialValues={formData}
-            onSubmit={(data) => {
-              // Atualizar apenas os campos principais
-              handleInputChange('nome', data.nome);
-              handleInputChange('codigo', data.codigo);
-              handleInputChange('descricao', data.descricao);
-              handleInputChange('tipo_banco', data.tipo_banco);
-              handleInputChange('ativo', data.ativo);
-              handleInputChange('sandbox', data.sandbox);
-            }}
-            showSubmitButton={false}
-            showResetButton={false}
-            className="banco-form"
-          />
-        </div>
+      {/* Informações Básicas */}
+      <div className="mb-4">
+        <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
+        <Form
+          config={bancoFormConfig}
+          initialValues={formData}
+          onSubmit={(data) => {
+            // Atualizar apenas os campos principais
+            handleInputChange('nome', data.nome);
+            handleInputChange('codigo', data.codigo);
+            handleInputChange('descricao', data.descricao);
+            handleInputChange('tipo_banco', data.tipo_banco);
+            handleInputChange('ativo', data.ativo);
+            handleInputChange('sandbox', data.sandbox);
+          }}
+          showSubmitButton={false}
+          showResetButton={false}
+          className="banco-form"
+        />
+      </div>
 
         {/* Configurações da API */}
         <div className="mb-4">
@@ -600,7 +599,6 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           </div>
         </div>
 
-      </form>
     </DraggableModal>
   );
 };

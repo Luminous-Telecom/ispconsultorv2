@@ -990,30 +990,29 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
         {/* Conteúdo das Abas - Com Scroll */}
         <div className="tab-content" id="clienteTabContent" style={{ flex: 1, overflow: 'auto', padding: '16px', minHeight: 0 }}>
-          <form id="cliente-form" onSubmit={handleSubmit}>
-            {/* Aba Dados Básicos */}
-            {activeTab === 'dados-basicos' && (
-              <Form
-                config={dadosBasicosFormConfig}
-                initialValues={formData}
-                onSubmit={(data) => {
-                  // Manter apenas os campos da aba dados básicos
-                  const dadosBasicos = {
-                    cnpj: data.cnpj,
-                    razao_social: data.razao_social,
-                    nome_fantasia: data.nome_fantasia,
-                    ativo: data.ativo
-                  };
-                  handleInputChange('cnpj', dadosBasicos.cnpj);
-                  handleInputChange('razao_social', dadosBasicos.razao_social);
-                  handleInputChange('nome_fantasia', dadosBasicos.nome_fantasia);
-                  handleInputChange('ativo', dadosBasicos.ativo);
-                }}
-                showSubmitButton={false}
-                showResetButton={false}
-                className="dados-basicos-form"
-              />
-            )}
+          {/* Aba Dados Básicos */}
+          {activeTab === 'dados-basicos' && (
+            <Form
+              config={dadosBasicosFormConfig}
+              initialValues={formData}
+              onSubmit={(data) => {
+                // Manter apenas os campos da aba dados básicos
+                const dadosBasicos = {
+                  cnpj: data.cnpj,
+                  razao_social: data.razao_social,
+                  nome_fantasia: data.nome_fantasia,
+                  ativo: data.ativo
+                };
+                handleInputChange('cnpj', dadosBasicos.cnpj);
+                handleInputChange('razao_social', dadosBasicos.razao_social);
+                handleInputChange('nome_fantasia', dadosBasicos.nome_fantasia);
+                handleInputChange('ativo', dadosBasicos.ativo);
+              }}
+              showSubmitButton={false}
+              showResetButton={false}
+              className="dados-basicos-form"
+            />
+          )}
 
             {/* Aba Contato */}
             {activeTab === 'contato' && (
@@ -2042,8 +2041,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 </div>
               </div>
             )}
-
-          </form>
         </div>
       </div>
 
