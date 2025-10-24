@@ -567,7 +567,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           if (termo.modelo_termo_id && contratoId) {
             setIsGeneratingPdf(true);
             try {
-              const url = await ModeloTermoService.generatePdfWithContrato(termo.modelo_termo_id, contratoId);
+              const blob = await ModeloTermoService.generatePdfWithContrato(termo.modelo_termo_id, contratoId);
+              const url = window.URL.createObjectURL(blob);
               setPdfUrl(url);
               setShowPreview(true);
             } catch (error: any) {
@@ -2063,6 +2064,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       show={showPreview}
       onClose={() => {
         setShowPreview(false);
+        if (pdfUrl) {
+          window.URL.revokeObjectURL(pdfUrl);
+        }
         setPdfUrl(null);
       }}
       pdfUrl={pdfUrl}
