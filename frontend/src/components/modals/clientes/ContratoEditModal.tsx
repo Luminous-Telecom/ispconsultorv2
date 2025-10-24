@@ -97,7 +97,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const queryClient = useQueryClient();
   
   // Buscar termos cadastrados no sistema
-  const { data: termosSistema } = useModelosTermo();
+  const { data: termosSistema, isLoading: isLoadingTermos } = useModelosTermo();
 
   // Filtrar e ordenar termos
   const filteredTermos = React.useMemo(() => {
@@ -183,7 +183,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const modelosContrato = modelosContratoData?.data || [];
   
   // Hooks para termos
-  const { data: termosData, isLoading: isLoadingTermos, refetch: refetchTermos } = useTermosContrato(contratoId || 0);
+  const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(contratoId || 0);
   const createTermoMutation = useCreateTermoContrato();
   const updateTermoMutation = useUpdateTermoContrato();
   const deactivateTermoMutation = useDeactivateTermoContrato();
@@ -1360,7 +1360,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 <DataTable
                   data={paginatedTermosData}
                   columns={termosColumns}
-                  isLoading={isLoadingTermos}
+                  isLoading={isLoadingTermosContrato}
                   showHeader={false}
                   onSelectionChange={setSelectedTermosItems}
                   onSort={(column: string, direction: 'asc' | 'desc') => {
@@ -1965,7 +1965,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         }}
         title="Selecionar Termo Cadastrado"
         size="lg"
-        modalId="selecionar-termo-modal"
+        modalId={`selecionar-termo-modal-${contratoId || 'new'}`}
         headerActions={
           <div className="d-flex gap-2">
             <button 
@@ -2001,7 +2001,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         <DataTable
           data={paginatedTermos}
           columns={columnsTermos}
-          isLoading={false}
+          isLoading={isLoadingTermos}
           pagination={paginationTermos}
           limit={limitTermosModal}
           setLimit={setLimitTermosModal}
