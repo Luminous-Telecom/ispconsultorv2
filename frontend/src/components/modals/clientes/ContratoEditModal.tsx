@@ -99,6 +99,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   // Buscar termos cadastrados no sistema
   const { data: termosSistema, isLoading: isLoadingTermos } = useModelosTermo();
 
+  // Debug: Monitorar estado do modal de seleção
+  React.useEffect(() => {
+    console.log('Estado showSelecionarTermoModal mudou para:', showSelecionarTermoModal);
+  }, [showSelecionarTermoModal]);
+
   // Filtrar e ordenar termos
   const filteredTermos = React.useMemo(() => {
     if (!termosSistema) return [];

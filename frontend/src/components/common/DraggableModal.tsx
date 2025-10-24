@@ -47,18 +47,9 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   };
 
-  // Gerenciar pilha de modais
-  useEffect(() => {
-    const currentModalId = modalId || `modal-${Date.now()}`;
-    if (show) {
-      modalStack.push(currentModalId);
-    } else {
-      modalStack.remove(currentModalId);
-    }
-
-    return () => {
-      modalStack.remove(currentModalId);
-    };
+  // Debug: Log do modal
+  React.useEffect(() => {
+    console.log(`Modal ${modalId || 'sem-id'} - show: ${show}, modalStack:`, modalStack.getStack());
   }, [show, modalId]);
 
   // Posicionar modal na área restante (excluindo menu) - 95% da dashboard
