@@ -231,6 +231,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     size="sm"
                     value={formData.instance_name}
                     onChange={(e) => setFormData(prev => ({ ...prev, instance_name: e.value }))}
+                    autoComplete="username"
                   />
                 </div>
               </div>
