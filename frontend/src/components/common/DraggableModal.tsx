@@ -47,11 +47,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   };
 
-  // Debug: Log do modal
-  React.useEffect(() => {
-    console.log(`Modal ${modalId || 'sem-id'} - show: ${show}, modalStack:`, modalStack.getStack());
-  }, [show, modalId]);
-
   // Gerenciar pilha de modais
   useEffect(() => {
     const currentModalId = modalId || `modal-${Date.now()}`;
@@ -212,14 +207,8 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [show]);
 
-  // Debug: Log do estado de renderização
-  React.useEffect(() => {
-    console.log(`Modal ${modalId || 'sem-id'} - shouldRender: ${shouldRender}, isVisible: ${isVisible}`);
-  }, [shouldRender, isVisible, modalId]);
-
   // Não renderizar se shouldRender for false
   if (!shouldRender) {
-    console.log(`Modal ${modalId || 'sem-id'} - NÃO RENDERIZANDO (shouldRender: false)`);
     return null;
   }
 

@@ -99,11 +99,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   // Buscar termos cadastrados no sistema
   const { data: termosSistema, isLoading: isLoadingTermos } = useModelosTermo();
 
-  // Debug: Monitorar estado do modal de seleção
-  React.useEffect(() => {
-    console.log('Estado showSelecionarTermoModal mudou para:', showSelecionarTermoModal);
-  }, [showSelecionarTermoModal]);
-
   // Filtrar e ordenar termos
   const filteredTermos = React.useMemo(() => {
     if (!termosSistema) return [];
@@ -1907,12 +1902,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     className="btn btn-outline-secondary"
                     title="Abrir listagem de registros"
                     onClick={() => {
-                      console.log('Clicando no botão de busca, showSelecionarTermoModal:', showSelecionarTermoModal);
                       setShowSelecionarTermoModal(true);
-                      console.log('Após setShowSelecionarTermoModal(true)');
                     }}
                   >
-                    <i className="fa fa-search" style={{ transform: 'rotate(90deg)' }}></i>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
                   </button>
                   
                   {/* Botão de link externo */}
@@ -1967,7 +1962,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       <DraggableModal
         show={showSelecionarTermoModal}
         onClose={() => {
-          console.log('Fechando modal de seleção');
           setShowSelecionarTermoModal(false);
           setTermoSelecionado(null);
         }}
