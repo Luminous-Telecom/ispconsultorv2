@@ -52,6 +52,20 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     console.log(`Modal ${modalId || 'sem-id'} - show: ${show}, modalStack:`, modalStack.getStack());
   }, [show, modalId]);
 
+  // Gerenciar pilha de modais
+  useEffect(() => {
+    const currentModalId = modalId || `modal-${Date.now()}`;
+    if (show) {
+      modalStack.push(currentModalId);
+    } else {
+      modalStack.remove(currentModalId);
+    }
+
+    return () => {
+      modalStack.remove(currentModalId);
+    };
+  }, [show, modalId]);
+
   // Posicionar modal na área restante (excluindo menu) - 95% da dashboard
   // Recalcula posição toda vez que o modal abrir
   useEffect(() => {
@@ -198,8 +212,14 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   }, [show]);
 
+  // Debug: Log do estado de renderização
+  React.useEffect(() => {
+    console.log(`Modal ${modalId || 'sem-id'} - shouldRender: ${shouldRender}, isVisible: ${isVisible}`);
+  }, [shouldRender, isVisible, modalId]);
+
   // Não renderizar se shouldRender for false
   if (!shouldRender) {
+    console.log(`Modal ${modalId || 'sem-id'} - NÃO RENDERIZANDO (shouldRender: false)`);
     return null;
   }
 
