@@ -37,14 +37,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     setNotifications(prev => {
       const existingNotification = prev.find(n => n.message === message && n.type === type);
       if (existingNotification) {
-        console.log('Notification already exists, skipping:', message);
         return prev;
       }
       
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       notificationId = id;
       const notification: Notification = { id, type, message, duration };
-      console.log('Adding notification:', notification);
       return [...prev, notification];
     });
 

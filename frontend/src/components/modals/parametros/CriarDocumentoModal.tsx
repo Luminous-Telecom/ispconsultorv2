@@ -44,6 +44,7 @@ const CriarDocumentoModal: React.FC<CriarDocumentoModalProps> = ({ show, onClose
     onSuccess: () => {
       addNotification('success', 'Documento criado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
+      queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       onSuccess();
     },
     onError: (error: any) => {
