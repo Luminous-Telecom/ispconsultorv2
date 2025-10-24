@@ -4,6 +4,7 @@ import NotificationContainer from '../common/NotificationContainer';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import DropdownMenu from '../common/DropdownMenu';
+import { Button } from '../ui';
 import { ClienteListModal } from '../modals/clientes';
 import { PlanoListModal } from '../modals/planos';
 import { BancoListModal } from '../modals/bancos';
@@ -102,26 +103,32 @@ const Layout: React.FC = () => {
         {/* Header */}
         <header className="main-header">
           <div className="d-flex align-items-center">
-            <button 
-              className="btn btn-link d-md-none me-3"
+            <Button 
+              variant="outline-secondary"
+              size="sm"
+              icon="list"
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="d-md-none me-3"
               style={{ color: 'var(--text-primary)' }}
             >
-              <i className="bi bi-list"></i>
-            </button>
+              {''}
+            </Button>
             <h2 className="h4 mb-0">
               Dashboard
             </h2>
           </div>
           
           <div className="d-flex align-items-center gap-3">
-            <button 
-              className="theme-toggle"
+            <Button 
+              variant="outline-secondary"
+              size="sm"
+              icon={theme === 'light' ? 'moon' : 'sun'}
               onClick={toggleTheme}
-              title={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
+              tooltip={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
+              className="theme-toggle"
             >
-              <i className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'}`}></i>
-            </button>
+              {''}
+            </Button>
           </div>
         </header>
 

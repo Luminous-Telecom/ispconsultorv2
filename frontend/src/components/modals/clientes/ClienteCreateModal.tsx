@@ -5,6 +5,7 @@ import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
+import { Button, FormField } from '../../ui';
 
 interface ClienteForm {
   cnpj: string;
@@ -162,22 +163,23 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
       modalId="cliente-create-modal"
       headerActions={
         <div className="d-flex gap-2">
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleCancel}
             disabled={createClienteMutation.isPending}
           >
             Cancelar
-          </button>
-          <button
-            type="submit"
-            form="cliente-create-form"
-            className="btn btn-primary btn-sm"
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSubmit}
             disabled={createClienteMutation.isPending}
+            loading={createClienteMutation.isPending}
           >
             Criar Cliente
-          </button>
+          </Button>
         </div>
       }
     >
@@ -187,36 +189,30 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
           <h6 className="border-bottom pb-2 mb-3">Dados Básicos</h6>
           <div className="row g-2">
             <div className="col-md-6">
-              <div className="mb-2">
-                <label htmlFor="cliente-create-cnpj" className="form-label small">CNPJ *</label>
-                <input
-                  type="text"
-                  id="cliente-create-cnpj"
-                  name="cnpj"
-                  autoComplete="off"
-                  className={`form-control form-control-sm ${errors.cnpj ? 'is-invalid' : ''}`}
-                  value={formData.cnpj}
-                  onChange={(e) => handleInputChange('cnpj', e.target.value)}
-                  placeholder="00.000.000/0000-00"
-                />
-                {errors.cnpj && <div className="invalid-feedback">{errors.cnpj}</div>}
-              </div>
+              <FormField
+                type="text"
+                label="CNPJ"
+                name="cnpj"
+                value={formData.cnpj}
+                onChange={(value) => handleInputChange('cnpj', value)}
+                placeholder="00.000.000/0000-00"
+                required
+                error={errors.cnpj}
+                size="sm"
+              />
             </div>
             <div className="col-md-6">
-              <div className="mb-2">
-                <label htmlFor="cliente-create-razao-social" className="form-label small">Razão Social *</label>
-                <input
-                  type="text"
-                  id="cliente-create-razao-social"
-                  name="razao_social"
-                  autoComplete="organization"
-                  className={`form-control form-control-sm ${errors.razao_social ? 'is-invalid' : ''}`}
-                  value={formData.razao_social}
-                  onChange={(e) => handleInputChange('razao_social', e.target.value)}
-                  placeholder="Nome da empresa"
-                />
-                {errors.razao_social && <div className="invalid-feedback">{errors.razao_social}</div>}
-              </div>
+              <FormField
+                type="text"
+                label="Razão Social"
+                name="razao_social"
+                value={formData.razao_social}
+                onChange={(value) => handleInputChange('razao_social', value)}
+                placeholder="Nome da empresa"
+                required
+                error={errors.razao_social}
+                size="sm"
+              />
             </div>
             <div className="col-md-6">
               <div className="mb-2">

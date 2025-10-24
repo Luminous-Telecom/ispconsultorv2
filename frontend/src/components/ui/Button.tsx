@@ -13,6 +13,7 @@ interface ButtonProps extends BaseComponentProps, LoadingProps, IconProps, Toolt
   href?: string;
   target?: string;
   rel?: string;
+  style?: React.CSSProperties;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -36,6 +37,7 @@ const Button: React.FC<ButtonProps> = ({
   href,
   target,
   rel,
+  style,
   id,
   'data-testid': dataTestId,
 }) => {
@@ -118,6 +120,7 @@ const Button: React.FC<ButtonProps> = ({
         target={target}
         rel={rel}
         className={getButtonClasses()}
+        style={style}
         id={id}
         data-testid={dataTestId}
         title={tooltip}
@@ -136,6 +139,7 @@ const Button: React.FC<ButtonProps> = ({
       className={getButtonClasses()}
       disabled={disabled || loading}
       onClick={onClick}
+      style={style}
       id={id}
       data-testid={dataTestId}
       title={tooltip}
