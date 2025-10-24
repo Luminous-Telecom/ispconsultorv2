@@ -577,4 +577,186 @@ export class ModeloTermoController {
       });
     }
   }
+
+  // Gerar PDF de termo com dados do contrato específico
+  static async generatePdfWithContrato(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, contratoId } = req.params;
+
+      const modelo = await ModeloTermo.findByPk(id);
+
+      if (!modelo) {
+        res.status(404).json({
+          success: false,
+          message: 'Modelo de termo não encontrado'
+        });
+        return;
+      }
+
+      // Buscar contrato com cliente e plano
+      const contrato = await Contrato.findByPk(contratoId, {
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' }
+        ]
+      });
+
+      if (!contrato) {
+        res.status(404).json({
+          success: false,
+          message: 'Contrato não encontrado'
+        });
+        return;
+      }
+
+      // Processar variáveis do documento
+      const conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
+        modelo.conteudo,
+        {
+          cliente: contrato.cliente,
+          contrato: contrato
+        }
+      );
+
+      // Prepara o HTML completo com estilos básicos
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              font-size: 12px;
+              color: #333;
+              margin: 0;
+              padding: 0;
+              line-height: 1.2;
+            }
+            
+            /* Estilos para imagens - preservar dimensões inline */
+            img {
+              display: block;
+              page-break-inside: avoid;
+              object-fit: contain;
+              max-width: 100% !important;
+            }
+            
+            /* Limitar imagens muito grandes (largura > 800px) */
+            img[width] {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            
+            /* Se tem style inline com dimensões, preservar proporções */
+            img[style*="width"] {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            
+            /* NÃO forçar auto se a imagem tem dimensões inline razoáveis */
+            img:not([style*="width"]):not([style*="height"]):not([width]):not([height]) {
+              max-width: 100%;
+              height: auto;
+            }
+            
+            /* Estilos para tabelas */
+            figure.table {
+              width: 100% !important;
+              float: none !important;
+              margin: 0 !important;
+              margin-inline-start: 0 !important;
+              margin-inline-end: 0 !important;
+              margin-top: 0 !important;
+              margin-bottom: 0.5em !important;
+            }
+            
+            table {
+              border-collapse: collapse;
+              width: 100% !important;
+              table-layout: auto !important;
+              margin: 0 !important;
+            }
+            
+            table colgroup,
+            table colgroup col {
+              width: auto !important;
+            }
+            
+            table td, table th {
+              border: none;
+              width: auto !important;
+              max-width: none !important;
+              min-width: 0 !important;
+              padding: 0 !important;
+            }
+            
+            /* Remover espaçamento excessivo entre elementos */
+            p {
+              margin: 0 !important;
+              padding: 0 !important;
+              line-height: 1.2 !important;
+            }
+            
+            /* Classes de espaçamento entre linhas */
+            .line-height-1 { line-height: 1.0 !important; }
+            .line-height-115 { line-height: 1.15 !important; }
+            .line-height-12 { line-height: 1.2 !important; }
+            .line-height-15 { line-height: 1.5 !important; }
+            .line-height-2 { line-height: 2.0 !important; }
+            
+            p:empty {
+              margin: 0 !important;
+              padding: 0 !important;
+              line-height: 0 !important;
+              height: 0 !important;
+              display: none !important;
+            }
+            
+            br {
+              display: block !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              line-height: 1 !important;
+              height: 0.5em !important;
+            }
+            
+            /* Adicionar pequeno espaço apenas entre parágrafos consecutivos */
+            p + p {
+              margin-top: 0.2em !important;
+            }
+            
+            /* Espaçamento do body */
+            body {
+              line-height: 1.2 !important;
+            }
+            
+            /* Espaçamento entre tabelas */
+            figure.table + figure.table {
+              margin-top: 0.5em !important;
+            }
+            
+            /* Remover espaço entre parágrafos vazios e tabelas */
+            p:empty + figure.table,
+            figure.table + p:empty {
+              margin: 0 !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div>${conteudoProcessado}</div>
+        </body>
+        </html>
+      `;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(htmlContent);
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF do termo:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
 }

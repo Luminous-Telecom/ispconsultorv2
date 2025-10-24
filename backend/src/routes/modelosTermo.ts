@@ -11,5 +11,6 @@ router.put('/:id', ModeloTermoController.update);
 router.delete('/:id', ModeloTermoController.delete);
 router.get('/:id/pdf', ModeloTermoController.generatePdf);
 router.post('/:id/pdf/test', ModeloTermoController.generateTestPdf);
+router.post('/:id/pdf/contrato/:contratoId', ModeloTermoController.generatePdfWithContrato);
 
 export default router;
