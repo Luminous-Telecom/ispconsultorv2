@@ -75,7 +75,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [lastClickedItem, setLastClickedItem] = useState<any>(null);
   const [termoFormData, setTermoFormData] = useState({
     assinado: 'NAO' as 'SIM' | 'NAO',
-    usarTermoCadastrado: false,
     termoCadastradoId: 0
   });
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
@@ -504,7 +503,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       action: () => {
         setTermoFormData({
           assinado: 'NAO',
-          usarTermoCadastrado: false,
           termoCadastradoId: 0
         });
         setShowTermoModal(true);
@@ -1768,7 +1766,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           e.preventDefault();
           try {
             // Validação no frontend
-            if (!termoFormData.usarTermoCadastrado || !termoFormData.termoCadastradoId || termoFormData.termoCadastradoId <= 0) {
+            if (!termoFormData.termoCadastradoId || termoFormData.termoCadastradoId <= 0) {
               error('É obrigatório selecionar um modelo de termo cadastrado no sistema.');
               return;
             }
@@ -1776,16 +1774,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             await createTermoMutation.mutateAsync({
               contratoId: contratoId!,
               data: {
-                modelo_termo_id: termoFormData.usarTermoCadastrado && termoFormData.termoCadastradoId > 0 
-                  ? termoFormData.termoCadastradoId 
-                  : null,
+                modelo_termo_id: termoFormData.termoCadastradoId,
                 assinado: termoFormData.assinado
               }
             });
             setShowTermoModal(false);
             setTermoFormData({
               assinado: 'NAO',
-              usarTermoCadastrado: false,
               termoCadastradoId: 0
             });
           } catch (error) {
@@ -1835,49 +1830,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               Conteúdo do Termo <span className="text-danger">*</span>
             </label>
             
-            {/* Opção de escolha */}
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="tipoConteudo"
-                  id="termoCadastrado"
-                  checked={termoFormData.usarTermoCadastrado}
-                  onChange={() => setTermoFormData({ 
-                    ...termoFormData, 
-                    usarTermoCadastrado: true
-                  })}
-                />
-                <label className="form-check-label" htmlFor="termoCadastrado">
-                  Usar termo cadastrado no sistema
-                </label>
-              </div>
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="tipoConteudo"
-                  id="conteudoPersonalizado"
-                  checked={!termoFormData.usarTermoCadastrado}
-                  onChange={() => setTermoFormData({ 
-                    ...termoFormData, 
-                    usarTermoCadastrado: false,
-                    termoCadastradoId: 0 // Limpar seleção de termo
-                  })}
-                />
-                <label className="form-check-label" htmlFor="conteudoPersonalizado">
-                  Termo personalizado (não disponível)
-                </label>
-              </div>
-            </div>
-
             {/* Campo de seleção de termo cadastrado */}
-            {termoFormData.usarTermoCadastrado && (
-              <div className="mb-3">
-                <label htmlFor="id_termo" className="form-label">
-                  Selecionar Termo Cadastrado
-                </label>
+            <div className="mb-3">
+              <label htmlFor="id_termo" className="form-label">
+                Selecionar Termo Cadastrado
+              </label>
                 <div className="d-flex align-items-center gap-2">
                   {/* Input do ID */}
                   <input
@@ -1944,7 +1901,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 </div>
                 
               </div>
-            )}
 
             {/* Campo de conteúdo personalizado */}
           </div>
