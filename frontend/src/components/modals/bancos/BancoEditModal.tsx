@@ -4,6 +4,7 @@ import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
+import FormField from '../../ui/FormField';
 
 interface BancoForm {
   nome: string;
@@ -353,17 +354,17 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
             <div className="row">
               <div className="col-md-12">
                 <div className="mb-3">
-                  <label htmlFor="identificador_conta" className="form-label small">Identificador da Conta *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="identificador_conta"
+                  <FormField
                     name="identificador_conta"
-                    autoComplete="off"
-                    value={formData.identificador_conta}
-                    onChange={(e) => handleInputChange('identificador_conta', e.target.value)}
-                    disabled={updateBancoMutation.isPending}
+                    type="text"
+                    label="Identificador da Conta"
                     placeholder="Disponibilizado no menu configurações da API"
+                    required={true}
+                    size="md"
+                    value={formData.identificador_conta}
+                    onChange={(e: any) => handleInputChange('identificador_conta', e.value)}
+                    disabled={updateBancoMutation.isPending}
+                    autoComplete="off"
                   />
                   <small className="text-secondary text-secondary">Disponível nas configurações da API Efi</small>
                 </div>
@@ -373,34 +374,32 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
             <div className="row">
               <div className="col-md-6">
                 <div className="mb-3">
-                  <label htmlFor="percentual_multa" className="form-label small">Percentual de Multa (%)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-control"
-                    id="percentual_multa"
+                  <FormField
                     name="percentual_multa"
-                    value={formData.percentual_multa}
-                    onChange={(e) => handleInputChange('percentual_multa', parseFloat(e.target.value) || 0)}
-                    disabled={updateBancoMutation.isPending}
+                    type="number"
+                    label="Percentual de Multa (%)"
                     placeholder="2.00"
+                    size="md"
+                    value={formData.percentual_multa}
+                    onChange={(e: any) => handleInputChange('percentual_multa', parseFloat(e.value) || 0)}
+                    disabled={updateBancoMutation.isPending}
+                    step={0.01}
                   />
                 </div>
               </div>
 
               <div className="col-md-6">
                 <div className="mb-3">
-                  <label htmlFor="percentual_juros" className="form-label small">Percentual de Juros (% ao dia)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-control"
-                    id="percentual_juros"
+                  <FormField
                     name="percentual_juros"
-                    value={formData.percentual_juros}
-                    onChange={(e) => handleInputChange('percentual_juros', parseFloat(e.target.value) || 0)}
-                    disabled={updateBancoMutation.isPending}
+                    type="number"
+                    label="Percentual de Juros (% ao dia)"
                     placeholder="0.03"
+                    size="md"
+                    value={formData.percentual_juros}
+                    onChange={(e: any) => handleInputChange('percentual_juros', parseFloat(e.value) || 0)}
+                    disabled={updateBancoMutation.isPending}
+                    step={0.01}
                   />
                 </div>
               </div>
@@ -409,16 +408,15 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
             <div className="row">
               <div className="col-md-12">
                 <div className="mb-3">
-                  <label htmlFor="local_pagamento" className="form-label small">Local de Pagamento</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="local_pagamento"
+                  <FormField
                     name="local_pagamento"
-                    value={formData.local_pagamento}
-                    onChange={(e) => handleInputChange('local_pagamento', e.target.value)}
-                    disabled={updateBancoMutation.isPending}
+                    type="text"
+                    label="Local de Pagamento"
                     placeholder="Pagável em qualquer banco até o vencimento"
+                    size="md"
+                    value={formData.local_pagamento}
+                    onChange={(e: any) => handleInputChange('local_pagamento', e.value)}
+                    disabled={updateBancoMutation.isPending}
                   />
                 </div>
               </div>
@@ -432,17 +430,17 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
             <div className="row">
               <div className="col-md-12">
                 <div className="mb-3">
-                  <label htmlFor="api_key" className="form-label small">API Key *</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="api_key"
+                  <FormField
                     name="api_key"
-                    autoComplete="off"
-                    value={formData.api_key}
-                    onChange={(e) => handleInputChange('api_key', e.target.value)}
-                    disabled={updateBancoMutation.isPending}
+                    type="password"
+                    label="API Key"
                     placeholder="Sua chave da API Asaas"
+                    required={true}
+                    size="md"
+                    value={formData.api_key}
+                    onChange={(e: any) => handleInputChange('api_key', e.value)}
+                    disabled={updateBancoMutation.isPending}
+                    autoComplete="off"
                   />
                   <small className="text-secondary text-secondary">Disponível no painel administrativo da Asaas</small>
                 </div>
@@ -452,17 +450,16 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
             <div className="row">
               <div className="col-md-6">
                 <div className="mb-3">
-                  <label htmlFor="taxa_cobranca" className="form-label small">Taxa de Cobrança (R$)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-control"
-                    id="taxa_cobranca"
+                  <FormField
                     name="taxa_cobranca"
-                    value={formData.taxa_cobranca}
-                    onChange={(e) => handleInputChange('taxa_cobranca', parseFloat(e.target.value) || 0)}
-                    disabled={updateBancoMutation.isPending}
+                    type="number"
+                    label="Taxa de Cobrança (R$)"
                     placeholder="0.00"
+                    size="md"
+                    value={formData.taxa_cobranca}
+                    onChange={(e: any) => handleInputChange('taxa_cobranca', parseFloat(e.value) || 0)}
+                    disabled={updateBancoMutation.isPending}
+                    step={0.01}
                   />
                 </div>
               </div>
@@ -545,19 +542,20 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
-                <label htmlFor="banco-edit-nome" className="form-label small">Nome *</label>
-                <input
-                  type="text"
-                  className={`form-control ${errors.nome ? 'is-invalid' : ''}`}
-                  id="banco-edit-nome"
+                <FormField
                   name="nome"
-                  autoComplete="organization"
-                  value={formData.nome}
-                  onChange={(e) => handleInputChange('nome', e.target.value)}
-                  disabled={updateBancoMutation.isPending}
+                  type="text"
+                  label="Nome do Banco"
                   placeholder="Ex: EFI - Conta Principal"
+                  required={true}
+                  size="md"
+                  value={formData.nome}
+                  onChange={(e: any) => handleInputChange('nome', e.value)}
+                  error={errors.nome}
+                  isInvalid={!!errors.nome}
+                  disabled={updateBancoMutation.isPending}
+                  autoComplete="organization"
                 />
-                {errors.nome && <div className="invalid-feedback">{errors.nome}</div>}
                 <small className="text-secondary text-secondary">Nome para identificar esta conta do banco</small>
               </div>
             </div>
@@ -604,16 +602,16 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
           </div>
 
           <div className="mb-3">
-            <label htmlFor="descricao" className="form-label small">Descrição</label>
-            <textarea
-              className="form-control"
-              id="descricao"
+            <FormField
               name="descricao"
-              rows={3}
-              value={formData.descricao}
-              onChange={(e) => handleInputChange('descricao', e.target.value)}
-              disabled={updateBancoMutation.isPending}
+              type="textarea"
+              label="Descrição"
               placeholder="Descrição do banco..."
+              size="md"
+              value={formData.descricao}
+              onChange={(e: any) => handleInputChange('descricao', e.value)}
+              disabled={updateBancoMutation.isPending}
+              rows={3}
             />
           </div>
         </div>
@@ -631,17 +629,18 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     <label htmlFor="client_id_producao" className="form-label small">
                       {formData.tipo_banco === 'efi' ? 'Client ID Produção *' : 'Client ID'}
                     </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="client_id_producao"
-                      name="client_id_producao"
-                      autoComplete="off"
-                      value={formData.client_id_producao}
-                      onChange={(e) => handleInputChange('client_id_producao', e.target.value)}
-                      disabled={updateBancoMutation.isPending}
-                      placeholder="Client ID para produção"
-                    />
+                      <FormField
+                        name="client_id_producao"
+                        type="text"
+                        label={formData.tipo_banco === 'efi' ? 'Client ID Produção' : 'Client ID'}
+                        placeholder="Client ID para produção"
+                        required={formData.tipo_banco === 'efi'}
+                        size="md"
+                        value={formData.client_id_producao}
+                        onChange={(e: any) => handleInputChange('client_id_producao', e.value)}
+                        disabled={updateBancoMutation.isPending}
+                        autoComplete="off"
+                      />
                   </div>
                 </div>
 
@@ -650,17 +649,18 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     <label htmlFor="client_secret_producao" className="form-label small">
                       {formData.tipo_banco === 'efi' ? 'Client Secret Produção *' : 'Client Secret'}
                     </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="client_secret_producao"
-                      name="client_secret_producao"
-                      autoComplete="off"
-                      value={formData.client_secret_producao}
-                      onChange={(e) => handleInputChange('client_secret_producao', e.target.value)}
-                      disabled={updateBancoMutation.isPending}
-                      placeholder="Client Secret para produção"
-                    />
+                      <FormField
+                        name="client_secret_producao"
+                        type="password"
+                        label={formData.tipo_banco === 'efi' ? 'Client Secret Produção' : 'Client Secret'}
+                        placeholder="Client Secret para produção"
+                        required={formData.tipo_banco === 'efi'}
+                        size="md"
+                        value={formData.client_secret_producao}
+                        onChange={(e: any) => handleInputChange('client_secret_producao', e.value)}
+                        disabled={updateBancoMutation.isPending}
+                        autoComplete="off"
+                      />
                   </div>
                 </div>
               </div>
@@ -669,17 +669,17 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                 <div className="col-md-12">
                   <div className="mb-3">
                     <label htmlFor="url_retorno" className="form-label small">URL de Retorno (Webhook)</label>
-                    <input
-                      type="url"
-                      className="form-control"
-                      id="url_retorno"
-                      name="url_retorno"
-                      autoComplete="url"
-                      value={formData.url_retorno}
-                      onChange={(e) => handleInputChange('url_retorno', e.target.value)}
-                      disabled={updateBancoMutation.isPending}
-                      placeholder="URL para retorno de webhooks"
-                    />
+                      <FormField
+                        name="url_retorno"
+                        type="url"
+                        label="URL de Retorno (Webhook)"
+                        placeholder="URL para retorno de webhooks"
+                        size="md"
+                        value={formData.url_retorno}
+                        onChange={(e: any) => handleInputChange('url_retorno', e.value)}
+                        disabled={updateBancoMutation.isPending}
+                        autoComplete="url"
+                      />
                     <small className="text-secondary text-secondary">URL para receber notificações de pagamento</small>
                   </div>
                 </div>

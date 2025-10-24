@@ -5,6 +5,7 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
 import { Form, FormConfig } from '../../forms';
+import FormField from '../../ui/FormField';
 
 interface BancoForm {
   nome: string;
@@ -297,17 +298,17 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
             <div className="row">
               <div className="col-md-12">
                 <div className="mb-3">
-                  <label htmlFor="identificador_conta" className="form-label small">Identificador da Conta *</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    id="identificador_conta"
+                  <FormField
                     name="identificador_conta"
-                    autoComplete="off"
-                    value={formData.identificador_conta}
-                    onChange={(e) => handleInputChange('identificador_conta', e.target.value)}
-                    disabled={createBancoMutation.isPending}
+                    type="text"
+                    label="Identificador da Conta"
                     placeholder="Disponibilizado no menu configurações da API"
+                    required={true}
+                    size="sm"
+                    value={formData.identificador_conta}
+                    onChange={(e: any) => handleInputChange('identificador_conta', e.value)}
+                    disabled={createBancoMutation.isPending}
+                    autoComplete="off"
                   />
                   <small className="text-secondary text-secondary">Disponível nas configurações da API Efi</small>
                 </div>
@@ -317,34 +318,32 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
             <div className="row">
               <div className="col-md-6">
                 <div className="mb-3">
-                  <label htmlFor="percentual_multa" className="form-label small">Percentual de Multa (%)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-control form-control-sm"
-                    id="percentual_multa"
+                  <FormField
                     name="percentual_multa"
-                    value={formData.percentual_multa}
-                    onChange={(e) => handleInputChange('percentual_multa', parseFloat(e.target.value) || 0)}
-                    disabled={createBancoMutation.isPending}
+                    type="number"
+                    label="Percentual de Multa (%)"
                     placeholder="2.00"
+                    size="sm"
+                    value={formData.percentual_multa}
+                    onChange={(e: any) => handleInputChange('percentual_multa', parseFloat(e.value) || 0)}
+                    disabled={createBancoMutation.isPending}
+                    step={0.01}
                   />
                 </div>
               </div>
 
               <div className="col-md-6">
                 <div className="mb-3">
-                  <label htmlFor="percentual_juros" className="form-label small">Percentual de Juros (% ao dia)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-control form-control-sm"
-                    id="percentual_juros"
+                  <FormField
                     name="percentual_juros"
-                    value={formData.percentual_juros}
-                    onChange={(e) => handleInputChange('percentual_juros', parseFloat(e.target.value) || 0)}
-                    disabled={createBancoMutation.isPending}
+                    type="number"
+                    label="Percentual de Juros (% ao dia)"
                     placeholder="0.03"
+                    size="sm"
+                    value={formData.percentual_juros}
+                    onChange={(e: any) => handleInputChange('percentual_juros', parseFloat(e.value) || 0)}
+                    disabled={createBancoMutation.isPending}
+                    step={0.01}
                   />
                 </div>
               </div>
@@ -353,16 +352,15 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
             <div className="row">
               <div className="col-md-12">
                 <div className="mb-3">
-                  <label htmlFor="local_pagamento" className="form-label small">Local de Pagamento</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    id="local_pagamento"
+                  <FormField
                     name="local_pagamento"
-                    value={formData.local_pagamento}
-                    onChange={(e) => handleInputChange('local_pagamento', e.target.value)}
-                    disabled={createBancoMutation.isPending}
+                    type="text"
+                    label="Local de Pagamento"
                     placeholder="Pagável em qualquer banco até o vencimento"
+                    size="sm"
+                    value={formData.local_pagamento}
+                    onChange={(e: any) => handleInputChange('local_pagamento', e.value)}
+                    disabled={createBancoMutation.isPending}
                   />
                 </div>
               </div>
@@ -376,17 +374,17 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
             <div className="row">
               <div className="col-md-12">
                 <div className="mb-3">
-                  <label htmlFor="api_key" className="form-label small">API Key *</label>
-                  <input
-                    type="password"
-                    className="form-control form-control-sm"
-                    id="api_key"
+                  <FormField
                     name="api_key"
-                    autoComplete="off"
-                    value={formData.api_key}
-                    onChange={(e) => handleInputChange('api_key', e.target.value)}
-                    disabled={createBancoMutation.isPending}
+                    type="password"
+                    label="API Key"
                     placeholder="Sua chave da API Asaas"
+                    required={true}
+                    size="sm"
+                    value={formData.api_key}
+                    onChange={(e: any) => handleInputChange('api_key', e.value)}
+                    disabled={createBancoMutation.isPending}
+                    autoComplete="off"
                   />
                   <small className="text-secondary text-secondary">Disponível no painel administrativo da Asaas</small>
                 </div>
@@ -396,17 +394,16 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
             <div className="row">
               <div className="col-md-6">
                 <div className="mb-3">
-                  <label htmlFor="taxa_cobranca" className="form-label small">Taxa de Cobrança (R$)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-control form-control-sm"
-                    id="taxa_cobranca"
+                  <FormField
                     name="taxa_cobranca"
-                    value={formData.taxa_cobranca}
-                    onChange={(e) => handleInputChange('taxa_cobranca', parseFloat(e.target.value) || 0)}
-                    disabled={createBancoMutation.isPending}
+                    type="number"
+                    label="Taxa de Cobrança (R$)"
                     placeholder="0.00"
+                    size="sm"
+                    value={formData.taxa_cobranca}
+                    onChange={(e: any) => handleInputChange('taxa_cobranca', parseFloat(e.value) || 0)}
+                    disabled={createBancoMutation.isPending}
+                    step={0.01}
                   />
                 </div>
               </div>
@@ -502,38 +499,34 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
-                    <label htmlFor="client_id_producao" className="form-label small">
-                      {formData.tipo_banco === 'efi' ? 'Client ID Produção *' : 'Client ID'}
-                    </label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  id="client_id_producao"
+                <FormField
                   name="client_id_producao"
-                  autoComplete="off"
-                  value={formData.client_id_producao}
-                  onChange={(e) => handleInputChange('client_id_producao', e.target.value)}
-                  disabled={createBancoMutation.isPending}
+                  type="text"
+                  label={formData.tipo_banco === 'efi' ? 'Client ID Produção' : 'Client ID'}
                   placeholder="Client ID para produção"
+                  required={formData.tipo_banco === 'efi'}
+                  size="sm"
+                  value={formData.client_id_producao}
+                  onChange={(e: any) => handleInputChange('client_id_producao', e.value)}
+                  disabled={createBancoMutation.isPending}
+                  autoComplete="off"
                 />
               </div>
             </div>
 
             <div className="col-md-6">
               <div className="mb-3">
-                    <label htmlFor="client_secret_producao" className="form-label small">
-                      {formData.tipo_banco === 'efi' ? 'Client Secret Produção *' : 'Client Secret'}
-                    </label>
-                <input
-                  type="password"
-                  className="form-control form-control-sm"
-                  id="client_secret_producao"
+                <FormField
                   name="client_secret_producao"
-                  autoComplete="off"
-                  value={formData.client_secret_producao}
-                  onChange={(e) => handleInputChange('client_secret_producao', e.target.value)}
-                  disabled={createBancoMutation.isPending}
+                  type="password"
+                  label={formData.tipo_banco === 'efi' ? 'Client Secret Produção' : 'Client Secret'}
                   placeholder="Client Secret para produção"
+                  required={formData.tipo_banco === 'efi'}
+                  size="sm"
+                  value={formData.client_secret_producao}
+                  onChange={(e: any) => handleInputChange('client_secret_producao', e.value)}
+                  disabled={createBancoMutation.isPending}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -542,20 +535,19 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
               <div className="row">
                 <div className="col-md-12">
           <div className="mb-3">
-                    <label htmlFor="url_retorno" className="form-label small">URL de Retorno (Webhook)</label>
-            <input
-              type="url"
-              className="form-control form-control-sm"
-              id="url_retorno"
+            <FormField
               name="url_retorno"
-              autoComplete="url"
-              value={formData.url_retorno}
-              onChange={(e) => handleInputChange('url_retorno', e.target.value)}
-              disabled={createBancoMutation.isPending}
+              type="url"
+              label="URL de Retorno (Webhook)"
               placeholder="URL para retorno de webhooks"
+              size="sm"
+              value={formData.url_retorno}
+              onChange={(e: any) => handleInputChange('url_retorno', e.value)}
+              disabled={createBancoMutation.isPending}
+              autoComplete="url"
             />
-                    <small className="text-secondary text-secondary">URL gerada automaticamente baseada no tipo de banco</small>
-                  </div>
+            <small className="text-secondary text-secondary">URL gerada automaticamente baseada no tipo de banco</small>
+          </div>
                 </div>
           </div>
 
