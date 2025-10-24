@@ -273,6 +273,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
           </ul>
 
           <DataTable
+            key={`datatable-${activeTab}`}
             data={documentos?.data as DocumentoUnion[] || []}
             columns={columns}
             isLoading={isLoading}
