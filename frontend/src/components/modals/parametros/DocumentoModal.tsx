@@ -169,6 +169,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     onSuccess: () => {
       addNotification('success', 'Documento criado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
+      queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       if (onSuccess) {
         onSuccess();
       }
@@ -197,6 +198,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     onSuccess: () => {
       addNotification('success', 'Documento salvo com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
+      queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       if (onSuccess) {
         onSuccess();
       }

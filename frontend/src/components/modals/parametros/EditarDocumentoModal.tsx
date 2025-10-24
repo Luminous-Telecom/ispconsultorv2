@@ -207,6 +207,7 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
         
         // Invalidar queries após salvar contratos
         queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
+        queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
         addNotification('success', 'Documento salvo com sucesso');
         if (onSuccess) {
           onSuccess();
