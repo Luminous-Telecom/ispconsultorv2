@@ -212,7 +212,7 @@ export class ModeloTermoController {
   static async generateTestPdf(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { cliente_id } = req.query;
+      const { clienteId } = req.body;
 
       const modelo = await ModeloTermo.findByPk(id);
 
@@ -227,8 +227,8 @@ export class ModeloTermoController {
       // Buscar cliente se fornecido
       let conteudoProcessado = modelo.conteudo;
       
-      if (cliente_id) {
-        const cliente = await Cliente.findByPk(cliente_id as string);
+      if (clienteId) {
+        const cliente = await Cliente.findByPk(clienteId as string);
         
         if (!cliente) {
           res.status(404).json({

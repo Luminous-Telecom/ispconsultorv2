@@ -67,9 +67,10 @@ class ModeloTermoService {
   }
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
-    const response = await axios.get(`${this.baseUrl}/${id}/pdf/test?cliente_id=${clienteId}`, {
-      responseType: 'blob'
-    });
+    const response = await axios.post(`${this.baseUrl}/${id}/pdf/test`, 
+      { clienteId },
+      { responseType: 'blob' }
+    );
     return response.data;
   }
 }
