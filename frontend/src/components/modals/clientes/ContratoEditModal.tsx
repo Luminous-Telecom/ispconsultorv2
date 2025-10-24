@@ -1852,10 +1852,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </div>
           
           <div className="mb-3">
-            <label className="form-label">
-              Conteúdo do Termo <span className="text-danger">*</span>
-            </label>
-            
             {/* Campo de seleção de termo cadastrado */}
             <div className="mb-3">
               <label htmlFor="id_termo" className="form-label">
