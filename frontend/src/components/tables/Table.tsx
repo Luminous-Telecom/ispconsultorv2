@@ -82,7 +82,10 @@ const Table = <T extends { id: number | string }>({
     sortable,
     selectable,
     multiSelect,
-    onSelectionChange,
+    onSelectionChange: (selectedItems) => {
+      // Atualizar estado local e chamar callback externo
+      onSelectionChange?.(selectedItems);
+    },
     onSort,
     onFilter,
     onSearch,

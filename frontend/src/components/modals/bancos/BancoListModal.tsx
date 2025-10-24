@@ -237,7 +237,10 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             setSortColumn(column);
             setSortDirection(direction);
           }}
-          onSelectionChange={setSelectedItems}
+          onSelectionChange={(selectedItems) => {
+            console.log('Selected bancos:', selectedItems);
+            setSelectedItems(selectedItems);
+          }}
           className="banco-list-table"
         />
       </div>

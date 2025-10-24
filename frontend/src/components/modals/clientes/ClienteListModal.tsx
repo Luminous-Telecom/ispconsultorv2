@@ -223,7 +223,10 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
             setSortColumn(column);
             setSortDirection(direction);
           }}
-          onSelectionChange={setSelectedItems}
+          onSelectionChange={(selectedItems) => {
+            console.log('Selected items:', selectedItems);
+            setSelectedItems(selectedItems);
+          }}
           className="cliente-list-table"
         />
       </div>

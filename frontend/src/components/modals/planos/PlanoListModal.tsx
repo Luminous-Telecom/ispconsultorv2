@@ -402,7 +402,10 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             setSortColumn(column);
             setSortDirection(direction);
           }}
-          onSelectionChange={setSelectedItems}
+          onSelectionChange={(selectedItems) => {
+            console.log('Selected planos:', selectedItems);
+            setSelectedItems(selectedItems);
+          }}
           className="plano-list-table"
         />
       </div>
