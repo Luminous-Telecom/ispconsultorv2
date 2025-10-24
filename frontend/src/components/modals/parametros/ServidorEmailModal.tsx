@@ -3,6 +3,7 @@ import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ServidorEmailService, ServidorEmail } from '../../../services/servidorEmailService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { FormField, Checkbox } from '../../ui';
 
 interface ServidorEmailModalProps {
   show: boolean;
@@ -232,144 +233,116 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
             <div className="card-body p-2">
               <div className="row g-2">
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <label htmlFor="host" className="form-label small mb-1">Host SMTP</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      id="host"
-                      value={formData.host}
-                      onChange={(e) => setFormData(prev => ({ ...prev, host: e.target.value }))}
-                      placeholder="smtp.gmail.com"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    name="host"
+                    type="text"
+                    label="Host SMTP"
+                    placeholder="smtp.gmail.com"
+                    required={true}
+                    size="sm"
+                    value={formData.host}
+                    onChange={(e) => setFormData(prev => ({ ...prev, host: e.value }))}
+                  />
                 </div>
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <label htmlFor="porta" className="form-label small mb-1">Porta</label>
-                    <input
-                      type="number"
-                      className="form-control form-control-sm"
-                      id="porta"
-                      value={formData.porta}
-                      onChange={(e) => setFormData(prev => ({ ...prev, porta: parseInt(e.target.value) }))}
-                      placeholder="587"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    name="porta"
+                    type="number"
+                    label="Porta"
+                    placeholder="587"
+                    required={true}
+                    size="sm"
+                    value={formData.porta.toString()}
+                    onChange={(e) => setFormData(prev => ({ ...prev, porta: parseInt(e.value) }))}
+                  />
                 </div>
               </div>
               
               <div className="row g-2">
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <label htmlFor="usuario" className="form-label small mb-1">Usuário/E-mail</label>
-                    <input
-                      type="email"
-                      className="form-control form-control-sm"
-                      id="usuario"
-                      value={formData.usuario}
-                      onChange={(e) => setFormData(prev => ({ ...prev, usuario: e.target.value }))}
-                      placeholder="usuario@gmail.com"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    name="usuario"
+                    type="email"
+                    label="Usuário/E-mail"
+                    placeholder="usuario@gmail.com"
+                    required={true}
+                    size="sm"
+                    value={formData.usuario}
+                    onChange={(e) => setFormData(prev => ({ ...prev, usuario: e.value }))}
+                  />
                 </div>
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <label htmlFor="senha" className="form-label small mb-1">
-                      Senha {!servidorAtivo?.data && <span className="text-danger">*</span>}
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control form-control-sm"
-                      id="senha"
-                      value={formData.senha}
-                      onChange={(e) => setFormData(prev => ({ ...prev, senha: e.target.value }))}
-                      placeholder={servidorAtivo?.data ? "Deixe em branco para manter a senha atual" : "Digite a senha do e-mail"}
-                      required={!servidorAtivo?.data}
-                    />
-                    {servidorAtivo?.data && (
-                      <small className="form-text text-secondary">
-                        Deixe em branco para manter a senha atual
-                      </small>
-                    )}
-                  </div>
+                  <FormField
+                    name="senha"
+                    type="password"
+                    label={`Senha ${!servidorAtivo?.data ? '*' : ''}`}
+                    placeholder={servidorAtivo?.data ? "Deixe em branco para manter a senha atual" : "Digite a senha do e-mail"}
+                    required={!servidorAtivo?.data}
+                    size="sm"
+                    value={formData.senha}
+                    onChange={(e) => setFormData(prev => ({ ...prev, senha: e.value }))}
+                  />
+                  {servidorAtivo?.data && (
+                    <small className="form-text text-secondary">
+                      Deixe em branco para manter a senha atual
+                    </small>
+                  )}
                 </div>
               </div>
 
               <div className="row g-2">
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <label htmlFor="nome_remetente" className="form-label small mb-1">Nome do Remetente</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      id="nome_remetente"
-                      value={formData.nome_remetente}
-                      onChange={(e) => setFormData(prev => ({ ...prev, nome_remetente: e.target.value }))}
-                      placeholder="CTM Telecom"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    name="nome_remetente"
+                    type="text"
+                    label="Nome do Remetente"
+                    placeholder="CTM Telecom"
+                    required={true}
+                    size="sm"
+                    value={formData.nome_remetente}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nome_remetente: e.value }))}
+                  />
                 </div>
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <label htmlFor="email_remetente" className="form-label small mb-1">E-mail do Remetente</label>
-                    <input
-                      type="email"
-                      className="form-control form-control-sm"
-                      id="email_remetente"
-                      value={formData.email_remetente}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email_remetente: e.target.value }))}
-                      placeholder="contato@ctmtelecom.com"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    name="email_remetente"
+                    type="email"
+                    label="E-mail do Remetente"
+                    placeholder="contato@ctmtelecom.com"
+                    required={true}
+                    size="sm"
+                    value={formData.email_remetente}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email_remetente: e.value }))}
+                  />
                 </div>
               </div>
               
               <div className="row g-2">
                 <div className="col-md-4">
-                  <div className="form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="ssl"
-                      checked={formData.ssl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, ssl: e.target.checked }))}
-                    />
-                    <label className="form-check-label" htmlFor="ssl">
-                      Usar SSL
-                    </label>
-                  </div>
+                  <Checkbox
+                    name="ssl"
+                    label="Usar SSL"
+                    checked={formData.ssl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, ssl: e.value }))}
+                  />
                 </div>
                 <div className="col-md-4">
-                  <div className="form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="tls"
-                      checked={formData.tls}
-                      onChange={(e) => setFormData(prev => ({ ...prev, tls: e.target.checked }))}
-                    />
-                    <label className="form-check-label" htmlFor="tls">
-                      Usar TLS
-                    </label>
-                  </div>
+                  <Checkbox
+                    name="tls"
+                    label="Usar TLS"
+                    checked={formData.tls}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tls: e.value }))}
+                  />
                 </div>
                 <div className="col-md-4">
-                  <div className="mb-2">
-                    <label htmlFor="timeout" className="form-label small mb-1">Timeout (ms)</label>
-                    <input
-                      type="number"
-                      className="form-control form-control-sm"
-                      id="timeout"
-                      value={formData.timeout}
-                      onChange={(e) => setFormData(prev => ({ ...prev, timeout: parseInt(e.target.value) }))}
-                    />
-                  </div>
+                  <FormField
+                    name="timeout"
+                    type="number"
+                    label="Timeout (ms)"
+                    size="sm"
+                    value={formData.timeout.toString()}
+                    onChange={(e) => setFormData(prev => ({ ...prev, timeout: parseInt(e.value) }))}
+                  />
                 </div>
               </div>
 
@@ -382,12 +355,14 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                       Enviar E-mail de Teste
                     </small>
                     <div className="input-group">
-                      <input
+                      <FormField
+                        name="email_teste"
                         type="email"
-                        className="form-control form-control-sm"
                         placeholder="Digite o e-mail para teste"
+                        size="sm"
                         value={emailTeste}
-                        onChange={(e) => setEmailTeste(e.target.value)}
+                        onChange={(e) => setEmailTeste(e.value)}
+                        className="flex-grow-1"
                       />
                       <button
                         type="button"
