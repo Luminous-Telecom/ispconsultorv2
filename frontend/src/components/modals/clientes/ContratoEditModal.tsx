@@ -555,13 +555,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         {
           label: `Imprimir Selecionados (${selectedTermosItems.length})`,
           action: () => {
-            console.log('Imprimir termos selecionados');
+            // TODO: Implementar impressão de termos selecionados
           }
         },
         {
           label: 'Imprimir Todos Ativos',
           action: () => {
-            console.log('Imprimir todos os termos ativos');
+            // TODO: Implementar impressão de todos os termos ativos
           }
         }
       ]
@@ -1917,8 +1917,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     title="Abrir registro (F3)"
                     onClick={() => {
                       if (termoFormData.termoCadastradoId > 0) {
-                        // Implementar abertura do registro
-                        console.log('Abrir registro do termo:', termoFormData.termoCadastradoId);
+                        // TODO: Implementar abertura do registro
                       }
                     }}
                     disabled={termoFormData.termoCadastradoId === 0}
