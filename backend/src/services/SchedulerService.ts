@@ -274,13 +274,6 @@ export class SchedulerService {
       throw new Error('Rotina não encontrada');
     }
 
-      hora_execucao_atual: routine.hora_execucao,
-      hora_execucao_nova: data.hora_execucao,
-      frequencia_atual: routine.frequencia,
-      frequencia_nova: data.frequencia,
-      data_recebida: data
-    });
-
     // Se a hora de execução ou frequência mudaram, recalcular próxima execução
     const shouldRecalculateNextExecution = 
       data.hora_execucao !== undefined || 
@@ -296,11 +289,6 @@ export class SchedulerService {
         ...data 
       };
       data.proxima_execucao = this.calculateNextExecution(updatedData);
-      
-        hora_execucao: updatedData.hora_execucao,
-        frequencia: updatedData.frequencia,
-        proxima_execucao: data.proxima_execucao
-      });
     }
 
     await routine.update(data);
@@ -365,22 +353,11 @@ export class SchedulerService {
 
 
   private calculateNextExecution(routine: any): Date {
-      hora_execucao: routine.hora_execucao,
-      frequencia: routine.frequencia
-    });
-
     const now = new Date();
     const [hours, minutes] = routine.hora_execucao.split(':');
     
     let nextExecution = new Date();
     nextExecution.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-      hours: parseInt(hours),
-      minutes: parseInt(minutes),
-      nextExecutionTime: nextExecution.toISOString(),
-      now: now.toISOString(),
-      isPast: nextExecution <= now
-    });
 
     // Se já passou hoje, agendar para o próximo período baseado na frequência
     if (nextExecution <= now) {
@@ -404,13 +381,8 @@ export class SchedulerService {
         default:
           nextExecution.setDate(nextExecution.getDate() + 1);
       }
-      
-        frequencia: routine.frequencia,
-        de: `${oldDate}/${oldMonth + 1}/${oldYear}`,
-        para: `${nextExecution.getDate()}/${nextExecution.getMonth() + 1}/${nextExecution.getFullYear()}`
-      });
     }
-    
+
     return nextExecution;
   }
 
@@ -481,12 +453,10 @@ export class SchedulerService {
   }
 
   public async getExecutionLogs(routineId?: number): Promise<any[]> {
-    
     const where: any = {};
     if (routineId) {
       where.routine_id = routineId;
     }
-
 
     try {
       const logs = await RoutineExecutionLog.findAll({

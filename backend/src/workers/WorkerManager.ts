@@ -235,8 +235,7 @@ export class WorkerManager extends EventEmitter {
     await routine.update({
       proxima_execucao: nextExecution
     });
-
-    // Atualizar próxima execução
+  }
 
   /**
    * Executa rotina manualmente
