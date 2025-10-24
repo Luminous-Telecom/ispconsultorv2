@@ -121,33 +121,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       from: clientesData?.pagination?.from || (page - 1) * limit + 1,
       to: clientesData?.pagination?.to || Math.min(page * limit, clientesData?.pagination?.total || 0)
     },
-    actions: onSelectClient ? [
-      {
-        key: 'select',
-        label: 'Selecionar',
-        icon: 'check',
-        variant: 'primary',
-        onClick: (item: Cliente) => handleRowClick(item)
-      }
-    ] : [
-      {
-        key: 'edit',
-        label: 'Editar',
-        icon: 'pencil',
-        variant: 'primary',
-        onClick: (item: Cliente) => {
-          setSelectedClienteId(item.id);
-          setShowEditModal(true);
-        }
-      },
-      {
-        key: 'delete',
-        label: 'Excluir',
-        icon: 'trash',
-        variant: 'danger',
-        onClick: (item: Cliente) => handleDelete(item.id)
-      }
-    ],
     bulkActions: onSelectClient ? [] : [
       {
         key: 'create',

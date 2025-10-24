@@ -125,33 +125,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       from: planosData?.pagination?.from || (page - 1) * limit + 1,
       to: planosData?.pagination?.to || Math.min(page * limit, planosData?.pagination?.total || 0)
     },
-    actions: onSelectPlano ? [
-      {
-        key: 'select',
-        label: 'Selecionar',
-        icon: 'check',
-        variant: 'primary',
-        onClick: (item: Plano) => handleRowClick(item)
-      }
-    ] : [
-      {
-        key: 'edit',
-        label: 'Editar',
-        icon: 'pencil',
-        variant: 'primary',
-        onClick: (item: Plano) => {
-          setSelectedPlanoId(item.id);
-          setShowEditModal(true);
-        }
-      },
-      {
-        key: 'delete',
-        label: 'Excluir',
-        icon: 'trash',
-        variant: 'danger',
-        onClick: (item: Plano) => handleDelete(item.id)
-      }
-    ],
     bulkActions: onSelectPlano ? [] : [
       {
         key: 'create',

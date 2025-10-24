@@ -117,33 +117,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       from: bancosData?.pagination?.from || (page - 1) * limit + 1,
       to: bancosData?.pagination?.to || Math.min(page * limit, bancosData?.pagination?.total || 0)
     },
-    actions: onSelectBanco ? [
-      {
-        key: 'select',
-        label: 'Selecionar',
-        icon: 'check',
-        variant: 'primary',
-        onClick: (item: Banco) => handleRowClick(item)
-      }
-    ] : [
-      {
-        key: 'edit',
-        label: 'Editar',
-        icon: 'pencil',
-        variant: 'primary',
-        onClick: (item: Banco) => {
-          setSelectedBancoId(item.id);
-          setShowEditModal(true);
-        }
-      },
-      {
-        key: 'delete',
-        label: 'Excluir',
-        icon: 'trash',
-        variant: 'danger',
-        onClick: (item: Banco) => handleDelete(item.id)
-      }
-    ],
     bulkActions: onSelectBanco ? [] : [
       {
         key: 'create',

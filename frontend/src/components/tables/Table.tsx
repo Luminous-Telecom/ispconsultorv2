@@ -199,12 +199,6 @@ const Table = <T extends { id: number | string }>({
               />
             ))}
           
-          {/* Coluna de ações */}
-          {actions.length > 0 && (
-            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
-              Ações
-            </th>
-          )}
         </tr>
       </thead>
     );
@@ -216,7 +210,7 @@ const Table = <T extends { id: number | string }>({
       return (
         <tbody>
           <tr>
-            <td colSpan={columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)} className="text-center">
+            <td colSpan={columns.length + (selectable ? 1 : 0)} className="text-center">
               <div className="spinner-border spinner-border-sm" role="status">
                 <span className="visually-hidden">Carregando...</span>
               </div>
@@ -230,7 +224,7 @@ const Table = <T extends { id: number | string }>({
       return (
         <tbody>
           <tr>
-            <td colSpan={columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)} className="text-center">
+            <td colSpan={columns.length + (selectable ? 1 : 0)} className="text-center">
               {emptyMessage}
             </td>
           </tr>
@@ -247,7 +241,14 @@ const Table = <T extends { id: number | string }>({
             <tr
               key={item.id}
               className={isSelected ? 'table-active' : ''}
-              onClick={() => onRowClick?.(item, index)}
+              onClick={() => {
+                // Selecionar/deselecionar item ao clicar na linha
+                if (selectable) {
+                  tableActions.toggleSelection(item);
+                }
+                // Chamar callback de clique na linha se existir
+                onRowClick?.(item, index);
+              }}
               style={{ 
                 cursor: 'pointer',
                 backgroundColor: isSelected ? '#0d6efd' : 'inherit',
@@ -298,25 +299,6 @@ const Table = <T extends { id: number | string }>({
                   </td>
                 ))}
               
-              {/* Célula de ações */}
-              {actions.length > 0 && (
-                <td 
-                  className="py-1 px-2"
-                  style={{ 
-                    fontSize: '0.75rem', 
-                    padding: '0.5rem',
-                    backgroundColor: isSelected ? '#0d6efd' : 'inherit',
-                    color: isSelected ? 'white' : 'inherit'
-                  }}
-                >
-                  <TableActions
-                    item={item}
-                    index={index}
-                    actions={actions}
-                    onActionClick={onActionClick}
-                  />
-                </td>
-              )}
             </tr>
           );
         })}
