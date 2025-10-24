@@ -26,7 +26,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <NotificationProvider key={`notification-provider-${Date.now()}`}>
+        <NotificationProvider>
           <Router>
             <Routes>
           <Route path="/login" element={<Login />} />

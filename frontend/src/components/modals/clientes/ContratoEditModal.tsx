@@ -4,7 +4,8 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import { useCreateContrato, useUpdateContrato } from '../../../hooks/useContratos';
-import { useTermosContrato, useCreateTermoContrato, useUpdateTermoContrato, useDeactivateTermoContrato } from '../../../hooks/useTermosContrato';
+import { useTermosContrato, useCreateTermoContrato, useUpdateTermoContrato, useDeactivateTermoContrato, useDeleteTermoContrato } from '../../../hooks/useTermosContrato';
+import { useModelosTermo } from '../../../hooks/useModelosTermo';
 import { TituloService } from '../../../services/tituloService';
 import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
@@ -14,7 +15,6 @@ import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
-import ModeloTermoService from '../../../services/modeloTermoService';
 
 interface ContratoForm {
   plano_id: number;
@@ -74,10 +74,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   const [lastClickedItem, setLastClickedItem] = useState<any>(null);
   const [termoFormData, setTermoFormData] = useState({
-    tipo_termo: 'adesao' as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
-    conteudo: '',
-    observacoes: '',
-    assinado: false,
+    assinado: 'NAO' as 'SIM' | 'NAO',
     usarTermoCadastrado: false,
     termoCadastradoId: 0
   });
@@ -99,24 +96,19 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const queryClient = useQueryClient();
   
   // Buscar termos cadastrados no sistema
-  const { data: termosSistema } = useQuery({
-    queryKey: ['termos-sistema'],
-    queryFn: () => ModeloTermoService.list(),
-    enabled: showSelecionarTermoModal
-  });
+  const { data: termosSistema } = useModelosTermo();
 
   // Filtrar e ordenar termos
   const filteredTermos = React.useMemo(() => {
-    if (!termosSistema?.data) return [];
+    if (!termosSistema) return [];
     
-    let filtered = [...termosSistema.data];
+    let filtered = [...termosSistema];
     
     // Aplicar busca
     if (searchTermosModal) {
       const searchLower = searchTermosModal.toLowerCase();
       filtered = filtered.filter(t => 
         t.nome?.toLowerCase().includes(searchLower) ||
-        t.tipo_termo?.toLowerCase().includes(searchLower) ||
         t.id?.toString().includes(searchLower)
       );
     }
@@ -135,7 +127,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     });
     
     return filtered;
-  }, [termosSistema?.data, searchTermosModal, sortColumnTermosModal, sortDirectionTermosModal]);
+  }, [termosSistema, searchTermosModal, sortColumnTermosModal, sortDirectionTermosModal]);
 
   // Paginar termos
   const paginatedTermos = React.useMemo(() => {
@@ -194,6 +186,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const createTermoMutation = useCreateTermoContrato();
   const updateTermoMutation = useUpdateTermoContrato();
   const deactivateTermoMutation = useDeactivateTermoContrato();
+  const deleteTermoMutation = useDeleteTermoContrato();
 
   // Garantir que termosData seja sempre um array
   const termosArray = Array.isArray(termosData) ? termosData : [];
@@ -510,10 +503,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       label: 'Novo',
       action: () => {
         setTermoFormData({
-          tipo_termo: 'adesao',
-          conteudo: '',
-          observacoes: '',
-          assinado: false,
+          assinado: 'NAO',
           usarTermoCadastrado: false,
           termoCadastradoId: 0
         });
@@ -541,7 +531,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           if (window.confirm(confirmMessage)) {
             try {
               for (const item of selectedItems) {
-                await deactivateTermoMutation.mutateAsync(item.id);
+                await deleteTermoMutation.mutateAsync(item.id);
               }
               success('Termo(s) deletado(s) com sucesso!');
               queryClient.invalidateQueries({ queryKey: ['termos-contrato', contratoId] });
@@ -657,26 +647,15 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       sortable: true,
     },
     {
-      key: 'tipo_termo',
-      label: 'Tipo',
+      key: 'assinado',
+      label: 'Assinado',
       sortable: true,
       render: (item: any) => {
-        const tipoLabels: { [key: string]: string } = {
-          'adesao': 'Adesão',
-          'permanencia': 'Permanência',
-          'cancelamento': 'Cancelamento',
-          'alteracao': 'Alteração'
-        };
-        return tipoLabels[item.tipo_termo] || item.tipo_termo;
-      }
-    },
-    {
-      key: 'conteudo',
-      label: 'Conteúdo',
-      sortable: true,
-      render: (item: any) => {
-        const conteudo = item.conteudo || '';
-        return conteudo.length > 50 ? conteudo.substring(0, 50) + '...' : conteudo;
+        return (
+          <span className={`badge ${item.assinado === 'SIM' ? 'bg-success' : 'bg-secondary'}`}>
+            {item.assinado}
+          </span>
+        );
       }
     },
     {
@@ -768,13 +747,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       return allData.filter((termo: any) => {
         const id = termo.id?.toString() || '';
         const tipoTermo = termo.tipo_termo || '';
-        const conteudo = termo.conteudo || '';
         const aceitoPor = termo.aceito_por || '';
         
         return (
           id.includes(searchTerm) ||
           tipoTermo.toLowerCase().includes(searchTerm) ||
-          conteudo.toLowerCase().includes(searchTerm) ||
           aceitoPor.toLowerCase().includes(searchTerm)
         );
       });
@@ -827,7 +804,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         ...formData
       });
 
-      success('Contrato atualizado com sucesso!');
+      // Notificação removida - não mostrar ao salvar automaticamente
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
       queryClient.invalidateQueries({ queryKey: ['cliente', contratoData?.data?.cliente_id] });
       
@@ -1790,20 +1767,24 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         <form onSubmit={async (e) => {
           e.preventDefault();
           try {
+            // Validação no frontend
+            if (!termoFormData.usarTermoCadastrado || !termoFormData.termoCadastradoId || termoFormData.termoCadastradoId <= 0) {
+              error('É obrigatório selecionar um modelo de termo cadastrado no sistema.');
+              return;
+            }
+            
             await createTermoMutation.mutateAsync({
               contratoId: contratoId!,
               data: {
-                tipo_termo: termoFormData.tipo_termo,
-                conteudo: termoFormData.conteudo,
-                observacoes: termoFormData.observacoes
+                modelo_termo_id: termoFormData.usarTermoCadastrado && termoFormData.termoCadastradoId > 0 
+                  ? termoFormData.termoCadastradoId 
+                  : null,
+                assinado: termoFormData.assinado
               }
             });
             setShowTermoModal(false);
             setTermoFormData({
-              tipo_termo: 'adesao',
-              conteudo: '',
-              observacoes: '',
-              assinado: false,
+              assinado: 'NAO',
               usarTermoCadastrado: false,
               termoCadastradoId: 0
             });
@@ -1814,29 +1795,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="tipoTermo" className="form-label">
-                  Tipo de Termo <span className="text-danger">*</span>
-                </label>
-                <select
-                  id="tipoTermo"
-                  className="form-select"
-                  value={termoFormData.tipo_termo}
-                  onChange={(e) => setTermoFormData({
-                    ...termoFormData,
-                    tipo_termo: e.target.value as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao'
-                  })}
-                  required
-                >
-                  <option value="adesao">Adesão</option>
-                  <option value="permanencia">Permanência</option>
-                  <option value="cancelamento">Cancelamento</option>
-                  <option value="alteracao">Alteração</option>
-                </select>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="mb-3">
-                <label htmlFor="assinado" className="form-label">Assinado</label>
+                <label className="form-label">Assinado</label>
                 <div className="d-flex gap-3 mt-2">
                   <div className="form-check">
                     <input
@@ -1844,9 +1803,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                       type="radio"
                       name="assinado"
                       id="assinadoSim"
-                      value="true"
-                      checked={termoFormData.assinado === true}
-                      onChange={() => setTermoFormData({ ...termoFormData, assinado: true })}
+                      value="SIM"
+                      checked={termoFormData.assinado === 'SIM'}
+                      onChange={() => setTermoFormData({ ...termoFormData, assinado: 'SIM' })}
                     />
                     <label className="form-check-label" htmlFor="assinadoSim">
                       Sim
@@ -1858,9 +1817,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                       type="radio"
                       name="assinado"
                       id="assinadoNao"
-                      value="false"
-                      checked={termoFormData.assinado === false}
-                      onChange={() => setTermoFormData({ ...termoFormData, assinado: false })}
+                      value="NAO"
+                      checked={termoFormData.assinado === 'NAO'}
+                      onChange={() => setTermoFormData({ ...termoFormData, assinado: 'NAO' })}
                     />
                     <label className="form-check-label" htmlFor="assinadoNao">
                       Não
@@ -1887,8 +1846,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   checked={termoFormData.usarTermoCadastrado}
                   onChange={() => setTermoFormData({ 
                     ...termoFormData, 
-                    usarTermoCadastrado: true,
-                    conteudo: '' // Limpar conteúdo personalizado
+                    usarTermoCadastrado: true
                   })}
                 />
                 <label className="form-check-label" htmlFor="termoCadastrado">
@@ -1909,7 +1867,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   })}
                 />
                 <label className="form-check-label" htmlFor="conteudoPersonalizado">
-                  Digitar conteúdo personalizado
+                  Termo personalizado (não disponível)
                 </label>
               </div>
             </div>
@@ -1917,7 +1875,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             {/* Campo de seleção de termo cadastrado */}
             {termoFormData.usarTermoCadastrado && (
               <div className="mb-3">
-                <label htmlFor="termoCadastradoSelect" className="form-label">
+                <label htmlFor="id_termo" className="form-label">
                   Selecionar Termo Cadastrado
                 </label>
                 <div className="d-flex align-items-center gap-2">
@@ -1930,11 +1888,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     value={termoFormData.termoCadastradoId || ''}
                     onChange={(e) => {
                       const id = parseInt(e.target.value) || 0;
-                      const termoSelecionado = termosSistema?.data?.find((t: any) => t.id === id);
-                      setTermoFormData({ 
+                      const termoSelecionado = termosSistema?.find((t: any) => t.id === id);
+                      setTermoFormData({
                         ...termoFormData, 
-                        termoCadastradoId: id,
-                        conteudo: termoSelecionado?.conteudo || ''
+                        termoCadastradoId: id
                       });
                     }}
                     placeholder="ID"
@@ -1948,7 +1905,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     id="id_termo_label"
                     className="form-control"
                     value={termoFormData.termoCadastradoId > 0 ? 
-                      termosSistema?.data?.find((t: any) => t.id === termoFormData.termoCadastradoId)?.nome || '' : 
+                      termosSistema?.find((t: any) => t.id === termoFormData.termoCadastradoId)?.nome || '' : 
                       ''
                     }
                     placeholder="Nome do termo"
@@ -1990,22 +1947,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             )}
 
             {/* Campo de conteúdo personalizado */}
-            {!termoFormData.usarTermoCadastrado && (
-              <div className="mb-3">
-                <label htmlFor="conteudo" className="form-label">
-                  Conteúdo Personalizado
-                </label>
-                <textarea
-                  id="conteudo"
-                  className="form-control"
-                  rows={8}
-                  value={termoFormData.conteudo}
-                  onChange={(e) => setTermoFormData({ ...termoFormData, conteudo: e.target.value })}
-                  placeholder="Digite o conteúdo do termo..."
-                  required={!termoFormData.usarTermoCadastrado}
-                />
-              </div>
-            )}
           </div>
           
 
@@ -2056,10 +1997,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               disabled={!termoSelecionado}
               onClick={() => {
                 if (termoSelecionado) {
-                  setTermoFormData({ 
+                  setTermoFormData({
                     ...termoFormData, 
-                    termoCadastradoId: termoSelecionado.id,
-                    conteudo: termoSelecionado.conteudo || ''
+                    termoCadastradoId: termoSelecionado.id
                   });
                   setShowSelecionarTermoModal(false);
                   setTermoSelecionado(null);
@@ -2102,10 +2042,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               // Verificar se é duplo clique (mesmo item clicado em menos de 300ms)
               if (lastClickedItem?.id === currentItem.id && (currentTime - lastClickTime) < 300) {
                 // Inserir termo ao clicar duas vezes
-                setTermoFormData({ 
+                setTermoFormData({
                   ...termoFormData, 
-                  termoCadastradoId: currentItem.id,
-                  conteudo: currentItem.conteudo || ''
+                  termoCadastradoId: currentItem.id
                 });
                 setShowSelecionarTermoModal(false);
                 setTermoSelecionado(null);

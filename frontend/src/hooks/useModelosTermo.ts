@@ -5,71 +5,85 @@ import { useNotificationContext } from '../contexts/NotificationContext';
 export const useModelosTermo = () => {
   return useQuery({
     queryKey: ['modelos-termo'],
-    queryFn: () => ModeloTermoService.list(),
-  });
-};
-
-export const useModeloTermoById = (id: number) => {
-  return useQuery({
-    queryKey: ['modelo-termo', id],
-    queryFn: () => ModeloTermoService.getById(id),
-    enabled: !!id,
+    queryFn: async () => {
+      const response = await ModeloTermoService.list();
+      return response.data;
+    },
   });
 };
 
 export const useModelosTermoByTipo = (tipo: string) => {
   return useQuery({
-    queryKey: ['modelos-termo', 'tipo', tipo],
-    queryFn: () => ModeloTermoService.getByTipo(tipo),
+    queryKey: ['modelos-termo', tipo],
+    queryFn: async () => {
+      const response = await ModeloTermoService.getByTipo(tipo);
+      return response.data;
+    },
     enabled: !!tipo,
+  });
+};
+
+export const useModeloTermo = (id: number) => {
+  return useQuery({
+    queryKey: ['modelo-termo', id],
+    queryFn: async () => {
+      const response = await ModeloTermoService.getById(id);
+      return response.data;
+    },
+    enabled: !!id,
   });
 };
 
 export const useCreateModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
-    mutationFn: (data: CreateModeloTermoData) => ModeloTermoService.create(data),
+    mutationFn: async (data: CreateModeloTermoData) => {
+      const response = await ModeloTermoService.create(data);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
-      addNotification('success', 'Modelo de termo criado com sucesso');
+      success('Modelo de termo criado com sucesso!');
     },
     onError: (error: any) => {
-      addNotification('error', error.response?.data?.message || 'Erro ao criar modelo de termo');
-    }
+      error(error.response?.data?.message || 'Erro ao criar modelo de termo');
+    },
   });
 };
 
 export const useUpdateModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateModeloTermoData }) =>
-      ModeloTermoService.update(id, data),
+    mutationFn: async ({ id, data }: { id: number; data: UpdateModeloTermoData }) => {
+      const response = await ModeloTermoService.update(id, data);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
-      addNotification('success', 'Modelo de termo atualizado com sucesso');
+      success('Modelo de termo atualizado com sucesso!');
     },
     onError: (error: any) => {
-      addNotification('error', error.response?.data?.message || 'Erro ao atualizar modelo de termo');
-    }
+      error(error.response?.data?.message || 'Erro ao atualizar modelo de termo');
+    },
   });
 };
 
 export const useDeleteModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: (id: number) => ModeloTermoService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
-      addNotification('success', 'Modelo de termo excluído com sucesso');
+      success('Modelo de termo excluído com sucesso!');
     },
     onError: (error: any) => {
-      addNotification('error', error.response?.data?.message || 'Erro ao excluir modelo de termo');
-    }
+      error(error.response?.data?.message || 'Erro ao excluir modelo de termo');
+    },
   });
 };

@@ -82,16 +82,14 @@ export const useDeactivateTermoContrato = () => {
 
 export const useDeleteTermoContrato = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
 
   return useMutation({
     mutationFn: (id: number) => TermoContratoService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
-      addNotification('success', 'Termo deletado com sucesso');
     },
     onError: (error: any) => {
-      addNotification('error', error.response?.data?.message || 'Erro ao deletar termo');
+      console.error('Erro ao deletar termo:', error);
     }
   });
 };

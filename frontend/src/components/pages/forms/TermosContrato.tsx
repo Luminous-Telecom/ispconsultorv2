@@ -13,9 +13,8 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
   const [selectedTermo, setSelectedTermo] = useState<TermoContrato | null>(null);
   const [aceitoPor, setAceitoPor] = useState('');
   const [formData, setFormData] = useState<CreateTermoContratoData>({
-    tipo_termo: 'adesao',
-    conteudo: '',
-    observacoes: ''
+    modelo_termo_id: null,
+    assinado: 'NAO'
   });
 
   const { data: termos, isLoading, refetch } = useTermosContrato(contratoId);
@@ -31,7 +30,7 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
     try {
       await createMutation.mutateAsync({ contratoId, data: formData });
       setShowCreateModal(false);
-      setFormData({ tipo_termo: 'adesao', conteudo: '', observacoes: '' });
+      setFormData({ modelo_termo_id: null, assinado: 'NAO' });
     } catch (error) {
       // Error handling is done in the mutation
     }
@@ -58,26 +57,6 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
         // Error handling is done in the mutation
       }
     }
-  };
-
-  const getTipoTermoLabel = (tipo: string) => {
-    const labels = {
-      adesao: 'Adesão',
-      permanencia: 'Permanência',
-      cancelamento: 'Cancelamento',
-      alteracao: 'Alteração'
-    };
-    return labels[tipo as keyof typeof labels] || tipo;
-  };
-
-  const getTipoTermoBadge = (tipo: string) => {
-    const variants = {
-      adesao: 'primary',
-      permanencia: 'success',
-      cancelamento: 'danger',
-      alteracao: 'warning'
-    };
-    return variants[tipo as keyof typeof variants] || 'secondary';
   };
 
   if (isLoading) {
@@ -108,8 +87,8 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
                   <div className="card h-100">
                     <div className="card-header d-flex justify-content-between align-items-center">
                       <div>
-                        <span className={`badge bg-${getTipoTermoBadge(termo.tipo_termo)}`}>
-                          {getTipoTermoLabel(termo.tipo_termo)}
+                        <span className={`badge ${termo.assinado === 'SIM' ? 'bg-success' : 'bg-secondary'}`}>
+                          {termo.assinado}
                         </span>
                         {termo.ativo && (
                           <span className="badge bg-success ms-2">Ativo</span>
@@ -152,16 +131,9 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
                             backgroundColor: '#f8f9fa'
                           }}
                         >
-                          {termo.conteudo}
+                          {termo.modelo_termo_id ? 'Conteúdo vinculado ao modelo de termo' : 'Sem conteúdo'}
                         </div>
                       </div>
-                      
-                      {termo.observacoes && (
-                        <div className="mb-2">
-                          <strong>Observações:</strong>
-                          <p className="mb-0 text-muted">{termo.observacoes}</p>
-                        </div>
-                      )}
 
                       {termo.data_aceite && (
                         <div className="mb-2">
@@ -197,41 +169,54 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
                 <div className="row">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Tipo do Termo</label>
-                      <select
-                        className="form-select"
-                        value={formData.tipo_termo}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, tipo_termo: e.target.value as any })}
-                      >
-                        <option value="adesao">Adesão</option>
-                        <option value="permanencia">Permanência</option>
-                        <option value="cancelamento">Cancelamento</option>
-                        <option value="alteracao">Alteração</option>
-                      </select>
+                      <label className="form-label">Assinado</label>
+                      <div className="d-flex gap-3 mt-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="assinado"
+                            id="assinadoSim"
+                            value="SIM"
+                            checked={formData.assinado === 'SIM'}
+                            onChange={() => setFormData({ ...formData, assinado: 'SIM' })}
+                          />
+                          <label className="form-check-label" htmlFor="assinadoSim">
+                            Sim
+                          </label>
+                        </div>
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="assinado"
+                            id="assinadoNao"
+                            value="NAO"
+                            checked={formData.assinado === 'NAO'}
+                            onChange={() => setFormData({ ...formData, assinado: 'NAO' })}
+                          />
+                          <label className="form-check-label" htmlFor="assinadoNao">
+                            Não
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="mb-3">
-                  <label className="form-label">Conteúdo</label>
-                  <textarea
+                  <label className="form-label">Modelo de Termo</label>
+                  <input
+                    type="number"
                     className="form-control"
-                    rows={8}
-                    value={formData.conteudo}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, conteudo: e.target.value })}
-                    placeholder="Digite o conteúdo do termo..."
+                    value={formData.modelo_termo_id || ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, modelo_termo_id: parseInt(e.target.value) || null })}
+                    placeholder="ID do modelo de termo..."
+                    required
                   />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Observações</label>
-                  <textarea
-                    className="form-control"
-                    rows={3}
-                    value={formData.observacoes}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, observacoes: e.target.value })}
-                    placeholder="Observações adicionais (opcional)..."
-                  />
+                  <div className="form-text">
+                    Digite o ID do modelo de termo cadastrado no sistema
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">
@@ -242,7 +227,7 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
                   type="button" 
                   className="btn btn-primary" 
                   onClick={handleCreate}
-                  disabled={!formData.conteudo.trim() || createMutation.isPending}
+                  disabled={!formData.modelo_termo_id || createMutation.isPending}
                 >
                   {createMutation.isPending ? 'Criando...' : 'Criar Termo'}
                 </button>
@@ -275,7 +260,7 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
                 
                 {selectedTermo && (
                   <div className="alert alert-info">
-                    <strong>Termo:</strong> {getTipoTermoLabel(selectedTermo.tipo_termo)}
+                    <strong>Termo:</strong> {selectedTermo.assinado === 'SIM' ? 'Assinado' : 'Não Assinado'}
                   </div>
                 )}
               </div>
