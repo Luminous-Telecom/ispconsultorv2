@@ -610,10 +610,11 @@ export class ModeloTermoController {
       }
 
       // Processar variáveis do documento
+      const contratoComIncludes = contrato as any; // Type assertion para acessar includes
       const conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
         modelo.conteudo,
         {
-          cliente: contrato.cliente,
+          cliente: contratoComIncludes.cliente,
           contrato: contrato
         }
       );
