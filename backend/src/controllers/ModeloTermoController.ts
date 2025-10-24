@@ -397,7 +397,7 @@ export class ModeloTermoController {
       await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
       const pdfBuffer = await page.pdf({
-        format: 'A4',
+        format: 'a4',
         printBackground: true,
         margin: {
           top: '1cm',
