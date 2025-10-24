@@ -16,7 +16,7 @@ import { useContratos, useDeleteContrato } from '../../../hooks/useContratos';
 import ContratoCreateModal from './ContratoCreateModal';
 import ContratoEditModal from './ContratoEditModal';
 import { useFormReset } from '../../../hooks/useFormReset';
-import { Form, FormConfig } from '../../forms';
+import { Form, FormConfig, AddressFields, ContactFields } from '../../forms';
 
 interface ClienteForm {
   cnpj: string;
@@ -1023,54 +1023,16 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             {/* Aba Contato */}
             {activeTab === 'contato' && (
               <div className="row">
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="dados-basicos-email" className="form-label">
-                      Email <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                      id="dados-basicos-email"
-                      name="email"
-                      autoComplete="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="email@exemplo.com"
-                    />
-                    {errors.email && <div className="invalid-feedback">{errors.email}</div>}
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="contato-telefone" className="form-label">Telefone</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="contato-telefone"
-                      name="telefone"
-                      autoComplete="tel"
-                      value={formData.telefone}
-                      onChange={(e) => handleInputChange('telefone', e.target.value)}
-                      placeholder="(00) 0000-0000"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="contato-whatsapp" className="form-label">WhatsApp</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="contato-whatsapp"
-                      name="whatsapp"
-                      autoComplete="tel"
-                      value={formData.whatsapp}
-                      onChange={(e) => handleInputChange('whatsapp', e.target.value)}
-                      placeholder="(00) 00000-0000"
-                    />
-                  </div>
+                <div className="col-md-8">
+                  <ContactFields 
+                    required={false}
+                    size="md"
+                    includeEmail={true}
+                    includeWhatsApp={true}
+                  />
                 </div>
-
-                <div className="col-md-6">
+                
+                <div className="col-md-4">
                   <h6 className="text-primary mb-3">Preferências de Comunicação</h6>
                   
                   <div className="mb-3">
@@ -1126,117 +1088,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
             {/* Aba Endereço */}
             {activeTab === 'endereco' && (
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="endereco-cep" className="form-label">CEP</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="endereco-cep"
-                      name="cep"
-                      autoComplete="postal-code"
-                      value={formData.cep}
-                      onChange={(e) => handleInputChange('cep', e.target.value)}
-                      placeholder="00000-000"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="endereco-endereco" className="form-label">Endereço</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="endereco-endereco"
-                      name="endereco"
-                      autoComplete="street-address"
-                      value={formData.endereco}
-                      onChange={(e) => handleInputChange('endereco', e.target.value)}
-                      placeholder="Rua, Avenida..."
-                    />
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="endereco-numero" className="form-label">Número</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="endereco-numero"
-                          name="numero"
-                          value={formData.numero}
-                          onChange={(e) => handleInputChange('numero', e.target.value)}
-                          placeholder="123"
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="endereco-complemento" className="form-label">Complemento</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="endereco-complemento"
-                          name="complemento"
-                          value={formData.complemento}
-                          onChange={(e) => handleInputChange('complemento', e.target.value)}
-                          placeholder="Apto, Sala..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label htmlFor="endereco-bairro" className="form-label">Bairro</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="endereco-bairro"
-                      name="bairro"
-                      value={formData.bairro}
-                      onChange={(e) => handleInputChange('bairro', e.target.value)}
-                      placeholder="Nome do bairro"
-                    />
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-8">
-                      <div className="mb-3">
-                        <label htmlFor="endereco-cidade" className="form-label">Cidade</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="endereco-cidade"
-                          name="cidade"
-                          autoComplete="address-level2"
-                          value={formData.cidade}
-                          onChange={(e) => handleInputChange('cidade', e.target.value)}
-                          placeholder="Nome da cidade"
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label htmlFor="endereco-estado" className="form-label">Estado</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="endereco-estado"
-                          name="estado"
-                          autoComplete="address-level1"
-                          value={formData.estado}
-                          onChange={(e) => handleInputChange('estado', e.target.value)}
-                          placeholder="UF"
-                          maxLength={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <AddressFields 
+                required={false}
+                size="md"
+              />
             )}
 
 

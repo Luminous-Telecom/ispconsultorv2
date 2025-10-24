@@ -3,6 +3,10 @@ export { default as Form } from './Form';
 export { FormProvider } from './FormProvider';
 export { default as FormFieldWrapper } from './FormFieldWrapper';
 
+// Componentes específicos
+export { default as AddressFields } from './AddressFields';
+export { default as ContactFields } from './ContactFields';
+
 // Exportar exemplo de uso
 export { default as FormsExample } from './FormsExample';
 

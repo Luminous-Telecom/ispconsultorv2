@@ -354,9 +354,9 @@ const Table = <T extends { id: number | string }>({
   };
 
   return (
-    <div className={className}>
+    <div className={className} style={{ width: '100%', margin: 0, padding: 0 }}>
       {/* Header com botões de ação e filtros */}
-      <div className="card-header py-2 border-bottom">
+      <div className="card-header py-2 border-bottom" style={{ margin: 0, paddingLeft: '1rem', paddingRight: '1rem' }}>
         {/* Primeira linha: Botões de ação */}
         <div className="d-flex align-items-center mb-2">
           <div className="d-flex" style={{ gap: '8px' }}>
@@ -388,95 +388,98 @@ const Table = <T extends { id: number | string }>({
           </div>
         </div>
 
-        {/* Segunda linha: Busca centralizada */}
-        {searchable && (
-          <div className="d-flex justify-content-center mb-2">
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              id={`search-${Math.random().toString(36).substr(2, 9)}`}
-              name="search"
-              placeholder={searchPlaceholder}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: '400px', height: '32px' }}
-            />
-          </div>
-        )}
-
-        {/* Terceira linha: Paginação e controles */}
-        {pagination && (
-          <div className="d-flex align-items-center justify-content-center gap-2">
-            {/* Seletor de linhas por página */}
-            <select 
-              className="form-select form-select-sm" 
-              id="data-table-limit"
-              name="dataTableLimit"
-              value={pagination.per_page}
-              onChange={(e) => onPageSizeChange?.(parseInt(e.target.value))}
-              style={{ width: '80px', height: '32px', cursor: 'pointer' }}
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={15}>15</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-
-            {/* Paginação compacta */}
-            <div className="d-flex align-items-center gap-1">
-              <button 
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={() => onPageChange?.(1)}
-                disabled={pagination.current_page <= 1}
-              >
-                <i className="bi bi-chevron-double-left"></i>
-              </button>
-              <button 
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={() => onPageChange?.(pagination.current_page - 1)}
-                disabled={pagination.current_page <= 1}
-              >
-                <i className="bi bi-chevron-left"></i>
-              </button>
-              
-              <span className="small text-muted mx-2">
-                {pagination.from || 0} - {pagination.to || 0} / {pagination.total || 0}
-              </span>
-              
-              <button 
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={() => onPageChange?.(pagination.current_page + 1)}
-                disabled={pagination.current_page >= pagination.last_page}
-              >
-                <i className="bi bi-chevron-right"></i>
-              </button>
-              <button 
-                className="btn btn-outline-secondary btn-sm" 
-                onClick={() => onPageChange?.(pagination.last_page)}
-                disabled={pagination.current_page >= pagination.last_page}
-              >
-                <i className="bi bi-chevron-double-right"></i>
-              </button>
+        {/* Segunda linha: Busca + Paginação + Reload */}
+        <div className="d-flex align-items-center justify-content-between">
+          {/* Busca à esquerda */}
+          {searchable && (
+            <div className="d-flex align-items-center">
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                id={`search-${Math.random().toString(36).substr(2, 9)}`}
+                name="search"
+                placeholder={searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ width: '400px', height: '32px' }}
+              />
             </div>
+          )}
 
-            {/* Botão de refresh */}
-            {onRefresh && (
-              <button 
-                className="btn btn-outline-secondary btn-sm"
-                onClick={onRefresh}
-                title="Recarregar dados"
+          {/* Paginação centralizada */}
+          {pagination && (
+            <div className="d-flex align-items-center gap-2">
+              {/* Seletor de linhas por página */}
+              <select 
+                className="form-select form-select-sm" 
+                id="data-table-limit"
+                name="dataTableLimit"
+                value={pagination.per_page}
+                onChange={(e) => onPageSizeChange?.(parseInt(e.target.value))}
+                style={{ width: '80px', height: '32px', cursor: 'pointer' }}
               >
-                <i className="bi bi-arrow-clockwise"></i>
-              </button>
-            )}
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+
+              {/* Paginação compacta */}
+              <div className="d-flex align-items-center gap-1">
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={() => onPageChange?.(1)}
+                  disabled={pagination.current_page <= 1}
+                >
+                  <i className="bi bi-chevron-double-left"></i>
+                </button>
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={() => onPageChange?.(pagination.current_page - 1)}
+                  disabled={pagination.current_page <= 1}
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+                
+                <span className="small text-muted mx-2">
+                  {pagination.from || 0} - {pagination.to || 0} / {pagination.total || 0}
+                </span>
+                
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={() => onPageChange?.(pagination.current_page + 1)}
+                  disabled={pagination.current_page >= pagination.last_page}
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+                <button 
+                  className="btn btn-outline-secondary btn-sm" 
+                  onClick={() => onPageChange?.(pagination.last_page)}
+                  disabled={pagination.current_page >= pagination.last_page}
+                >
+                  <i className="bi bi-chevron-double-right"></i>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Botão de reload à direita */}
+          <div className="d-flex align-items-center">
+            <button 
+              className="btn btn-outline-secondary btn-sm"
+              onClick={onRefresh}
+              title="Recarregar dados"
+            >
+              <i className="bi bi-arrow-clockwise"></i>
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Tabela */}
-      <div className="table-responsive">
+      <div className="table-responsive" style={{ margin: 0, padding: 0 }}>
         <table className="table table-striped table-sm">
           {renderTableHeader()}
           {renderTableBody()}

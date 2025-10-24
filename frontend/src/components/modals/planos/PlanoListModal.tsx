@@ -367,6 +367,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       title={title}
       size="lg"
       modalId="plano-list-modal"
+      className="no-padding"
     >
       <div>
         <Table
@@ -379,6 +380,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             console.log('Selected planos:', selectedItems);
             setSelectedItems(selectedItems);
           }}
+          onRefresh={() => refetch()}
           className="plano-list-table"
         />
       </div>

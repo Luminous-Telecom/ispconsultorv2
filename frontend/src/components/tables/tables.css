@@ -3,6 +3,8 @@
 /* Container da tabela */
 .table-container {
   width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 /* Responsividade */

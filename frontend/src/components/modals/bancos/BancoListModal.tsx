@@ -202,6 +202,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       title={title}
       size="lg"
       modalId="banco-list-modal"
+      className="no-padding"
     >
       <div>
         <Table
@@ -214,6 +215,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             console.log('Selected bancos:', selectedItems);
             setSelectedItems(selectedItems);
           }}
+          onRefresh={() => refetch()}
           className="banco-list-table"
         />
       </div>

@@ -188,6 +188,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       title={title}
       size="lg"
       modalId="cliente-list-modal"
+      className="no-padding"
     >
       <div>
         <Table
@@ -200,6 +201,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
             console.log('Selected items:', selectedItems);
             setSelectedItems(selectedItems);
           }}
+          onRefresh={() => refetch()}
           className="cliente-list-table"
         />
       </div>
