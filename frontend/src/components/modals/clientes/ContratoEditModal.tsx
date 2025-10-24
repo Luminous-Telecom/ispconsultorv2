@@ -2099,6 +2099,16 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               setTermoSelecionado(null);
             }
           }}
+          onRowDoubleClick={(termo: any) => {
+            // Inserir termo ao clicar duas vezes
+            setTermoFormData({ 
+              ...termoFormData, 
+              termoCadastradoId: termo.id,
+              conteudo: termo.conteudo || ''
+            });
+            setShowSelecionarTermoModal(false);
+            setTermoSelecionado(null);
+          }}
         />
       </DraggableModal>
     </DraggableModal>
