@@ -6,6 +6,7 @@ import { ClienteService } from '../../../services/clienteService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { CreateCarneParcela } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
+import FormField from '../../ui/FormField';
 
 interface TituloForm {
   plano_id: number;
@@ -278,31 +279,31 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="data_vencimento" className="form-label small">Data de Vencimento *</label>
-              <input
-                type="date"
-                className={`form-control ${errors.data_vencimento ? 'is-invalid' : ''}`}
-                id="data_vencimento"
+              <FormField
                 name="data_vencimento"
+                type="date"
+                label="Data de Vencimento"
+                required={true}
+                size="sm"
                 value={formData.data_vencimento}
-                onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
+                onChange={(e: any) => handleInputChange('data_vencimento', e.value)}
+                error={errors.data_vencimento}
+                isInvalid={!!errors.data_vencimento}
                 disabled={createParcelaMutation.isPending}
               />
-              {errors.data_vencimento && <div className="invalid-feedback">{errors.data_vencimento}</div>}
             </div>
           </div>
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="descricao" className="form-label small">Descrição</label>
-              <input
-                type="text"
-                className="form-control"
-                id="descricao"
+              <FormField
                 name="descricao"
-                value={formData.descricao}
-                onChange={(e) => handleInputChange('descricao', e.target.value)}
-                disabled={createParcelaMutation.isPending}
+                type="text"
+                label="Descrição"
                 placeholder="Descrição do título..."
+                size="sm"
+                value={formData.descricao}
+                onChange={(e: any) => handleInputChange('descricao', e.value)}
+                disabled={createParcelaMutation.isPending}
               />
             </div>
           </div>
@@ -312,36 +313,34 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="desconto_percentual" className="form-label small">Desconto (%)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                className="form-control"
-                id="desconto_percentual"
+              <FormField
                 name="desconto_percentual"
-                value={formData.desconto_percentual}
-                onChange={(e) => handleInputChange('desconto_percentual', parseFloat(e.target.value) || 0)}
-                disabled={createParcelaMutation.isPending}
+                type="number"
+                label="Desconto (%)"
                 placeholder="0.00"
+                size="sm"
+                value={formData.desconto_percentual}
+                onChange={(e: any) => handleInputChange('desconto_percentual', parseFloat(e.value) || 0)}
+                disabled={createParcelaMutation.isPending}
+                min={0}
+                max={100}
+                step={0.01}
               />
             </div>
           </div>
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="desconto_valor" className="form-label small">Desconto (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                className="form-control"
-                id="desconto_valor"
+              <FormField
                 name="desconto_valor"
-                value={formData.desconto_valor}
-                onChange={(e) => handleInputChange('desconto_valor', parseFloat(e.target.value) || 0)}
-                disabled={createParcelaMutation.isPending}
+                type="number"
+                label="Desconto (R$)"
                 placeholder="0.00"
+                size="sm"
+                value={formData.desconto_valor}
+                onChange={(e: any) => handleInputChange('desconto_valor', parseFloat(e.value) || 0)}
+                disabled={createParcelaMutation.isPending}
+                min={0}
+                step={0.01}
               />
             </div>
           </div>
@@ -351,36 +350,34 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="acrescimo_percentual" className="form-label small">Acréscimo (%)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                className="form-control"
-                id="acrescimo_percentual"
+              <FormField
                 name="acrescimo_percentual"
-                value={formData.acrescimo_percentual}
-                onChange={(e) => handleInputChange('acrescimo_percentual', parseFloat(e.target.value) || 0)}
-                disabled={createParcelaMutation.isPending}
+                type="number"
+                label="Acréscimo (%)"
                 placeholder="0.00"
+                size="sm"
+                value={formData.acrescimo_percentual}
+                onChange={(e: any) => handleInputChange('acrescimo_percentual', parseFloat(e.value) || 0)}
+                disabled={createParcelaMutation.isPending}
+                min={0}
+                max={100}
+                step={0.01}
               />
             </div>
           </div>
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="acrescimo_valor" className="form-label small">Acréscimo (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                className="form-control"
-                id="acrescimo_valor"
+              <FormField
                 name="acrescimo_valor"
-                value={formData.acrescimo_valor}
-                onChange={(e) => handleInputChange('acrescimo_valor', parseFloat(e.target.value) || 0)}
-                disabled={createParcelaMutation.isPending}
+                type="number"
+                label="Acréscimo (R$)"
                 placeholder="0.00"
+                size="sm"
+                value={formData.acrescimo_valor}
+                onChange={(e: any) => handleInputChange('acrescimo_valor', parseFloat(e.value) || 0)}
+                disabled={createParcelaMutation.isPending}
+                min={0}
+                step={0.01}
               />
             </div>
           </div>
@@ -389,16 +386,16 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         <div className="row">
           <div className="col-12">
             <div className="mb-3">
-              <label htmlFor="observacoes" className="form-label small">Observações</label>
-              <textarea
-                className="form-control"
-                id="observacoes"
+              <FormField
                 name="observacoes"
-                rows={3}
-                value={formData.observacoes}
-                onChange={(e) => handleInputChange('observacoes', e.target.value)}
-                disabled={createParcelaMutation.isPending}
+                type="textarea"
+                label="Observações"
                 placeholder="Observações sobre a parcela..."
+                size="sm"
+                value={formData.observacoes}
+                onChange={(e: any) => handleInputChange('observacoes', e.value)}
+                disabled={createParcelaMutation.isPending}
+                rows={3}
               />
             </div>
           </div>

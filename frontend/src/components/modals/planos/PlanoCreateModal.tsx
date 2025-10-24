@@ -4,6 +4,7 @@ import { PlanoService } from '../../../services/planoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
+import FormField from '../../ui/FormField';
 
 interface PlanoForm {
   nome_plano: string;
@@ -192,19 +193,20 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           <div className="row g-2">
             <div className="col-md-6">
               <div className="mb-2">
-                <label htmlFor="nome_plano" className="form-label small">Nome do Plano *</label>
-              <input
-                type="text"
-                className={`form-control form-control-sm ${errors.nome_plano ? 'is-invalid' : ''}`}
-                id="nome_plano"
-                name="nome_plano"
-                value={formData.nome_plano}
-                onChange={(e) => handleInputChange('nome_plano', e.target.value)}
-                disabled={createPlanoMutation.isPending}
-                placeholder="Ex: Plano Premium"
-              />
-              {errors.nome_plano && <div className="invalid-feedback">{errors.nome_plano}</div>}
-            </div>
+                <FormField
+                  name="nome_plano"
+                  type="text"
+                  label="Nome do Plano"
+                  placeholder="Ex: Plano Premium"
+                  required={true}
+                  size="sm"
+                  value={formData.nome_plano}
+                  onChange={(e: any) => handleInputChange('nome_plano', e.value)}
+                  error={errors.nome_plano}
+                  isInvalid={!!errors.nome_plano}
+                  disabled={createPlanoMutation.isPending}
+                />
+              </div>
           </div>
 
           <div className="col-md-6">
@@ -232,85 +234,85 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
         </div>
 
               <div className="mb-2">
-          <label htmlFor="descricao" className="form-label small">Descrição</label>
-          <textarea
-            className="form-control form-control-sm"
-            id="descricao"
-            name="descricao"
-            rows={2}
-            value={formData.descricao}
-            onChange={(e) => handleInputChange('descricao', e.target.value)}
-            disabled={createPlanoMutation.isPending}
-            placeholder="Descrição detalhada do plano"
-          ></textarea>
+                <FormField
+                  name="descricao"
+                  type="textarea"
+                  label="Descrição"
+                  placeholder="Descrição detalhada do plano"
+                  size="sm"
+                  value={formData.descricao}
+                  onChange={(e: any) => handleInputChange('descricao', e.value)}
+                  disabled={createPlanoMutation.isPending}
+                  rows={2}
+                />
+              </div>
+
+        <div className="row">
+          <div className="col-md-6">
+              <div className="mb-2">
+                <FormField
+                  name="valor_mensal"
+                  type="number"
+                  label="Valor Mensal"
+                  placeholder="0.00"
+                  required={true}
+                  size="md"
+                  value={formData.valor_mensal}
+                  onChange={(e: any) => handleInputChange('valor_mensal', parseFloat(e.value) || 0)}
+                  error={errors.valor_mensal}
+                  isInvalid={!!errors.valor_mensal}
+                  disabled={createPlanoMutation.isPending}
+                  step={0.01}
+                />
+              </div>
+          </div>
+
+          <div className="col-md-6">
+              <div className="mb-2">
+                <FormField
+                  name="quantidade_usuarios"
+                  type="number"
+                  label="Quantidade de Usuários"
+                  size="sm"
+                  value={formData.quantidade_usuarios}
+                  onChange={(e: any) => handleInputChange('quantidade_usuarios', parseInt(e.value) || 1)}
+                  disabled={createPlanoMutation.isPending}
+                  min={1}
+                />
+              </div>
+          </div>
         </div>
 
         <div className="row">
           <div className="col-md-6">
               <div className="mb-2">
-              <label htmlFor="valor_mensal" className="form-label small">Valor Mensal *</label>
-              <input
-                type="number"
-                step="0.01"
-                className={`form-control ${errors.valor_mensal ? 'is-invalid' : ''}`}
-                id="valor_mensal"
-                name="valor_mensal"
-                value={formData.valor_mensal}
-                onChange={(e) => handleInputChange('valor_mensal', parseFloat(e.target.value) || 0)}
-                disabled={createPlanoMutation.isPending}
-                placeholder="0.00"
-              />
-              {errors.valor_mensal && <div className="invalid-feedback">{errors.valor_mensal}</div>}
-            </div>
+                <FormField
+                  name="data_inicio"
+                  type="date"
+                  label="Data de Início"
+                  required={true}
+                  size="md"
+                  value={formData.data_inicio}
+                  onChange={(e: any) => handleInputChange('data_inicio', e.value)}
+                  error={errors.data_inicio}
+                  isInvalid={!!errors.data_inicio}
+                  disabled={createPlanoMutation.isPending}
+                />
+              </div>
           </div>
 
           <div className="col-md-6">
               <div className="mb-2">
-              <label htmlFor="quantidade_usuarios" className="form-label small">Quantidade de Usuários</label>
-              <input
-                type="number"
-                min="1"
-                className="form-control form-control-sm"
-                id="quantidade_usuarios"
-                name="quantidade_usuarios"
-                value={formData.quantidade_usuarios}
-                onChange={(e) => handleInputChange('quantidade_usuarios', parseInt(e.target.value) || 1)}
-                disabled={createPlanoMutation.isPending}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-              <div className="mb-2">
-              <label htmlFor="data_inicio" className="form-label small">Data de Início *</label>
-              <input
-                type="date"
-                className={`form-control ${errors.data_inicio ? 'is-invalid' : ''}`}
-                id="data_inicio"
-                name="data_inicio"
-                value={formData.data_inicio}
-                onChange={(e) => handleInputChange('data_inicio', e.target.value)}
-                disabled={createPlanoMutation.isPending}
-              />
-              {errors.data_inicio && <div className="invalid-feedback">{errors.data_inicio}</div>}
-            </div>
-          </div>
-
-          <div className="col-md-6">
-              <div className="mb-2">
-              <label htmlFor="data_fim" className="form-label small">Data de Fim</label>
-              <input
-                type="date"
-                className="form-control form-control-sm"
-                id="data_fim"
-                name="data_fim"
-                value={formData.data_fim}
-                onChange={(e) => handleInputChange('data_fim', e.target.value)}
-                disabled={createPlanoMutation.isPending}
-              />
-            </div>
+                <FormField
+                  name="data_fim"
+                  type="date"
+                  label="Data de Fim"
+                  size="sm"
+                  value={formData.data_fim}
+                  onChange={(e: any) => handleInputChange('data_fim', e.value)}
+                  disabled={createPlanoMutation.isPending}
+                />
+              </div>
           </div>
         </div>
 
@@ -339,18 +341,18 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
         </div>
 
               <div className="mb-2">
-          <label htmlFor="observacoes" className="form-label small">Observações</label>
-          <textarea
-            className="form-control form-control-sm"
-            id="observacoes"
-            name="observacoes"
-            rows={2}
-            value={formData.observacoes}
-            onChange={(e) => handleInputChange('observacoes', e.target.value)}
-            disabled={createPlanoMutation.isPending}
-            placeholder="Observações adicionais sobre o plano"
-          ></textarea>
-        </div>
+                <FormField
+                  name="observacoes"
+                  type="textarea"
+                  label="Observações"
+                  placeholder="Observações adicionais sobre o plano"
+                  size="sm"
+                  value={formData.observacoes}
+                  onChange={(e: any) => handleInputChange('observacoes', e.value)}
+                  disabled={createPlanoMutation.isPending}
+                  rows={2}
+                />
+              </div>
 
       </form>
     </DraggableModal>

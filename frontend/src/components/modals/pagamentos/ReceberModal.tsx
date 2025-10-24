@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMarcarTituloPago } from '../../../hooks/useTitulos';
 import DraggableModal from '../../common/DraggableModal';
+import FormField from '../ui/FormField';
 
 interface ReceberModalProps {
   isOpen: boolean;
@@ -154,21 +155,18 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="data_pagamento" className="form-label">
-                Data de Pagamento *
-              </label>
-              <input
-                type="date"
-                className={`form-control ${errors.data_pagamento ? 'is-invalid' : ''}`}
-                id="data_pagamento"
+              <FormField
                 name="data_pagamento"
+                type="date"
+                label="Data de Pagamento"
+                required={true}
+                size="md"
                 value={formData.data_pagamento}
-                onChange={(e) => handleInputChange('data_pagamento', e.target.value)}
+                onChange={(e) => handleInputChange('data_pagamento', e.value)}
+                error={errors.data_pagamento}
+                isInvalid={!!errors.data_pagamento}
                 disabled={marcarPagoMutation.isPending}
               />
-              {errors.data_pagamento && (
-                <div className="invalid-feedback">{errors.data_pagamento}</div>
-              )}
             </div>
           </div>
 
@@ -185,41 +183,37 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                   borderColor: 'var(--bs-border-color)',
                   border: '1px solid var(--bs-border-color)'
                 }}>R$</span>
-                <input
-                  type="text"
-                  className={`form-control ${errors.valor_pago ? 'is-invalid' : ''}`}
-                  id="valor_pago"
+                <FormField
                   name="valor_pago"
-                  value={formData.valor_pago}
-                  onChange={(e) => handleValorChange(e.target.value)}
+                  type="text"
                   placeholder="0,00"
+                  required={true}
+                  size="md"
+                  value={formData.valor_pago}
+                  onChange={(e) => handleValorChange(e.value)}
+                  error={errors.valor_pago}
+                  isInvalid={!!errors.valor_pago}
                   disabled={marcarPagoMutation.isPending}
                 />
-                {errors.valor_pago && (
-                  <div className="invalid-feedback">{errors.valor_pago}</div>
-                )}
               </div>
             </div>
           </div>
         </div>
 
         <div className="mb-3">
-          <label htmlFor="observacoes" className="form-label">
-            Observações
-          </label>
-          <textarea
-            className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
-            id="observacoes"
+          <FormField
             name="observacoes"
-            rows={3}
-            value={formData.observacoes}
-            onChange={(e) => handleInputChange('observacoes', e.target.value)}
+            type="textarea"
+            label="Observações"
             placeholder="Observações sobre o pagamento (opcional)"
+            size="md"
+            value={formData.observacoes}
+            onChange={(e) => handleInputChange('observacoes', e.value)}
+            error={errors.observacoes}
+            isInvalid={!!errors.observacoes}
             disabled={marcarPagoMutation.isPending}
+            rows={3}
           />
-          {errors.observacoes && (
-            <div className="invalid-feedback">{errors.observacoes}</div>
-          )}
           <div className="text-secondary">
             {formData.observacoes.length}/500 caracteres
           </div>

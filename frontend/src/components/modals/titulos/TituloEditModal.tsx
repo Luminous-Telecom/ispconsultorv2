@@ -5,6 +5,7 @@ import { PlanoService } from '../../../services/planoService';
 import { ClienteService } from '../../../services/clienteService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
+import FormField from '../ui/FormField';
 
 interface TituloForm {
   cliente_id: number;
@@ -239,35 +240,37 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="data_vencimento" className="form-label small">Data de Vencimento *</label>
-              <input
-                type="date"
-                className={`form-control ${errors.data_vencimento ? 'is-invalid' : ''}`}
-                id="data_vencimento"
+              <FormField
                 name="data_vencimento"
+                type="date"
+                label="Data de Vencimento"
+                required={true}
+                size="sm"
                 value={formData.data_vencimento}
-                onChange={(e) => handleInputChange('data_vencimento', e.target.value)}
+                onChange={(e) => handleInputChange('data_vencimento', e.value)}
+                error={errors.data_vencimento}
+                isInvalid={!!errors.data_vencimento}
                 disabled={updateParcelaMutation.isPending}
               />
-              {errors.data_vencimento && <div className="invalid-feedback">{errors.data_vencimento}</div>}
             </div>
           </div>
         </div>
 
 
         <div className="mb-3">
-          <label htmlFor="observacoes" className="form-label small">Observações</label>
-          <textarea
-            className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
-            id="observacoes"
+          <FormField
             name="observacoes"
-            rows={3}
-            value={formData.observacoes}
-            onChange={(e) => handleInputChange('observacoes', e.target.value)}
-            disabled={updateParcelaMutation.isPending}
+            type="textarea"
+            label="Observações"
             placeholder="Observações sobre a parcela"
-          ></textarea>
-          {errors.observacoes && <div className="invalid-feedback">{errors.observacoes}</div>}
+            size="sm"
+            value={formData.observacoes}
+            onChange={(e) => handleInputChange('observacoes', e.value)}
+            error={errors.observacoes}
+            isInvalid={!!errors.observacoes}
+            disabled={updateParcelaMutation.isPending}
+            rows={3}
+          />
         </div>
 
       </form>
