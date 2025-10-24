@@ -75,6 +75,8 @@ class ModeloTermoService {
   }
 
   static async generatePdfWithContrato(id: number, contratoId: number): Promise<string> {
+    const response = await axios.post(`${this.baseUrl}/${id}/pdf/contrato/${contratoId}`);
+    // Retorna a URL para o modal de impressão
     return `${this.baseUrl}/${id}/pdf/contrato/${contratoId}`;
   }
 }
