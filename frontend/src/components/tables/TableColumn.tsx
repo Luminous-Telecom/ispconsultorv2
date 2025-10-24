@@ -99,9 +99,9 @@ const TableColumn = <T extends { id: number | string }>({
       style={getColumnStyles()}
       onClick={handleSort}
       title={column.tooltip}
-      data-sortable={isSortable}
-      data-sorted={isSorted}
-      data-sort-direction={sortDirection}
+      data-sortable={isSortable ? 'true' : 'false'}
+      data-sorted={isSorted ? 'true' : 'false'}
+      data-sort-direction={sortDirection || ''}
     >
       <div className="d-flex align-items-center justify-content-between">
         <span className="column-label">
