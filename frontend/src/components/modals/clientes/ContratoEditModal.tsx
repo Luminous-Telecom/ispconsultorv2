@@ -153,19 +153,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   // Definir colunas da tabela de termos
   const columnsTermos = [
     {
-      key: 'selecao',
-      label: '',
-      sortable: false,
-      render: (termo: any) => (
-        <input
-          type="radio"
-          name="termoSelecionado"
-          checked={termoSelecionado?.id === termo.id}
-          onChange={() => setTermoSelecionado(termo)}
-        />
-      )
-    },
-    {
       key: 'id',
       label: 'ID',
       sortable: true,
@@ -2103,8 +2090,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           searchPlaceholder="Buscar termos..."
           emptyMessage="Nenhum termo encontrado"
           onSelectionChange={(selectedItems: any[]) => {
-            if (selectedItems.length > 0) {
+            // Permitir apenas uma seleção (como radio buttons)
+            if (selectedItems.length > 1) {
+              setTermoSelecionado(selectedItems[selectedItems.length - 1]);
+            } else if (selectedItems.length === 1) {
               setTermoSelecionado(selectedItems[0]);
+            } else {
+              setTermoSelecionado(null);
             }
           }}
         />
