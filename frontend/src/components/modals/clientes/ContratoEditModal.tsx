@@ -71,6 +71,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [limitTermosModal, setLimitTermosModal] = useState(10);
   const [sortColumnTermosModal, setSortColumnTermosModal] = useState<string>('id');
   const [sortDirectionTermosModal, setSortDirectionTermosModal] = useState<'asc' | 'desc'>('desc');
+  const [lastClickTime, setLastClickTime] = useState<number>(0);
+  const [lastClickedItem, setLastClickedItem] = useState<any>(null);
   const [termoFormData, setTermoFormData] = useState({
     tipo_termo: 'adesao' as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
     conteudo: '',
@@ -2094,20 +2096,29 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             if (selectedItems.length > 1) {
               setTermoSelecionado(selectedItems[selectedItems.length - 1]);
             } else if (selectedItems.length === 1) {
-              setTermoSelecionado(selectedItems[0]);
+              const currentItem = selectedItems[0];
+              const currentTime = Date.now();
+              
+              // Verificar se é duplo clique (mesmo item clicado em menos de 300ms)
+              if (lastClickedItem?.id === currentItem.id && (currentTime - lastClickTime) < 300) {
+                // Inserir termo ao clicar duas vezes
+                setTermoFormData({ 
+                  ...termoFormData, 
+                  termoCadastradoId: currentItem.id,
+                  conteudo: currentItem.conteudo || ''
+                });
+                setShowSelecionarTermoModal(false);
+                setTermoSelecionado(null);
+                setLastClickTime(0);
+                setLastClickedItem(null);
+              } else {
+                setTermoSelecionado(currentItem);
+                setLastClickTime(currentTime);
+                setLastClickedItem(currentItem);
+              }
             } else {
               setTermoSelecionado(null);
             }
-          }}
-          onRowDoubleClick={(termo: any) => {
-            // Inserir termo ao clicar duas vezes
-            setTermoFormData({ 
-              ...termoFormData, 
-              termoCadastradoId: termo.id,
-              conteudo: termo.conteudo || ''
-            });
-            setShowSelecionarTermoModal(false);
-            setTermoSelecionado(null);
           }}
         />
       </DraggableModal>
