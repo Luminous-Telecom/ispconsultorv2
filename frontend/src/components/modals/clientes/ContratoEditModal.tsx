@@ -178,16 +178,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       render: (termo: any) => termo.nome
     },
     {
-      key: 'tipo_termo',
-      label: 'Tipo',
-      sortable: true,
-      render: (termo: any) => (
-        <span className="badge bg-info">
-          {termo.tipo_termo}
-        </span>
-      )
-    },
-    {
       key: 'ativo',
       label: 'Status',
       sortable: true,
@@ -2092,34 +2082,32 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </div>
         }
       >
-        <div className="p-2">
-          <DataTable
-            data={paginatedTermos}
-            columns={columnsTermos}
-            isLoading={false}
-            pagination={paginationTermos}
-            limit={limitTermosModal}
-            setLimit={setLimitTermosModal}
-            setPage={setPageTermosModal}
-            onSort={(column: string, direction: 'asc' | 'desc') => {
-              setSortColumnTermosModal(column);
-              setSortDirectionTermosModal(direction);
-            }}
-            sortColumn={sortColumnTermosModal}
-            sortDirection={sortDirectionTermosModal}
-            onSearch={(value: string) => {
-              setSearchTermosModal(value);
-              setPageTermosModal(1);
-            }}
-            searchPlaceholder="Buscar termos..."
-            emptyMessage="Nenhum termo encontrado"
-            onSelectionChange={(selectedItems: any[]) => {
-              if (selectedItems.length > 0) {
-                setTermoSelecionado(selectedItems[0]);
-              }
-            }}
-          />
-        </div>
+        <DataTable
+          data={paginatedTermos}
+          columns={columnsTermos}
+          isLoading={false}
+          pagination={paginationTermos}
+          limit={limitTermosModal}
+          setLimit={setLimitTermosModal}
+          setPage={setPageTermosModal}
+          onSort={(column: string, direction: 'asc' | 'desc') => {
+            setSortColumnTermosModal(column);
+            setSortDirectionTermosModal(direction);
+          }}
+          sortColumn={sortColumnTermosModal}
+          sortDirection={sortDirectionTermosModal}
+          onSearch={(value: string) => {
+            setSearchTermosModal(value);
+            setPageTermosModal(1);
+          }}
+          searchPlaceholder="Buscar termos..."
+          emptyMessage="Nenhum termo encontrado"
+          onSelectionChange={(selectedItems: any[]) => {
+            if (selectedItems.length > 0) {
+              setTermoSelecionado(selectedItems[0]);
+            }
+          }}
+        />
       </DraggableModal>
     </DraggableModal>
   );
