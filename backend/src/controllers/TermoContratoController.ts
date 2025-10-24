@@ -64,7 +64,7 @@ export class TermoContratoController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
-      const { modelo_termo_id } = req.body;
+      const { modelo_termo_id, assinado } = req.body;
 
       // Validações
       if (!contratoId) {
@@ -97,6 +97,7 @@ export class TermoContratoController {
       const termo = await TermoContrato.create({
         contrato_id: parseInt(contratoId),
         modelo_termo_id: modelo_termo_id,
+        assinado: assinado || 'NAO',
         ativo: true
       });
 
@@ -118,7 +119,7 @@ export class TermoContratoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { ativo, modelo_termo_id } = req.body;
+      const { ativo, modelo_termo_id, assinado } = req.body;
 
       const termo = await TermoContrato.findByPk(id);
       
@@ -133,6 +134,7 @@ export class TermoContratoController {
       // Atualizar apenas campos permitidos
       if (ativo !== undefined) termo.ativo = ativo;
       if (modelo_termo_id !== undefined) termo.modelo_termo_id = modelo_termo_id;
+      if (assinado !== undefined) termo.assinado = assinado;
 
       await termo.save();
 

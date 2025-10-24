@@ -18,6 +18,7 @@ export class TermoContrato extends Model<
   declare id: CreationOptional<number>;
   declare contrato_id: number;
   declare modelo_termo_id: number | null;
+  declare assinado: 'SIM' | 'NAO';
   declare data_aceite: Date | null;
   declare aceito_por: string | null;
   declare ativo: boolean;
@@ -76,6 +77,11 @@ TermoContrato.init(
         model: 'modelos_termo',
         key: 'id'
       }
+    },
+    assinado: {
+      type: DataTypes.ENUM('SIM', 'NAO'),
+      allowNull: false,
+      defaultValue: 'NAO'
     },
     data_aceite: {
       type: DataTypes.DATE,

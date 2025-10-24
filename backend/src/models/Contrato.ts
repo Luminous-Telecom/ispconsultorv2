@@ -133,10 +133,11 @@ export class Contrato extends Model<
     return TermoContrato.findAtivosByContrato(this.id);
   }
 
-  async adicionarTermo(modeloTermoId: number): Promise<TermoContrato> {
+  async adicionarTermo(modeloTermoId: number, assinado: 'SIM' | 'NAO' = 'NAO'): Promise<TermoContrato> {
     return this.createTermo({
       contrato_id: this.id,
       modelo_termo_id: modeloTermoId,
+      assinado: assinado,
       ativo: true
     });
   }
