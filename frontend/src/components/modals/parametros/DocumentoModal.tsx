@@ -221,9 +221,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       }
     },
     onSuccess: () => {
-      console.log('DocumentoModal - Mutation onSuccess chamada para tipo:', tipo);
       addNotification('success', 'Documento salvo com sucesso');
-      console.log('DocumentoModal - Notificação adicionada');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       if (onSuccess) {
