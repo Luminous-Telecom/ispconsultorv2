@@ -259,7 +259,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
                   size="md"
                   value={formData.valor_mensal}
                   onChange={(e: any) => handleInputChange('valor_mensal', parseFloat(e.value) || 0)}
-                  error={errors.valor_mensal}
+                  error={errors.valor_mensal?.toString()}
                   isInvalid={!!errors.valor_mensal}
                   disabled={createPlanoMutation.isPending}
                   step={0.01}

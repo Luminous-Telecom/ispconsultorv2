@@ -5,7 +5,7 @@ import { PlanoService } from '../../../services/planoService';
 import { ClienteService } from '../../../services/clienteService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
-import FormField from '../ui/FormField';
+import FormField from '../../ui/FormField';
 
 interface TituloForm {
   cliente_id: number;
@@ -247,7 +247,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
                 required={true}
                 size="sm"
                 value={formData.data_vencimento}
-                onChange={(e) => handleInputChange('data_vencimento', e.value)}
+                onChange={(e: any) => handleInputChange('data_vencimento', e.value)}
                 error={errors.data_vencimento}
                 isInvalid={!!errors.data_vencimento}
                 disabled={updateParcelaMutation.isPending}
@@ -265,7 +265,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
             placeholder="Observações sobre a parcela"
             size="sm"
             value={formData.observacoes}
-            onChange={(e) => handleInputChange('observacoes', e.value)}
+            onChange={(e: any) => handleInputChange('observacoes', e.value)}
             error={errors.observacoes}
             isInvalid={!!errors.observacoes}
             disabled={updateParcelaMutation.isPending}

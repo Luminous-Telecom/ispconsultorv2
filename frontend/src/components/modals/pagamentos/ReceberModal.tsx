@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMarcarTituloPago } from '../../../hooks/useTitulos';
 import DraggableModal from '../../common/DraggableModal';
-import FormField from '../ui/FormField';
+import FormField from '../../ui/FormField';
 
 interface ReceberModalProps {
   isOpen: boolean;
@@ -162,7 +162,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                 required={true}
                 size="md"
                 value={formData.data_pagamento}
-                onChange={(e) => handleInputChange('data_pagamento', e.value)}
+                onChange={(e: any) => handleInputChange('data_pagamento', e.value)}
                 error={errors.data_pagamento}
                 isInvalid={!!errors.data_pagamento}
                 disabled={marcarPagoMutation.isPending}
@@ -190,7 +190,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                   required={true}
                   size="md"
                   value={formData.valor_pago}
-                  onChange={(e) => handleValorChange(e.value)}
+                  onChange={(e: any) => handleValorChange(e.value)}
                   error={errors.valor_pago}
                   isInvalid={!!errors.valor_pago}
                   disabled={marcarPagoMutation.isPending}
@@ -208,7 +208,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             placeholder="Observações sobre o pagamento (opcional)"
             size="md"
             value={formData.observacoes}
-            onChange={(e) => handleInputChange('observacoes', e.value)}
+            onChange={(e: any) => handleInputChange('observacoes', e.value)}
             error={errors.observacoes}
             isInvalid={!!errors.observacoes}
             disabled={marcarPagoMutation.isPending}
