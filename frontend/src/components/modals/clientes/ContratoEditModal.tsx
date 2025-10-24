@@ -855,6 +855,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   }
 
   return (
+    <>
     <DraggableModal
       show={show}
       onClose={onClose}
@@ -2055,18 +2056,20 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         </div>
       </DraggableModal>
 
-      {/* Modal de impressão */}
-      <ImprimirModal
-        show={showPreview}
-        onClose={() => {
-          setShowPreview(false);
-          setPdfUrl(null);
-        }}
-        pdfUrl={pdfUrl}
-        title="Visualizar Termo"
-        modalId="termo-imprimir-modal"
-      />
     </DraggableModal>
+
+    {/* Modal de impressão */}
+    <ImprimirModal
+      show={showPreview}
+      onClose={() => {
+        setShowPreview(false);
+        setPdfUrl(null);
+      }}
+      pdfUrl={pdfUrl}
+      title="Visualizar Termo"
+      modalId="termo-imprimir-modal"
+    />
+  </>
   );
 };
 
