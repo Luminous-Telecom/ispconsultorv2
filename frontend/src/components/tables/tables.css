@@ -1,11 +1,8 @@
-/* Estilos para sistema de tabelas unificado */
+/* Estilos para sistema de tabelas unificado - Mantendo compatibilidade com DataTable original */
 
 /* Container da tabela */
 .table-container {
   width: 100%;
-  background: white;
-  border-radius: 0.375rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
 /* Responsividade */
@@ -14,31 +11,23 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* Cabeçalho fixo */
-.sticky-header .sticky-top {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Tabela base */
+/* Tabela base - usando estilos do DataTable original */
 .table {
   margin-bottom: 0;
   border-collapse: separate;
   border-spacing: 0;
 }
 
-/* Colunas */
+/* Colunas - mantendo estilo original do DataTable */
 .table-column {
   position: relative;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border-bottom: 1px solid #dee2e6;
   background-color: #f8f9fa;
   font-weight: 600;
   color: #495057;
   white-space: nowrap;
+  font-size: 0.75rem;
 }
 
 .table-column.sortable {
@@ -60,40 +49,29 @@
 }
 
 .table-column .sort-icon {
-  font-size: 0.875rem;
+  font-size: 0.6rem;
   opacity: 0.7;
+  line-height: 0.5;
 }
 
 .table-column.sorted .sort-icon {
   opacity: 1;
 }
 
-/* Colunas fixas */
-.table-column.fixed-left {
-  position: sticky;
-  left: 0;
-  z-index: 5;
-  background-color: #f8f9fa;
-}
-
-.table-column.fixed-right {
-  position: sticky;
-  right: 0;
-  z-index: 5;
-  background-color: #f8f9fa;
-}
-
-/* Colunas de seleção e ações */
+/* Colunas de seleção e ações - estilo original do DataTable */
 .selection-column,
 .actions-column {
-  width: 50px;
+  width: 40px;
   text-align: center;
   background-color: #f8f9fa;
+  font-size: 0.75rem;
+  padding: 0.5rem;
 }
 
-/* Linhas da tabela */
+/* Linhas da tabela - mantendo estilo original */
 .table-row {
   transition: background-color 0.15s ease-in-out;
+  cursor: pointer;
 }
 
 .table-row:hover {
@@ -101,18 +79,21 @@
 }
 
 .table-row-selected {
-  background-color: #e3f2fd !important;
+  background-color: #0d6efd !important;
+  color: white !important;
 }
 
 .table-row-selected:hover {
-  background-color: #bbdefb !important;
+  background-color: #0d6efd !important;
+  color: white !important;
 }
 
-/* Células */
+/* Células - usando estilo original do DataTable */
 .table td {
-  padding: 0.75rem;
+  padding: 0.5rem;
   border-bottom: 1px solid #dee2e6;
   vertical-align: middle;
+  font-size: 0.75rem;
 }
 
 /* Barra de ferramentas */

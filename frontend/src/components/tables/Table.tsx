@@ -154,28 +154,25 @@ const Table = <T extends { id: number | string }>({
   // Renderizar cabeçalho da tabela
   const renderTableHeader = () => {
     return (
-      <thead className={stickyHeader ? 'sticky-top' : ''}>
+      <thead>
         <tr>
           {/* Checkbox de seleção múltipla */}
-          {selectable && multiSelect && (
-            <th className="selection-column">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={isAllSelected}
-                  ref={(input) => {
-                    if (input) input.indeterminate = isPartiallySelected;
-                  }}
-                  onChange={() => {
-                    if (isAllSelected) {
-                      tableActions.clearSelection();
-                    } else {
-                      tableActions.selectAll();
-                    }
-                  }}
-                />
-              </div>
+          {selectable && (
+            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '40px' }}>
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id={`select-all-${Math.random().toString(36).substr(2, 9)}`}
+                name="selectAll"
+                checked={isAllSelected}
+                onChange={() => {
+                  if (isAllSelected) {
+                    tableActions.clearSelection();
+                  } else {
+                    tableActions.selectAll();
+                  }
+                }}
+              />
             </th>
           )}
           
@@ -194,7 +191,7 @@ const Table = <T extends { id: number | string }>({
           
           {/* Coluna de ações */}
           {actions.length > 0 && (
-            <th className="actions-column">
+            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
               Ações
             </th>
           )}
@@ -209,12 +206,9 @@ const Table = <T extends { id: number | string }>({
       return (
         <tbody>
           <tr>
-            <td colSpan={columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)} className="text-center py-4">
-              <div className="d-flex align-items-center justify-content-center">
-                <div className="spinner-border spinner-border-sm me-2" role="status">
-                  <span className="visually-hidden">Carregando...</span>
-                </div>
-                {loadingMessage}
+            <td colSpan={columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)} className="text-center">
+              <div className="spinner-border spinner-border-sm" role="status">
+                <span className="visually-hidden">Carregando...</span>
               </div>
             </td>
           </tr>
@@ -226,11 +220,8 @@ const Table = <T extends { id: number | string }>({
       return (
         <tbody>
           <tr>
-            <td colSpan={columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)} className="text-center py-4">
-              <div className="text-muted">
-                <i className="bi bi-inbox fs-1 d-block mb-2"></i>
-                {emptyMessage}
-              </div>
+            <td colSpan={columns.length + (selectable ? 1 : 0) + (actions.length > 0 ? 1 : 0)} className="text-center">
+              {emptyMessage}
             </td>
           </tr>
         </tbody>
@@ -245,22 +236,33 @@ const Table = <T extends { id: number | string }>({
           return (
             <tr
               key={item.id}
-              className={`table-row ${isSelected ? 'table-row-selected' : ''}`}
+              className={isSelected ? 'table-active' : ''}
               onClick={() => onRowClick?.(item, index)}
-              style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+              style={{ 
+                cursor: 'pointer',
+                backgroundColor: isSelected ? '#0d6efd' : 'inherit',
+                color: isSelected ? 'white' : 'inherit'
+              }}
             >
               {/* Checkbox de seleção */}
               {selectable && (
-                <td className="selection-column">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => tableActions.toggleSelection(item)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
+                <td 
+                  className="py-1 px-2"
+                  style={{ 
+                    fontSize: '0.75rem', 
+                    padding: '0.5rem',
+                    backgroundColor: isSelected ? '#0d6efd' : 'inherit',
+                    color: isSelected ? 'white' : 'inherit',
+                    width: '40px'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => tableActions.toggleSelection(item)}
+                  />
                 </td>
               )}
               
@@ -270,8 +272,12 @@ const Table = <T extends { id: number | string }>({
                 .map(column => (
                   <td
                     key={column.key}
-                    className={column.className}
+                    className="py-1 px-2"
                     style={{
+                      fontSize: '0.75rem', 
+                      padding: '0.5rem',
+                      backgroundColor: isSelected ? '#0d6efd' : 'inherit',
+                      color: isSelected ? 'white' : 'inherit',
                       width: column.width,
                       minWidth: column.minWidth,
                       maxWidth: column.maxWidth,
@@ -284,7 +290,15 @@ const Table = <T extends { id: number | string }>({
               
               {/* Célula de ações */}
               {actions.length > 0 && (
-                <td className="actions-column">
+                <td 
+                  className="py-1 px-2"
+                  style={{ 
+                    fontSize: '0.75rem', 
+                    padding: '0.5rem',
+                    backgroundColor: isSelected ? '#0d6efd' : 'inherit',
+                    color: isSelected ? 'white' : 'inherit'
+                  }}
+                >
                   <TableActions
                     item={item}
                     index={index}
@@ -348,38 +362,14 @@ const Table = <T extends { id: number | string }>({
   };
 
   return (
-    <div className={getContainerClasses()}>
-      {/* Barra de ferramentas */}
-      {renderToolbar()}
-      
-      {/* Filtros */}
-      {filters.length > 0 && (
-        <TableFilters
-          filters={filters}
-          values={state.filters}
-          onFilterChange={tableActions.setFilter}
-          onFiltersChange={tableActions.setFilters}
-          onClearFilters={tableActions.clearFilters}
-          className="mb-3"
-        />
-      )}
-      
+    <div className={className}>
       {/* Tabela */}
-      <table ref={tableRef} className={getTableClasses()}>
-        {renderTableHeader()}
-        {renderTableBody()}
-      </table>
-      
-      {/* Paginação */}
-      {pagination && totalPages > 1 && (
-        <div className="mt-3">
-          <TablePagination
-            pagination={pagination}
-            onPageChange={tableActions.setPage}
-            onPageSizeChange={tableActions.setPageSize}
-          />
-        </div>
-      )}
+      <div className="table-responsive">
+        <table className="table table-striped table-sm">
+          {renderTableHeader()}
+          {renderTableBody()}
+        </table>
+      </div>
     </div>
   );
 };

@@ -34,14 +34,48 @@ const TableColumn = <T extends { id: number | string }>({
     if (!isSortable) return null;
     
     if (isSorted) {
-      return sortDirection === 'asc' ? (
-        <i className="bi bi-chevron-up"></i>
-      ) : (
-        <i className="bi bi-chevron-down"></i>
+      return (
+        <div className="d-flex flex-column">
+          <i 
+            className={`bi bi-caret-up-fill`}
+            style={{ 
+              fontSize: '0.6rem', 
+              lineHeight: '0.5',
+              color: sortDirection === 'asc' ? '#ffffff' : '#adb5bd'
+            }}
+          ></i>
+          <i 
+            className={`bi bi-caret-down-fill`}
+            style={{ 
+              fontSize: '0.6rem', 
+              lineHeight: '0.5',
+              color: sortDirection === 'desc' ? '#ffffff' : '#adb5bd'
+            }}
+          ></i>
+        </div>
       );
     }
     
-    return <i className="bi bi-chevron-expand text-muted"></i>;
+    return (
+      <div className="d-flex flex-column">
+        <i 
+          className={`bi bi-caret-up-fill`}
+          style={{ 
+            fontSize: '0.6rem', 
+            lineHeight: '0.5',
+            color: '#adb5bd'
+          }}
+        ></i>
+        <i 
+          className={`bi bi-caret-down-fill`}
+          style={{ 
+            fontSize: '0.6rem', 
+            lineHeight: '0.5',
+            color: '#adb5bd'
+          }}
+        ></i>
+      </div>
+    );
   };
 
   const getColumnStyles = () => {
