@@ -3,6 +3,7 @@ import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ServidorWhatsAppService, ServidorWhatsApp } from '../../../services/servidorWhatsAppService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { FormField } from '../../ui';
 
 interface ServidorWhatsappModalProps {
   show: boolean;
@@ -206,63 +207,51 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
             <div className="card-body p-2">
               <div className="row g-2">
                 <div className="col-12">
-                  <div className="mb-2">
-                    <label htmlFor="evolution_api_url" className="form-label small mb-1">
-                      Servidor <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="url"
-                      className="form-control form-control-sm"
-                      id="evolution_api_url"
-                      value={formData.evolution_api_url}
-                      onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_url: e.target.value }))}
-                      placeholder="https://evo-api.luminoustelecom.com.br"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    name="evolution_api_url"
+                    type="url"
+                    label="Servidor"
+                    placeholder="https://evo-api.luminoustelecom.com.br"
+                    required={true}
+                    size="sm"
+                    value={formData.evolution_api_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_url: e.value }))}
+                  />
                 </div>
               </div>
 
               <div className="row g-2">
                 <div className="col-12">
-                  <div className="mb-2">
-                    <label htmlFor="instance_name" className="form-label small mb-1">
-                      Nome da Instância <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      id="instance_name"
-                      value={formData.instance_name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, instance_name: e.target.value }))}
-                      placeholder="mkauth"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    name="instance_name"
+                    type="text"
+                    label="Nome da Instância"
+                    placeholder="mkauth"
+                    required={true}
+                    size="sm"
+                    value={formData.instance_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instance_name: e.value }))}
+                  />
                 </div>
               </div>
 
               <div className="row g-2">
                 <div className="col-12">
-                  <div className="mb-2">
-                    <label htmlFor="evolution_api_key" className="form-label small mb-1">
-                      Token da Instância {!servidorAtivo?.data && <span className="text-danger">*</span>}
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control form-control-sm"
-                      id="evolution_api_key"
-                      value={formData.evolution_api_key}
-                      onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_key: e.target.value }))}
-                      placeholder={servidorAtivo?.data ? "Deixe em branco para manter o token atual" : "Digite o token da instância"}
-                      required={!servidorAtivo?.data}
-                    />
-                    {servidorAtivo?.data && (
-                      <small className="form-text text-secondary">
-                        Deixe em branco para manter o token atual
-                      </small>
-                    )}
-                  </div>
+                  <FormField
+                    name="evolution_api_key"
+                    type="password"
+                    label={`Token da Instância ${!servidorAtivo?.data ? '*' : ''}`}
+                    placeholder={servidorAtivo?.data ? "Deixe em branco para manter o token atual" : "Digite o token da instância"}
+                    required={!servidorAtivo?.data}
+                    size="sm"
+                    value={formData.evolution_api_key}
+                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_key: e.value }))}
+                  />
+                  {servidorAtivo?.data && (
+                    <small className="form-text text-secondary">
+                      Deixe em branco para manter o token atual
+                    </small>
+                  )}
                 </div>
               </div>
             </div>
@@ -279,33 +268,29 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
               </small>
               <div className="row g-2">
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <label htmlFor="testPhone" className="form-label small mb-1">Número do Telefone</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      id="testPhone"
-                      placeholder="5511999999999"
-                      value={testPhone}
-                      onChange={(e) => setTestPhone(e.target.value)}
-                    />
-                    <small className="form-text text-secondary">
-                      Digite o número com código do país (ex: 5511999999999)
-                    </small>
-                  </div>
+                  <FormField
+                    name="testPhone"
+                    type="text"
+                    label="Número do Telefone"
+                    placeholder="5511999999999"
+                    size="sm"
+                    value={testPhone}
+                    onChange={(e) => setTestPhone(e.value)}
+                  />
+                  <small className="form-text text-secondary">
+                    Digite o número com código do país (ex: 5511999999999)
+                  </small>
                 </div>
                 <div className="col-md-6">
-                  <div className="mb-2">
-                    <label htmlFor="testMessage" className="form-label small mb-1">Mensagem</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      id="testMessage"
-                      placeholder="Mensagem de teste do sistema CTM Telecom"
-                      value={testMessage}
-                      onChange={(e) => setTestMessage(e.target.value)}
-                    />
-                  </div>
+                  <FormField
+                    name="testMessage"
+                    type="text"
+                    label="Mensagem"
+                    placeholder="Mensagem de teste do sistema CTM Telecom"
+                    size="sm"
+                    value={testMessage}
+                    onChange={(e) => setTestMessage(e.value)}
+                  />
                 </div>
               </div>
               <div className="d-flex gap-2">
