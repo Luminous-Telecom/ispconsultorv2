@@ -151,7 +151,32 @@ const EditarDocumentoModal: React.FC<EditarDocumentoModalProps> = ({ show, onClo
     mutationFn: async (data: any) => {
       switch (tipo) {
         case 'contrato':
-          return DocumentoSistemaService.update(documento!.id, data);
+          // Para contratos, salvar cada modelo específico
+          const promises = [];
+          
+          if (data.conteudo_contrato !== undefined) {
+            promises.push(DocumentoSistemaService.saveModeloContratoConteudo(documento!.id, data.conteudo_contrato || ''));
+          }
+          
+          if (data.conteudo_adesao !== undefined) {
+            promises.push(DocumentoSistemaService.saveModeloTermoAdesao(documento!.id, data.conteudo_adesao || ''));
+          }
+          
+          if (data.conteudo_permanencia !== undefined) {
+            promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, data.conteudo_permanencia || ''));
+          }
+          
+          // Também atualizar dados básicos se fornecidos
+          if (data.nome || data.descricao || data.conteudo) {
+            promises.push(DocumentoSistemaService.update(documento!.id, {
+              nome: data.nome,
+              descricao: data.descricao,
+              conteudo: data.conteudo
+            }));
+          }
+          
+          await Promise.all(promises);
+          return { success: true };
         case 'recibo':
           return ModeloReciboService.update(documento!.id, data);
         case 'carta_cobranca':
