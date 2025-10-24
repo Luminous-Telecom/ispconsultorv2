@@ -1,0 +1,154 @@
+/* Estilos para componentes UI base */
+
+/* Input com ícone */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  z-index: 3;
+  color: #6c757d;
+  pointer-events: none;
+}
+
+.input-icon-left .input-icon {
+  left: 12px;
+}
+
+.input-icon-right .input-icon {
+  right: 12px;
+}
+
+.input-icon-left .form-control {
+  padding-left: 2.5rem;
+}
+
+.input-icon-right .form-control {
+  padding-right: 2.5rem;
+}
+
+/* FormField */
+.form-field {
+  margin-bottom: 1rem;
+}
+
+.form-field .form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.form-field .form-text {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Botão com loading */
+.btn .spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Checkbox inline */
+.form-check-inline {
+  margin-right: 1rem;
+}
+
+/* Switch personalizado */
+.form-switch .form-check-input {
+  width: 2.5rem;
+  height: 1.25rem;
+}
+
+.form-switch .form-check-input:focus {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:checked {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+/* Validação */
+.is-valid {
+  border-color: #198754;
+}
+
+.is-invalid {
+  border-color: #dc3545;
+}
+
+.form-text.text-success {
+  color: #198754 !important;
+}
+
+.form-text.text-danger {
+  color: #dc3545 !important;
+}
+
+/* Tooltip */
+[data-bs-toggle="tooltip"] {
+  cursor: help;
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+  .form-field {
+    margin-bottom: 0.75rem;
+  }
+  
+  .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .btn:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Estados de foco */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Animações */
+.btn {
+  transition: all 0.15s ease-in-out;
+}
+
+.form-control,
+.form-select {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Acessibilidade */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Estados de loading */
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
