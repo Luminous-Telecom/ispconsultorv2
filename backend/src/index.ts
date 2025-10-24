@@ -196,11 +196,6 @@ const startServer = async () => {
     await sequelize.authenticate();
     
     // Sincronizar modelos (apenas em desenvolvimento)
-    // Temporariamente desabilitado para evitar erros de foreign key
-    // if (process.env.NODE_ENV === 'development') {
-    //   await sequelize.sync({ force: false });
-    //   console.log('✅ Modelos sincronizados com o banco de dados');
-    // }
     
     // Iniciar servidor com configurações para evitar erro 431
     const server = app.listen(PORT, async () => {
