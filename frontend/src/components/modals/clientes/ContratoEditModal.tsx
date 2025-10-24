@@ -552,20 +552,22 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     {
       label: 'Imprimir',
       variant: 'primary',
-      dropdown: [
-        {
-          label: `Imprimir Selecionados (${selectedTermosItems.length})`,
-          action: () => {
-            // TODO: Implementar impressão de termos selecionados
-          }
-        },
-        {
-          label: 'Imprimir Todos Ativos',
-          action: () => {
-            // TODO: Implementar impressão de todos os termos ativos
+      disabled: () => selectedTermosItems.length === 0,
+      action: () => {
+        if (selectedTermosItems.length > 0) {
+          const termo = selectedTermosItems[0];
+          if (termo.modelo_termo_id && contratoId) {
+            // Fazer download direto do termo
+            const url = `/api/modelos-termo/${termo.modelo_termo_id}/pdf/contrato/${contratoId}`;
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `termo-${termo.modelo_termo_id}-contrato-${contratoId}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
           }
         }
-      ]
+      }
     }
   ];
 
