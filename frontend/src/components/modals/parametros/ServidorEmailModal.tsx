@@ -269,6 +269,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     size="sm"
                     value={formData.usuario}
                     onChange={(e) => setFormData(prev => ({ ...prev, usuario: e.value }))}
+                    autoComplete="username"
                   />
                 </div>
                 <div className="col-md-6">
@@ -281,6 +282,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     size="sm"
                     value={formData.senha}
                     onChange={(e) => setFormData(prev => ({ ...prev, senha: e.value }))}
+                    autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
                   />
                   {servidorAtivo?.data && (
                     <small className="form-text text-secondary">

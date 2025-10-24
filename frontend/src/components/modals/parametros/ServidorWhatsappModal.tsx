@@ -246,6 +246,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     size="sm"
                     value={formData.evolution_api_key}
                     onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_key: e.value }))}
+                    autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
                   />
                   {servidorAtivo?.data && (
                     <small className="form-text text-secondary">
