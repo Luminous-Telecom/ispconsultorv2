@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
-import DataTable from '../../common/DataTable';
-import TableFilters from '../../common/TableFilters';
 import DraggableModal from '../../common/DraggableModal';
-import ModalHeaderActions from '../../common/ModalHeaderActions';
 import { ClienteCreateModal, ClienteEditModal } from './index';
+import { Table, TableConfig } from '../../tables';
 
 interface Cliente {
   id: number;
@@ -50,6 +48,146 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
   const deleteClienteMutation = useDeleteCliente();
 
+  // Configuração da tabela unificada
+  const tableConfig: TableConfig = {
+    data: clientesData?.data || [],
+    loading: isLoading,
+    columns: [
+      {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        width: '80px',
+        render: (item: Cliente) => <span>{item.id}</span>
+      },
+      {
+        key: 'cnpj',
+        label: 'CNPJ',
+        sortable: true,
+        width: '150px',
+        render: (item: Cliente) => (
+          <span className="text-nowrap">{item.cnpj}</span>
+        )
+      },
+      {
+        key: 'razao_social',
+        label: 'Razão Social',
+        sortable: true,
+        render: (item: Cliente) => (
+          <strong>{item.razao_social}</strong>
+        )
+      },
+      {
+        key: 'nome_fantasia',
+        label: 'Nome Fantasia',
+        sortable: true,
+        render: (item: Cliente) => (
+          <span className="text-muted">{item.nome_fantasia || '-'}</span>
+        )
+      },
+      {
+        key: 'email',
+        label: 'Email',
+        sortable: true,
+        render: (item: Cliente) => (
+          <span className="text-nowrap">{item.email}</span>
+        )
+      },
+      {
+        key: 'whatsapp',
+        label: 'WhatsApp',
+        sortable: false,
+        render: (item: Cliente) => (
+          <span className="text-nowrap">{item.whatsapp || '-'}</span>
+        )
+      },
+      {
+        key: 'ativo',
+        label: 'Status',
+        sortable: true,
+        width: '100px',
+        render: (item: Cliente) => (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? 'Ativo' : 'Inativo'}
+          </span>
+        )
+      }
+    ],
+    pagination: {
+      current_page: page,
+      last_page: clientesData?.pagination?.last_page || 1,
+      per_page: limit,
+      total: clientesData?.pagination?.total || 0,
+      from: clientesData?.pagination?.from || (page - 1) * limit + 1,
+      to: clientesData?.pagination?.to || Math.min(page * limit, clientesData?.pagination?.total || 0)
+    },
+    actions: onSelectClient ? [
+      {
+        key: 'select',
+        label: 'Selecionar',
+        icon: 'check',
+        variant: 'primary',
+        onClick: (item: Cliente) => handleRowClick(item)
+      }
+    ] : [
+      {
+        key: 'edit',
+        label: 'Editar',
+        icon: 'pencil',
+        variant: 'primary',
+        onClick: (item: Cliente) => {
+          setSelectedClienteId(item.id);
+          setShowEditModal(true);
+        }
+      },
+      {
+        key: 'delete',
+        label: 'Excluir',
+        icon: 'trash',
+        variant: 'danger',
+        onClick: (item: Cliente) => handleDelete(item.id)
+      }
+    ],
+    bulkActions: onSelectClient ? [] : [
+      {
+        key: 'create',
+        label: 'Novo',
+        icon: 'plus',
+        variant: 'primary',
+        onClick: () => setShowCreateModal(true)
+      },
+      {
+        key: 'edit',
+        label: 'Editar',
+        icon: 'pencil',
+        variant: 'primary',
+        onClick: (selectedItems: any[]) => {
+          if (selectedItems.length > 0) {
+            setSelectedClienteId(selectedItems[0].id);
+            setShowEditModal(true);
+          }
+        }
+      },
+      {
+        key: 'delete',
+        label: 'Excluir',
+        icon: 'trash',
+        variant: 'danger',
+        onClick: (selectedItems: any[]) => {
+          if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} cliente(s)?`)) {
+            selectedItems.forEach(item => handleDelete(item.id));
+          }
+        }
+      }
+    ],
+    searchable: true,
+    searchPlaceholder: 'Buscar por CNPJ, razão social...',
+    sortable: true,
+    selectable: !onSelectClient,
+    multiSelect: !onSelectClient,
+    emptyMessage: 'Nenhum cliente encontrado'
+  };
+
 
   const handleDelete = async (clienteId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
@@ -69,108 +207,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     }
   };
 
-  const columns = [
-    {
-      key: 'id',
-      label: 'ID',
-      sortable: true,
-      render: (item: Cliente) => <span>{item.id}</span>
-    },
-    {
-      key: 'cnpj',
-      label: 'CNPJ',
-      sortable: true,
-      render: (item: Cliente) => (
-        <span className="text-nowrap">{item.cnpj}</span>
-      )
-    },
-    {
-      key: 'razao_social',
-      label: 'Razão Social',
-      sortable: true,
-      render: (item: Cliente) => (
-        <strong>{item.razao_social}</strong>
-      )
-    },
-    {
-      key: 'nome_fantasia',
-      label: 'Nome Fantasia',
-      sortable: true,
-      render: (item: Cliente) => (
-        <span className="text-muted">{item.nome_fantasia || '-'}</span>
-      )
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      sortable: true,
-      render: (item: Cliente) => (
-        <span className="text-nowrap">{item.email}</span>
-      )
-    },
-    {
-      key: 'whatsapp',
-      label: 'WhatsApp',
-      sortable: false,
-      render: (item: Cliente) => (
-        <span className="text-nowrap">{item.whatsapp || '-'}</span>
-      )
-    },
-    {
-      key: 'ativo',
-      label: 'Status',
-      sortable: true,
-      render: (item: Cliente) => (
-        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {item.ativo ? 'Ativo' : 'Inativo'}
-        </span>
-      )
-    }
-  ];
-
-  const bulkActions = onSelectClient ? [] : [
-    {
-      label: 'Novo',
-      action: () => {
-        setShowCreateModal(true);
-      }
-    },
-    {
-      label: 'Editar',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0) {
-          setSelectedClienteId(selectedItems[0].id);
-          setShowEditModal(true);
-        }
-      }
-    },
-    {
-      label: 'Excluir',
-      action: (selectedItems: any[]) => {
-        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} cliente(s)?`)) {
-          selectedItems.forEach(item => handleDelete(item.id));
-        }
-      }
-    }
-  ];
-
-
-  // Ações para o header do modal usando componente reutilizável
-  const headerActions = (
-    <ModalHeaderActions
-      bulkActions={bulkActions}
-      selectedItems={selectedItems}
-      search={search}
-      onSearchChange={setSearch}
-      searchPlaceholder="Buscar por CNPJ, razão social..."
-      limit={limit}
-      onLimitChange={setLimit}
-      pagination={clientesData?.pagination}
-      onPageChange={setPage}
-      onRefresh={() => refetch()}
-      idPrefix="cliente-list"
-    />
-  );
 
   return (
     <DraggableModal
@@ -178,38 +214,19 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       onClose={onClose}
       title={title}
       size="lg"
-      headerActions={headerActions}
       modalId="cliente-list-modal"
     >
       <div>
-        <DataTable
-            data={clientesData?.data || []}
-            columns={columns}
-            isLoading={isLoading}
-            pagination={{
-              from: clientesData?.pagination?.from || (page - 1) * limit + 1,
-              to: clientesData?.pagination?.to || Math.min(page * limit, clientesData?.pagination?.total || 0),
-              total: clientesData?.pagination?.total || 0,
-              current_page: clientesData?.pagination?.current_page || page,
-              last_page: clientesData?.pagination?.last_page || 1
-            }}
-            limit={limit}
-            setLimit={setLimit}
-            setPage={setPage}
-            onSort={(column: string, direction: 'asc' | 'desc') => {
-              setSortColumn(column);
-              setSortDirection(direction);
-            }}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            bulkActions={bulkActions}
-            onSelectionChange={setSelectedItems}
-            searchPlaceholder="Buscar por CNPJ, razão social..."
-            onSearch={setSearch}
-            emptyMessage="Nenhum cliente encontrado"
-            showHeader={false}
-          />
-        </div>
+        <Table
+          config={tableConfig}
+          onSort={(column: string, direction: 'asc' | 'desc') => {
+            setSortColumn(column);
+            setSortDirection(direction);
+          }}
+          onSelectionChange={setSelectedItems}
+          className="cliente-list-table"
+        />
+      </div>
 
       {/* Modal de Criação */}
       <ClienteCreateModal
