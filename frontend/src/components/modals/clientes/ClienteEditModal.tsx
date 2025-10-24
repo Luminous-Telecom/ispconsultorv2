@@ -1029,6 +1029,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     size="md"
                     includeEmail={true}
                     includeWhatsApp={true}
+                    formData={formData}
+                    onChange={(name: string, value: any) => handleInputChange(name as keyof ClienteForm, value)}
+                    errors={errors}
                   />
                 </div>
                 
@@ -1091,6 +1094,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               <AddressFields 
                 required={false}
                 size="md"
+                formData={formData}
+                onChange={(name: string, value: any) => handleInputChange(name as keyof ClienteForm, value)}
+                errors={errors}
               />
             )}
 

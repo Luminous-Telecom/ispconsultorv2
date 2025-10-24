@@ -1,28 +1,38 @@
 import React from 'react';
-import FormFieldWrapper from './FormFieldWrapper';
-import { FieldConfig } from './types';
+import FormField from '../ui/FormField';
 
 interface AddressFieldsProps {
   prefix?: string;
   required?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  formData?: Record<string, any>;
+  onChange?: (name: string, value: any) => void;
+  errors?: Record<string, any>;
 }
 
 const AddressFields: React.FC<AddressFieldsProps> = ({ 
   prefix = '', 
   required = false, 
-  size = 'sm' 
+  size = 'sm',
+  formData = {},
+  onChange,
+  errors = {}
 }) => {
   const getFieldName = (field: string) => prefix ? `${prefix}_${field}` : field;
+  const getFieldValue = (field: string) => formData[getFieldName(field)] || '';
+  const getFieldError = (field: string) => errors[getFieldName(field)] || '';
 
-  const addressFields: FieldConfig[] = [
+  const handleChange = (field: string, value: any) => {
+    if (onChange) {
+      onChange(getFieldName(field), value);
+    }
+  };
+
+  const addressFields = [
     {
-      name: getFieldName('cep'),
-      type: 'text',
+      name: 'cep',
       label: 'CEP',
       placeholder: '00000-000',
-      required,
-      size,
       validation: required ? [
         { type: 'required', message: 'CEP é obrigatório' },
         { type: 'pattern', value: /^\d{5}-?\d{3}$/, message: 'CEP inválido' }
@@ -31,63 +41,47 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       ]
     },
     {
-      name: getFieldName('endereco'),
-      type: 'text',
+      name: 'endereco',
       label: 'Endereço',
       placeholder: 'Rua, Avenida...',
-      required,
-      size,
       validation: required ? [
         { type: 'required', message: 'Endereço é obrigatório' }
       ] : []
     },
     {
-      name: getFieldName('numero'),
-      type: 'text',
+      name: 'numero',
       label: 'Número',
       placeholder: '123',
-      required,
-      size,
       validation: required ? [
         { type: 'required', message: 'Número é obrigatório' }
       ] : []
     },
     {
-      name: getFieldName('complemento'),
-      type: 'text',
+      name: 'complemento',
       label: 'Complemento',
       placeholder: 'Apto, Sala...',
-      size
+      validation: []
     },
     {
-      name: getFieldName('bairro'),
-      type: 'text',
+      name: 'bairro',
       label: 'Bairro',
       placeholder: 'Nome do bairro',
-      required,
-      size,
       validation: required ? [
         { type: 'required', message: 'Bairro é obrigatório' }
       ] : []
     },
     {
-      name: getFieldName('cidade'),
-      type: 'text',
+      name: 'cidade',
       label: 'Cidade',
       placeholder: 'Nome da cidade',
-      required,
-      size,
       validation: required ? [
         { type: 'required', message: 'Cidade é obrigatória' }
       ] : []
     },
     {
-      name: getFieldName('estado'),
-      type: 'text',
+      name: 'estado',
       label: 'Estado',
       placeholder: 'SP',
-      required,
-      size,
       validation: required ? [
         { type: 'required', message: 'Estado é obrigatório' },
         { type: 'minLength', value: 2, message: 'Estado deve ter pelo menos 2 caracteres' },
@@ -103,8 +97,17 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
     <div className="row g-2">
       {addressFields.map((field) => (
         <div key={field.name} className={getColumnClass(field.name)}>
-          <FormFieldWrapper
-            field={field}
+          <FormField
+            name={getFieldName(field.name)}
+            type="text"
+            label={field.label}
+            placeholder={field.placeholder}
+            required={required}
+            size={size}
+            value={getFieldValue(field.name)}
+            onChange={(e) => handleChange(field.name, e.value)}
+            error={getFieldError(field.name)}
+            isInvalid={!!getFieldError(field.name)}
           />
         </div>
       ))}

@@ -1,6 +1,5 @@
 import React from 'react';
-import FormFieldWrapper from './FormFieldWrapper';
-import { FieldConfig } from './types';
+import FormField from '../ui/FormField';
 
 interface ContactFieldsProps {
   prefix?: string;
@@ -8,6 +7,9 @@ interface ContactFieldsProps {
   size?: 'sm' | 'md' | 'lg';
   includeWhatsApp?: boolean;
   includeEmail?: boolean;
+  formData?: Record<string, any>;
+  onChange?: (name: string, value: any) => void;
+  errors?: Record<string, any>;
 }
 
 const ContactFields: React.FC<ContactFieldsProps> = ({ 
@@ -15,21 +17,30 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
   required = false, 
   size = 'sm',
   includeWhatsApp = true,
-  includeEmail = true
+  includeEmail = true,
+  formData = {},
+  onChange,
+  errors = {}
 }) => {
   const getFieldName = (field: string) => prefix ? `${prefix}_${field}` : field;
+  const getFieldValue = (field: string) => formData[getFieldName(field)] || '';
+  const getFieldError = (field: string) => errors[getFieldName(field)] || '';
 
-  const contactFields: FieldConfig[] = [];
+  const handleChange = (field: string, value: any) => {
+    if (onChange) {
+      onChange(getFieldName(field), value);
+    }
+  };
+
+  const contactFields = [];
 
   // Email
   if (includeEmail) {
     contactFields.push({
-      name: getFieldName('email'),
-      type: 'email',
+      name: 'email',
+      type: 'email' as const,
       label: 'Email',
       placeholder: 'email@empresa.com',
-      required,
-      size,
       validation: required ? [
         { type: 'required', message: 'Email é obrigatório' },
         { type: 'email', message: 'Email inválido' }
@@ -41,12 +52,10 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
 
   // Telefone
   contactFields.push({
-    name: getFieldName('telefone'),
-    type: 'tel',
+    name: 'telefone',
+    type: 'tel' as const,
     label: 'Telefone',
     placeholder: '(11) 99999-9999',
-    required,
-    size,
     validation: required ? [
       { type: 'required', message: 'Telefone é obrigatório' },
       { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: 'Telefone inválido' }
@@ -58,11 +67,10 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
   // WhatsApp
   if (includeWhatsApp) {
     contactFields.push({
-      name: getFieldName('whatsapp'),
-      type: 'tel',
+      name: 'whatsapp',
+      type: 'tel' as const,
       label: 'WhatsApp',
       placeholder: '(11) 99999-9999',
-      size,
       validation: [
         { type: 'pattern', value: /^\(\d{2}\)\s\d{4,5}-\d{4}$/, message: 'WhatsApp inválido' }
       ]
@@ -73,8 +81,17 @@ const ContactFields: React.FC<ContactFieldsProps> = ({
     <div className="row g-2">
       {contactFields.map((field) => (
         <div key={field.name} className="col-md-6">
-          <FormFieldWrapper
-            field={field}
+          <FormField
+            name={getFieldName(field.name)}
+            type={field.type}
+            label={field.label}
+            placeholder={field.placeholder}
+            required={required}
+            size={size}
+            value={getFieldValue(field.name)}
+            onChange={(e) => handleChange(field.name, e.value)}
+            error={getFieldError(field.name)}
+            isInvalid={!!getFieldError(field.name)}
           />
         </div>
       ))}
