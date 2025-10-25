@@ -183,11 +183,9 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         </div>
       }
     >
-      <form id="empresa-form" onSubmit={handleSubmit}>
-        {/* Espaço acima das abas */}
-        <div style={{ marginTop: '1rem' }}>
-          {/* Navegação de Abas */}
-          <ul className="nav nav-tabs mb-3">
+      <form id="empresa-form" onSubmit={handleSubmit} style={{ padding: '1rem' }}>
+        {/* Navegação de Abas */}
+        <ul className="nav nav-tabs mb-3">
           <li className="nav-item">
             <button
               type="button"
@@ -459,7 +457,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         </div>
         )}
 
-        </div>
       </form>
     </DraggableModal>
   );
