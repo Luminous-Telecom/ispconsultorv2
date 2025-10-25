@@ -238,14 +238,17 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
                 responsive: true,
                 bulkActions: [
                   {
+                    key: 'novo-contrato',
                     label: 'Novo Contrato',
-                    action: () => setShowContratoCreateModal(true)
+                    onClick: () => setShowContratoCreateModal(true)
                   },
                   {
+                    key: 'deletar',
                     label: 'Deletar',
-                    action: handleDeletarContrato
+                    onClick: handleDeletarContrato
                   },
                   {
+                    key: 'imprimir',
                     label: 'Imprimir',
                     variant: 'primary',
                     dropdown: [
@@ -273,9 +276,9 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
                     disabled: () => false
                   }
                 ],
-                emptyMessage: 'Nenhum contrato encontrado',
-                tableId: 'cliente-contratos'
+                emptyMessage: 'Nenhum contrato encontrado'
               }}
+              tableId="cliente-contratos"
               onSort={handleSort}
               onRefresh={refetchContratos}
               onSelectionChange={setSelectedItems}

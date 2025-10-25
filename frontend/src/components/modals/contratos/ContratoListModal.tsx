@@ -253,10 +253,15 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             striped: true,
             hover: true,
             responsive: true,
-            bulkActions,
-            emptyMessage: 'Nenhum contrato encontrado',
-            tableId: 'contrato-list-modal'
+            bulkActions: bulkActions.map(action => ({
+              key: action.label.toLowerCase().replace(/\s+/g, '-'),
+              label: action.label,
+              onClick: action.action,
+              disabled: action.disabled
+            })),
+            emptyMessage: 'Nenhum contrato encontrado'
           }}
+          tableId="contrato-list-modal"
           onSort={(column: string, direction: 'asc' | 'desc') => {
             setSortColumn(column);
             setSortDirection(direction);

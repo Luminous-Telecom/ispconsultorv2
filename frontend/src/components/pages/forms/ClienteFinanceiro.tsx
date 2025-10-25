@@ -199,23 +199,27 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                 responsive: true,
                 bulkActions: [
                   {
+                    key: 'novo-titulo',
                     label: 'Novo Título',
-                    action: () => {
+                    onClick: () => {
                       setShowParcelaCreateModal(true);
                     }
                   },
                   {
+                    key: 'editar',
                     label: 'Editar',
-                    action: handleEditarParcela
+                    onClick: handleEditarParcela
                   },
                   {
+                    key: 'marcar-pago',
                     label: 'Marcar como Pago',
-                    action: handleMarcarPago,
+                    onClick: handleMarcarPago,
                     disabled: (selectedItems) => selectedItems.every(item => item.status === 'pago')
                   },
                   {
+                    key: 'consultar-recebimento',
                     label: 'Consultar Recebimento',
-                    action: async (selectedItems) => {
+                    onClick: async (selectedItems: CarneParcela[]) => {
                       if (selectedItems.length > 0) {
                         const item = selectedItems[0];
                         if (!item.charge_id) {
@@ -235,8 +239,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                     disabled: (selectedItems) => selectedItems.length !== 1 || !selectedItems[0].charge_id
                   },
                   {
+                    key: 'estornar',
                     label: 'Estornar',
-                    action: async (selectedItems) => {
+                    onClick: async (selectedItems: CarneParcela[]) => {
                       if (selectedItems.length > 0) {
                         const item = selectedItems[0];
                         if (item.status === 'pago' || item.status === 'pago_atraso') {
@@ -265,17 +270,29 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                       return selectedItems.every(item => item.status !== 'pago' && item.status !== 'pago_atraso');
                     }
                   },
-                  createImprimirDropdown({
-                    selectedItems,
-                    totalItems: parcelas.filter((p: CarneParcela) => p.status === 'pendente' || p.status === 'vencido'),
-                    onImprimirSelecionados: handleImprimirSelecionados,
-                    onImprimirTodos: handleImprimirTodos,
-                    filterLabel: 'Todos em Aberto'
-                  }),
+                  {
+                    key: 'imprimir',
+                    label: 'Imprimir',
+                    variant: 'primary',
+                    dropdown: [
+                      {
+                        label: `Imprimir Selecionados (${selectedItems.length})`,
+                        action: () => handleImprimirSelecionados(selectedItems.map(item => item.id).join(','))
+                      },
+                      {
+                        label: `Imprimir Todos em Aberto`,
+                        action: () => {
+                          const titulosAbertos = parcelas.filter((p: CarneParcela) => p.status === 'pendente' || p.status === 'vencido');
+                          handleImprimirTodos(titulosAbertos.map(item => item.id).join(','));
+                        }
+                      }
+                    ],
+                    disabled: () => false
+                  }
                 ],
-                emptyMessage: 'Nenhuma parcela encontrada',
-                tableId: 'cliente-financeiro'
+                emptyMessage: 'Nenhuma parcela encontrada'
               }}
+              tableId="cliente-financeiro"
               onSort={handleSortParcelas}
               onRefresh={refetchParcelas}
               onSelectionChange={setSelectedItems}

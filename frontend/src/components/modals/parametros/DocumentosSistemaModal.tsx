@@ -283,10 +283,16 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
               striped: true,
               hover: true,
               responsive: true,
-              bulkActions,
-              emptyMessage: `Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`,
-              tableId: `documentos-${activeTab}`
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                variant: action.variant,
+                onClick: action.action,
+                disabled: action.disabled
+              })),
+              emptyMessage: `Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`
             }}
+            tableId={`documentos-${activeTab}`}
             onSelectionChange={setSelectedItems}
             onSort={(column: string, direction: 'asc' | 'desc') => {
               setSortColumn(column);

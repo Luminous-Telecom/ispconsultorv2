@@ -285,9 +285,9 @@ const LogsModal: React.FC<LogsModalProps> = ({
               hover: true,
               responsive: true,
               bulkActions: [],
-              emptyMessage: 'Nenhum log encontrado',
-              tableId: 'logs-modal'
+              emptyMessage: 'Nenhum log encontrado'
             }}
+            tableId="logs-modal"
             onSearch={handleSearchChange}
             onSort={handleSort}
             onRefresh={() => window.location.reload()}
