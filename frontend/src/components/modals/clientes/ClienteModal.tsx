@@ -28,19 +28,20 @@ import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { validateClienteForm } from '../../../utils/validators';
 import { ContratoItem, TituloItem, ClienteFormData, ClienteFormErrors, BulkActionItem } from '../../../types/cliente';
 
-interface ClienteEditModalProps {
+interface ClienteModalProps {
   show: boolean;
   onClose: () => void;
-  clienteId: number | null;
+  clienteId?: number | null; // Se passar clienteId, é edição; se não, é criação
   onSuccess?: () => void;
 }
 
-const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ 
+const ClienteModal: React.FC<ClienteModalProps> = ({ 
   show, 
   onClose, 
-  clienteId,
+  clienteId = null,
   onSuccess 
 }) => {
+  const isEditing = !!clienteId;
   const formPrefix = useFormPrefix('ClienteEditModal');
   const { success, error } = useNotificationContext();
   const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
@@ -159,11 +160,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   }, [showImprimirDropdown]);
 
 
-  // Buscar dados do cliente
+  // Buscar dados do cliente (apenas se estiver editando)
   const { data: cliente, isLoading: isLoadingCliente } = useQuery({
     queryKey: ['cliente', clienteId],
     queryFn: () => ClienteService.getById(clienteId!),
-    enabled: !!clienteId,
+    enabled: isEditing && !!clienteId,
   });
 
   // Carregar dados do cliente quando disponíveis
@@ -212,11 +213,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   // Hook para deletar contrato
   const deleteContratoMutation = useDeleteContrato();
 
-  // Buscar parcelas do cliente (dados reais do banco)
+  // Buscar parcelas do cliente (dados reais do banco - apenas se estiver editando)
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
     queryKey: ['parcelas', 'cliente', clienteId],
     queryFn: () => TituloService.list({ cliente_id: clienteId!, limit: 100 }),
-    enabled: !!clienteId,
+    enabled: isEditing && !!clienteId,
   });
 
   // Configuração do formulário unificado para dados básicos
@@ -1042,6 +1043,20 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
   });
 
+  // Mutation para criar cliente
+  const createClienteMutation = useMutation({
+    mutationFn: (data: Partial<Cliente>) => ClienteService.create(data as any),
+    onSuccess: () => {
+      success('Cliente criado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      onSuccess?.();
+      // Não fechar o modal automaticamente
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao criar cliente');
+    },
+  });
+
   // Dados iniciais do formulário
   const initialFormData: ClienteFormData = {
     cnpj: '',
@@ -1191,12 +1206,16 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     });
 
-    updateClienteMutation.mutate(dataToSend);
+    if (isEditing) {
+      updateClienteMutation.mutate(dataToSend);
+    } else {
+      createClienteMutation.mutate(dataToSend);
+    }
   };
 
-  if (isLoadingCliente) {
+  if (isLoadingCliente && isEditing) {
     return (
-      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl" modalId="cliente-edit-modal-loading">
+      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl" modalId="cliente-modal-loading">
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
             <span className="visually-hidden">Carregando...</span>
@@ -1207,9 +1226,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     );
   }
 
-  if (!cliente) {
+  if (!cliente && isEditing) {
     return (
-      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl" modalId="cliente-edit-modal-error">
+      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl" modalId="cliente-modal-error">
         <div className="text-center p-4">
           <p>Cliente não encontrado.</p>
         </div>
@@ -1221,9 +1240,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Cliente"
+      title={isEditing ? 'Editar Cliente' : 'Novo Cliente'}
       size="xl"
-      modalId="cliente-edit-modal"
+      modalId={isEditing ? "cliente-edit-modal" : "cliente-create-modal"}
       headerActions={
         <div className="d-flex gap-2">
           <button
@@ -1237,9 +1256,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             type="button"
             onClick={handleSubmit}
             className="btn btn-primary btn-sm"
-            disabled={updateClienteMutation.isPending}
+            disabled={isEditing ? updateClienteMutation.isPending : createClienteMutation.isPending}
           >
-            Salvar
+            {isEditing ? 'Salvar' : 'Criar'} Cliente
           </button>
         </div>
       }
@@ -1278,24 +1297,28 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               Endereço
             </button>
           </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
-              onClick={() => setActiveTab('contratos')}
-              type="button"
-            >
-              Contratos
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
-              onClick={() => setActiveTab('financeiro')}
-              type="button"
-            >
-              Financeiro
-            </button>
-          </li>
+          {isEditing && (
+            <>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('contratos')}
+                  type="button"
+                >
+                  Contratos
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('financeiro')}
+                  type="button"
+                >
+                  Financeiro
+                </button>
+              </li>
+            </>
+          )}
           <li className="nav-item" role="presentation">
             <button
               className={`nav-link ${activeTab === 'observacoes' ? 'active' : ''}`}
@@ -1687,4 +1710,4 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   );
 };
 
-export default ClienteEditModal;
+export default ClienteModal;
