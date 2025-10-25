@@ -123,7 +123,7 @@ export const useClienteEditModal = (clienteId: number | null) => {
     
     try {
       const promises = selectedItems.map(item => 
-        TituloService.marcarPago(item.id, { valor_pago: item.valor })
+        TituloService.marcarPago(item.id, undefined, item.valor)
       );
       
       await Promise.all(promises);
@@ -143,7 +143,10 @@ export const useClienteEditModal = (clienteId: number | null) => {
     
     if (confirmar) {
       try {
-        const promises = selectedItems.map(item => TituloService.cancelar(item.id));
+        // Como não existe método cancelar, vamos usar update para marcar como cancelado
+        const promises = selectedItems.map(item => 
+          TituloService.update(item.id, { status: 'cancelado' })
+        );
         const results = await Promise.allSettled(promises);
         
         const successCount = results.filter(r => r.status === 'fulfilled').length;
