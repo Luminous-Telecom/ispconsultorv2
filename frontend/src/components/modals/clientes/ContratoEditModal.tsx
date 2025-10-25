@@ -1012,15 +1012,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 onClick={() => setShowPlanoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn"
+                className="btn btn-outline-secondary"
                 style={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #ced4da',
-                  borderLeft: 'none',
-                  color: '#6c757d',
-                  padding: '0.375rem 0.75rem',
-                  fontSize: '1rem',
-                  lineHeight: '1.5'
+                  borderLeft: 'none'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1124,15 +1118,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 onClick={() => setShowBancoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn"
+                className="btn btn-outline-secondary"
                 style={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #ced4da',
-                  borderLeft: 'none',
-                  color: '#6c757d',
-                  padding: '0.375rem 0.75rem',
-                  fontSize: '1rem',
-                  lineHeight: '1.5'
+                  borderLeft: 'none'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1236,15 +1224,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 onClick={() => setShowModeloContratoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn"
+                className="btn btn-outline-secondary"
                 style={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #ced4da',
-                  borderLeft: 'none',
-                  color: '#6c757d',
-                  padding: '0.375rem 0.75rem',
-                  fontSize: '1rem',
-                  lineHeight: '1.5'
+                  borderLeft: 'none'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
