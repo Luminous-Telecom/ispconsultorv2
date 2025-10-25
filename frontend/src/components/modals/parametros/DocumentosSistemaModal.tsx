@@ -288,7 +288,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
                 label: action.label,
                 variant: action.variant,
                 onClick: action.action,
-                disabled: action.disabled
+                ...(action.disabled && { disabled: action.disabled })
               })),
               emptyMessage: `Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`
             }}
