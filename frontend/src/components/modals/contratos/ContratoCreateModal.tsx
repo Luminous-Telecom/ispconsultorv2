@@ -269,7 +269,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 <input
                   type="text"
                   className={`form-control ${errors.plano_id ? 'is-invalid' : ''}`}
-                  value={planoSelecionado ? planoSelecionado.nome_plano : ''}
+                  value={planoSelecionado ? `${planoSelecionado.id} - ${planoSelecionado.nome_plano}` : ''}
                   placeholder="Selecione um plano"
                   readOnly
                   disabled={createContratoMutation.isPending}
@@ -414,7 +414,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 <input
                   type="text"
                   className={`form-control ${errors.conta_boleto ? 'is-invalid' : ''}`}
-                  value={bancoSelecionado ? bancoSelecionado.nome : ''}
+                  value={bancoSelecionado ? `${bancoSelecionado.id} - ${bancoSelecionado.nome}` : ''}
                   placeholder="Selecione um banco"
                   readOnly
                   disabled={createContratoMutation.isPending}
