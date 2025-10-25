@@ -219,7 +219,9 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
 
   // Atualizar formData quando banco for carregado
   useEffect(() => {
+    console.log('🔄 useEffect banco:', { banco: !!banco, show, customFormData: !!customFormData });
     if (banco && show && customFormData) {
+      console.log('📝 Atualizando formData com customFormData:', customFormData);
       setFormData(customFormData);
     }
   }, [banco, show, customFormData]);
@@ -240,10 +242,13 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
   });
 
   const handleInputChange = (field: keyof BancoForm, value: string | boolean | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log('🔄 handleInputChange:', { field, value, currentFormData: formData });
+    
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      console.log('📝 setFormData:', { field, value, prev, newData });
+      return newData;
+    });
 
     if (errors[field]) {
       setErrors(prev => ({
