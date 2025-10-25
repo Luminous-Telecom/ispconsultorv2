@@ -988,25 +988,33 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label">
               Plano <span className="text-danger ms-1">*</span>
             </label>
-            <div className="input-group">
-              <div className="form-control d-flex align-items-center" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
-                <span className="badge bg-secondary me-2" style={{ fontSize: '0.75em' }}>
-                  {planoSelecionado ? planoSelecionado.id : 'ID'}
-                </span>
-                <span className="text-muted">
-                  {planoSelecionado ? planoSelecionado.nome_plano : 'Selecione um plano'}
-                </span>
+            <div className="row g-2">
+              <div className="col-2">
+                <div className="form-control text-center" style={{ padding: '0.375rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                  <span className="badge bg-secondary" style={{ fontSize: '0.75em' }}>
+                    {planoSelecionado ? planoSelecionado.id : 'ID'}
+                  </span>
+                </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setShowPlanoModal(true)}
-                title="Selecionar plano"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                </svg>
-              </button>
+              <div className="col-8">
+                <div className="form-control" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                  <span className="text-muted">
+                    {planoSelecionado ? planoSelecionado.nome_plano : 'Selecione um plano'}
+                  </span>
+                </div>
+              </div>
+              <div className="col-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary w-100"
+                  onClick={() => setShowPlanoModal(true)}
+                  title="Selecionar plano"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
           </div>
@@ -1080,25 +1088,33 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label">
               Banco para Boleto <span className="text-danger ms-1">*</span>
             </label>
-            <div className="input-group">
-              <div className="form-control d-flex align-items-center" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
-                <span className="badge bg-secondary me-2" style={{ fontSize: '0.75em' }}>
-                  {bancoSelecionado ? bancoSelecionado.id : 'ID'}
-                </span>
-                <span className="text-muted">
-                  {bancoSelecionado ? bancoSelecionado.nome : 'Selecione um banco'}
-                </span>
+            <div className="row g-2">
+              <div className="col-2">
+                <div className="form-control text-center" style={{ padding: '0.375rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                  <span className="badge bg-secondary" style={{ fontSize: '0.75em' }}>
+                    {bancoSelecionado ? bancoSelecionado.id : 'ID'}
+                  </span>
+                </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setShowBancoModal(true)}
-                title="Selecionar banco"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                </svg>
-              </button>
+              <div className="col-8">
+                <div className="form-control" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                  <span className="text-muted">
+                    {bancoSelecionado ? bancoSelecionado.nome : 'Selecione um banco'}
+                  </span>
+                </div>
+              </div>
+              <div className="col-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary w-100"
+                  onClick={() => setShowBancoModal(true)}
+                  title="Selecionar banco"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             {errors.conta_boleto && <div className="invalid-feedback">{errors.conta_boleto}</div>}
           </div>
@@ -1172,26 +1188,34 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <label className="form-label small">
               Modelo de Contrato <span className="text-danger ms-1">*</span>
             </label>
-            <div className="input-group">
-              <div className="form-control d-flex align-items-center" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
-                <span className="badge bg-secondary me-2" style={{ fontSize: '0.75em' }}>
-                  {modeloContratoSelecionado ? modeloContratoSelecionado.id : 'ID'}
-                </span>
-                <span className="text-muted">
-                  {modeloContratoSelecionado ? modeloContratoSelecionado.nome : 'Selecione um modelo de contrato'}
-                </span>
+            <div className="row g-2">
+              <div className="col-2">
+                <div className="form-control text-center" style={{ padding: '0.375rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                  <span className="badge bg-secondary" style={{ fontSize: '0.75em' }}>
+                    {modeloContratoSelecionado ? modeloContratoSelecionado.id : 'ID'}
+                  </span>
+                </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setShowModeloContratoModal(true)}
-                disabled={updateContratoMutation.isPending}
-                title="Selecionar modelo de contrato"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                </svg>
-              </button>
+              <div className="col-8">
+                <div className="form-control" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                  <span className="text-muted">
+                    {modeloContratoSelecionado ? modeloContratoSelecionado.nome : 'Selecione um modelo de contrato'}
+                  </span>
+                </div>
+              </div>
+              <div className="col-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary w-100"
+                  onClick={() => setShowModeloContratoModal(true)}
+                  disabled={updateContratoMutation.isPending}
+                  title="Selecionar modelo de contrato"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
             <small className="form-text text-muted">
