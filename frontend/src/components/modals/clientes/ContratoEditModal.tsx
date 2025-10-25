@@ -998,8 +998,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 className="btn btn-outline-secondary"
                 onClick={() => setShowPlanoModal(true)}
+                title="Selecionar plano"
               >
-                Selecionar
+                <i className="fas fa-search"></i>
               </button>
             </div>
             {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
@@ -1082,8 +1083,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 className="btn btn-outline-secondary"
                 onClick={() => setShowBancoModal(true)}
+                title="Selecionar banco"
               >
-                Selecionar
+                <i className="fas fa-search"></i>
               </button>
             </div>
             {errors.conta_boleto && <div className="invalid-feedback">{errors.conta_boleto}</div>}
@@ -1170,8 +1172,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 className="btn btn-outline-secondary"
                 onClick={() => setShowModeloContratoModal(true)}
                 disabled={updateContratoMutation.isPending}
+                title="Selecionar modelo de contrato"
               >
-                Selecionar
+                <i className="fas fa-search"></i>
               </button>
             </div>
             {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
