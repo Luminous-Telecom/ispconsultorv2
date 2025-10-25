@@ -1250,7 +1250,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         flexDirection: 'column'
       }}>
         {/* Navegação por Abas - Fixa */}
-        <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '0.5rem' }}>
+        <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
           <li className="nav-item" role="presentation">
             <button
               className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
