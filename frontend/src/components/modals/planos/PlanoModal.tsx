@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlanoService } from '../../../services/planoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
+import { useFormReset } from '../../../hooks/useFormReset';
 import FormField from '../../ui/FormField';
 
 interface PlanoForm {
@@ -17,26 +18,28 @@ interface PlanoForm {
   periodicidade: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
   servicos_inclusos: string[];
   renovacao_automatica: boolean;
-  ativo: boolean;
+  status: 'ativo' | 'inativo' | 'cancelado';
   data_inicio: string;
   data_fim: string;
   observacoes: string;
 }
 
-interface PlanoEditModalProps {
+interface PlanoModalProps {
   show: boolean;
   onClose: () => void;
-  planoId: number | null;
   onSuccess?: () => void;
+  planoId?: number | null; // Se passar planoId, é edição; se não, é criação
 }
 
-const PlanoEditModal: React.FC<PlanoEditModalProps> = ({ 
+const PlanoModal: React.FC<PlanoModalProps> = ({ 
   show, 
   onClose, 
-  planoId, 
-  onSuccess 
+  onSuccess,
+  planoId 
 }) => {
-  const [formData, setFormData] = useState<PlanoForm>({
+  const isEditing = !!planoId;
+  // Dados iniciais do formulário
+  const initialFormData: PlanoForm = {
     nome_plano: '',
     tipo_servico: 'internet',
     descricao: '',
@@ -48,69 +51,86 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
     periodicidade: 'mensal',
     servicos_inclusos: [],
     renovacao_automatica: true,
-    ativo: true,
+    status: 'ativo',
     data_inicio: new Date().toISOString().split('T')[0],
     data_fim: '',
     observacoes: ''
-  });
+  };
 
+  const [formData, setFormData] = useState<PlanoForm>(initialFormData);
   const [errors, setErrors] = useState<Partial<PlanoForm>>({});
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
-  // Query para buscar plano
-  const { data: plano, isLoading: planoLoading } = useQuery({
+  // Buscar dados do plano se estiver editando
+  const { data: planoData, isLoading } = useQuery({
     queryKey: ['plano', planoId],
     queryFn: () => PlanoService.getById(planoId!),
-    enabled: !!planoId,
-    staleTime: 60 * 1000,
-    refetchOnMount: false,
+    enabled: isEditing && !!planoId,
+  });
+
+  // Carregar dados do plano quando modal abrir em modo edição
+  useEffect(() => {
+    if (isEditing && planoData && show) {
+      setFormData({
+        nome_plano: planoData.nome_plano || '',
+        tipo_servico: planoData.tipo_servico || 'internet',
+        descricao: planoData.descricao || '',
+        valor_mensal: Number(planoData.valor_mensal) || 0,
+        desconto_percentual: Number(planoData.desconto_percentual) || 0,
+        desconto_valor: Number(planoData.desconto_valor) || 0,
+        desconto_ativo: planoData.desconto_ativo || false,
+        quantidade_usuarios: planoData.quantidade_usuarios || 1,
+        periodicidade: planoData.periodicidade || 'mensal',
+        servicos_inclusos: planoData.servicos_inclusos || [],
+        renovacao_automatica: planoData.renovacao_automatica || false,
+        status: planoData.status || 'ativo',
+        data_inicio: planoData.data_inicio || new Date().toISOString().split('T')[0],
+        data_fim: planoData.data_fim || '',
+        observacoes: planoData.observacoes || ''
+      });
+    }
+  }, [isEditing, planoData, show]);
+
+  // Usar hook personalizado para reset do formulário
+  useFormReset({
+    show: show && !isEditing, // Apenas resetar quando não estiver editando
+    initialData: initialFormData,
+    setFormData,
+    setErrors
+  });
+
+  // Mutation para criar plano
+  const createPlanoMutation = useMutation({
+    mutationFn: (data: PlanoForm) => PlanoService.create(data),
+    onSuccess: () => {
+      success('Plano criado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      onSuccess?.();
+      // Não fechar o modal automaticamente
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao criar plano');
+    }
   });
 
   // Mutation para atualizar plano
   const updatePlanoMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: PlanoForm }) => PlanoService.update(id, data),
+    mutationFn: (data: PlanoForm) => PlanoService.update(planoId!, data),
     onSuccess: () => {
       success('Plano atualizado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['planos'] });
+      queryClient.invalidateQueries({ queryKey: ['planos', planoId] });
       queryClient.invalidateQueries({ queryKey: ['plano', planoId] });
       onSuccess?.();
-      // Não fechar o modal automaticamente
+      onClose();
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao atualizar plano');
     }
   });
 
-  // Carregar dados do plano quando disponível
-  useEffect(() => {
-    if (plano) {
-      setFormData({
-        nome_plano: plano.nome_plano || '',
-        tipo_servico: (plano.tipo_servico as PlanoForm['tipo_servico']) || 'internet',
-        descricao: plano.descricao || '',
-        valor_mensal: plano.valor_mensal || 0,
-        desconto_percentual: plano.desconto_percentual || 0,
-        desconto_valor: plano.desconto_valor || 0,
-        desconto_ativo: plano.desconto_ativo || false,
-        quantidade_usuarios: plano.quantidade_usuarios || 1,
-        periodicidade: (plano.periodicidade as PlanoForm['periodicidade']) || 'mensal',
-        servicos_inclusos: Array.isArray(plano.servicos_inclusos) 
-          ? plano.servicos_inclusos 
-          : typeof plano.servicos_inclusos === 'string' 
-            ? JSON.parse(plano.servicos_inclusos) 
-            : [],
-        renovacao_automatica: plano.renovacao_automatica || false,
-        ativo: plano.status === 'ativo',
-        data_inicio: plano.data_inicio || new Date().toISOString().split('T')[0],
-        data_fim: plano.data_fim || '',
-        observacoes: plano.observacoes || ''
-      });
-    }
-  }, [plano]);
-
   // Limpar formulário quando modal fechar
-  useEffect(() => {
+  React.useEffect(() => {
     if (!show) {
       setFormData({
         nome_plano: '',
@@ -124,7 +144,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
         periodicidade: 'mensal',
         servicos_inclusos: [],
         renovacao_automatica: true,
-        ativo: true,
+        status: 'ativo',
         data_inicio: new Date().toISOString().split('T')[0],
         data_fim: '',
         observacoes: ''
@@ -171,37 +191,13 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm() || !planoId) return;
+    if (!validateForm()) return;
 
-    // Converter campo ativo para status e limpar dados
-    const dataToSubmit: any = {
-      nome_plano: formData.nome_plano,
-      tipo_servico: formData.tipo_servico,
-      descricao: formData.descricao,
-      valor_mensal: formData.valor_mensal,
-      desconto_percentual: formData.desconto_percentual,
-      desconto_valor: formData.desconto_valor,
-      desconto_ativo: formData.desconto_ativo,
-      quantidade_usuarios: formData.quantidade_usuarios,
-      periodicidade: formData.periodicidade,
-      servicos_inclusos: formData.servicos_inclusos,
-      renovacao_automatica: formData.renovacao_automatica,
-      status: formData.ativo ? 'ativo' : 'inativo',
-      observacoes: formData.observacoes
-    };
-    
-    // Adicionar datas apenas se forem válidas
-    if (formData.data_inicio && formData.data_inicio !== '') {
-      dataToSubmit.data_inicio = formData.data_inicio;
+    if (isEditing) {
+      updatePlanoMutation.mutate(formData);
+    } else {
+      createPlanoMutation.mutate(formData);
     }
-    if (formData.data_fim && formData.data_fim !== '') {
-      dataToSubmit.data_fim = formData.data_fim;
-    }
-
-    updatePlanoMutation.mutate({
-      id: planoId,
-      data: dataToSubmit
-    });
   };
 
   const handleCancel = () => {
@@ -222,37 +218,37 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Plano"
-      modalId="plano-edit-modal"
+      title={isEditing ? 'Editar Plano' : 'Novo Plano'}
+      modalId={isEditing ? 'plano-edit-modal' : 'plano-create-modal'}
       headerActions={
         <div className="d-flex gap-2">
           <button
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={handleCancel}
-            disabled={updatePlanoMutation.isPending}
+            disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
           >
             Cancelar
           </button>
           <button
             type="submit"
-            form="plano-edit-form"
+            form={isEditing ? 'plano-edit-form' : 'plano-create-form'}
             className="btn btn-primary btn-sm"
-            disabled={updatePlanoMutation.isPending}
+            disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
           >
-            Salvar
+            {isEditing ? 'Salvar Plano' : 'Criar Plano'}
           </button>
         </div>
       }
     >
-      {planoLoading ? (
-        <div className="text-center py-4">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
+        {isLoading ? (
+          <div className="text-center p-3">
+            <div className="spinner-border spinner-border-sm" role="status">
+              <span className="visually-hidden">Carregando...</span>
+            </div>
           </div>
-        </div>
-      ) : (
-        <form id="plano-edit-form" onSubmit={handleSubmit} style={{ padding: '1rem' }}>
+        ) : (
+          <form id={isEditing ? 'plano-edit-form' : 'plano-create-form'} onSubmit={handleSubmit} style={{ padding: '1rem' }}>
           <div className="row g-2">
             <div className="col-md-6">
               <div className="mb-2">
@@ -267,12 +263,12 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   onChange={(e: any) => handleInputChange('nome_plano', e.value)}
                   error={errors.nome_plano}
                   isInvalid={!!errors.nome_plano}
-                  disabled={updatePlanoMutation.isPending}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                 />
               </div>
-            </div>
+          </div>
 
-            <div className="col-md-6">
+          <div className="col-md-6">
               <div className="mb-2">
                 <FormField
                   name="tipo_servico"
@@ -284,7 +280,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   onChange={(e: any) => handleInputChange('tipo_servico', e.value)}
                   error={errors.tipo_servico}
                   isInvalid={!!errors.tipo_servico}
-                  disabled={updatePlanoMutation.isPending}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                   options={[
                     { value: 'internet', label: 'Internet' },
                     { value: 'telefonia', label: 'Telefonia' },
@@ -297,24 +293,24 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                 />
               </div>
             </div>
-          </div>
+        </div>
 
-          <div className="mb-2">
-            <FormField
-              name="descricao"
-              type="textarea"
-              label="Descrição"
-              placeholder="Descrição detalhada do plano"
-              size="sm"
-              value={formData.descricao}
-              onChange={(e: any) => handleInputChange('descricao', e.value)}
-              disabled={updatePlanoMutation.isPending}
-              rows={2}
-            />
-          </div>
+              <div className="mb-2">
+                <FormField
+                  name="descricao"
+                  type="textarea"
+                  label="Descrição"
+                  placeholder="Descrição detalhada do plano"
+                  size="sm"
+                  value={formData.descricao}
+                  onChange={(e: any) => handleInputChange('descricao', e.value)}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
+                  rows={2}
+                />
+              </div>
 
-          <div className="row">
-            <div className="col-md-6">
+        <div className="row">
+          <div className="col-md-6">
               <div className="mb-2">
                 <FormField
                   name="valor_mensal"
@@ -322,18 +318,18 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   label="Valor Mensal"
                   placeholder="0.00"
                   required={true}
-                  size="sm"
+                  size="md"
                   value={formData.valor_mensal}
                   onChange={(e: any) => handleInputChange('valor_mensal', parseFloat(e.value) || 0)}
                   error={errors.valor_mensal?.toString()}
                   isInvalid={!!errors.valor_mensal}
-                  disabled={updatePlanoMutation.isPending}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                   step={0.01}
                 />
               </div>
-            </div>
+          </div>
 
-            <div className="col-md-6">
+          <div className="col-md-6">
               <div className="mb-2">
                 <FormField
                   name="quantidade_usuarios"
@@ -342,32 +338,32 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   size="sm"
                   value={formData.quantidade_usuarios}
                   onChange={(e: any) => handleInputChange('quantidade_usuarios', parseInt(e.value) || 1)}
-                  disabled={updatePlanoMutation.isPending}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                   min={1}
                 />
               </div>
-            </div>
           </div>
+        </div>
 
-          <div className="row">
-            <div className="col-md-6">
+        <div className="row">
+          <div className="col-md-6">
               <div className="mb-2">
                 <FormField
                   name="data_inicio"
                   type="date"
                   label="Data de Início"
                   required={true}
-                  size="sm"
+                  size="md"
                   value={formData.data_inicio}
                   onChange={(e: any) => handleInputChange('data_inicio', e.value)}
                   error={errors.data_inicio}
                   isInvalid={!!errors.data_inicio}
-                  disabled={updatePlanoMutation.isPending}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                 />
               </div>
-            </div>
+          </div>
 
-            <div className="col-md-6">
+          <div className="col-md-6">
               <div className="mb-2">
                 <FormField
                   name="data_fim"
@@ -376,63 +372,48 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   size="sm"
                   value={formData.data_fim}
                   onChange={(e: any) => handleInputChange('data_fim', e.value)}
-                  disabled={updatePlanoMutation.isPending}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                 />
               </div>
-            </div>
           </div>
+        </div>
 
+              <div className="mb-2">
+          <label className="form-label small">Serviços Inclusos</label>
           <div className="row">
-            <div className="col-md-6">
+            {servicosDisponiveis.map((servico) => (
+              <div key={servico} className="col-md-4 mb-2">
+                <FormField
+                  name={`servico_${servico}`}
+                  type="checkbox"
+                  label={servico}
+                  value={formData.servicos_inclusos.includes(servico)}
+                  onChange={() => handleServiceToggle(servico)}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
               <div className="mb-2">
                 <FormField
-                  name="ativo"
-                  type="checkbox"
-                  label="Ativo"
-                  value={formData.ativo}
-                  onChange={(value: any) => handleInputChange('ativo', value)}
-                  disabled={updatePlanoMutation.isPending}
+                  name="observacoes"
+                  type="textarea"
+                  label="Observações"
+                  placeholder="Observações adicionais sobre o plano"
+                  size="sm"
+                  value={formData.observacoes}
+                  onChange={(e: any) => handleInputChange('observacoes', e.value)}
+                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
+                  rows={2}
                 />
               </div>
-            </div>
-          </div>
 
-          <div className="mb-2">
-            <label className="form-label small">Serviços Inclusos</label>
-            <div className="row">
-              {servicosDisponiveis.map((servico) => (
-                <div key={servico} className="col-md-4 mb-2">
-                  <FormField
-                    name={`servico_${servico}`}
-                    type="checkbox"
-                    label={servico}
-                    value={formData.servicos_inclusos.includes(servico)}
-                    onChange={() => handleServiceToggle(servico)}
-                    disabled={updatePlanoMutation.isPending}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-2">
-            <FormField
-              name="observacoes"
-              type="textarea"
-              label="Observações"
-              placeholder="Observações adicionais sobre o plano"
-              size="sm"
-              value={formData.observacoes}
-              onChange={(e: any) => handleInputChange('observacoes', e.value)}
-              disabled={updatePlanoMutation.isPending}
-              rows={2}
-            />
-          </div>
-
-        </form>
-      )}
+      </form>
+        )}
     </DraggableModal>
   );
 };
 
-export default PlanoEditModal;
+export default PlanoModal;

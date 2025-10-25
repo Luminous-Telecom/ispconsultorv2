@@ -3,8 +3,7 @@ import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import ListModal from '../../common/ListModal';
-import PlanoCreateModal from './PlanoCreateModal';
-import PlanoEditModal from './PlanoEditModal';
+import PlanoModal from './PlanoModal';
 import { Plano } from '../../../types';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -273,26 +272,18 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         bulkActions={bulkActions}
       />
 
-      {/* Modal de Criação */}
-      <PlanoCreateModal
-        show={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={() => {
-          refetch();
-          setShowCreateModal(false);
-        }}
-      />
-
-      {/* Modal de Edição */}
-      <PlanoEditModal
-        show={showEditModal}
+      {/* Modal de Criação/Edição unificado */}
+      <PlanoModal
+        show={showCreateModal || showEditModal}
         onClose={() => {
+          setShowCreateModal(false);
           setShowEditModal(false);
           setSelectedPlanoId(null);
         }}
-        planoId={selectedPlanoId}
+        planoId={showEditModal ? selectedPlanoId : null}
         onSuccess={() => {
           refetch();
+          setShowCreateModal(false);
           setShowEditModal(false);
           setSelectedPlanoId(null);
         }}
