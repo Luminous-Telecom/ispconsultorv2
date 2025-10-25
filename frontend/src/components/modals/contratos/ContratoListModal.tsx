@@ -6,7 +6,6 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
-import ModalHeaderActions from '../../common/ModalHeaderActions';
 import ContratoCreateModal from '../clientes/ContratoCreateModal';
 import ContratoEditModal from '../clientes/ContratoEditModal';
 
@@ -215,22 +214,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     last_page: Math.ceil(filteredData.length / limit)
   };
 
-  // Ações para o header do modal
-  const headerActions = (
-    <ModalHeaderActions
-      bulkActions={bulkActions}
-      selectedItems={selectedItems}
-      search={search}
-      onSearchChange={setSearch}
-      searchPlaceholder="Buscar por cliente ou plano..."
-      limit={limit}
-      onLimitChange={setLimit}
-      pagination={pagination}
-      onPageChange={setPage}
-      onRefresh={() => refetch()}
-      idPrefix="contrato-list"
-    />
-  );
+  // Removido headerActions - botões agora ficam apenas na div interna do Table
 
   return (
     <DraggableModal
@@ -239,7 +223,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       title={title}
       size="lg"
       modalId="contrato-list-modal"
-      headerActions={headerActions}
     >
       <div>
         <Table

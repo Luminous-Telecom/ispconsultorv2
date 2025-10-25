@@ -9,7 +9,6 @@ import DocumentoModal from './DocumentoModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
-import ModalHeaderActions from '../../common/ModalHeaderActions';
 
 interface DocumentosSistemaModalProps {
   show: boolean;
@@ -198,28 +197,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     }
   ];
 
-  // Ações para o header do modal usando componente reutilizável
-  const headerActions = (
-    <ModalHeaderActions
-      bulkActions={bulkActions}
-      selectedItems={selectedItems}
-      search={search}
-      onSearchChange={setSearch}
-      searchPlaceholder={`Buscar ${getTipoLabel(activeTab).toLowerCase()}...`}
-      limit={limit}
-      onLimitChange={setLimit}
-      pagination={{
-        from: 1,
-        to: documentos?.data?.length || 0,
-        total: documentos?.data?.length || 0,
-        current_page: 1,
-        last_page: 1
-      }}
-      onPageChange={setPage}
-      onRefresh={() => refetch()}
-      idPrefix="documentos-sistema"
-    />
-  );
+  // Removido headerActions - botões agora ficam apenas na div interna do Table
 
   return (
     <>
@@ -229,7 +207,6 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         title="Modelos de Documentos"
         size="lg"
         modalId="documentos-sistema-modal"
-        headerActions={headerActions}
       >
         <div>
           {/* Abas */}
