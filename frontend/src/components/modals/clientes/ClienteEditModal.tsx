@@ -1380,25 +1380,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Busca, Filtros e Paginação - Linha 2 */}
-                    <div className="d-flex mb-3">
-                      {/* Busca à esquerda */}
-                      <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          id="contratos-search"
-                          name="contratosSearch"
-                          placeholder="Buscar por plano, status, valor..."
-                          value={searchContratos}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            setSearchContratos(e.target.value);
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ width: '300px', height: '32px' }}
-                        />
-                      </div>
+                    {/* Elementos de busca e paginação removidos - agora integrados no Table component */}
 
                       {/* Filtros após a busca */}
                       <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
