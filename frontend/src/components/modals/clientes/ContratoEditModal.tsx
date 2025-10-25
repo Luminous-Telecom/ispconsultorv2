@@ -21,6 +21,10 @@ import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
+import PlanoListModal from '../planos/PlanoListModal';
+import BancoListModal from '../bancos/BancoListModal';
+import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
+import { Banco, DocumentoSistema } from '../../../types';
 
 interface ContratoForm {
   plano_id: number;
@@ -96,6 +100,16 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  
+  // Estados dos modais de seleção
+  const [showPlanoModal, setShowPlanoModal] = useState(false);
+  const [showBancoModal, setShowBancoModal] = useState(false);
+  const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
+  
+  // Objetos selecionados
+  const [planoSelecionado, setPlanoSelecionado] = useState<Plano | null>(null);
+  const [bancoSelecionado, setBancoSelecionado] = useState<Banco | null>(null);
+  const [modeloContratoSelecionado, setModeloContratoSelecionado] = useState<DocumentoSistema | null>(null);
   
   const [search, setSearch] = useState('');
   const [searchTermos, setSearchTermos] = useState('');
@@ -274,6 +288,23 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     customData: customFormData
   });
 
+  // Carregar objetos selecionados quando os dados do contrato forem carregados
+  useEffect(() => {
+    if (contratoData && planos.length > 0 && bancos.length > 0 && modelosContrato.length > 0) {
+      // Encontrar plano selecionado
+      const plano = planos.find((p: Plano) => p.id === contratoData.plano_id);
+      if (plano) setPlanoSelecionado(plano);
+
+      // Encontrar banco selecionado
+      const banco = bancos.find((b: any) => b.id === contratoData.conta_boleto);
+      if (banco) setBancoSelecionado(banco);
+
+      // Encontrar modelo de contrato selecionado
+      const modelo = modelosContrato.find((m: any) => m.id === contratoData.modelo_contrato_id);
+      if (modelo) setModeloContratoSelecionado(modelo);
+    }
+  }, [contratoData, planos, bancos, modelosContrato]);
+
   const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -286,6 +317,25 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         [field]: undefined
       }));
     }
+  };
+
+  // Callbacks para seleção nos modais
+  const handlePlanoSelect = (plano: Plano) => {
+    setPlanoSelecionado(plano);
+    setFormData(prev => ({ ...prev, plano_id: plano.id }));
+    setShowPlanoModal(false);
+  };
+
+  const handleBancoSelect = (banco: Banco) => {
+    setBancoSelecionado(banco);
+    setFormData(prev => ({ ...prev, conta_boleto: banco.id }));
+    setShowBancoModal(false);
+  };
+
+  const handleModeloContratoSelect = (modelo: DocumentoSistema) => {
+    setModeloContratoSelecionado(modelo);
+    setFormData(prev => ({ ...prev, modelo_contrato_id: modelo.id }));
+    setShowModeloContratoModal(false);
   };
 
   const validateForm = (): boolean => {
@@ -934,21 +984,23 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <div className="row">
           {/* Plano */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="plano_id" className="form-label">Plano *</label>
-            <select
-              id="plano_id"
-              name="plano_id"
-              className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
-              value={formData.plano_id}
-              onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
-            >
-              <option value={0}>Selecione um plano</option>
-              {planos.map((plano: Plano) => (
-                <option key={plano.id} value={plano.id}>
-                  {plano.nome_plano}
-                </option>
-              ))}
-            </select>
+            <label className="form-label">Plano *</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className={`form-control ${errors.plano_id ? 'is-invalid' : ''}`}
+                value={planoSelecionado ? planoSelecionado.nome_plano : ''}
+                placeholder="Selecione um plano"
+                readOnly
+              />
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setShowPlanoModal(true)}
+              >
+                Selecionar
+              </button>
+            </div>
             {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
           </div>
 
@@ -1016,21 +1068,23 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Banco para Boleto */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="conta_boleto" className="form-label">Banco para Boleto *</label>
-            <select
-              id="conta_boleto"
-              name="conta_boleto"
-              className={`form-select ${errors.conta_boleto ? 'is-invalid' : ''}`}
-              value={formData.conta_boleto}
-              onChange={(e) => handleInputChange('conta_boleto', parseInt(e.target.value))}
-            >
-              <option value={0}>Selecione um banco</option>
-              {bancos.map((banco: any) => (
-                <option key={banco.id} value={banco.id}>
-                  {banco.nome}
-                </option>
-              ))}
-            </select>
+            <label className="form-label">Banco para Boleto *</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className={`form-control ${errors.conta_boleto ? 'is-invalid' : ''}`}
+                value={bancoSelecionado ? bancoSelecionado.nome : ''}
+                placeholder="Selecione um banco"
+                readOnly
+              />
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setShowBancoModal(true)}
+              >
+                Selecionar
+              </button>
+            </div>
             {errors.conta_boleto && <div className="invalid-feedback">{errors.conta_boleto}</div>}
           </div>
 
@@ -1100,22 +1154,25 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Modelo de Contrato */}
           <div className="col-md-12 mb-3">
-            <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato *</label>
-            <select
-              className={`form-select ${errors.modelo_contrato_id ? 'is-invalid' : ''}`}
-              id="modelo_contrato_id"
-              name="modelo_contrato_id"
-              value={formData.modelo_contrato_id || 0}
-              onChange={(e) => handleInputChange('modelo_contrato_id', parseInt(e.target.value))}
-              disabled={updateContratoMutation.isPending}
-            >
-              <option value={0}>Selecione um modelo</option>
-              {modelosContrato.map((modelo: any) => (
-                <option key={modelo.id} value={modelo.id}>
-                  {modelo.id} - {modelo.nome}
-                </option>
-              ))}
-            </select>
+            <label className="form-label small">Modelo de Contrato *</label>
+            <div className="input-group">
+              <input
+                type="text"
+                className={`form-control ${errors.modelo_contrato_id ? 'is-invalid' : ''}`}
+                value={modeloContratoSelecionado ? `${modeloContratoSelecionado.id} - ${modeloContratoSelecionado.nome}` : ''}
+                placeholder="Selecione um modelo de contrato"
+                readOnly
+                disabled={updateContratoMutation.isPending}
+              />
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setShowModeloContratoModal(true)}
+                disabled={updateContratoMutation.isPending}
+              >
+                Selecionar
+              </button>
+            </div>
             {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
             <small className="form-text text-muted">
               Selecione um modelo de contrato cadastrado no sistema
@@ -2070,6 +2127,28 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       pdfUrl={pdfUrl}
       title="Visualizar Termo"
       modalId="termo-imprimir-modal"
+    />
+
+    {/* Modais de seleção */}
+    <PlanoListModal
+      show={showPlanoModal}
+      onClose={() => setShowPlanoModal(false)}
+      onSelectPlano={handlePlanoSelect}
+      title="Selecionar Plano"
+    />
+
+    <BancoListModal
+      show={showBancoModal}
+      onClose={() => setShowBancoModal(false)}
+      onSelectBanco={handleBancoSelect}
+      title="Selecionar Banco"
+    />
+
+    <ModeloContratoSelectModal
+      show={showModeloContratoModal}
+      onClose={() => setShowModeloContratoModal(false)}
+      onSelectModelo={handleModeloContratoSelect}
+      title="Selecionar Modelo de Contrato"
     />
   </>
   );
