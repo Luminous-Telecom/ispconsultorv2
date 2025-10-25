@@ -45,6 +45,8 @@ interface FormFieldProps extends BaseComponentProps, ValidationProps, TooltipPro
   iconPosition?: 'left' | 'right';
   iconSize?: 'sm' | 'md' | 'lg';
   isInvalid?: boolean;
+  // Prefixo para gerar IDs únicos
+  formPrefix?: string;
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -94,9 +96,10 @@ const FormField: React.FC<FormFieldProps> = ({
   icon,
   iconPosition = 'left',
   iconSize = 'md',
+  formPrefix,
 }) => {
-  // Gerar ID único se não fornecido
-  const fieldId = id || `field-${name}`;
+  // Gerar ID único usando prefixo do formulário
+  const fieldId = id || `${formPrefix ? `${formPrefix}-` : ''}field-${name}`;
 
   // Handler para onChange
   const handleChange = (changeValue: any, changeName?: string) => {

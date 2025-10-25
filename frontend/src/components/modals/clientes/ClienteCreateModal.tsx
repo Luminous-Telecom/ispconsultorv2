@@ -7,6 +7,7 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { Button } from '../../ui';
 import { Form, FormConfig } from '../../forms';
+import { useFormPrefix } from '../../../hooks/useFormId';
 
 interface ClienteForm {
   cnpj: string;
@@ -52,6 +53,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
 }) => {
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
+  const formPrefix = useFormPrefix('ClienteCreateModal');
 
   const [formData, setFormData] = useState<ClienteForm>({
     cnpj: '',
@@ -393,6 +395,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
         key={`cliente-create-${formData.cnpj}-${formData.razao_social}`}
         config={formConfig}
         initialValues={formData}
+        formPrefix={formPrefix}
         onSubmit={(data) => {
           createClienteMutation.mutate(data as ClienteForm);
         }}

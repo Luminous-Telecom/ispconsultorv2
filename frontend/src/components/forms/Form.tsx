@@ -22,6 +22,7 @@ interface FormProps {
   submitButtonVariant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
   resetButtonVariant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
   className?: string;
+  formPrefix?: string;
 }
 
 // Componente interno que renderiza o formulário
@@ -35,6 +36,7 @@ const FormContent: React.FC<{
   submitButtonVariant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
   resetButtonVariant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
   className?: string;
+  formPrefix?: string;
 }> = ({
   config,
   children,
@@ -45,6 +47,7 @@ const FormContent: React.FC<{
   submitButtonVariant = 'primary',
   resetButtonVariant = 'secondary',
   className = '',
+  formPrefix,
 }) => {
   const { state, actions } = useFormContext();
 
@@ -96,6 +99,7 @@ const FormContent: React.FC<{
         error={state.errors[field.name]}
         isValid={!state.errors[field.name] && state.touched[field.name]}
         isInvalid={!!state.errors[field.name]}
+        formPrefix={formPrefix}
       />
     ));
   };
@@ -204,6 +208,7 @@ const Form: React.FC<FormProps> = ({
   submitButtonVariant = 'primary',
   resetButtonVariant = 'secondary',
   className = '',
+  formPrefix,
 }) => {
   return (
     <FormProvider
@@ -227,6 +232,7 @@ const Form: React.FC<FormProps> = ({
         submitButtonVariant={submitButtonVariant}
         resetButtonVariant={resetButtonVariant}
         className={className}
+        formPrefix={formPrefix}
       />
     </FormProvider>
   );
