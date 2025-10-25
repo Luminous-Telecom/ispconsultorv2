@@ -8,6 +8,7 @@ import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaSe
 import ModeloTermoService, { ModeloTermo } from '../../../services/modeloTermoService';
 import RichTextEditor from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import FormField from '../../ui/FormField';
 import { ClienteService } from '../../../services/clienteService';
 
 type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta | ModeloTermo;
@@ -642,30 +643,26 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
             {/* Campos superiores em linha única */}
             <div className="row g-2 mb-2">
               <div className="col-md-6">
-                <label htmlFor="doc-nome" className="form-label small mb-1">
-                  Nome <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  id="doc-nome"
+                <FormField
                   name="nome"
+                  type="text"
+                  label="Nome"
                   value={formData.nome}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, nome: e.value }))}
                   placeholder={isEditing ? undefined : `Ex: ${getTipoLabel(tipo)} Padrão`}
                   required
+                  size="sm"
                 />
               </div>
               <div className="col-md-6">
-                <label htmlFor="doc-descricao" className="form-label small mb-1">Descrição</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  id="doc-descricao"
+                <FormField
                   name="descricao"
+                  type="text"
+                  label="Descrição"
                   value={formData.descricao}
-                  onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                  onChange={(e: any) => setFormData(prev => ({ ...prev, descricao: e.value }))}
                   placeholder="Breve descrição"
+                  size="sm"
                 />
               </div>
             </div>

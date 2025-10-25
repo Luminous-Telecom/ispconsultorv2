@@ -325,18 +325,15 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                   )}
                 </div>
                 <div className="flex-grow-1">
-                  <input
-                    type="file"
-                    className="form-control"
-                    id="logo"
+                  <FormField
                     name="logo"
-                    accept="image/*"
+                    type="file"
+                    value=""
                     onChange={onLogoChange}
                     disabled={updateDadosMutation.isPending}
+                    accept="image/*"
+                    helpText="Formatos aceitos: JPG, PNG, GIF (máx. 2MB)"
                   />
-                  <small className="text-secondary text-secondary">
-                    Formatos aceitos: JPG, PNG, GIF (máx. 2MB)
-                  </small>
                 </div>
               </div>
             </div>
