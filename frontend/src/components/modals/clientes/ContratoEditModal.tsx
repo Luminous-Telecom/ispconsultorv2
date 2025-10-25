@@ -1012,10 +1012,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 onClick={() => setShowPlanoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn btn-outline-secondary"
+                className="btn"
                 style={{
                   borderLeft: 'none',
-                  borderColor: '#ced4da'
+                  border: '1px solid #ced4da',
+                  color: '#6c757d'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1119,10 +1120,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 onClick={() => setShowBancoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn btn-outline-secondary"
+                className="btn"
                 style={{
                   borderLeft: 'none',
-                  borderColor: '#ced4da'
+                  border: '1px solid #ced4da',
+                  color: '#6c757d'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1226,10 +1228,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 onClick={() => setShowModeloContratoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn btn-outline-secondary"
+                className="btn"
                 style={{
                   borderLeft: 'none',
-                  borderColor: '#ced4da'
+                  border: '1px solid #ced4da',
+                  color: '#6c757d'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
