@@ -8,6 +8,7 @@ import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { Cliente, CarneParcela, Contrato, Titulo } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
+import FormField from '../../ui/FormField';
 import { useFormPrefix } from '../../../hooks/useFormId';
 import DataTable from '../../common/DataTable';
 import ImprimirModal from '../../common/ImprimirModal';
@@ -1042,51 +1043,33 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   <h6 className="text-primary mb-3">Preferências de Comunicação</h6>
                   
                   <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_email"
-                        name="recebe_email"
-                        checked={formData.recebe_email}
-                        onChange={(e) => handleInputChange('recebe_email', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_email">
-                        Recebe Email
-                      </label>
-                    </div>
+                    <FormField
+                      name="recebe_email"
+                      type="checkbox"
+                      label="Recebe Email"
+                      value={formData.recebe_email}
+                      onChange={(value: any) => handleInputChange('recebe_email', value)}
+                    />
                   </div>
 
                   <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_sms"
-                        name="recebe_sms"
-                        checked={formData.recebe_sms}
-                        onChange={(e) => handleInputChange('recebe_sms', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_sms">
-                        Recebe SMS
-                      </label>
-                    </div>
+                    <FormField
+                      name="recebe_sms"
+                      type="checkbox"
+                      label="Recebe SMS"
+                      value={formData.recebe_sms}
+                      onChange={(value: any) => handleInputChange('recebe_sms', value)}
+                    />
                   </div>
 
                   <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="recebe_whatsapp"
-                        name="recebe_whatsapp"
-                        checked={formData.recebe_whatsapp}
-                        onChange={(e) => handleInputChange('recebe_whatsapp', e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="recebe_whatsapp">
-                        Recebe WhatsApp
-                      </label>
-                    </div>
+                    <FormField
+                      name="recebe_whatsapp"
+                      type="checkbox"
+                      label="Recebe WhatsApp"
+                      value={formData.recebe_whatsapp}
+                      onChange={(value: any) => handleInputChange('recebe_whatsapp', value)}
+                    />
                   </div>
                 </div>
               </div>

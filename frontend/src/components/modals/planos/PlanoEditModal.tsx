@@ -390,7 +390,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
                   type="checkbox"
                   label="Ativo"
                   value={formData.ativo}
-                  onChange={(e: any) => handleInputChange('ativo', e.value)}
+                  onChange={(value: any) => handleInputChange('ativo', value)}
                   disabled={updatePlanoMutation.isPending}
                 />
               </div>

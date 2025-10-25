@@ -411,20 +411,14 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
               </div>
 
               <div className="col-md-6">
-                <div className="form-check mt-4">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="incluir_taxa"
-                    name="incluir_taxa"
-                    checked={formData.incluir_taxa}
-                    onChange={(e) => handleInputChange('incluir_taxa', e.target.checked)}
-                    disabled={createBancoMutation.isPending}
-                  />
-                  <label className="form-check-label" htmlFor="incluir_taxa">
-                    Incluir Taxa no Boleto
-                  </label>
-                </div>
+                <FormField
+                  name="incluir_taxa"
+                  type="checkbox"
+                  label="Incluir Taxa no Boleto"
+                  value={formData.incluir_taxa}
+                  onChange={(value: any) => handleInputChange('incluir_taxa', value)}
+                  disabled={createBancoMutation.isPending}
+                />
               </div>
             </div>
           </>
@@ -556,23 +550,15 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
 
           <div className="row">
                 <div className="col-md-12">
-              <div className="form-check mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="sandbox"
-                  name="sandbox"
-                  checked={formData.sandbox}
-                  onChange={(e) => handleInputChange('sandbox', e.target.checked)}
-                  disabled={createBancoMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="sandbox">
-                      Modo Sandbox (Testes)
-                </label>
-                    <small className="text-secondary text-secondary d-block">
-                      Ative para usar ambiente de testes. Desative para produção.
-                    </small>
-              </div>
+              <FormField
+                name="sandbox"
+                type="checkbox"
+                label="Modo Sandbox (Testes)"
+                value={formData.sandbox}
+                onChange={(value: any) => handleInputChange('sandbox', value)}
+                disabled={createBancoMutation.isPending}
+                description="Ative para usar ambiente de testes. Desative para produção."
+              />
             </div>
               </div>
             </>
