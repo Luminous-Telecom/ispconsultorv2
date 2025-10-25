@@ -27,14 +27,17 @@ export interface ContratoItem {
 
 export interface TituloItem {
   id: number;
-  numero_titulo: string;
+  numero_titulo?: string;
+  numero_parcela?: number;
   status: string;
-  valor: number;
+  valor?: number;
   valor_parcela: number;
-  valor_pago: number | null;
+  valor_pago?: number | null;
   data_vencimento: string;
   data_pagamento: string | null;
   charge_id: string | null;
+  cliente?: any;
+  carne?: any;
 }
 
 export interface BulkActionItem {

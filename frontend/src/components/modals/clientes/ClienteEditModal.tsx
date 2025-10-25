@@ -23,29 +23,10 @@ import { Form, FormConfig, AddressFields, ContactFields } from '../../forms';
 import Button from '../../ui/Button';
 import Dropdown from '../../ui/Dropdown';
 import ConfirmModal from '../../ui/ConfirmModal';
-
-interface ClienteForm {
-  cnpj: string;
-  razao_social: string;
-  nome_fantasia: string;
-  email: string;
-  telefone: string;
-  whatsapp: string;
-  cep: string;
-  endereco: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-  ativo: boolean;
-  tipo_cobranca: 'titulo';
-  valor_primeiro_titulo: 'total' | 'proporcional';
-  recebe_email: boolean;
-  recebe_sms: boolean;
-  recebe_whatsapp: boolean;
-  observacoes: string;
-}
+// Utilitários centralizados
+import { formatCurrency, formatDate } from '../../../utils/formatters';
+import { validateClienteForm } from '../../../utils/validators';
+import { ContratoItem, TituloItem, ClienteFormData, ClienteFormErrors, BulkActionItem } from '../../../types/cliente';
 
 interface ClienteEditModalProps {
   show: boolean;
@@ -69,7 +50,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   };
   const queryClient = useQueryClient();
 
-  const [formData, setFormData] = useState<ClienteForm>({
+  const [formData, setFormData] = useState<ClienteFormData>({
     cnpj: '',
     razao_social: '',
     nome_fantasia: '',
@@ -92,7 +73,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     observacoes: ''
   });
 
-  const [errors, setErrors] = useState<Partial<ClienteForm>>({});
+  const [errors, setErrors] = useState<ClienteFormErrors>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
   const [showCancelados, setShowCancelados] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
@@ -105,9 +86,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
-  const [selectedParcela, setSelectedParcela] = useState<any>(null);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
-  const [selectedContratosItems, setSelectedContratosItems] = useState<any[]>([]);
+  const [selectedParcela, setSelectedParcela] = useState<TituloItem | null>(null);
+  const [selectedItems, setSelectedItems] = useState<TituloItem[]>([]);
+  const [selectedContratosItems, setSelectedContratosItems] = useState<ContratoItem[]>([]);
   const [showInativosContratos, setShowInativosContratos] = useState(false);
   const [searchContratos, setSearchContratos] = useState('');
   const [searchFinanceiro, setSearchFinanceiro] = useState('');
@@ -316,8 +297,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           valueB = b.carne?.numero_carne || '';
           break;
         case 'quantidade_parcelas':
-          valueA = a.numero_parcela;
-          valueB = b.numero_parcela;
+          valueA = (a.numero_parcela || a.numero_titulo || a.id).toString();
+          valueB = (b.numero_parcela || b.numero_titulo || b.id).toString();
           break;
         case 'data_vencimento':
           valueA = new Date(a.data_vencimento);
@@ -664,7 +645,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       onClick: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
-          setSelectedParcela(item);
+          setSelectedParcela({
+            ...item,
+            valor_pago: item.valor_pago ?? null
+          } as TituloItem);
           setShowReceberModal(true);
         }
       }
@@ -736,8 +720,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           const item = selectedItems[0];
           if (item.status === 'pago') {
             const confirmar = window.confirm(
-              `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-              `Valor: R$ ${item.valor_pago || item.valor}\n` +
+              `Tem certeza que deseja estornar o título ${item.numero_titulo || item.id}?\n\n` +
+              `Valor: ${formatCurrency(item.valor_pago || item.valor || 0)}\n` +
               `O título voltará para status PENDENTE.`
             );
             
@@ -855,25 +839,25 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      render: (contrato: any) => contrato.id
+      render: (contrato: ContratoItem) => contrato.id
     },
     {
       key: 'nome_plano',
       label: 'Plano',
       sortable: true,
-      render: (contrato: any) => contrato.plano?.nome_plano || '-'
+      render: (contrato: ContratoItem) => contrato.plano?.nome_plano || '-'
     },
     {
       key: 'valor_plano',
       label: 'Valor Plano',
       sortable: true,
-      render: (contrato: any) => contrato.plano?.valor_mensal ? `R$ ${contrato.plano.valor_mensal}` : '-'
+      render: (contrato: ContratoItem) => contrato.plano?.valor_mensal ? formatCurrency(contrato.plano.valor_mensal) : '-'
     },
     {
       key: 'status',
       label: 'Status',
       sortable: true,
-      render: (contrato: any) => (
+      render: (contrato: ContratoItem) => (
         <span className={`badge ${
           contrato.status === 'ativo' ? 'bg-success' :
           contrato.status === 'inativo' ? 'bg-danger' :
@@ -887,37 +871,37 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'desconto_percentual',
       label: 'Desconto %',
       sortable: true,
-      render: (contrato: any) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
+      render: (contrato: ContratoItem) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
     },
     {
       key: 'desconto_valor',
       label: 'Desconto R$',
       sortable: true,
-      render: (contrato: any) => contrato.desconto_valor ? `R$ ${contrato.desconto_valor}` : '-'
+      render: (contrato: ContratoItem) => contrato.desconto_valor ? formatCurrency(contrato.desconto_valor) : '-'
     },
     {
       key: 'valor_final',
       label: 'Valor Final',
       sortable: true,
-      render: (contrato: any) => contrato.valor_final ? `R$ ${contrato.valor_final}` : '-'
+      render: (contrato: ContratoItem) => contrato.valor_final ? formatCurrency(contrato.valor_final) : '-'
     },
     {
       key: 'data_inicio',
       label: 'Data Início',
       sortable: true,
-      render: (contrato: any) => contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'
+      render: (contrato: ContratoItem) => formatDate(contrato.data_inicio)
     },
     {
       key: 'data_fim',
       label: 'Data Fim',
       sortable: true,
-      render: (contrato: any) => contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'
+      render: (contrato: ContratoItem) => contrato.data_fim ? formatDate(contrato.data_fim) : '-'
     },
     {
       key: 'isento_mensalidade',
       label: 'Isento',
       sortable: true,
-      render: (contrato: any) => (
+      render: (contrato: ContratoItem) => (
         <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
           {contrato.isento_mensalidade ? 'Sim' : 'Não'}
         </span>
@@ -927,13 +911,13 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       key: 'dia_vencimento',
       label: 'Dia Venc.',
       sortable: true,
-      render: (contrato: any) => contrato.dia_vencimento ? contrato.dia_vencimento : '-'
+      render: (contrato: ContratoItem) => contrato.dia_vencimento ? contrato.dia_vencimento : '-'
     },
     {
       key: 'banco_nome',
       label: 'Banco',
       sortable: true,
-      render: (contrato: any) => contrato.bancoBoleto?.nome || '-'
+      render: (contrato: ContratoItem) => contrato.bancoBoleto?.nome || '-'
     }
   ];
 
@@ -970,7 +954,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       label: 'Vencimento',
       sortable: true,
       render: (item: CarneParcela) => {
-        return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
+        return formatDate(item.data_vencimento);
       }
     },
     {
@@ -978,7 +962,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       label: 'Valor',
       sortable: true,
       render: (item: CarneParcela) => {
-        return `R$ ${Number(item.valor || 0).toFixed(2)}`;
+        return formatCurrency(item.valor || 0);
       }
     },
     {
@@ -986,7 +970,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       label: 'Valor baixado',
       sortable: true,
       render: (item: CarneParcela) => {
-        return item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00';
+        return item.status === 'pago' ? formatCurrency(item.valor_pago || item.valor || 0) : formatCurrency(0);
       }
     },
     {
@@ -994,7 +978,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       label: 'Valor aberto',
       sortable: true,
       render: (item: CarneParcela) => {
-        return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
+        return (item.status === 'pago' || item.status === 'cancelado') ? formatCurrency(0) : formatCurrency(item.valor || 0);
       }
     },
     {
@@ -1002,7 +986,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       label: 'Data Pagamento',
       sortable: true,
       render: (item: CarneParcela) => {
-        return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
+        return item.data_pagamento ? formatDate(item.data_pagamento) : '-';
       }
     },
     {
@@ -1031,7 +1015,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   });
 
   // Dados iniciais do formulário
-  const initialFormData: ClienteForm = {
+  const initialFormData: ClienteFormData = {
     cnpj: '',
     razao_social: '',
     nome_fantasia: '',
@@ -1113,11 +1097,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     customData: customFormData
   });
 
-  const handleInputChange = (field: keyof ClienteForm, value: any) => {
+  const handleInputChange = (field: keyof ClienteFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Limpar erro do campo quando o usuário começar a digitar
-    if (errors[field]) {
+    if (errors[field as keyof ClienteFormErrors]) {
       setErrors(prev => ({
         ...prev,
         [field]: undefined
@@ -1347,7 +1331,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     includeEmail={true}
                     includeWhatsApp={true}
                     formData={formData}
-                    onChange={(name: string, value: any) => handleInputChange(name as keyof ClienteForm, value)}
+                    onChange={(name: string, value: any) => handleInputChange(name as keyof ClienteFormData, value)}
                     errors={errors}
                   />
                 </div>
@@ -1397,7 +1381,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 required={false}
                 size="md"
                 formData={formData}
-                onChange={(name: string, value: any) => handleInputChange(name as keyof ClienteForm, value)}
+                onChange={(name: string, value: any) => handleInputChange(name as keyof ClienteFormData, value)}
                 errors={errors}
               />
             )}
@@ -1410,7 +1394,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   <Table
                     config={{
                       columns: contratosColumns,
-                      data: contratosData || [],
+                      data: contratosData as ContratoItem[] || [],
                       loading: isLoadingContratos,
                       selectable: true,
                       multiSelect: true,
@@ -1514,7 +1498,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         </div>
                       )
                     }}
-                    onSelectionChange={setSelectedItems}
+                      onSelectionChange={(items: any[]) => setSelectedItems(items as TituloItem[])}
                     onRefresh={() => refetchParcelas()}
                   />
 
@@ -1613,7 +1597,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           }}
           parcela={selectedParcela ? {
             id: selectedParcela.id,
-            numero_titulo: selectedParcela.numero_titulo || `Parcela ${selectedParcela.numero_parcela}`,
+            numero_titulo: (selectedParcela.numero_titulo || selectedParcela.numero_parcela || `Título ${selectedParcela.id}`).toString(),
             valor_parcela: selectedParcela.valor || selectedParcela.valor_parcela,
             data_vencimento: selectedParcela.data_vencimento,
             cliente: selectedParcela.cliente || selectedParcela.carne?.cliente
