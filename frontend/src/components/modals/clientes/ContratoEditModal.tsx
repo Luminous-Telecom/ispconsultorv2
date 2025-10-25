@@ -1303,11 +1303,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         {activeTab === 'termos' && (
           <div className="row">
             <div className="col-12">
-              {/* Cabeçalho fixo - não rola */}
-              <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
-                {/* Botões de Ação - Linha 1 */}
-                <div className="d-flex justify-content-start mb-3">
-                  <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
+              {/* Botões de Ação */}
+              <div className="d-flex justify-content-start mb-3">
+                <div className="d-flex" style={{ gap: '8px' }}>
                     {termosBulkActions.map((bulkAction, index) => {
                       // Botão "Novo" sempre habilitado, outros apenas quando há seleção
                       const isNewButton = bulkAction.label === 'Novo';
@@ -1402,7 +1400,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 {/* Busca, Filtros e Paginação - Linha 2 */}
                 <div className="d-flex mb-3">
                   {/* Busca à esquerda */}
-                  <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
+                  <div className="d-flex gap-2">
                     <input
                       type="text"
                       id="termos-search"
@@ -1420,7 +1418,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   </div>
 
                   {/* Filtros após a busca */}
-                  <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
+                  <div className="d-flex gap-3 align-items-center">
                     <div className="form-check">
                       <input 
                         className="form-check-input" 
@@ -1573,7 +1571,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
                   {/* Botões de Ação - Linha 1 */}
                   <div className="d-flex justify-content-start mb-3">
-                    <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
+                    <div className="d-flex" style={{ gap: '8px' }}>
                       {bulkActions.map((bulkAction, index) => {
                         // Botão "Novo" sempre habilitado, outros apenas quando há seleção
                         const isNewButton = bulkAction.label === 'Novo';
@@ -1672,7 +1670,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   {/* Busca, Filtros e Paginação - Linha 2 */}
                   <div className="d-flex mb-3">
                     {/* Busca à esquerda */}
-                    <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
+                    <div className="d-flex gap-2">
                       <input
                         type="text"
                         id="contrato-search"
@@ -1690,7 +1688,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     </div>
 
                     {/* Filtros após a busca */}
-                    <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
+                    <div className="d-flex gap-3 align-items-center">
                       <div className="form-check">
                         <input 
                           className="form-check-input" 
