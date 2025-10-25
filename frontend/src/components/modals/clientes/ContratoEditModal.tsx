@@ -24,6 +24,7 @@ import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import PlanoListModal from '../planos/PlanoListModal';
 import BancoListModal from '../bancos/BancoListModal';
 import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
+import '../contratos/ContratoModals.css';
 import { Banco } from '../../../types';
 import { DocumentoSistema } from '../../../services/documentoSistemaService';
 
@@ -1006,19 +1007,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="text"
                 className="form-control"
                 value={planoSelecionado ? planoSelecionado.nome_plano : ''}
-                style={{ borderRight: 'none' }}
+                style={{ borderRight: 'none', borderColor: '#dee2e6' }}
               />
               <button
                 type="button"
                 onClick={() => setShowPlanoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn"
-                style={{
-                  borderLeft: 'none',
-                  border: '1px solid #ced4da',
-                  color: '#6c757d',
-                  padding: '0.375rem 0.75rem'
-                }}
+                className="search-button"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                   <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
@@ -1115,19 +1110,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="text"
                 className="form-control"
                 value={bancoSelecionado ? bancoSelecionado.nome : ''}
-                style={{ borderRight: 'none' }}
+                style={{ borderRight: 'none', borderColor: '#dee2e6' }}
               />
               <button
                 type="button"
                 onClick={() => setShowBancoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn"
-                style={{
-                  borderLeft: 'none',
-                  border: '1px solid #ced4da',
-                  color: '#6c757d',
-                  padding: '0.375rem 0.75rem'
-                }}
+                className="search-button"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                   <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
@@ -1224,19 +1213,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="text"
                 className="form-control"
                 value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
-                style={{ borderRight: 'none' }}
+                style={{ borderRight: 'none', borderColor: '#dee2e6' }}
               />
               <button
                 type="button"
                 onClick={() => setShowModeloContratoModal(true)}
                 title="Abrir listagem de registros"
-                className="btn"
-                style={{
-                  borderLeft: 'none',
-                  border: '1px solid #ced4da',
-                  color: '#6c757d',
-                  padding: '0.375rem 0.75rem'
-                }}
+                className="search-button"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                   <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
