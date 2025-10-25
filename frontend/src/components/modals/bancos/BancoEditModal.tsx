@@ -219,10 +219,10 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
 
   // Atualizar formData quando banco for carregado
   useEffect(() => {
-    if (banco && show) {
+    if (banco && show && customFormData) {
       setFormData(customFormData);
     }
-  }, [banco, show]);
+  }, [banco, show, customFormData]);
 
   // Mutation para atualizar banco
   const updateBancoMutation = useMutation({
