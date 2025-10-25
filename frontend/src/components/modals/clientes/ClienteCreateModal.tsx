@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../../../services/clienteService';
 import { PlanoService } from '../../../services/planoService';
@@ -40,17 +40,20 @@ interface ClienteForm {
   observacoes: string;
 }
 
-interface ClienteCreateModalProps {
+interface ClienteModalProps {
   show: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  clienteId?: number | null; // Se passar clienteId, é edição; se não, é criação
 }
 
-const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({ 
+const ClienteModal: React.FC<ClienteModalProps> = ({ 
   show, 
   onClose, 
-  onSuccess 
+  onSuccess,
+  clienteId 
 }) => {
+  const isEditing = !!clienteId;
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   const formPrefix = useFormPrefix('ClienteCreateModal');
@@ -85,6 +88,49 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
     data_inicio_plano: '',
     observacoes: '',
   });
+
+  // Buscar dados do cliente se estiver editando
+  const { data: clienteData, isLoading } = useQuery({
+    queryKey: ['cliente', clienteId],
+    queryFn: () => ClienteService.getById(clienteId!),
+    enabled: isEditing && !!clienteId,
+  });
+
+  // Carregar dados do cliente quando modal abrir em modo edição
+  useEffect(() => {
+    if (isEditing && clienteData && show) {
+      setFormData({
+        cnpj: clienteData.cnpj || '',
+        razao_social: clienteData.razao_social || '',
+        nome_fantasia: clienteData.nome_fantasia || '',
+        email: clienteData.email || '',
+        telefone: clienteData.telefone || '',
+        whatsapp: clienteData.whatsapp || '',
+        cep: clienteData.cep || '',
+        endereco: clienteData.endereco || '',
+        numero: clienteData.numero || '',
+        complemento: clienteData.complemento || '',
+        bairro: clienteData.bairro || '',
+        cidade: clienteData.cidade || '',
+        estado: clienteData.estado || '',
+        ativo: clienteData.ativo ?? true,
+        tipo_cobranca: clienteData.tipo_cobranca || 'carne',
+        valor_primeiro_titulo: clienteData.valor_primeiro_titulo || 'total',
+        dia_vencimento: clienteData.dia_vencimento || 10,
+        conta_boleto: clienteData.conta_boleto || 0,
+        isento_mensalidade: clienteData.isento_mensalidade ?? false,
+        recebe_email: clienteData.recebe_email ?? true,
+        recebe_sms: clienteData.recebe_sms ?? false,
+        recebe_whatsapp: clienteData.recebe_whatsapp ?? false,
+        plano_id: 0,
+        desconto_percentual: 0,
+        desconto_valor: 0,
+        data_validade_desconto: '',
+        data_inicio_plano: '',
+        observacoes: clienteData.observacoes || ''
+      });
+    }
+  }, [isEditing, clienteData, show]);
 
   // Queries para buscar dados
   const { data: planos } = useQuery({
@@ -360,6 +406,21 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
     },
   });
 
+  // Mutation para atualizar cliente
+  const updateClienteMutation = useMutation({
+    mutationFn: (data: ClienteForm) => ClienteService.update(clienteId!, data),
+    onSuccess: () => {
+      success('Cliente atualizado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['clientes', clienteId] });
+      queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
+      onSuccess?.();
+      onClose();
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao atualizar cliente');
+    },
+  });
+
   const handleCancel = () => {
     onClose();
   };
@@ -368,36 +429,47 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
     <DraggableModal
       show={show}
       onClose={handleCancel}
-      title="Cliente"
-      modalId="cliente-create-modal"
+      title={isEditing ? 'Editar Cliente' : 'Novo Cliente'}
+      modalId={isEditing ? 'cliente-edit-modal' : 'cliente-create-modal'}
       headerActions={
         <div className="d-flex gap-2">
           <Button
             variant="secondary"
             size="sm"
             onClick={handleCancel}
-            disabled={createClienteMutation.isPending}
+            disabled={isEditing ? updateClienteMutation.isPending : createClienteMutation.isPending}
           >
             Cancelar
           </Button>
           <Button
             variant="primary"
             size="sm"
-            disabled={createClienteMutation.isPending}
-            loading={createClienteMutation.isPending}
+            disabled={isEditing ? updateClienteMutation.isPending : createClienteMutation.isPending}
+            loading={isEditing ? updateClienteMutation.isPending : createClienteMutation.isPending}
           >
-            Criar Cliente
+            {isEditing ? 'Salvar Cliente' : 'Criar Cliente'}
           </Button>
         </div>
       }
     >
-      <Form
+      {isLoading ? (
+        <div className="text-center p-3">
+          <div className="spinner-border spinner-border-sm" role="status">
+            <span className="visually-hidden">Carregando...</span>
+          </div>
+        </div>
+      ) : (
+        <Form
         key={`cliente-create-${formData.cnpj}-${formData.razao_social}`}
         config={formConfig}
         initialValues={formData}
         formPrefix={formPrefix}
         onSubmit={(data) => {
-          createClienteMutation.mutate(data as ClienteForm);
+          if (isEditing) {
+            updateClienteMutation.mutate(data as ClienteForm);
+          } else {
+            createClienteMutation.mutate(data as ClienteForm);
+          }
         }}
         onReset={() => {
           setFormData({
@@ -435,8 +507,9 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
         showResetButton={false}
         className="cliente-form"
       />
+        )}
     </DraggableModal>
   );
 };
 
-export default ClienteCreateModal;
+export default ClienteModal;
