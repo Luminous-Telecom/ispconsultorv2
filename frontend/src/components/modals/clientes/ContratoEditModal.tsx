@@ -1017,7 +1017,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   backgroundColor: '#fff',
                   border: '1px solid #ced4da',
                   borderLeft: 'none',
-                  color: '#6c757d'
+                  color: '#6c757d',
+                  padding: '0.375rem 0.75rem',
+                  fontSize: '1rem',
+                  lineHeight: '1.5'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1126,7 +1129,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   backgroundColor: '#fff',
                   border: '1px solid #ced4da',
                   borderLeft: 'none',
-                  color: '#6c757d'
+                  color: '#6c757d',
+                  padding: '0.375rem 0.75rem',
+                  fontSize: '1rem',
+                  lineHeight: '1.5'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1235,7 +1241,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   backgroundColor: '#fff',
                   border: '1px solid #ced4da',
                   borderLeft: 'none',
-                  color: '#6c757d'
+                  color: '#6c757d',
+                  padding: '0.375rem 0.75rem',
+                  fontSize: '1rem',
+                  lineHeight: '1.5'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
