@@ -905,32 +905,33 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   }
 
   return (
-        <DraggableModal
-          show={show}
-          onClose={onClose}
-          title="Cliente"
-          size="xl"
-          modalId="cliente-edit-modal"
-          headerActions={
-            <div className="d-flex gap-2">
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={onClose}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="btn btn-primary btn-sm"
-                disabled={updateClienteMutation.isPending}
-              >
-                Salvar
-              </button>
-            </div>
-          }
-        >
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title="Cliente"
+      size="xl"
+      modalId="cliente-edit-modal"
+      headerActions={
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="btn btn-primary btn-sm"
+            disabled={updateClienteMutation.isPending}
+          >
+            Salvar
+          </button>
+        </div>
+      }
+    >
+      <>
       <div style={{ 
         height: '100%',
         display: 'flex',
@@ -1120,8 +1121,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             e.stopPropagation();
                             if (selectedContratosItems.length === 1) {
                               setSelectedContratoId(selectedContratosItems[0].id);
-                            setShowContratoEditModal(true);
-                          }
+                              setShowContratoEditModal(true);
+                            }
                           }}
                           onMouseDown={(e) => e.stopPropagation()}
                           disabled={selectedContratosItems.length !== 1}
@@ -1138,18 +1139,18 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                             if (selectedContratosItems.length > 0) {
                               if (window.confirm(`Tem certeza que deseja deletar ${selectedContratosItems.length} contrato(s)?`)) {
                                 for (const item of selectedContratosItems) {
-                                try {
-                                  await deleteContratoMutation.mutateAsync(item.id);
-                                } catch (error: any) {
-                                  console.error(`Erro ao deletar contrato ${item.id}:`, error);
-                                  const errorMessage = error?.response?.data?.message || 
-                                                     error?.response?.data?.error || 
-                                                     `Erro ao deletar contrato ${item.id}`;
-                                  showNotification(errorMessage, 'error');
+                                  try {
+                                    await deleteContratoMutation.mutateAsync(item.id);
+                                  } catch (error: any) {
+                                    console.error(`Erro ao deletar contrato ${item.id}:`, error);
+                                    const errorMessage = error?.response?.data?.message || 
+                                                       error?.response?.data?.error || 
+                                                       `Erro ao deletar contrato ${item.id}`;
+                                    showNotification(errorMessage, 'error');
+                                  }
                                 }
-                              }
-                              // Refetch contratos após deletar
-                              refetchContratos();
+                                // Refetch contratos após deletar
+                                refetchContratos();
                                 setSelectedContratosItems([]);
                               }
                             }
@@ -1382,22 +1383,22 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                     {/* Elementos de busca e paginação removidos - agora integrados no Table component */}
 
-                  {/* Tabela unificada com busca, paginação e reload integrados */}
-                  <Table
-                    config={{
-                      columns: contratosColumns,
-                      data: sortedContratosData,
-                      loading: isLoadingContratos,
-                      selectable: true,
-                      multiSelect: true,
-                      searchable: true,
-                      searchPlaceholder: 'Buscar por plano, status, valor...',
-                      emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
-                      className: 'no-padding'
-                    }}
-                    onSelectionChange={setSelectedContratosItems}
-                    onRefresh={() => refetchContratos()}
-                  />
+                    {/* Tabela unificada com busca, paginação e reload integrados */}
+                    <Table
+                      config={{
+                        columns: contratosColumns,
+                        data: sortedContratosData,
+                        loading: isLoadingContratos,
+                        selectable: true,
+                        multiSelect: true,
+                        searchable: true,
+                        searchPlaceholder: 'Buscar por plano, status, valor...',
+                        emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
+                        className: 'no-padding'
+                      }}
+                      onSelectionChange={setSelectedContratosItems}
+                      onRefresh={() => refetchContratos()}
+                    />
 
                   {/* Resumo de Contratos */}
                   {sortedContratosData.length > 0 && (
@@ -1530,8 +1531,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       </div>
                     </div>
 
-                  {/* Tabela unificada com busca, paginação e reload integrados */}
-                  <Table
+                    {/* Tabela unificada com busca, paginação e reload integrados */}
+                    <Table
                     config={{
                       columns: columns,
                       data: paginatedData,
@@ -1609,8 +1610,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 </div>
               </div>
             )}
+          </div>
         </div>
-      </div>
 
       {/* Modal de edição de título */}
       <TituloEditModal
@@ -1692,7 +1693,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         title="Visualizar Contrato"
         modalId="cliente-imprimir-modal"
       />
-
     </DraggableModal>
   );
 };
