@@ -270,10 +270,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 alignItems: 'stretch',
                 background: 'white',
                 border: '1px solid #ced4da',
-                borderRadius: '6px',
+                borderRadius: '0.375rem',
                 overflow: 'hidden',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+                transition: 'all 0.15s ease-in-out',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.075)'
               }}>
                 <input
                   readOnly
@@ -286,7 +286,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     padding: '0.375rem 0.75rem',
                     background: '#f8f9fa',
                     border: 'none',
-                    borderRight: '1px solid #e9ecef',
+                    borderRight: '1px solid #dee2e6',
                     fontSize: '0.875rem',
                     color: '#495057',
                     textAlign: 'center',
@@ -322,10 +322,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     padding: '0.375rem 0.75rem',
                     background: 'white',
                     border: 'none',
-                    borderLeft: '1px solid #e9ecef',
+                    borderLeft: '1px solid #dee2e6',
                     color: '#6c757d',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.15s ease-in-out',
                     outline: 'none',
                     display: 'flex',
                     alignItems: 'center',
@@ -480,10 +480,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 alignItems: 'stretch',
                 background: 'white',
                 border: '1px solid #ced4da',
-                borderRadius: '6px',
+                borderRadius: '0.375rem',
                 overflow: 'hidden',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+                transition: 'all 0.15s ease-in-out',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.075)'
               }}>
                 <input
                   readOnly
@@ -496,7 +496,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     padding: '0.375rem 0.75rem',
                     background: '#f8f9fa',
                     border: 'none',
-                    borderRight: '1px solid #e9ecef',
+                    borderRight: '1px solid #dee2e6',
                     fontSize: '0.875rem',
                     color: '#495057',
                     textAlign: 'center',
@@ -532,10 +532,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     padding: '0.375rem 0.75rem',
                     background: 'white',
                     border: 'none',
-                    borderLeft: '1px solid #e9ecef',
+                    borderLeft: '1px solid #dee2e6',
                     color: '#6c757d',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.15s ease-in-out',
                     outline: 'none',
                     display: 'flex',
                     alignItems: 'center',
@@ -591,10 +591,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 alignItems: 'stretch',
                 background: 'white',
                 border: '1px solid #ced4da',
-                borderRadius: '6px',
+                borderRadius: '0.375rem',
                 overflow: 'hidden',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+                transition: 'all 0.15s ease-in-out',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.075)'
               }}>
                 <input
                   readOnly
@@ -607,7 +607,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     padding: '0.375rem 0.75rem',
                     background: '#f8f9fa',
                     border: 'none',
-                    borderRight: '1px solid #e9ecef',
+                    borderRight: '1px solid #dee2e6',
                     fontSize: '0.875rem',
                     color: '#495057',
                     textAlign: 'center',
@@ -643,10 +643,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     padding: '0.375rem 0.75rem',
                     background: 'white',
                     border: 'none',
-                    borderLeft: '1px solid #e9ecef',
+                    borderLeft: '1px solid #dee2e6',
                     color: '#6c757d',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.15s ease-in-out',
                     outline: 'none',
                     display: 'flex',
                     alignItems: 'center',
