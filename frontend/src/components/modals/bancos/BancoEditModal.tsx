@@ -601,7 +601,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                   type="checkbox"
                   label={formData.ativo ? 'Ativo' : 'Inativo'}
                   value={formData.ativo}
-                  onChange={(e: any) => handleInputChange('ativo', e.value)}
+                  onChange={(value: any) => handleInputChange('ativo', value)}
                   disabled={updateBancoMutation.isPending}
                   formPrefix={formPrefix}
                   switch={true}
@@ -698,7 +698,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                       type="checkbox"
                       label="Modo Sandbox (Testes)"
                       value={formData.sandbox}
-                      onChange={(e: any) => handleInputChange('sandbox', e.value)}
+                      onChange={(value: any) => handleInputChange('sandbox', value)}
                       disabled={updateBancoMutation.isPending}
                       formPrefix={formPrefix}
                       switch={true}
