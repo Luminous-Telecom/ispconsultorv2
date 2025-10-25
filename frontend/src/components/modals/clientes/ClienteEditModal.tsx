@@ -1556,159 +1556,22 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Busca, Filtros e Paginação - Linha 2 */}
-                    <div className="d-flex mb-3">
-                      {/* Busca à esquerda */}
-                      <div className="d-flex gap-2" style={{ paddingLeft: '1rem' }}>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          id="parcelas-search"
-                          name="parcelasSearch"
-                          placeholder="Buscar por ID, carnê, valor..."
-                          value={searchFinanceiro}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            setSearchFinanceiro(e.target.value);
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ width: '300px', height: '32px' }}
-                        />
-                      </div>
-
-                      {/* Filtros após a busca */}
-                      <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            id="showCanceled"
-                            name="showCanceled"
-                            checked={showCancelados}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              setShowCancelados(e.target.checked);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <label className="form-check-label small" htmlFor="showCanceled">
-                            Mostrar cancelados
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
-                        <select 
-                          id={`limit-${Math.random().toString(36).substr(2, 9)}`}
-                          name="limitSelector"
-                          className="form-select form-select-sm" 
-                          value={limit}
-                          onChange={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setLimit(parseInt(e.target.value));
-                          }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          style={{ width: '80px', height: '32px', cursor: 'pointer' }}
-                        >
-                          <option value={5}>5</option>
-                          <option value={10}>10</option>
-                          <option value={15}>15</option>
-                          <option value={25}>25</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </select>
-
-                        <div className="d-flex gap-1">
-                          <button 
-                            className="btn btn-outline-secondary btn-sm" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setPage(1);
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            disabled={page <= 1}
-                          >
-                            <i className="bi bi-chevron-double-left"></i>
-                          </button>
-                          <button 
-                            className="btn btn-outline-secondary btn-sm" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setPage(page - 1);
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            disabled={page <= 1}
-                          >
-                            <i className="bi bi-chevron-left"></i>
-                          </button>
-                          <span className="small text-muted mx-2">
-                            {sortedData.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, sortedData.length)} / {sortedData.length}
-                          </span>
-                          <button 
-                            className="btn btn-outline-secondary btn-sm" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setPage(page + 1);
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            disabled={page >= Math.ceil(sortedData.length / limit)}
-                          >
-                            <i className="bi bi-chevron-right"></i>
-                          </button>
-                          <button 
-                            className="btn btn-outline-secondary btn-sm" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setPage(Math.ceil(sortedData.length / limit));
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            disabled={page >= Math.ceil(sortedData.length / limit)}
-                          >
-                            <i className="bi bi-chevron-double-right"></i>
-                          </button>
-                        </div>
-
-                        {/* Botão de refresh */}
-                        <button 
-                          className="btn btn-outline-secondary btn-sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            refetchParcelas();
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          title="Recarregar dados"
-                        >
-                          <i className="bi bi-arrow-clockwise"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Conteúdo rolável - apenas a tabela */}
-                  <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    <Table
-                      config={{
-                        columns: columns,
-                        data: paginatedData,
-                        loading: isLoadingParcelas,
-                        selectable: true,
-                        multiSelect: true,
-                        emptyMessage: 'Este cliente ainda não possui títulos cadastrados.',
-                        className: 'no-padding'
-                      }}
-                      onSelectionChange={setSelectedItems}
-                    />
-                  </div>
+                  {/* Tabela unificada com busca, paginação e reload integrados */}
+                  <Table
+                    config={{
+                      columns: columns,
+                      data: paginatedData,
+                      loading: isLoadingParcelas,
+                      selectable: true,
+                      multiSelect: true,
+                      searchable: true,
+                      searchPlaceholder: 'Buscar por ID, carnê, valor...',
+                      emptyMessage: 'Este cliente ainda não possui títulos cadastrados.',
+                      className: 'no-padding'
+                    }}
+                    onSelectionChange={setSelectedItems}
+                    onRefresh={() => refetchParcelas()}
+                  />
 
                   {/* Resumo Financeiro */}
                   {sortedData.length > 0 && (
