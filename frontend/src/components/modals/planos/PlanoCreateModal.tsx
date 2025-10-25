@@ -73,8 +73,8 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
     onSuccess: () => {
       success('Plano criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['planos'] });
-      onClose();
       onSuccess?.();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao criar plano');

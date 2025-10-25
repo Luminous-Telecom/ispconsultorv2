@@ -353,7 +353,7 @@ const ClienteCreateModal: React.FC<ClienteCreateModalProps> = ({
       success('Cliente criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       onSuccess?.();
-      onClose();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao criar cliente');

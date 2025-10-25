@@ -95,7 +95,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       // Chamar onSuccess antes de fechar o modal
       onSuccess?.();
-      onClose();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       console.error('Erro ao atualizar parcela:', err);

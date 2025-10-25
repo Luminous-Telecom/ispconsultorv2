@@ -74,8 +74,8 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
       success('Plano atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['planos'] });
       queryClient.invalidateQueries({ queryKey: ['plano', planoId] });
-      onClose();
       onSuccess?.();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao atualizar plano');

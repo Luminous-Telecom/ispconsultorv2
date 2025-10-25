@@ -149,7 +149,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       onSuccess: () => {
         success('Contrato criado com sucesso!');
         onSuccess?.();
-        onClose();
+        // Não fechar o modal automaticamente
       },
       onError: () => {
         error('Erro ao criar contrato');

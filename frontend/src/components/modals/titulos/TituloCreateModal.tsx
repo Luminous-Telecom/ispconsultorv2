@@ -154,7 +154,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         onSuccess();
       }
       
-      onClose();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       console.error('Erro ao criar título:', err);
