@@ -1163,6 +1163,13 @@ export class TituloController {
         </html>
       `;
 
+      logger.info('Template HTML gerado:', { 
+        length: template.length,
+        hasQuantidade: template.includes('QUANTIDADE'),
+        hasInOperator: template.includes(' in '),
+        hasTemplateVars: template.includes('{{')
+      });
+
       // Converter HTML para PDF usando html-pdf-node
       const htmlPdf = require('html-pdf-node');
       const file = { content: template };
