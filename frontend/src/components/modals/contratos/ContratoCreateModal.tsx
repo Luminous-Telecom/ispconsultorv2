@@ -301,7 +301,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   title="Abrir listagem de registros"
                   style={{ marginLeft: '-1px' }}
                 >
-                  <i className="fa fa-search" aria-hidden="true" style={{ transform: 'rotate(90deg)' }}></i>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
+                    <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
+                  </svg>
                 </button>
               </div>
               {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
@@ -464,7 +466,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   title="Abrir listagem de registros"
                   style={{ marginLeft: '-1px' }}
                 >
-                  <i className="fa fa-search" aria-hidden="true" style={{ transform: 'rotate(90deg)' }}></i>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
+                    <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
+                  </svg>
                 </button>
               </div>
               {errors.conta_boleto && <div className="invalid-feedback">{errors.conta_boleto}</div>}
@@ -528,7 +532,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   title="Abrir listagem de registros"
                   style={{ marginLeft: '-1px' }}
                 >
-                  <i className="fa fa-search" aria-hidden="true" style={{ transform: 'rotate(90deg)' }}></i>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
+                    <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
+                  </svg>
                 </button>
               </div>
               {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
