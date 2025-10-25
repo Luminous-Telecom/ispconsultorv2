@@ -68,7 +68,7 @@ function ListModal<T extends { id: any }>({
             columns: tableColumns,
             data,
             loading,
-            pagination,
+            pagination: undefined, // Não mostrar paginação duplicada, já está no header
             selectable: true,
             multiSelect,
             emptyMessage,
