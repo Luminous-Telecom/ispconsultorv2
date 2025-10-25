@@ -268,13 +268,23 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               </label>
               <div className="input-group">
                 <input
-                  readOnly
-                  title="F2 para pesquisar ou F3 para editar cadastro"
+                  title="Digite o ID do plano"
                   autoComplete="off"
                   type="text"
                   className="form-control text-center"
                   value={planoSelecionado ? planoSelecionado.id : ''}
                   style={{ maxWidth: '66px' }}
+                  onChange={(e) => {
+                    const id = parseInt(e.target.value);
+                    if (!isNaN(id) && id > 0) {
+                      // Buscar plano pelo ID
+                      const plano = planosData?.data?.find(p => p.id === id);
+                      if (plano) {
+                        setPlanoSelecionado(plano);
+                        handlePlanoSelect(plano);
+                      }
+                    }
+                  }}
                 />
                 <input
                   placeholder="Buscar..."
@@ -423,13 +433,23 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               </label>
               <div className="input-group">
                 <input
-                  readOnly
-                  title="F2 para pesquisar ou F3 para editar cadastro"
+                  title="Digite o ID do banco"
                   autoComplete="off"
                   type="text"
                   className="form-control text-center"
                   value={bancoSelecionado ? bancoSelecionado.id : ''}
                   style={{ maxWidth: '66px' }}
+                  onChange={(e) => {
+                    const id = parseInt(e.target.value);
+                    if (!isNaN(id) && id > 0) {
+                      // Buscar banco pelo ID
+                      const banco = bancosData?.data?.find(b => b.id === id);
+                      if (banco) {
+                        setBancoSelecionado(banco);
+                        handleBancoSelect(banco);
+                      }
+                    }
+                  }}
                 />
                 <input
                   placeholder="Buscar..."
@@ -479,13 +499,23 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               </label>
               <div className="input-group">
                 <input
-                  readOnly
-                  title="F2 para pesquisar ou F3 para editar cadastro"
+                  title="Digite o ID do modelo de contrato"
                   autoComplete="off"
                   type="text"
                   className="form-control text-center"
                   value={modeloContratoSelecionado ? modeloContratoSelecionado.id : ''}
                   style={{ maxWidth: '66px' }}
+                  onChange={(e) => {
+                    const id = parseInt(e.target.value);
+                    if (!isNaN(id) && id > 0) {
+                      // Buscar modelo de contrato pelo ID
+                      const modelo = modelosContratoData?.data?.find((m: any) => m.id === id);
+                      if (modelo) {
+                        setModeloContratoSelecionado(modelo);
+                        handleModeloContratoSelect(modelo);
+                      }
+                    }
+                  }}
                 />
                 <input
                   placeholder="Buscar..."
