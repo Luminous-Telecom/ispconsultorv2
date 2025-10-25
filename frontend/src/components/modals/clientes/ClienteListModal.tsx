@@ -233,7 +233,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => {
           refetch();
-          setShowCreateModal(false);
         }}
       />
 
