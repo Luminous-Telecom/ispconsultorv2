@@ -3,8 +3,6 @@ import { TableConfig, TableColumn as TableColumnType, TableAction, BulkAction, S
 import { useTable } from './useTable';
 import TableColumn from './TableColumn';
 import TableActions from './TableActions';
-import TablePagination from './TablePagination';
-import TableFilters from './TableFilters';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';
 
