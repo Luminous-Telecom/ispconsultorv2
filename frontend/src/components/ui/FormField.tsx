@@ -70,6 +70,7 @@ const FormField: React.FC<FormFieldProps> = ({
   minLength,
   maxLength,
   pattern,
+  accept,
   autoComplete,
   autoFocus = false,
   readOnly = false,
