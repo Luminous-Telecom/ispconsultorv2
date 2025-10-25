@@ -238,7 +238,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="cliente_id" className="form-label small">Cliente *</label>
+              <label htmlFor="cliente_id" className="form-label small">
+                Cliente <span className="text-danger ms-1">*</span>
+              </label>
               <select
                 className={`form-select ${errors.cliente_id ? 'is-invalid' : ''}`}
                 id="cliente_id"
@@ -260,7 +262,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
           <div className="col-md-6">
             <div className="mb-3">
-              <label className="form-label small">Plano *</label>
+              <label className="form-label small">
+                Plano <span className="text-danger ms-1">*</span>
+              </label>
               <div className="input-group">
                 <input
                   type="text"
@@ -290,7 +294,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="status" className="form-label small">Status *</label>
+              <label htmlFor="status" className="form-label small">
+                Status <span className="text-danger ms-1">*</span>
+              </label>
               <select
                 className={`form-select ${errors.status ? 'is-invalid' : ''}`}
                 id="status"
@@ -401,7 +407,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label className="form-label small">Banco para Boleto *</label>
+              <label className="form-label small">
+                Banco para Boleto <span className="text-danger ms-1">*</span>
+              </label>
               <div className="input-group">
                 <input
                   type="text"
@@ -445,7 +453,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-12">
             <div className="mb-3">
-              <label className="form-label small">Modelo de Contrato *</label>
+              <label className="form-label small">
+                Modelo de Contrato <span className="text-danger ms-1">*</span>
+              </label>
               <div className="input-group">
                 <input
                   type="text"

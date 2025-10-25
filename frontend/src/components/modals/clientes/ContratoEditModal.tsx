@@ -985,7 +985,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <div className="row">
           {/* Plano */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Plano *</label>
+            <label className="form-label">
+              Plano <span className="text-danger ms-1">*</span>
+            </label>
             <div className="input-group">
               <input
                 type="text"
@@ -1010,7 +1012,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Status */}
           <div className="col-md-6 mb-3">
-            <label htmlFor="status" className="form-label">Status *</label>
+            <label htmlFor="status" className="form-label">
+              Status <span className="text-danger ms-1">*</span>
+            </label>
             <select
               id="status"
               name="status"
@@ -1072,7 +1076,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Banco para Boleto */}
           <div className="col-md-6 mb-3">
-            <label className="form-label">Banco para Boleto *</label>
+            <label className="form-label">
+              Banco para Boleto <span className="text-danger ms-1">*</span>
+            </label>
             <div className="input-group">
               <input
                 type="text"
@@ -1161,7 +1167,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Modelo de Contrato */}
           <div className="col-md-12 mb-3">
-            <label className="form-label small">Modelo de Contrato *</label>
+            <label className="form-label small">
+              Modelo de Contrato <span className="text-danger ms-1">*</span>
+            </label>
             <div className="input-group">
               <input
                 type="text"
