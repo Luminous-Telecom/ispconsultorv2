@@ -190,23 +190,24 @@ export class TituloService {
   static async gerarPdfBoletosMultiplos(ids: number[]): Promise<Blob> {
     try {
       const idsParam = ids.join(',');
-      const response = await apiService.get(`${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
-        responseType: 'blob'
+      
+      // Usar axios diretamente para evitar problemas com o interceptor
+      const axios = (await import('axios')).default;
+      const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+      const token = localStorage.getItem('auth_token');
+      
+      const response = await axios.get(`${baseURL}${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
+        responseType: 'blob',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
       });
 
-      console.log('Response recebida:', {
-        response,
-        responseType: typeof response,
-        hasData: 'data' in (response as any),
-        dataType: typeof (response as any).data,
-        isBlob: (response as any).data instanceof Blob
-      });
-
-      // Com responseType: 'blob', o Blob está em response.data
-      const blob = (response as any).data;
+      // Com responseType: 'blob', o axios retorna o blob em response.data
+      const blob = response.data;
       
       if (!blob || !(blob instanceof Blob)) {
-        console.error('Blob inválido:', { blob, isBlob: blob instanceof Blob });
         throw new Error('Resposta inválida do servidor');
       }
 

@@ -1153,8 +1153,8 @@ export class TituloController {
             @media print {
               .page-break { page-break-after: always; }
             }
-            body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
-            .boleto { margin-bottom: 20px; }
+            body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+            .boleto { margin-bottom: 0; }
           </style>
         </head>
         <body>
@@ -1187,10 +1187,10 @@ export class TituloController {
       const options = {
         format: 'A4',
         margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm'
+          top: '10mm',
+          right: '10mm',
+          bottom: '10mm',
+          left: '10mm'
         },
         printBackground: true,
         displayHeaderFooter: false
@@ -1200,6 +1200,7 @@ export class TituloController {
       
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulos.length}-titulos.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
       res.send(pdfBuffer);
     } catch (error: any) {
       logger.error('Erro ao gerar PDF de múltiplos boletos', { error: error.message });

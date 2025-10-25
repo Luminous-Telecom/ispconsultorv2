@@ -32,7 +32,12 @@ class ApiService {
           // Interceptor para responses
           this.api.interceptors.response.use(
             (response: AxiosResponse) => {
-              // Garantir que sempre retornamos um valor válido
+              // Para responseType 'blob', retornar diretamente o data (que já é o Blob)
+              if (response.config.responseType === 'blob') {
+                return response.data;
+              }
+              
+              // Para outros tipos de resposta, garantir que sempre retornamos um valor válido
               const data = response.data;
               if (data === undefined || data === null) {
                 return {};
