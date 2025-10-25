@@ -4,6 +4,7 @@ import { TituloService } from '../../../services/tituloService';
 import { PlanoService } from '../../../services/planoService';
 import { ClienteService } from '../../../services/clienteService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { useFormPrefix } from '../../../hooks/useFormId';
 import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
 
@@ -27,6 +28,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
   onSuccess,
   parcelaId
 }) => {
+  const formPrefix = useFormPrefix('TituloEditModal');
   const [formData, setFormData] = useState<TituloForm>({
     cliente_id: 0,
     plano_id: 0,
@@ -206,6 +208,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
                 error={errors.cliente_id}
                 isInvalid={!!errors.cliente_id}
                 disabled={updateParcelaMutation.isPending}
+                formPrefix={formPrefix}
                 options={[
                   { value: 0, label: 'Selecione um cliente' },
                   ...(clientes?.data?.map((cliente: any) => ({
@@ -229,6 +232,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
                 error={errors.plano_id}
                 isInvalid={!!errors.plano_id}
                 disabled={updateParcelaMutation.isPending}
+                formPrefix={formPrefix}
                 options={[
                   { value: 0, label: 'Selecione um plano' },
                   ...(planos?.data?.map((plano: any) => ({
@@ -255,6 +259,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
                 error={errors.data_vencimento}
                 isInvalid={!!errors.data_vencimento}
                 disabled={updateParcelaMutation.isPending}
+                formPrefix={formPrefix}
               />
             </div>
           </div>
@@ -274,6 +279,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
             isInvalid={!!errors.observacoes}
             disabled={updateParcelaMutation.isPending}
             rows={3}
+            formPrefix={formPrefix}
           />
         </div>
 

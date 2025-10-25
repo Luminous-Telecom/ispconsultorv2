@@ -21,6 +21,7 @@ interface TableProps<T = any> {
   onPageSizeChange?: (size: number) => void;
   onRefresh?: () => void;
   className?: string;
+  tableId?: string;
 }
 
 function Table<T extends { id: number | string }>({
@@ -36,7 +37,11 @@ function Table<T extends { id: number | string }>({
   onPageSizeChange,
   onRefresh,
   className = '',
+  tableId
 }: TableProps<T>) {
+  // Gerar ID único para a tabela
+  const uniqueTableId = tableId || `table-${Math.random().toString(36).substr(2, 9)}`;
+  
   const {
     columns,
     data,
@@ -473,7 +478,7 @@ function Table<T extends { id: number | string }>({
               {/* Seletor de linhas por página */}
               <select 
                 className="form-select form-select-sm" 
-                id="data-table-limit"
+                id={`${uniqueTableId}-limit`}
                 name="dataTableLimit"
                 value={pagination?.per_page || state.pageSize}
                 onChange={(e) => {

@@ -44,6 +44,7 @@ interface TableProps<T = any> {
   sortDirection?: 'asc' | 'desc';
   onRefresh?: () => void;
   showHeader?: boolean;
+  tableId?: string;
 }
 
 const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
@@ -64,8 +65,12 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
     sortColumn,
     sortDirection = 'asc',
     onRefresh,
-    showHeader = true
+    showHeader = true,
+    tableId
   } = props;
+  
+  // Gerar ID único para a tabela
+  const uniqueTableId = tableId || `datatable-${Math.random().toString(36).substr(2, 9)}`;
   const [selectedItems, setSelectedItems] = useState<T[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
@@ -281,7 +286,7 @@ const DataTable = <T extends { id: number | string }>(props: TableProps<T>) => {
             {/* Seletor de linhas por página */}
             <select 
               className="form-select form-select-sm" 
-              id="data-table-limit"
+              id={`${uniqueTableId}-limit`}
               name="dataTableLimit"
               value={limit}
               onChange={(e) => setLimit(parseInt(e.target.value))}
