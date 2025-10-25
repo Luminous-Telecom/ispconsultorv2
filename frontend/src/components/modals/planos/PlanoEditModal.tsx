@@ -253,16 +253,16 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
         </div>
       ) : (
         <form id="plano-edit-form" onSubmit={handleSubmit} style={{ padding: '1rem' }}>
-          <div className="row">
+          <div className="row g-2">
             <div className="col-md-6">
-              <div className="mb-3">
+              <div className="mb-2">
                 <FormField
                   name="nome_plano"
                   type="text"
                   label="Nome do Plano"
                   placeholder="Ex: Plano Premium"
                   required={true}
-                  size="md"
+                  size="sm"
                   value={formData.nome_plano}
                   onChange={(e: any) => handleInputChange('nome_plano', e.value)}
                   error={errors.nome_plano}
@@ -273,13 +273,13 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             </div>
 
             <div className="col-md-6">
-              <div className="mb-3">
+              <div className="mb-2">
                 <FormField
                   name="tipo_servico"
                   type="select"
                   label="Tipo de Serviço"
                   required={true}
-                  size="md"
+                  size="sm"
                   value={formData.tipo_servico}
                   onChange={(e: any) => handleInputChange('tipo_servico', e.value)}
                   error={errors.tipo_servico}
@@ -299,7 +299,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <FormField
               name="descricao"
               type="textarea"
@@ -315,14 +315,14 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
 
           <div className="row">
             <div className="col-md-6">
-              <div className="mb-3">
+              <div className="mb-2">
                 <FormField
                   name="valor_mensal"
                   type="number"
                   label="Valor Mensal"
                   placeholder="0.00"
                   required={true}
-                  size="md"
+                  size="sm"
                   value={formData.valor_mensal}
                   onChange={(e: any) => handleInputChange('valor_mensal', parseFloat(e.value) || 0)}
                   error={errors.valor_mensal?.toString()}
@@ -334,7 +334,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             </div>
 
             <div className="col-md-6">
-              <div className="mb-3">
+              <div className="mb-2">
                 <FormField
                   name="quantidade_usuarios"
                   type="number"
@@ -351,13 +351,13 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
 
           <div className="row">
             <div className="col-md-6">
-              <div className="mb-3">
+              <div className="mb-2">
                 <FormField
                   name="data_inicio"
                   type="date"
                   label="Data de Início"
                   required={true}
-                  size="md"
+                  size="sm"
                   value={formData.data_inicio}
                   onChange={(e: any) => handleInputChange('data_inicio', e.value)}
                   error={errors.data_inicio}
@@ -368,7 +368,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             </div>
 
             <div className="col-md-6">
-              <div className="mb-3">
+              <div className="mb-2">
                 <FormField
                   name="data_fim"
                   type="date"
@@ -384,7 +384,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
 
           <div className="row">
             <div className="col-md-6">
-              <div className="mb-3">
+              <div className="mb-2">
                 <FormField
                   name="ativo"
                   type="checkbox"
@@ -397,7 +397,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <label className="form-label small">Serviços Inclusos</label>
             <div className="row">
               {servicosDisponiveis.map((servico) => (
@@ -415,7 +415,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <FormField
               name="observacoes"
               type="textarea"
