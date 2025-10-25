@@ -1007,7 +1007,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="text"
                 className="form-control"
                 value={planoSelecionado ? planoSelecionado.nome_plano : ''}
-                style={{ borderRight: 'none', borderColor: '#dee2e6' }}
+                style={{ borderRight: 'none' }}
               />
               <button
                 type="button"
@@ -1110,7 +1110,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="text"
                 className="form-control"
                 value={bancoSelecionado ? bancoSelecionado.nome : ''}
-                style={{ borderRight: 'none', borderColor: '#dee2e6' }}
+                style={{ borderRight: 'none' }}
               />
               <button
                 type="button"
@@ -1213,7 +1213,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="text"
                 className="form-control"
                 value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
-                style={{ borderRight: 'none', borderColor: '#dee2e6' }}
+                style={{ borderRight: 'none' }}
               />
               <button
                 type="button"
