@@ -67,8 +67,8 @@ export class ClienteService {
   // Criar novo cliente
   static async create(data: CreateCliente): Promise<Cliente> {
     try {
-      const response = await apiService.post<Cliente>('/clientes', data);
-      return response;
+      const response = await apiService.post<{ success: boolean; data: Cliente; message: string }>('/clientes', data);
+      return response.data;
     } catch (error) {
       console.error('Erro ao criar cliente:', error);
       throw error;

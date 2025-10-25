@@ -106,9 +106,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
   // Determinar se as abas Contratos e Financeiro devem ser habilitadas
   const canEditContratosFinanceiro = useMemo(() => {
-    const result = isEditing || !!createdClienteId;
-    console.log('ClienteModal - isEditing:', isEditing, 'createdClienteId:', createdClienteId, 'canEditContratosFinanceiro:', result);
-    return result;
+    return isEditing || !!createdClienteId;
   }, [isEditing, createdClienteId]);
 
   // Função helper para mostrar confirmação
@@ -1060,9 +1058,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       success('Cliente criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       // Armazenar o ID do cliente criado para usar nas abas
-      console.log('Cliente criado com ID:', createdCliente.id);
       setCreatedClienteId(createdCliente.id);
-      console.log('createdClienteId foi atualizado');
       onSuccess?.();
       // Não fechar o modal automaticamente
     },
