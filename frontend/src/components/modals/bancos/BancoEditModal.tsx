@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
@@ -160,7 +160,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
   };
 
   // Dados customizados do banco (quando editando)
-  const customFormData = banco ? {
+  const customFormData = useMemo(() => banco ? {
     nome: banco.nome || '',
     codigo: banco.codigo || '',
     descricao: banco.descricao || '',
@@ -199,7 +199,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     instrucao_linha_3: banco.instrucao_linha_3 || '',
     instrucao_linha_4: banco.instrucao_linha_4 || '',
     instrucao_linha_5: banco.instrucao_linha_5 || '',
-  } : undefined;
+  } : undefined, [banco]);
 
   // Usar hook personalizado para reset do formulário
   useFormReset({
