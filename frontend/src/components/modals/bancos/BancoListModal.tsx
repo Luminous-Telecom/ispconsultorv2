@@ -164,7 +164,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       }
     },
     {
-      label: 'Selecionar',
+      label: 'Inserir',
       variant: 'primary' as const,
       disabled: () => !selectedBanco,
       action: handleSelect

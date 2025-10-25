@@ -182,12 +182,16 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   };
 
   const handleSelect = () => {
+    console.log('handleSelect chamado, selectedItem:', selectedItem);
     if (selectedItem) {
+      console.log('Chamando onSelectPlano com:', selectedItem);
       clearSelection();
       if (onSelectPlano) {
         onSelectPlano(selectedItem);
         onClose();
       }
+    } else {
+      console.log('selectedItem é null/undefined');
     }
   };
 
@@ -213,7 +217,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       }
     },
     {
-      label: 'Selecionar',
+      label: 'Inserir',
       variant: 'primary' as const,
       disabled: () => !selectedItem,
       action: handleSelect

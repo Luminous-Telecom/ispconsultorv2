@@ -169,7 +169,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       }
     },
     {
-      label: 'Selecionar',
+      label: 'Inserir',
       variant: 'primary' as const,
       disabled: () => !selectedItem,
       action: handleSelect

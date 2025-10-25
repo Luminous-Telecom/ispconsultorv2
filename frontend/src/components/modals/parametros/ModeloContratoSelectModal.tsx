@@ -134,7 +134,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
       }
     },
     {
-      label: 'Selecionar',
+      label: 'Inserir',
       variant: 'primary' as const,
       disabled: () => !selectedItem,
       action: handleSelect
