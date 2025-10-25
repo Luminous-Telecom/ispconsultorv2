@@ -4,7 +4,7 @@ import Input from './Input';
 import Select from './Select';
 import Checkbox from './Checkbox';
 
-type FieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'month' | 'week' | 'select' | 'checkbox' | 'textarea';
+type FieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'month' | 'week' | 'select' | 'checkbox' | 'textarea' | 'file';
 
 interface FormFieldProps extends BaseComponentProps, ValidationProps, TooltipProps {
   type?: FieldType;
@@ -26,6 +26,7 @@ interface FormFieldProps extends BaseComponentProps, ValidationProps, TooltipPro
   minLength?: number;
   maxLength?: number;
   pattern?: string;
+  accept?: string;
   autoComplete?: string;
   autoFocus?: boolean;
   readOnly?: boolean;
@@ -214,6 +215,22 @@ const FormField: React.FC<FormFieldProps> = ({
             data-bs-toggle={tooltip ? 'tooltip' : undefined}
             data-bs-placement={tooltip ? tooltipPosition : undefined}
             data-bs-title={tooltip}
+          />
+        );
+
+      case 'file':
+        return (
+          <input
+            id={fieldId}
+            name={name}
+            type="file"
+            onChange={(e) => handleChange(e.target.files?.[0] || null, name)}
+            required={required}
+            disabled={disabled}
+            accept={accept}
+            multiple={multiple}
+            className={`form-control ${className}`}
+            autoFocus={autoFocus}
           />
         );
 
