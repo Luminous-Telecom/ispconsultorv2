@@ -42,6 +42,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   onSuccess 
 }) => {
   const isEditing = !!clienteId;
+  
   const formPrefix = useFormPrefix('ClienteEditModal');
   const { success, error } = useNotificationContext();
   const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
@@ -101,6 +102,10 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [confirmMessage, setConfirmMessage] = useState('');
+  const [createdClienteId, setCreatedClienteId] = useState<number | null>(null);
+
+  // Determinar se as abas Contratos e Financeiro devem ser habilitadas
+  const canEditContratosFinanceiro = isEditing || !!createdClienteId;
 
   // Função helper para mostrar confirmação
   const showConfirmation = (message: string, action: () => void) => {
@@ -207,17 +212,18 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     queryFn: () => BancoService.list({ page: 1, limit: 100 }),
   });
 
-  // Buscar contratos do cliente
-  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError, refetch: refetchContratos } = useContratos(cliente?.id);
+  // Buscar contratos do cliente (usar clienteId quando editando, ou createdClienteId quando criou)
+  const effectiveClienteIdForContratos = clienteId || createdClienteId || undefined;
+  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError, refetch: refetchContratos } = useContratos(effectiveClienteIdForContratos);
   
   // Hook para deletar contrato
   const deleteContratoMutation = useDeleteContrato();
 
-  // Buscar parcelas do cliente (dados reais do banco - apenas se estiver editando)
+  // Buscar parcelas do cliente (dados reais do banco)
   const { data: parcelasData, isLoading: isLoadingParcelas, refetch: refetchParcelas } = useQuery({
-    queryKey: ['parcelas', 'cliente', clienteId],
-    queryFn: () => TituloService.list({ cliente_id: clienteId!, limit: 100 }),
-    enabled: isEditing && !!clienteId,
+    queryKey: ['parcelas', 'cliente', effectiveClienteIdForContratos],
+    queryFn: () => TituloService.list({ cliente_id: effectiveClienteIdForContratos!, limit: 100 }),
+    enabled: !!effectiveClienteIdForContratos,
   });
 
   // Configuração do formulário unificado para dados básicos
@@ -1046,9 +1052,11 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   // Mutation para criar cliente
   const createClienteMutation = useMutation({
     mutationFn: (data: Partial<Cliente>) => ClienteService.create(data as any),
-    onSuccess: () => {
+    onSuccess: (createdCliente: Cliente) => {
       success('Cliente criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      // Armazenar o ID do cliente criado para usar nas abas
+      setCreatedClienteId(createdCliente.id);
       onSuccess?.();
       // Não fechar o modal automaticamente
     },
@@ -1272,10 +1280,16 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     );
   }
 
+  // Handler para limpar estado ao fechar
+  const handleClose = () => {
+    setCreatedClienteId(null);
+    onClose();
+  };
+
   return (
     <DraggableModal
       show={show}
-      onClose={onClose}
+      onClose={handleClose}
       title={isEditing ? 'Editar Cliente' : 'Novo Cliente'}
       size="xl"
       modalId={isEditing ? "cliente-edit-modal" : "cliente-create-modal"}
@@ -1284,7 +1298,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={onClose}
+            onClick={handleClose}
           >
             Cancelar
           </button>
@@ -1338,7 +1352,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
               onClick={() => setActiveTab('contratos')}
               type="button"
-              disabled={!isEditing}
+              disabled={!canEditContratosFinanceiro}
             >
               Contratos
             </button>
@@ -1348,7 +1362,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
               onClick={() => setActiveTab('financeiro')}
               type="button"
-              disabled={!isEditing}
+              disabled={!canEditContratosFinanceiro}
             >
               Financeiro
             </button>
