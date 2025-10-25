@@ -1297,7 +1297,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         </ul>
 
         {/* Conteúdo das Abas - Com Scroll */}
-        <div className="tab-content" id="clienteTabContent" style={{ flex: 1, overflow: 'auto', padding: '16px', minHeight: 0 }}>
+        <div className="tab-content" id="clienteTabContent" style={{ flex: 1, overflow: 'auto', padding: '0', minHeight: 0 }}>
           {/* Aba Dados Básicos */}
           {activeTab === 'dados-basicos' && (
             <Form
