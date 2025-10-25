@@ -195,7 +195,7 @@ export class TituloService {
       });
 
       // Com responseType: 'blob', o Blob está em response.data
-      const blob = response.data;
+      const blob = (response as any).data;
       
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta inválida do servidor');
