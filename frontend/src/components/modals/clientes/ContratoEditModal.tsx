@@ -12,6 +12,8 @@ import FormField from '../../ui/FormField';
 import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import DataTable from '../../common/DataTable';
+import Table from '../../tables/Table';
+import { TableConfig } from '../../tables/types';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
 import ImprimirModal from '../../common/ImprimirModal';
 import ModeloTermoService from '../../../services/modeloTermoService';
@@ -1385,22 +1387,17 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
               {/* Conteúdo rolável - apenas a tabela */}
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                <DataTable
-                  data={paginatedTermosData}
-                  columns={termosColumns}
-                  isLoading={isLoadingTermosContrato}
-                  showHeader={false}
-                  onSelectionChange={setSelectedTermosItems}
-                  onSort={(column: string, direction: 'asc' | 'desc') => {
-                    setSortColumn(column);
-                    setSortDirection(direction);
+                <Table
+                  config={{
+                    columns: termosColumns,
+                    data: paginatedTermosData,
+                    loading: isLoadingTermosContrato,
+                    selectable: true,
+                    multiSelect: true,
+                    emptyMessage: 'Este contrato ainda não possui termos cadastrados.',
+                    className: 'no-padding'
                   }}
-                  sortColumn={sortColumn}
-                  sortDirection={sortDirection}
-                  limit={limit}
-                  setLimit={setLimit}
-                  setPage={setPage}
-                  emptyMessage="Este contrato ainda não possui termos cadastrados."
+                  onSelectionChange={setSelectedTermosItems}
                 />
               </div>
             </div>
@@ -1654,22 +1651,17 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
                 {/* Conteúdo rolável - apenas a tabela */}
                 <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  <DataTable
-                    data={paginatedData}
-                    columns={columns}
-                    isLoading={isLoadingTitulos}
-                    showHeader={false}
-                    onSelectionChange={setSelectedItems}
-                    onSort={(column: string, direction: 'asc' | 'desc') => {
-                      setSortColumn(column);
-                      setSortDirection(direction);
+                  <Table
+                    config={{
+                      columns: columns,
+                      data: paginatedData,
+                      loading: isLoadingTitulos,
+                      selectable: true,
+                      multiSelect: true,
+                      emptyMessage: 'Este contrato ainda não possui títulos cadastrados.',
+                      className: 'no-padding'
                     }}
-                    sortColumn={sortColumn}
-                    sortDirection={sortDirection}
-                    limit={limit}
-                    setLimit={setLimit}
-                    setPage={setPage}
-                    emptyMessage="Este contrato ainda não possui títulos cadastrados."
+                    onSelectionChange={setSelectedItems}
                   />
                 </div>
 
@@ -2020,20 +2012,17 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         }
       >
         <div>
-          <DataTable
-            data={paginatedTermos}
-            columns={columnsTermos}
-            isLoading={isLoadingTermos}
-            pagination={paginationTermos}
-            limit={limitTermosModal}
-            setLimit={setLimitTermosModal}
-            setPage={setPageTermosModal}
-            onSort={(column: string, direction: 'asc' | 'desc') => {
-              setSortColumnTermosModal(column);
-              setSortDirectionTermosModal(direction);
+          <Table
+            config={{
+              columns: columnsTermos,
+              data: paginatedTermos,
+              loading: isLoadingTermos,
+              pagination: paginationTermos,
+              selectable: true,
+              multiSelect: false,
+              emptyMessage: 'Nenhum termo encontrado.',
+              className: 'no-padding'
             }}
-            sortColumn={sortColumnTermosModal}
-            sortDirection={sortDirectionTermosModal}
             onSelectionChange={(selectedItems: any[]) => {
               // Permitir apenas uma seleção (como radio buttons)
               if (selectedItems.length > 1) {
@@ -2062,7 +2051,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 setTermoSelecionado(null);
               }
             }}
-            searchPlaceholder="Buscar termos..."
+          />
             emptyMessage="Nenhum termo encontrado"
             showHeader={false}
           />
