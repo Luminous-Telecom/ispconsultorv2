@@ -1521,21 +1521,22 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Conteúdo rolável - apenas a tabela */}
-                  <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    <Table
-                      config={{
-                        columns: contratosColumns,
-                        data: paginatedContratosData,
-                        loading: isLoadingContratos,
-                        selectable: true,
-                        multiSelect: true,
-                        emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
-                        className: 'no-padding'
-                      }}
-                      onSelectionChange={setSelectedContratosItems}
-                    />
-                  </div>
+                  {/* Tabela unificada com busca, paginação e reload integrados */}
+                  <Table
+                    config={{
+                      columns: contratosColumns,
+                      data: sortedContratosData,
+                      loading: isLoadingContratos,
+                      selectable: true,
+                      multiSelect: true,
+                      searchable: true,
+                      searchPlaceholder: 'Buscar por plano, status, valor...',
+                      emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
+                      className: 'no-padding'
+                    }}
+                    onSelectionChange={setSelectedContratosItems}
+                    onRefresh={() => refetchContratos()}
+                  />
 
                   {/* Resumo de Contratos */}
                   {sortedContratosData.length > 0 && (
