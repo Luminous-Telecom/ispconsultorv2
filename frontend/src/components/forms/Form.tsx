@@ -63,7 +63,7 @@ const FormContent: React.FC<{
         type={field.type}
         label={field.label}
         name={field.name}
-        value={state.data[field.name]}
+        value={typeof state.data[field.name] === 'object' ? '' : state.data[field.name]}
         onChange={(value) => actions.setValue(field.name, value)}
         placeholder={field.placeholder}
         required={field.required}

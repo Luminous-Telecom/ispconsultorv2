@@ -1293,14 +1293,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           {/* Aba Dados Básicos */}
           {activeTab === 'dados-basicos' && (
             <Form
-              key={`dados-basicos-${formData.cnpj}-${formData.razao_social}`}
+              key={`dados-basicos-${clienteId}`}
               config={dadosBasicosFormConfig}
               formPrefix={formPrefix}
               initialValues={{
-                cnpj: formData.cnpj,
-                razao_social: formData.razao_social,
-                nome_fantasia: formData.nome_fantasia,
+                cnpj: formData.cnpj || '',
+                razao_social: formData.razao_social || '',
+                nome_fantasia: formData.nome_fantasia || '',
                 ativo: formData.ativo
+              }}
+              onFieldChange={(name, value) => {
+                handleInputChange(name as keyof ClienteFormData, value);
               }}
               onSubmit={(data) => {
                 // Manter apenas os campos da aba dados básicos
