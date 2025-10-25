@@ -252,7 +252,7 @@ const PlanoEditModal: React.FC<PlanoEditModalProps> = ({
           </div>
         </div>
       ) : (
-        <form id="plano-edit-form" onSubmit={handleSubmit}>
+        <form id="plano-edit-form" onSubmit={handleSubmit} style={{ padding: '1rem' }}>
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
