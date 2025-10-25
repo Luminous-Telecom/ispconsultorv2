@@ -166,6 +166,34 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     enabled: !!clienteId,
   });
 
+  // Carregar dados do cliente quando disponíveis
+  useEffect(() => {
+    if (cliente) {
+      setFormData({
+        cnpj: cliente.cnpj || '',
+        razao_social: cliente.razao_social || '',
+        nome_fantasia: cliente.nome_fantasia || '',
+        email: cliente.email || '',
+        telefone: cliente.telefone || '',
+        whatsapp: cliente.whatsapp || '',
+        cep: cliente.cep || '',
+        endereco: cliente.endereco || '',
+        numero: cliente.numero || '',
+        complemento: cliente.complemento || '',
+        bairro: cliente.bairro || '',
+        cidade: cliente.cidade || '',
+        estado: cliente.estado || '',
+        ativo: cliente.ativo ?? true,
+        tipo_cobranca: cliente.tipo_cobranca || 'titulo',
+        valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
+        recebe_email: cliente.recebe_email ?? true,
+        recebe_sms: cliente.recebe_sms ?? false,
+        recebe_whatsapp: cliente.recebe_whatsapp ?? true,
+        observacoes: cliente.observacoes || ''
+      });
+    }
+  }, [cliente]);
+
   // Buscar planos
   const { data: planosData } = useQuery({
     queryKey: ['planos'],

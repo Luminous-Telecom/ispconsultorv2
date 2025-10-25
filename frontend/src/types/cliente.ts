@@ -66,7 +66,7 @@ export interface ClienteFormData {
   cidade: string;
   estado: string;
   ativo: boolean;
-  tipo_cobranca: 'titulo';
+  tipo_cobranca: 'titulo' | 'carne';
   valor_primeiro_titulo: 'total' | 'proporcional';
   recebe_email: boolean;
   recebe_sms: boolean;
