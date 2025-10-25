@@ -1382,26 +1382,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                     {/* Elementos de busca e paginação removidos - agora integrados no Table component */}
 
-                      {/* Filtros após a busca */}
-                      <div className="d-flex gap-3 align-items-center" style={{ paddingLeft: '1rem' }}>
-                        <div className="form-check">
-                          <input 
-                            className="form-check-input" 
-                            type="checkbox" 
-                            id="showInativosContratos"
-                            name="showInativosContratos"
-                            checked={showInativosContratos}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              setShowInativosContratos(e.target.checked);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <label className="form-check-label small" htmlFor="showInativosContratos">
-                            Mostrar inativos
-                          </label>
-                        </div>
-                      </div>
 
                       {/* Paginação à direita */}
                       <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
