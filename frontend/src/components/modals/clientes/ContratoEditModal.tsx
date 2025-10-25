@@ -1014,7 +1014,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 title="Abrir listagem de registros"
                 className="btn btn-outline-secondary"
                 style={{
-                  borderLeft: 'none'
+                  borderLeft: 'none',
+                  borderColor: '#ced4da',
+                  backgroundColor: '#fff'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1120,7 +1122,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 title="Abrir listagem de registros"
                 className="btn btn-outline-secondary"
                 style={{
-                  borderLeft: 'none'
+                  borderLeft: 'none',
+                  borderColor: '#ced4da',
+                  backgroundColor: '#fff'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1226,7 +1230,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 title="Abrir listagem de registros"
                 className="btn btn-outline-secondary"
                 style={{
-                  borderLeft: 'none'
+                  borderLeft: 'none',
+                  borderColor: '#ced4da',
+                  backgroundColor: '#fff'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
