@@ -981,6 +981,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
           {/* Conteúdo das Abas */}
           <div className="tab-content" style={{ flex: 1, overflow: 'auto', padding: (activeTab === 'termos' || activeTab === 'financeiro') ? '0' : '16px' }}>
+            <>
             {/* Aba Contrato */}
             {activeTab === 'contrato' && (
               <div className="row">
@@ -1554,7 +1555,14 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                     selectable: true,
                     multiSelect: true,
                     emptyMessage: 'Este contrato ainda não possui termos cadastrados.',
-                    className: 'no-padding'
+                    className: 'no-padding',
+                    bulkActions: termosBulkActions.map(action => ({
+                      key: action.label,
+                      label: action.label,
+                      variant: action.variant || 'primary',
+                      onClick: action.action,
+                      disabled: action.disabled
+                    }))
                   }}
                   onSelectionChange={setSelectedTermosItems}
                 />
@@ -1563,75 +1571,75 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </div>
         )}
 
-            {/* Aba Financeiro */}
-          {activeTab === 'financeiro' && (
-            <div className="row">
-              <div className="col-12">
-                {/* Cabeçalho fixo - não rola */}
-                <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
-                  {/* Botões de Ação - Linha 1 */}
-                  <div className="d-flex justify-content-start mb-3">
-                    <div className="d-flex" style={{ gap: '8px' }}>
-                      {bulkActions.map((bulkAction, index) => {
-                        // Botão "Novo" sempre habilitado, outros apenas quando há seleção
-                        const isNewButton = bulkAction.label === 'Novo';
-                        const hasSelection = selectedItems.length > 0;
-                        const selectedItem = hasSelection ? selectedItems[0] : null;
-                        
-                        // Lógica de desabilitação baseada no status
-                        let isDisabled = !isNewButton && !hasSelection;
-                        
-                        if (hasSelection && selectedItem) {
-                          if (bulkAction.label === 'Receber' && selectedItem.status === 'pago') {
-                            isDisabled = true; // Não pode receber título já pago
-                          }
-                          if (bulkAction.label === 'Cancelar' && selectedItem.status === 'pago') {
-                            isDisabled = true; // Não pode cancelar título pago
-                          }
-                          if (bulkAction.label === 'Cancelar' && selectedItem.status === 'cancelado') {
-                            isDisabled = true; // Não pode cancelar título já cancelado
-                          }
-                          if (bulkAction.label === 'Receber' && selectedItem.status === 'cancelado') {
-                            isDisabled = true; // Não pode receber título cancelado
-                          }
+        {/* Aba Financeiro */}
+        {activeTab === 'financeiro' && (
+          <div className="row">
+            <div className="col-12">
+              {/* Cabeçalho fixo - não rola */}
+              <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
+                {/* Botões de Ação - Linha 1 */}
+                <div className="d-flex justify-content-start mb-3">
+                  <div className="d-flex" style={{ gap: '8px' }}>
+                    {bulkActions.map((bulkAction, index) => {
+                      // Botão "Novo" sempre habilitado, outros apenas quando há seleção
+                      const isNewButton = bulkAction.label === 'Novo';
+                      const hasSelection = selectedItems.length > 0;
+                      const selectedItem = hasSelection ? selectedItems[0] : null;
+                      
+                      // Lógica de desabilitação baseada no status
+                      let isDisabled = !isNewButton && !hasSelection;
+                      
+                      if (hasSelection && selectedItem) {
+                        if (bulkAction.label === 'Receber' && selectedItem.status === 'pago') {
+                          isDisabled = true; // Não pode receber título já pago
                         }
-                        
-                        // Usar a função disabled do bulkAction se existir
-                        if (bulkAction.disabled) {
-                          isDisabled = isDisabled || bulkAction.disabled(selectedItems);
+                        if (bulkAction.label === 'Cancelar' && selectedItem.status === 'pago') {
+                          isDisabled = true; // Não pode cancelar título pago
                         }
-                        
-                        // Se tem dropdown, renderizar dropdown
-                        if (bulkAction.dropdown) {
-                          return (
-                            <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
-                              <button
-                                className={`btn btn-sm btn-${bulkAction.variant || 'primary'} dropdown-toggle`}
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setOpenDropdown(openDropdown === index ? null : index);
-                                }}
-                                onMouseDown={(e) => e.stopPropagation()}
+                        if (bulkAction.label === 'Cancelar' && selectedItem.status === 'cancelado') {
+                          isDisabled = true; // Não pode cancelar título já cancelado
+                        }
+                        if (bulkAction.label === 'Receber' && selectedItem.status === 'cancelado') {
+                          isDisabled = true; // Não pode receber título cancelado
+                        }
+                      }
+                      
+                      // Usar a função disabled do bulkAction se existir
+                      if (bulkAction.disabled) {
+                        isDisabled = isDisabled || bulkAction.disabled(selectedItems);
+                      }
+                      
+                      // Se tem dropdown, renderizar dropdown
+                      if (bulkAction.dropdown) {
+                        return (
+                          <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
+                            <button
+                              className={`btn btn-sm btn-${bulkAction.variant || 'primary'} dropdown-toggle`}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setOpenDropdown(openDropdown === index ? null : index);
+                              }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                            >
+                              {bulkAction.label}
+                              <i className="bi bi-chevron-down ms-1"></i>
+                            </button>
+                            {openDropdown === index && (
+                              <ul 
+                                className="dropdown-menu show" 
+                                style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
                               >
-                                {bulkAction.label}
-                                <i className="bi bi-chevron-down ms-1"></i>
-                              </button>
-                              {openDropdown === index && (
-                                <ul 
-                                  className="dropdown-menu show" 
-                                  style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
-                                >
-                                  {bulkAction.dropdown.map((item, itemIndex) => (
-                                    <li key={itemIndex}>
-                                      <button
-                                        className="dropdown-item"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          item.action();
-                                          setOpenDropdown(null);
+                                {bulkAction.dropdown.map((item, itemIndex) => (
+                                  <li key={itemIndex}>
+                                    <button
+                                      className="dropdown-item"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        item.action();
+                                        setOpenDropdown(null);
                                         }}
                                       >
                                         {item.label}
@@ -1818,7 +1826,14 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                       selectable: true,
                       multiSelect: true,
                       emptyMessage: 'Este contrato ainda não possui títulos cadastrados.',
-                      className: 'no-padding'
+                      className: 'no-padding',
+                      bulkActions: bulkActions.map(action => ({
+                        key: action.label,
+                        label: action.label,
+                        variant: action.variant || 'primary',
+                        onClick: action.action,
+                        disabled: action.disabled
+                      }))
                     }}
                     onSelectionChange={setSelectedItems}
                   />
@@ -1868,6 +1883,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           )}
         </div>
       </div>
+      </>
 
       {/* Modais */}
       <TituloCreateModal
