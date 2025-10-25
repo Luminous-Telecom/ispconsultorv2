@@ -197,7 +197,7 @@ export class TituloService {
       console.log('Response recebida:', {
         response,
         responseType: typeof response,
-        hasData: 'data' in response,
+        hasData: 'data' in (response as any),
         dataType: typeof (response as any).data,
         isBlob: (response as any).data instanceof Blob
       });
