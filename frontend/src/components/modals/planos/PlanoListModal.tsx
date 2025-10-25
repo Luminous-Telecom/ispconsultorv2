@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
+import { useModalSelect } from '../../../hooks/useModalSelect';
 import DraggableModal from '../../common/DraggableModal';
+import ModalHeaderActions from '../../common/ModalHeaderActions';
 import PlanoCreateModal from './PlanoCreateModal';
 import PlanoEditModal from './PlanoEditModal';
 import { Plano } from '../../../types';
-import { Table, TableConfig } from '../../tables';
+import { Table } from '../../tables';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface PlanoListModalProps {
   show: boolean;
@@ -19,152 +22,69 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   onSelectPlano,
   title = "Selecionar Plano"
 }) => {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  
+  // Usar hook customizado para gerenciar seleção
+  const {
+    selectedItem,
+    handleSelectionChange,
+    clearSelection
+  } = useModalSelect<Plano>(
+    onSelectPlano ? (plano) => {
+      onSelectPlano(plano);
+      onClose();
+    } : undefined
+  );
 
-  // Query para buscar planos
+  // Query para buscar planos (buscando todos para filtrar localmente)
   const { data: planosData, isLoading, refetch } = usePlanos({
-    search: search || undefined,
+    search: undefined,
     status: status || undefined,
-    page,
-    limit
+    page: 1,
+    limit: 1000
   });
 
   const deletePlanoMutation = useDeletePlano();
 
-  // Configuração da tabela unificada
-  const tableConfig: TableConfig = {
-    data: planosData?.data || [],
-    loading: isLoading,
-    columns: [
-      {
-        key: 'id',
-        label: 'ID',
-        sortable: true,
-        width: '80px',
-        render: (item: Plano) => <span>{item.id}</span>
-      },
-      {
-        key: 'nome_plano',
-        label: 'Nome do Plano',
-        sortable: true,
-        render: (item: Plano) => (
-          <div className="fw-bold">{item.nome_plano}</div>
-        )
-      },
-      {
-        key: 'descricao',
-        label: 'Descrição',
-        sortable: false,
-        render: (item: Plano) => item.descricao || '-'
-      },
-      {
-        key: 'tipo_servico',
-        label: 'Tipo de Serviço',
-        sortable: true,
-        width: '150px',
-        render: (item: Plano) => (
-          <span className="badge bg-info">
-            {getTipoServicoLabel(item.tipo_servico)}
-          </span>
-        )
-      },
-      {
-        key: 'valor_mensal',
-        label: 'Valor Mensal',
-        sortable: true,
-        width: '120px',
-        render: (item: Plano) => (
-          <span className="fw-bold text-success">
-            R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
-          </span>
-        )
-      },
-      {
-        key: 'quantidade_usuarios',
-        label: 'Usuários',
-        sortable: true,
-        width: '100px',
-        render: (item: Plano) => (
-          <span>{item.quantidade_usuarios || '-'}</span>
-        )
-      },
-      {
-        key: 'periodicidade',
-        label: 'Periodicidade',
-        sortable: true,
-        width: '120px',
-        render: (item: Plano) => (
-          <span className="text-capitalize">{item.periodicidade || '-'}</span>
-        )
-      },
-      {
-        key: 'status',
-        label: 'Status',
-        sortable: true,
-        width: '100px',
-        render: (item: Plano) => (
-          <span className={`badge ${getStatusBadgeClass(item.status)}`}>
-            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-          </span>
-        )
-      }
-    ],
-    pagination: {
-      current_page: page,
-      last_page: planosData?.pagination?.last_page || 1,
-      per_page: limit,
-      total: planosData?.pagination?.total || 0,
-      from: planosData?.pagination?.from || (page - 1) * limit + 1,
-      to: planosData?.pagination?.to || Math.min(page * limit, planosData?.pagination?.total || 0)
-    },
-    bulkActions: onSelectPlano ? [] : [
-      {
-        key: 'create',
-        label: 'Novo',
-        icon: 'plus',
-        variant: 'primary',
-        onClick: () => setShowCreateModal(true)
-      },
-      {
-        key: 'edit',
-        label: 'Editar',
-        icon: 'pencil',
-        variant: 'primary',
-        onClick: (selectedItems: Plano[]) => {
-          if (selectedItems.length === 1) {
-            setSelectedPlanoId(selectedItems[0].id);
-            setShowEditModal(true);
-          }
-        },
-        disabled: (selectedItems: Plano[]) => selectedItems.length !== 1
-      },
-      {
-        key: 'delete',
-        label: 'Excluir',
-        icon: 'trash',
-        variant: 'danger',
-        onClick: (selectedItems: Plano[]) => {
-          if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} plano(s)?`)) {
-            selectedItems.forEach(item => handleDelete(item.id));
-          }
-        }
-      }
-    ],
-    searchable: true,
-    searchPlaceholder: 'Buscar por nome do plano...',
-    sortable: true,
-    selectable: !onSelectPlano,
-    multiSelect: !onSelectPlano,
-    emptyMessage: 'Nenhum plano encontrado'
+  // Filtrar planos localmente
+  const filteredPlanos = useMemo(() => {
+    if (!planosData?.data) return [];
+    
+    let filtered = [...planosData.data];
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.nome_plano?.toLowerCase().includes(searchLower) ||
+        p.id?.toString().includes(searchLower) ||
+        p.descricao?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  }, [planosData, search]);
+
+  // Paginar planos
+  const paginatedPlanos = useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return filteredPlanos.slice(startIndex, startIndex + limit);
+  }, [filteredPlanos, page, limit]);
+
+  // Criar paginação manual
+  const pagination = {
+    from: (page - 1) * limit + 1,
+    to: Math.min(page * limit, filteredPlanos.length),
+    total: filteredPlanos.length,
+    current_page: page,
+    last_page: Math.ceil(filteredPlanos.length / limit),
+    per_page: limit
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -189,6 +109,15 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     return tipos[tipo] || tipo;
   };
 
+  const handleSelect = () => {
+    if (selectedItem) {
+      clearSelection();
+      if (onSelectPlano) {
+        onSelectPlano(selectedItem);
+        onClose();
+      }
+    }
+  };
 
   const handleDelete = async (planoId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este plano?')) {
@@ -197,61 +126,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         refetch();
       } catch (error: any) {
         console.error('Erro ao excluir plano:', error);
-        // O erro já é tratado pelo hook useDeletePlano
       }
     }
-  };
-
-  const handleRowClick = (plano: Plano) => {
-    if (onSelectPlano) {
-      onSelectPlano(plano);
-      onClose();
-    }
-  };
-
-
-  // Função para ordenar os dados localmente (seguindo padrão das outras páginas)
-  const getSortedData = () => {
-    if (!planosData?.data || !sortColumn) {
-      return planosData?.data || [];
-    }
-
-    return [...planosData.data].sort((a, b) => {
-      let aValue: any = a[sortColumn as keyof Plano];
-      let bValue: any = b[sortColumn as keyof Plano];
-
-      // Converter para string se necessário para comparação
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-      }
-      if (typeof bValue === 'string') {
-        bValue = bValue.toLowerCase();
-      }
-
-      // Converter datas se necessário
-      if (sortColumn.includes('data') || sortColumn.includes('created_at')) {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
-      }
-
-      // Converter números se necessário
-      if (sortColumn.includes('valor') || sortColumn.includes('total') || sortColumn.includes('quantidade')) {
-        aValue = parseFloat(aValue) || 0;
-        bValue = parseFloat(bValue) || 0;
-      }
-
-      // Tratar valores nulos/undefined
-      if (aValue == null) aValue = '';
-      if (bValue == null) bValue = '';
-
-      if (aValue < bValue) {
-        return sortDirection === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortDirection === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
   };
 
   const columns = [
@@ -323,65 +199,90 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
   ];
 
-  const bulkActions = onSelectPlano ? [] : [
-    {
-      label: 'Novo',
-      action: () => {
-        setShowCreateModal(true);
-      }
-    },
-    {
-      label: 'Editar',
-      action: (selectedItems: Plano[]) => {
-        if (selectedItems.length > 0) {
-          setSelectedPlanoId(selectedItems[0].id);
-          setShowEditModal(true);
-        }
-      }
-    },
-    {
-      label: 'Excluir',
-      action: async (selectedItems: any[]) => {
-        if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} plano(s)?`)) {
-          // Excluir um por vez para evitar problemas de concorrência
-          for (const item of selectedItems) {
-            try {
-              await deletePlanoMutation.mutateAsync(item.id);
-            } catch (error: any) {
-              console.error(`Erro ao excluir plano ${item.id}:`, error);
-              // O erro já é tratado pelo hook useDeletePlano
-              // Continuar com os próximos mesmo se um falhar
-            }
-          }
-          // Refetch apenas uma vez após todas as exclusões
-          refetch();
-        }
-      }
-    }
-  ];
-
-
   return (
     <DraggableModal
       show={show}
-      onClose={onClose}
+      onClose={() => {
+        clearSelection();
+        onClose();
+      }}
       title={title}
       size="lg"
       modalId="plano-list-modal"
-      className="no-padding"
+      headerActions={
+        <ModalHeaderActions
+          bulkActions={onSelectPlano ? [
+            {
+              label: 'Cancelar',
+              variant: 'secondary',
+              action: () => {
+                clearSelection();
+                onClose();
+              }
+            },
+            {
+              label: 'Selecionar',
+              variant: 'primary',
+              disabled: () => !selectedItem,
+              action: handleSelect
+            }
+          ] : [
+            {
+              label: 'Novo',
+              variant: 'primary',
+              action: () => setShowCreateModal(true)
+            },
+            {
+              label: 'Editar',
+              variant: 'primary',
+              disabled: () => !selectedItem,
+              action: () => {
+                if (selectedItem) {
+                  setSelectedPlanoId(selectedItem.id);
+                  setShowEditModal(true);
+                }
+              }
+            },
+            {
+              label: 'Excluir',
+              variant: 'danger',
+              disabled: () => !selectedItem,
+              action: () => {
+                if (selectedItem && window.confirm('Tem certeza que deseja excluir este plano?')) {
+                  handleDelete(selectedItem.id);
+                }
+              }
+            }
+          ]}
+          selectedItems={selectedItem ? [selectedItem] : []}
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Buscar por nome do plano..."
+          limit={limit}
+          onLimitChange={setLimit}
+          pagination={pagination}
+          onPageChange={setPage}
+          onRefresh={() => {
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ['planos'] });
+          }}
+          idPrefix="plano-list"
+        />
+      }
     >
       <div>
         <Table
-          config={tableConfig}
-          onSort={(column: string, direction: 'asc' | 'desc') => {
-            setSortColumn(column);
-            setSortDirection(direction);
+          config={{
+            columns,
+            data: paginatedPlanos,
+            loading: isLoading,
+            pagination,
+            selectable: true,
+            multiSelect: false,
+            emptyMessage: 'Nenhum plano encontrado',
+            className: 'no-padding'
           }}
-          onSelectionChange={(selectedItems) => {
-            setSelectedItems(selectedItems);
-          }}
-          onRefresh={() => refetch()}
-          className="plano-list-table"
+          onSelectionChange={handleSelectionChange}
         />
       </div>
 
@@ -409,7 +310,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
           setSelectedPlanoId(null);
         }}
       />
-
     </DraggableModal>
   );
 };

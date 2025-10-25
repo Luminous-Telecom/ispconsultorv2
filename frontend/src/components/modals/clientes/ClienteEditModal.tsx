@@ -1250,7 +1250,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         flexDirection: 'column'
       }}>
         {/* Navegação por Abas - Fixa */}
-        <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0 }}>
+        <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '0.5rem' }}>
           <li className="nav-item" role="presentation">
             <button
               className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
@@ -1313,7 +1313,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           id="clienteTabContent" 
           style={{ 
             flex: 1, 
-            overflow: 'auto', 
+            overflow: 'hidden', 
             padding: (activeTab === 'contratos' || activeTab === 'financeiro') ? '0' : '16px', 
             minHeight: 0 
           }}
@@ -1461,7 +1461,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   {/* Resumo de Contratos */}
                   {sortedContratosData.length > 0 && (
-                    <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                    <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded" style={{ margin: '1rem' }}>
                       <div className="d-flex align-items-center">
                         <i className="bi bi-info-circle text-muted me-2"></i>
                         <span className="small text-muted">Resumo de contratos</span>
@@ -1529,7 +1529,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   {/* Resumo Financeiro */}
                   {sortedData.length > 0 && (
-                    <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                    <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded" style={{ margin: '1rem' }}>
                       <div className="d-flex align-items-center">
                         <i className="bi bi-info-circle text-muted me-2"></i>
                         <span className="small text-muted">Legenda de cores</span>

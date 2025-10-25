@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useBancos, useDeleteBanco } from '../../../hooks/useBancos';
-import DraggableModal from '../../common/DraggableModal';
+import { useModalSelect } from '../../../hooks/useModalSelect';
+import { useListModal } from '../../../hooks/useListModal';
+import ListModal from '../../common/ListModal';
 import BancoCreateModal from './BancoCreateModal';
 import BancoEditModal from './BancoEditModal';
 import { Banco } from '../../../types';
-import { Table, TableConfig } from '../../tables';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface BancoListModalProps {
   show: boolean;
@@ -19,81 +21,55 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   onSelectBanco,
   title = "Selecionar Banco"
 }) => {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [tipo, setTipo] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  
+  // Usar hook customizado para gerenciar seleção
+  const {
+    selectedItem: selectedBanco,
+    handleSelectionChange,
+    clearSelection
+  } = useModalSelect<Banco>(
+    onSelectBanco ? (banco) => {
+      onSelectBanco(banco);
+      onClose();
+    } : undefined
+  );
 
-  // Query para buscar bancos
-  const { data: bancosData, isLoading, refetch } = useBancos({
-    search: search || undefined,
-    tipo_banco: tipo || undefined,
-    page,
-    limit
-  });
-
-  const deleteBancoMutation = useDeleteBanco();
-
-  // Configuração da tabela unificada
-  const tableConfig: TableConfig = {
-    data: bancosData?.data || [],
-    loading: isLoading,
+  // Configurar modal centralizado
+  const modal = useListModal({
+    title,
     columns: [
       {
         key: 'id',
         label: 'ID',
         sortable: true,
-        width: '80px',
         render: (item: Banco) => <span>{item.id}</span>
       },
       {
         key: 'nome',
         label: 'Nome',
         sortable: true,
-        render: (item: Banco) => <div className="fw-bold">{item.nome}</div>
-      },
-      {
-        key: 'codigo',
-        label: 'Código',
-        sortable: true,
-        width: '100px',
-        render: (item: Banco) => <span className="text-muted">{getCodigoBanco(item.tipo_banco)}</span>
-      },
-      {
-        key: 'tipo_banco',
-        label: 'Tipo',
-        sortable: true,
-        width: '120px',
-        render: (item: Banco) => (
-          <span className="badge bg-primary">
-            {getTipoBancoLabel(item.tipo_banco)}
-          </span>
-        )
+        render: (item: Banco) => <strong>{item.nome}</strong>
       },
       {
         key: 'descricao',
         label: 'Descrição',
         sortable: false,
-        render: (item: Banco) => (
-          <div className="text-truncate" style={{ maxWidth: '200px' }} title={item.descricao || ''}>
-            {item.descricao || '-'}
-          </div>
-        )
+        render: (item: Banco) => item.descricao || '-'
       },
       {
-        key: 'sandbox',
-        label: 'Ambiente',
+        key: 'tipo',
+        label: 'Tipo',
         sortable: true,
-        width: '120px',
         render: (item: Banco) => (
-          <span className={`badge ${item.sandbox ? 'bg-warning text-dark' : 'bg-success'}`}>
-            {item.sandbox ? 'Sandbox' : 'Produção'}
+          <span className="badge bg-info">
+            {item.tipo === 'efi' ? 'EFI' : 'Asaas'}
           </span>
         )
       },
@@ -101,7 +77,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         key: 'ativo',
         label: 'Status',
         sortable: true,
-        width: '100px',
         render: (item: Banco) => (
           <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
             {item.ativo ? 'Ativo' : 'Inativo'}
@@ -109,71 +84,62 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         )
       }
     ],
-    pagination: {
-      current_page: page,
-      last_page: bancosData?.pagination?.last_page || 1,
-      per_page: limit,
-      total: bancosData?.pagination?.total || 0,
-      from: bancosData?.pagination?.from || (page - 1) * limit + 1,
-      to: bancosData?.pagination?.to || Math.min(page * limit, bancosData?.pagination?.total || 0)
-    },
-    bulkActions: onSelectBanco ? [] : [
-      {
-        key: 'create',
-        label: 'Novo',
-        icon: 'plus',
-        variant: 'primary',
-        onClick: () => setShowCreateModal(true)
-      },
-      {
-        key: 'edit',
-        label: 'Editar',
-        icon: 'pencil',
-        variant: 'primary',
-        onClick: (selectedItems: Banco[]) => {
-          if (selectedItems.length === 1) {
-            setSelectedBancoId(selectedItems[0].id);
-            setShowEditModal(true);
-          }
-        },
-        disabled: (selectedItems: Banco[]) => selectedItems.length !== 1
-      },
-      {
-        key: 'delete',
-        label: 'Excluir',
-        icon: 'trash',
-        variant: 'danger',
-        onClick: (selectedItems: Banco[]) => {
-          if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} banco(s)?`)) {
-            selectedItems.forEach(item => handleDelete(item.id));
-          }
-        }
-      }
-    ],
-    searchable: true,
     searchPlaceholder: 'Buscar por nome do banco...',
-    sortable: true,
-    selectable: true,
-    multiSelect: false, // Sempre seleção única
-    emptyMessage: 'Nenhum banco encontrado'
+    multiSelect: false
+  });
+
+  // Query para buscar bancos (buscando todos para filtrar localmente)
+  const { data: bancosData, isLoading, refetch } = useBancos({
+    search: undefined,
+    tipo_banco: undefined,
+    page: 1,
+    limit: 1000
+  });
+
+  const deleteBancoMutation = useDeleteBanco();
+
+  // Filtrar bancos localmente
+  const filteredBancos = useMemo(() => {
+    if (!bancosData?.data) return [];
+    
+    let filtered = [...bancosData.data];
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(b => 
+        b.nome?.toLowerCase().includes(searchLower) ||
+        b.id?.toString().includes(searchLower) ||
+        b.descricao?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  }, [bancosData, search]);
+
+  // Paginar bancos
+  const paginatedBancos = useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return filteredBancos.slice(startIndex, startIndex + limit);
+  }, [filteredBancos, page, limit]);
+
+  // Criar paginação manual
+  const pagination = {
+    from: (page - 1) * limit + 1,
+    to: Math.min(page * limit, filteredBancos.length),
+    total: filteredBancos.length,
+    current_page: page,
+    last_page: Math.ceil(filteredBancos.length / limit),
+    per_page: limit
   };
 
-  // Helper para exibir tipo do banco formatado
-  const getTipoBancoLabel = (tipo: string) => {
-    const tipos: Record<string, string> = {
-      'efi': 'EFI',
-      'asaas': 'Asaas'
-    };
-    return tipos[tipo] || tipo;
-  };
-
-  // Helper para obter código do banco baseado no tipo
-  const getCodigoBanco = (tipo: string) => {
-    const codigos: Record<string, string> = {
-      'efi': '364',
-      'asaas': '461'
-    };
-    return codigos[tipo] || '-';
+  const handleSelect = () => {
+    if (selectedBanco) {
+      clearSelection();
+      if (onSelectBanco) {
+        onSelectBanco(selectedBanco);
+        onClose();
+      }
+    }
   };
 
   const handleDelete = async (bancoId: number) => {
@@ -187,37 +153,76 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     }
   };
 
-  const handleRowClick = (banco: Banco) => {
-    if (onSelectBanco) {
-      onSelectBanco(banco);
-      onClose();
+  // Bulk actions
+  const bulkActions = onSelectBanco ? [
+    {
+      label: 'Cancelar',
+      variant: 'secondary' as const,
+      action: () => {
+        clearSelection();
+        onClose();
+      }
+    },
+    {
+      label: 'Selecionar',
+      variant: 'primary' as const,
+      disabled: () => !selectedBanco,
+      action: handleSelect
     }
-  };
-
+  ] : [
+    {
+      label: 'Novo',
+      variant: 'primary' as const,
+      action: () => setShowCreateModal(true)
+    },
+    {
+      label: 'Editar',
+      variant: 'primary' as const,
+      disabled: () => !selectedBanco,
+      action: () => {
+        if (selectedBanco) {
+          setSelectedBancoId(selectedBanco.id);
+          setShowEditModal(true);
+        }
+      }
+    },
+    {
+      label: 'Excluir',
+      variant: 'danger' as const,
+      disabled: () => !selectedBanco,
+      action: () => {
+        if (selectedBanco && window.confirm('Tem certeza que deseja excluir este banco?')) {
+          handleDelete(selectedBanco.id);
+        }
+      }
+    }
+  ];
 
   return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title={title}
-      size="lg"
-      modalId="banco-list-modal"
-      className="no-padding"
-    >
-      <div>
-        <Table
-          config={tableConfig}
-          onSort={(column: string, direction: 'asc' | 'desc') => {
-            setSortColumn(column);
-            setSortDirection(direction);
-          }}
-          onSelectionChange={(selectedItems) => {
-            setSelectedItems(selectedItems);
-          }}
-          onRefresh={() => refetch()}
-          className="banco-list-table"
-        />
-      </div>
+    <>
+      <ListModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        config={modal.config}
+        data={paginatedBancos}
+        loading={isLoading}
+        selectedItems={selectedBanco ? [selectedBanco] : []}
+        onSelectionChange={handleSelectionChange}
+        search={search}
+        onSearchChange={setSearch}
+        pagination={pagination}
+        onPageChange={setPage}
+        limit={limit}
+        onLimitChange={setLimit}
+        onRefresh={() => {
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['bancos'] });
+        }}
+        bulkActions={bulkActions}
+      />
 
       {/* Modal de Criação */}
       <BancoCreateModal
@@ -238,12 +243,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         }}
         bancoId={selectedBancoId}
         onSuccess={() => {
+          refetch();
           setShowEditModal(false);
           setSelectedBancoId(null);
-          refetch();
         }}
       />
-    </DraggableModal>
+    </>
   );
 };
 

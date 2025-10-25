@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
-import DraggableModal from '../../common/DraggableModal';
+import { useModalSelect } from '../../../hooks/useModalSelect';
+import { useListModal } from '../../../hooks/useListModal';
+import ListModal from '../../common/ListModal';
 import { ClienteCreateModal, ClienteEditModal } from './index';
-import { Table, TableConfig } from '../../tables';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Cliente {
   id: number;
@@ -27,31 +29,30 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   onSelectClient,
   title = "Selecionar Cliente"
 }) => {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  
+  // Usar hook customizado para gerenciar seleção
+  const {
+    selectedItem,
+    handleSelectionChange,
+    clearSelection
+  } = useModalSelect<Cliente>(
+    onSelectClient ? (cliente) => {
+      onSelectClient(cliente);
+      onClose();
+    } : undefined
+  );
 
-  // Hooks para gerenciar clientes
-  const { data: clientesData, isLoading, refetch } = useClientes({
-    search: search || undefined,
-    ativo: status ? status === 'ativo' : undefined,
-    page,
-    limit
-  });
-
-  const deleteClienteMutation = useDeleteCliente();
-
-  // Configuração da tabela unificada
-  const tableConfig: TableConfig = {
-    data: clientesData?.data || [],
-    loading: isLoading,
+  // Configurar modal centralizado
+  const modal = useListModal({
+    title,
     columns: [
       {
         key: 'id',
@@ -113,54 +114,29 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         )
       }
     ],
-    pagination: {
-      current_page: page,
-      last_page: clientesData?.pagination?.last_page || 1,
-      per_page: limit,
-      total: clientesData?.pagination?.total || 0,
-      from: clientesData?.pagination?.from || (page - 1) * limit + 1,
-      to: clientesData?.pagination?.to || Math.min(page * limit, clientesData?.pagination?.total || 0)
-    },
-    bulkActions: onSelectClient ? [] : [
-      {
-        key: 'create',
-        label: 'Novo',
-        icon: 'plus',
-        variant: 'primary',
-        onClick: () => setShowCreateModal(true)
-      },
-      {
-        key: 'edit',
-        label: 'Editar',
-        icon: 'pencil',
-        variant: 'primary',
-        onClick: (selectedItems: any[]) => {
-          if (selectedItems.length > 0) {
-            setSelectedClienteId(selectedItems[0].id);
-            setShowEditModal(true);
-          }
-        }
-      },
-      {
-        key: 'delete',
-        label: 'Excluir',
-        icon: 'trash',
-        variant: 'danger',
-        onClick: (selectedItems: any[]) => {
-          if (selectedItems.length > 0 && window.confirm(`Tem certeza que deseja excluir ${selectedItems.length} cliente(s)?`)) {
-            selectedItems.forEach(item => handleDelete(item.id));
-          }
-        }
-      }
-    ],
-    searchable: true,
     searchPlaceholder: 'Buscar por CNPJ, razão social...',
-    sortable: true,
-    selectable: !onSelectClient,
-    multiSelect: !onSelectClient,
-    emptyMessage: 'Nenhum cliente encontrado'
-  };
+    multiSelect: !onSelectClient
+  });
 
+  // Hooks para gerenciar clientes
+  const { data: clientesData, isLoading, refetch } = useClientes({
+    search: search || undefined,
+    ativo: status ? status === 'ativo' : undefined,
+    page,
+    limit
+  });
+
+  const deleteClienteMutation = useDeleteCliente();
+
+  const handleSelect = () => {
+    if (selectedItem) {
+      clearSelection();
+      if (onSelectClient) {
+        onSelectClient(selectedItem);
+        onClose();
+      }
+    }
+  };
 
   const handleDelete = async (clienteId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
@@ -173,37 +149,85 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     }
   };
 
-  const handleRowClick = (cliente: Cliente) => {
-    if (onSelectClient) {
-      onSelectClient(cliente);
-      onClose();
-    }
+  const pagination = {
+    current_page: page,
+    last_page: clientesData?.pagination?.last_page || 1,
+    per_page: limit,
+    total: clientesData?.pagination?.total || 0,
+    from: clientesData?.pagination?.from || (page - 1) * limit + 1,
+    to: clientesData?.pagination?.to || Math.min(page * limit, clientesData?.pagination?.total || 0)
   };
 
+  // Bulk actions
+  const bulkActions = onSelectClient ? [
+    {
+      label: 'Cancelar',
+      variant: 'secondary' as const,
+      action: () => {
+        clearSelection();
+        onClose();
+      }
+    },
+    {
+      label: 'Selecionar',
+      variant: 'primary' as const,
+      disabled: () => !selectedItem,
+      action: handleSelect
+    }
+  ] : [
+    {
+      label: 'Novo',
+      variant: 'primary' as const,
+      action: () => setShowCreateModal(true)
+    },
+    {
+      label: 'Editar',
+      variant: 'primary' as const,
+      disabled: () => !selectedItem,
+      action: () => {
+        if (selectedItem) {
+          setSelectedClienteId(selectedItem.id);
+          setShowEditModal(true);
+        }
+      }
+    },
+    {
+      label: 'Excluir',
+      variant: 'danger' as const,
+      disabled: () => !selectedItem,
+      action: () => {
+        if (selectedItem && window.confirm('Tem certeza que deseja excluir este cliente?')) {
+          handleDelete(selectedItem.id);
+        }
+      }
+    }
+  ];
 
   return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title={title}
-      size="lg"
-      modalId="cliente-list-modal"
-      className="no-padding"
-    >
-      <div>
-        <Table
-          config={tableConfig}
-          onSort={(column: string, direction: 'asc' | 'desc') => {
-            setSortColumn(column);
-            setSortDirection(direction);
-          }}
-          onSelectionChange={(selectedItems) => {
-            setSelectedItems(selectedItems);
-          }}
-          onRefresh={() => refetch()}
-          className="cliente-list-table"
-        />
-      </div>
+    <>
+      <ListModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        config={modal.config}
+        data={clientesData?.data || []}
+        loading={isLoading}
+        selectedItems={selectedItem ? [selectedItem] : []}
+        onSelectionChange={handleSelectionChange}
+        search={search}
+        onSearchChange={setSearch}
+        pagination={pagination}
+        onPageChange={setPage}
+        limit={limit}
+        onLimitChange={setLimit}
+        onRefresh={() => {
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['clientes'] });
+        }}
+        bulkActions={bulkActions}
+      />
 
       {/* Modal de Criação */}
       <ClienteCreateModal
@@ -225,10 +249,9 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         clienteId={selectedClienteId}
         onSuccess={() => {
           refetch();
-          // Não fechar o modal automaticamente
         }}
       />
-    </DraggableModal>
+    </>
   );
 };
 

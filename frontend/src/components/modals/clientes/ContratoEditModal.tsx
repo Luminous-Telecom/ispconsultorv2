@@ -1,19 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
-import { useCreateContrato, useUpdateContrato } from '../../../hooks/useContratos';
-import { useTermosContrato, useCreateTermoContrato, useUpdateTermoContrato, useDeactivateTermoContrato, useDeleteTermoContrato } from '../../../hooks/useTermosContrato';
+import { useUpdateContrato } from '../../../hooks/useContratos';
+import { useTermosContrato, useDeleteTermoContrato } from '../../../hooks/useTermosContrato';
 import { TermoContrato } from '../../../services/TermoContratoService';
-import { useModelosTermo } from '../../../hooks/useModelosTermo';
 import { TituloService } from '../../../services/tituloService';
-import FormField from '../../ui/FormField';
 import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
-import Table from '../../tables/Table';
-import { TableConfig } from '../../tables/types';
-import ModalHeaderActions from '../../common/ModalHeaderActions';
 import ImprimirModal from '../../common/ImprimirModal';
 import ModeloTermoService from '../../../services/modeloTermoService';
 import { useFormReset } from '../../../hooks/useFormReset';
@@ -27,21 +22,8 @@ import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
 import '../contratos/ContratoModals.css';
 import { Banco } from '../../../types';
 import { DocumentoSistema } from '../../../services/documentoSistemaService';
-
-interface ContratoForm {
-  plano_id: number;
-  desconto_percentual: number;
-  desconto_valor: number;
-  data_inicio: string;
-  data_fim: string;
-  status: 'ativo' | 'inativo' | 'suspenso';
-  observacoes: string;
-  isento_mensalidade: boolean;
-  dia_vencimento: number;
-  conta_boleto: number;
-  data_validade_desconto: string;
-  modelo_contrato_id: number;
-}
+import { ContratoTab, TermosTab, FinanceiroTab, ContratoForm } from './contrato';
+import { TermoEditModal, SelecionarTermoModal } from './contrato/modals';
 
 interface ContratoEditModalProps {
   show: boolean;
@@ -82,8 +64,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [searchTermosModal, setSearchTermosModal] = useState('');
   const [pageTermosModal, setPageTermosModal] = useState(1);
   const [limitTermosModal, setLimitTermosModal] = useState(10);
-  const [sortColumnTermosModal, setSortColumnTermosModal] = useState<string>('id');
-  const [sortDirectionTermosModal, setSortDirectionTermosModal] = useState<'asc' | 'desc'>('desc');
   const [lastClickTime, setLastClickTime] = useState<number>(0);
   const [lastClickedItem, setLastClickedItem] = useState<any>(null);
   const [termoFormData, setTermoFormData] = useState({
@@ -123,81 +103,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   
-  // Buscar termos cadastrados no sistema
-  const { data: termosSistema, isLoading: isLoadingTermos } = useModelosTermo();
 
-  // Filtrar e ordenar termos
-  const filteredTermos = React.useMemo(() => {
-    if (!termosSistema) return [];
-    
-    let filtered = [...termosSistema];
-    
-    // Aplicar busca
-    if (searchTermosModal) {
-      const searchLower = searchTermosModal.toLowerCase();
-      filtered = filtered.filter(t => 
-        t.nome?.toLowerCase().includes(searchLower) ||
-        t.id?.toString().includes(searchLower)
-      );
-    }
-    
-    // Aplicar ordenação
-    filtered.sort((a, b) => {
-      let aVal: any = a[sortColumnTermosModal as keyof typeof a];
-      let bVal: any = b[sortColumnTermosModal as keyof typeof b];
-      
-      if (aVal === bVal) return 0;
-      if (aVal == null) return 1;
-      if (bVal == null) return -1;
-      
-      const comparison = aVal < bVal ? -1 : 1;
-      return sortDirectionTermosModal === 'asc' ? comparison : -comparison;
-    });
-    
-    return filtered;
-  }, [termosSistema, searchTermosModal, sortColumnTermosModal, sortDirectionTermosModal]);
-
-  // Paginar termos
-  const paginatedTermos = React.useMemo(() => {
-    const startIndex = (pageTermosModal - 1) * limitTermosModal;
-    return filteredTermos.slice(startIndex, startIndex + limitTermosModal);
-  }, [filteredTermos, pageTermosModal, limitTermosModal]);
-
-  // Criar paginação manual para client-side
-  const paginationTermos = {
-    from: (pageTermosModal - 1) * limitTermosModal + 1,
-    to: Math.min(pageTermosModal * limitTermosModal, filteredTermos.length),
-    total: filteredTermos.length,
-    current_page: pageTermosModal,
-    last_page: Math.ceil(filteredTermos.length / limitTermosModal),
-    per_page: limitTermosModal
-  };
-
-  // Definir colunas da tabela de termos
-  const columnsTermos = [
-    {
-      key: 'id',
-      label: 'ID',
-      sortable: true,
-      render: (termo: any) => termo.id
-    },
-    {
-      key: 'nome',
-      label: 'Nome',
-      sortable: true,
-      render: (termo: any) => termo.nome
-    },
-    {
-      key: 'ativo',
-      label: 'Status',
-      sortable: true,
-      render: (termo: any) => (
-        <span className={`badge ${termo.ativo ? 'bg-success' : 'bg-secondary'}`}>
-          {termo.ativo ? 'Ativo' : 'Inativo'}
-        </span>
-      )
-    }
-  ];
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
   const { data: modelosContratoData } = useQuery({
@@ -212,9 +118,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   
   // Hooks para termos
   const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(contratoId || 0);
-  const createTermoMutation = useCreateTermoContrato();
-  const updateTermoMutation = useUpdateTermoContrato();
-  const deactivateTermoMutation = useDeactivateTermoContrato();
   const deleteTermoMutation = useDeleteTermoContrato();
 
   // Garantir que termosData seja sempre um array
@@ -399,11 +302,24 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
 
   // Funções para impressão
-  const handleImprimirSelecionados = () => {
+  const handleImprimirSelecionados = async () => {
     if (selectedItems.length === 0) return;
-    const ids = selectedItems.map(item => item.id);
-    const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`;
-    window.open(url, '_blank');
+    setIsGeneratingPdf(true);
+    try {
+      const ids = selectedItems.map(item => item.id);
+      const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
+      
+      const url = window.URL.createObjectURL(pdfBlob);
+      setPdfUrl(url);
+      setShowPreview(true);
+      
+      success('Boletos selecionados gerados com sucesso!');
+    } catch (err: any) {
+      console.error('Erro ao gerar PDF dos boletos:', err);
+      error('Erro ao gerar boletos selecionados');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handleImprimirTodosEmAberto = async () => {
@@ -418,9 +334,22 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       success('Nenhum título em aberto encontrado');
       return;
     }
-    const ids = titulosEmAberto.map((titulo: Titulo) => titulo.id);
-    const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${JSON.stringify(ids)}&print=true`;
-    window.open(url, '_blank');
+    setIsGeneratingPdf(true);
+    try {
+      const ids = titulosEmAberto.map((titulo: Titulo) => titulo.id);
+      const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
+      
+      const url = window.URL.createObjectURL(pdfBlob);
+      setPdfUrl(url);
+      setShowPreview(true);
+      
+      success('Boletos em aberto gerados com sucesso!');
+    } catch (err: any) {
+      console.error('Erro ao gerar PDF dos boletos:', err);
+      error('Erro ao gerar boletos em aberto');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // Bulk actions para títulos
@@ -448,20 +377,27 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           setSelectedTituloId(item.id);
           setShowTituloEditModal(true);
         }
-      }
+      },
+      disabled: (selectedItems: Titulo[]) => selectedItems.length !== 1
     },
     {
       label: 'Receber',
+      variant: 'success',
       action: (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedParcela(item);
           setShowReceberModal(true);
         }
+      },
+      disabled: (selectedItems: Titulo[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
       }
     },
     {
       label: 'Cancelar',
+      variant: 'danger',
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const confirmMessage = selectedItems.length === 1 
@@ -497,17 +433,21 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 error(message);
               }
               
-              // Recarregar dados
               queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
             } catch (err: any) {
               error('Erro ao cancelar títulos');
             }
           }
         }
+      },
+      disabled: (selectedItems: Titulo[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
       }
     },
     {
       label: 'Estornar',
+      variant: 'warning',
       action: async (selectedItems: Titulo[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
@@ -538,15 +478,16 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       }
     },
     {
-      label: 'Imprimir',
+      label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
       variant: 'primary',
+      disabled: () => isGeneratingPdf,
       dropdown: [
         {
-          label: `Imprimir Selecionados (${selectedItems.length})`,
+          label: 'Selecionados',
           action: handleImprimirSelecionados
         },
         {
-          label: 'Imprimir Todos em Aberto',
+          label: 'Abertos',
           action: handleImprimirTodosEmAberto
         }
       ]
@@ -871,9 +812,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   });
 
-  const paginatedData = sortedData.slice((page - 1) * limit, page * limit);
-  const paginatedTermosData = sortedTermosData.slice((page - 1) * limit, page * limit);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -949,7 +887,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       <form id="contrato-edit-form" onSubmit={handleSubmit}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Navegação por Abas */}
-          <ul className="nav nav-tabs" id="contratoTab" role="tablist">
+          <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ marginTop: '0.5rem' }}>
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
@@ -984,906 +922,79 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             <>
             {/* Aba Contrato */}
             {activeTab === 'contrato' && (
-              <div className="row">
-          {/* Plano */}
-          <div className="col-md-6 mb-3">
-            <label className="form-label">
-              Plano <span className="text-danger ms-1">*</span>
-            </label>
-            <div className="input-group">
-              <input
-                title="Digite o ID do plano"
-                autoComplete="off"
-                type="text"
-                className="form-control text-center id-field"
-                placeholder="ID"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '') {
-                    // Limpar seleção
-                    setPlanoSelecionado(null);
-                    setFormData(prev => ({ ...prev, plano_id: 0 }));
-                  } else {
-                    const id = parseInt(value);
-                    if (!isNaN(id) && id > 0) {
-                      // Buscar plano pelo ID
-                      const plano = planosData?.data?.find(p => p.id === id);
-                      if (plano) {
-                        setPlanoSelecionado(plano);
-                        handlePlanoSelect(plano);
-                      }
-                    }
-                  }
-                }}
-                defaultValue={planoSelecionado ? planoSelecionado.id : ''}
+              <ContratoTab
+                formData={formData}
+                errors={errors}
+                handleInputChange={handleInputChange}
+                planoSelecionado={planoSelecionado}
+                bancoSelecionado={bancoSelecionado}
+                modeloContratoSelecionado={modeloContratoSelecionado}
+                onPlanoSelect={handlePlanoSelect}
+                onBancoSelect={handleBancoSelect}
+                onModeloContratoSelect={handleModeloContratoSelect}
+                planosData={planosData}
+                bancosData={bancosData}
+                modelosContratoData={modelosContratoData}
+                onShowPlanoModal={() => setShowPlanoModal(true)}
+                onShowBancoModal={() => setShowBancoModal(true)}
+                onShowModeloContratoModal={() => setShowModeloContratoModal(true)}
               />
-              <input
-                placeholder="Buscar..."
-                readOnly
-                autoComplete="off"
-                tabIndex={-1}
-                type="text"
-                className="form-control"
-                value={planoSelecionado ? planoSelecionado.nome_plano : ''}
-                style={{ borderRight: 'none' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPlanoModal(true)}
-                title="Abrir listagem de registros"
-                className="search-button"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
-                  <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
-                </svg>
-              </button>
-            </div>
-            {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
-          </div>
-
-          {/* Status */}
-          <div className="col-md-6 mb-3">
-            <label htmlFor="status" className="form-label">
-              Status <span className="text-danger ms-1">*</span>
-            </label>
-            <select
-              id="status"
-              name="status"
-              className={`form-select ${errors.status ? 'is-invalid' : ''}`}
-              value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value as 'ativo' | 'inativo' | 'suspenso')}
-            >
-              <option value="ativo">Ativo</option>
-              <option value="inativo">Inativo</option>
-              <option value="suspenso">Suspenso</option>
-            </select>
-            {errors.status && <div className="invalid-feedback">{errors.status}</div>}
-          </div>
-
-          {/* Data de Início */}
-          <div className="col-md-6 mb-3">
-            <FormField
-              name="data_inicio"
-              type="date"
-              label="Data de Início"
-              required={true}
-              size="md"
-              value={formData.data_inicio}
-              onChange={(e: any) => handleInputChange('data_inicio', e.value)}
-              error={errors.data_inicio}
-              isInvalid={!!errors.data_inicio}
-            />
-          </div>
-
-          {/* Data de Fim */}
-          <div className="col-md-6 mb-3">
-            <FormField
-              name="data_fim"
-              type="date"
-              label="Data de Fim"
-              size="md"
-              value={formData.data_fim}
-              onChange={(e: any) => handleInputChange('data_fim', e.value)}
-            />
-          </div>
-
-          {/* Dia de Vencimento */}
-          <div className="col-md-6 mb-3">
-            <FormField
-              name="dia_vencimento"
-              type="number"
-              label="Dia de Vencimento"
-              placeholder="Ex: 10"
-              required={true}
-              size="md"
-              value={formData.dia_vencimento}
-              onChange={(e: any) => handleInputChange('dia_vencimento', parseInt(e.value))}
-              error={errors.dia_vencimento?.toString()}
-              isInvalid={!!errors.dia_vencimento}
-              min={1}
-              max={31}
-            />
-          </div>
-
-          {/* Banco para Boleto */}
-          <div className="col-md-6 mb-3">
-            <label className="form-label">
-              Banco para Boleto <span className="text-danger ms-1">*</span>
-            </label>
-            <div className="input-group">
-              <input
-                title="Digite o ID do banco"
-                autoComplete="off"
-                type="text"
-                className="form-control text-center id-field"
-                placeholder="ID"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '') {
-                    // Limpar seleção
-                    setBancoSelecionado(null);
-                    setFormData(prev => ({ ...prev, conta_boleto: 0 }));
-                  } else {
-                    const id = parseInt(value);
-                    if (!isNaN(id) && id > 0) {
-                      // Buscar banco pelo ID
-                      const banco = bancosData?.data?.find(b => b.id === id);
-                      if (banco) {
-                        setBancoSelecionado(banco);
-                        handleBancoSelect(banco);
-                      }
-                    }
-                  }
-                }}
-                defaultValue={bancoSelecionado ? bancoSelecionado.id : ''}
-              />
-              <input
-                placeholder="Buscar..."
-                readOnly
-                autoComplete="off"
-                tabIndex={-1}
-                type="text"
-                className="form-control"
-                value={bancoSelecionado ? bancoSelecionado.nome : ''}
-                style={{ borderRight: 'none' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowBancoModal(true)}
-                title="Abrir listagem de registros"
-                className="search-button"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
-                  <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
-                </svg>
-              </button>
-            </div>
-            {errors.conta_boleto && <div className="invalid-feedback">{errors.conta_boleto}</div>}
-          </div>
-
-          {/* Desconto Percentual */}
-          <div className="col-md-6 mb-3">
-            <FormField
-              name="desconto_percentual"
-              type="number"
-              label="Desconto Percentual (%)"
-              placeholder="0.00"
-              size="md"
-              value={formData.desconto_percentual}
-              onChange={(e: any) => handleInputChange('desconto_percentual', parseFloat(e.value) || 0)}
-              error={errors.desconto_percentual?.toString()}
-              isInvalid={!!errors.desconto_percentual}
-              min={0}
-              max={100}
-              step={0.01}
-            />
-          </div>
-
-          {/* Desconto Valor */}
-          <div className="col-md-6 mb-3">
-            <FormField
-              name="desconto_valor"
-              type="number"
-              label="Desconto Valor (R$)"
-              placeholder="0.00"
-              size="md"
-              value={formData.desconto_valor}
-              onChange={(e: any) => handleInputChange('desconto_valor', parseFloat(e.value) || 0)}
-              error={errors.desconto_valor?.toString()}
-              isInvalid={!!errors.desconto_valor}
-              min={0}
-              step={0.01}
-            />
-          </div>
-
-          {/* Data Validade Desconto */}
-          <div className="col-md-6 mb-3">
-            <FormField
-              name="data_validade_desconto"
-              type="date"
-              label="Data Validade Desconto"
-              size="md"
-              value={formData.data_validade_desconto}
-              onChange={(e: any) => handleInputChange('data_validade_desconto', e.value)}
-            />
-          </div>
-
-          {/* Isento Mensalidade */}
-          <div className="col-md-6 mb-3">
-            <div className="form-check">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="isento_mensalidade"
-                name="isento_mensalidade"
-                checked={formData.isento_mensalidade}
-                onChange={(e) => handleInputChange('isento_mensalidade', e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="isento_mensalidade">
-                Isento de Mensalidade
-              </label>
-            </div>
-          </div>
-
-          {/* Modelo de Contrato */}
-          <div className="col-md-12 mb-3">
-            <label className="form-label small">
-              Modelo de Contrato <span className="text-danger ms-1">*</span>
-            </label>
-            <div className="input-group">
-              <input
-                title="Digite o ID do modelo de contrato"
-                autoComplete="off"
-                type="text"
-                className="form-control text-center id-field"
-                placeholder="ID"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '') {
-                    // Limpar seleção
-                    setModeloContratoSelecionado(null);
-                    setFormData(prev => ({ ...prev, modelo_contrato_id: 0 }));
-                  } else {
-                    const id = parseInt(value);
-                    if (!isNaN(id) && id > 0) {
-                      // Buscar modelo de contrato pelo ID
-                      const modelo = modelosContratoData?.data?.find((m: any) => m.id === id);
-                      if (modelo) {
-                        setModeloContratoSelecionado(modelo);
-                        handleModeloContratoSelect(modelo);
-                      }
-                    }
-                  }
-                }}
-                defaultValue={modeloContratoSelecionado ? modeloContratoSelecionado.id : ''}
-              />
-              <input
-                placeholder="Buscar..."
-                readOnly
-                autoComplete="off"
-                tabIndex={-1}
-                type="text"
-                className="form-control"
-                value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
-                style={{ borderRight: 'none' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowModeloContratoModal(true)}
-                title="Abrir listagem de registros"
-                className="search-button"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
-                  <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
-                </svg>
-              </button>
-            </div>
-            {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
-            <small className="form-text text-muted">
-              Selecione um modelo de contrato cadastrado no sistema
-            </small>
-          </div>
-
-          {/* Observações */}
-          <div className="col-12 mb-3">
-            <FormField
-              name="observacoes"
-              type="textarea"
-              label="Observações"
-              size="md"
-              value={formData.observacoes}
-              onChange={(e: any) => handleInputChange('observacoes', e.value)}
-              rows={3}
-            />
-          </div>
-        </div>
             )}
 
         {/* Aba Termos */}
         {activeTab === 'termos' && (
-          <div className="row">
-            <div className="col-12">
-              {/* Botões de Ação */}
-              <div className="d-flex justify-content-start mb-3">
-                <div className="d-flex" style={{ gap: '8px' }}>
-                    {termosBulkActions.map((bulkAction, index) => {
-                      // Botão "Novo" sempre habilitado, outros apenas quando há seleção
-                      const isNewButton = bulkAction.label === 'Novo';
-                      const isImprimirButton = bulkAction.label === 'Imprimir';
-                      const hasSelection = selectedTermosItems.length > 0;
-                      const selectedItem = hasSelection ? selectedTermosItems[0] : null;
-                      
-                      // Lógica de desabilitação baseada no status
-                      let isDisabled = !isNewButton && !isImprimirButton && !hasSelection;
-                      
-                      if (hasSelection && selectedItem) {
-                        if (bulkAction.label === 'Editar' && !selectedItem.ativo) {
-                          isDisabled = true; // Não pode editar termo inativo
-                        }
-                        if (bulkAction.label === 'Deletar' && !selectedItem.ativo) {
-                          isDisabled = true; // Não pode deletar termo já inativo
-                        }
-                      }
-
-                      // Usar a função disabled do bulkAction se existir
-                      if (bulkAction.disabled) {
-                        isDisabled = isDisabled || bulkAction.disabled(selectedTermosItems);
-                      }
-
-                      // Se tem dropdown, renderizar dropdown
-                      if (bulkAction.dropdown) {
-                        return (
-                          <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
-                            <button
-                              className={`btn btn-sm btn-${bulkAction.variant || 'primary'} dropdown-toggle`}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setOpenDropdown(openDropdown === index ? null : index);
-                              }}
-                            >
-                              {bulkAction.label}
-                              <i className="bi bi-chevron-down ms-1"></i>
-                            </button>
-                            {openDropdown === index && (
-                              <div 
-                                className="dropdown-menu show" 
-                                style={{ 
-                                  position: 'absolute', 
-                                  top: '100%', 
-                                  left: 0, 
-                                  zIndex: 1050,
-                                  display: 'block',
-                                  minWidth: '200px'
-                                }}
-                              >
-                                {bulkAction.dropdown.map((item: { label: string; action: () => void }, itemIndex: number) => (
-                                  <button
-                                    key={itemIndex}
-                                    className="dropdown-item"
-                                    onClick={() => {
-                                      item.action();
-                                      setOpenDropdown(null);
-                                    }}
-                                    style={{ display: 'block', width: '100%', textAlign: 'left' }}
-                                  >
-                                    {item.label}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      }
-
-                      // Botão normal
-                      return (
-                        <button
-                          key={index}
-                          className="btn btn-sm btn-primary"
-                          onClick={(event) => {
-                            if (!isDisabled && bulkAction.action) {
-                              bulkAction.action(selectedTermosItems);
-                            }
-                          }}
-                          disabled={isDisabled}
-                          style={{ flexShrink: 0 }}
-                        >
-                          {isImprimirButton && isGeneratingPdf ? 'Gerando...' : bulkAction.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Busca, Filtros e Paginação - Linha 2 */}
-                <div className="d-flex mb-3">
-                  {/* Busca à esquerda */}
-                  <div className="d-flex gap-2">
-                    <input
-                      type="text"
-                      id="termos-search"
-                      name="termosSearch"
-                      className="form-control form-control-sm"
-                      placeholder="Buscar por tipo, conteúdo..."
-                      value={searchTermos}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setSearchTermos(e.target.value);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ width: '300px', height: '32px' }}
-                    />
-                  </div>
-
-                  {/* Filtros após a busca */}
-                  <div className="d-flex gap-3 align-items-center">
-                    <div className="form-check">
-                      <input 
-                        className="form-check-input" 
-                        type="checkbox" 
-                        id="showInactive"
-                        name="showInactive"
-                        checked={showInativos}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          setShowInativos(e.target.checked);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <label className="form-check-label small" htmlFor="showInactive">
-                        Mostrar inativos
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Paginação à direita */}
-                  <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
-                    {/* Seletor de linhas por página */}
-                    <select 
-                      id="termos-limit"
-                      name="termosLimit"
-                      className="form-select form-select-sm" 
-                      value={limit}
-                      onChange={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setLimit(parseInt(e.target.value));
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      style={{ width: '80px', height: '32px', cursor: 'pointer' }}
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={15}>15</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-
-                    {/* Paginação compacta */}
-                    <div className="d-flex gap-1">
-                      <button 
-                        className="btn btn-outline-secondary btn-sm" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setPage(1);
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        disabled={page <= 1}
-                        style={{ height: '32px', width: '32px', padding: '0' }}
-                      >
-                        <i className="bi bi-chevron-double-left"></i>
-                      </button>
-                      <button 
-                        className="btn btn-outline-secondary btn-sm" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setPage(Math.max(1, page - 1));
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        disabled={page <= 1}
-                        style={{ height: '32px', width: '32px', padding: '0' }}
-                      >
-                        <i className="bi bi-chevron-left"></i>
-                      </button>
-                      
-                      <span className="d-flex align-items-center px-2 small text-muted" style={{ height: '32px' }}>
-                        {sortedTermosData.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, sortedTermosData.length)} / {sortedTermosData.length}
-                      </span>
-                      
-                      <button 
-                        className="btn btn-outline-secondary btn-sm" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setPage(Math.min(Math.ceil(sortedTermosData.length / limit), page + 1));
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        disabled={page >= Math.ceil(sortedTermosData.length / limit)}
-                        style={{ height: '32px', width: '32px', padding: '0' }}
-                      >
-                        <i className="bi bi-chevron-right"></i>
-                      </button>
-                      <button 
-                        className="btn btn-outline-secondary btn-sm" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setPage(Math.ceil(sortedTermosData.length / limit));
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        disabled={page >= Math.ceil(sortedTermosData.length / limit)}
-                        style={{ height: '32px', width: '32px', padding: '0' }}
-                      >
-                        <i className="bi bi-chevron-double-right"></i>
-                      </button>
-                    </div>
-
-                    {/* Botão de refresh */}
-                    <button 
-                      className="btn btn-outline-secondary btn-sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        refetchTermos();
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      title="Recarregar dados"
-                    >
-                      <i className="bi bi-arrow-clockwise"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Conteúdo rolável - apenas a tabela */}
-              <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                <Table
-                  config={{
-                    columns: termosColumns,
-                    data: paginatedTermosData,
-                    loading: isLoadingTermosContrato,
-                    selectable: true,
-                    multiSelect: true,
-                    emptyMessage: 'Este contrato ainda não possui termos cadastrados.',
-                    className: 'no-padding',
-                    bulkActions: termosBulkActions.map(action => ({
-                      key: action.label,
-                      label: action.label,
-                      variant: action.variant || 'primary',
-                      onClick: action.action,
-                      disabled: action.disabled
-                    }))
-                  }}
-                  onSelectionChange={setSelectedTermosItems}
-                />
-              </div>
-            </div>
-          </div>
+          <TermosTab
+            termosData={termosArray}
+            isLoading={isLoadingTermosContrato}
+            bulkActions={termosBulkActions}
+            searchTermos={searchTermos}
+            setSearchTermos={setSearchTermos}
+            showInativos={showInativos}
+            setShowInativos={setShowInativos}
+            limit={limit}
+            setLimit={setLimit}
+            page={page}
+            setPage={setPage}
+            sortedData={sortedTermosData}
+            selectedTermosItems={selectedTermosItems}
+            setSelectedTermosItems={setSelectedTermosItems}
+            onRefresh={refetchTermos}
+            columns={termosColumns}
+            openDropdown={openDropdown}
+            setOpenDropdown={setOpenDropdown}
+            isGeneratingPdf={isGeneratingPdf}
+          />
         )}
 
         {/* Aba Financeiro */}
         {activeTab === 'financeiro' && (
-          <div className="row">
-            <div className="col-12">
-              {/* Cabeçalho fixo - não rola */}
-              <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
-                {/* Botões de Ação - Linha 1 */}
-                <div className="d-flex justify-content-start mb-3">
-                  <div className="d-flex" style={{ gap: '8px' }}>
-                    {bulkActions.map((bulkAction, index) => {
-                      // Botão "Novo" sempre habilitado, outros apenas quando há seleção
-                      const isNewButton = bulkAction.label === 'Novo';
-                      const hasSelection = selectedItems.length > 0;
-                      const selectedItem = hasSelection ? selectedItems[0] : null;
-                      
-                      // Lógica de desabilitação baseada no status
-                      let isDisabled = !isNewButton && !hasSelection;
-                      
-                      if (hasSelection && selectedItem) {
-                        if (bulkAction.label === 'Receber' && selectedItem.status === 'pago') {
-                          isDisabled = true; // Não pode receber título já pago
-                        }
-                        if (bulkAction.label === 'Cancelar' && selectedItem.status === 'pago') {
-                          isDisabled = true; // Não pode cancelar título pago
-                        }
-                        if (bulkAction.label === 'Cancelar' && selectedItem.status === 'cancelado') {
-                          isDisabled = true; // Não pode cancelar título já cancelado
-                        }
-                        if (bulkAction.label === 'Receber' && selectedItem.status === 'cancelado') {
-                          isDisabled = true; // Não pode receber título cancelado
-                        }
-                      }
-                      
-                      // Usar a função disabled do bulkAction se existir
-                      if (bulkAction.disabled) {
-                        isDisabled = isDisabled || bulkAction.disabled(selectedItems);
-                      }
-                      
-                      // Se tem dropdown, renderizar dropdown
-                      if (bulkAction.dropdown) {
-                        return (
-                          <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
-                            <button
-                              className={`btn btn-sm btn-${bulkAction.variant || 'primary'} dropdown-toggle`}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setOpenDropdown(openDropdown === index ? null : index);
-                              }}
-                              onMouseDown={(e) => e.stopPropagation()}
-                            >
-                              {bulkAction.label}
-                              <i className="bi bi-chevron-down ms-1"></i>
-                            </button>
-                            {openDropdown === index && (
-                              <ul 
-                                className="dropdown-menu show" 
-                                style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
-                              >
-                                {bulkAction.dropdown.map((item, itemIndex) => (
-                                  <li key={itemIndex}>
-                                    <button
-                                      className="dropdown-item"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        item.action();
-                                        setOpenDropdown(null);
-                                        }}
-                                      >
-                                        {item.label}
-                                      </button>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          );
-                        }
-                        
-                        // Botão normal
-                        return (
-                          <button
-                            key={index}
-                            className="btn btn-sm btn-primary"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              if (!isDisabled && bulkAction.action) {
-                                bulkAction.action(selectedItems);
-                              }
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            disabled={isDisabled}
-                            style={{ flexShrink: 0 }}
-                          >
-                            {bulkAction.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Busca, Filtros e Paginação - Linha 2 */}
-                  <div className="d-flex mb-3">
-                    {/* Busca à esquerda */}
-                    <div className="d-flex gap-2">
-                      <input
-                        type="text"
-                        id="contrato-search"
-                        name="contratoSearch"
-                        className="form-control form-control-sm"
-                        placeholder="Buscar por ID, carnê, valor..."
-                        value={search}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          setSearch(e.target.value);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ width: '300px', height: '32px' }}
-                      />
-                    </div>
-
-                    {/* Filtros após a busca */}
-                    <div className="d-flex gap-3 align-items-center">
-                      <div className="form-check">
-                        <input 
-                          className="form-check-input" 
-                          type="checkbox" 
-                          id="showCanceled"
-                          name="showCanceled"
-                          checked={showCancelados}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            setShowCancelados(e.target.checked);
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <label className="form-check-label small" htmlFor="showCanceled">
-                          Mostrar cancelados
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Paginação à direita */}
-                    <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
-                      {/* Seletor de linhas por página */}
-                      <select 
-                        id="titulos-limit"
-                        name="titulosLimit"
-                        className="form-select form-select-sm" 
-                        value={limit}
-                        onChange={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setLimit(parseInt(e.target.value));
-                        }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        style={{ width: '80px', height: '32px', cursor: 'pointer' }}
-                      >
-                        <option value={5}>5</option>
-                        <option value={10}>10</option>
-                        <option value={15}>15</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
-
-                      {/* Paginação compacta */}
-                      <div className="d-flex gap-1">
-                        <button 
-                          className="btn btn-outline-secondary btn-sm" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setPage(1);
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          disabled={page <= 1}
-                        >
-                          <i className="bi bi-chevron-double-left"></i>
-                        </button>
-                        <button 
-                          className="btn btn-outline-secondary btn-sm" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setPage(page - 1);
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          disabled={page <= 1}
-                        >
-                          <i className="bi bi-chevron-left"></i>
-                        </button>
-                        <span className="small text-muted mx-2">
-                          {sortedData.length > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, sortedData.length)} / {sortedData.length}
-                        </span>
-                        <button 
-                          className="btn btn-outline-secondary btn-sm" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setPage(page + 1);
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          disabled={page >= Math.ceil(sortedData.length / limit)}
-                        >
-                          <i className="bi bi-chevron-right"></i>
-                        </button>
-                        <button 
-                          className="btn btn-outline-secondary btn-sm" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setPage(Math.ceil(sortedData.length / limit));
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          disabled={page >= Math.ceil(sortedData.length / limit)}
-                        >
-                          <i className="bi bi-chevron-double-right"></i>
-                        </button>
-                      </div>
-
-                      {/* Botão de refresh */}
-                      <button 
-                        className="btn btn-outline-secondary btn-sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          refetchTitulos();
-                        }}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        title="Recarregar dados"
-                      >
-                        <i className="bi bi-arrow-clockwise"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Conteúdo rolável - apenas a tabela */}
-                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  <Table
-                    config={{
-                      columns: columns,
-                      data: paginatedData,
-                      loading: isLoadingTitulos,
-                      selectable: true,
-                      multiSelect: true,
-                      emptyMessage: 'Este contrato ainda não possui títulos cadastrados.',
-                      className: 'no-padding',
-                      bulkActions: bulkActions.map(action => ({
-                        key: action.label,
-                        label: action.label,
-                        variant: action.variant || 'primary',
-                        onClick: action.action,
-                        disabled: action.disabled
-                      }))
-                    }}
-                    onSelectionChange={setSelectedItems}
-                  />
-                </div>
-
-                {/* Resumo Financeiro */}
-                {sortedData.length > 0 && (
-                  <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
-                    <div className="d-flex align-items-center">
-                      <i className="bi bi-info-circle text-muted me-2"></i>
-                      <span className="small text-muted">Legenda de cores</span>
-                    </div>
-                    <div className="d-flex gap-4">
-                      <div className="text-end">
-                        <div className="small text-muted">Valor:</div>
-                        <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                          return sum + Number(item.valor || item.valor_parcela || 0);
-                        }, 0).toFixed(2)}</strong>
-                      </div>
-                      <div className="text-end">
-                        <div className="small text-muted">Valor baixado:</div>
-                        <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                          // Só considerar como baixado se estiver pago E não cancelado
-                          if (item.pago && item.status === 'pago') {
-                            return sum + Number(item.valor_pago || 0);
-                          }
-                          return sum;
-                        }, 0).toFixed(2)}</strong>
-                      </div>
-                      <div className="text-end">
-                        <div className="small text-muted">Valor aberto:</div>
-                        <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                          return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || item.valor_parcela || 0));
-                        }, 0).toFixed(2)}</strong>
-                      </div>
-                      <div className="text-end">
-                        <div className="small text-muted">Valor cancelado:</div>
-                        <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                          return sum + (item.status === 'cancelado' ? Number(item.valor || item.valor_parcela || 0) : 0);
-                        }, 0).toFixed(2)}</strong>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <FinanceiroTab
+            titulosData={titulosData?.data || []}
+            isLoading={isLoadingTitulos}
+            bulkActions={bulkActions}
+            search={search}
+            setSearch={setSearch}
+            showCancelados={showCancelados}
+            setShowCancelados={setShowCancelados}
+            limit={limit}
+            setLimit={setLimit}
+            page={page}
+            setPage={setPage}
+            sortedData={sortedData}
+            selectedItems={selectedItems}
+            setSelectedItems={setSelectedItems}
+            onRefresh={refetchTitulos}
+            columns={columns}
+            openDropdown={openDropdown}
+            setOpenDropdown={setOpenDropdown}
+            isGeneratingPdf={isGeneratingPdf}
+          />
         )}
+            </>
+          </div>
         </div>
-      </div>
-      </>
+      </form>
+      </DraggableModal>
 
       {/* Modais */}
       <TituloCreateModal
@@ -1924,30 +1035,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         }}
       />
 
-      <TituloCreateModal
-        show={showTituloCreateModal}
-        onClose={() => setShowTituloCreateModal(false)}
-        contratoId={contratoId!}
-        onSuccess={() => {
-          setShowTituloCreateModal(false);
-          refetchTitulos();
-        }}
-      />
-
-      <TituloEditModal
-        show={showTituloEditModal}
-        onClose={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-        }}
-        parcelaId={selectedTituloId!}
-        onSuccess={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-          refetchTitulos();
-        }}
-      />
-
       <ReceberModal
         isOpen={showReceberModal}
         parcela={selectedParcela}
@@ -1958,316 +1045,76 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       />
 
       {/* Modal para criar/editar termo */}
-      <DraggableModal
+      <TermoEditModal
         show={showTermoModal}
         onClose={() => {
           setShowTermoModal(false);
           setEditingTermo(null);
+          setTermoFormData({
+            assinado: 'NAO',
+            termoCadastradoId: 0
+          });
         }}
-        title={editingTermo ? "Editar Termo" : "Novo Termo"}
-        size="lg"
-      >
-        <form onSubmit={async (e) => {
-          e.preventDefault();
-          try {
-            // Validação no frontend
-            if (!termoFormData.termoCadastradoId || termoFormData.termoCadastradoId <= 0) {
-              error('É obrigatório selecionar um modelo de termo cadastrado no sistema.');
-              return;
-            }
-            
-            if (editingTermo) {
-              // Atualizar termo existente
-              await updateTermoMutation.mutateAsync({
-                id: editingTermo.id,
-                data: {
-                  modelo_termo_id: termoFormData.termoCadastradoId,
-                  assinado: termoFormData.assinado
-                }
-              });
-            } else {
-              // Criar novo termo
-              await createTermoMutation.mutateAsync({
-                contratoId: contratoId!,
-                data: {
-                  modelo_termo_id: termoFormData.termoCadastradoId,
-                  assinado: termoFormData.assinado
-                }
-              });
-            }
-            
-            setShowTermoModal(false);
-            setEditingTermo(null);
-            setTermoFormData({
-              assinado: 'NAO',
-              termoCadastradoId: 0
-            });
-          } catch (error) {
-            console.error('Erro ao criar termo:', error);
-          }
-        }}>
-          <div className="row">
-            <div className="col-md-6">
-              <div className="mb-3">
-                <label className="form-label">Assinado</label>
-                <div className="d-flex gap-3 mt-2">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="assinado"
-                      id="assinadoSim"
-                      value="SIM"
-                      checked={termoFormData.assinado === 'SIM'}
-                      onChange={() => setTermoFormData({ ...termoFormData, assinado: 'SIM' })}
-                    />
-                    <label className="form-check-label" htmlFor="assinadoSim">
-                      Sim
-                    </label>
-                  </div>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="assinado"
-                      id="assinadoNao"
-                      value="NAO"
-                      checked={termoFormData.assinado === 'NAO'}
-                      onChange={() => setTermoFormData({ ...termoFormData, assinado: 'NAO' })}
-                    />
-                    <label className="form-check-label" htmlFor="assinadoNao">
-                      Não
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mb-3">
-            {/* Campo de seleção de termo cadastrado */}
-            <div className="mb-3">
-              <label htmlFor="id_termo" className="form-label">
-                Selecionar Termo Cadastrado
-              </label>
-                <div className="d-flex align-items-center gap-2">
-                  {/* Input do ID */}
-                  <input
-                    type="text"
-                    id="id_termo"
-                    className="form-control"
-                    style={{ width: '66px' }}
-                    value={termoFormData.termoCadastradoId || ''}
-                    onChange={(e) => {
-                      const id = parseInt(e.target.value) || 0;
-                      const termoSelecionado = termosSistema?.find((t: any) => t.id === id);
-                      setTermoFormData({
-                        ...termoFormData, 
-                        termoCadastradoId: id
-                      });
-                    }}
-                    placeholder="ID"
-                    title="Digite o ID do termo"
-                    autoComplete="off"
-                  />
-                  
-                  {/* Input do Label */}
-                  <input
-                    type="text"
-                    id="id_termo_label"
-                    className="form-control"
-                    value={termoFormData.termoCadastradoId > 0 ? 
-                      termosSistema?.find((t: any) => t.id === termoFormData.termoCadastradoId)?.nome || '' : 
-                      ''
-                    }
-                    placeholder="Nome do termo"
-                    disabled
-                    autoComplete="off"
-                    style={{ cursor: 'auto' }}
-                  />
-                  
-                  {/* Botão de busca */}
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    title="Abrir listagem de registros"
-                    onClick={() => {
-                      setShowSelecionarTermoModal(true);
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                    </svg>
-                  </button>
-                </div>
-                
-              </div>
-
-            {/* Campo de conteúdo personalizado */}
-          </div>
-          
-
-          <div className="d-flex justify-content-end gap-2 mt-4">
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              onClick={() => {
-                setShowTermoModal(false);
-                setEditingTermo(null);
-              }}
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={createTermoMutation.isPending || updateTermoMutation.isPending}
-            >
-              {(createTermoMutation.isPending || updateTermoMutation.isPending) 
-                ? 'Salvando...' 
-                : (editingTermo ? 'Atualizar' : 'Salvar')
-              }
-            </button>
-          </div>
-        </form>
-      </DraggableModal>
+        editingTermo={editingTermo}
+        contratoId={contratoId!}
+        termoFormData={termoFormData}
+        setTermoFormData={setTermoFormData}
+        onShowSelecionarTermo={() => setShowSelecionarTermoModal(true)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['termos-contrato', contratoId] });
+        }}
+      />
 
       {/* Modal para selecionar termo cadastrado */}
-      <DraggableModal
+      <SelecionarTermoModal
         show={showSelecionarTermoModal}
-        onClose={() => {
+        onClose={() => setShowSelecionarTermoModal(false)}
+        onSelect={(termo) => {
+          setTermoFormData({
+            ...termoFormData, 
+            termoCadastradoId: termo.id
+          });
           setShowSelecionarTermoModal(false);
-          setTermoSelecionado(null);
         }}
-        title="Selecionar Termo Cadastrado"
-        size="lg"
-        modalId="selecionar-termo-modal"
-        headerActions={
-          <ModalHeaderActions
-            bulkActions={[
-              {
-                label: 'Cancelar',
-                variant: 'secondary',
-                action: () => {
-                  setShowSelecionarTermoModal(false);
-                  setTermoSelecionado(null);
-                }
-              },
-              {
-                label: 'Inserir',
-                variant: 'primary',
-                disabled: () => !termoSelecionado,
-                action: () => {
-                  if (termoSelecionado) {
-                    setTermoFormData({
-                      ...termoFormData, 
-                      termoCadastradoId: termoSelecionado.id
-                    });
-                    setShowSelecionarTermoModal(false);
-                    setTermoSelecionado(null);
-                  }
-                }
-              }
-            ]}
-            selectedItems={termoSelecionado ? [termoSelecionado] : []}
-            search={searchTermosModal}
-            onSearchChange={setSearchTermosModal}
-            searchPlaceholder="Buscar termos..."
-            limit={limitTermosModal}
-            onLimitChange={setLimitTermosModal}
-            pagination={paginationTermos}
-            onPageChange={setPageTermosModal}
-            onRefresh={() => {
-              // Refetch dos termos do sistema
-              queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
-            }}
-            idPrefix="selecionar-termo"
-          />
-        }
-      >
-        <div>
-          <Table
-            config={{
-              columns: columnsTermos,
-              data: paginatedTermos,
-              loading: isLoadingTermos,
-              pagination: paginationTermos,
-              selectable: true,
-              multiSelect: false,
-              emptyMessage: 'Nenhum termo encontrado.',
-              className: 'no-padding'
-            }}
-            onSelectionChange={(selectedItems: any[]) => {
-              // Permitir apenas uma seleção (como radio buttons)
-              if (selectedItems.length > 1) {
-                setTermoSelecionado(selectedItems[selectedItems.length - 1]);
-              } else if (selectedItems.length === 1) {
-                const currentItem = selectedItems[0];
-                const currentTime = Date.now();
-                
-                // Verificar se é duplo clique (mesmo item clicado em menos de 300ms)
-                if (lastClickedItem?.id === currentItem.id && (currentTime - lastClickTime) < 300) {
-                  // Inserir termo ao clicar duas vezes
-                  setTermoFormData({
-                    ...termoFormData, 
-                    termoCadastradoId: currentItem.id
-                  });
-                  setShowSelecionarTermoModal(false);
-                  setTermoSelecionado(null);
-                  setLastClickTime(0);
-                  setLastClickedItem(null);
-                } else {
-                  setTermoSelecionado(currentItem);
-                  setLastClickTime(currentTime);
-                  setLastClickedItem(currentItem);
-                }
-              } else {
-                setTermoSelecionado(null);
-              }
-            }}
-          />
-        </div>
-      </DraggableModal>
-      </form>
-      </DraggableModal>
+      />
 
-    {/* Modal de impressão */}
-    <ImprimirModal
-      show={showPreview}
-      onClose={() => {
-        setShowPreview(false);
-        if (pdfUrl) {
-          window.URL.revokeObjectURL(pdfUrl);
-        }
-        setPdfUrl(null);
-      }}
-      pdfUrl={pdfUrl}
-      title="Visualizar Termo"
-      modalId="termo-imprimir-modal"
-    />
+      {/* Modal de impressão */}
+      <ImprimirModal
+        show={showPreview}
+        onClose={() => {
+          setShowPreview(false);
+          if (pdfUrl) {
+            window.URL.revokeObjectURL(pdfUrl);
+          }
+          setPdfUrl(null);
+        }}
+        pdfUrl={pdfUrl}
+        title="Visualizar Termo"
+        modalId="termo-imprimir-modal"
+      />
 
-    {/* Modais de seleção */}
-    <PlanoListModal
-      show={showPlanoModal}
-      onClose={() => setShowPlanoModal(false)}
-      onSelectPlano={handlePlanoSelect}
-      title="Selecionar Plano"
-    />
+      {/* Modais de seleção */}
+      <PlanoListModal
+        show={showPlanoModal}
+        onClose={() => setShowPlanoModal(false)}
+        onSelectPlano={handlePlanoSelect}
+        title="Selecionar Plano"
+      />
 
-    <BancoListModal
-      show={showBancoModal}
-      onClose={() => setShowBancoModal(false)}
-      onSelectBanco={handleBancoSelect}
-      title="Selecionar Banco"
-    />
+      <BancoListModal
+        show={showBancoModal}
+        onClose={() => setShowBancoModal(false)}
+        onSelectBanco={handleBancoSelect}
+        title="Selecionar Banco"
+      />
 
-    <ModeloContratoSelectModal
-      show={showModeloContratoModal}
-      onClose={() => setShowModeloContratoModal(false)}
-      onSelectModelo={handleModeloContratoSelect}
-      title="Selecionar Modelo de Contrato"
-    />
-  </>
+      <ModeloContratoSelectModal
+        show={showModeloContratoModal}
+        onClose={() => setShowModeloContratoModal(false)}
+        onSelectModelo={handleModeloContratoSelect}
+        title="Selecionar Modelo de Contrato"
+      />
+    </>
   );
 };
 

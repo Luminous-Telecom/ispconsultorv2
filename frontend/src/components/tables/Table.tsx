@@ -375,11 +375,11 @@ function Table<T extends { id: number | string }>({
   };
 
   return (
-    <div className={className} style={{ width: '100%', margin: 0, padding: 0 }}>
+    <div className={className} style={{ width: '100%', margin: 0, padding: 0, boxSizing: 'border-box' }}>
       {/* Header com botões de ação e filtros */}
-      <div className="card-header py-2 border-bottom" style={{ margin: 0, paddingLeft: '1rem', paddingRight: '1rem' }}>
+      <div className="border-bottom" style={{ margin: 0, padding: 0, background: 'transparent' }}>
         {/* Primeira linha: Botões de ação */}
-        <div className="d-flex align-items-center mb-2">
+        <div className="d-flex align-items-center mb-2" style={{ padding: '0.5rem 1rem' }}>
           <div className="d-flex" style={{ gap: '8px' }}>
             {bulkActions.map((bulkAction, index) => {
               // Novo sempre habilitado, outros só quando há seleção
@@ -452,7 +452,7 @@ function Table<T extends { id: number | string }>({
         </div>
 
         {/* Segunda linha: Busca + Paginação + Reload */}
-        <div className="d-flex align-items-center justify-content-between">
+        <div className="d-flex align-items-center justify-content-between" style={{ padding: '0 1rem 0.5rem 1rem' }}>
           {/* Busca e controles customizados à esquerda */}
           <div className="d-flex align-items-center gap-3">
             {searchable && (
@@ -580,8 +580,8 @@ function Table<T extends { id: number | string }>({
       </div>
 
       {/* Tabela */}
-      <div className="table-responsive" style={{ margin: 0, padding: 0 }}>
-        <table className="table table-striped table-sm">
+      <div className="table-responsive" style={{ margin: 0, padding: 0, overflowX: 'auto', width: '100%', boxSizing: 'border-box', maxWidth: '100%' }}>
+        <table className="table table-striped table-sm" style={{ width: '100%', tableLayout: 'auto', margin: 0 }}>
           {renderTableHeader()}
           {renderTableBody()}
         </table>

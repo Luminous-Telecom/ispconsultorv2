@@ -5,8 +5,12 @@ import { PlanoService } from '../../../services/planoService';
 import { ClienteService } from '../../../services/clienteService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { useFormPrefix } from '../../../hooks/useFormId';
+import { useEntitySelectField } from '../../../hooks/useEntitySelectField';
 import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
+import EntitySelectField from '../../ui/EntitySelectField';
+import ClienteListModal from '../clientes/ClienteListModal';
+import PlanoListModal from '../planos/PlanoListModal';
 
 interface TituloForm {
   cliente_id: number;
@@ -39,6 +43,10 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
+  
+  // Hooks para gerenciar seleção de entidades
+  const clienteSelect = useEntitySelectField<{ id: number }>();
+  const planoSelect = useEntitySelectField<{ id: number }>();
 
   // Query para buscar dados da parcela
   const { data: parcela, isLoading: isLoadingParcela } = useQuery({
@@ -193,55 +201,35 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
         </div>
       }
     >
-      <form id="titulo-edit-form" onSubmit={handleSubmit}>
+      <form id="titulo-edit-form" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3">
-              <FormField
-                name="cliente_id"
-                type="select"
-                label="Cliente"
-                required={true}
-                size="sm"
-                value={formData.cliente_id}
-                onChange={(e: any) => handleInputChange('cliente_id', parseInt(e.value))}
-                error={errors.cliente_id}
-                isInvalid={!!errors.cliente_id}
-                disabled={updateParcelaMutation.isPending}
-                formPrefix={formPrefix}
-                options={[
-                  { value: 0, label: 'Selecione um cliente' },
-                  ...(clientes?.data?.map((cliente: any) => ({
-                    value: cliente.id,
-                    label: `${cliente.nome || cliente.razao_social} - ${cliente.cpf_cnpj || cliente.cnpj}`
-                  })) || [])
-                ]}
-              />
-            </div>
+            <EntitySelectField
+              value={formData.cliente_id}
+              onChange={(value) => handleInputChange('cliente_id', value)}
+              onShowModal={clienteSelect.openModal}
+              entities={clientes?.data?.map((cliente: any) => ({
+                id: cliente.id,
+                nome: `${cliente.nome || cliente.razao_social} - ${cliente.cpf_cnpj || cliente.cnpj}`
+              })) || []}
+              label="Cliente"
+              error={errors.cliente_id}
+              required
+            />
           </div>
           <div className="col-md-6">
-            <div className="mb-3">
-              <FormField
-                name="plano_id"
-                type="select"
-                label="Plano"
-                required={true}
-                size="sm"
-                value={formData.plano_id}
-                onChange={(e: any) => handleInputChange('plano_id', parseInt(e.value))}
-                error={errors.plano_id}
-                isInvalid={!!errors.plano_id}
-                disabled={updateParcelaMutation.isPending}
-                formPrefix={formPrefix}
-                options={[
-                  { value: 0, label: 'Selecione um plano' },
-                  ...(planos?.data?.map((plano: any) => ({
-                    value: plano.id,
-                    label: plano.nome_plano
-                  })) || [])
-                ]}
-              />
-            </div>
+            <EntitySelectField
+              value={formData.plano_id}
+              onChange={(value) => handleInputChange('plano_id', value)}
+              onShowModal={planoSelect.openModal}
+              entities={planos?.data?.map((plano: any) => ({
+                id: plano.id,
+                nome: plano.nome_plano
+              })) || []}
+              label="Plano"
+              error={errors.plano_id}
+              required
+            />
           </div>
         </div>
 
@@ -284,6 +272,27 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
         </div>
 
       </form>
+      
+      {/* Modais de seleção */}
+      <ClienteListModal
+        show={clienteSelect.showModal}
+        onClose={clienteSelect.closeModal}
+        onSelectClient={(cliente) => {
+          handleInputChange('cliente_id', cliente.id);
+          clienteSelect.handleSelect(cliente);
+        }}
+        title="Selecionar Cliente"
+      />
+      
+      <PlanoListModal
+        show={planoSelect.showModal}
+        onClose={planoSelect.closeModal}
+        onSelectPlano={(plano) => {
+          handleInputChange('plano_id', plano.id);
+          planoSelect.handleSelect(plano);
+        }}
+        title="Selecionar Plano"
+      />
     </DraggableModal>
   );
 };

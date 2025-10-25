@@ -8,6 +8,10 @@ import { useBancos } from '../../../hooks/useBancos';
 import { useQuery } from '@tanstack/react-query';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import FormField from '../../ui/FormField';
+import EntitySelectField from '../../../components/ui/EntitySelectField';
+import PlanoListModal from '../planos/PlanoListModal';
+import BancoListModal from '../bancos/BancoListModal';
+import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
 
 interface ContratoForm {
   plano_id: number;
@@ -70,6 +74,16 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
   
   // Mutation para criar contrato
   const createContratoMutation = useCreateContrato();
+
+  // Estados dos modais de seleção
+  const [showPlanoModal, setShowPlanoModal] = useState(false);
+  const [showBancoModal, setShowBancoModal] = useState(false);
+  const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
+  
+  // Objetos selecionados
+  const [planoSelecionado, setPlanoSelecionado] = useState<any>(null);
+  const [bancoSelecionado, setBancoSelecionado] = useState<any>(null);
+  const [modeloContratoSelecionado, setModeloContratoSelecionado] = useState<any>(null);
 
   // Limpar formulário quando modal fechar
   React.useEffect(() => {
@@ -161,6 +175,24 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     onClose();
   };
 
+  const handlePlanoSelect = (plano: any) => {
+    setPlanoSelecionado(plano);
+    setFormData(prev => ({ ...prev, plano_id: plano.id }));
+    setShowPlanoModal(false);
+  };
+
+  const handleBancoSelect = (banco: any) => {
+    setBancoSelecionado(banco);
+    setFormData(prev => ({ ...prev, conta_boleto: banco.id }));
+    setShowBancoModal(false);
+  };
+
+  const handleModeloContratoSelect = (modelo: any) => {
+    setModeloContratoSelecionado(modelo);
+    setFormData(prev => ({ ...prev, modelo_contrato_id: modelo.id }));
+    setShowModeloContratoModal(false);
+  };
+
   return (
     <DraggableModal
       show={show}
@@ -188,27 +220,22 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         </div>
       }
     >
-      <form id="contrato-cliente-create-form" onSubmit={handleSubmit}>
+      <form id="contrato-cliente-create-form" onSubmit={handleSubmit} style={{ padding: '16px' }}>
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="plano_id" className="form-label small">Plano *</label>
-              <select
-                className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
-                id="plano_id"
-                value={formData.plano_id}
-                onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
-                disabled={createContratoMutation.isPending}
-              >
-                <option value={0}>Selecione um plano</option>
-                {planos.map((plano) => (
-                  <option key={plano.id} value={plano.id}>
-                    {plano.nome_plano}
-                  </option>
-                ))}
-              </select>
-              {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
-            </div>
+            <EntitySelectField
+              value={formData.plano_id || 0}
+              onChange={(value) => setFormData(prev => ({ ...prev, plano_id: value }))}
+              onShowModal={() => setShowPlanoModal(true)}
+              entities={planos.map((p: any) => ({
+                id: p.id,
+                nome: p.nome_plano
+              }))}
+              label="Plano"
+              idFieldTitle="Digite o ID do plano"
+              error={errors.plano_id}
+              required
+            />
           </div>
 
           <div className="col-md-6">
@@ -318,51 +345,37 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           </div>
 
           <div className="col-md-6">
-            <div className="mb-3">
-              <label htmlFor="conta_boleto" className="form-label small">Banco para Boleto</label>
-              <select
-                className="form-select"
-                id="conta_boleto"
-                name="conta_boleto"
-                value={formData.conta_boleto || 0}
-                onChange={(e) => handleInputChange('conta_boleto', parseInt(e.target.value))}
-                disabled={createContratoMutation.isPending}
-              >
-                <option value={0}>Selecione um banco</option>
-                {bancos.map((banco) => (
-                  <option key={banco.id} value={banco.id}>
-                    {banco.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <EntitySelectField
+              value={formData.conta_boleto || 0}
+              onChange={(value) => setFormData(prev => ({ ...prev, conta_boleto: value }))}
+              onShowModal={() => setShowBancoModal(true)}
+              entities={bancos.map((b: any) => ({
+                id: b.id,
+                nome: b.nome
+              }))}
+              label="Banco para Boleto"
+              idFieldTitle="Digite o ID do banco"
+              required
+            />
           </div>
         </div>
 
         <div className="row">
           <div className="col-md-12">
-            <div className="mb-3">
-              <label htmlFor="modelo_contrato_id" className="form-label small">Modelo de Contrato *</label>
-              <select
-                className={`form-select ${errors.modelo_contrato_id ? 'is-invalid' : ''}`}
-                id="modelo_contrato_id"
-                name="modelo_contrato_id"
-                value={formData.modelo_contrato_id || 0}
-                onChange={(e) => handleInputChange('modelo_contrato_id', parseInt(e.target.value))}
-                disabled={createContratoMutation.isPending}
-              >
-                <option value={0}>Selecione um modelo</option>
-                {modelosContrato.map((modelo) => (
-                  <option key={modelo.id} value={modelo.id}>
-                    {modelo.id} - {modelo.nome}
-                  </option>
-                ))}
-              </select>
-              {errors.modelo_contrato_id && <div className="invalid-feedback">{errors.modelo_contrato_id}</div>}
-              <small className="form-text text-muted">
-                Selecione um modelo de contrato cadastrado no sistema
-              </small>
-            </div>
+            <EntitySelectField
+              value={formData.modelo_contrato_id || 0}
+              onChange={(value) => setFormData(prev => ({ ...prev, modelo_contrato_id: value }))}
+              onShowModal={() => setShowModeloContratoModal(true)}
+              entities={modelosContrato.map((m: any) => ({
+                id: m.id,
+                nome: m.nome
+              }))}
+              label="Modelo de Contrato"
+              idFieldTitle="Digite o ID do modelo de contrato"
+              helpText="Selecione um modelo de contrato cadastrado no sistema"
+              error={errors.modelo_contrato_id}
+              required
+            />
           </div>
         </div>
 
@@ -416,6 +429,28 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         </div>
 
       </form>
+
+      {/* Modais de seleção */}
+      <PlanoListModal
+        show={showPlanoModal}
+        onClose={() => setShowPlanoModal(false)}
+        onSelectPlano={handlePlanoSelect}
+        title="Selecionar Plano"
+      />
+
+      <BancoListModal
+        show={showBancoModal}
+        onClose={() => setShowBancoModal(false)}
+        onSelectBanco={handleBancoSelect}
+        title="Selecionar Banco"
+      />
+
+      <ModeloContratoSelectModal
+        show={showModeloContratoModal}
+        onClose={() => setShowModeloContratoModal(false)}
+        onSelectModelo={handleModeloContratoSelect}
+        title="Selecionar Modelo de Contrato"
+      />
     </DraggableModal>
   );
 };
