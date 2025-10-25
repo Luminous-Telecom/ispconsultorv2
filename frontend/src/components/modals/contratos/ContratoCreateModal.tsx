@@ -265,34 +265,86 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <label className="form-label small">
                 Plano <span className="text-danger ms-1">*</span>
               </label>
-              <div className="d-flex align-items-center">
+              <div style={{
+                display: 'flex',
+                alignItems: 'stretch',
+                background: 'white',
+                border: '1px solid #ced4da',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+              }}>
                 <input
-                  className="form-control"
                   readOnly
                   title="F2 para pesquisar ou F3 para editar cadastro"
                   autoComplete="off"
                   type="text"
                   value={planoSelecionado ? planoSelecionado.id : ''}
-                  style={{ width: '66px', cursor: 'auto' }}
+                  style={{
+                    flex: '0 0 66px',
+                    padding: '0.375rem 0.75rem',
+                    background: '#f8f9fa',
+                    border: 'none',
+                    borderRight: '1px solid #e9ecef',
+                    fontSize: '0.875rem',
+                    color: '#495057',
+                    textAlign: 'center',
+                    fontWeight: '500',
+                    cursor: 'default',
+                    outline: 'none'
+                  }}
                 />
-                <div style={{ display: 'inline-block' }}>
-                  <input
-                    className="form-control"
-                    placeholder="Buscar..."
-                    readOnly
-                    autoComplete="off"
-                    tabIndex={-1}
-                    type="text"
-                    value={planoSelecionado ? planoSelecionado.nome_plano : ''}
-                    style={{ cursor: 'auto' }}
-                  />
-                </div>
+                <input
+                  placeholder="Buscar..."
+                  readOnly
+                  autoComplete="off"
+                  tabIndex={-1}
+                  type="text"
+                  value={planoSelecionado ? planoSelecionado.nome_plano : ''}
+                  style={{
+                    flex: '1',
+                    padding: '0.375rem 0.75rem',
+                    border: 'none',
+                    fontSize: '0.875rem',
+                    color: '#495057',
+                    background: 'white',
+                    cursor: 'default',
+                    outline: 'none'
+                  }}
+                />
                 <button
                   type="button"
-                  className="btn btn-outline-secondary"
                   onClick={() => setShowPlanoModal(true)}
                   title="Abrir listagem de registros"
-                  style={{ marginLeft: '-1px' }}
+                  style={{
+                    flex: '0 0 auto',
+                    padding: '0.375rem 0.75rem',
+                    background: 'white',
+                    border: 'none',
+                    borderLeft: '1px solid #e9ecef',
+                    color: '#6c757d',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f8f9fa';
+                    e.currentTarget.style.color = '#495057';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'white';
+                    e.currentTarget.style.color = '#6c757d';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.background = '#e9ecef';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.background = '#f8f9fa';
+                  }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                     <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
@@ -423,34 +475,86 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <label className="form-label small">
                 Banco para Boleto <span className="text-danger ms-1">*</span>
               </label>
-              <div className="d-flex align-items-center">
+              <div style={{
+                display: 'flex',
+                alignItems: 'stretch',
+                background: 'white',
+                border: '1px solid #ced4da',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+              }}>
                 <input
-                  className="form-control"
                   readOnly
                   title="F2 para pesquisar ou F3 para editar cadastro"
                   autoComplete="off"
                   type="text"
                   value={bancoSelecionado ? bancoSelecionado.id : ''}
-                  style={{ width: '66px', cursor: 'auto' }}
+                  style={{
+                    flex: '0 0 66px',
+                    padding: '0.375rem 0.75rem',
+                    background: '#f8f9fa',
+                    border: 'none',
+                    borderRight: '1px solid #e9ecef',
+                    fontSize: '0.875rem',
+                    color: '#495057',
+                    textAlign: 'center',
+                    fontWeight: '500',
+                    cursor: 'default',
+                    outline: 'none'
+                  }}
                 />
-                <div style={{ display: 'inline-block' }}>
-                  <input
-                    className="form-control"
-                    placeholder="Buscar..."
-                    readOnly
-                    autoComplete="off"
-                    tabIndex={-1}
-                    type="text"
-                    value={bancoSelecionado ? bancoSelecionado.nome : ''}
-                    style={{ cursor: 'auto' }}
-                  />
-                </div>
+                <input
+                  placeholder="Buscar..."
+                  readOnly
+                  autoComplete="off"
+                  tabIndex={-1}
+                  type="text"
+                  value={bancoSelecionado ? bancoSelecionado.nome : ''}
+                  style={{
+                    flex: '1',
+                    padding: '0.375rem 0.75rem',
+                    border: 'none',
+                    fontSize: '0.875rem',
+                    color: '#495057',
+                    background: 'white',
+                    cursor: 'default',
+                    outline: 'none'
+                  }}
+                />
                 <button
                   type="button"
-                  className="btn btn-outline-secondary"
                   onClick={() => setShowBancoModal(true)}
                   title="Abrir listagem de registros"
-                  style={{ marginLeft: '-1px' }}
+                  style={{
+                    flex: '0 0 auto',
+                    padding: '0.375rem 0.75rem',
+                    background: 'white',
+                    border: 'none',
+                    borderLeft: '1px solid #e9ecef',
+                    color: '#6c757d',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f8f9fa';
+                    e.currentTarget.style.color = '#495057';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'white';
+                    e.currentTarget.style.color = '#6c757d';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.background = '#e9ecef';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.background = '#f8f9fa';
+                  }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                     <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
@@ -482,34 +586,86 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <label className="form-label small">
                 Modelo de Contrato <span className="text-danger ms-1">*</span>
               </label>
-              <div className="d-flex align-items-center">
+              <div style={{
+                display: 'flex',
+                alignItems: 'stretch',
+                background: 'white',
+                border: '1px solid #ced4da',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+              }}>
                 <input
-                  className="form-control"
                   readOnly
                   title="F2 para pesquisar ou F3 para editar cadastro"
                   autoComplete="off"
                   type="text"
                   value={modeloContratoSelecionado ? modeloContratoSelecionado.id : ''}
-                  style={{ width: '66px', cursor: 'auto' }}
+                  style={{
+                    flex: '0 0 66px',
+                    padding: '0.375rem 0.75rem',
+                    background: '#f8f9fa',
+                    border: 'none',
+                    borderRight: '1px solid #e9ecef',
+                    fontSize: '0.875rem',
+                    color: '#495057',
+                    textAlign: 'center',
+                    fontWeight: '500',
+                    cursor: 'default',
+                    outline: 'none'
+                  }}
                 />
-                <div style={{ display: 'inline-block' }}>
-                  <input
-                    className="form-control"
-                    placeholder="Buscar..."
-                    readOnly
-                    autoComplete="off"
-                    tabIndex={-1}
-                    type="text"
-                    value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
-                    style={{ cursor: 'auto' }}
-                  />
-                </div>
+                <input
+                  placeholder="Buscar..."
+                  readOnly
+                  autoComplete="off"
+                  tabIndex={-1}
+                  type="text"
+                  value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
+                  style={{
+                    flex: '1',
+                    padding: '0.375rem 0.75rem',
+                    border: 'none',
+                    fontSize: '0.875rem',
+                    color: '#495057',
+                    background: 'white',
+                    cursor: 'default',
+                    outline: 'none'
+                  }}
+                />
                 <button
                   type="button"
-                  className="btn btn-outline-secondary"
                   onClick={() => setShowModeloContratoModal(true)}
                   title="Abrir listagem de registros"
-                  style={{ marginLeft: '-1px' }}
+                  style={{
+                    flex: '0 0 auto',
+                    padding: '0.375rem 0.75rem',
+                    background: 'white',
+                    border: 'none',
+                    borderLeft: '1px solid #e9ecef',
+                    color: '#6c757d',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f8f9fa';
+                    e.currentTarget.style.color = '#495057';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'white';
+                    e.currentTarget.style.color = '#6c757d';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.background = '#e9ecef';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.background = '#f8f9fa';
+                  }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                     <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
