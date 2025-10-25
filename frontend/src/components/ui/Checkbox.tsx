@@ -137,15 +137,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
       defaultChecked={defaultChecked}
       value={value}
       name={name}
-      onChange={(e) => {
-        console.log('🔄 Checkbox onChange:', { 
-          name, 
-          checked: e.target.checked, 
-          currentChecked: checked,
-          booleanChecked: Boolean(checked)
-        });
-        handleChange(e);
-      }}
+      onChange={handleChange}
       onBlur={onBlur}
       onFocus={onFocus}
       required={required}

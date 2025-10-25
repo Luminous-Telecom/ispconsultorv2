@@ -105,9 +105,7 @@ const FormField: React.FC<FormFieldProps> = ({
 
   // Handler para onChange
   const handleChange = (changeValue: any, changeName?: string) => {
-    console.log('🔄 FormField handleChange:', { changeValue, changeName, name, onChange: !!onChange });
     if (onChange) {
-      console.log('📝 FormField chamando onChange:', { changeValue, changeName: changeName || name });
       onChange(changeValue, changeName || name);
     }
   };
@@ -183,7 +181,6 @@ const FormField: React.FC<FormFieldProps> = ({
         );
 
       case 'checkbox':
-        console.log('🔄 FormField checkbox:', { name, value, type });
         return (
           <Checkbox
             {...commonProps}
@@ -193,10 +190,7 @@ const FormField: React.FC<FormFieldProps> = ({
             inline={inline}
             switch={isSwitch}
             indeterminate={indeterminate}
-            onChange={(e) => {
-              console.log('🔄 FormField checkbox onChange:', { name, e, value: e.value, currentValue: value });
-              handleChange(e.value, name);
-            }}
+            onChange={(e) => handleChange(e.value, name)}
           />
         );
 
