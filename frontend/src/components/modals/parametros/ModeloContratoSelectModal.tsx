@@ -31,9 +31,46 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     enabled: show,
   });
 
+  // Filtrar e ordenar dados localmente
+  const filteredData = React.useMemo(() => {
+    if (!modelosData?.data) return [];
+    
+    let filtered = [...modelosData.data];
+    
+    // Aplicar busca
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.nome?.toLowerCase().includes(searchLower) ||
+        item.id?.toString().includes(searchLower)
+      );
+    }
+    
+    // Aplicar ordenação
+    filtered.sort((a, b) => {
+      let aVal: any = a[sortColumn as keyof DocumentoSistema];
+      let bVal: any = b[sortColumn as keyof DocumentoSistema];
+      
+      if (aVal === bVal) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      
+      const comparison = aVal < bVal ? -1 : 1;
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    
+    return filtered;
+  }, [modelosData?.data, search, sortColumn, sortDirection]);
+
+  // Paginar dados localmente
+  const paginatedData = React.useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return filteredData.slice(startIndex, startIndex + limit);
+  }, [filteredData, page, limit]);
+
   // Configuração da tabela
   const tableConfig: TableConfig<DocumentoSistema> = {
-    data: modelosData?.data || [],
+    data: paginatedData,
     loading: isLoading,
     columns: [
       {
@@ -73,11 +110,11 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     ],
     pagination: {
       current_page: page,
-      last_page: modelosData?.pagination?.last_page || 1,
+      last_page: Math.ceil(filteredData.length / limit),
       per_page: limit,
-      total: modelosData?.pagination?.total || 0,
-      from: modelosData?.pagination?.from || (page - 1) * limit + 1,
-      to: modelosData?.pagination?.to || Math.min(page * limit, modelosData?.pagination?.total || 0)
+      total: filteredData.length,
+      from: (page - 1) * limit + 1,
+      to: Math.min(page * limit, filteredData.length)
     },
     bulkActions: [],
     searchable: true,

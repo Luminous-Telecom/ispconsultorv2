@@ -24,7 +24,8 @@ import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import PlanoListModal from '../planos/PlanoListModal';
 import BancoListModal from '../bancos/BancoListModal';
 import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
-import { Banco, DocumentoSistema } from '../../../types';
+import { Banco } from '../../../types';
+import { DocumentoSistema } from '../../../services/documentoSistemaService';
 
 interface ContratoForm {
   plano_id: number;

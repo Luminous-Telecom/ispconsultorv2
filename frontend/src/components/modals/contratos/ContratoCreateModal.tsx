@@ -11,7 +11,8 @@ import FormField from '../../ui/FormField';
 import PlanoListModal from '../planos/PlanoListModal';
 import BancoListModal from '../bancos/BancoListModal';
 import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
-import { Plano, Banco, DocumentoSistema } from '../../../types';
+import { Plano, Banco } from '../../../types';
+import { DocumentoSistema } from '../../../services/documentoSistemaService';
 
 interface ContratoForm {
   cliente_id: number;
