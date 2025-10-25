@@ -1170,9 +1170,20 @@ export class TituloController {
         hasTemplateVars: template.includes('{{')
       });
 
+      // Limpar variáveis não processadas para evitar erro do html-pdf-node
+      const templateLimpo = template
+        .replace(/\{\{QUANTIDADE\}\}/g, '1')
+        .replace(/\{\{VALOR_UNITARIO\}\}/g, '1')
+        .replace(/\{\{[^}]+\}\}/g, ''); // Remove qualquer variável {{}} restante
+
+      logger.info('Template limpo:', { 
+        length: templateLimpo.length,
+        hasTemplateVars: templateLimpo.includes('{{')
+      });
+
       // Converter HTML para PDF usando html-pdf-node
       const htmlPdf = require('html-pdf-node');
-      const file = { content: template };
+      const file = { content: templateLimpo };
       const options = {
         format: 'A4',
         margin: {
