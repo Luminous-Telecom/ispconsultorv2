@@ -8,6 +8,7 @@ import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { Cliente, CarneParcela, Contrato, Titulo } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
+import { useFormPrefix } from '../../../hooks/useFormId';
 import DataTable from '../../common/DataTable';
 import ImprimirModal from '../../common/ImprimirModal';
 import TituloEditModal from '../titulos/TituloEditModal';
@@ -54,6 +55,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   clienteId,
   onSuccess 
 }) => {
+  const formPrefix = useFormPrefix('ClienteEditModal');
   const { success, error } = useNotificationContext();
   const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
     if (type === 'success') success(message);
@@ -995,6 +997,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             <Form
               key={`dados-basicos-${formData.cnpj}-${formData.razao_social}`}
               config={dadosBasicosFormConfig}
+              formPrefix={formPrefix}
               initialValues={{
                 cnpj: formData.cnpj,
                 razao_social: formData.razao_social,

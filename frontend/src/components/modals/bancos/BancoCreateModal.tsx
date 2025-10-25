@@ -6,6 +6,7 @@ import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
 import { Form, FormConfig } from '../../forms';
 import FormField from '../../ui/FormField';
+import { useFormPrefix } from '../../../hooks/useFormId';
 
 interface BancoForm {
   nome: string;
@@ -59,6 +60,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
   onClose, 
   onSuccess 
 }) => {
+  const formPrefix = useFormPrefix('BancoCreateModal');
   const initialFormData: BancoForm = {
     nome: '',
     codigo: '',
@@ -466,6 +468,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
         <Form
           key={`banco-form-${formData.nome}-${formData.codigo}`}
           config={bancoFormConfig}
+          formPrefix={formPrefix}
           initialValues={{
             nome: formData.nome,
             codigo: formData.codigo,
