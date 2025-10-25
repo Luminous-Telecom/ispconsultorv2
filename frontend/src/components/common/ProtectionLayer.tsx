@@ -63,8 +63,6 @@ const ProtectionLayer: React.FC<ProtectionLayerProps> = ({ children }) => {
       return false;
     };
 
-    // Teclas de atalho sempre permitidas
-
     // Proteção contra drag and drop
     const preventDrag = (e: DragEvent) => {
       e.preventDefault();
@@ -82,8 +80,6 @@ const ProtectionLayer: React.FC<ProtectionLayerProps> = ({ children }) => {
     document.addEventListener('contextmenu', preventContextMenu);
     document.addEventListener('dragstart', preventDrag);
     document.addEventListener('beforeprint', preventPrint);
-
-    // DevTools sempre permitidos
 
     // Limpeza dos event listeners
     return () => {

@@ -10,32 +10,15 @@
   -webkit-tap-highlight-color: transparent !important;
 }
 
-/* Permitir seleção apenas em formulários e campos de entrada */
+/* Permitir seleção em formulários e campos de entrada */
 form,
 .form-group,
 .form-control,
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="tel"],
-input[type="url"],
-input[type="search"],
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"],
-input[type="month"],
-input[type="week"],
-input[type="color"],
-input[type="file"],
-input[type="range"],
-input[type="checkbox"],
-input[type="radio"],
+input,
 textarea,
 select,
 option,
 [contenteditable="true"],
-.select2-search__field,
 .form-check,
 .form-check-input,
 .form-check-label,
@@ -44,10 +27,6 @@ option,
 .invalid-feedback,
 .valid-feedback,
 .form-select,
-.form-control:focus,
-input:focus,
-textarea:focus,
-select:focus,
 .help-text,
 .form-help,
 .input-group,
@@ -67,91 +46,14 @@ select:focus,
 @media print {
   * {
     display: none !important;
-    visibility: hidden !important;
   }
-  
-  body::before {
-    content: "Impressão não autorizada - CTM Telecom ERP";
+  body::after {
+    content: "Impressão não autorizada";
     display: block !important;
-    visibility: visible !important;
     font-size: 24px;
     text-align: center;
     margin-top: 50px;
-    color: #000;
   }
-}
-
-/* Proteção contra screenshots - overlay invisível */
-body::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  pointer-events: none;
-  z-index: 999999;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Proteção contra seleção em tabelas */
-table, tr, td, th {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra seleção em cards */
-.card, .card-body, .card-header, .card-footer {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra seleção em modais */
-.modal, .modal-content, .modal-header, .modal-body, .modal-footer {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra seleção em navegação */
-.navbar, .nav, .nav-item, .nav-link {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra seleção em sidebar */
-.sidebar, .sidebar-content {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra seleção em botões */
-.btn, button {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra seleção em labels e textos */
-label, p, span, div, h1, h2, h3, h4, h5, h6 {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
 }
 
 /* Proteção contra drag and drop */
@@ -160,76 +62,4 @@ label, p, span, div, h1, h2, h3, h4, h5, h6 {
   -khtml-user-drag: none !important;
   -moz-user-drag: none !important;
   -o-user-drag: none !important;
-  user-drag: none !important;
-}
-
-/* Highlight padrão do navegador sempre permitido */
-
-/* Proteção contra outline em elementos selecionados */
-*:focus {
-  outline: none !important;
-}
-
-/* Proteção contra copy/paste em campos específicos */
-.protected-field {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra screenshots com watermark */
-.watermark {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1000;
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(0, 0, 0, 0.03) 10px,
-    rgba(0, 0, 0, 0.03) 20px
-  );
-}
-
-/* Proteção contra zoom excessivo */
-body {
-  max-zoom: 1.5;
-  -webkit-text-size-adjust: 100%;
-}
-
-/* Proteção contra seleção em elementos específicos do React (exceto formulários) */
-[data-reactroot] {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra seleção em elementos do Bootstrap (exceto formulários) */
-.container, .row, .col, .col-* {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Proteção contra seleção em elementos do Quasar (exceto formulários) */
-.q-page, .q-layout, .q-header, .q-drawer, .q-footer {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Permitir seleção em todos os elementos de formulário */
-form * {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
 }
