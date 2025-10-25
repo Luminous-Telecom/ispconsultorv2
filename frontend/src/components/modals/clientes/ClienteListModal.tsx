@@ -198,7 +198,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
             setSortDirection(direction);
           }}
           onSelectionChange={(selectedItems) => {
-            console.log('Selected items:', selectedItems);
             setSelectedItems(selectedItems);
           }}
           onRefresh={() => refetch()}

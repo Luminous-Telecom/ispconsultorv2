@@ -212,7 +212,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             setSortDirection(direction);
           }}
           onSelectionChange={(selectedItems) => {
-            console.log('Selected bancos:', selectedItems);
             setSelectedItems(selectedItems);
           }}
           onRefresh={() => refetch()}

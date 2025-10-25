@@ -377,7 +377,6 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             setSortDirection(direction);
           }}
           onSelectionChange={(selectedItems) => {
-            console.log('Selected planos:', selectedItems);
             setSelectedItems(selectedItems);
           }}
           onRefresh={() => refetch()}
