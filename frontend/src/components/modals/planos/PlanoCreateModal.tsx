@@ -189,7 +189,7 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
         </div>
       }
     >
-        <form id="plano-create-form" onSubmit={handleSubmit}>
+        <form id="plano-create-form" onSubmit={handleSubmit} style={{ padding: '1rem' }}>
           <div className="row g-2">
             <div className="col-md-6">
               <div className="mb-2">
