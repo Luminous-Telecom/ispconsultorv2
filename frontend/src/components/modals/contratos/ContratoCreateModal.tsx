@@ -315,35 +315,18 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 />
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() => setShowPlanoModal(true)}
                   title="Abrir listagem de registros"
                   style={{
                     flex: '0 0 auto',
                     padding: '0.375rem 0.75rem',
-                    background: '#6c757d',
                     border: 'none',
                     borderLeft: '1px solid #dee2e6',
-                    color: 'white',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease-in-out',
-                    outline: 'none',
+                    borderRadius: '0',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#495057';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#6c757d';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseDown={(e) => {
-                    e.currentTarget.style.background = '#343a40';
-                  }}
-                  onMouseUp={(e) => {
-                    e.currentTarget.style.background = '#495057';
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -525,35 +508,18 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 />
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() => setShowBancoModal(true)}
                   title="Abrir listagem de registros"
                   style={{
                     flex: '0 0 auto',
                     padding: '0.375rem 0.75rem',
-                    background: '#6c757d',
                     border: 'none',
                     borderLeft: '1px solid #dee2e6',
-                    color: 'white',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease-in-out',
-                    outline: 'none',
+                    borderRadius: '0',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#495057';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#6c757d';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseDown={(e) => {
-                    e.currentTarget.style.background = '#343a40';
-                  }}
-                  onMouseUp={(e) => {
-                    e.currentTarget.style.background = '#495057';
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -636,35 +602,18 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 />
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() => setShowModeloContratoModal(true)}
                   title="Abrir listagem de registros"
                   style={{
                     flex: '0 0 auto',
                     padding: '0.375rem 0.75rem',
-                    background: '#6c757d',
                     border: 'none',
                     borderLeft: '1px solid #dee2e6',
-                    color: 'white',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease-in-out',
-                    outline: 'none',
+                    borderRadius: '0',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#495057';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#6c757d';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseDown={(e) => {
-                    e.currentTarget.style.background = '#343a40';
-                  }}
-                  onMouseUp={(e) => {
-                    e.currentTarget.style.background = '#495057';
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
