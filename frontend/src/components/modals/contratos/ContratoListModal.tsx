@@ -4,7 +4,8 @@ import { useDeleteContrato, Contrato } from '../../../hooks/useContratos';
 import { ContratoService } from '../../../services/ContratoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
-import DataTable from '../../common/DataTable';
+import Table from '../../tables/Table';
+import { TableConfig } from '../../tables/types';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
 import ContratoCreateModal from '../clientes/ContratoCreateModal';
 import ContratoEditModal from '../clientes/ContratoEditModal';
@@ -120,7 +121,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     return filteredData.slice(startIndex, startIndex + limit);
   }, [filteredData, page, limit]);
 
-  const columns = [
+  const columns: TableConfig<Contrato>['columns'] = [
     {
       key: 'id',
       label: 'ID',
@@ -241,26 +242,27 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       headerActions={headerActions}
     >
       <div>
-        <DataTable
-          data={paginatedData}
-          columns={columns}
-          isLoading={isLoading}
-          pagination={pagination}
-          limit={limit}
-          setLimit={setLimit}
-          setPage={setPage}
+        <Table
+          config={{
+            columns,
+            data: paginatedData,
+            loading: isLoading,
+            searchable: true,
+            searchPlaceholder: 'Buscar por cliente ou plano...',
+            sortable: true,
+            striped: true,
+            hover: true,
+            responsive: true,
+            bulkActions,
+            emptyMessage: 'Nenhum contrato encontrado',
+            tableId: 'contrato-list-modal'
+          }}
           onSort={(column: string, direction: 'asc' | 'desc') => {
             setSortColumn(column);
             setSortDirection(direction);
           }}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
-          bulkActions={bulkActions}
           onSelectionChange={setSelectedItems}
-          searchPlaceholder="Buscar por cliente ou plano..."
           onSearch={setSearch}
-          emptyMessage="Nenhum contrato encontrado"
-          showHeader={false}
         />
       </div>
 

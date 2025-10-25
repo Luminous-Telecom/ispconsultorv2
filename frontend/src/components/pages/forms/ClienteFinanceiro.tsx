@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DataTable from '../../common/DataTable';
+import Table from '../../tables/Table';
+import { TableConfig } from '../../tables/types';
 import { useTitulos } from '../../../hooks/useTitulos';
 import { useMarcarTituloPago } from '../../../hooks/useTitulos';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
@@ -147,7 +148,7 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     }
   };
 
-  const parcelasColumns = [
+  const parcelasColumns: TableConfig<CarneParcela>['columns'] = [
     { key: 'id', label: 'ID', sortable: true },
     { key: 'numero_titulo', label: 'Título', sortable: true },
     { 
@@ -185,96 +186,97 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
         </div>
 
             
-            <DataTable
-              data={getSortedParcelas()}
-              columns={parcelasColumns}
-              isLoading={parcelasLoading}
-              pagination={parcelasData?.pagination}
-              limit={10}
-              setLimit={() => {}}
-              setPage={() => {}}
-              emptyMessage="Nenhuma parcela encontrada"
-              searchPlaceholder="Número da parcela"
-              onSearch={() => {}}
-              bulkActions={[
-                {
-                  label: 'Novo Título',
-                  action: () => {
-                    setShowParcelaCreateModal(true);
-                  }
-                },
-                {
-                  label: 'Editar',
-                  action: handleEditarParcela
-                },
-                {
-                  label: 'Marcar como Pago',
-                  action: handleMarcarPago,
-                  disabled: (selectedItems) => selectedItems.every(item => item.status === 'pago')
-                },
-                {
-                  label: 'Consultar Recebimento',
-                  action: async (selectedItems) => {
-                    if (selectedItems.length > 0) {
-                      const item = selectedItems[0];
-                      if (!item.charge_id) {
-                        showNotification('Título não possui charge_id (não foi registrado no banco)', 'warning');
-                        return;
-                      }
-
-                      try {
-                        const resultado = await TituloService.consultarRecebimento(item.id);
-                        showNotification(resultado.message, 'success');
-                        refetchParcelas();
-                      } catch (err: any) {
-                        showNotification(err.message || 'Erro ao consultar recebimento.', 'error');
-                      }
+            <Table
+              config={{
+                columns: parcelasColumns,
+                data: getSortedParcelas(),
+                loading: parcelasLoading,
+                searchable: true,
+                searchPlaceholder: 'Número da parcela',
+                sortable: true,
+                striped: true,
+                hover: true,
+                responsive: true,
+                bulkActions: [
+                  {
+                    label: 'Novo Título',
+                    action: () => {
+                      setShowParcelaCreateModal(true);
                     }
                   },
-                  disabled: (selectedItems) => selectedItems.length !== 1 || !selectedItems[0].charge_id
-                },
-                {
-                  label: 'Estornar',
-                  action: async (selectedItems) => {
-                    if (selectedItems.length > 0) {
-                      const item = selectedItems[0];
-                      if (item.status === 'pago' || item.status === 'pago_atraso') {
-                        const confirmar = window.confirm(
-                          `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
-                          `Valor: R$ ${item.valor_pago || item.valor}\n` +
-                          `O título voltará para status PENDENTE.`
-                        );
-                        
-                        if (confirmar) {
-                          try {
-                            await TituloService.estornar(item.id);
-                            showNotification('Título estornado com sucesso!', 'success');
-                            refetchParcelas();
-                          } catch (err: any) {
-                            showNotification(err.message || 'Erro ao estornar título.', 'error');
-                          }
+                  {
+                    label: 'Editar',
+                    action: handleEditarParcela
+                  },
+                  {
+                    label: 'Marcar como Pago',
+                    action: handleMarcarPago,
+                    disabled: (selectedItems) => selectedItems.every(item => item.status === 'pago')
+                  },
+                  {
+                    label: 'Consultar Recebimento',
+                    action: async (selectedItems) => {
+                      if (selectedItems.length > 0) {
+                        const item = selectedItems[0];
+                        if (!item.charge_id) {
+                          showNotification('Título não possui charge_id (não foi registrado no banco)', 'warning');
+                          return;
                         }
-                      } else {
-                        showNotification('Só é possível estornar títulos que estão pagos', 'info');
+
+                        try {
+                          const resultado = await TituloService.consultarRecebimento(item.id);
+                          showNotification(resultado.message, 'success');
+                          refetchParcelas();
+                        } catch (err: any) {
+                          showNotification(err.message || 'Erro ao consultar recebimento.', 'error');
+                        }
                       }
+                    },
+                    disabled: (selectedItems) => selectedItems.length !== 1 || !selectedItems[0].charge_id
+                  },
+                  {
+                    label: 'Estornar',
+                    action: async (selectedItems) => {
+                      if (selectedItems.length > 0) {
+                        const item = selectedItems[0];
+                        if (item.status === 'pago' || item.status === 'pago_atraso') {
+                          const confirmar = window.confirm(
+                            `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
+                            `Valor: R$ ${item.valor_pago || item.valor}\n` +
+                            `O título voltará para status PENDENTE.`
+                          );
+                          
+                          if (confirmar) {
+                            try {
+                              await TituloService.estornar(item.id);
+                              showNotification('Título estornado com sucesso!', 'success');
+                              refetchParcelas();
+                            } catch (err: any) {
+                              showNotification(err.message || 'Erro ao estornar título.', 'error');
+                            }
+                          }
+                        } else {
+                          showNotification('Só é possível estornar títulos que estão pagos', 'info');
+                        }
+                      }
+                    },
+                    disabled: (selectedItems) => {
+                      if (selectedItems.length === 0) return true;
+                      return selectedItems.every(item => item.status !== 'pago' && item.status !== 'pago_atraso');
                     }
                   },
-                  disabled: (selectedItems) => {
-                    if (selectedItems.length === 0) return true;
-                    return selectedItems.every(item => item.status !== 'pago' && item.status !== 'pago_atraso');
-                  }
-                },
-                createImprimirDropdown({
-                  selectedItems,
-                  totalItems: parcelas.filter((p: CarneParcela) => p.status === 'pendente' || p.status === 'vencido'),
-                  onImprimirSelecionados: handleImprimirSelecionados,
-                  onImprimirTodos: handleImprimirTodos,
-                  filterLabel: 'Todos em Aberto'
-                }),
-              ]}
+                  createImprimirDropdown({
+                    selectedItems,
+                    totalItems: parcelas.filter((p: CarneParcela) => p.status === 'pendente' || p.status === 'vencido'),
+                    onImprimirSelecionados: handleImprimirSelecionados,
+                    onImprimirTodos: handleImprimirTodos,
+                    filterLabel: 'Todos em Aberto'
+                  }),
+                ],
+                emptyMessage: 'Nenhuma parcela encontrada',
+                tableId: 'cliente-financeiro'
+              }}
               onSort={handleSortParcelas}
-              sortColumn={sortColumnParcelas}
-              sortDirection={sortDirectionParcelas}
               onRefresh={refetchParcelas}
               onSelectionChange={setSelectedItems}
             />

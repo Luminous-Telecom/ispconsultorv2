@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from './DraggableModal';
-import DataTable from './DataTable';
+import Table from '../tables/Table';
+import { TableConfig } from '../tables/types';
 
 interface LogsModalProps {
   show: boolean;
@@ -208,85 +209,89 @@ const LogsModal: React.FC<LogsModalProps> = ({
             </div>
           )}
           
-          <DataTable
-            data={paginatedLogs}
-            columns={[
-              {
-                key: 'status',
-                label: 'Status',
-                sortable: true,
-                render: (log: LogEntry) => (
-                  <span className={`badge ${
-                    log.status === 'sucesso' ? 'bg-success' :
-                    log.status === 'erro' ? 'bg-danger' :
-                    'bg-warning'
-                  }`}>
-                    {log.status === 'sucesso' ? 'Sucesso' :
-                     log.status === 'erro' ? 'Erro' :
-                     'Executando'}
-                  </span>
-                )
-              },
-              {
-                key: 'data_inicio',
-                label: 'Data/Hora',
-                sortable: true,
-                render: (log: LogEntry) => log.data_inicio ? new Date(log.data_inicio).toLocaleString('pt-BR') : '-'
-              },
-              {
-                key: 'duracao_ms',
-                label: 'Duração',
-                sortable: true,
-                render: (log: LogEntry) => log.duracao_ms ? `${log.duracao_ms}ms` : '-'
-              },
-              {
-                key: 'resultado',
-                label: 'Resultado',
-                sortable: false,
-                render: (log: LogEntry) => {
-                  if (log.resultado) {
-                    return (
-                      <small className="text-muted">
-                        {typeof log.resultado === 'string' 
-                          ? log.resultado 
-                          : JSON.stringify(log.resultado)}
-                      </small>
-                    );
-                  } else if (log.erro) {
-                    return (
-                      <div>
-                        <small className="text-danger">
-                          {log.erro}
+          <Table
+            config={{
+              columns: [
+                {
+                  key: 'status',
+                  label: 'Status',
+                  sortable: true,
+                  render: (log: LogEntry) => (
+                    <span className={`badge ${
+                      log.status === 'sucesso' ? 'bg-success' :
+                      log.status === 'erro' ? 'bg-danger' :
+                      'bg-warning'
+                    }`}>
+                      {log.status === 'sucesso' ? 'Sucesso' :
+                       log.status === 'erro' ? 'Erro' :
+                       'Executando'}
+                    </span>
+                  )
+                },
+                {
+                  key: 'data_inicio',
+                  label: 'Data/Hora',
+                  sortable: true,
+                  render: (log: LogEntry) => log.data_inicio ? new Date(log.data_inicio).toLocaleString('pt-BR') : '-'
+                },
+                {
+                  key: 'duracao_ms',
+                  label: 'Duração',
+                  sortable: true,
+                  render: (log: LogEntry) => log.duracao_ms ? `${log.duracao_ms}ms` : '-'
+                },
+                {
+                  key: 'resultado',
+                  label: 'Resultado',
+                  sortable: false,
+                  render: (log: LogEntry) => {
+                    if (log.resultado) {
+                      return (
+                        <small className="text-muted">
+                          {typeof log.resultado === 'string' 
+                            ? log.resultado 
+                            : JSON.stringify(log.resultado)}
                         </small>
-                        {log.stack_trace && (
-                          <details className="mt-1">
-                            <summary className="text-warning" style={{ cursor: 'pointer', fontSize: '0.7rem' }}>
-                              Ver detalhes técnicos
-                            </summary>
-                            <pre className="text-danger mt-1" style={{ fontSize: '0.6rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                              {log.stack_trace}
-                            </pre>
-                          </details>
-                        )}
-                      </div>
-                    );
+                      );
+                    } else if (log.erro) {
+                      return (
+                        <div>
+                          <small className="text-danger">
+                            {log.erro}
+                          </small>
+                          {log.stack_trace && (
+                            <details className="mt-1">
+                              <summary className="text-warning" style={{ cursor: 'pointer', fontSize: '0.7rem' }}>
+                                Ver detalhes técnicos
+                              </summary>
+                              <pre className="text-danger mt-1" style={{ fontSize: '0.6rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                                {log.stack_trace}
+                              </pre>
+                            </details>
+                          )}
+                        </div>
+                      );
+                    }
+                    return '-';
                   }
-                  return '-';
                 }
-              }
-            ]}
-            isLoading={loading}
-            pagination={pagination}
-            limit={pageSize}
-            setLimit={handleLimitChange}
-            setPage={handlePageChange}
-            bulkActions={[]}
+              ],
+              data: paginatedLogs,
+              loading,
+              searchable: true,
+              searchPlaceholder: 'Buscar logs...',
+              sortable: true,
+              striped: true,
+              hover: true,
+              responsive: true,
+              bulkActions: [],
+              emptyMessage: 'Nenhum log encontrado',
+              tableId: 'logs-modal'
+            }}
             onSearch={handleSearchChange}
             onSort={handleSort}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSelectionChange={() => {}}
             onRefresh={() => window.location.reload()}
+            onSelectionChange={() => {}}
           />
         </div>
       )}
