@@ -105,7 +105,9 @@ const FormField: React.FC<FormFieldProps> = ({
 
   // Handler para onChange
   const handleChange = (changeValue: any, changeName?: string) => {
+    console.log('🔄 FormField handleChange:', { changeValue, changeName, name, onChange: !!onChange });
     if (onChange) {
+      console.log('📝 FormField chamando onChange:', { changeValue, changeName: changeName || name });
       onChange(changeValue, changeName || name);
     }
   };
