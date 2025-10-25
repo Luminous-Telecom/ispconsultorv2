@@ -1297,28 +1297,26 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               Endereço
             </button>
           </li>
-          {isEditing && (
-            <>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('contratos')}
-                  type="button"
-                >
-                  Contratos
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('financeiro')}
-                  type="button"
-                >
-                  Financeiro
-                </button>
-              </li>
-            </>
-          )}
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('contratos')}
+              type="button"
+              disabled={!isEditing}
+            >
+              Contratos
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
+              onClick={() => setActiveTab('financeiro')}
+              type="button"
+              disabled={!isEditing}
+            >
+              Financeiro
+            </button>
+          </li>
           <li className="nav-item" role="presentation">
             <button
               className={`nav-link ${activeTab === 'observacoes' ? 'active' : ''}`}
