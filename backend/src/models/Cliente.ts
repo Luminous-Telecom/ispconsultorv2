@@ -43,6 +43,7 @@ export class Cliente extends Model<
   declare estado: string | null;
   declare observacoes: string | null;
   declare ativo: boolean;
+  declare tipo_cobranca: 'titulo' | 'carne' | null;
   declare valor_primeiro_titulo: string | null;
   declare recebe_email: boolean;
   declare recebe_sms: boolean;
@@ -190,6 +191,11 @@ Cliente.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
+    },
+    tipo_cobranca: {
+      type: DataTypes.ENUM('titulo', 'carne'),
+      allowNull: false,
+      defaultValue: 'titulo'
     },
     valor_primeiro_titulo: {
       type: DataTypes.STRING(20),
