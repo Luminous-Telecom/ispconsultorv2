@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { UseFormOptions, UseFormReturn, FormState, FormActions, ValidationRule, FieldValidationResult } from './types';
 import { validateField } from './ValidationRules';
 
@@ -20,6 +20,11 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Atualizar dados quando initialValues mudarem
+  useEffect(() => {
+    setData(initialValues);
+  }, [initialValues]);
 
   // Calcular estado derivado
   const isValid = useMemo(() => {
