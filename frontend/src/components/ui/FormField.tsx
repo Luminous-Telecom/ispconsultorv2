@@ -187,6 +187,7 @@ const FormField: React.FC<FormFieldProps> = ({
             inline={inline}
             switch={isSwitch}
             indeterminate={indeterminate}
+            onChange={(e) => handleChange(e.value, name)}
           />
         );
 
