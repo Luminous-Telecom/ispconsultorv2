@@ -473,7 +473,7 @@ function Table<T extends { id: number | string }>({
           </div>
 
           {/* Paginação centralizada */}
-          {(pagination || (!pagination && data.length > 0)) && (
+          {pagination && (
             <div className="d-flex align-items-center gap-2">
               {/* Seletor de linhas por página */}
               <select 
