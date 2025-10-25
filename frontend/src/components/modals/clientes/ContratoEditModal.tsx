@@ -1297,7 +1297,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             />
           </div>
         </div>
-
             )}
 
         {/* Aba Termos */}
@@ -1880,7 +1879,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 )}
               </div>
             </div>
-          )}
+          </div>
+        )}
         </div>
       </div>
       </>
@@ -1923,7 +1923,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
         }}
       />
-      </form>
 
       <TituloCreateModal
         show={showTituloCreateModal}
@@ -2229,8 +2228,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           />
         </div>
       </DraggableModal>
-
-    </DraggableModal>
+      </form>
+      </DraggableModal>
 
     {/* Modal de impressão */}
     <ImprimirModal
