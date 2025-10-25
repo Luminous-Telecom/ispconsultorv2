@@ -990,24 +990,24 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             </label>
             <div className="d-flex align-items-center">
               <input
-                type="text"
                 className="form-control"
-                style={{ width: '66px', cursor: 'auto' }}
-                value={planoSelecionado ? planoSelecionado.id : ''}
                 readOnly
                 title="F2 para pesquisar ou F3 para editar cadastro"
                 autoComplete="off"
+                type="text"
+                value={planoSelecionado ? planoSelecionado.id : ''}
+                style={{ width: '66px', cursor: 'auto' }}
               />
               <div style={{ display: 'inline-block' }}>
                 <input
-                  type="text"
                   className="form-control"
-                  style={{ cursor: 'auto' }}
-                  value={planoSelecionado ? planoSelecionado.nome_plano : ''}
                   placeholder="Buscar..."
                   readOnly
                   autoComplete="off"
                   tabIndex={-1}
+                  type="text"
+                  value={planoSelecionado ? planoSelecionado.nome_plano : ''}
+                  style={{ cursor: 'auto' }}
                 />
               </div>
               <button
@@ -1101,24 +1101,24 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             </label>
             <div className="d-flex align-items-center">
               <input
-                type="text"
                 className="form-control"
-                style={{ width: '66px', cursor: 'auto' }}
-                value={bancoSelecionado ? bancoSelecionado.id : ''}
                 readOnly
                 title="F2 para pesquisar ou F3 para editar cadastro"
                 autoComplete="off"
+                type="text"
+                value={bancoSelecionado ? bancoSelecionado.id : ''}
+                style={{ width: '66px', cursor: 'auto' }}
               />
               <div style={{ display: 'inline-block' }}>
                 <input
-                  type="text"
                   className="form-control"
-                  style={{ cursor: 'auto' }}
-                  value={bancoSelecionado ? bancoSelecionado.nome : ''}
                   placeholder="Buscar..."
                   readOnly
                   autoComplete="off"
                   tabIndex={-1}
+                  type="text"
+                  value={bancoSelecionado ? bancoSelecionado.nome : ''}
+                  style={{ cursor: 'auto' }}
                 />
               </div>
               <button
@@ -1212,32 +1212,29 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             </label>
             <div className="d-flex align-items-center">
               <input
-                type="text"
                 className="form-control"
-                style={{ width: '66px', cursor: 'auto' }}
-                value={modeloContratoSelecionado ? modeloContratoSelecionado.id : ''}
                 readOnly
-                disabled={updateContratoMutation.isPending}
                 title="F2 para pesquisar ou F3 para editar cadastro"
                 autoComplete="off"
+                type="text"
+                value={modeloContratoSelecionado ? modeloContratoSelecionado.id : ''}
+                style={{ width: '66px', cursor: 'auto' }}
               />
               <div style={{ display: 'inline-block' }}>
                 <input
-                  type="text"
                   className="form-control"
-                  style={{ cursor: 'auto' }}
-                  value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
                   placeholder="Buscar..."
                   readOnly
-                  disabled={updateContratoMutation.isPending}
                   autoComplete="off"
                   tabIndex={-1}
+                  type="text"
+                  value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
+                  style={{ cursor: 'auto' }}
                 />
               </div>
               <button
                 type="button"
                 className="btn btn-outline-secondary"
-                disabled={updateContratoMutation.isPending}
                 title="Dropdown"
               >
                 <i className="fa fa-chevron-down" aria-hidden="true"></i>
@@ -1246,7 +1243,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 type="button"
                 className="btn btn-outline-secondary"
                 onClick={() => setShowModeloContratoModal(true)}
-                disabled={updateContratoMutation.isPending}
                 title="Abrir listagem de registros"
                 style={{ marginLeft: '-1px' }}
               >
