@@ -194,10 +194,19 @@ export class TituloService {
         responseType: 'blob'
       });
 
+      console.log('Response recebida:', {
+        response,
+        responseType: typeof response,
+        hasData: 'data' in response,
+        dataType: typeof (response as any).data,
+        isBlob: (response as any).data instanceof Blob
+      });
+
       // Com responseType: 'blob', o Blob está em response.data
       const blob = (response as any).data;
       
       if (!blob || !(blob instanceof Blob)) {
+        console.error('Blob inválido:', { blob, isBlob: blob instanceof Blob });
         throw new Error('Resposta inválida do servidor');
       }
 
