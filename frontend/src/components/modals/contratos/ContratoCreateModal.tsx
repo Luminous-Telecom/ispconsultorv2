@@ -320,10 +320,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   style={{
                     flex: '0 0 auto',
                     padding: '0.375rem 0.75rem',
-                    background: 'white',
+                    background: '#f8f9fa',
                     border: 'none',
                     borderLeft: '1px solid #dee2e6',
-                    color: '#6c757d',
+                    color: '#495057',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease-in-out',
                     outline: 'none',
@@ -332,18 +332,18 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     justifyContent: 'center'
                   }}
                   onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#e9ecef';
+                    e.currentTarget.style.color = '#212529';
+                  }}
+                  onMouseLeave={(e) => {
                     e.currentTarget.style.background = '#f8f9fa';
                     e.currentTarget.style.color = '#495057';
                   }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'white';
-                    e.currentTarget.style.color = '#6c757d';
-                  }}
                   onMouseDown={(e) => {
-                    e.currentTarget.style.background = '#e9ecef';
+                    e.currentTarget.style.background = '#dee2e6';
                   }}
                   onMouseUp={(e) => {
-                    e.currentTarget.style.background = '#f8f9fa';
+                    e.currentTarget.style.background = '#e9ecef';
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -530,10 +530,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   style={{
                     flex: '0 0 auto',
                     padding: '0.375rem 0.75rem',
-                    background: 'white',
+                    background: '#f8f9fa',
                     border: 'none',
                     borderLeft: '1px solid #dee2e6',
-                    color: '#6c757d',
+                    color: '#495057',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease-in-out',
                     outline: 'none',
@@ -542,18 +542,18 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     justifyContent: 'center'
                   }}
                   onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#e9ecef';
+                    e.currentTarget.style.color = '#212529';
+                  }}
+                  onMouseLeave={(e) => {
                     e.currentTarget.style.background = '#f8f9fa';
                     e.currentTarget.style.color = '#495057';
                   }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'white';
-                    e.currentTarget.style.color = '#6c757d';
-                  }}
                   onMouseDown={(e) => {
-                    e.currentTarget.style.background = '#e9ecef';
+                    e.currentTarget.style.background = '#dee2e6';
                   }}
                   onMouseUp={(e) => {
-                    e.currentTarget.style.background = '#f8f9fa';
+                    e.currentTarget.style.background = '#e9ecef';
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -641,10 +641,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   style={{
                     flex: '0 0 auto',
                     padding: '0.375rem 0.75rem',
-                    background: 'white',
+                    background: '#f8f9fa',
                     border: 'none',
                     borderLeft: '1px solid #dee2e6',
-                    color: '#6c757d',
+                    color: '#495057',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease-in-out',
                     outline: 'none',
@@ -653,18 +653,18 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     justifyContent: 'center'
                   }}
                   onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#e9ecef';
+                    e.currentTarget.style.color = '#212529';
+                  }}
+                  onMouseLeave={(e) => {
                     e.currentTarget.style.background = '#f8f9fa';
                     e.currentTarget.style.color = '#495057';
                   }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'white';
-                    e.currentTarget.style.color = '#6c757d';
-                  }}
                   onMouseDown={(e) => {
-                    e.currentTarget.style.background = '#e9ecef';
+                    e.currentTarget.style.background = '#dee2e6';
                   }}
                   onMouseUp={(e) => {
-                    e.currentTarget.style.background = '#f8f9fa';
+                    e.currentTarget.style.background = '#e9ecef';
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
