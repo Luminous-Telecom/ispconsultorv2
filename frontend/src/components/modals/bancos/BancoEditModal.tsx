@@ -5,6 +5,7 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
 import FormField from '../../ui/FormField';
+import { useFormPrefix } from '../../../hooks/useFormId';
 
 interface BancoForm {
   nome: string;
@@ -60,6 +61,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
   bancoId,
   onSuccess 
 }) => {
+  const formPrefix = useFormPrefix('BancoEditModal');
   const [formData, setFormData] = useState<BancoForm>({
     nome: '',
     codigo: '',
@@ -465,19 +467,17 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
               </div>
 
               <div className="col-md-6">
-                <div className="form-check form-switch mt-4">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="incluir_taxa"
+                <div className="mt-4">
+                  <FormField
                     name="incluir_taxa"
-                    checked={formData.incluir_taxa}
-                    onChange={(e) => handleInputChange('incluir_taxa', e.target.checked)}
+                    type="checkbox"
+                    label="Incluir Taxa no Boleto"
+                    value={formData.incluir_taxa}
+                    onChange={(e: any) => handleInputChange('incluir_taxa', e.value)}
                     disabled={updateBancoMutation.isPending}
+                    formPrefix={formPrefix}
+                    switch={true}
                   />
-                  <label className="form-check-label" htmlFor="incluir_taxa">
-                    Incluir Taxa no Boleto
-                  </label>
                 </div>
               </div>
             </div>
@@ -564,39 +564,36 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
           <div className="row">
             <div className="col-md-6">
               <div className="mb-3">
-                <label htmlFor="tipo_banco" className="form-label small">Tipo de Banco</label>
-                <select
-                  className="form-select"
-                  id="tipo_banco"
+                <FormField
                   name="tipo_banco"
+                  type="select"
+                  label="Tipo de Banco"
+                  size="sm"
                   value={formData.tipo_banco}
-                  onChange={(e) => handleInputChange('tipo_banco', e.target.value as any)}
+                  onChange={(e: any) => handleInputChange('tipo_banco', e.value)}
                   disabled={updateBancoMutation.isPending}
-                >
-                  <option value="efi">EFI (Código: 364)</option>
-                  <option value="asaas">Asaas (Código: 461)</option>
-                </select>
+                  formPrefix={formPrefix}
+                  options={[
+                    { value: 'efi', label: 'EFI (Código: 364)' },
+                    { value: 'asaas', label: 'Asaas (Código: 461)' }
+                  ]}
+                />
                 <small className="text-secondary text-secondary">Código do banco é definido automaticamente</small>
               </div>
             </div>
 
             <div className="col-md-6">
               <div className="mb-3">
-                <label className="form-label small">Status</label>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="ativo"
-                    name="ativo"
-                    checked={formData.ativo}
-                    onChange={(e) => handleInputChange('ativo', e.target.checked)}
-                    disabled={updateBancoMutation.isPending}
-                  />
-                  <label className="form-check-label" htmlFor="ativo">
-                    {formData.ativo ? 'Ativo' : 'Inativo'}
-                  </label>
-                </div>
+                <FormField
+                  name="ativo"
+                  type="checkbox"
+                  label={formData.ativo ? 'Ativo' : 'Inativo'}
+                  value={formData.ativo}
+                  onChange={(e: any) => handleInputChange('ativo', e.value)}
+                  disabled={updateBancoMutation.isPending}
+                  formPrefix={formPrefix}
+                  switch={true}
+                />
               </div>
             </div>
           </div>
@@ -626,9 +623,6 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="mb-3">
-                    <label htmlFor="client_id_producao" className="form-label small">
-                      {formData.tipo_banco === 'efi' ? 'Client ID Produção *' : 'Client ID'}
-                    </label>
                       <FormField
                         name="client_id_producao"
                         type="text"
@@ -640,15 +634,13 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                         onChange={(e: any) => handleInputChange('client_id_producao', e.value)}
                         disabled={updateBancoMutation.isPending}
                         autoComplete="off"
+                        formPrefix={formPrefix}
                       />
                   </div>
                 </div>
 
                 <div className="col-md-6">
                   <div className="mb-3">
-                    <label htmlFor="client_secret_producao" className="form-label small">
-                      {formData.tipo_banco === 'efi' ? 'Client Secret Produção *' : 'Client Secret'}
-                    </label>
                       <FormField
                         name="client_secret_producao"
                         type="password"
@@ -660,6 +652,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                         onChange={(e: any) => handleInputChange('client_secret_producao', e.value)}
                         disabled={updateBancoMutation.isPending}
                         autoComplete="off"
+                        formPrefix={formPrefix}
                       />
                   </div>
                 </div>
@@ -668,7 +661,6 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
               <div className="row">
                 <div className="col-md-12">
                   <div className="mb-3">
-                    <label htmlFor="url_retorno" className="form-label small">URL de Retorno (Webhook)</label>
                       <FormField
                         name="url_retorno"
                         type="url"
@@ -679,6 +671,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                         onChange={(e: any) => handleInputChange('url_retorno', e.value)}
                         disabled={updateBancoMutation.isPending}
                         autoComplete="url"
+                        formPrefix={formPrefix}
                       />
                     <small className="text-secondary text-secondary">URL para receber notificações de pagamento</small>
                   </div>
@@ -688,20 +681,16 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
               <div className="row">
                 <div className="col-md-12">
                   <div className="mb-3">
-                    <div className="form-check form-switch">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="sandbox"
-                        name="sandbox"
-                        checked={formData.sandbox}
-                        onChange={(e) => handleInputChange('sandbox', e.target.checked)}
-                        disabled={updateBancoMutation.isPending}
-                      />
-                      <label className="form-check-label" htmlFor="sandbox">
-                        Modo Sandbox (Testes)
-                      </label>
-                    </div>
+                    <FormField
+                      name="sandbox"
+                      type="checkbox"
+                      label="Modo Sandbox (Testes)"
+                      value={formData.sandbox}
+                      onChange={(e: any) => handleInputChange('sandbox', e.value)}
+                      disabled={updateBancoMutation.isPending}
+                      formPrefix={formPrefix}
+                      switch={true}
+                    />
                     <small className="text-secondary text-secondary">
                       Ative para usar ambiente de testes. Desative para produção.
                     </small>
