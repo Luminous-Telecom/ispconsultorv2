@@ -375,11 +375,13 @@ function Table<T extends { id: number | string }>({
   return (
     <div className={className} style={{ width: '100%', margin: 0, padding: 0, boxSizing: 'border-box' }}>
       {/* Header com botões de ação e filtros */}
-      <div className="border-bottom" style={{ margin: 0, padding: 0, background: 'transparent' }}>
-        {/* Primeira linha: Botões de ação */}
-        <div className="d-flex align-items-center mb-2" style={{ padding: '0.5rem 1rem' }}>
-          <div className="d-flex" style={{ gap: '8px' }}>
-            {bulkActions.map((bulkAction, index) => {
+      {(bulkActions.length > 0 || searchable || pagination || (!pagination && data.length > 0)) && (
+        <div className="border-bottom" style={{ margin: 0, padding: 0, background: 'transparent' }}>
+          {/* Primeira linha: Botões de ação */}
+          {bulkActions.length > 0 && (
+            <div className="d-flex align-items-center mb-2" style={{ padding: '0.5rem 1rem' }}>
+              <div className="d-flex" style={{ gap: '8px' }}>
+                {bulkActions.map((bulkAction, index) => {
               // Novo sempre habilitado, outros só quando há seleção
               const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
               const isImprimirButton = bulkAction.label.toLowerCase().includes('imprimir');
@@ -448,6 +450,7 @@ function Table<T extends { id: number | string }>({
             })}
           </div>
         </div>
+          )}
 
         {/* Segunda linha: Busca + Paginação + Reload */}
         <div className="d-flex align-items-center justify-content-between" style={{ padding: '0 1rem 0.5rem 1rem' }}>
@@ -576,6 +579,7 @@ function Table<T extends { id: number | string }>({
           </div>
         </div>
       </div>
+      )}
 
       {/* Tabela */}
       <div className="table-responsive" style={{ margin: 0, padding: 0, overflowX: 'auto', width: '100%', boxSizing: 'border-box', maxWidth: '100%' }}>
