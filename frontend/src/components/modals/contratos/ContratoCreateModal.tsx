@@ -265,35 +265,15 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <label className="form-label small">
                 Plano <span className="text-danger ms-1">*</span>
               </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'stretch',
-                background: 'white',
-                border: '1px solid #ced4da',
-                borderRadius: '0.375rem',
-                overflow: 'hidden',
-                transition: 'all 0.15s ease-in-out',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.075)'
-              }}>
+              <div className="input-group">
                 <input
                   readOnly
                   title="F2 para pesquisar ou F3 para editar cadastro"
                   autoComplete="off"
                   type="text"
+                  className="form-control text-center"
                   value={planoSelecionado ? planoSelecionado.id : ''}
-                  style={{
-                    flex: '0 0 66px',
-                    padding: '0.375rem 0.75rem',
-                    background: '#f8f9fa',
-                    border: 'none',
-                    borderRight: '1px solid #dee2e6',
-                    fontSize: '0.875rem',
-                    color: '#495057',
-                    textAlign: 'center',
-                    fontWeight: '500',
-                    cursor: 'default',
-                    outline: 'none'
-                  }}
+                  style={{ maxWidth: '66px' }}
                 />
                 <input
                   placeholder="Buscar..."
@@ -301,44 +281,14 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   autoComplete="off"
                   tabIndex={-1}
                   type="text"
+                  className="form-control"
                   value={planoSelecionado ? planoSelecionado.nome_plano : ''}
-                  style={{
-                    flex: '1',
-                    padding: '0.375rem 0.75rem',
-                    border: 'none',
-                    fontSize: '0.875rem',
-                    color: '#495057',
-                    background: 'white',
-                    cursor: 'default',
-                    outline: 'none'
-                  }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPlanoModal(true)}
                   title="Abrir listagem de registros"
-                  style={{
-                    flex: '0 0 auto',
-                    padding: '0.375rem 0.75rem',
-                    backgroundColor: '#6c757d',
-                    border: 'none',
-                    borderLeft: '1px solid #dee2e6',
-                    borderRadius: '0',
-                    color: 'white',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '400',
-                    lineHeight: '1.5',
-                    textAlign: 'center',
-                    textDecoration: 'none',
-                    verticalAlign: 'middle',
-                    userSelect: 'none',
-                    minHeight: '38px',
-                    boxSizing: 'border-box'
-                  }}
+                  className="btn btn-outline-secondary"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                     <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
@@ -469,35 +419,15 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <label className="form-label small">
                 Banco para Boleto <span className="text-danger ms-1">*</span>
               </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'stretch',
-                background: 'white',
-                border: '1px solid #ced4da',
-                borderRadius: '0.375rem',
-                overflow: 'hidden',
-                transition: 'all 0.15s ease-in-out',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.075)'
-              }}>
+              <div className="input-group">
                 <input
                   readOnly
                   title="F2 para pesquisar ou F3 para editar cadastro"
                   autoComplete="off"
                   type="text"
+                  className="form-control text-center"
                   value={bancoSelecionado ? bancoSelecionado.id : ''}
-                  style={{
-                    flex: '0 0 66px',
-                    padding: '0.375rem 0.75rem',
-                    background: '#f8f9fa',
-                    border: 'none',
-                    borderRight: '1px solid #dee2e6',
-                    fontSize: '0.875rem',
-                    color: '#495057',
-                    textAlign: 'center',
-                    fontWeight: '500',
-                    cursor: 'default',
-                    outline: 'none'
-                  }}
+                  style={{ maxWidth: '66px' }}
                 />
                 <input
                   placeholder="Buscar..."
@@ -505,44 +435,14 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   autoComplete="off"
                   tabIndex={-1}
                   type="text"
+                  className="form-control"
                   value={bancoSelecionado ? bancoSelecionado.nome : ''}
-                  style={{
-                    flex: '1',
-                    padding: '0.375rem 0.75rem',
-                    border: 'none',
-                    fontSize: '0.875rem',
-                    color: '#495057',
-                    background: 'white',
-                    cursor: 'default',
-                    outline: 'none'
-                  }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowBancoModal(true)}
                   title="Abrir listagem de registros"
-                  style={{
-                    flex: '0 0 auto',
-                    padding: '0.375rem 0.75rem',
-                    backgroundColor: '#6c757d',
-                    border: 'none',
-                    borderLeft: '1px solid #dee2e6',
-                    borderRadius: '0',
-                    color: 'white',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '400',
-                    lineHeight: '1.5',
-                    textAlign: 'center',
-                    textDecoration: 'none',
-                    verticalAlign: 'middle',
-                    userSelect: 'none',
-                    minHeight: '38px',
-                    boxSizing: 'border-box'
-                  }}
+                  className="btn btn-outline-secondary"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                     <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
@@ -574,35 +474,15 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               <label className="form-label small">
                 Modelo de Contrato <span className="text-danger ms-1">*</span>
               </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'stretch',
-                background: 'white',
-                border: '1px solid #ced4da',
-                borderRadius: '0.375rem',
-                overflow: 'hidden',
-                transition: 'all 0.15s ease-in-out',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.075)'
-              }}>
+              <div className="input-group">
                 <input
                   readOnly
                   title="F2 para pesquisar ou F3 para editar cadastro"
                   autoComplete="off"
                   type="text"
+                  className="form-control text-center"
                   value={modeloContratoSelecionado ? modeloContratoSelecionado.id : ''}
-                  style={{
-                    flex: '0 0 66px',
-                    padding: '0.375rem 0.75rem',
-                    background: '#f8f9fa',
-                    border: 'none',
-                    borderRight: '1px solid #dee2e6',
-                    fontSize: '0.875rem',
-                    color: '#495057',
-                    textAlign: 'center',
-                    fontWeight: '500',
-                    cursor: 'default',
-                    outline: 'none'
-                  }}
+                  style={{ maxWidth: '66px' }}
                 />
                 <input
                   placeholder="Buscar..."
@@ -610,44 +490,14 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   autoComplete="off"
                   tabIndex={-1}
                   type="text"
+                  className="form-control"
                   value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
-                  style={{
-                    flex: '1',
-                    padding: '0.375rem 0.75rem',
-                    border: 'none',
-                    fontSize: '0.875rem',
-                    color: '#495057',
-                    background: 'white',
-                    cursor: 'default',
-                    outline: 'none'
-                  }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowModeloContratoModal(true)}
                   title="Abrir listagem de registros"
-                  style={{
-                    flex: '0 0 auto',
-                    padding: '0.375rem 0.75rem',
-                    backgroundColor: '#6c757d',
-                    border: 'none',
-                    borderLeft: '1px solid #dee2e6',
-                    borderRadius: '0',
-                    color: 'white',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '400',
-                    lineHeight: '1.5',
-                    textAlign: 'center',
-                    textDecoration: 'none',
-                    verticalAlign: 'middle',
-                    userSelect: 'none',
-                    minHeight: '38px',
-                    boxSizing: 'border-box'
-                  }}
+                  className="btn btn-outline-secondary"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
                     <path d="M21.71 20.29L18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.39zM11 18a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/>
