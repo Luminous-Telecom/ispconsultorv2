@@ -1038,18 +1038,27 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               />
               <button
                 type="button"
-                className="btn btn-secondary"
                 onClick={() => setShowPlanoModal(true)}
                 title="Abrir listagem de registros"
                 style={{
                   flex: '0 0 auto',
                   padding: '0.375rem 0.75rem',
+                  background: '#6c757d !important',
                   border: 'none',
                   borderLeft: '1px solid #dee2e6',
                   borderRadius: '0',
+                  color: 'white !important',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: '400',
+                  lineHeight: '1.5',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  verticalAlign: 'middle',
+                  userSelect: 'none'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1179,18 +1188,27 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               />
               <button
                 type="button"
-                className="btn btn-secondary"
                 onClick={() => setShowBancoModal(true)}
                 title="Abrir listagem de registros"
                 style={{
                   flex: '0 0 auto',
                   padding: '0.375rem 0.75rem',
+                  background: '#6c757d !important',
                   border: 'none',
                   borderLeft: '1px solid #dee2e6',
                   borderRadius: '0',
+                  color: 'white !important',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: '400',
+                  lineHeight: '1.5',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  verticalAlign: 'middle',
+                  userSelect: 'none'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1320,18 +1338,27 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               />
               <button
                 type="button"
-                className="btn btn-secondary"
                 onClick={() => setShowModeloContratoModal(true)}
                 title="Abrir listagem de registros"
                 style={{
                   flex: '0 0 auto',
                   padding: '0.375rem 0.75rem',
+                  background: '#6c757d !important',
                   border: 'none',
                   borderLeft: '1px solid #dee2e6',
                   borderRadius: '0',
+                  color: 'white !important',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: '400',
+                  lineHeight: '1.5',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  verticalAlign: 'middle',
+                  userSelect: 'none'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
