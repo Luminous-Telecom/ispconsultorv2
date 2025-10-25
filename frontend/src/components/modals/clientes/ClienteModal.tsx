@@ -1408,7 +1408,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               <div className="row">
                 <div className="col-md-8">
                   <ContactFields 
-                    required={false}
+                    required={true}
                     size="md"
                     includeEmail={true}
                     includeWhatsApp={true}
