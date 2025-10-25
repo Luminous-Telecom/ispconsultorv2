@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
 import DraggableModal from '../../common/DraggableModal';
-import { PlanoCreateModal, PlanoEditModal } from './index';
+import PlanoCreateModal from './PlanoCreateModal';
+import PlanoEditModal from './PlanoEditModal';
 import { Plano } from '../../../types';
 import { Table, TableConfig } from '../../tables';
 

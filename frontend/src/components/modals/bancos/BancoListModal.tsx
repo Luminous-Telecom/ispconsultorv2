@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useBancos, useDeleteBanco } from '../../../hooks/useBancos';
 import DraggableModal from '../../common/DraggableModal';
-import { BancoCreateModal } from './index';
+import BancoCreateModal from './BancoCreateModal';
 import BancoEditModal from './BancoEditModal';
 import { Banco } from '../../../types';
 import { Table, TableConfig } from '../../tables';
