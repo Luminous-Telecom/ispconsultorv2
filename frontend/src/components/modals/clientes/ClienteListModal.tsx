@@ -3,7 +3,7 @@ import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import ListModal from '../../common/ListModal';
-import { ClienteCreateModal, ClienteModal } from './index';
+import { ClienteModal } from './index';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface Cliente {
@@ -230,7 +230,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       />
 
       {/* Modal de Criação */}
-      <ClienteCreateModal
+      <ClienteModal
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => {
