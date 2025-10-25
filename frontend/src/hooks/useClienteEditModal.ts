@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ClienteService } from '../../services/clienteService';
-import { TituloService } from '../../services/tituloService';
-import { useNotificationContext } from '../../contexts/NotificationContext';
-import { ClienteFormData, ClienteFormErrors, ContratoItem, TituloItem, ApiError } from '../../types/cliente';
-import { validateClienteForm } from '../../utils/validators';
+import { ClienteService } from '../services/clienteService';
+import { TituloService } from '../services/tituloService';
+import { useNotificationContext } from '../contexts/NotificationContext';
+import { ClienteFormData, ClienteFormErrors, ContratoItem, TituloItem, ApiError } from '../types/cliente';
+import { validateClienteForm } from '../utils/validators';
 
 export const useClienteEditModal = (clienteId: number | null) => {
   const { success, error } = useNotificationContext();
@@ -53,14 +53,14 @@ export const useClienteEditModal = (clienteId: number | null) => {
   }, [success, error]);
   
   const handleInputChange = useCallback((field: keyof ClienteFormData, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev: ClienteFormData) => ({
       ...prev,
       [field]: value
     }));
     
     // Limpar erro do campo quando usuário começar a digitar
     if (errors[field as keyof ClienteFormErrors]) {
-      setErrors(prev => ({
+      setErrors((prev: ClienteFormErrors) => ({
         ...prev,
         [field]: undefined
       }));
