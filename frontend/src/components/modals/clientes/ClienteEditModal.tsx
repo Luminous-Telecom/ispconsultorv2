@@ -1382,10 +1382,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                     {/* Elementos de busca e paginação removidos - agora integrados no Table component */}
 
-
-                      {/* Paginação à direita */}
-                      <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
-                        {/* Seletor de linhas por página */}
+                  {/* Tabela unificada com busca, paginação e reload integrados */}
                         <select 
                           id={`limit-${Math.random().toString(36).substr(2, 9)}`}
                           name="limitSelector"
@@ -1411,7 +1408,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           <option value={100}>100</option>
                         </select>
 
-                        {/* Paginação compacta */}
                         <div className="d-flex gap-1">
                           <button 
                             className="btn btn-outline-secondary btn-sm" 
@@ -1672,9 +1668,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Paginação à direita */}
                       <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
-                        {/* Seletor de linhas por página */}
                         <select 
                           id={`limit-${Math.random().toString(36).substr(2, 9)}`}
                           name="limitSelector"
@@ -1700,7 +1694,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           <option value={100}>100</option>
                         </select>
 
-                        {/* Paginação compacta */}
                         <div className="d-flex gap-1">
                           <button 
                             className="btn btn-outline-secondary btn-sm" 
