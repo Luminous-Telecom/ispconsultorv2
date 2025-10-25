@@ -989,13 +989,14 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               Plano <span className="text-danger ms-1">*</span>
             </label>
             <div className="input-group">
-              <input
-                type="text"
-                className={`form-control ${errors.plano_id ? 'is-invalid' : ''}`}
-                value={planoSelecionado ? `${planoSelecionado.id} - ${planoSelecionado.nome_plano}` : ''}
-                placeholder="Selecione um plano"
-                readOnly
-              />
+              <div className="form-control d-flex align-items-center" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                <span className="badge bg-secondary me-2" style={{ fontSize: '0.75em' }}>
+                  {planoSelecionado ? planoSelecionado.id : 'ID'}
+                </span>
+                <span className="text-muted">
+                  {planoSelecionado ? planoSelecionado.nome_plano : 'Selecione um plano'}
+                </span>
+              </div>
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -1080,13 +1081,14 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               Banco para Boleto <span className="text-danger ms-1">*</span>
             </label>
             <div className="input-group">
-              <input
-                type="text"
-                className={`form-control ${errors.conta_boleto ? 'is-invalid' : ''}`}
-                value={bancoSelecionado ? `${bancoSelecionado.id} - ${bancoSelecionado.nome}` : ''}
-                placeholder="Selecione um banco"
-                readOnly
-              />
+              <div className="form-control d-flex align-items-center" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                <span className="badge bg-secondary me-2" style={{ fontSize: '0.75em' }}>
+                  {bancoSelecionado ? bancoSelecionado.id : 'ID'}
+                </span>
+                <span className="text-muted">
+                  {bancoSelecionado ? bancoSelecionado.nome : 'Selecione um banco'}
+                </span>
+              </div>
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -1171,14 +1173,14 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               Modelo de Contrato <span className="text-danger ms-1">*</span>
             </label>
             <div className="input-group">
-              <input
-                type="text"
-                className={`form-control ${errors.modelo_contrato_id ? 'is-invalid' : ''}`}
-                value={modeloContratoSelecionado ? `${modeloContratoSelecionado.id} - ${modeloContratoSelecionado.nome}` : ''}
-                placeholder="Selecione um modelo de contrato"
-                readOnly
-                disabled={updateContratoMutation.isPending}
-              />
+              <div className="form-control d-flex align-items-center" style={{ padding: '0.375rem 0.75rem', backgroundColor: '#f8f9fa', border: '1px solid #ced4da' }}>
+                <span className="badge bg-secondary me-2" style={{ fontSize: '0.75em' }}>
+                  {modeloContratoSelecionado ? modeloContratoSelecionado.id : 'ID'}
+                </span>
+                <span className="text-muted">
+                  {modeloContratoSelecionado ? modeloContratoSelecionado.nome : 'Selecione um modelo de contrato'}
+                </span>
+              </div>
               <button
                 type="button"
                 className="btn btn-outline-secondary"
