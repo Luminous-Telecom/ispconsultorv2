@@ -1436,7 +1436,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
 
             {/* Aba Contratos */}
-            {activeTab === 'contratos' && (
+            {isEditing && activeTab === 'contratos' && (
               <div className="row">
                 <div className="col-12">
                   <Table
@@ -1512,7 +1512,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
             )}
 
             {/* Aba Financeiro */}
-            {activeTab === 'financeiro' && (
+            {isEditing && activeTab === 'financeiro' && (
               <div className="row">
                 <div className="col-12">
                   <Table
@@ -1616,7 +1616,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         </div>
 
         {/* Modal de edição de título */}
-        <TituloEditModal
+        {isEditing && (
+          <>
+            <TituloEditModal
           show={showTituloEditModal}
           onClose={() => {
             setShowTituloEditModal(false);
@@ -1706,7 +1708,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           confirmText="Confirmar"
           cancelText="Cancelar"
         />
-    </DraggableModal>
+          </>
+        )}
+      </>
   );
 };
 
