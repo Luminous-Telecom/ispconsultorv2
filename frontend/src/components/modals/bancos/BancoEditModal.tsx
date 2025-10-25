@@ -207,7 +207,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     initialData: initialFormData,
     setFormData,
     setErrors,
-    customData: customFormData
+    customData: banco ? customFormData : undefined
   });
 
   // Limpar resultado do teste quando o modal abre
