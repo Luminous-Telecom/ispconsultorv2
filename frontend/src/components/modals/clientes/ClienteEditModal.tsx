@@ -452,9 +452,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       key: 'imprimir',
-      label: 'Imprimir',
+      label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
       variant: 'primary',
-      disabled: (selectedItems) => selectedItems.length === 0,
+      disabled: (selectedItems) => selectedItems.length === 0 || isGeneratingPdf,
       dropdown: [
         {
           label: 'Contrato',
@@ -488,7 +488,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                 }
               } catch (error: any) {
                 console.error('Erro ao gerar PDF:', error);
-                showNotification('Erro ao gerar contrato', 'error');
+                if (error.response?.status === 404) {
+                  showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
+                } else {
+                  showNotification('Erro ao gerar contrato', 'error');
+                }
               } finally {
                 setIsGeneratingPdf(false);
               }
@@ -509,12 +513,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   }
                 });
                 
-                const modeloTermo = await DocumentoSistemaService.getDefaultByType('termo_adesao');
+                // Usar o tipo 'contrato' disponível para termo de adesão
+                const modeloTermo = await DocumentoSistemaService.getDefaultByType('contrato');
                 
                 if (modeloTermo.success && modeloTermo.data) {
-                  const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                  // Buscar conteúdos específicos do modelo
+                  const modelosData = await DocumentoSistemaService.getModelosByModeloContrato(modeloTermo.data.id);
+                  const conteudoAdesao = modelosData.data?.modelo_termo_adesao || modeloTermo.data.conteudo;
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
                     modeloTermo.data.id, 
-                    clienteId || 0
+                    clienteId || 0,
+                    conteudoAdesao
                   );
                   
                   const url = window.URL.createObjectURL(pdfBlob);
@@ -523,11 +532,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   
                   showNotification('Termo de Adesão gerado com sucesso!', 'success');
                 } else {
-                  showNotification('Nenhum modelo de termo de adesão encontrado. Cadastre um modelo primeiro.', 'error');
+                  showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
                 }
               } catch (error: any) {
                 console.error('Erro ao gerar PDF:', error);
-                showNotification('Erro ao gerar termo de adesão', 'error');
+                if (error.response?.status === 404) {
+                  showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
+                } else {
+                  showNotification('Erro ao gerar termo de adesão', 'error');
+                }
               } finally {
                 setIsGeneratingPdf(false);
               }
@@ -548,12 +561,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   }
                 });
                 
-                const modeloPermanencia = await DocumentoSistemaService.getDefaultByType('contrato_permanencia');
+                // Usar o tipo 'contrato' disponível para contrato de permanência
+                const modeloPermanencia = await DocumentoSistemaService.getDefaultByType('contrato');
                 
                 if (modeloPermanencia.success && modeloPermanencia.data) {
-                  const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                  // Buscar conteúdos específicos do modelo
+                  const modelosData = await DocumentoSistemaService.getModelosByModeloContrato(modeloPermanencia.data.id);
+                  const conteudoPermanencia = modelosData.data?.modelo_contrato_permanencia || modeloPermanencia.data.conteudo;
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
                     modeloPermanencia.data.id, 
-                    clienteId || 0
+                    clienteId || 0,
+                    conteudoPermanencia
                   );
                   
                   const url = window.URL.createObjectURL(pdfBlob);
@@ -562,11 +580,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   
                   showNotification('Contrato de Permanência gerado com sucesso!', 'success');
                 } else {
-                  showNotification('Nenhum modelo de contrato de permanência encontrado. Cadastre um modelo primeiro.', 'error');
+                  showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
                 }
               } catch (error: any) {
                 console.error('Erro ao gerar PDF:', error);
-                showNotification('Erro ao gerar contrato de permanência', 'error');
+                if (error.response?.status === 404) {
+                  showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
+                } else {
+                  showNotification('Erro ao gerar contrato de permanência', 'error');
+                }
               } finally {
                 setIsGeneratingPdf(false);
               }
@@ -714,8 +736,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     },
     {
       key: 'imprimir',
-      label: 'Imprimir',
+      label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
       variant: 'primary',
+      disabled: (selectedItems) => isGeneratingPdf,
       dropdown: [
         {
           label: 'Contrato',
