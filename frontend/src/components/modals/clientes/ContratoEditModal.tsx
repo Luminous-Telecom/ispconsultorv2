@@ -154,7 +154,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     to: Math.min(pageTermosModal * limitTermosModal, filteredTermos.length),
     total: filteredTermos.length,
     current_page: pageTermosModal,
-    last_page: Math.ceil(filteredTermos.length / limitTermosModal)
+    last_page: Math.ceil(filteredTermos.length / limitTermosModal),
+    per_page: limitTermosModal
   };
 
   // Definir colunas da tabela de termos
@@ -2051,9 +2052,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 setTermoSelecionado(null);
               }
             }}
-          />
-            emptyMessage="Nenhum termo encontrado"
-            showHeader={false}
           />
         </div>
       </DraggableModal>
