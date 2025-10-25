@@ -211,26 +211,29 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
 
           <div className="col-md-6">
               <div className="mb-2">
-                <label htmlFor="tipo_servico" className="form-label small">Tipo de Serviço *</label>
-                <select
-                  className={`form-select form-select-sm ${errors.tipo_servico ? 'is-invalid' : ''}`}
-                id="tipo_servico"
-                name="tipo_servico"
-                value={formData.tipo_servico}
-                onChange={(e) => handleInputChange('tipo_servico', e.target.value)}
-                disabled={createPlanoMutation.isPending}
-              >
-              <option value="internet">Internet</option>
-              <option value="telefonia">Telefonia</option>
-              <option value="tv">TV por Assinatura</option>
-              <option value="suporte">Suporte</option>
-              <option value="infraestrutura">Infraestrutura</option>
-              <option value="consultoria">Consultoria</option>
-              <option value="outros">Outros</option>
-              </select>
-              {errors.tipo_servico && <div className="invalid-feedback">{errors.tipo_servico}</div>}
+                <FormField
+                  name="tipo_servico"
+                  type="select"
+                  label="Tipo de Serviço"
+                  required={true}
+                  size="sm"
+                  value={formData.tipo_servico}
+                  onChange={(e: any) => handleInputChange('tipo_servico', e.value)}
+                  error={errors.tipo_servico}
+                  isInvalid={!!errors.tipo_servico}
+                  disabled={createPlanoMutation.isPending}
+                  options={[
+                    { value: 'internet', label: 'Internet' },
+                    { value: 'telefonia', label: 'Telefonia' },
+                    { value: 'tv', label: 'TV por Assinatura' },
+                    { value: 'suporte', label: 'Suporte' },
+                    { value: 'infraestrutura', label: 'Infraestrutura' },
+                    { value: 'consultoria', label: 'Consultoria' },
+                    { value: 'outros', label: 'Outros' }
+                  ]}
+                />
+              </div>
             </div>
-          </div>
         </div>
 
               <div className="mb-2">
@@ -321,20 +324,14 @@ const PlanoCreateModal: React.FC<PlanoCreateModalProps> = ({
           <div className="row">
             {servicosDisponiveis.map((servico) => (
               <div key={servico} className="col-md-4 mb-2">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id={`servico_${servico}`}
-                    name={`servico_${servico}`}
-                    checked={formData.servicos_inclusos.includes(servico)}
-                    onChange={() => handleServiceToggle(servico)}
-                    disabled={createPlanoMutation.isPending}
-                  />
-                  <label className="form-check-label" htmlFor={`servico_${servico}`}>
-                    {servico}
-                  </label>
-                </div>
+                <FormField
+                  name={`servico_${servico}`}
+                  type="checkbox"
+                  label={servico}
+                  value={formData.servicos_inclusos.includes(servico)}
+                  onChange={() => handleServiceToggle(servico)}
+                  disabled={createPlanoMutation.isPending}
+                />
               </div>
             ))}
           </div>

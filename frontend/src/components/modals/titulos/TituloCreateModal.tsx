@@ -255,23 +255,25 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="plano_id" className="form-label small">Plano *</label>
-              <select
-                className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
-                id="plano_id"
+              <FormField
                 name="plano_id"
+                type="select"
+                label="Plano"
+                required={true}
+                size="sm"
                 value={formData.plano_id}
-                onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
+                onChange={(e: any) => handleInputChange('plano_id', parseInt(e.value))}
+                error={errors.plano_id}
+                isInvalid={!!errors.plano_id}
                 disabled={createParcelaMutation.isPending}
-              >
-                <option value={0}>Selecione um plano</option>
-                {planos?.data?.map((plano: any) => (
-                  <option key={plano.id} value={plano.id}>
-                    {plano.nome_plano}
-                  </option>
-                ))}
-              </select>
-              {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
+                options={[
+                  { value: 0, label: 'Selecione um plano' },
+                  ...(planos?.data?.map((plano: any) => ({
+                    value: plano.id,
+                    label: plano.nome_plano
+                  })) || [])
+                ]}
+              />
             </div>
           </div>
         </div>

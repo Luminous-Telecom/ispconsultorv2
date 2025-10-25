@@ -195,44 +195,48 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="cliente_id" className="form-label small">Cliente *</label>
-              <select
-                className={`form-select ${errors.cliente_id ? 'is-invalid' : ''}`}
-                id="cliente_id"
+              <FormField
                 name="cliente_id"
+                type="select"
+                label="Cliente"
+                required={true}
+                size="sm"
                 value={formData.cliente_id}
-                onChange={(e) => handleInputChange('cliente_id', parseInt(e.target.value))}
+                onChange={(e: any) => handleInputChange('cliente_id', parseInt(e.value))}
+                error={errors.cliente_id}
+                isInvalid={!!errors.cliente_id}
                 disabled={updateParcelaMutation.isPending}
-              >
-                <option value={0}>Selecione um cliente</option>
-                {clientes?.data?.map((cliente: any) => (
-                  <option key={cliente.id} value={cliente.id}>
-                    {cliente.nome || cliente.razao_social} - {cliente.cpf_cnpj || cliente.cnpj}
-                  </option>
-                ))}
-              </select>
-              {errors.cliente_id && <div className="invalid-feedback">{errors.cliente_id}</div>}
+                options={[
+                  { value: 0, label: 'Selecione um cliente' },
+                  ...(clientes?.data?.map((cliente: any) => ({
+                    value: cliente.id,
+                    label: `${cliente.nome || cliente.razao_social} - ${cliente.cpf_cnpj || cliente.cnpj}`
+                  })) || [])
+                ]}
+              />
             </div>
           </div>
           <div className="col-md-6">
             <div className="mb-3">
-              <label htmlFor="plano_id" className="form-label small">Plano *</label>
-              <select
-                className={`form-select ${errors.plano_id ? 'is-invalid' : ''}`}
-                id="plano_id"
+              <FormField
                 name="plano_id"
+                type="select"
+                label="Plano"
+                required={true}
+                size="sm"
                 value={formData.plano_id}
-                onChange={(e) => handleInputChange('plano_id', parseInt(e.target.value))}
+                onChange={(e: any) => handleInputChange('plano_id', parseInt(e.value))}
+                error={errors.plano_id}
+                isInvalid={!!errors.plano_id}
                 disabled={updateParcelaMutation.isPending}
-              >
-                <option value={0}>Selecione um plano</option>
-                {planos?.data?.map((plano: any) => (
-                  <option key={plano.id} value={plano.id}>
-                    {plano.nome_plano}
-                  </option>
-                ))}
-              </select>
-              {errors.plano_id && <div className="invalid-feedback">{errors.plano_id}</div>}
+                options={[
+                  { value: 0, label: 'Selecione um plano' },
+                  ...(planos?.data?.map((plano: any) => ({
+                    value: plano.id,
+                    label: plano.nome_plano
+                  })) || [])
+                ]}
+              />
             </div>
           </div>
         </div>
