@@ -1,6 +1,5 @@
 import React from 'react';
 import DraggableModal from './DraggableModal';
-import ModalHeaderActions from './ModalHeaderActions';
 import { Table } from '../tables';
 import { ListModalProps } from '../../types/modal';
 
@@ -45,22 +44,6 @@ function ListModal<T extends { id: any }>({
       title={title}
       size="lg"
       className="no-padding"
-      headerActions={
-        bulkActions.length > 0 ? (
-          <ModalHeaderActions
-            bulkActions={bulkActions}
-            selectedItems={selectedItems}
-            search=""
-            onSearchChange={() => {}}
-            searchPlaceholder=""
-            limit={15}
-            onLimitChange={() => {}}
-            pagination={undefined}
-            onPageChange={() => {}}
-            onRefresh={onRefresh}
-          />
-        ) : undefined
-      }
     >
       <div style={{ padding: '16px' }}>
         <Table
@@ -74,7 +57,13 @@ function ListModal<T extends { id: any }>({
             searchable: !!onSearchChange,
             searchPlaceholder,
             emptyMessage,
-            className: 'no-padding'
+            className: 'no-padding',
+            bulkActions: bulkActions.map(action => ({
+              key: action.label.toLowerCase().replace(/\s+/g, '-'),
+              label: action.label,
+              onClick: action.action,
+              disabled: action.disabled
+            }))
           }}
           onSelectionChange={onSelectionChange}
           onSearch={onSearchChange}
