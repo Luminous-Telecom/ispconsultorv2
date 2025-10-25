@@ -229,6 +229,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
       {/* Modal de Criação */}
       <ClienteModal
+        key="create-modal"
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => {

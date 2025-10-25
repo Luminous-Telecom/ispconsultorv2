@@ -106,6 +106,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
   // Determinar se as abas Contratos e Financeiro devem ser habilitadas
   const canEditContratosFinanceiro = isEditing || !!createdClienteId;
+  
+  // Debug: verificar valores
+  console.log('ClienteModal - isEditing:', isEditing, 'createdClienteId:', createdClienteId, 'canEditContratosFinanceiro:', canEditContratosFinanceiro);
 
   // Função helper para mostrar confirmação
   const showConfirmation = (message: string, action: () => void) => {
