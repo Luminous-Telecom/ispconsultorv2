@@ -107,7 +107,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [selectedContratosItems, setSelectedContratosItems] = useState<any[]>([]);
   const [showInativosContratos, setShowInativosContratos] = useState(false);
-  const [search, setSearch] = useState('');
+  const [searchContratos, setSearchContratos] = useState('');
+  const [searchFinanceiro, setSearchFinanceiro] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [sortColumn, setSortColumn] = useState<string>('id');
@@ -235,8 +236,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     });
 
     // Aplicar filtro de busca
-    if (search.trim()) {
-      const searchTerm = search.toLowerCase().trim();
+    if (searchFinanceiro.trim()) {
+      const searchTerm = searchFinanceiro.toLowerCase().trim();
       filteredData = filteredData.filter((titulo: CarneParcela) => {
         const id = titulo.id?.toString() || '';
         const numeroTitulo = titulo.numero_titulo || '';
@@ -502,8 +503,8 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     
     let filtered = contratosData.filter((contrato: any) => {
       // Filtro por busca
-      if (search) {
-        const searchLower = search.toLowerCase();
+      if (searchContratos) {
+        const searchLower = searchContratos.toLowerCase();
         const matchesSearch = 
           contrato.plano?.nome_plano?.toLowerCase().includes(searchLower) ||
           contrato.status?.toLowerCase().includes(searchLower) ||
@@ -548,7 +549,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }
     
     return filtered;
-  }, [contratosData, search, showInativosContratos, sortColumn, sortDirection]);
+  }, [contratosData, searchContratos, showInativosContratos, sortColumn, sortDirection]);
 
   const paginatedContratosData = React.useMemo(() => {
     const startIndex = (page - 1) * limit;
@@ -1389,10 +1390,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           id="contratos-search"
                           name="contratosSearch"
                           placeholder="Buscar por plano, status, valor..."
-                          value={search}
+                          value={searchContratos}
                           onChange={(e) => {
                             e.stopPropagation();
-                            setSearch(e.target.value);
+                            setSearchContratos(e.target.value);
                           }}
                           onClick={(e) => e.stopPropagation()}
                           style={{ width: '300px', height: '32px' }}
@@ -1677,10 +1678,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                           id="parcelas-search"
                           name="parcelasSearch"
                           placeholder="Buscar por ID, carnê, valor..."
-                          value={search}
+                          value={searchFinanceiro}
                           onChange={(e) => {
                             e.stopPropagation();
-                            setSearch(e.target.value);
+                            setSearchFinanceiro(e.target.value);
                           }}
                           onClick={(e) => e.stopPropagation()}
                           style={{ width: '300px', height: '32px' }}
