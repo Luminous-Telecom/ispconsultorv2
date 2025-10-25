@@ -1015,8 +1015,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 className="btn btn-outline-secondary"
                 style={{
                   borderLeft: 'none',
-                  borderColor: '#ced4da',
-                  backgroundColor: '#fff'
+                  borderColor: '#ced4da'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1123,8 +1122,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 className="btn btn-outline-secondary"
                 style={{
                   borderLeft: 'none',
-                  borderColor: '#ced4da',
-                  backgroundColor: '#fff'
+                  borderColor: '#ced4da'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1231,8 +1229,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 className="btn btn-outline-secondary"
                 style={{
                   borderLeft: 'none',
-                  borderColor: '#ced4da',
-                  backgroundColor: '#fff'
+                  borderColor: '#ced4da'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
