@@ -1529,10 +1529,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         loading: isLoadingContratos,
                         selectable: true,
                         multiSelect: true,
-                        onSelectionChange: setSelectedContratosItems,
                         emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
                         className: 'no-padding'
                       }}
+                      onSelectionChange={setSelectedContratosItems}
                     />
                   </div>
 
@@ -1817,10 +1817,10 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                         loading: isLoadingParcelas,
                         selectable: true,
                         multiSelect: true,
-                        onSelectionChange: setSelectedItems,
                         emptyMessage: 'Este cliente ainda não possui títulos cadastrados.',
                         className: 'no-padding'
                       }}
+                      onSelectionChange={setSelectedItems}
                     />
                   </div>
 
