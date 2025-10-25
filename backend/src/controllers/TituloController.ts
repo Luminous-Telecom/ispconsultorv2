@@ -1061,10 +1061,14 @@ export class TituloController {
       if (idsParam) {
         try {
           // Tentar parse como JSON primeiro
-          ids = JSON.parse(idsParam);
+          const parsed = JSON.parse(idsParam);
+          // Garantir que seja sempre um array
+          ids = Array.isArray(parsed) ? parsed : [parsed];
+          logger.info('IDs parseados como JSON:', { ids });
         } catch (e) {
           // Se não for JSON válido, tentar split por vírgula
           ids = idsParam.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id));
+          logger.info('IDs parseados como CSV:', { ids });
         }
       }
 
