@@ -182,6 +182,7 @@ const FormField: React.FC<FormFieldProps> = ({
         return (
           <Checkbox
             {...commonProps}
+            checked={value}
             label={label}
             description={description}
             inline={inline}
