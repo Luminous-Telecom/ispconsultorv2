@@ -192,7 +192,7 @@ const FormField: React.FC<FormFieldProps> = ({
             switch={isSwitch}
             indeterminate={indeterminate}
             onChange={(e) => {
-              console.log('🔄 FormField checkbox onChange:', { name, value: e.value, currentValue: value });
+              console.log('🔄 FormField checkbox onChange:', { name, e, value: e.value, currentValue: value });
               handleChange(e.value, name);
             }}
           />
