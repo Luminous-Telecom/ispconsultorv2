@@ -233,8 +233,8 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       success('Banco atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
       queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
-      onClose();
       onSuccess?.();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao atualizar banco');

@@ -122,8 +122,8 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
     onSuccess: () => {
       success('Banco criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
-      onClose();
       onSuccess?.();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao criar banco');
