@@ -10,3 +10,8 @@
   align-items: center;
   justify-content: center;
 }
+
+.input-group .id-field {
+  max-width: 60px;
+  min-width: 50px;
+}

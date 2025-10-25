@@ -271,7 +271,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   title="Digite o ID do plano"
                   autoComplete="off"
                   type="text"
-                  className="form-control text-center"
+                  className="form-control text-center id-field"
                   placeholder="ID"
                   onChange={(e) => {
                     const value = e.target.value;
@@ -443,7 +443,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   title="Digite o ID do banco"
                   autoComplete="off"
                   type="text"
-                  className="form-control text-center"
+                  className="form-control text-center id-field"
                   placeholder="ID"
                   onChange={(e) => {
                     const value = e.target.value;
@@ -516,7 +516,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   title="Digite o ID do modelo de contrato"
                   autoComplete="off"
                   type="text"
-                  className="form-control text-center"
+                  className="form-control text-center id-field"
                   placeholder="ID"
                   onChange={(e) => {
                     const value = e.target.value;
