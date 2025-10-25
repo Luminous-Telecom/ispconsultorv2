@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { TableConfig, TableColumn as TableColumnType, TableAction, BulkAction, SortDirection } from './types';
 import { useTable } from './useTable';
 import TableColumn from './TableColumn';
@@ -23,7 +23,7 @@ interface TableProps<T = any> {
   className?: string;
 }
 
-const Table = <T extends { id: number | string }>({
+function Table<T extends { id: number | string }>({
   config,
   onActionClick,
   onBulkActionClick,
@@ -36,7 +36,7 @@ const Table = <T extends { id: number | string }>({
   onPageSizeChange,
   onRefresh,
   className = '',
-}: TableProps<T>) => {
+}: TableProps<T>) {
   const {
     columns,
     data,
@@ -61,9 +61,19 @@ const Table = <T extends { id: number | string }>({
     responsive = true,
     stickyHeader = false,
     stickyActions = false,
+    customControls,
+    customFilters,
   } = config;
 
-  // Usar o hook useTable
+  const [searchTerm, setSearchTerm] = useState('');
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  // Memoizar dados filtrados para evitar loops infinitos
+  const filteredData = useMemo(() => {
+    if (!customFilters) return data;
+    return customFilters(data);
+  }, [data, customFilters]);
   const {
     state,
     actions: tableActions,
@@ -74,7 +84,7 @@ const Table = <T extends { id: number | string }>({
     isAllSelected,
     isPartiallySelected,
   } = useTable({
-    data,
+    data: filteredData,
     columns,
     pagination,
     filters,
@@ -94,9 +104,6 @@ const Table = <T extends { id: number | string }>({
     onRefresh,
   });
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const tableRef = useRef<HTMLTableElement>(null);
-
   // Sincronizar busca local com o hook
   useEffect(() => {
     if (searchTerm !== state.searchTerm) {
@@ -110,6 +117,15 @@ const Table = <T extends { id: number | string }>({
       onSearch(searchTerm);
     }
   }, [searchTerm, onSearch, state.searchTerm]);
+
+  // Fechar dropdown quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = () => setOpenDropdown(null);
+    if (openDropdown !== null) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdown]);
 
   // Construir classes da tabela
   const getTableClasses = () => {
@@ -368,6 +384,48 @@ const Table = <T extends { id: number | string }>({
               const isDisabledByCondition = bulkAction.disabled && typeof bulkAction.disabled === 'function' ? bulkAction.disabled(state.selectedItems) : false;
               const isDisabled = isDisabledBySelection || isDisabledByCondition;
               
+              // Se tem dropdown, renderizar dropdown
+              if (bulkAction.dropdown) {
+                return (
+                  <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === index ? null : index);
+                      }}
+                      disabled={isDisabled}
+                      style={{ flexShrink: 0 }}
+                    >
+                      {bulkAction.label} <i className="bi bi-chevron-down ms-1"></i>
+                    </button>
+                    {openDropdown === index && (
+                      <ul 
+                        className="dropdown-menu show" 
+                        style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
+                      >
+                        {bulkAction.dropdown.map((item, itemIndex) => (
+                          <li key={itemIndex}>
+                            <button
+                              className="dropdown-item"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                item.action();
+                                setOpenDropdown(null);
+                              }}
+                            >
+                              {item.label}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              }
+              
               // Botão normal
               return (
                 <button
@@ -390,32 +448,42 @@ const Table = <T extends { id: number | string }>({
 
         {/* Segunda linha: Busca + Paginação + Reload */}
         <div className="d-flex align-items-center justify-content-between">
-          {/* Busca à esquerda */}
-          {searchable && (
-            <div className="d-flex align-items-center">
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                id={`search-${Math.random().toString(36).substr(2, 9)}`}
-                name="search"
-                placeholder={searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: '400px', height: '32px' }}
-              />
-            </div>
-          )}
+          {/* Busca e controles customizados à esquerda */}
+          <div className="d-flex align-items-center gap-3">
+            {searchable && (
+              <div className="d-flex align-items-center">
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  id={`search-${Math.random().toString(36).substr(2, 9)}`}
+                  name="search"
+                  placeholder={searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ width: '400px', height: '32px' }}
+                />
+              </div>
+            )}
+            {customControls}
+          </div>
 
           {/* Paginação centralizada */}
-          {pagination && (
+          {(pagination || (!pagination && data.length > 0)) && (
             <div className="d-flex align-items-center gap-2">
               {/* Seletor de linhas por página */}
               <select 
                 className="form-select form-select-sm" 
                 id="data-table-limit"
                 name="dataTableLimit"
-                value={pagination.per_page}
-                onChange={(e) => onPageSizeChange?.(parseInt(e.target.value))}
+                value={pagination?.per_page || state.pageSize}
+                onChange={(e) => {
+                  const newPageSize = parseInt(e.target.value);
+                  if (pagination) {
+                    onPageSizeChange?.(newPageSize);
+                  } else {
+                    tableActions.setPageSize(newPageSize);
+                  }
+                }}
                 style={{ width: '80px', height: '32px', cursor: 'pointer' }}
               >
                 <option value={5}>5</option>
@@ -430,34 +498,62 @@ const Table = <T extends { id: number | string }>({
               <div className="d-flex align-items-center gap-1">
                 <button 
                   className="btn btn-outline-secondary btn-sm" 
-                  onClick={() => onPageChange?.(1)}
-                  disabled={pagination.current_page <= 1}
+                  onClick={() => {
+                    if (pagination) {
+                      onPageChange?.(1);
+                    } else {
+                      tableActions.setPage(1);
+                    }
+                  }}
+                  disabled={pagination ? pagination.current_page <= 1 : state.currentPage <= 1}
                 >
                   <i className="bi bi-chevron-double-left"></i>
                 </button>
                 <button 
                   className="btn btn-outline-secondary btn-sm" 
-                  onClick={() => onPageChange?.(pagination.current_page - 1)}
-                  disabled={pagination.current_page <= 1}
+                  onClick={() => {
+                    if (pagination) {
+                      onPageChange?.(pagination.current_page - 1);
+                    } else {
+                      tableActions.setPage(state.currentPage - 1);
+                    }
+                  }}
+                  disabled={pagination ? pagination.current_page <= 1 : state.currentPage <= 1}
                 >
                   <i className="bi bi-chevron-left"></i>
                 </button>
                 
                 <span className="small text-muted mx-2">
-                  {pagination.from || 0} - {pagination.to || 0} / {pagination.total || 0}
+                  {pagination ? (
+                    `${pagination.from || 0} - ${pagination.to || 0} / ${pagination.total || 0}`
+                  ) : (
+                    `${((state.currentPage - 1) * state.pageSize) + 1}-${Math.min(state.currentPage * state.pageSize, data.length)} de ${data.length}`
+                  )}
                 </span>
                 
                 <button 
                   className="btn btn-outline-secondary btn-sm" 
-                  onClick={() => onPageChange?.(pagination.current_page + 1)}
-                  disabled={pagination.current_page >= pagination.last_page}
+                  onClick={() => {
+                    if (pagination) {
+                      onPageChange?.(pagination.current_page + 1);
+                    } else {
+                      tableActions.setPage(state.currentPage + 1);
+                    }
+                  }}
+                  disabled={pagination ? pagination.current_page >= pagination.last_page : !hasNextPage}
                 >
                   <i className="bi bi-chevron-right"></i>
                 </button>
                 <button 
                   className="btn btn-outline-secondary btn-sm" 
-                  onClick={() => onPageChange?.(pagination.last_page)}
-                  disabled={pagination.current_page >= pagination.last_page}
+                  onClick={() => {
+                    if (pagination) {
+                      onPageChange?.(pagination.last_page);
+                    } else {
+                      tableActions.setPage(totalPages);
+                    }
+                  }}
+                  disabled={pagination ? pagination.current_page >= pagination.last_page : !hasNextPage}
                 >
                   <i className="bi bi-chevron-double-right"></i>
                 </button>

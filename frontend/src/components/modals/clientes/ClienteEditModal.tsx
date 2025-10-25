@@ -21,6 +21,9 @@ import ContratoCreateModal from './ContratoCreateModal';
 import ContratoEditModal from './ContratoEditModal';
 import { useFormReset } from '../../../hooks/useFormReset';
 import { Form, FormConfig, AddressFields, ContactFields } from '../../forms';
+import Button from '../../ui/Button';
+import Dropdown from '../../ui/Dropdown';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 interface ClienteForm {
   cnpj: string;
@@ -114,6 +117,31 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const [sortColumn, setSortColumn] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState('');
+
+  // Função helper para mostrar confirmação
+  const showConfirmation = (message: string, action: () => void) => {
+    setConfirmMessage(message);
+    setConfirmAction(() => action);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirm = () => {
+    if (confirmAction) {
+      confirmAction();
+    }
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+    setConfirmMessage('');
+  };
+
+  const handleCancelConfirm = () => {
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+    setConfirmMessage('');
+  };
 
   // Fechar dropdown ao clicar fora
   React.useEffect(() => {
@@ -124,7 +152,16 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }
   }, [openDropdown]);
 
-  // Fechar dropdown de impressão ao clicar fora
+  // Fechar dropdown ao clicar fora
+  React.useEffect(() => {
+    const handleClickOutside = () => setOpenDropdown(null);
+    if (openDropdown !== null) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openDropdown]);
+
+
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -350,20 +387,220 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }
   };
 
-  // Ações para o header do modal (apenas na aba Financeiro)
-  const bulkActions: Array<{
+  // Ações para contratos
+  const contratosBulkActions: Array<{
+    key: string;
     label: string;
-    action?: (selectedItems: CarneParcela[]) => void;
     variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
-    disabled?: (selectedItems: CarneParcela[]) => boolean;
+    disabled?: boolean | ((selectedItems: any[]) => boolean);
+    onClick?: (selectedItems: any[]) => void;
+    confirm?: {
+      title: string;
+      message: string;
+      confirmText?: string;
+      cancelText?: string;
+    };
     dropdown?: {
       label: string;
       action: () => void;
     }[];
   }> = [
     {
+      key: 'novo',
+      label: 'Novo',
+      variant: 'primary',
+      onClick: () => setShowContratoCreateModal(true)
+    },
+    {
+      key: 'editar',
       label: 'Editar',
-      action: (selectedItems: CarneParcela[]) => {
+      variant: 'primary',
+      disabled: (selectedItems) => selectedItems.length !== 1,
+      onClick: (selectedItems) => {
+        if (selectedItems.length === 1) {
+          setSelectedContratoId(selectedItems[0].id);
+          setShowContratoEditModal(true);
+        }
+      }
+    },
+    {
+      key: 'excluir',
+      label: 'Excluir',
+      variant: 'primary',
+      disabled: (selectedItems) => selectedItems.length === 0,
+      onClick: (selectedItems) => {
+        for (const item of selectedItems) {
+          try {
+            deleteContratoMutation.mutateAsync(item.id);
+          } catch (error: any) {
+            console.error(`Erro ao deletar contrato ${item.id}:`, error);
+            const errorMessage = error?.response?.data?.message || 
+                               error?.response?.data?.error || 
+                               `Erro ao deletar contrato ${item.id}`;
+            showNotification(errorMessage, 'error');
+          }
+        }
+        refetchContratos();
+        setSelectedContratosItems([]);
+      },
+      confirm: {
+        title: 'Confirmar Exclusão',
+        message: 'Tem certeza que deseja deletar os contratos selecionados?',
+        confirmText: 'Confirmar',
+        cancelText: 'Cancelar'
+      }
+    },
+    {
+      key: 'imprimir',
+      label: 'Imprimir',
+      variant: 'primary',
+      disabled: (selectedItems) => selectedItems.length === 0,
+      dropdown: [
+        {
+          label: 'Contrato',
+          action: async () => {
+            if (selectedContratosItems.length > 0) {
+              setIsGeneratingPdf(true);
+              try {
+                await new Promise(resolve => {
+                  if (window.requestIdleCallback) {
+                    window.requestIdleCallback(resolve);
+                  } else {
+                    setTimeout(resolve, 0);
+                  }
+                });
+                
+                const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
+                
+                if (modeloContrato.success && modeloContrato.data) {
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                    modeloContrato.data.id, 
+                    clienteId || 0
+                  );
+                  
+                  const url = window.URL.createObjectURL(pdfBlob);
+                  setPdfUrl(url);
+                  setShowImprimirModal(true);
+                  
+                  showNotification('Contrato gerado com sucesso!', 'success');
+                } else {
+                  showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
+                }
+              } catch (error: any) {
+                console.error('Erro ao gerar PDF:', error);
+                showNotification('Erro ao gerar contrato', 'error');
+              } finally {
+                setIsGeneratingPdf(false);
+              }
+            }
+          }
+        },
+        {
+          label: 'Termo de Adesão',
+          action: async () => {
+            if (selectedContratosItems.length > 0) {
+              setIsGeneratingPdf(true);
+              try {
+                await new Promise(resolve => {
+                  if (window.requestIdleCallback) {
+                    window.requestIdleCallback(resolve);
+                  } else {
+                    setTimeout(resolve, 0);
+                  }
+                });
+                
+                const modeloTermo = await DocumentoSistemaService.getDefaultByType('termo_adesao');
+                
+                if (modeloTermo.success && modeloTermo.data) {
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                    modeloTermo.data.id, 
+                    clienteId || 0
+                  );
+                  
+                  const url = window.URL.createObjectURL(pdfBlob);
+                  setPdfUrl(url);
+                  setShowImprimirModal(true);
+                  
+                  showNotification('Termo de Adesão gerado com sucesso!', 'success');
+                } else {
+                  showNotification('Nenhum modelo de termo de adesão encontrado. Cadastre um modelo primeiro.', 'error');
+                }
+              } catch (error: any) {
+                console.error('Erro ao gerar PDF:', error);
+                showNotification('Erro ao gerar termo de adesão', 'error');
+              } finally {
+                setIsGeneratingPdf(false);
+              }
+            }
+          }
+        },
+        {
+          label: 'Contrato Permanência',
+          action: async () => {
+            if (selectedContratosItems.length > 0) {
+              setIsGeneratingPdf(true);
+              try {
+                await new Promise(resolve => {
+                  if (window.requestIdleCallback) {
+                    window.requestIdleCallback(resolve);
+                  } else {
+                    setTimeout(resolve, 0);
+                  }
+                });
+                
+                const modeloPermanencia = await DocumentoSistemaService.getDefaultByType('contrato_permanencia');
+                
+                if (modeloPermanencia.success && modeloPermanencia.data) {
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+                    modeloPermanencia.data.id, 
+                    clienteId || 0
+                  );
+                  
+                  const url = window.URL.createObjectURL(pdfBlob);
+                  setPdfUrl(url);
+                  setShowImprimirModal(true);
+                  
+                  showNotification('Contrato de Permanência gerado com sucesso!', 'success');
+                } else {
+                  showNotification('Nenhum modelo de contrato de permanência encontrado. Cadastre um modelo primeiro.', 'error');
+                }
+              } catch (error: any) {
+                console.error('Erro ao gerar PDF:', error);
+                showNotification('Erro ao gerar contrato de permanência', 'error');
+              } finally {
+                setIsGeneratingPdf(false);
+              }
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // Ações para o header do modal (apenas na aba Financeiro)
+  const bulkActions: Array<{
+    key: string;
+    label: string;
+    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
+    disabled?: boolean | ((selectedItems: CarneParcela[]) => boolean);
+    onClick?: (selectedItems: CarneParcela[]) => void;
+    confirm?: {
+      title: string;
+      message: string;
+      confirmText?: string;
+      cancelText?: string;
+    };
+    dropdown?: {
+      label: string;
+      action: () => void;
+    }[];
+  }> = [
+    {
+      key: 'editar',
+      label: 'Editar',
+      variant: 'primary',
+      disabled: (selectedItems) => selectedItems.length !== 1,
+      onClick: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedTituloId(item.id);
@@ -372,8 +609,14 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     },
     {
+      key: 'receber',
       label: 'Receber',
-      action: (selectedItems: CarneParcela[]) => {
+      variant: 'success',
+      disabled: (selectedItems) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
+      },
+      onClick: (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           setSelectedParcela(item);
@@ -382,8 +625,14 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     },
     {
+      key: 'cancelar',
       label: 'Cancelar',
-      action: async (selectedItems: CarneParcela[]) => {
+      variant: 'danger',
+      disabled: (selectedItems) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
+      },
+      onClick: async (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const confirmMessage = selectedItems.length === 1 
             ? 'Tem certeza que deseja cancelar este título?'
@@ -430,8 +679,14 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       }
     },
     {
+      key: 'estornar',
       label: 'Estornar',
-      action: async (selectedItems: CarneParcela[]) => {
+      variant: 'warning',
+      disabled: (selectedItems: CarneParcela[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status !== 'pago');
+      },
+      onClick: async (selectedItems: CarneParcela[]) => {
         if (selectedItems.length > 0) {
           const item = selectedItems[0];
           if (item.status === 'pago') {
@@ -455,22 +710,23 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             showNotification('Só é possível estornar títulos que estão pagos', 'info');
           }
         }
-      },
-      disabled: (selectedItems: CarneParcela[]) => {
-        if (selectedItems.length === 0) return true;
-        return selectedItems.every(item => item.status !== 'pago');
       }
     },
     {
+      key: 'imprimir',
       label: 'Imprimir',
       variant: 'primary',
       dropdown: [
         {
-          label: `Imprimir Selecionados (${selectedItems.length})`,
+          label: 'Contrato',
           action: handleImprimirSelecionados
         },
         {
-          label: 'Imprimir Todos em Aberto',
+          label: 'Termo de Adesão',
+          action: handleImprimirTodosEmAberto
+        },
+        {
+          label: 'Contrato Permanência',
           action: handleImprimirTodosEmAberto
         }
       ]
@@ -655,6 +911,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'status',
       label: 'Status',
+      sortable: true,
       render: (item: CarneParcela) => {
         return (
           <span className={`badge bg-${getStatusColor(item.status)}`}>
@@ -666,6 +923,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'plano',
       label: 'Plano',
+      sortable: true,
       render: (item: CarneParcela) => {
         return item.plano?.nome_plano || '-';
       }
@@ -673,6 +931,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'data_vencimento',
       label: 'Vencimento',
+      sortable: true,
       render: (item: CarneParcela) => {
         return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
       }
@@ -680,6 +939,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'valor',
       label: 'Valor',
+      sortable: true,
       render: (item: CarneParcela) => {
         return `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
@@ -687,6 +947,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'valor_pago',
       label: 'Valor baixado',
+      sortable: true,
       render: (item: CarneParcela) => {
         return item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00';
       }
@@ -694,6 +955,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
+      sortable: true,
       render: (item: CarneParcela) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
       }
@@ -701,6 +963,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'data_pagamento',
       label: 'Data Pagamento',
+      sortable: true,
       render: (item: CarneParcela) => {
         return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
       }
@@ -708,6 +971,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     {
       key: 'charge_id',
       label: 'Charge ID',
+      sortable: true,
       render: (item: CarneParcela) => {
         return item.charge_id || '-';
       }
@@ -931,7 +1195,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         </div>
       }
     >
-      <>
       <div style={{ 
         height: '100%',
         display: 'flex',
@@ -1048,7 +1311,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   
                   <div className="mb-3">
                     <FormField
-                      name="recebe_email"
+                      name={`${formPrefix}-recebe_email`}
                       type="checkbox"
                       label="Recebe Email"
                       value={formData.recebe_email}
@@ -1058,7 +1321,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   <div className="mb-3">
                     <FormField
-                      name="recebe_sms"
+                      name={`${formPrefix}-recebe_sms`}
                       type="checkbox"
                       label="Recebe SMS"
                       value={formData.recebe_sms}
@@ -1068,7 +1331,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   <div className="mb-3">
                     <FormField
-                      name="recebe_whatsapp"
+                      name={`${formPrefix}-recebe_whatsapp`}
                       type="checkbox"
                       label="Recebe WhatsApp"
                       value={formData.recebe_whatsapp}
@@ -1095,310 +1358,26 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             {activeTab === 'contratos' && (
               <div className="row">
                 <div className="col-12">
-                  {/* Cabeçalho fixo - não rola */}
-                  <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
-                    {/* Botões de Ação - Linha 1 */}
-                    <div className="d-flex justify-content-start mb-3">
-                      <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-primary"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setShowContratoCreateModal(true);
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                        >
-                          Novo
-                        </button>
-                        
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-primary"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (selectedContratosItems.length === 1) {
-                              setSelectedContratoId(selectedContratosItems[0].id);
-                              setShowContratoEditModal(true);
-                            }
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          disabled={selectedContratosItems.length !== 1}
-                        >
-                          Editar
-                        </button>
-                        
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-primary"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (selectedContratosItems.length > 0) {
-                              if (window.confirm(`Tem certeza que deseja deletar ${selectedContratosItems.length} contrato(s)?`)) {
-                                for (const item of selectedContratosItems) {
-                                  try {
-                                    await deleteContratoMutation.mutateAsync(item.id);
-                                  } catch (error: any) {
-                                    console.error(`Erro ao deletar contrato ${item.id}:`, error);
-                                    const errorMessage = error?.response?.data?.message || 
-                                                       error?.response?.data?.error || 
-                                                       `Erro ao deletar contrato ${item.id}`;
-                                    showNotification(errorMessage, 'error');
-                                  }
-                                }
-                                // Refetch contratos após deletar
-                                refetchContratos();
-                                setSelectedContratosItems([]);
-                              }
-                            }
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          disabled={selectedContratosItems.length === 0}
-                        >
-                          Deletar
-                        </button>
-                        
-                        <div className="dropdown" style={{ position: 'relative' }}>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-primary dropdown-toggle"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowImprimirDropdown(!showImprimirDropdown);
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            disabled={selectedContratosItems.length === 0 || isGeneratingPdf}
-                          >
-                            {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
-                            <i className="bi bi-chevron-down ms-1"></i>
-                          </button>
-                          {showImprimirDropdown && (
-                            <div 
-                              className="dropdown-menu show" 
-                              style={{ 
-                                position: 'absolute', 
-                                top: '100%', 
-                                left: 0, 
-                                zIndex: 1050,
-                                display: 'block',
-                                minWidth: '200px'
-                              }}
-                            >
-                              <button
-                                className="dropdown-item"
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setShowImprimirDropdown(false);
-                                  if (selectedContratosItems.length > 0) {
-                                    setIsGeneratingPdf(true);
-                                    try {
-                                      // Usar requestIdleCallback para melhorar performance
-                                      await new Promise(resolve => {
-                                        if (window.requestIdleCallback) {
-                                          window.requestIdleCallback(resolve);
-                                        } else {
-                                          setTimeout(resolve, 0);
-                                        }
-                                      });
-                                      
-                                      // Buscar o modelo de contrato padrão
-                                      const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
-                                      
-                                      if (modeloContrato.success && modeloContrato.data) {
-                                        // Gerar PDF com dados do cliente
-                                        const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-                                          modeloContrato.data.id, 
-                                          clienteId || 0
-                                        );
-                                        
-                                        // Criar URL e abrir modal
-                                        const url = window.URL.createObjectURL(pdfBlob);
-                                        setPdfUrl(url);
-                                        setShowImprimirModal(true);
-                                        
-                                        showNotification('Contrato gerado com sucesso!', 'success');
-                                      } else {
-                                        showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
-                                      }
-                                    } catch (error: any) {
-                                      console.error('Erro ao gerar contrato:', error);
-                                      const errorMessage = error?.response?.data?.message || 
-                                                         error?.message || 
-                                                         'Erro ao gerar contrato';
-                                      showNotification(errorMessage, 'error');
-                                    } finally {
-                                      setIsGeneratingPdf(false);
-                                    }
-                                  }
-                                }}
-                                style={{ display: 'block', width: '100%', textAlign: 'left' }}
-                                disabled={selectedContratosItems.length === 0 || isGeneratingPdf}
-                              >
-                                Contrato
-                              </button>
-                              <button
-                                className="dropdown-item"
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setShowImprimirDropdown(false);
-                                  if (selectedContratosItems.length > 0) {
-                                    setIsGeneratingPdf(true);
-                                    try {
-                                      // Usar requestIdleCallback para melhorar performance
-                                      await new Promise(resolve => {
-                                        if (window.requestIdleCallback) {
-                                          window.requestIdleCallback(resolve);
-                                        } else {
-                                          setTimeout(resolve, 0);
-                                        }
-                                      });
-                                      
-                                      // Buscar o modelo de termo de adesão vinculado ao modelo de contrato
-                                      const contratoSelecionado = selectedContratosItems[0];
-                                      const modeloContratoId = contratoSelecionado.modelo_contrato_id;
-                                      
-                                      if (modeloContratoId) {
-                                        // Buscar todos os modelos vinculados ao modelo de contrato
-                                        const modelosVinculados = await DocumentoSistemaService.getModelosByModeloContrato(modeloContratoId);
-                                        
-                                        if (modelosVinculados.success && modelosVinculados.data) {
-                                          // Verificar se existe modelo_termo_adesao
-                                          if (modelosVinculados.data.modelo_termo_adesao) {
-                                            // Gerar PDF com dados do cliente usando o modelo de contrato
-                                            const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
-                                              contratoSelecionado.modelo_contrato_id, 
-                                              clienteId || 0,
-                                              modelosVinculados.data.modelo_termo_adesao
-                                            );
-                                            
-                                            // Criar URL e abrir modal
-                                            const url = window.URL.createObjectURL(pdfBlob);
-                                            setPdfUrl(url);
-                                            setShowImprimirModal(true);
-                                            
-                                            showNotification('Termo de Adesão gerado com sucesso!', 'success');
-                                          } else {
-                                            showNotification('Nenhum modelo de termo de adesão vinculado a este contrato encontrado.', 'error');
-                                          }
-                                        } else {
-                                          showNotification('Erro ao buscar modelos vinculados ao contrato.', 'error');
-                                        }
-                                      } else {
-                                        showNotification('Contrato selecionado não possui modelo vinculado.', 'error');
-                                      }
-                                    } catch (error: any) {
-                                      console.error('Erro ao gerar termo de adesão:', error);
-                                      const errorMessage = error?.response?.data?.message || 
-                                                         error?.message || 
-                                                         'Erro ao gerar termo de adesão';
-                                      showNotification(errorMessage, 'error');
-                                    } finally {
-                                      setIsGeneratingPdf(false);
-                                    }
-                                  }
-                                }}
-                                style={{ display: 'block', width: '100%', textAlign: 'left' }}
-                                disabled={selectedContratosItems.length === 0 || isGeneratingPdf}
-                              >
-                                Termo de Adesão
-                              </button>
-                              <button
-                                className="dropdown-item"
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setShowImprimirDropdown(false);
-                                  if (selectedContratosItems.length > 0) {
-                                    setIsGeneratingPdf(true);
-                                    try {
-                                      // Usar requestIdleCallback para melhorar performance
-                                      await new Promise(resolve => {
-                                        if (window.requestIdleCallback) {
-                                          window.requestIdleCallback(resolve);
-                                        } else {
-                                          setTimeout(resolve, 0);
-                                        }
-                                      });
-                                      
-                                      // Buscar o modelo de contrato de permanência vinculado ao modelo de contrato
-                                      const contratoSelecionado = selectedContratosItems[0];
-                                      const modeloContratoId = contratoSelecionado.modelo_contrato_id;
-                                      
-                                      if (modeloContratoId) {
-                                        // Buscar todos os modelos vinculados ao modelo de contrato
-                                        const modelosVinculados = await DocumentoSistemaService.getModelosByModeloContrato(modeloContratoId);
-                                        
-                                        if (modelosVinculados.success && modelosVinculados.data) {
-                                          // Verificar se existe modelo_contrato_permanencia
-                                          if (modelosVinculados.data.modelo_contrato_permanencia) {
-                                            // Gerar PDF com dados do cliente usando o modelo de contrato
-                                            const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
-                                              contratoSelecionado.modelo_contrato_id, 
-                                              clienteId || 0,
-                                              modelosVinculados.data.modelo_contrato_permanencia
-                                            );
-                                            
-                                            // Criar URL e abrir modal
-                                            const url = window.URL.createObjectURL(pdfBlob);
-                                            setPdfUrl(url);
-                                            setShowImprimirModal(true);
-                                            
-                                            showNotification('Contrato de Permanência gerado com sucesso!', 'success');
-                                          } else {
-                                            showNotification('Nenhum modelo de contrato de permanência vinculado a este contrato encontrado.', 'error');
-                                          }
-                                        } else {
-                                          showNotification('Erro ao buscar modelos vinculados ao contrato.', 'error');
-                                        }
-                                      } else {
-                                        showNotification('Contrato selecionado não possui modelo vinculado.', 'error');
-                                      }
-                                    } catch (error: any) {
-                                      console.error('Erro ao gerar contrato de permanência:', error);
-                                      const errorMessage = error?.response?.data?.message || 
-                                                         error?.message || 
-                                                         'Erro ao gerar contrato de permanência';
-                                      showNotification(errorMessage, 'error');
-                                    } finally {
-                                      setIsGeneratingPdf(false);
-                                    }
-                                  }
-                                }}
-                                style={{ display: 'block', width: '100%', textAlign: 'left' }}
-                                disabled={selectedContratosItems.length === 0 || isGeneratingPdf}
-                              >
-                                Contrato Permanência
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Elementos de busca e paginação removidos - agora integrados no Table component */}
-
-                    {/* Tabela unificada com busca, paginação e reload integrados */}
-                    <Table
-                      config={{
-                        columns: contratosColumns,
-                        data: sortedContratosData,
-                        loading: isLoadingContratos,
-                        selectable: true,
-                        multiSelect: true,
-                        searchable: true,
-                        searchPlaceholder: 'Buscar por plano, status, valor...',
-                        emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
-                        className: 'no-padding'
-                      }}
-                      onSelectionChange={setSelectedContratosItems}
-                      onRefresh={() => refetchContratos()}
-                    />
+                  <Table
+                    config={{
+                      columns: contratosColumns,
+                      data: contratosData || [],
+                      loading: isLoadingContratos,
+                      selectable: true,
+                      multiSelect: true,
+                      searchable: true,
+                      searchPlaceholder: 'Buscar por plano, status, valor...',
+                      sortable: true,
+                      striped: true,
+                      hover: true,
+                      responsive: true,
+                      bulkActions: contratosBulkActions,
+                      emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
+                      className: 'no-padding'
+                    }}
+                    onSelectionChange={setSelectedContratosItems}
+                    onRefresh={() => refetchContratos()}
+                  />
 
                   {/* Resumo de Contratos */}
                   {sortedContratosData.length > 0 && (
@@ -1433,116 +1412,36 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             {activeTab === 'financeiro' && (
               <div className="row">
                 <div className="col-12">
-                  {/* Cabeçalho fixo - não rola */}
-                  <div style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-primary)', zIndex: 10, paddingBottom: '1rem' }}>
-                    {/* Botões de Ação - Linha 1 */}
-                    <div className="d-flex justify-content-start mb-3">
-                      <div className="d-flex" style={{ gap: '8px', paddingLeft: '1rem' }}>
-                        {bulkActions.map((bulkAction, index) => {
-                          const hasSelection = selectedItems.length > 0;
-                          const selectedItem = hasSelection ? selectedItems[0] : null;
-                          
-                          // Lógica de desabilitação baseada no status
-                          let isDisabled = !hasSelection;
-                          
-                          if (hasSelection && selectedItem) {
-                            if (bulkAction.label === 'Receber' && selectedItem.status === 'pago') {
-                              isDisabled = true; // Não pode receber título já pago
-                            }
-                            if (bulkAction.label === 'Cancelar' && selectedItem.status === 'pago') {
-                              isDisabled = true; // Não pode cancelar título pago
-                            }
-                            if (bulkAction.label === 'Cancelar' && selectedItem.status === 'cancelado') {
-                              isDisabled = true; // Não pode cancelar título já cancelado
-                            }
-                            if (bulkAction.label === 'Receber' && selectedItem.status === 'cancelado') {
-                              isDisabled = true; // Não pode receber título cancelado
-                            }
-                          }
-                          
-                          // Usar a função disabled do bulkAction se existir
-                          if (bulkAction.disabled) {
-                            isDisabled = isDisabled || bulkAction.disabled(selectedItems);
-                          }
-                          
-                          // Se tem dropdown, renderizar dropdown
-                          if (bulkAction.dropdown) {
-                            return (
-                              <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
-                                <button
-                                  className={`btn btn-sm btn-${bulkAction.variant || 'primary'} dropdown-toggle`}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setOpenDropdown(openDropdown === index ? null : index);
-                                  }}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                >
-                                  {bulkAction.label}
-                                  <i className="bi bi-chevron-down ms-1"></i>
-                                </button>
-                                {openDropdown === index && (
-                                  <ul 
-                                    className="dropdown-menu show" 
-                                    style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1050 }}
-                                  >
-                                    {bulkAction.dropdown.map((item, itemIndex) => (
-                                      <li key={itemIndex}>
-                                        <button
-                                          className="dropdown-item"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            item.action();
-                                            setOpenDropdown(null);
-                                          }}
-                                        >
-                                          {item.label}
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            );
-                          }
-                          
-                          // Botão normal
-                          return (
-                            <button
-                              key={index}
-                              className="btn btn-sm btn-primary"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (!isDisabled && bulkAction.action) {
-                                  bulkAction.action(selectedItems);
-                                }
-                              }}
-                              onMouseDown={(e) => e.stopPropagation()}
-                              disabled={isDisabled}
-                              style={{ flexShrink: 0 }}
-                            >
-                              {bulkAction.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Tabela unificada com busca, paginação e reload integrados */}
-                    <Table
+                  <Table
                     config={{
                       columns: columns,
-                      data: paginatedData,
+                      data: sortedData,
                       loading: isLoadingParcelas,
                       selectable: true,
                       multiSelect: true,
                       searchable: true,
                       searchPlaceholder: 'Buscar por ID, carnê, valor...',
+                      sortable: true,
+                      striped: true,
+                      hover: true,
+                      responsive: true,
+                      bulkActions: bulkActions,
                       emptyMessage: 'Este cliente ainda não possui títulos cadastrados.',
-                      className: 'no-padding'
+                      className: 'no-padding',
+                      customControls: (
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="showCancelados"
+                            checked={showCancelados}
+                            onChange={(e) => setShowCancelados(e.target.checked)}
+                          />
+                          <label className="form-check-label" htmlFor="showCancelados">
+                            Mostrar cancelados
+                          </label>
+                        </div>
+                      )
                     }}
                     onSelectionChange={setSelectedItems}
                     onRefresh={() => refetchParcelas()}
@@ -1592,15 +1491,15 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
             )}
 
             {/* Aba Observações */}
-            {activeTab === 'observacoes' && (
+            {activeTab === "observacoes" && (
               <div className="row">
                 <div className="col-12">
                   <div className="mb-3">
-                    <label htmlFor="observacoes" className="form-label">Observações</label>
+                    <label htmlFor={`${formPrefix}-observacoes`} className="form-label">Observações</label>
                     <textarea
                       className="form-control"
-                      id="observacoes"
-                      name="observacoes"
+                      id={`${formPrefix}-observacoes`}
+                      name={`${formPrefix}-observacoes`}
                       rows={8}
                       value={formData.observacoes}
                       onChange={(e) => handleInputChange('observacoes', e.target.value)}
@@ -1613,86 +1512,97 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           </div>
         </div>
 
-      {/* Modal de edição de título */}
-      <TituloEditModal
-        show={showTituloEditModal}
-        onClose={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-          // Sempre refetch quando modal fechar (cancelar ou sucesso)
-          refetchParcelas();
-          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
-        }}
-        onSuccess={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-          // Forçar refetch imediatamente
-          refetchParcelas();
-          // Também invalidar queries para garantir atualização
-          queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
-        }}
-        parcelaId={selectedTituloId || 0}
-      />
+        {/* Modal de edição de título */}
+        <TituloEditModal
+          show={showTituloEditModal}
+          onClose={() => {
+            setShowTituloEditModal(false);
+            setSelectedTituloId(null);
+            // Sempre refetch quando modal fechar (cancelar ou sucesso)
+            refetchParcelas();
+            queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
+          }}
+          onSuccess={() => {
+            setShowTituloEditModal(false);
+            setSelectedTituloId(null);
+            // Forçar refetch imediatamente
+            refetchParcelas();
+            // Também invalidar queries para garantir atualização
+            queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
+          }}
+          parcelaId={selectedTituloId || 0}
+        />
 
-      {/* Modal para receber */}
-      <ReceberModal
-        isOpen={showReceberModal}
-        onClose={() => {
-          setShowReceberModal(false);
-          setSelectedParcela(null);
-        }}
-        parcela={selectedParcela ? {
-          id: selectedParcela.id,
-          numero_titulo: selectedParcela.numero_titulo || `Parcela ${selectedParcela.numero_parcela}`,
-          valor_parcela: selectedParcela.valor || selectedParcela.valor_parcela,
-          data_vencimento: selectedParcela.data_vencimento,
-          cliente: selectedParcela.cliente || selectedParcela.carne?.cliente
-        } : null}
-        onSuccess={() => {
-          setShowReceberModal(false);
-          setSelectedParcela(null);
-          refetchParcelas();
-        }}
-      />
+        {/* Modal para receber */}
+        <ReceberModal
+          isOpen={showReceberModal}
+          onClose={() => {
+            setShowReceberModal(false);
+            setSelectedParcela(null);
+          }}
+          parcela={selectedParcela ? {
+            id: selectedParcela.id,
+            numero_titulo: selectedParcela.numero_titulo || `Parcela ${selectedParcela.numero_parcela}`,
+            valor_parcela: selectedParcela.valor || selectedParcela.valor_parcela,
+            data_vencimento: selectedParcela.data_vencimento,
+            cliente: selectedParcela.cliente || selectedParcela.carne?.cliente
+          } : null}
+          onSuccess={() => {
+            setShowReceberModal(false);
+            setSelectedParcela(null);
+            refetchParcelas();
+          }}
+        />
 
-      {/* Modal de criação de contrato */}
-      <ContratoCreateModal
-        show={showContratoCreateModal}
-        clienteId={cliente?.id}
-        onClose={() => setShowContratoCreateModal(false)}
-        onSuccess={() => {
-          setShowContratoCreateModal(false);
-          // Refetch contratos
-        }}
-      />
+        {/* Modal de criação de contrato */}
+        <ContratoCreateModal
+          show={showContratoCreateModal}
+          clienteId={cliente?.id}
+          onClose={() => setShowContratoCreateModal(false)}
+          onSuccess={() => {
+            setShowContratoCreateModal(false);
+            // Refetch contratos
+          }}
+        />
 
-      {/* Modal de edição de contrato */}
-      <ContratoEditModal
-        show={showContratoEditModal}
-        contratoId={selectedContratoId}
-        onClose={() => {
-          setShowContratoEditModal(false);
-          setSelectedContratoId(null);
-        }}
-        onSuccess={() => {
-          // Refetch contratos
-        }}
-      />
+        {/* Modal de edição de contrato */}
+        <ContratoEditModal
+          show={showContratoEditModal}
+          contratoId={selectedContratoId}
+          onClose={() => {
+            setShowContratoEditModal(false);
+            setSelectedContratoId(null);
+          }}
+          onSuccess={() => {
+            // Refetch contratos
+          }}
+        />
 
-      {/* Modal de impressão - renderizado fora do modal principal */}
-      <ImprimirModal
-        show={showImprimirModal}
-        onClose={() => {
-          setShowImprimirModal(false);
-          if (pdfUrl) {
-            window.URL.revokeObjectURL(pdfUrl);
-            setPdfUrl(null);
-          }
-        }}
-        pdfUrl={pdfUrl}
-        title="Visualizar Contrato"
-        modalId="cliente-imprimir-modal"
-      />
+        {/* Modal de impressão - renderizado fora do modal principal */}
+        <ImprimirModal
+          show={showImprimirModal}
+          onClose={() => {
+            setShowImprimirModal(false);
+            if (pdfUrl) {
+              window.URL.revokeObjectURL(pdfUrl);
+              setPdfUrl(null);
+            }
+          }}
+          pdfUrl={pdfUrl}
+          title="Visualizar Contrato"
+          modalId="cliente-imprimir-modal"
+        />
+
+        {/* Modal de Confirmação */}
+        <ConfirmModal
+          show={showConfirmModal}
+          message={confirmMessage}
+          onConfirm={handleConfirm}
+          onCancel={handleCancelConfirm}
+          confirmVariant="danger"
+          confirmText="Confirmar"
+          cancelText="Cancelar"
+        />
     </DraggableModal>
   );
 };

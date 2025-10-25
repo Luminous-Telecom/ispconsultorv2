@@ -48,13 +48,17 @@ export interface BulkAction<T = any> {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
   disabled?: boolean | ((selectedItems: T[]) => boolean);
   hidden?: boolean | ((selectedItems: T[]) => boolean);
-  onClick: (selectedItems: T[]) => void;
+  onClick?: (selectedItems: T[]) => void;
   confirm?: {
     title: string;
     message: string;
     confirmText?: string;
     cancelText?: string;
   };
+  dropdown?: {
+    label: string;
+    action: () => void;
+  }[];
 }
 
 export interface TablePagination {
@@ -100,6 +104,8 @@ export interface TableConfig<T = any> {
   stickyHeader?: boolean;
   stickyActions?: boolean;
   className?: string;
+  customControls?: React.ReactNode;
+  customFilters?: (data: T[]) => T[];
 }
 
 export interface TableState<T = any> {

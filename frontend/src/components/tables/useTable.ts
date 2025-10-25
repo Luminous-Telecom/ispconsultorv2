@@ -39,11 +39,18 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   // Atualizar dados quando props mudarem
   useEffect(() => {
-    setState(prev => ({
-      ...prev,
-      data: data || [],
-      filteredData: data || [],
-    }));
+    setState(prev => {
+      const newData = data || [];
+      // Só atualiza se os dados realmente mudaram
+      if (prev.data !== newData) {
+        return {
+          ...prev,
+          data: newData,
+          filteredData: newData,
+        };
+      }
+      return prev;
+    });
   }, [data]);
 
   // Filtrar dados baseado em busca e filtros
@@ -107,12 +114,10 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   // Paginar dados
   const paginatedData = useMemo(() => {
-    if (!pagination) return sortedData;
-
     const startIndex = (state.currentPage - 1) * state.pageSize;
     const endIndex = startIndex + state.pageSize;
     return sortedData.slice(startIndex, endIndex);
-  }, [sortedData, state.currentPage, state.pageSize, pagination]);
+  }, [sortedData, state.currentPage, state.pageSize]);
 
   // Calcular total de páginas
   const totalPages = useMemo(() => {

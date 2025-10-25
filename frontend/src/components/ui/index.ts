@@ -4,6 +4,8 @@ export { default as Input } from './Input';
 export { default as Select } from './Select';
 export { default as Checkbox } from './Checkbox';
 export { default as FormField } from './FormField';
+export { default as Dropdown } from './Dropdown';
+export { default as ConfirmModal } from './ConfirmModal';
 
 // Exportar exemplo de uso
 export { default as UIComponentsExample } from './UIComponentsExample';
