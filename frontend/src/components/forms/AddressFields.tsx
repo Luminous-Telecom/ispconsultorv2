@@ -105,7 +105,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
             required={required}
             size={size}
             value={getFieldValue(field.name)}
-            onChange={(e) => handleChange(field.name, e.value)}
+            onChange={(value) => handleChange(field.name, value)}
             error={getFieldError(field.name)}
             isInvalid={!!getFieldError(field.name)}
           />
