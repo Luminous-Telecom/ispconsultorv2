@@ -1349,31 +1349,34 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                   
                   <div className="mb-3">
                     <FormField
-                      name={`${formPrefix}-recebe_email`}
+                      name="recebe_email"
                       type="checkbox"
                       label="Recebe Email"
                       value={formData.recebe_email}
                       onChange={(value: any) => handleInputChange('recebe_email', value)}
+                      formPrefix={formPrefix}
                     />
                   </div>
 
                   <div className="mb-3">
                     <FormField
-                      name={`${formPrefix}-recebe_sms`}
+                      name="recebe_sms"
                       type="checkbox"
                       label="Recebe SMS"
                       value={formData.recebe_sms}
                       onChange={(value: any) => handleInputChange('recebe_sms', value)}
+                      formPrefix={formPrefix}
                     />
                   </div>
 
                   <div className="mb-3">
                     <FormField
-                      name={`${formPrefix}-recebe_whatsapp`}
+                      name="recebe_whatsapp"
                       type="checkbox"
                       label="Recebe WhatsApp"
                       value={formData.recebe_whatsapp}
                       onChange={(value: any) => handleInputChange('recebe_whatsapp', value)}
+                      formPrefix={formPrefix}
                     />
                   </div>
                 </div>
@@ -1559,7 +1562,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     <textarea
                       className="form-control"
                       id={`${formPrefix}-observacoes`}
-                      name={`${formPrefix}-observacoes`}
+                      name="observacoes"
                       rows={8}
                       value={formData.observacoes}
                       onChange={(e) => handleInputChange('observacoes', e.target.value)}
