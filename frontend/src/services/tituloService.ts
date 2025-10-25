@@ -194,12 +194,14 @@ export class TituloService {
         responseType: 'blob'
       });
 
-      // Com responseType: 'blob', o Axios retorna diretamente o Blob
-      if (!response || !(response instanceof Blob)) {
+      // Com responseType: 'blob', o Blob está em response.data
+      const blob = response.data;
+      
+      if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta inválida do servidor');
       }
 
-      return response;
+      return blob;
     } catch (error) {
       console.error('Erro ao gerar PDF de múltiplos boletos:', error);
       throw error;
