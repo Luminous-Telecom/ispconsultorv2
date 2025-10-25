@@ -168,7 +168,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
   // Carregar dados do cliente quando disponíveis
   useEffect(() => {
+    console.log('useEffect cliente:', cliente);
     if (cliente) {
+      console.log('Carregando dados do cliente:', cliente);
       setFormData({
         cnpj: cliente.cnpj || '',
         razao_social: cliente.razao_social || '',
@@ -191,6 +193,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         recebe_whatsapp: cliente.recebe_whatsapp ?? true,
         observacoes: cliente.observacoes || ''
       });
+      console.log('FormData atualizado');
     }
   }, [cliente]);
 
@@ -1320,7 +1323,9 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
         >
           {/* Aba Dados Básicos */}
           {activeTab === 'dados-basicos' && (
-            <Form
+            <>
+              {console.log('FormData atual:', formData)}
+              <Form
               key={`dados-basicos-${clienteId}`}
               config={dadosBasicosFormConfig}
               formPrefix={formPrefix}
@@ -1344,6 +1349,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
               showResetButton={false}
               className="dados-basicos-form"
             />
+            </>
           )}
 
             {/* Aba Contato */}
