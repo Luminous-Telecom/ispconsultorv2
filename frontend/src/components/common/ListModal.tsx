@@ -53,8 +53,8 @@ function ListModal<T extends { id: any }>({
             search=""
             onSearchChange={() => {}}
             searchPlaceholder=""
-            limit={limit}
-            onLimitChange={onLimitChange || (() => {})}
+            limit={15}
+            onLimitChange={() => {}}
             pagination={undefined}
             onPageChange={() => {}}
             onRefresh={onRefresh}
