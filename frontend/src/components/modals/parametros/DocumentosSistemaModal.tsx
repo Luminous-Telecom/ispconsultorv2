@@ -7,9 +7,9 @@ import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaSe
 import ModeloTermoService, { ModeloTermo } from '../../../services/modeloTermoService';
 import DocumentoModal from './DocumentoModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import DataTable from '../../common/DataTable';
+import Table from '../../tables/Table';
+import { TableConfig } from '../../tables/types';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
-import { Column } from '../../../types/entities';
 
 interface DocumentosSistemaModalProps {
   show: boolean;
@@ -111,7 +111,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   };
 
   // Definir colunas da tabela
-  const columns: Column<DocumentoUnion>[] = [
+  const columns: TableConfig<DocumentoUnion>['columns'] = [
     {
       key: 'id',
       label: 'ID',
@@ -272,33 +272,28 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             </li>
           </ul>
 
-          <DataTable
-            key={`datatable-${activeTab}`}
-            data={documentos?.data as DocumentoUnion[] || []}
-            columns={columns}
-            isLoading={isLoading}
-            pagination={{
-              from: 1,
-              to: documentos?.data?.length || 0,
-              total: documentos?.data?.length || 0,
-              current_page: 1,
-              last_page: 1
+          <Table
+            config={{
+              columns,
+              data: documentos?.data as DocumentoUnion[] || [],
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: `Buscar ${getTipoLabel(activeTab).toLowerCase()}...`,
+              sortable: true,
+              striped: true,
+              hover: true,
+              responsive: true,
+              bulkActions,
+              emptyMessage: `Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`,
+              tableId: `documentos-${activeTab}`
             }}
-            limit={limit}
-            setLimit={setLimit}
-            setPage={setPage}
+            onSelectionChange={setSelectedItems}
             onSort={(column: string, direction: 'asc' | 'desc') => {
               setSortColumn(column);
               setSortDirection(direction);
             }}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            bulkActions={bulkActions}
-            onSelectionChange={setSelectedItems}
-            searchPlaceholder={`Buscar ${getTipoLabel(activeTab).toLowerCase()}...`}
             onSearch={setSearch}
-            emptyMessage={`Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`}
-            showHeader={false}
+            onRefresh={() => refetch()}
           />
         </div>
 

@@ -11,7 +11,6 @@ import { TituloService } from '../../../services/tituloService';
 import FormField from '../../ui/FormField';
 import { Titulo, Plano } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
-import DataTable from '../../common/DataTable';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import ModalHeaderActions from '../../common/ModalHeaderActions';
@@ -587,7 +586,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   ];
 
-  // Colunas para o DataTable
+  // Colunas para a tabela de títulos
   const columns = [
     {
       key: 'id',
@@ -664,7 +663,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   ];
 
-  // Colunas para o DataTable de termos
+  // Colunas para a tabela de títulos de termos
   const termosColumns = [
     {
       key: 'id',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import DataTable from '../../common/DataTable';
+import Table from '../../tables/Table';
+import { TableConfig } from '../../tables/types';
 import { ContratoCreateModal } from '../../modals/contratos';
 import { useContratos } from '../../../hooks/useContratos';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
@@ -101,7 +102,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
     }
   };
 
-  const contratosColumns = [
+  const contratosColumns: TableConfig<any>['columns'] = [
     { key: 'id', label: 'ID', sortable: true },
     { 
       key: 'plano', 
@@ -224,63 +225,58 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
               <h6 className="mb-0">Contratos ({contratos.length})</h6>
             </div>
 
-            <DataTable
-              data={getSortedContratos()}
-              columns={contratosColumns}
-              isLoading={contratosLoading}
-              pagination={{
-                from: 1,
-                to: contratos.length,
-                total: contratos.length,
-                current_page: 1,
-                last_page: 1
+            <Table
+              config={{
+                columns: contratosColumns,
+                data: getSortedContratos(),
+                loading: contratosLoading,
+                searchable: true,
+                searchPlaceholder: 'Buscar contratos...',
+                sortable: true,
+                striped: true,
+                hover: true,
+                responsive: true,
+                bulkActions: [
+                  {
+                    label: 'Novo Contrato',
+                    action: () => setShowContratoCreateModal(true)
+                  },
+                  {
+                    label: 'Deletar',
+                    action: handleDeletarContrato
+                  },
+                  {
+                    label: 'Imprimir',
+                    variant: 'primary',
+                    dropdown: [
+                      {
+                        label: `Imprimir Selecionados (${selectedItems.length})`,
+                        action: () => {
+                          if (selectedItems.length > 0) {
+                            const ids = selectedItems.map(item => item.id);
+                            const idsParam = ids.join(',');
+                            handleImprimirSelecionados(idsParam);
+                          }
+                        }
+                      },
+                      {
+                        label: `Imprimir Todos Ativos`,
+                        action: () => {
+                          if (contratosAtivos.length > 0) {
+                            const ids = contratosAtivos.map(item => item.id);
+                            const idsParam = ids.join(',');
+                            handleImprimirTodos(idsParam);
+                          }
+                        }
+                      }
+                    ],
+                    disabled: () => false
+                  }
+                ],
+                emptyMessage: 'Nenhum contrato encontrado',
+                tableId: 'cliente-contratos'
               }}
-              limit={10}
-              setLimit={() => {}}
-              setPage={() => {}}
-              emptyMessage="Nenhum contrato encontrado"
-              searchPlaceholder="Buscar contratos..."
-              onSearch={() => {}}
-              bulkActions={[
-                {
-                  label: 'Novo Contrato',
-                  action: () => setShowContratoCreateModal(true)
-                },
-                {
-                  label: 'Deletar',
-                  action: handleDeletarContrato
-                },
-                {
-                  label: 'Imprimir',
-                  variant: 'primary',
-                  dropdown: [
-                    {
-                      label: `Imprimir Selecionados (${selectedItems.length})`,
-                      action: () => {
-                        if (selectedItems.length > 0) {
-                          const ids = selectedItems.map(item => item.id);
-                          const idsParam = ids.join(',');
-                          handleImprimirSelecionados(idsParam);
-                        }
-                      }
-                    },
-                    {
-                      label: `Imprimir Todos Ativos`,
-                      action: () => {
-                        if (contratosAtivos.length > 0) {
-                          const ids = contratosAtivos.map(item => item.id);
-                          const idsParam = ids.join(',');
-                          handleImprimirTodos(idsParam);
-                        }
-                      }
-                    }
-                  ],
-                  disabled: () => false
-                }
-              ]}
               onSort={handleSort}
-              sortColumn={sortColumn}
-              sortDirection={sortDirection}
               onRefresh={refetchContratos}
               onSelectionChange={setSelectedItems}
             />

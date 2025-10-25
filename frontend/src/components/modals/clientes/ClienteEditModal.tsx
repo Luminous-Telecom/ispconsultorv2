@@ -10,7 +10,6 @@ import { Cliente, CarneParcela, Contrato, Titulo } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
 import { useFormPrefix } from '../../../hooks/useFormId';
-import DataTable from '../../common/DataTable';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import ImprimirModal from '../../common/ImprimirModal';
@@ -938,7 +937,7 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
     }
   ];
 
-  // Colunas para o DataTable
+  // Colunas para a tabela de títulos
   const columns = [
     {
       key: 'id',
