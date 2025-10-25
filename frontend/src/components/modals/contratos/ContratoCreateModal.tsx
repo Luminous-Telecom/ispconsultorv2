@@ -293,7 +293,8 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   style={{
                     borderLeft: 'none',
                     border: '1px solid #ced4da',
-                    color: '#6c757d'
+                    color: '#6c757d',
+                    padding: '0.375rem 0.75rem'
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -453,7 +454,8 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   style={{
                     borderLeft: 'none',
                     border: '1px solid #ced4da',
-                    color: '#6c757d'
+                    color: '#6c757d',
+                    padding: '0.375rem 0.75rem'
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -514,7 +516,8 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   style={{
                     borderLeft: 'none',
                     border: '1px solid #ced4da',
-                    color: '#6c757d'
+                    color: '#6c757d',
+                    padding: '0.375rem 0.75rem'
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
