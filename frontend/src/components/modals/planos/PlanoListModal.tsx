@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
 import { useModalSelect } from '../../../hooks/useModalSelect';
-import DraggableModal from '../../common/DraggableModal';
-import ModalHeaderActions from '../../common/ModalHeaderActions';
+import { useListModal } from '../../../hooks/useListModal';
+import ListModal from '../../common/ListModal';
 import PlanoCreateModal from './PlanoCreateModal';
 import PlanoEditModal from './PlanoEditModal';
 import { Plano } from '../../../types';
-import { Table } from '../../tables';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface PlanoListModalProps {
@@ -42,6 +41,79 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       onClose();
     } : undefined
   );
+
+  // Configurar modal centralizado
+  const modal = useListModal({
+    title,
+    columns: [
+      {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        render: (item: Plano) => <span>{item.id}</span>
+      },
+      {
+        key: 'nome_plano',
+        label: 'Nome do Plano',
+        sortable: true,
+        render: (item: Plano) => <strong>{item.nome_plano}</strong>
+      },
+      {
+        key: 'descricao',
+        label: 'Descrição',
+        sortable: false,
+        render: (item: Plano) => item.descricao || '-'
+      },
+      {
+        key: 'tipo_servico',
+        label: 'Tipo de Serviço',
+        sortable: true,
+        render: (item: Plano) => (
+          <span className="badge bg-info">
+            {getTipoServicoLabel(item.tipo_servico)}
+          </span>
+        )
+      },
+      {
+        key: 'valor_mensal',
+        label: 'Valor Mensal',
+        sortable: true,
+        render: (item: Plano) => (
+          <span className="fw-bold text-success">
+            R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
+          </span>
+        )
+      },
+      {
+        key: 'quantidade_usuarios',
+        label: 'Usuários',
+        sortable: true,
+        render: (item: Plano) => (
+          <span>{item.quantidade_usuarios || '-'}</span>
+        )
+      },
+      {
+        key: 'periodicidade',
+        label: 'Periodicidade',
+        sortable: true,
+        render: (item: Plano) => (
+          <span className="text-capitalize">{item.periodicidade || '-'}</span>
+        )
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        sortable: true,
+        render: (item: Plano) => (
+          <span className={`badge ${getStatusBadgeClass(item.status)}`}>
+            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          </span>
+        )
+      }
+    ],
+    searchPlaceholder: 'Buscar por nome do plano...',
+    multiSelect: false
+  });
 
   // Query para buscar planos (buscando todos para filtrar localmente)
   const { data: planosData, isLoading, refetch } = usePlanos({
@@ -130,161 +202,76 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
   };
 
-  const columns = [
+  // Bulk actions
+  const bulkActions = onSelectPlano ? [
     {
-      key: 'id',
-      label: 'ID',
-      sortable: true,
-      render: (item: Plano) => <span>{item.id}</span>
+      label: 'Cancelar',
+      variant: 'secondary' as const,
+      action: () => {
+        clearSelection();
+        onClose();
+      }
     },
     {
-      key: 'nome_plano',
-      label: 'Nome do Plano',
-      sortable: true,
-      render: (item: Plano) => (
-        <div className="fw-bold">{item.nome_plano}</div>
-      )
+      label: 'Selecionar',
+      variant: 'primary' as const,
+      disabled: () => !selectedItem,
+      action: handleSelect
+    }
+  ] : [
+    {
+      label: 'Novo',
+      variant: 'primary' as const,
+      action: () => setShowCreateModal(true)
     },
     {
-      key: 'descricao',
-      label: 'Descrição',
-      sortable: false,
-      render: (item: Plano) => item.descricao || '-'
+      label: 'Editar',
+      variant: 'primary' as const,
+      disabled: () => !selectedItem,
+      action: () => {
+        if (selectedItem) {
+          setSelectedPlanoId(selectedItem.id);
+          setShowEditModal(true);
+        }
+      }
     },
     {
-      key: 'tipo_servico',
-      label: 'Tipo de Serviço',
-      sortable: true,
-      render: (item: Plano) => (
-        <span className="badge bg-info">
-          {getTipoServicoLabel(item.tipo_servico)}
-        </span>
-      )
-    },
-    {
-      key: 'valor_mensal',
-      label: 'Valor Mensal',
-      sortable: true,
-      render: (item: Plano) => (
-        <span className="fw-bold text-success">
-          R$ {Number(item.valor_mensal || 0).toFixed(2).replace('.', ',')}
-        </span>
-      )
-    },
-    {
-      key: 'quantidade_usuarios',
-      label: 'Usuários',
-      sortable: true,
-      render: (item: Plano) => (
-        <span>{item.quantidade_usuarios || '-'}</span>
-      )
-    },
-    {
-      key: 'periodicidade',
-      label: 'Periodicidade',
-      sortable: true,
-      render: (item: Plano) => (
-        <span className="text-capitalize">{item.periodicidade || '-'}</span>
-      )
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      render: (item: Plano) => (
-        <span className={`badge ${getStatusBadgeClass(item.status)}`}>
-          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-        </span>
-      )
+      label: 'Excluir',
+      variant: 'danger' as const,
+      disabled: () => !selectedItem,
+      action: () => {
+        if (selectedItem && window.confirm('Tem certeza que deseja excluir este plano?')) {
+          handleDelete(selectedItem.id);
+        }
+      }
     }
   ];
 
   return (
-    <DraggableModal
-      show={show}
-      onClose={() => {
-        clearSelection();
-        onClose();
-      }}
-      title={title}
-      size="lg"
-      modalId="plano-list-modal"
-      headerActions={
-        <ModalHeaderActions
-          bulkActions={onSelectPlano ? [
-            {
-              label: 'Cancelar',
-              variant: 'secondary',
-              action: () => {
-                clearSelection();
-                onClose();
-              }
-            },
-            {
-              label: 'Selecionar',
-              variant: 'primary',
-              disabled: () => !selectedItem,
-              action: handleSelect
-            }
-          ] : [
-            {
-              label: 'Novo',
-              variant: 'primary',
-              action: () => setShowCreateModal(true)
-            },
-            {
-              label: 'Editar',
-              variant: 'primary',
-              disabled: () => !selectedItem,
-              action: () => {
-                if (selectedItem) {
-                  setSelectedPlanoId(selectedItem.id);
-                  setShowEditModal(true);
-                }
-              }
-            },
-            {
-              label: 'Excluir',
-              variant: 'danger',
-              disabled: () => !selectedItem,
-              action: () => {
-                if (selectedItem && window.confirm('Tem certeza que deseja excluir este plano?')) {
-                  handleDelete(selectedItem.id);
-                }
-              }
-            }
-          ]}
-          selectedItems={selectedItem ? [selectedItem] : []}
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Buscar por nome do plano..."
-          limit={limit}
-          onLimitChange={setLimit}
-          pagination={pagination}
-          onPageChange={setPage}
-          onRefresh={() => {
-            refetch();
-            queryClient.invalidateQueries({ queryKey: ['planos'] });
-          }}
-          idPrefix="plano-list"
-        />
-      }
-    >
-      <div>
-        <Table
-          config={{
-            columns,
-            data: paginatedPlanos,
-            loading: isLoading,
-            pagination,
-            selectable: true,
-            multiSelect: false,
-            emptyMessage: 'Nenhum plano encontrado',
-            className: 'no-padding'
-          }}
-          onSelectionChange={handleSelectionChange}
-        />
-      </div>
+    <>
+      <ListModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        config={modal.config}
+        data={paginatedPlanos}
+        loading={isLoading}
+        selectedItems={selectedItem ? [selectedItem] : []}
+        onSelectionChange={handleSelectionChange}
+        search={search}
+        onSearchChange={setSearch}
+        pagination={pagination}
+        onPageChange={setPage}
+        limit={limit}
+        onLimitChange={setLimit}
+        onRefresh={() => {
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['planos'] });
+        }}
+        bulkActions={bulkActions}
+      />
 
       {/* Modal de Criação */}
       <PlanoCreateModal
@@ -310,7 +297,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
           setSelectedPlanoId(null);
         }}
       />
-    </DraggableModal>
+    </>
   );
 };
 
