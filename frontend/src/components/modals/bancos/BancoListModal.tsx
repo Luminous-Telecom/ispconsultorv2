@@ -154,7 +154,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     searchPlaceholder: 'Buscar por nome do banco...',
     sortable: true,
     selectable: true,
-    multiSelect: !onSelectBanco, // Se onSelectBanco existe, apenas seleção única
+    multiSelect: false, // Sempre seleção única
     emptyMessage: 'Nenhum banco encontrado'
   };
 
