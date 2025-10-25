@@ -1383,32 +1383,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                     {/* Elementos de busca e paginação removidos - agora integrados no Table component */}
 
                   {/* Tabela unificada com busca, paginação e reload integrados */}
-                        <select 
-                          id={`limit-${Math.random().toString(36).substr(2, 9)}`}
-                          name="limitSelector"
-                          className="form-select form-select-sm" 
-                          value={limit}
-                          onChange={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setLimit(parseInt(e.target.value));
-                          }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          style={{ width: '80px', height: '32px', cursor: 'pointer' }}
-                        >
-                          <option value={5}>5</option>
-                          <option value={10}>10</option>
-                          <option value={15}>15</option>
-                          <option value={25}>25</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </select>
-
-                  {/* Tabela unificada com busca, paginação e reload integrados */}
                   <Table
                     config={{
                       columns: contratosColumns,
