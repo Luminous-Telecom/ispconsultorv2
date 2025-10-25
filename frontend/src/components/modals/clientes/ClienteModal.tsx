@@ -1302,7 +1302,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
               onClick={() => setActiveTab('contratos')}
               type="button"
-              disabled={!isEditing}
             >
               Contratos
             </button>
@@ -1312,7 +1311,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
               onClick={() => setActiveTab('financeiro')}
               type="button"
-              disabled={!isEditing}
             >
               Financeiro
             </button>
