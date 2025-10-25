@@ -81,13 +81,11 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
   });
 
   const handleDelete = async (documentoId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este documento?')) {
-      try {
-        await deleteDocumentoMutation.mutateAsync(documentoId);
-        refetch();
-      } catch (error) {
-        // Erro já é tratado pelo onError da mutation
-      }
+    try {
+      await deleteDocumentoMutation.mutateAsync(documentoId);
+      refetch();
+    } catch (error) {
+      // Erro já é tratado pelo onError da mutation
     }
   };
 

@@ -191,13 +191,11 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   };
 
   const handleDelete = async (planoId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este plano?')) {
-      try {
-        await deletePlanoMutation.mutateAsync(planoId);
-        refetch();
-      } catch (error: any) {
-        console.error('Erro ao excluir plano:', error);
-      }
+    try {
+      await deletePlanoMutation.mutateAsync(planoId);
+      refetch();
+    } catch (error: any) {
+      console.error('Erro ao excluir plano:', error);
     }
   };
 

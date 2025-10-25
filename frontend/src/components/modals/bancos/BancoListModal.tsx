@@ -143,13 +143,11 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   };
 
   const handleDelete = async (bancoId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este banco?')) {
-      try {
-        await deleteBancoMutation.mutateAsync(bancoId);
-        refetch();
-      } catch (error) {
-        console.error('Erro ao excluir banco:', error);
-      }
+    try {
+      await deleteBancoMutation.mutateAsync(bancoId);
+      refetch();
+    } catch (error) {
+      console.error('Erro ao excluir banco:', error);
     }
   };
 

@@ -139,13 +139,11 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   };
 
   const handleDelete = async (clienteId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
-      try {
-        await deleteClienteMutation.mutateAsync(clienteId);
-        refetch();
-      } catch (error) {
-        console.error('Erro ao excluir cliente:', error);
-      }
+    try {
+      await deleteClienteMutation.mutateAsync(clienteId);
+      refetch();
+    } catch (error) {
+      console.error('Erro ao excluir cliente:', error);
     }
   };
 
