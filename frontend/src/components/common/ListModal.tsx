@@ -45,7 +45,7 @@ function ListModal<T extends { id: any }>({
       size="lg"
       className="no-padding"
     >
-      <div style={{ padding: '16px' }}>
+      <div>
         <Table
           config={{
             columns: tableColumns,
