@@ -360,28 +360,52 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
   const paginatedData = getPaginatedData();
 
   // Funções de impressão
-  const handleImprimirSelecionados = () => {
+  const handleImprimirSelecionados = async () => {
     if (selectedItems.length > 0) {
-      const ids = selectedItems.map(item => item.id);
-      const idsParam = ids.join(',');
-      const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
-      window.open(url, '_blank');
+      setIsGeneratingPdf(true);
+      try {
+        const ids = selectedItems.map(item => item.id);
+        const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
+        
+        const url = window.URL.createObjectURL(pdfBlob);
+        setPdfUrl(url);
+        setShowImprimirModal(true);
+        
+        showNotification('Boletos selecionados gerados com sucesso!', 'success');
+      } catch (error: any) {
+        console.error('Erro ao gerar PDF dos boletos:', error);
+        showNotification('Erro ao gerar boletos selecionados', 'error');
+      } finally {
+        setIsGeneratingPdf(false);
+      }
     } else {
       showNotification('Nenhum título selecionado', 'info');
     }
   };
 
-  const handleImprimirTodosEmAberto = () => {
+  const handleImprimirTodosEmAberto = async () => {
     const allTitulos = parcelasData?.data || [];
     const titulosEmAberto = allTitulos.filter((p: CarneParcela) => 
       p.status === 'pendente' || p.status === 'vencido'
     );
     
     if (titulosEmAberto.length > 0) {
-      const ids = titulosEmAberto.map((item: CarneParcela) => item.id);
-      const idsParam = ids.join(',');
-      const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/multiplos?ids=${idsParam}&print=true`;
-      window.open(url, '_blank');
+      setIsGeneratingPdf(true);
+      try {
+        const ids = titulosEmAberto.map((item: CarneParcela) => item.id);
+        const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
+        
+        const url = window.URL.createObjectURL(pdfBlob);
+        setPdfUrl(url);
+        setShowImprimirModal(true);
+        
+        showNotification('Boletos em aberto gerados com sucesso!', 'success');
+      } catch (error: any) {
+        console.error('Erro ao gerar PDF dos boletos:', error);
+        showNotification('Erro ao gerar boletos em aberto', 'error');
+      } finally {
+        setIsGeneratingPdf(false);
+      }
     } else {
       showNotification('Não há títulos em aberto para imprimir', 'info');
     }
@@ -741,15 +765,11 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
       disabled: (selectedItems) => isGeneratingPdf,
       dropdown: [
         {
-          label: 'Contrato',
+          label: 'Selecionados',
           action: handleImprimirSelecionados
         },
         {
-          label: 'Termo de Adesão',
-          action: handleImprimirTodosEmAberto
-        },
-        {
-          label: 'Contrato Permanência',
+          label: 'Abertos',
           action: handleImprimirTodosEmAberto
         }
       ]
@@ -790,11 +810,6 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
           contrato.valor_final?.toString().includes(searchLower) ||
           contrato.id?.toString().includes(searchLower);
         if (!matchesSearch) return false;
-      }
-      
-      // Filtro por inativos
-      if (!showInativosContratos && contrato.status === 'inativo') {
-        return false;
       }
       
       return true;
@@ -1396,7 +1411,29 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
                       responsive: true,
                       bulkActions: contratosBulkActions,
                       emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
-                      className: 'no-padding'
+                      className: 'no-padding',
+                      customFilters: (data: any[]) => {
+                        return data.filter((contrato: any) => {
+                          if (contrato.status === 'inativo' && !showInativosContratos) {
+                            return false;
+                          }
+                          return true;
+                        });
+                      },
+                      customControls: (
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="showInativosContratos"
+                            checked={showInativosContratos}
+                            onChange={(e) => setShowInativosContratos(e.target.checked)}
+                          />
+                          <label className="form-check-label" htmlFor="showInativosContratos">
+                            Mostrar inativos
+                          </label>
+                        </div>
+                      )
                     }}
                     onSelectionChange={setSelectedContratosItems}
                     onRefresh={() => refetchContratos()}

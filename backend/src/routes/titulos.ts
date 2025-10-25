@@ -6,6 +6,9 @@ const router = Router();
 // Listar títulos
 router.get('/', TituloController.list);
 
+// Gerar PDF de múltiplos boletos (DEVE VIR ANTES DE /:id)
+router.get('/boletos-multiplos-pdf', TituloController.gerarPdfBoletosMultiplos);
+
 // Buscar título por ID
 router.get('/:id', TituloController.show);
 

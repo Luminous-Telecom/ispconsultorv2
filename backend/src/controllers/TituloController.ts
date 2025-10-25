@@ -1049,6 +1049,145 @@ export class TituloController {
     }
   }
 
+  // Gerar PDF de múltiplos boletos
+  static async gerarPdfBoletosMultiplos(req: Request, res: Response): Promise<void> {
+    try {
+      // Aceitar ids de query
+      let ids: number[] = [];
+      const idsParam = req.query.ids as string;
+      
+      logger.info('Query params recebidos:', { query: req.query, idsParam });
+      
+      if (idsParam) {
+        try {
+          // Tentar parse como JSON primeiro
+          ids = JSON.parse(idsParam);
+        } catch (e) {
+          // Se não for JSON válido, tentar split por vírgula
+          ids = idsParam.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id));
+        }
+      }
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        res.status(400).json({
+          success: false,
+          message: 'IDs dos títulos não fornecidos'
+        });
+        return;
+      }
+
+      logger.info('IDs recebidos para PDF:', { ids });
+
+      const titulos = await Titulo.findAll({
+        where: { id: { [Op.in]: ids } },
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { 
+            model: Banco, 
+            as: 'banco', 
+            attributes: [
+              'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
+              'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
+              'instrucao_linha_4', 'instrucao_linha_5', 'logo'
+            ] 
+          }
+        ]
+      });
+
+      if (titulos.length === 0) {
+        res.status(404).json({
+          success: false,
+          message: 'Nenhum título encontrado'
+        });
+        return;
+      }
+
+      // Gerar HTML para cada boleto usando função auxiliar
+      const boletosHtml: string[] = [];
+
+      // Registrar títulos que ainda não foram registrados no banco
+      for (const titulo of titulos) {
+        if (!titulo.charge_id) {
+          try {
+            // Simular registro no banco (implementar conforme necessário)
+            const chargeId = `charge_${titulo.id}_${Date.now()}`;
+            if (chargeId) {
+              await titulo.update({ 
+                charge_id: chargeId,
+                status: 'pendente'
+              });
+            }
+          } catch (error: any) {
+            logger.error('Erro ao registrar título no banco', { 
+              titulo_id: titulo.id,
+              error: error.message 
+            });
+            // Continua processando os outros mesmo se um falhar
+          }
+        }
+
+        // Processar HTML do boleto usando função auxiliar
+        const boletoHtml = await TituloController.processarBoletoHtml(titulo);
+        
+        // Adicionar quebra de página
+        boletosHtml.push(`
+          <div style="page-break-after: always;">
+            ${boletoHtml}
+          </div>
+        `);
+      }
+
+      // Template final com todos os boletos
+      const template = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Boletos - ${titulos.length} título(s)</title>
+          <style>
+            @media print {
+              .page-break { page-break-after: always; }
+            }
+            body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+            .boleto { margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          ${boletosHtml.join('')}
+        </body>
+        </html>
+      `;
+
+      // Converter HTML para PDF usando html-pdf-node
+      const htmlPdf = require('html-pdf-node');
+      const file = { content: template };
+      const options = {
+        format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm'
+        },
+        printBackground: true,
+        displayHeaderFooter: false
+      };
+      
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulos.length}-titulos.pdf"`);
+      res.send(pdfBuffer);
+    } catch (error: any) {
+      logger.error('Erro ao gerar PDF de múltiplos boletos', { error: error.message });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
   // Marcar como pago
   static async marcarComoPago(req: Request, res: Response): Promise<void> {
     try {

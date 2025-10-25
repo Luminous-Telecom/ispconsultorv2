@@ -185,6 +185,27 @@ export class TituloService {
   static getBoletoUrl(id: number): string {
     return `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/${id}`;
   }
+
+  // Gerar PDF de múltiplos boletos
+  static async gerarPdfBoletosMultiplos(ids: number[]): Promise<Blob> {
+    try {
+      const idsParam = ids.join(',');
+      const response = await apiService.get(`${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
+        responseType: 'blob'
+      });
+
+      const blob = response instanceof Blob ? response : (response as any).data;
+
+      if (!blob || !(blob instanceof Blob)) {
+        throw new Error('Resposta inválida do servidor');
+      }
+
+      return blob;
+    } catch (error) {
+      console.error('Erro ao gerar PDF de múltiplos boletos:', error);
+      throw error;
+    }
+  }
 }
 
 export const tituloService = new TituloService();
