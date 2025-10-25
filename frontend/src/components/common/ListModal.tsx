@@ -46,17 +46,17 @@ function ListModal<T extends { id: any }>({
       size="lg"
       className="no-padding"
       headerActions={
-        bulkActions.length > 0 || onSearchChange ? (
+        bulkActions.length > 0 ? (
           <ModalHeaderActions
             bulkActions={bulkActions}
             selectedItems={selectedItems}
-            search={search}
-            onSearchChange={onSearchChange || (() => {})}
-            searchPlaceholder={searchPlaceholder}
+            search=""
+            onSearchChange={() => {}}
+            searchPlaceholder=""
             limit={limit}
             onLimitChange={onLimitChange || (() => {})}
-            pagination={pagination}
-            onPageChange={onPageChange || (() => {})}
+            pagination={undefined}
+            onPageChange={() => {}}
             onRefresh={onRefresh}
           />
         ) : undefined
@@ -68,13 +68,18 @@ function ListModal<T extends { id: any }>({
             columns: tableColumns,
             data,
             loading,
-            pagination: undefined, // Não mostrar paginação duplicada, já está no header
+            pagination,
             selectable: true,
             multiSelect,
+            searchable: true,
+            searchPlaceholder,
             emptyMessage,
             className: 'no-padding'
           }}
           onSelectionChange={onSelectionChange}
+          onPageChange={onPageChange}
+          onPageSizeChange={onLimitChange}
+          onRefresh={onRefresh}
         />
       </div>
     </DraggableModal>
