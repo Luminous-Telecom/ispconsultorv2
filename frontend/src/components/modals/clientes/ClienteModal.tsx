@@ -1708,7 +1708,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         />
           </>
         )}
-      </>
+    </DraggableModal>
   );
 };
 
