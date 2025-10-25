@@ -195,7 +195,7 @@ export class ClienteController {
   static async store(req: Request, res: Response): Promise<void> {
     try {
       // Validar dados
-      const { error, value } = this.createSchema.validate(req.body);
+      const { error, value } = ClienteController.createSchema.validate(req.body);
       
       if (error) {
         res.status(400).json({
