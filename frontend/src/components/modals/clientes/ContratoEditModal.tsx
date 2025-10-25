@@ -1013,13 +1013,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <button
                 type="button"
                 className="btn btn-outline-secondary"
-                title="Dropdown"
-              >
-                <i className="fa fa-chevron-down" aria-hidden="true"></i>
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
                 onClick={() => setShowPlanoModal(true)}
                 title="Abrir listagem de registros"
                 style={{ marginLeft: '-1px' }}
@@ -1126,13 +1119,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <button
                 type="button"
                 className="btn btn-outline-secondary"
-                title="Dropdown"
-              >
-                <i className="fa fa-chevron-down" aria-hidden="true"></i>
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
                 onClick={() => setShowBancoModal(true)}
                 title="Abrir listagem de registros"
                 style={{ marginLeft: '-1px' }}
@@ -1236,13 +1222,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   style={{ cursor: 'auto' }}
                 />
               </div>
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                title="Dropdown"
-              >
-                <i className="fa fa-chevron-down" aria-hidden="true"></i>
-              </button>
               <button
                 type="button"
                 className="btn btn-outline-secondary"

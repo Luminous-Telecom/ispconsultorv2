@@ -290,13 +290,6 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
-                  title="Dropdown"
-                >
-                  <i className="fa fa-chevron-down" aria-hidden="true"></i>
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
                   onClick={() => setShowPlanoModal(true)}
                   title="Abrir listagem de registros"
                   style={{ marginLeft: '-1px' }}
@@ -455,13 +448,6 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
-                  title="Dropdown"
-                >
-                  <i className="fa fa-chevron-down" aria-hidden="true"></i>
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
                   onClick={() => setShowBancoModal(true)}
                   title="Abrir listagem de registros"
                   style={{ marginLeft: '-1px' }}
@@ -518,13 +504,6 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                     style={{ cursor: 'auto' }}
                   />
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  title="Dropdown"
-                >
-                  <i className="fa fa-chevron-down" aria-hidden="true"></i>
-                </button>
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
