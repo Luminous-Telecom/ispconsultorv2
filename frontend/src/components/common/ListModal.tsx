@@ -62,16 +62,30 @@ function ListModal<T extends { id: any }>({
         ) : undefined
       }
     >
-      <div>
+      <div style={{ padding: '16px' }}>
+        {/* Campo de busca */}
+        {onSearchChange && (
+          <div className="mb-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder={searchPlaceholder}
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              style={{ height: '38px' }}
+            />
+          </div>
+        )}
+        
         <Table
           config={{
             columns: tableColumns,
             data,
             loading,
-            pagination,
+            pagination: undefined, // Paginação gerenciada externamente pelo ListModal
             selectable: true,
             multiSelect,
-            searchable: true,
+            searchable: false, // Busca gerenciada externamente pelo ListModal
             searchPlaceholder,
             emptyMessage,
             className: 'no-padding'
@@ -81,6 +95,64 @@ function ListModal<T extends { id: any }>({
           onPageSizeChange={onLimitChange}
           onRefresh={onRefresh}
         />
+
+        {/* Paginação */}
+        {pagination && (
+          <div className="d-flex justify-content-between align-items-center mt-3" style={{ paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+            <div className="d-flex align-items-center gap-2">
+              <select
+                className="form-select form-select-sm"
+                value={limit}
+                onChange={(e) => onLimitChange?.(parseInt(e.target.value))}
+                style={{ width: '80px' }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="small text-muted">Itens por página</span>
+            </div>
+
+            <div className="d-flex align-items-center gap-2">
+              <span className="small text-muted">
+                {pagination.from} - {pagination.to} de {pagination.total}
+              </span>
+              <div className="d-flex gap-1">
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => onPageChange?.(1)}
+                  disabled={pagination.current_page <= 1}
+                >
+                  <i className="bi bi-chevron-double-left"></i>
+                </button>
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => onPageChange?.(pagination.current_page - 1)}
+                  disabled={pagination.current_page <= 1}
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => onPageChange?.(pagination.current_page + 1)}
+                  disabled={pagination.current_page >= pagination.last_page}
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => onPageChange?.(pagination.last_page)}
+                  disabled={pagination.current_page >= pagination.last_page}
+                >
+                  <i className="bi bi-chevron-double-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DraggableModal>
   );
