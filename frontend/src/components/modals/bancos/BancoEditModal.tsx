@@ -217,6 +217,13 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     }
   }, [show]);
 
+  // Atualizar formData quando banco for carregado
+  useEffect(() => {
+    if (banco && show) {
+      setFormData(customFormData);
+    }
+  }, [banco, show]);
+
   // Mutation para atualizar banco
   const updateBancoMutation = useMutation({
     mutationFn: (data: BancoForm) => BancoService.update(bancoId!, data),
