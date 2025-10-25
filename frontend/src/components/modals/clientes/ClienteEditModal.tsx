@@ -11,6 +11,8 @@ import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
 import { useFormPrefix } from '../../../hooks/useFormId';
 import DataTable from '../../common/DataTable';
+import Table from '../../tables/Table';
+import { TableConfig } from '../../tables/types';
 import ImprimirModal from '../../common/ImprimirModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
@@ -1520,22 +1522,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   {/* Conteúdo rolável - apenas a tabela */}
                   <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    <DataTable
-                      data={paginatedContratosData}
-                      columns={contratosColumns}
-                      isLoading={isLoadingContratos}
-                      showHeader={false}
-                      onSelectionChange={setSelectedContratosItems}
-                      onSort={(column: string, direction: 'asc' | 'desc') => {
-                        setSortColumn(column);
-                        setSortDirection(direction);
+                    <Table
+                      config={{
+                        columns: contratosColumns,
+                        data: paginatedContratosData,
+                        loading: isLoadingContratos,
+                        selectable: true,
+                        multiSelect: true,
+                        onSelectionChange: setSelectedContratosItems,
+                        emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
+                        className: 'no-padding'
                       }}
-                      sortColumn={sortColumn}
-                      sortDirection={sortDirection}
-                      limit={limit}
-                      setLimit={setLimit}
-                      setPage={setPage}
-                      emptyMessage="Este cliente ainda não possui contratos cadastrados."
                     />
                   </div>
 
@@ -1813,22 +1810,17 @@ const ClienteEditModal: React.FC<ClienteEditModalProps> = ({
 
                   {/* Conteúdo rolável - apenas a tabela */}
                   <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    <DataTable
-                      data={paginatedData}
-                      columns={columns}
-                      isLoading={isLoadingParcelas}
-                      showHeader={false}
-                      onSelectionChange={setSelectedItems}
-                      onSort={(column: string, direction: 'asc' | 'desc') => {
-                        setSortColumn(column);
-                        setSortDirection(direction);
+                    <Table
+                      config={{
+                        columns: columns,
+                        data: paginatedData,
+                        loading: isLoadingParcelas,
+                        selectable: true,
+                        multiSelect: true,
+                        onSelectionChange: setSelectedItems,
+                        emptyMessage: 'Este cliente ainda não possui títulos cadastrados.',
+                        className: 'no-padding'
                       }}
-                      sortColumn={sortColumn}
-                      sortDirection={sortDirection}
-                      limit={limit}
-                      setLimit={setLimit}
-                      setPage={setPage}
-                      emptyMessage="Este cliente ainda não possui títulos cadastrados."
                     />
                   </div>
 
