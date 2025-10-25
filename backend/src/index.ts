@@ -9,6 +9,16 @@ import path from 'path';
 // Importar configurações
 import { sequelize } from './config/database';
 
+// Importar middlewares de proteção
+import { 
+  copyProtectionMiddleware, 
+  devToolsDetectionMiddleware, 
+  fileProtectionMiddleware, 
+  apiProtectionMiddleware, 
+  imageProtectionMiddleware, 
+  configProtectionMiddleware 
+} from './middleware/copyProtection';
+
 // Importar modelos para configurar relacionamentos
 import './models';
 
@@ -55,8 +65,32 @@ const PORT = process.env.PORT;
 // Middleware de segurança
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false, // Desabilitar CSP para permitir iframes
-  frameguard: false // Desabilitar X-Frame-Options para permitir iframes
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  frameguard: { action: 'deny' },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: 'no-referrer' },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
 // Middleware de CORS
@@ -93,13 +127,13 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Configurar limite de cabeçalhos HTTP para evitar erro 431
-// Este middleware será aplicado antes de outros middlewares
-app.use((req, res, next) => {
-  // Configurar limites maiores para cabeçalhos
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  next();
-});
+// Aplicar middlewares de proteção
+app.use(copyProtectionMiddleware);
+app.use(devToolsDetectionMiddleware);
+app.use(fileProtectionMiddleware);
+app.use(apiProtectionMiddleware);
+app.use(imageProtectionMiddleware);
+app.use(configProtectionMiddleware);
 
 // Middleware de logging
 app.use(morgan('combined'));
