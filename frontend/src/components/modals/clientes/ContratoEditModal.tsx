@@ -1043,11 +1043,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 style={{
                   flex: '0 0 auto',
                   padding: '0.375rem 0.75rem',
-                  background: '#6c757d !important',
+                  backgroundColor: '#6c757d',
                   border: 'none',
                   borderLeft: '1px solid #dee2e6',
                   borderRadius: '0',
-                  color: 'white !important',
+                  color: 'white',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1058,7 +1058,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   textAlign: 'center',
                   textDecoration: 'none',
                   verticalAlign: 'middle',
-                  userSelect: 'none'
+                  userSelect: 'none',
+                  minHeight: '38px',
+                  boxSizing: 'border-box'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1193,11 +1195,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 style={{
                   flex: '0 0 auto',
                   padding: '0.375rem 0.75rem',
-                  background: '#6c757d !important',
+                  backgroundColor: '#6c757d',
                   border: 'none',
                   borderLeft: '1px solid #dee2e6',
                   borderRadius: '0',
-                  color: 'white !important',
+                  color: 'white',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1208,7 +1210,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   textAlign: 'center',
                   textDecoration: 'none',
                   verticalAlign: 'middle',
-                  userSelect: 'none'
+                  userSelect: 'none',
+                  minHeight: '38px',
+                  boxSizing: 'border-box'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
@@ -1343,11 +1347,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 style={{
                   flex: '0 0 auto',
                   padding: '0.375rem 0.75rem',
-                  background: '#6c757d !important',
+                  backgroundColor: '#6c757d',
                   border: 'none',
                   borderLeft: '1px solid #dee2e6',
                   borderRadius: '0',
-                  color: 'white !important',
+                  color: 'white',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1358,7 +1362,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                   textAlign: 'center',
                   textDecoration: 'none',
                   verticalAlign: 'middle',
-                  userSelect: 'none'
+                  userSelect: 'none',
+                  minHeight: '38px',
+                  boxSizing: 'border-box'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(90deg)' }}>
