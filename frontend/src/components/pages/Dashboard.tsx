@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
@@ -391,109 +391,77 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  // Função para renderizar gráfico de linha temporal
+  // Função para renderizar gráfico de linha temporal com Canvas
   const renderLineChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
-    const maxValue = Math.max(...data.map(item => item.valor));
-    const minValue = Math.min(...data.map(item => item.valor));
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     
-    // Se todos os valores são zero ou muito baixos, usar 0 como base
-    // Se há valores positivos, usar minValue como base mas normalizar melhor
-    const hasPositiveValues = maxValue > 0;
-    const actualMinValue = hasPositiveValues && minValue === 0 ? 0 : minValue;
-    const range = hasPositiveValues ? maxValue - actualMinValue || 1 : 1;
-    
-    const formatValue = (val: number) => {
-      switch (format) {
-        case 'currency':
-          return `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`;
-        default:
-          return val.toString();
-      }
-    };
-    
-    const calculateY = (value: number, chartHeight: number) => {
-      // Sempre começa do 0 para preencher melhor o espaço
-      // Adiciona padding de 10% no topo e fundo
-      const padding = 0.1;
-      const chartAreaHeight = chartHeight * (1 - padding * 2);
-      const chartAreaTop = chartHeight * padding;
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
       
-      if (maxValue === 0) return chartHeight - chartAreaTop;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
       
-      const percentage = value / maxValue;
-      return chartHeight - chartAreaTop - (percentage * chartAreaHeight);
-    };
-    
-    const chartHeight = 120;
-    const chartWidth = 100;
-    const pointRadius = 5;
-    
-    // Criar path da linha
-    let pathData = '';
-    data.forEach((item, index) => {
-      const x = (index / (data.length - 1 || 1)) * chartWidth;
-      const y = calculateY(item.valor, chartHeight);
-      if (index === 0) {
-        pathData += `M ${x} ${y}`;
-      } else {
-        pathData += ` L ${x} ${y}`;
-      }
-    });
+      const maxValue = Math.max(...data.map(item => item.valor));
+      const chartWidth = canvas.width;
+      const chartHeight = 120;
+      const padding = 20;
+      const pointRadius = 5;
+      
+      // Limpar canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Desenhar linha e pontos
+      data.forEach((item, index) => {
+        const x = (index / (data.length - 1 || 1)) * (chartWidth - padding * 2) + padding;
+        const percentage = maxValue > 0 ? item.valor / maxValue : 0;
+        const y = chartHeight - (percentage * chartHeight) + 10;
+        
+        // Desenhar linha
+        if (index === 0) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = '#007bff';
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+        }
+        
+        // Desenhar ponto
+        ctx.beginPath();
+        ctx.arc(x, y, pointRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#007bff';
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        // Desenhar valor
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 0.75rem sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(item.valor.toString(), x, y - 10);
+        
+        // Desenhar mês
+        ctx.fillStyle = 'var(--text-secondary)';
+        ctx.font = '0.65rem sans-serif';
+        ctx.fillText(item.mes, x, chartHeight + 28);
+      });
+    }, [data]);
     
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
-        <div className="line-chart-wrapper" style={{ height: `${chartHeight + 50}px` }}>
-          <svg className="line-chart-svg" viewBox="0 0 100 170" preserveAspectRatio="xMidYMid meet">
-            {/* Linha */}
-            <path
-              d={pathData}
-              fill="none"
-              stroke="#007bff"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {/* Pontos e labels */}
-            {data.map((item, index) => {
-              const x = (index / (data.length - 1 || 1)) * chartWidth;
-              const y = calculateY(item.valor, chartHeight);
-              return (
-                <g key={index}>
-                  {/* Círculo no ponto */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={pointRadius}
-                    fill="#007bff"
-                    stroke="white"
-                    strokeWidth="1.5"
-                  />
-                  {/* Valor */}
-                  <text
-                    x={x}
-                    y={y - 10}
-                    textAnchor="middle"
-                    fill="white"
-                    fontSize="3"
-                    fontWeight="700"
-                  >
-                    {item.valor}
-                  </text>
-                  {/* Mês */}
-                  <text
-                    x={x}
-                    y={chartHeight + 12}
-                    textAnchor="middle"
-                    fill="var(--text-secondary)"
-                    fontSize="2.5"
-                  >
-                    {item.mes}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+        <div className="line-chart-wrapper">
+          <canvas 
+            ref={canvasRef}
+            width="548"
+            height="170"
+            style={{ display: 'block', width: '100%', height: '170px' }}
+          />
         </div>
       </div>
     );
