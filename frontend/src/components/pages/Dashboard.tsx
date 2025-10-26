@@ -196,7 +196,6 @@ const Dashboard: React.FC = () => {
 
   // Métricas adicionais (usando dados reais quando disponíveis)
   // Ticket médio = receita total / número de contratos ativos
-  const contratosAtivos = contratos.filter(c => c.status === 'ativo').length;
   const ticketMedio = contratosAtivos > 0 ? receitaTotal / contratosAtivos : 0;
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
