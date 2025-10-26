@@ -100,10 +100,54 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     customData: customFormData
   });
 
+  // Funções de formatação
+  const formatCNPJ = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 5) return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+    if (numbers.length <= 8) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5)}`;
+    if (numbers.length <= 12) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8)}`;
+    return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8, 12)}-${numbers.slice(12, 14)}`;
+  };
+
+  const formatCPF = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+    if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
+    return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+  };
+
+  const formatPhone = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 2) return numbers ? `(${numbers}` : numbers;
+    if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
+
+  const formatCEP = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 5) return numbers;
+    return `${numbers.slice(0, 5)}-${numbers.slice(5, 8)}`;
+  };
+
   const handleInputChange = (field: keyof DadosEmpresaType, value: string) => {
+    // Aplicar formatação baseada no campo
+    let formattedValue = value;
+    if (field === 'cnpj' && typeof value === 'string') {
+      formattedValue = formatCNPJ(value);
+    } else if ((field === 'telefone' || field === 'celular') && typeof value === 'string') {
+      formattedValue = formatPhone(value);
+    } else if (field === 'cep' && typeof value === 'string') {
+      formattedValue = formatCEP(value);
+    } else if (field === 'responsavel_cpf' && typeof value === 'string') {
+      formattedValue = formatCPF(value);
+    }
+
     setDados(prev => ({
       ...prev,
-      [field]: value || '' // Garantir que nunca seja null
+      [field]: formattedValue || '' // Garantir que nunca seja null
     }));
   };
 
