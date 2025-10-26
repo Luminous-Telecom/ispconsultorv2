@@ -178,7 +178,14 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   // Carregar dados do cliente quando disponíveis
   useEffect(() => {
     if (cliente) {
-      setFormData({
+      console.log('=== Carregando dados do cliente ===');
+      console.log('Cliente objeto completo:', cliente);
+      console.log('Tipo de cnpj:', typeof cliente.cnpj, 'Valor:', cliente.cnpj);
+      console.log('Tipo de razao_social:', typeof cliente.razao_social, 'Valor:', cliente.razao_social);
+      console.log('Tipo de nome_fantasia:', typeof cliente.nome_fantasia, 'Valor:', cliente.nome_fantasia);
+      console.log('Tipo de email:', typeof cliente.email, 'Valor:', cliente.email);
+      
+      const processedData = {
         cnpj: ensureString(cliente.cnpj),
         razao_social: ensureString(cliente.razao_social),
         nome_fantasia: ensureString(cliente.nome_fantasia),
@@ -199,7 +206,14 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         recebe_sms: cliente.recebe_sms ?? false,
         recebe_whatsapp: cliente.recebe_whatsapp ?? true,
         observacoes: ensureString(cliente.observacoes)
-      });
+      };
+      
+      console.log('Dados processados:', processedData);
+      console.log('Tipo processado de cnpj:', typeof processedData.cnpj);
+      console.log('Tipo processado de razao_social:', typeof processedData.razao_social);
+      console.log('=================================');
+      
+      setFormData(processedData);
     }
   }, [cliente]);
 
