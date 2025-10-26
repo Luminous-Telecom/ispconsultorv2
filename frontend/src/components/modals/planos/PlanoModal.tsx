@@ -260,7 +260,10 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   required={true}
                   size="sm"
                   value={formData.nome_plano}
-                  onChange={(e: any) => handleInputChange('nome_plano', e.value)}
+                  onChange={(e) => {
+                    const value = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
+                    handleInputChange('nome_plano', value);
+                  }}
                   error={errors.nome_plano}
                   isInvalid={!!errors.nome_plano}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}

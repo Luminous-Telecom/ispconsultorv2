@@ -106,11 +106,7 @@ const FormField: React.FC<FormFieldProps> = ({
   // Handler para onChange
   const handleChange = (changeValue: any, changeName?: string) => {
     if (onChange) {
-      // Se changeValue é um objeto com propriedade value, extrair apenas o value
-      const value = typeof changeValue === 'object' && changeValue !== null && 'value' in changeValue 
-        ? changeValue.value 
-        : changeValue;
-      onChange(value, changeName || name);
+      onChange(changeValue, changeName || name);
     }
   };
 
