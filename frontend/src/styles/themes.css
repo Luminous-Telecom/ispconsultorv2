@@ -942,7 +942,7 @@ body {
   position: relative;
   width: 100%;
   overflow: visible;
-  min-height: 280px;
+  min-height: 200px;
 }
 
 .line-chart-svg {

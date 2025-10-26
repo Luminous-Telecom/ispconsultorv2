@@ -412,12 +412,12 @@ const Dashboard: React.FC = () => {
     };
     
     const calculateY = (value: number, chartHeight: number) => {
-      const normalizedValue = hasPositiveValues ? value - actualMinValue : value;
-      const normalizedRange = range || 1;
-      return chartHeight - (normalizedValue / normalizedRange) * chartHeight;
+      // Sempre começa do 0 para preencher melhor o espaço
+      const percentage = maxValue > 0 ? (value / maxValue) : 0;
+      return chartHeight - (percentage * chartHeight);
     };
     
-    const chartHeight = 200;
+    const chartHeight = 120;
     const chartWidth = 150;
     const pointRadius = 5;
     
@@ -436,8 +436,8 @@ const Dashboard: React.FC = () => {
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
-        <div className="line-chart-wrapper" style={{ height: `${chartHeight + 60}px` }}>
-          <svg className="line-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight + 60}`}>
+        <div className="line-chart-wrapper" style={{ height: `${chartHeight + 50}px` }}>
+          <svg className="line-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight + 50}`}>
             {/* Linha */}
             <path
               d={pathData}
@@ -476,7 +476,7 @@ const Dashboard: React.FC = () => {
                   {/* Mês */}
                   <text
                     x={x}
-                    y={chartHeight + 15}
+                    y={chartHeight + 12}
                     textAnchor="middle"
                     fill="var(--text-secondary)"
                     fontSize="2.5"
