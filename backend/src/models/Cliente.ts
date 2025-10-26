@@ -219,7 +219,8 @@ Cliente.init(
     },
     valor_primeiro_titulo: {
       type: DataTypes.STRING(20),
-      allowNull: true,
+      allowNull: false,
+      defaultValue: 'total',
       comment: 'Valor do primeiro título: total, proporcional ou valor numérico'
     },
     recebe_email: {
