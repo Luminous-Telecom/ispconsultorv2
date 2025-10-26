@@ -8,7 +8,6 @@ export { default as Dropdown } from './Dropdown';
 export { default as ConfirmModal } from './ConfirmModal';
 
 // Exportar exemplo de uso
-export { default as UIComponentsExample } from './UIComponentsExample';
 
 // Exportar tipos
 export * from './types';
