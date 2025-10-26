@@ -206,9 +206,9 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         size="xl"
         modalId="documentos-sistema-modal"
       >
-        <div>
+        <div style={{ padding: '1rem' }}>
           {/* Abas */}
-          <ul className="nav nav-tabs mb-3" style={{ marginLeft: '1rem', marginRight: '1rem', marginTop: '1rem' }}>
+          <ul className="nav nav-tabs mb-3">
             <li className="nav-item">
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
@@ -247,7 +247,6 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             </li>
           </ul>
 
-          <div style={{ marginLeft: '1rem', marginRight: '1rem', marginBottom: '1rem' }}>
           <Table
             config={{
               columns,
@@ -277,7 +276,6 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             onSearch={setSearch}
             onRefresh={() => refetch()}
           />
-          </div>
         </div>
 
         {/* Modal Unificado */}
