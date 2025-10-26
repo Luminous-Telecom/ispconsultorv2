@@ -489,17 +489,20 @@ export class BancoApiService {
   ): Promise<any> {
     const baseUrl = banco.url_retorno;
     
-    if (!baseUrl) {
-      throw new Error('URL de retorno não configurada no banco');
+    if (baseUrl) {
+      logger.info('Gerando título com URL de notificação', {
+        banco_id: banco.id,
+        banco_nome: banco.nome,
+        url_retorno_cadastrada: banco.url_retorno,
+        titulo_id: titulo.id
+      });
+    } else {
+      logger.warn('URL de retorno não configurada no banco', {
+        banco_id: banco.id,
+        banco_nome: banco.nome,
+        titulo_id: titulo.id
+      });
     }
-    
-    logger.info('Gerando título com URL de notificação', {
-      banco_id: banco.id,
-      banco_nome: banco.nome,
-      url_retorno_cadastrada: banco.url_retorno,
-      url_final_usada: baseUrl,
-      titulo_id: titulo.id
-    });
     
     // Buscar dados da empresa (recebedor)
     const { DadosEmpresa } = await import('../models/DadosEmpresa');
@@ -647,7 +650,7 @@ export class BancoApiService {
       }
     };
 
-    return {
+    const payload: any = {
       items: [{
         name: plano.nome_plano || 'Serviço de Internet',
         value: valorCentavos,
@@ -665,11 +668,17 @@ export class BancoApiService {
         }
       },
       metadata: {
-        custom_id: `titulo_${titulo.id}`,
-        notification_url: baseUrl
-      },
-      notification_url: baseUrl
+        custom_id: `titulo_${titulo.id}`
+      }
     };
+
+    // Adicionar notification_url apenas se configurada
+    if (baseUrl) {
+      payload.notification_url = baseUrl;
+      payload.metadata.notification_url = baseUrl;
+    }
+
+    return payload;
   }
 
   /**
