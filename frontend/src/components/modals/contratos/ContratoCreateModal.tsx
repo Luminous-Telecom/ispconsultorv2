@@ -518,6 +518,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   type="text"
                   className="form-control text-center id-field"
                   placeholder="ID"
+                  name="modelo_contrato_id_field"
                   onChange={(e) => {
                     const value = e.target.value;
                     if (value === '') {
@@ -545,6 +546,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                   tabIndex={-1}
                   type="text"
                   className="form-control"
+                  name="modelo_contrato_nome_field"
                   value={modeloContratoSelecionado ? modeloContratoSelecionado.nome : ''}
                   style={{ borderRight: 'none' }}
                 />
