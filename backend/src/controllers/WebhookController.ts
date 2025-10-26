@@ -95,6 +95,7 @@ export class WebhookController {
       }
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar webhook Efí unificado', {
         error: error.message,
         stack: error.stack
@@ -197,6 +198,7 @@ export class WebhookController {
       };
       
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar token de notificação', {
         token: notificationToken,
         error: error.message
@@ -318,6 +320,7 @@ export class WebhookController {
         };
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar dados da notificação', {
         banco_id: banco.id,
         error: error.message
@@ -356,6 +359,7 @@ export class WebhookController {
           return 0;
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação individual', {
         notificacao,
         error: error.message
@@ -511,6 +515,7 @@ export class WebhookController {
 
       return 1;
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de título', {
         charge_id: chargeId,
         error: error.message
@@ -578,6 +583,7 @@ export class WebhookController {
         }
       };
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de charge', {
         notification,
         error: error.message
@@ -602,6 +608,7 @@ export class WebhookController {
       // Por enquanto, tratar como notificação genérica
       return await WebhookController.processarNotificacaoGenerica(notification);
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de PIX', {
         notification,
         error: error.message
@@ -653,6 +660,7 @@ export class WebhookController {
         status: 400
       };
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação genérica', {
         notification,
         error: error.message
@@ -751,6 +759,7 @@ export class WebhookController {
       };
       
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao consultar dados atualizados do título', {
         titulo_id: titulo.id,
         charge_id: titulo.charge_id,
