@@ -473,7 +473,7 @@ export class TituloController {
         banco_id: banco.id,
         contrato_id: contrato_id || null,
         numero_titulo: gerarNumeroTitulo(),
-        valor: plano.valor_mensal,
+        valor: valorFinal, // Usar valorFinal (com descontos) ao invés do plano.valor_mensal
         valor_final: valorFinal,
         data_vencimento: dataVencimentoFinal,
         observacoes: observacoes || '',
