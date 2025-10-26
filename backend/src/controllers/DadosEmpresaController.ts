@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { DadosEmpresa } from '../models/DadosEmpresa';
-import path from 'path';
 
 export class DadosEmpresaController {
   static async get(req: Request, res: Response): Promise<void> {

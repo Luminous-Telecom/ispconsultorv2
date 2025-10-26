@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { Parametro } from '../models/Parametro';
-import { Op } from 'sequelize';
 
 export class ParametroController {
   

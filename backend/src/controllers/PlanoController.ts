@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { Plano } from '../models/Plano';
-import { Cliente } from '../models/Cliente';
 import { Op } from 'sequelize';
 
 export class PlanoController {

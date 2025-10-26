@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { TermoContrato } from '../models/TermoContrato';
 import { Contrato } from '../models/Contrato';
-import { Op } from 'sequelize';
 
 export class TermoContratoController {
   // Listar termos de um contrato específico
