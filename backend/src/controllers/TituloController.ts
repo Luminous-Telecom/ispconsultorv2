@@ -463,8 +463,17 @@ export class TituloController {
         valorFinal = valorFinal + parseFloat(acrescimo_valor.toString());
       }
       
-      // Garantir que o valor final não seja negativo
-      valorFinal = Math.max(0, valorFinal);
+      // Validar se o valor final é válido
+      if (isNaN(valorFinal) || valorFinal <= 0) {
+        res.status(400).json({
+          success: false,
+          message: 'Descontos aplicados resultaram em valor inválido. O valor do título deve ser no mínimo R$ 0,01.'
+        });
+        return;
+      }
+      
+      // Garantir que o valor final seja pelo menos R$ 0,01 (valor mínimo permitido)
+      valorFinal = Math.max(0.01, valorFinal);
 
       // Criar título
       const titulo = await Titulo.create({
