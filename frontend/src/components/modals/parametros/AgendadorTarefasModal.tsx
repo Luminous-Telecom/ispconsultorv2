@@ -4,6 +4,7 @@ import ListModal from '../../common/ListModal';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import { SchedulerService, RotinaAgendada } from '../../../services/schedulerService';
+import RotinaAgendadaModal from './RotinaAgendadaModal';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -192,9 +193,27 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   };
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedRotinaId, setSelectedRotinaId] = useState<number | null>(null);
 
   const handleCreate = () => {
     setShowCreateModal(true);
+  };
+
+  const handleEdit = () => {
+    if (selectedItem) {
+      setSelectedRotinaId(selectedItem.id);
+      setShowEditModal(true);
+    }
+  };
+
+  const handleSuccess = () => {
+    setShowCreateModal(false);
+    setShowEditModal(false);
+    setSelectedRotinaId(null);
+    clearSelection();
+    refetch();
+    queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
   };
 
   const bulkActions = [
@@ -202,6 +221,12 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       label: 'Novo',
       variant: 'primary' as const,
       action: handleCreate
+    },
+    {
+      label: 'Editar',
+      variant: 'primary' as const,
+      disabled: () => !selectedItem,
+      action: handleEdit
     },
     {
       label: 'Executar',
@@ -230,29 +255,42 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   ];
 
   return (
-    <ListModal
-      show={show}
-      onClose={() => {
-        clearSelection();
-        onClose();
-      }}
-      config={modal.config}
-      data={paginatedRotinas}
-      loading={isLoading}
-      selectedItems={selectedItem ? [selectedItem] : []}
-      onSelectionChange={handleSelectionChange}
-      search={search}
-      onSearchChange={setSearch}
-      pagination={pagination}
-      onPageChange={setPage}
-      limit={limit}
-      onLimitChange={setLimit}
-      onRefresh={() => {
-        refetch();
-        queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
-      }}
-      bulkActions={bulkActions}
-    />
+    <>
+      <ListModal
+        show={show}
+        onClose={() => {
+          clearSelection();
+          onClose();
+        }}
+        config={modal.config}
+        data={paginatedRotinas}
+        loading={isLoading}
+        selectedItems={selectedItem ? [selectedItem] : []}
+        onSelectionChange={handleSelectionChange}
+        search={search}
+        onSearchChange={setSearch}
+        pagination={pagination}
+        onPageChange={setPage}
+        limit={limit}
+        onLimitChange={setLimit}
+        onRefresh={() => {
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
+        }}
+        bulkActions={bulkActions}
+      />
+
+      <RotinaAgendadaModal
+        show={showCreateModal || showEditModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setShowEditModal(false);
+          setSelectedRotinaId(null);
+        }}
+        rotinaId={showEditModal ? selectedRotinaId : null}
+        onSuccess={handleSuccess}
+      />
+    </>
   );
 };
 
