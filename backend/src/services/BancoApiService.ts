@@ -199,14 +199,27 @@ export class BancoApiService {
           continue;
         }
         
-        logger.error('Erro ao obter token', { 
-          banco_id: banco.id,
-          error: errorMessage,
-          status: errorResponse?.status,
-          statusText: errorResponse?.statusText,
-          tentativa,
-          isTimeout
-        });
+        // Se for erro 401 (token expirado), logar como warn, caso contrário como error
+        const isAuthError = errorResponse?.status === 401 || errorResponse?.status === 403;
+        
+        if (isAuthError) {
+          logger.warn('Token expirado/inválido, será renovado na próxima requisição', {
+            banco_id: banco.id,
+            status: errorResponse?.status,
+            statusText: errorResponse?.statusText,
+            tentativa,
+            isTimeout
+          });
+        } else {
+          logger.error('Erro ao obter token', { 
+            banco_id: banco.id,
+            error: errorMessage,
+            status: errorResponse?.status,
+            statusText: errorResponse?.statusText,
+            tentativa,
+            isTimeout
+          });
+        }
         return null;
       }
     }

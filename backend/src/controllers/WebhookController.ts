@@ -447,13 +447,24 @@ export class WebhookController {
           updateData.codigo_barras = codigoBarras;
           updateData.linha_digitavel = linhaDigitavel;
           
-          logger.warn('Erro ao consultar dados da EFI, usando fallback', {
-            titulo_id: titulo.id,
-            charge_id: chargeId,
-            error: error instanceof Error ? error.message : 'Erro desconhecido',
-            codigo_barras: codigoBarras,
-            linha_digitavel: linhaDigitavel
-          });
+          // Log apenas como debug se for erro de autenticação (esperado)
+          const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+          const isAuthError = errorMsg.includes('401') || errorMsg.includes('Unauthorized');
+          
+          if (isAuthError) {
+            logger.debug('Token expirado/inválido, usando fallback', {
+              titulo_id: titulo.id,
+              charge_id: chargeId,
+              codigo_barras: codigoBarras,
+              linha_digitavel: linhaDigitavel
+            });
+          } else {
+            logger.warn('Erro ao consultar dados da EFI, usando fallback', {
+              titulo_id: titulo.id,
+              charge_id: chargeId,
+              error: errorMsg
+            });
+          }
         } catch (fallbackError) {
           logger.error('Erro crítico ao gerar dados de fallback', {
             titulo_id: titulo.id,
