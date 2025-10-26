@@ -33,6 +33,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       name: 'cep',
       label: 'CEP',
       placeholder: '00000-000',
+      fieldRequired: false, // CEP é opcional no backend
       validation: required ? [
         { type: 'required', message: 'CEP é obrigatório' },
         { type: 'pattern', value: /^\d{5}-?\d{3}$/, message: 'CEP inválido' }
@@ -44,6 +45,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       name: 'endereco',
       label: 'Endereço',
       placeholder: 'Rua, Avenida...',
+      fieldRequired: false, // Endereço é opcional no backend
       validation: required ? [
         { type: 'required', message: 'Endereço é obrigatório' }
       ] : []
@@ -52,6 +54,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       name: 'numero',
       label: 'Número',
       placeholder: '123',
+      fieldRequired: false, // Número é opcional no backend
       validation: required ? [
         { type: 'required', message: 'Número é obrigatório' }
       ] : []
@@ -60,12 +63,14 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       name: 'complemento',
       label: 'Complemento',
       placeholder: 'Apto, Sala...',
+      fieldRequired: false, // Complemento é opcional no backend
       validation: []
     },
     {
       name: 'bairro',
       label: 'Bairro',
       placeholder: 'Nome do bairro',
+      fieldRequired: false, // Bairro é opcional no backend
       validation: required ? [
         { type: 'required', message: 'Bairro é obrigatório' }
       ] : []
@@ -74,6 +79,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       name: 'cidade',
       label: 'Cidade',
       placeholder: 'Nome da cidade',
+      fieldRequired: false, // Cidade é opcional no backend
       validation: required ? [
         { type: 'required', message: 'Cidade é obrigatória' }
       ] : []
@@ -82,6 +88,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       name: 'estado',
       label: 'Estado',
       placeholder: 'SP',
+      fieldRequired: false, // Estado é opcional no backend
       validation: required ? [
         { type: 'required', message: 'Estado é obrigatório' },
         { type: 'minLength', value: 2, message: 'Estado deve ter pelo menos 2 caracteres' },
@@ -102,7 +109,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
             type="text"
             label={field.label}
             placeholder={field.placeholder}
-            required={required}
+            required={field.fieldRequired !== undefined ? field.fieldRequired : required}
             size={size}
             value={getFieldValue(field.name)}
             onChange={(value) => handleChange(field.name, value)}
