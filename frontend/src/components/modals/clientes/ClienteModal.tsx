@@ -85,6 +85,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       setActiveTab('dados-basicos');
     }
   }, [show]);
+  
+  // Sincronizar Form com valores formatados (sem forçar re-render completo)
   const [showCancelados, setShowCancelados] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
@@ -1386,14 +1388,27 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 ativo: formData.ativo
               }}
               onFieldChange={(name, value) => {
-                handleInputChange(name as keyof ClienteFormData, value);
+                // Aplicar formatação ANTES de atualizar o estado
+                let formattedValue = value;
+                if (typeof value === 'string') {
+                  if (name === 'cnpj') {
+                    formattedValue = formatCNPJ(value);
+                  } else if (name === 'telefone' || name === 'whatsapp') {
+                    formattedValue = formatPhone(value);
+                  } else if (name === 'cep') {
+                    formattedValue = formatCEP(value);
+                  }
+                }
+                
+                // Atualizar estado com valor formatado
+                setFormData(prev => {
+                  const newData = { ...prev, [name]: formattedValue };
+                  return newData;
+                });
               }}
+              validateOnChange={false}
               onSubmit={(data) => {
-                // Manter apenas os campos da aba dados básicos
-                handleInputChange('cnpj', data.cnpj);
-                handleInputChange('razao_social', data.razao_social);
-                handleInputChange('nome_fantasia', data.nome_fantasia);
-                handleInputChange('ativo', data.ativo);
+                // Não fazer nada no submit, pois os dados já estão atualizados via onFieldChange
               }}
               showSubmitButton={false}
               showResetButton={false}
