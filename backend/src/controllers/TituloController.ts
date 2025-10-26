@@ -1171,16 +1171,27 @@ export class TituloController {
       for (const titulo of titulos) {
         if (!titulo.charge_id) {
           try {
-            // Simular registro no banco (implementar conforme necessário)
-            const chargeId = `charge_${titulo.id}_${Date.now()}`;
-            if (chargeId) {
-              await titulo.update({ 
-                charge_id: chargeId,
-                status: 'pendente'
+            logger.info('Registrando título no banco antes de gerar PDF', {
+              titulo_id: titulo.id,
+              banco_id: titulo.banco_id,
+              banco_disponivel: !!titulo.banco
+            });
+
+            const resultado = await BancoApiService.gerarTitulo(titulo as any);
+            
+            if (resultado.success && resultado.data) {
+              logger.info('Título registrado com sucesso no banco', {
+                titulo_id: titulo.id,
+                charge_id: resultado.data.charge_id
+              });
+            } else {
+              logger.error('Falha ao registrar título no banco', {
+                titulo_id: titulo.id,
+                message: resultado.message
               });
             }
           } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+            const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
             logger.error('Erro ao registrar título no banco', { 
               titulo_id: titulo.id,
               error: errorMessage 
