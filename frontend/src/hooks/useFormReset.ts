@@ -31,19 +31,22 @@ export function useFormReset<T>({
 
   // Função para garantir que valores string sejam sempre strings
   const processData = (data: T): T => {
-    return Object.keys(data).reduce((acc, key) => {
-      const value = data[key];
-      const initialValue = initialData[key];
+    const typedData = data as Record<string, any>;
+    const typedInitialData = initialData as Record<string, any>;
+    
+    return Object.keys(typedData).reduce((acc, key) => {
+      const value = typedData[key];
+      const initialValue = typedInitialData[key];
       
       // Se o valor inicial é string, garantir que seja string
       if (typeof initialValue === 'string') {
-        acc[key] = ensureString(value) as any;
+        acc[key] = ensureString(value);
       } else {
         acc[key] = value;
       }
       
       return acc;
-    }, {} as T);
+    }, {} as Record<string, any>) as T;
   };
 
   useEffect(() => {
