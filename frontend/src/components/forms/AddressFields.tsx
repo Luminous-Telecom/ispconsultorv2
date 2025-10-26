@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import FormField from '../ui/FormField';
 
 interface AddressFieldsProps {
@@ -8,6 +8,16 @@ interface AddressFieldsProps {
   formData?: Record<string, any>;
   onChange?: (name: string, value: any) => void;
   errors?: Record<string, any>;
+}
+
+interface ViaCEPResponse {
+  cep: string;
+  logradouro: string;
+  complemento: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  erro?: boolean;
 }
 
 const AddressFields: React.FC<AddressFieldsProps> = ({ 
@@ -27,6 +37,32 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       onChange(getFieldName(field), value);
     }
   };
+
+  // Buscar CEP automaticamente quando o CEP tiver 8 dígitos
+  useEffect(() => {
+    const cep = getFieldValue('cep');
+    const cepNumbers = cep.replace(/\D/g, '');
+    
+    if (cepNumbers.length === 8) {
+      // Buscar endereço via API ViaCEP
+      fetch(`https://viacep.com.br/ws/${cepNumbers}/json/`)
+        .then(response => response.json())
+        .then((data: ViaCEPResponse) => {
+          if (!data.erro) {
+            // Preencher campos automaticamente
+            if (onChange) {
+              if (data.logradouro) onChange(getFieldName('endereco'), data.logradouro);
+              if (data.bairro) onChange(getFieldName('bairro'), data.bairro);
+              if (data.localidade) onChange(getFieldName('cidade'), data.localidade);
+              if (data.uf) onChange(getFieldName('estado'), data.uf);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Erro ao buscar CEP:', error);
+        });
+    }
+  }, [getFieldValue('cep'), onChange, prefix]);
 
   const addressFields = [
     {
