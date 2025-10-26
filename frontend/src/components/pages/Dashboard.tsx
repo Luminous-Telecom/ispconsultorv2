@@ -347,13 +347,13 @@ const Dashboard: React.FC = () => {
             const width = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
             return (
               <div key={index} className="bar-item-horizontal">
-                <div className="bar-label-horizontal">{item.label}</div>
+                <div className="bar-label-horizontal" title={item.label}>{item.label}</div>
                 <div className="bar-container-horizontal">
                   <div className="bar-horizontal" style={{
                     width: `${width}%`,
                     backgroundColor: item.color
                   }}>
-                    <span className="bar-value-horizontal">{formatValue(item.value)}</span>
+                    <span className="bar-value-horizontal">{item.value > 0 ? formatValue(item.value) : ''}</span>
                   </div>
                 </div>
               </div>
