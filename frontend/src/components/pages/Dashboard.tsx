@@ -205,10 +205,17 @@ const Dashboard: React.FC = () => {
   // Métricas adicionais (usando dados reais quando disponíveis)
   const totalBoletos = titulos.length;
   const valorTotalBoletos = titulos.reduce((sum, titulo) => {
-    const valor = parseFloat(String(titulo.valor)) || 0;
+    // Tentar diferentes campos de valor
+    const valor = parseFloat(String(titulo.valor || titulo.valor_titulo || titulo.valor_original || 0)) || 0;
     return sum + valor;
   }, 0);
-  const ticketMedio = totalBoletos > 0 ? valorTotalBoletos / totalBoletos : 0;
+  
+  // Debug para ver a estrutura dos títulos
+  if (titulos.length > 0) {
+    console.log('Primeiro título:', titulos[0]);
+  }
+  
+  const ticketMedio = totalBoletos > 0 && !isNaN(valorTotalBoletos) && !isNaN(totalBoletos) ? valorTotalBoletos / totalBoletos : 0;
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
