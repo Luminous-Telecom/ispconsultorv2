@@ -410,9 +410,9 @@ const Dashboard: React.FC = () => {
       return chartHeight - ((value - minValue) / range) * chartHeight;
     };
     
-    const chartHeight = 150;
+    const chartHeight = 200;
     const chartWidth = 100;
-    const pointRadius = 4;
+    const pointRadius = 5;
     
     // Criar path da linha
     let pathData = '';
@@ -429,8 +429,8 @@ const Dashboard: React.FC = () => {
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
-        <div className="line-chart-wrapper" style={{ height: `${chartHeight + 40}px` }}>
-          <svg className="line-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight + 40}`}>
+        <div className="line-chart-wrapper" style={{ height: `${chartHeight + 50}px` }}>
+          <svg className="line-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight + 50}`}>
             {/* Linha */}
             <path
               d={pathData}
@@ -469,7 +469,7 @@ const Dashboard: React.FC = () => {
                   {/* Mês */}
                   <text
                     x={x}
-                    y={chartHeight + 8}
+                    y={chartHeight + 12}
                     textAnchor="middle"
                     fill="var(--text-secondary)"
                     fontSize="2.5"
