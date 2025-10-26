@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../../../services/clienteService';
 import { PlanoService } from '../../../services/planoService';
@@ -1158,18 +1158,28 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     customData: customFormData
   });
 
-  const handleInputChange = (field: keyof ClienteFormData, value: any) => {
-    // Aplicar formatação baseada no campo
-    let formattedValue = value;
-    if (field === 'cnpj' && typeof value === 'string') {
-      formattedValue = formatCNPJ(value);
-    } else if ((field === 'telefone' || field === 'whatsapp') && typeof value === 'string') {
-      formattedValue = formatPhone(value);
-    } else if (field === 'cep' && typeof value === 'string') {
-      formattedValue = formatCEP(value);
+  const handleInputChange = useCallback((field: keyof ClienteFormData, value: any) => {
+    // Aplicar formatação baseada no campo apenas quando necessário
+    // O valor já pode estar formatado se vier do FormField
+    const currentValue = formData[field];
+    
+    // Só formatar se for um campo que precisa de formatação E o valor for diferente
+    if (typeof value === 'string' && value !== currentValue) {
+      let formattedValue = value;
+      
+      if (field === 'cnpj') {
+        formattedValue = formatCNPJ(value);
+      } else if (field === 'telefone' || field === 'whatsapp') {
+        formattedValue = formatPhone(value);
+      } else if (field === 'cep') {
+        formattedValue = formatCEP(value);
+      }
+      
+      // Só atualizar se o valor formatado for diferente
+      if (formattedValue !== currentValue) {
+        setFormData(prev => ({ ...prev, [field]: formattedValue }));
+      }
     }
-
-    setFormData(prev => ({ ...prev, [field]: formattedValue }));
     
     // Limpar erro do campo quando o usuário começar a digitar
     if (errors[field as keyof ClienteFormErrors]) {
@@ -1178,7 +1188,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         [field]: undefined
       }));
     }
-  };
+  }, [formData, errors]);
 
   const validateForm = (): boolean => {
     const newErrors: any = {};
