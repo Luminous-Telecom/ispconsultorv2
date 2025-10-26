@@ -35,12 +35,12 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
   const getTipoBadge = (tipo: string) => {
     const badges = {
-      feature: { class: 'bg-primary', label: 'Nova Funcionalidade', icon: 'bi-star-fill' },
-      bugfix: { class: 'bg-danger', label: 'Correção', icon: 'bi-bug-fill' },
-      security: { class: 'bg-warning text-dark', label: 'Segurança', icon: 'bi-shield-fill' },
-      melhoria: { class: 'bg-info', label: 'Melhoria', icon: 'bi-arrow-up-circle-fill' }
+      feature: { class: 'text-primary', bgClass: 'bg-primary bg-opacity-10', label: 'Nova', icon: 'bi-star-fill' },
+      bugfix: { class: 'text-danger', bgClass: 'bg-danger bg-opacity-10', label: 'Correção', icon: 'bi-bug-fill' },
+      security: { class: 'text-warning', bgClass: 'bg-warning bg-opacity-10', label: 'Segurança', icon: 'bi-shield-fill' },
+      melhoria: { class: 'text-info', bgClass: 'bg-info bg-opacity-10', label: 'Melhoria', icon: 'bi-arrow-up-circle-fill' }
     };
-    return badges[tipo as keyof typeof badges] || { class: 'bg-secondary', label: 'Outro', icon: 'bi-circle-fill' };
+    return badges[tipo as keyof typeof badges] || { class: 'text-secondary', bgClass: 'bg-secondary bg-opacity-10', label: 'Outro', icon: 'bi-circle-fill' };
   };
 
   return (
@@ -83,14 +83,14 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
         {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
           <div>
-            <div className="card mb-3 border" style={{ borderRadius: '0.5rem', backgroundColor: 'var(--bs-body-bg)', borderColor: 'var(--bs-border-color) !important' }}>
-              <div className="card-body py-3">
+            <div className="card mb-2 border" style={{ borderRadius: '0.5rem', backgroundColor: 'var(--bs-body-bg)', borderColor: 'var(--bs-border-color) !important' }}>
+              <div className="card-body py-2">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
-                    <span className="text-muted small d-block mb-1">Versão Atual do Sistema</span>
-                    <h5 className="mb-0 fw-bold text-primary">v{atualizacoes[atualizacoes.length - 1].versao}</h5>
+                    <span className="text-muted small d-block mb-1" style={{ fontSize: '0.75rem' }}>Versão Atual</span>
+                    <h6 className="mb-0 fw-bold text-primary" style={{ fontSize: '1.1rem' }}>v{atualizacoes[atualizacoes.length - 1].versao}</h6>
                   </div>
-                  <i className="bi bi-check-circle-fill text-success fs-2"></i>
+                  <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '1.5rem' }}></i>
                 </div>
               </div>
             </div>
@@ -103,32 +103,42 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                     borderRadius: '0.5rem',
                     border: '1px solid var(--bs-border-color)',
                     backgroundColor: 'var(--bs-body-bg)',
+                    padding: '0.75rem',
                     transition: 'all 0.2s ease'
                   }}>
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <div className="d-flex align-items-start">
-                        <i className={`bi ${badge.icon} ${badge.class} me-2`} style={{ fontSize: '1.25rem' }}></i>
-                        <div>
-                          <h6 className="mb-1 fw-semibold">
-                            v{atualizacao.versao}
-                          </h6>
-                          <small className="text-muted d-flex align-items-center">
-                            <i className="bi bi-calendar3 me-1"></i>
-                            {new Date(atualizacao.data).toLocaleDateString('pt-BR', { 
-                              day: '2-digit', 
-                              month: 'long', 
-                              year: 'numeric' 
-                            })}
-                          </small>
-                        </div>
+                    <div className="d-flex align-items-start mb-1">
+                      <div className={`me-2 d-flex align-items-center justify-content-center ${badge.bgClass}`} style={{ 
+                        width: '28px', 
+                        height: '28px', 
+                        borderRadius: '0.375rem',
+                        fontSize: '0.875rem'
+                      }}>
+                        <i className={`bi ${badge.icon} ${badge.class}`}></i>
                       </div>
-                      <span className={`badge ${badge.class} px-3 py-2`}>
-                        {badge.label}
-                      </span>
+                      <div className="flex-grow-1" style={{ fontSize: '0.875rem' }}>
+                        <div className="d-flex justify-content-between align-items-start mb-1">
+                          <div>
+                            <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.95rem' }}>
+                              v{atualizacao.versao}
+                            </h6>
+                            <small className="text-muted d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
+                              <i className="bi bi-calendar3 me-1" style={{ fontSize: '0.7rem' }}></i>
+                              {new Date(atualizacao.data).toLocaleDateString('pt-BR', { 
+                                day: '2-digit', 
+                                month: 'short', 
+                                year: 'numeric' 
+                              })}
+                            </small>
+                          </div>
+                          <span className={`badge ${badge.bgClass} ${badge.class} border-0`} style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}>
+                            {badge.label}
+                          </span>
+                        </div>
+                        <p className="mb-0 text-secondary mt-1" style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
+                          {atualizacao.descricao}
+                        </p>
+                      </div>
                     </div>
-                    <p className="mb-0 text-secondary" style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
-                      {atualizacao.descricao}
-                    </p>
                   </div>
                 );
               })}
