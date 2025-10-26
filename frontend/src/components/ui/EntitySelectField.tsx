@@ -34,19 +34,22 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
 }) => {
   const selectedEntity = entities.find((e) => e.id === value);
 
+  const fieldId = `${label.toLowerCase().replace(/\s+/g, '_')}_id_field`;
+
   return (
     <div className="mb-3">
-      <label className="form-label small">
+      <label htmlFor={fieldId} className="form-label small">
         {label} {required && <span className="text-danger ms-1">*</span>}
       </label>
       <div className="input-group">
         <input
+          id={fieldId}
           title={idFieldTitle}
           autoComplete="off"
           type="text"
           className="form-control text-center id-field"
           placeholder="ID"
-          name={`${label.toLowerCase().replace(/\s+/g, '_')}_id_field`}
+          name={fieldId}
           onChange={(e) => {
             const id = parseInt(e.target.value) || 0;
             onChange(id);
