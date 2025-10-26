@@ -227,6 +227,8 @@ export class SchedulerService {
     const { Op } = await import('sequelize');
     
     try {
+      console.log('Iniciando geração de títulos...');
+      
       // Buscar todos os contratos ativos
       const contratos = await Contrato.findAll({
         where: {
@@ -239,6 +241,8 @@ export class SchedulerService {
           }
         ]
       });
+
+      console.log(`Encontrados ${contratos.length} contratos ativos`);
 
       let titulosGerados = 0;
       let contratosProcessados = 0;
@@ -270,6 +274,8 @@ export class SchedulerService {
 
           // Verificar se precisa gerar mais títulos
           const titulosGerar = quantidadeMinimaTitulos - titulosExistentes.length;
+
+          console.log(`Contrato ${contrato.id}: ${titulosExistentes.length} títulos existentes, precisa gerar ${titulosGerar}`);
 
           if (titulosGerar > 0) {
             // Buscar data inicial do contrato ou usar data atual
@@ -320,16 +326,20 @@ export class SchedulerService {
                 });
 
                 titulosGerados++;
+                console.log(`Título criado para contrato ${contrato.id}, valor: R$ ${valorTitulo.toFixed(2)}, vencimento: ${dataVencimento.toLocaleDateString('pt-BR')}`);
               }
             }
 
             contratosProcessados++;
+            console.log(`Contrato ${contrato.id} processado com sucesso`);
           }
         } catch (error) {
           console.error(`Erro ao processar contrato ${contrato.id}:`, error);
           erros++;
         }
       }
+
+      console.log(`Geração de títulos concluída: ${titulosGerados} títulos gerados em ${contratosProcessados} contratos, ${erros} erros`);
 
       return {
         success: true,
