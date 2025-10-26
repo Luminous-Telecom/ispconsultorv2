@@ -64,6 +64,7 @@ export class DiasVencimentoController {
         message: 'Configuração de dias de vencimento atualizada com sucesso'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao atualizar configuração de dias de vencimento:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -107,6 +108,7 @@ export class DiasVencimentoController {
         message: 'Configuração de dias de vencimento criada com sucesso'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao criar configuração de dias de vencimento:', error);
       
       if (error.name === 'SequelizeValidationError') {
