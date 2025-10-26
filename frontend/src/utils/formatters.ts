@@ -59,52 +59,60 @@ export const formatPercentage = (value: number | string): string => {
 };
 
 /**
- * Formata um CNPJ
+ * Formata um CNPJ progressivamente durante a digitação
  * @param cnpj - CNPJ sem formatação
  * @returns CNPJ formatado como 00.000.000/0000-00
  */
 export const formatCNPJ = (cnpj: string): string => {
   if (!cnpj) return '';
   
-  const cleaned = cnpj.replace(/\D/g, '');
-  
-  if (cleaned.length !== 14) return cnpj;
-  
-  return cleaned.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  const numbers = cnpj.replace(/\D/g, '');
+  if (numbers.length <= 2) return numbers;
+  if (numbers.length <= 5) return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+  if (numbers.length <= 8) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5)}`;
+  if (numbers.length <= 12) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8)}`;
+  return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8, 12)}-${numbers.slice(12, 14)}`;
 };
 
 /**
- * Formata um telefone
+ * Formata um CPF progressivamente durante a digitação
+ * @param cpf - CPF sem formatação
+ * @returns CPF formatado como 000.000.000-00
+ */
+export const formatCPF = (cpf: string): string => {
+  if (!cpf) return '';
+  
+  const numbers = cpf.replace(/\D/g, '');
+  if (numbers.length <= 3) return numbers;
+  if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+  if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
+  return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+};
+
+/**
+ * Formata um telefone progressivamente durante a digitação
  * @param phone - Telefone sem formatação
- * @returns Telefone formatado
+ * @returns Telefone formatado como (00) 00000-0000
  */
 export const formatPhone = (phone: string): string => {
   if (!phone) return '';
   
-  const cleaned = phone.replace(/\D/g, '');
-  
-  if (cleaned.length === 11) {
-    return cleaned.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
-  } else if (cleaned.length === 10) {
-    return cleaned.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
-  }
-  
-  return phone;
+  const numbers = phone.replace(/\D/g, '');
+  if (numbers.length <= 2) return numbers ? `(${numbers}` : numbers;
+  if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+  if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
 };
 
 /**
- * Formata um CEP
+ * Formata um CEP progressivamente durante a digitação
  * @param cep - CEP sem formatação
  * @returns CEP formatado como 00000-000
  */
 export const formatCEP = (cep: string): string => {
   if (!cep) return '';
   
-  const cleaned = cep.replace(/\D/g, '');
-  
-  if (cleaned.length === 8) {
-    return cleaned.replace(/^(\d{5})(\d{3})$/, '$1-$2');
-  }
-  
-  return cep;
+  const numbers = cep.replace(/\D/g, '');
+  if (numbers.length <= 5) return numbers;
+  return `${numbers.slice(0, 5)}-${numbers.slice(5, 8)}`;
 };
