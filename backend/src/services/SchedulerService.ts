@@ -414,7 +414,7 @@ export class SchedulerService {
             model: Banco,
             as: 'banco',
             required: true,
-            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox']
+            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox', 'client_id_producao', 'client_secret_producao']
           },
           {
             model: Cliente,
