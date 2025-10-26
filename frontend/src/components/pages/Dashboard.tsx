@@ -192,20 +192,22 @@ const Dashboard: React.FC = () => {
     };
   };
 
-  // Análise de valores por plano
-  const getValoresPorPlano = () => {
-    const valores = planos.reduce((acc, plano) => {
-      const valor = parseFloat(String(plano.valor_mensal)) || 0;
-      acc[plano.nome_plano] = valor;
+  // Análise de clientes por plano
+  const getClientesPorPlano = () => {
+    const contagem = contratos.reduce((acc, contrato) => {
+      const planoNome = contrato.plano?.nome_plano || 'Sem plano';
+      acc[planoNome] = (acc[planoNome] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8'];
-    return Object.entries(valores).map(([plano, valor], index) => ({
-      label: plano,
-      value: valor,
-      color: cores[index % cores.length]
-    }));
+    return Object.entries(contagem)
+      .map(([plano, quantidade], index) => ({
+        label: plano,
+        value: quantidade,
+        color: cores[index % cores.length]
+      }))
+      .sort((a, b) => b.value - a.value);
   };
 
   // Crescimento de receita (últimos 6 meses)
@@ -324,7 +326,7 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  // Função para renderizar gráfico de barras
+  // Função para renderizar gráfico de barras horizontais
   const renderBarChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
     const maxValue = Math.max(...data.map(item => item.value));
     
@@ -338,17 +340,20 @@ const Dashboard: React.FC = () => {
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
-        <div className="bar-chart">
+        <div className="bar-chart-horizontal">
           {data.map((item, index) => {
-            const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+            const width = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
             return (
-              <div key={index} className="bar-item">
-                <div className="bar" style={{
-                  height: `${height}%`,
-                  backgroundColor: item.color
-                }}></div>
-                <div className="bar-label">{item.label}</div>
-                <div className="bar-value">{formatValue(item.value)}</div>
+              <div key={index} className="bar-item-horizontal">
+                <div className="bar-label-horizontal">{item.label}</div>
+                <div className="bar-container-horizontal">
+                  <div className="bar-horizontal" style={{
+                    width: `${width}%`,
+                    backgroundColor: item.color
+                  }}>
+                    <span className="bar-value-horizontal">{formatValue(item.value)}</span>
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -501,9 +506,9 @@ const Dashboard: React.FC = () => {
 
       {/* Gráficos de Valores e Performance */}
       <div className="row g-2 mb-2">
-        <div className="col-12">
+        <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
-            {renderBarChart(getValoresPorPlano(), 'Valores por Plano', 'currency')}
+            {renderBarChart(getClientesPorPlano(), 'Clientes por Plano', 'number')}
           </div>
         </div>
       </div>
