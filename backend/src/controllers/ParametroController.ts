@@ -28,11 +28,12 @@ export class ParametroController {
         data: parametros
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao listar parâmetros:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -59,11 +60,12 @@ export class ParametroController {
         data: parametro
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao obter parâmetro:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -115,11 +117,12 @@ export class ParametroController {
         data: parametro
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao atualizar parâmetro:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -190,11 +193,12 @@ export class ParametroController {
         data: results
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao atualizar múltiplos parâmetros:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -217,11 +221,12 @@ export class ParametroController {
         data: parametros
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao obter parâmetros por categoria:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -270,11 +275,12 @@ export class ParametroController {
         data: results
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao resetar parâmetros:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
