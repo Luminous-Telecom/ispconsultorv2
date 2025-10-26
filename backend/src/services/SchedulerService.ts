@@ -293,7 +293,7 @@ export class SchedulerService {
     await routine.update(data);
     
     // Recarregar a rotina do banco para verificar se foi salva
-    const updatedRoutine = await ScheduledRoutine.findByPk(id);
+    const _updatedRoutine = await ScheduledRoutine.findByPk(id);
     
     // Reagendar se a rotina estiver ativa
     if (routine.ativo) {
@@ -360,9 +360,9 @@ export class SchedulerService {
 
     // Se já passou hoje, agendar para o próximo período baseado na frequência
     if (nextExecution <= now) {
-      const oldDate = nextExecution.getDate();
-      const oldMonth = nextExecution.getMonth();
-      const oldYear = nextExecution.getFullYear();
+      const _oldDate = nextExecution.getDate();
+      const _oldMonth = nextExecution.getMonth();
+      const _oldYear = nextExecution.getFullYear();
       
       switch (routine.frequencia) {
         case 'diaria':
