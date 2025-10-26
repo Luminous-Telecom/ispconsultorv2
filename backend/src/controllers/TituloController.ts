@@ -243,7 +243,8 @@ export class TituloController {
         }
       });
     } catch (error: unknown) {
-      logger.error('Erro ao listar títulos', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao listar títulos', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -289,7 +290,8 @@ export class TituloController {
         data: titulo
       });
     } catch (error: unknown) {
-      logger.error('Erro ao buscar título', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao buscar título', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -490,7 +492,8 @@ export class TituloController {
         data: titulo
       });
     } catch (error: unknown) {
-      logger.error('Erro ao criar título', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao criar título', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -555,9 +558,10 @@ export class TituloController {
               charge_id: titulo.charge_id 
             });
           } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
             logger.warn('Erro ao cancelar título na EFI', { 
               titulo_id: titulo.id, 
-              error: error.message 
+              error: errorMessage 
             });
           }
         }
@@ -596,7 +600,8 @@ export class TituloController {
         data: titulo
       });
     } catch (error: unknown) {
-      logger.error('Erro ao atualizar título', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao atualizar título', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -630,9 +635,10 @@ export class TituloController {
             charge_id: titulo.charge_id 
           });
         } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           logger.warn('Erro ao cancelar título na EFI', { 
             titulo_id: titulo.id, 
-            error: error.message 
+            error: errorMessage 
           });
         }
       }
@@ -645,7 +651,8 @@ export class TituloController {
         message: 'Título deletado com sucesso'
       });
     } catch (error: unknown) {
-      logger.error('Erro ao deletar título', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao deletar título', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -739,9 +746,10 @@ export class TituloController {
           await titulo.reload();
           
         } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           logger.error('Erro ao registrar título no banco', { 
             titulo_id: titulo.id, 
-            error: error.message,
+            error: errorMessage,
             stack: error.stack
           });
           
@@ -785,7 +793,8 @@ export class TituloController {
         topoTemplate = fs.readFileSync(topoTemplatePath, 'utf8');
         corpoTemplate = fs.readFileSync(corpoTemplatePath, 'utf8');
       } catch (error: unknown) {
-        logger.error('Erro ao carregar templates do boleto', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        logger.error('Erro ao carregar templates do boleto', { error: errorMessage });
         res.status(500).json({
           success: false,
           message: 'Erro ao carregar template do boleto'
@@ -889,7 +898,8 @@ export class TituloController {
       // Não definir X-Frame-Options para permitir iframe em desenvolvimento
       res.send(template);
     } catch (error: unknown) {
-      logger.error('Erro ao imprimir boleto', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao imprimir boleto', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -995,8 +1005,9 @@ export class TituloController {
               // Continua processando os outros mesmo se um falhar
             }
           } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
             logger.error('Erro ao registrar título', { 
-              error: error.message, 
+              error: errorMessage, 
               titulo_id: titulo.id 
             });
             // Continua processando os outros mesmo se um falhar
@@ -1041,7 +1052,8 @@ export class TituloController {
       // Não definir X-Frame-Options para permitir iframe em desenvolvimento
       res.send(template);
     } catch (error: unknown) {
-      logger.error('Erro ao imprimir boletos múltiplos', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao imprimir boletos múltiplos', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -1123,9 +1135,10 @@ export class TituloController {
               });
             }
           } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
             logger.error('Erro ao registrar título no banco', { 
               titulo_id: titulo.id,
-              error: error.message 
+              error: errorMessage 
             });
             // Continua processando os outros mesmo se um falhar
           }
@@ -1203,7 +1216,8 @@ export class TituloController {
       res.setHeader('Content-Length', pdfBuffer.length);
       res.send(pdfBuffer);
     } catch (error: unknown) {
-      logger.error('Erro ao gerar PDF de múltiplos boletos', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao gerar PDF de múltiplos boletos', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -1252,7 +1266,8 @@ export class TituloController {
         data: titulo
       });
     } catch (error: unknown) {
-      logger.error('Erro ao marcar título como pago', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao marcar título como pago', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -1282,7 +1297,8 @@ export class TituloController {
         data: titulo
       });
     } catch (error: unknown) {
-      logger.error('Erro ao desmarcar título como pago', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao desmarcar título como pago', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -1365,7 +1381,8 @@ export class TituloController {
         });
       }
     } catch (error: unknown) {
-      logger.error('Erro ao consultar recebimento', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao consultar recebimento', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -1404,7 +1421,8 @@ export class TituloController {
         data: titulo
       });
     } catch (error: unknown) {
-      logger.error('Erro ao estornar título', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao estornar título', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -1459,7 +1477,8 @@ export class TituloController {
         data: titulos
       });
     } catch (error: unknown) {
-      logger.error('Erro ao buscar títulos por contrato', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao buscar títulos por contrato', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -1526,7 +1545,8 @@ export class TituloController {
         }
       });
     } catch (error: unknown) {
-      logger.error('Erro ao buscar estatísticas dos títulos', { error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao buscar estatísticas dos títulos', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
