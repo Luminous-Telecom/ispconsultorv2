@@ -6,7 +6,7 @@ import { ContratoService } from '../../services/ContratoService';
 import { useDashboard } from '../../hooks/useDashboard';
 
 // Componente para gráfico de linha temporal com Canvas
-const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'number' }> = ({ data, title }) => {
+const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'number' }> = ({ data, title, format = 'number' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
@@ -65,6 +65,12 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       ctx.lineWidth = 1;
       ctx.stroke();
       
+      // Formatar valor
+      let valorFormatado = item.valor.toString();
+      if (format === 'currency') {
+        valorFormatado = `R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      
       // Desenhar valor - ajustar posição para não sair do canvas
       const textY = y - 8;
       const adjustedTextY = textY < 15 ? y + 20 : textY; // Se texto está muito alto, mostrar abaixo
@@ -72,14 +78,14 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       ctx.fillStyle = 'white';
       ctx.font = 'bold 0.65rem sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(item.valor.toString(), x, adjustedTextY);
+      ctx.fillText(valorFormatado, x, adjustedTextY);
       
       // Desenhar mês
       ctx.fillStyle = 'var(--text-secondary)';
       ctx.font = '0.55rem sans-serif';
       ctx.fillText(item.mes, x, chartHeight + 28);
     });
-  }, [data]);
+  }, [data, format]);
   
   return (
     <div className="chart-container">
