@@ -193,28 +193,28 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
 
   const bulkActions = [
     {
-      label: 'Ativar',
-      variant: 'success' as const,
-      disabled: () => !selectedItem || selectedItem.ativo,
-      action: () => selectedItem && handleToggle(selectedItem)
+      label: 'Executar',
+      variant: 'primary' as const,
+      disabled: () => !selectedItem,
+      action: () => {
+        if (selectedItem) handleExecute(selectedItem);
+      }
     },
     {
       label: 'Desativar',
       variant: 'secondary' as const,
       disabled: () => !selectedItem || !selectedItem.ativo,
-      action: () => selectedItem && handleToggle(selectedItem)
-    },
-    {
-      label: 'Executar',
-      variant: 'primary' as const,
-      disabled: () => !selectedItem,
-      action: () => selectedItem && handleExecute(selectedItem)
+      action: () => {
+        if (selectedItem) handleToggle(selectedItem);
+      }
     },
     {
       label: 'Excluir',
       variant: 'danger' as const,
       disabled: () => !selectedItem,
-      action: () => selectedItem && handleDelete(selectedItem)
+      action: () => {
+        if (selectedItem) handleDelete(selectedItem);
+      }
     }
   ];
 
