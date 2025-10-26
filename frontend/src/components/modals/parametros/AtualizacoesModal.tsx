@@ -139,20 +139,6 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                             <span className={`badge ${badge.bgClass} ${badge.class} border-0`} style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}>
                               {badge.label}
                             </span>
-                            {!isLatestVersion && (
-                              <button 
-                                className="btn btn-sm btn-primary"
-                                onClick={() => {
-                                  if (window.confirm(`Deseja atualizar para a versão ${atualizacao.versao}?\n\nATENÇÃO: Isso irá fazer backup automático antes da atualização.`)) {
-                                    addNotification('info', 'Download e instalação em desenvolvimento');
-                                  }
-                                }}
-                                style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                              >
-                                <i className="bi bi-download me-1"></i>
-                                Atualizar
-                              </button>
-                            )}
                           </div>
                         </div>
                         <p className="mb-0 text-secondary mt-1" style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
