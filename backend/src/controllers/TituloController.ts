@@ -56,11 +56,17 @@ export class TituloController {
         logo_final: logoBanco.substring(0, 50) + '...'
       });
     }
+    
+    // Converter logo do banco para base64 se necessário
+    logoBanco = TituloController.converterLogoParaBase64(logoBanco);
+    
+    // Converter logo da empresa para base64 se necessário
+    const logoEmpresa = TituloController.converterLogoParaBase64(dadosEmpresa.logo || '');
 
     // Variáveis para substituição no template - Padrão FEBRABAN
     const templateVars = {
       // Dados da empresa (Beneficiário)
-      LOGOMARCA: dadosEmpresa.logo || '',
+      LOGOMARCA: logoEmpresa,
       CEDENTE: dadosEmpresa.razao_social || 'CTM Telecom',
       EMPRESACPF: dadosEmpresa.cnpj || '',
       EMPRESAENDERECO: `${dadosEmpresa.endereco || ''} ${dadosEmpresa.numero || ''}`.trim(),
@@ -155,17 +161,90 @@ export class TituloController {
 
 
 
-  // Obter logo padrão do banco
-  private static getLogoBancoPadrao(tipoBanco: string): string {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
-    const logosPadrao: Record<string, string> = {
-      'efi': `${baseUrl}/images/bancos/efi.png`,
-      'asaas': `${baseUrl}/images/bancos/asaas.png`,
-      'bancario': `${baseUrl}/images/bancos/boletoproprio.png`,
-      'outros': `${baseUrl}/images/bancos/boletoproprio.png`
-    };
+  // Converter logo para base64 se for URL HTTP
+  private static converterLogoParaBase64(logo: string): string {
+    if (!logo) return '';
+    
+    // Se já é data URI, retornar como está
+    if (logo.startsWith('data:image/')) {
+      return logo;
+    }
+    
+    // Se é URL HTTP/HTTPS, tentar converter para base64
+    if (logo.startsWith('http://') || logo.startsWith('https://')) {
+      try {
+        // Extrair nome do arquivo da URL
+        const url = new URL(logo);
+        const fileName = url.pathname.split('/').pop() || '';
+        
+        if (fileName.includes('efi.png')) {
+          return this.getLogoBancoPadrao('efi');
+        } else if (fileName.includes('asaas.png')) {
+          return this.getLogoBancoPadrao('asaas');
+        } else if (fileName.includes('boletoproprio.png')) {
+          return this.getLogoBancoPadrao('bancario');
+        }
+        
+        // Tentar ler arquivo do caminho public
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Remover base URL se estiver na URL
+        let cleanPath = url.pathname;
+        if (cleanPath.startsWith('/images/')) {
+          cleanPath = cleanPath.substring(1);
+        }
+        
+        const imagePath = path.join(__dirname, '../../public', cleanPath);
+        
+        if (fs.existsSync(imagePath)) {
+          const imageBuffer = fs.readFileSync(imagePath);
+          const base64Image = imageBuffer.toString('base64');
+          const ext = fileName.substring(fileName.lastIndexOf('.') + 1);
+          const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+          return `data:${mimeType};base64,${base64Image}`;
+        }
+      } catch (error) {
+        logger.warn('Erro ao converter URL para base64', { logo, error });
+      }
+    }
+    
+    // Se não conseguiu converter, retornar como está
+    return logo;
+  }
 
-    return logosPadrao[tipoBanco] || logosPadrao['outros'];
+  // Obter logo padrão do banco (retorna base64 data URI)
+  private static getLogoBancoPadrao(tipoBanco: string): string {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const logosPadrao: Record<string, string> = {
+        'efi': 'efi.png',
+        'asaas': 'efi.png', // Usar efi.png por enquanto
+        'bancario': 'boletoproprio.png',
+        'outros': 'boletoproprio.png'
+      };
+      
+      const fileName = logosPadrao[tipoBanco] || logosPadrao['outros'];
+      const imagePath = path.join(__dirname, '../../public/images/bancos', fileName);
+      
+      // Ler arquivo e converter para base64
+      if (fs.existsSync(imagePath)) {
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64Image = imageBuffer.toString('base64');
+        const ext = fileName.substring(fileName.lastIndexOf('.') + 1);
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        return `data:${mimeType};base64,${base64Image}`;
+      }
+      
+      // Se arquivo não existir, retornar string vazia
+      logger.warn('Arquivo de logo não encontrado', { imagePath, tipoBanco });
+      return '';
+    } catch (error) {
+      logger.error('Erro ao carregar logo do banco', { error, tipoBanco });
+      return '';
+    }
   }
 
   // Processar instruções com substituição de variáveis
