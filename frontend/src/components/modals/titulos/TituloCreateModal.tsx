@@ -3,6 +3,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { TituloService } from '../../../services/tituloService';
 import { PlanoService } from '../../../services/planoService';
 import { ClienteService } from '../../../services/clienteService';
+import { ContratoService } from '../../../services/ContratoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { CreateCarneParcela } from '../../../types';
 import { useEntitySelectField } from '../../../hooks/useEntitySelectField';
@@ -72,6 +73,13 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
     enabled: !!clienteId, // Sempre habilitar quando há clienteId
   });
 
+  // Buscar dados do contrato quando contratoId for fornecido
+  const { data: contratoData } = useQuery({
+    queryKey: ['contrato', contratoId],
+    queryFn: () => ContratoService.getById(contratoId!),
+    enabled: !!contratoId,
+  });
+
   // Função para calcular a próxima data de vencimento
   const calcularProximaDataVencimento = (diaVencimento: number): string => {
     const hoje = new Date();
@@ -85,9 +93,38 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
     return dataFinal.toISOString().split('T')[0];
   };
 
-  // Pré-selecionar plano ativo do cliente e data de vencimento
+  // Preencher com dados do contrato quando contratoId for fornecido
   useEffect(() => {
-    if (show && clienteData?.contratos && clienteData.contratos.length > 0) {
+    if (show && contratoData) {
+      const contrato = contratoData;
+      
+      if (contrato.plano_id) {
+        let dataVencimento = '';
+        
+        // Se tem dia de vencimento configurado no contrato, usar ele
+        if (contrato.dia_vencimento) {
+          dataVencimento = calcularProximaDataVencimento(contrato.dia_vencimento);
+        } else {
+          // Se não tem dia configurado, usar o dia 15 do próximo mês como padrão
+          dataVencimento = calcularProximaDataVencimento(15);
+        }
+        
+        // Atualizar formulário com dados do contrato
+        setFormData(prev => ({
+          ...prev,
+          plano_id: contrato.plano_id,
+          contrato_id: contrato.id,
+          desconto_percentual: contrato.desconto_percentual || 0,
+          desconto_valor: contrato.desconto_valor || 0,
+          data_vencimento: dataVencimento
+        }));
+      }
+    }
+  }, [show, contratoData]);
+
+  // Pré-selecionar plano ativo do cliente e data de vencimento (quando não há contratoId)
+  useEffect(() => {
+    if (show && !contratoId && clienteData?.contratos && clienteData.contratos.length > 0) {
       const contratoAtivo = clienteData.contratos.find((contrato: any) => contrato.status === 'ativo');
       
       if (contratoAtivo && contratoAtivo.plano_id) {
@@ -118,7 +155,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         });
       }
     }
-  }, [show, clienteData]);
+  }, [show, clienteData, contratoId]);
 
   // Limpar formulário quando modal fechar (usar ref para evitar conflitos)
   const prevShowRef = useRef(show);
