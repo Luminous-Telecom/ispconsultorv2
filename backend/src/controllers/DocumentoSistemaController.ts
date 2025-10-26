@@ -101,11 +101,12 @@ export class ModeloContratoController {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar documento:', error);
       
-      if (error.name === 'SequelizeValidationError') {
+      if (error instanceof Error && error.name === 'SequelizeValidationError') {
+        const validationError = error as any;
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: error.errors.map((err: any) => err.message)
+          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
         });
         return;
       }
@@ -146,11 +147,12 @@ export class ModeloContratoController {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao atualizar documento:', error);
       
-      if (error.name === 'SequelizeValidationError') {
+      if (error instanceof Error && error.name === 'SequelizeValidationError') {
+        const validationError = error as any;
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: error.errors.map((err: any) => err.message)
+          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
         });
         return;
       }
