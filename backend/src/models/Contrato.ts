@@ -101,9 +101,8 @@ export class Contrato extends Model<
     const valorAtual = this.valor_final ? parseFloat(this.valor_final.toString()) : 0;
     
     if (Math.abs(valorCalculado - valorAtual) > 0.01) {
-      // Valor mudou, atualizar no banco em background
-      this.valor_final = valorCalculado;
-      this.save().catch(err => console.error('Erro ao atualizar valor_final:', err));
+      // Valor mudou, atualizar no banco
+      await this.update({ valor_final: valorCalculado });
     }
 
     return valorCalculado;
