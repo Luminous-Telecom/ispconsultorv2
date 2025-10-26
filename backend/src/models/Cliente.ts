@@ -13,10 +13,7 @@ import {
   HasManyHasAssociationMixin,
   HasManyHasAssociationsMixin,
   HasManyCountAssociationsMixin,
-  HasManyCreateAssociationMixin,
-  BelongsToGetAssociationMixin,
-  BelongsToSetAssociationMixin,
-  BelongsToCreateAssociationMixin
+  HasManyCreateAssociationMixin
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Plano } from './Plano';
