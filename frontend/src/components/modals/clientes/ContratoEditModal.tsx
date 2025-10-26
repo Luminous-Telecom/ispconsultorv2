@@ -887,7 +887,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       <form id="contrato-edit-form" onSubmit={handleSubmit}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Navegação por Abas */}
-          <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ marginTop: '0.5rem' }}>
+          <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ borderBottom: '1px solid #dee2e6' }}>
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
