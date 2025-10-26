@@ -49,14 +49,14 @@ export class DashboardController {
     const [
       totalClientes,
       clientesAtivos,
-      totalPlanos,
+      _totalPlanos,
       planosAtivos,
-      totalBancos,
-      bancosAtivos,
-      totalTitulos,
+      _totalBancos,
+      _bancosAtivos,
+      _totalTitulos,
       titulosAtivos,
-      titulosPagos,
-      carnesPendentes
+      _titulosPagos,
+      _carnesPendentes
     ] = await Promise.all([
       Cliente.count(),
       Cliente.count({ where: { ativo: true } }),
@@ -73,14 +73,14 @@ export class DashboardController {
     // Calcular valores monetários
     const titulos = await Titulo.findAll();
 
-    let valorTotalTitulos = 0;
+    let _valorTotalTitulos = 0;
     let valorTotalPago = 0;
     let valorTotalPendente = 0;
 
     for (const titulo of titulos) {
       const valorTitulo = parseFloat(titulo.valor.toString());
 
-      valorTotalTitulos += valorTitulo;
+      _valorTotalTitulos += valorTitulo;
 
       if (titulo.status === 'pago') {
         valorTotalPago += valorTitulo;
