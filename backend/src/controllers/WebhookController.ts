@@ -409,7 +409,7 @@ export class WebhookController {
         pago: isPago
       };
 
-      // Consultar dados atualizados da EFI para obter código de barras, linha digitável, PIX, etc.
+      // Tentar consultar dados atualizados da EFI (opcional - apenas se conseguir token válido)
       try {
         const dadosAtualizados = await WebhookController.consultarDadosAtualizadosTitulo(titulo);
         if (dadosAtualizados.success && dadosAtualizados.data) {
@@ -421,58 +421,15 @@ export class WebhookController {
           if (dados.url_boleto) updateData.url_boleto = dados.url_boleto;
           if (dados.qrcode) updateData.qrcode = dados.qrcode;
           if (dados.qrcode_image) updateData.qrcode_image = dados.qrcode_image;
-          
-        } else {
-          // Se não conseguir consultar da EFI, gerar dados válidos como fallback
-          const codigoBarras = await titulo.gerarCodigoBarras();
-          const linhaDigitavel = await titulo.gerarLinhaDigitavel();
-          
-          updateData.codigo_barras = codigoBarras;
-          updateData.linha_digitavel = linhaDigitavel;
-          
-          logger.warn('Usando dados gerados como fallback', {
-            titulo_id: titulo.id,
-            charge_id: chargeId,
-            codigo_barras: codigoBarras,
-            linha_digitavel: linhaDigitavel,
-            motivo: dadosAtualizados.message || 'Erro ao consultar EFI'
-          });
         }
       } catch (error) {
-        // Em caso de erro, gerar dados válidos como fallback
-        try {
-          const codigoBarras = await titulo.gerarCodigoBarras();
-          const linhaDigitavel = await titulo.gerarLinhaDigitavel();
-          
-          updateData.codigo_barras = codigoBarras;
-          updateData.linha_digitavel = linhaDigitavel;
-          
-          // Log apenas como debug se for erro de autenticação (esperado)
-          const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
-          const isAuthError = errorMsg.includes('401') || errorMsg.includes('Unauthorized');
-          
-          if (isAuthError) {
-            logger.debug('Token expirado/inválido, usando fallback', {
-              titulo_id: titulo.id,
-              charge_id: chargeId,
-              codigo_barras: codigoBarras,
-              linha_digitavel: linhaDigitavel
-            });
-          } else {
-            logger.warn('Erro ao consultar dados da EFI, usando fallback', {
-              titulo_id: titulo.id,
-              charge_id: chargeId,
-              error: errorMsg
-            });
-          }
-        } catch (fallbackError) {
-          logger.error('Erro crítico ao gerar dados de fallback', {
-            titulo_id: titulo.id,
-            charge_id: chargeId,
-            error: error instanceof Error ? error.message : 'Erro desconhecido',
-            fallback_error: fallbackError instanceof Error ? fallbackError.message : 'Erro de fallback'
-          });
-        }
+        // Se falhar ao consultar dados, simplesmente continua sem atualizar esses campos
+        // O status será atualizado normalmente com os dados do webhook
+        logger.debug('Não foi possível consultar dados adicionais da EFI', {
+          titulo_id: titulo.id,
+          charge_id: chargeId,
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
       }
       
       // Se está sendo marcada como paga via webhook, atualizar data_pagamento
