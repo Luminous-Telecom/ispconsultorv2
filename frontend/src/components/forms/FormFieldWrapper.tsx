@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldConfig } from './types';
+import { FieldConfig, FieldValue } from './types';
 import { useFormField } from './FormProvider';
 import FormField from '../ui/FormField';
 

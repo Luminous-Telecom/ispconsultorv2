@@ -252,7 +252,7 @@ export class ParametroController {
       const results = [];
 
       for (const param of parametrosPadrao) {
-        let [parametro] = await Parametro.findOrCreate({
+        const [parametro] = await Parametro.findOrCreate({
           where: { chave: param.chave },
           defaults: param
         });

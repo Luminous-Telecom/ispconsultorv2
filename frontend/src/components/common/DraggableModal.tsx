@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { modalStack } from '../../utils/modalStack';
 
@@ -34,18 +34,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   // ID único para este modal - usar prop se fornecida, senão gerar um estável
   const modalIdRef = useRef<string>(propModalId || `modal-${Math.random().toString(36).substr(2, 9)}`);
   const modalId = modalIdRef.current;
-
-  // Definir larguras padrão (altura será automática)
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'sm': return { width: 600 };
-      case 'md': return { width: 800 };
-      case 'lg': return { width: 1000 };
-      case 'xl': return { width: 1200 };
-      case 'a4': return { width: 980 }; // Largura para impressão de boletos
-      default: return { width: 1000 }; // Tamanho padrão bom para todos
-    }
-  };
 
   // Gerenciar pilha de modais
   useEffect(() => {

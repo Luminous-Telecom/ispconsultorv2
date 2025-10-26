@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
-import { TableConfig } from '../tables/types';
 
 interface LogsModalProps {
   show: boolean;

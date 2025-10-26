@@ -367,7 +367,7 @@ export class ServidorEmailController {
       const servidorData = req.body;
 
       // Buscar servidor existente
-      let servidor = await ServidorEmail.findOne({
+      const servidor = await ServidorEmail.findOne({
         where: { ativo: true }
       });
 

@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { FormConfig, FieldConfig } from './types';
+import { FormConfig } from './types';
 import { FormProvider, useFormContext } from './FormProvider';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';

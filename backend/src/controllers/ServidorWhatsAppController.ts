@@ -266,7 +266,7 @@ export class ServidorWhatsAppController {
       const servidorData = req.body;
 
       // Buscar servidor existente
-      let servidor = await ServidorWhatsApp.findOne({
+      const servidor = await ServidorWhatsApp.findOne({
         where: { ativo: true }
       });
 
