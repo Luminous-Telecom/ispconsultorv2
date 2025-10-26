@@ -721,18 +721,29 @@ export class TituloController {
         logger.info('Título não registrado no banco, registrando agora antes de imprimir...', {
           titulo_id: titulo.id,
           banco_id: titulo.banco_id,
-          cliente_id: titulo.cliente_id
+          cliente_id: titulo.cliente_id,
+          banco_disponivel: !!titulo.banco,
+          banco_nome: titulo.banco?.nome,
+          banco_tipo: titulo.banco?.tipo_banco
         });
 
         try {
           // Registrar no banco e AGUARDAR resposta
           const resultado = await BancoApiService.gerarTitulo(titulo as any);
           
+          logger.info('Resultado do envio ao banco:', {
+            titulo_id: titulo.id,
+            success: resultado.success,
+            message: resultado.message,
+            tem_data: !!resultado.data
+          });
+          
           if (!resultado.success || !resultado.data) {
             // Falha ao registrar - retornar erro
             logger.error('Falha ao registrar título no banco', {
               titulo_id: titulo.id,
-              message: resultado.message
+              message: resultado.message,
+              resultado_completo: JSON.stringify(resultado)
             });
             
             res.status(500).json({
