@@ -537,11 +537,15 @@ export class BancoApiService {
     const fineBp = Math.round(Number(banco.percentual_multa || 0) * 100);
     const interestBp = Math.round(Number(banco.percentual_juros || 0) * 100);
     
+    // Garantir que nome tenha espaço (exigência da API EFI)
+    const nomeCliente = cliente.razao_social || 'Cliente';
+    const nomeFormatado = nomeCliente.includes(' ') ? nomeCliente : `${nomeCliente}  `;
+    
     const customerData: any = {
-      name: cliente.razao_social,
+      name: nomeFormatado,
       phone_number: cliente.telefone.replace(/\D/g, ''),
       juridical_person: {
-        corporate_name: cliente.razao_social,
+        corporate_name: nomeFormatado,
         cnpj: cliente.cnpj.replace(/\D/g, ''),
       },
       address: {

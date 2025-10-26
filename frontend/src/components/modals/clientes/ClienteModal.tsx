@@ -177,27 +177,35 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   // Carregar dados do cliente quando disponíveis
   useEffect(() => {
     if (cliente) {
+      // Função helper para garantir que valores sejam strings e não objetos
+      const ensureString = (value: any): string => {
+        if (!value) return '';
+        if (typeof value === 'string') return value;
+        if (typeof value === 'object') return JSON.stringify(value);
+        return String(value);
+      };
+
       setFormData({
-        cnpj: cliente.cnpj || '',
-        razao_social: cliente.razao_social || '',
-        nome_fantasia: cliente.nome_fantasia || '',
-        email: cliente.email || '',
-        telefone: cliente.telefone || '',
-        whatsapp: cliente.whatsapp || '',
-        cep: cliente.cep || '',
-        endereco: cliente.endereco || '',
-        numero: cliente.numero || '',
-        complemento: cliente.complemento || '',
-        bairro: cliente.bairro || '',
-        cidade: cliente.cidade || '',
-        estado: cliente.estado || '',
+        cnpj: ensureString(cliente.cnpj),
+        razao_social: ensureString(cliente.razao_social),
+        nome_fantasia: ensureString(cliente.nome_fantasia),
+        email: ensureString(cliente.email),
+        telefone: ensureString(cliente.telefone),
+        whatsapp: ensureString(cliente.whatsapp),
+        cep: ensureString(cliente.cep),
+        endereco: ensureString(cliente.endereco),
+        numero: ensureString(cliente.numero),
+        complemento: ensureString(cliente.complemento),
+        bairro: ensureString(cliente.bairro),
+        cidade: ensureString(cliente.cidade),
+        estado: ensureString(cliente.estado),
         ativo: cliente.ativo ?? true,
         tipo_cobranca: cliente.tipo_cobranca || 'titulo',
         valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
         recebe_email: cliente.recebe_email ?? true,
         recebe_sms: cliente.recebe_sms ?? false,
         recebe_whatsapp: cliente.recebe_whatsapp ?? true,
-        observacoes: cliente.observacoes || ''
+        observacoes: ensureString(cliente.observacoes)
       });
     }
   }, [cliente]);
