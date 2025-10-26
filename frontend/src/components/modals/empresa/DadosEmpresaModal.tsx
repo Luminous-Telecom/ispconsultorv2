@@ -241,7 +241,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 required={true}
                 size="md"
                 value={dados.razao_social}
-                onChange={(e) => handleInputChange('razao_social', e.value)}
+                onChange={(value) => handleInputChange('razao_social', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -253,7 +253,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="Nome fantasia da empresa"
                 size="md"
                 value={dados.nome_fantasia}
-                onChange={(e) => handleInputChange('nome_fantasia', e.value)}
+                onChange={(value) => handleInputChange('nome_fantasia', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -269,7 +269,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 required={true}
                 size="md"
                 value={dados.cnpj}
-                onChange={(e) => handleInputChange('cnpj', e.value)}
+                onChange={(value) => handleInputChange('cnpj', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -281,7 +281,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="Inscrição estadual"
                 size="md"
                 value={dados.inscricao_estadual}
-                onChange={(e) => handleInputChange('inscricao_estadual', e.value)}
+                onChange={(value) => handleInputChange('inscricao_estadual', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -293,7 +293,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="Inscrição municipal"
                 size="md"
                 value={dados.inscricao_municipal}
-                onChange={(e) => handleInputChange('inscricao_municipal', e.value)}
+                onChange={(value) => handleInputChange('inscricao_municipal', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -366,7 +366,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="(11) 3333-4444"
                 size="md"
                 value={dados.telefone}
-                onChange={(e) => handleInputChange('telefone', e.value)}
+                onChange={(value) => handleInputChange('telefone', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -378,7 +378,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="(11) 99999-9999"
                 size="md"
                 value={dados.celular}
-                onChange={(e) => handleInputChange('celular', e.value)}
+                onChange={(value) => handleInputChange('celular', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -390,7 +390,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="email@empresa.com"
                 size="md"
                 value={dados.email}
-                onChange={(e) => handleInputChange('email', e.value)}
+                onChange={(value) => handleInputChange('email', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -405,7 +405,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="https://www.empresa.com"
                 size="md"
                 value={dados.site}
-                onChange={(e) => handleInputChange('site', e.value)}
+                onChange={(value) => handleInputChange('site', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -425,7 +425,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="Nome do responsável"
                 size="md"
                 value={dados.responsavel_nome}
-                onChange={(e) => handleInputChange('responsavel_nome', e.value)}
+                onChange={(value) => handleInputChange('responsavel_nome', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -437,7 +437,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="000.000.000-00"
                 size="md"
                 value={dados.responsavel_cpf}
-                onChange={(e) => handleInputChange('responsavel_cpf', e.value)}
+                onChange={(value) => handleInputChange('responsavel_cpf', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
@@ -449,7 +449,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 placeholder="Cargo do responsável"
                 size="md"
                 value={dados.responsavel_cargo}
-                onChange={(e) => handleInputChange('responsavel_cargo', e.value)}
+                onChange={(value) => handleInputChange('responsavel_cargo', value)}
                 disabled={updateDadosMutation.isPending}
               />
             </div>
