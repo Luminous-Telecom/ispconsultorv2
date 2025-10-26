@@ -905,19 +905,18 @@ body {
 .bar-horizontal {
   height: 100%;
   min-width: 25px;
-  display: flex;
-  align-items: center;
-  padding: 0 0.5rem;
   transition: width 0.3s ease;
   position: relative;
 }
 
-.bar-value-horizontal {
-  font-size: 0.7rem;
+.bar-value-end {
+  font-size: 0.75rem;
   font-weight: 700;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  color: var(--text-primary);
+  min-width: 50px;
+  text-align: left;
   white-space: nowrap;
+  padding-left: 0.5rem;
 }
 
 /* Gráfico de Valor Único */

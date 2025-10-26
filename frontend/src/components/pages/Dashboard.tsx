@@ -352,9 +352,10 @@ const Dashboard: React.FC = () => {
                   <div className="bar-horizontal" style={{
                     width: `${width}%`,
                     backgroundColor: item.color
-                  }}>
-                    <span className="bar-value-horizontal">{item.value > 0 ? formatValue(item.value) : ''}</span>
-                  </div>
+                  }}></div>
+                </div>
+                <div className="bar-value-end">
+                  {item.value > 0 ? formatValue(item.value) : '0'}
                 </div>
               </div>
             );
