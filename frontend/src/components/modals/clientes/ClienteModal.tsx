@@ -1244,11 +1244,16 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       observacoes: formData.observacoes
     };
 
-    // Remover apenas campos undefined (permitir null, string vazia e 0)
+    // Converter strings vazias para null e remover undefined
     Object.keys(dataToSend).forEach(key => {
       const value = dataToSend[key];
       if (value === undefined) {
         delete dataToSend[key];
+      } else if (typeof value === 'string' && value.trim() === '') {
+        // Converter strings vazias para null para campos opcionais
+        if (key !== 'cnpj' && key !== 'razao_social' && key !== 'email') {
+          dataToSend[key] = null;
+        }
       }
     });
 
