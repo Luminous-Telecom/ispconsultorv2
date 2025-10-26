@@ -654,7 +654,8 @@ export class BancoApiService {
         }
       },
       metadata: {
-        custom_id: `titulo_${titulo.id}`
+        custom_id: `titulo_${titulo.id}`,
+        notification_url: baseUrl
       }
     };
   }
