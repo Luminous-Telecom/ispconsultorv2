@@ -7,7 +7,9 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc && cp -r src/templates dist/",
     "start": "node dist/index.js",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
   },
   "dependencies": {
     "@types/qrcode": "^1.5.5",
@@ -48,6 +50,9 @@
     "@types/node": "^20.10.4",
     "@types/nodemailer": "^7.0.2",
     "@types/pdfkit": "^0.17.3",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.38.0",
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
     "ts-jest": "^29.1.1",
