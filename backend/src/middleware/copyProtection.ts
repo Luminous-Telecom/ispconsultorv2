@@ -113,7 +113,7 @@ export const apiProtectionMiddleware = (req: Request, res: Response, next: NextF
 export const imageProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
   if (req.path.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i)) {
     const referer = req.get('Referer');
-    const origin = req.get('Origin');
+    const _origin = req.get('Origin');
     
     // Permitir apenas requisições do mesmo domínio
     if (referer && !referer.includes(req.get('Host') || '')) {

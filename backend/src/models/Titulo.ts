@@ -297,7 +297,7 @@ export class Titulo extends Model<
   }
 
   async gerarNossoNumero(): Promise<string> {
-    const banco = await this.getBanco();
+    const _banco = await this.getBanco();
     
     // Formato: AAAAMMDD + ID do título (8 dígitos)
     const data = new Date();
