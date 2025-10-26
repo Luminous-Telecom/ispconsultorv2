@@ -236,7 +236,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
             className="btn btn-primary btn-sm"
             disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
           >
-            Salvar Plano
+            Salvar
           </button>
         </div>
       }
