@@ -464,12 +464,6 @@ const Dashboard: React.FC = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {/* Área sob a linha (opcional) */}
-            <path
-              d={`${pathData} L ${(data.length - 1 || 1) / (data.length - 1 || 1) * chartWidth} ${chartHeight * 0.9} L 0 ${chartHeight * 0.9} Z`}
-              fill={`url(#${gradientId})`}
-              fillOpacity="0.1"
-            />
             {/* Pontos e labels */}
             {data.map((item, index) => {
               const x = (index / (data.length - 1 || 1)) * chartWidth;
