@@ -310,12 +310,20 @@ export class TituloController {
         contrato_id,
         data_vencimento, 
         observacoes,
-        desconto_percentual,
-        desconto_valor,
-        acrescimo_percentual,
-        acrescimo_valor,
+        desconto_percentual: descontoPercentualRaw,
+        desconto_valor: descontoValorRaw,
+        acrescimo_percentual: acrescimoPercentualRaw,
+        acrescimo_valor: acrescimoValorRaw,
         descricao
       } = req.body;
+
+      // Converter strings para números
+      const desconto_percentual = descontoPercentualRaw ? parseFloat(descontoPercentualRaw.toString()) : null;
+      const desconto_valor = descontoValorRaw ? parseFloat(descontoValorRaw.toString()) : null;
+      const acrescimo_percentual = acrescimoPercentualRaw ? parseFloat(acrescimoPercentualRaw.toString()) : null;
+      const acrescimo_valor = acrescimoValorRaw ? parseFloat(acrescimoValorRaw.toString()) : null;
+
+      console.log('Dados convertidos:', { desconto_percentual, desconto_valor, acrescimo_percentual, acrescimo_valor });
 
       // Validar dados obrigatórios
       if (!cliente_id) {
@@ -445,28 +453,37 @@ export class TituloController {
       // Calcular valor final com desconto/acréscimo
       let valorFinal = parseFloat(plano.valor_mensal.toString());
       
+      console.log('Valor do plano:', valorFinal);
+      
       // Aplicar desconto percentual
       if (desconto_percentual && desconto_percentual > 0) {
         valorFinal = valorFinal * (1 - (desconto_percentual / 100));
+        console.log('Após desconto %:', valorFinal);
       }
       
       // Aplicar desconto em valor
       if (desconto_valor && desconto_valor > 0) {
         valorFinal = valorFinal - parseFloat(desconto_valor.toString());
+        console.log('Após desconto R$:', valorFinal);
       }
       
       // Aplicar acréscimo percentual
       if (acrescimo_percentual && acrescimo_percentual > 0) {
         valorFinal = valorFinal * (1 + (acrescimo_percentual / 100));
+        console.log('Após acréscimo %:', valorFinal);
       }
       
       // Aplicar acréscimo em valor
       if (acrescimo_valor && acrescimo_valor > 0) {
         valorFinal = valorFinal + parseFloat(acrescimo_valor.toString());
+        console.log('Após acréscimo R$:', valorFinal);
       }
+      
+      console.log('Valor final calculado:', valorFinal);
       
       // Validar se o valor final é válido
       if (isNaN(valorFinal) || valorFinal <= 0) {
+        console.log('Valor final inválido!');
         res.status(400).json({
           success: false,
           message: 'Descontos aplicados resultaram em valor inválido. O valor do título deve ser no mínimo R$ 0,01.'
@@ -476,6 +493,7 @@ export class TituloController {
       
       // Garantir que o valor final seja pelo menos R$ 0,01 (valor mínimo permitido)
       valorFinal = Math.max(0.01, valorFinal);
+      console.log('Valor final após garantia mínima:', valorFinal);
 
       // Criar título
       const titulo = await Titulo.create({
