@@ -801,7 +801,7 @@ export class TituloController {
             as: 'banco', 
             attributes: [
               'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
-              'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
+              'url_retorno', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
               'instrucao_linha_4', 'instrucao_linha_5', 'logo'
             ] 
           }
@@ -1091,7 +1091,7 @@ export class TituloController {
             as: 'banco', 
             attributes: [
               'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
-              'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
+              'url_retorno', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
               'instrucao_linha_4', 'instrucao_linha_5', 'logo'
             ] 
           }
@@ -1249,7 +1249,7 @@ export class TituloController {
             as: 'banco', 
             attributes: [
               'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
-              'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
+              'url_retorno', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
               'instrucao_linha_4', 'instrucao_linha_5', 'logo'
             ] 
           }
