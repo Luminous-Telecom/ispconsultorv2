@@ -268,10 +268,12 @@ export class SchedulerService {
             continue;
           }
 
-          // Buscar títulos existentes para este contrato
+          // Buscar títulos existentes para este contrato (apenas em aberto - não pagos/não cancelados)
           const titulosExistentes = await Titulo.findAll({
             where: {
-              contrato_id: contrato.id
+              contrato_id: contrato.id,
+              status: ['pendente', 'vencido'], // Apenas títulos em aberto
+              pago: false
             }
           });
 
