@@ -191,7 +191,18 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     }
   };
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const handleCreate = () => {
+    setShowCreateModal(true);
+  };
+
   const bulkActions = [
+    {
+      label: 'Novo',
+      variant: 'primary' as const,
+      action: handleCreate
+    },
     {
       label: 'Executar',
       variant: 'primary' as const,
