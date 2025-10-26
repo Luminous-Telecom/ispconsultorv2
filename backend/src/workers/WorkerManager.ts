@@ -161,9 +161,9 @@ export class WorkerManager extends EventEmitter {
 
     try {
       await executionPromise;
-      this.emit('routineCompleted', { routine: _routine });
+      this.emit('routineCompleted', { routine });
     } catch (error) {
-      this.emit('routineFailed', { routine: _routine, error });
+      this.emit('routineFailed', { routine, error });
     } finally {
       this.activeExecutions.delete(routine.id);
     }
