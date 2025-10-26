@@ -63,7 +63,7 @@ export class DiasVencimentoController {
         data: configuracao,
         message: 'Configuração de dias de vencimento atualizada com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao atualizar configuração de dias de vencimento:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -106,7 +106,7 @@ export class DiasVencimentoController {
         data: configuracao,
         message: 'Configuração de dias de vencimento criada com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao criar configuração de dias de vencimento:', error);
       
       if (error.name === 'SequelizeValidationError') {

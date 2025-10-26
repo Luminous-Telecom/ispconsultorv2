@@ -1,5 +1,12 @@
 // Tipos base para o sistema ERP Assessoria
 
+// Helper type para lidar com erros
+export interface ApiError extends Error {
+  status?: number;
+  code?: string;
+  details?: unknown;
+}
+
 export interface BaseEntity {
   id: number;
   created_at: Date;

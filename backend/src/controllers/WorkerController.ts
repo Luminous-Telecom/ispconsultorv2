@@ -14,7 +14,7 @@ export class WorkerController {
         success: true,
         data: status
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter status dos workers:', error);
       res.status(500).json({
         success: false,
@@ -36,7 +36,7 @@ export class WorkerController {
         success: true,
         data: health
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter status de saúde:', error);
       res.status(500).json({
         success: false,
@@ -69,7 +69,7 @@ export class WorkerController {
         success: true,
         data: stats
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter estatísticas:', error);
       res.status(500).json({
         success: false,
@@ -102,7 +102,7 @@ export class WorkerController {
         success: true,
         message: 'Rotina executada com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao executar rotina:', error);
       res.status(500).json({
         success: false,
@@ -146,7 +146,7 @@ export class WorkerController {
         success: true,
         data: logs
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter logs de execução:', error);
       res.status(500).json({
         success: false,
@@ -179,7 +179,7 @@ export class WorkerController {
         success: true,
         data: logs
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter logs recentes:', error);
       res.status(500).json({
         success: false,

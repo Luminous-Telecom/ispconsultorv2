@@ -27,7 +27,7 @@ export class ParametroController {
         success: true,
         data: parametros
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao listar parâmetros:', error);
       res.status(500).json({
         success: false,
@@ -58,7 +58,7 @@ export class ParametroController {
         success: true,
         data: parametro
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter parâmetro:', error);
       res.status(500).json({
         success: false,
@@ -114,7 +114,7 @@ export class ParametroController {
         message: 'Parâmetro atualizado com sucesso',
         data: parametro
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar parâmetro:', error);
       res.status(500).json({
         success: false,
@@ -189,7 +189,7 @@ export class ParametroController {
         message: 'Parâmetros atualizados',
         data: results
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar múltiplos parâmetros:', error);
       res.status(500).json({
         success: false,
@@ -216,7 +216,7 @@ export class ParametroController {
         success: true,
         data: parametros
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter parâmetros por categoria:', error);
       res.status(500).json({
         success: false,
@@ -269,7 +269,7 @@ export class ParametroController {
         message: 'Parâmetros resetados para valores padrão',
         data: results
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao resetar parâmetros:', error);
       res.status(500).json({
         success: false,

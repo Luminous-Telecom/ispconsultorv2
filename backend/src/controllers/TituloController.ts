@@ -242,7 +242,7 @@ export class TituloController {
           totalPages: Math.ceil(count / Number(limit))
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao listar títulos', { error: error.message });
       res.status(500).json({
         success: false,
@@ -288,7 +288,7 @@ export class TituloController {
         success: true,
         data: titulo
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao buscar título', { error: error.message });
       res.status(500).json({
         success: false,
@@ -489,7 +489,7 @@ export class TituloController {
         message: 'Título criado com sucesso',
         data: titulo
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao criar título', { error: error.message });
       res.status(500).json({
         success: false,
@@ -554,7 +554,7 @@ export class TituloController {
               titulo_id: titulo.id, 
               charge_id: titulo.charge_id 
             });
-          } catch (error: any) {
+          } catch (error: unknown) {
             logger.warn('Erro ao cancelar título na EFI', { 
               titulo_id: titulo.id, 
               error: error.message 
@@ -595,7 +595,7 @@ export class TituloController {
         message: 'Título atualizado com sucesso',
         data: titulo
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao atualizar título', { error: error.message });
       res.status(500).json({
         success: false,
@@ -629,7 +629,7 @@ export class TituloController {
             titulo_id: titulo.id, 
             charge_id: titulo.charge_id 
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.warn('Erro ao cancelar título na EFI', { 
             titulo_id: titulo.id, 
             error: error.message 
@@ -644,7 +644,7 @@ export class TituloController {
         success: true,
         message: 'Título deletado com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao deletar título', { error: error.message });
       res.status(500).json({
         success: false,
@@ -738,7 +738,7 @@ export class TituloController {
           // Recarregar título com dados atualizados
           await titulo.reload();
           
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Erro ao registrar título no banco', { 
             titulo_id: titulo.id, 
             error: error.message,
@@ -784,7 +784,7 @@ export class TituloController {
       try {
         topoTemplate = fs.readFileSync(topoTemplatePath, 'utf8');
         corpoTemplate = fs.readFileSync(corpoTemplatePath, 'utf8');
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error('Erro ao carregar templates do boleto', { error: error.message });
         res.status(500).json({
           success: false,
@@ -888,7 +888,7 @@ export class TituloController {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       // Não definir X-Frame-Options para permitir iframe em desenvolvimento
       res.send(template);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao imprimir boleto', { error: error.message });
       res.status(500).json({
         success: false,
@@ -994,7 +994,7 @@ export class TituloController {
               });
               // Continua processando os outros mesmo se um falhar
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             logger.error('Erro ao registrar título', { 
               error: error.message, 
               titulo_id: titulo.id 
@@ -1040,7 +1040,7 @@ export class TituloController {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       // Não definir X-Frame-Options para permitir iframe em desenvolvimento
       res.send(template);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao imprimir boletos múltiplos', { error: error.message });
       res.status(500).json({
         success: false,
@@ -1122,7 +1122,7 @@ export class TituloController {
                 status: 'pendente'
               });
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             logger.error('Erro ao registrar título no banco', { 
               titulo_id: titulo.id,
               error: error.message 
@@ -1202,7 +1202,7 @@ export class TituloController {
       res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulos.length}-titulos.pdf"`);
       res.setHeader('Content-Length', pdfBuffer.length);
       res.send(pdfBuffer);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao gerar PDF de múltiplos boletos', { error: error.message });
       res.status(500).json({
         success: false,
@@ -1251,7 +1251,7 @@ export class TituloController {
         message: 'Título marcado como pago',
         data: titulo
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao marcar título como pago', { error: error.message });
       res.status(500).json({
         success: false,
@@ -1281,7 +1281,7 @@ export class TituloController {
         message: 'Título desmarcado como pago',
         data: titulo
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao desmarcar título como pago', { error: error.message });
       res.status(500).json({
         success: false,
@@ -1364,7 +1364,7 @@ export class TituloController {
           message: resultado.message || 'Erro ao consultar status no banco'
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao consultar recebimento', { error: error.message });
       res.status(500).json({
         success: false,
@@ -1403,7 +1403,7 @@ export class TituloController {
         message: 'Título estornado com sucesso',
         data: titulo
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao estornar título', { error: error.message });
       res.status(500).json({
         success: false,
@@ -1458,7 +1458,7 @@ export class TituloController {
         success: true,
         data: titulos
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao buscar títulos por contrato', { error: error.message });
       res.status(500).json({
         success: false,
@@ -1525,7 +1525,7 @@ export class TituloController {
           }
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao buscar estatísticas dos títulos', { error: error.message });
       res.status(500).json({
         success: false,

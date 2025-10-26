@@ -195,7 +195,7 @@ export class ContratoController {
         message: 'Contrato criado com sucesso',
         data: contrato
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao criar contrato:', error);
       
       // Tratar erro de constraint de unicidade

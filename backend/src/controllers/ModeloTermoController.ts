@@ -767,7 +767,7 @@ export class ModeloTermoController {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="termo-contrato-${contratoId}.pdf"`);
       res.send(pdfBuffer);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao gerar PDF do termo:', error);
       res.status(500).json({
         success: false,

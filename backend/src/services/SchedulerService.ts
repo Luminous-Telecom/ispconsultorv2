@@ -179,7 +179,7 @@ export class SchedulerService {
       }
       await routine.update({ ultima_execucao: endTime });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Erro ao executar rotina ${routine.nome}:`, error);
 
       const endTime = new Date();

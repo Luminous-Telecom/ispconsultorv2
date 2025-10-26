@@ -118,7 +118,7 @@ export class BancoApiService {
         success: true,
         message: 'Autenticação realizada com sucesso'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Exceção ao testar autenticação', {
         banco: banco.tipo_banco,
         error: error.message
@@ -177,7 +177,7 @@ export class BancoApiService {
           tentativa
         });
         return null;
-      } catch (error: any) {
+      } catch (error: unknown) {
         const isTimeout = error.code === 'ECONNABORTED' || 
                          error.response?.status === 504 || 
                          error.response?.status === 502 || 
@@ -313,7 +313,7 @@ export class BancoApiService {
             timeout: 30000
           });
           break; // Sucesso, sair do loop
-        } catch (error: any) {
+        } catch (error: unknown) {
           const isTimeout = error.code === 'ECONNABORTED' || 
                            error.response?.status === 504 || 
                            error.response?.status === 502 || 
@@ -433,7 +433,7 @@ export class BancoApiService {
         success: false,
         message: 'Erro ao gerar título'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorDetails = {
         titulo_id: titulo.id,
         error: error.message,
@@ -630,7 +630,7 @@ export class BancoApiService {
             timeout: 30000
           });
           break; // Sucesso, sair do loop
-        } catch (error: any) {
+        } catch (error: unknown) {
           const isTimeout = error.code === 'ECONNABORTED' || 
                            error.response?.status === 504 || 
                            error.response?.status === 502 || 
@@ -668,7 +668,7 @@ export class BancoApiService {
         success: false,
         message: 'Erro ao consultar status'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao consultar status', { 
         titulo_id: titulo.id,
         error: error.message 
@@ -730,7 +730,7 @@ export class BancoApiService {
           if (response.status >= 200 && response.status < 300) {
             break; // Sucesso, sair do loop
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Se não é a última tentativa e é erro temporário (502, 503, 504), tentar novamente
           if (tentativa < maxTentativas && 
               error.response?.status && 
@@ -761,7 +761,7 @@ export class BancoApiService {
         success: false,
         message: 'Erro ao consultar notificação'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Se é erro de token inválido/expirado, logar como warning em vez de error
         if (error.response?.data?.code === 3500010 || error.response?.status === 500) {
           logger.warn('Token de notificação inválido ou expirado', {
@@ -855,7 +855,7 @@ export class BancoApiService {
             timeout: 30000
           });
           break; // Sucesso, sair do loop
-        } catch (error: any) {
+        } catch (error: unknown) {
           const isTimeout = error.code === 'ECONNABORTED' || 
                            error.response?.status === 504 || 
                            error.response?.status === 502 || 
@@ -894,7 +894,7 @@ export class BancoApiService {
         success: false,
         message: 'Erro ao cancelar título: ' + response.status
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao cancelar título individual', {
         titulo_id: titulo.id,
         charge_id: titulo.charge_id,
@@ -984,7 +984,7 @@ export class BancoApiService {
         };
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao liquidar título', {
         titulo_id: titulo.id,
         error: error.message
@@ -1021,7 +1021,7 @@ export class BancoApiService {
           timestamp: new Date().toISOString()
         }
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao enviar remessa', { 
         banco_id: banco.id,
         banco_nome: banco.nome,

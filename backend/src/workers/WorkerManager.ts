@@ -185,7 +185,7 @@ export class WorkerManager extends EventEmitter {
         
         return;
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         lastError = error;
         console.error(`❌ Tentativa ${attempt} falhou para rotina ${routine.id}:`, error.message);
 

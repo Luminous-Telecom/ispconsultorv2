@@ -45,7 +45,7 @@ export class SchedulerController {
           pages: totalPages
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao listar rotinas:', error);
       res.status(500).json({
         success: false,
@@ -73,7 +73,7 @@ export class SchedulerController {
         success: true,
         data: routine
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter rotina:', error);
       res.status(500).json({
         success: false,
@@ -104,7 +104,7 @@ export class SchedulerController {
         message: 'Rotina criada com sucesso',
         data: routine
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao criar rotina:', error);
       res.status(500).json({
         success: false,
@@ -129,7 +129,7 @@ export class SchedulerController {
         message: 'Rotina atualizada com sucesso',
         data: routine
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar rotina:', error);
       res.status(500).json({
         success: false,
@@ -150,7 +150,7 @@ export class SchedulerController {
         success: true,
         message: 'Rotina deletada com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao deletar rotina:', error);
       res.status(500).json({
         success: false,
@@ -181,7 +181,7 @@ export class SchedulerController {
         message: `Rotina ${ativo ? 'ativada' : 'desativada'} com sucesso`,
         data: routine
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao alterar status da rotina:', error);
       res.status(500).json({
         success: false,
@@ -203,7 +203,7 @@ export class SchedulerController {
         message: 'Rotina executada com sucesso',
         data: resultado
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao executar rotina:', error);
       res.status(500).json({
         success: false,
@@ -223,7 +223,7 @@ export class SchedulerController {
         success: true,
         data: status
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter status do scheduler:', error);
       res.status(500).json({
         success: false,
@@ -253,7 +253,7 @@ export class SchedulerController {
         success: true,
         data: logs
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter logs de execução:', error);
       res.status(500).json({
         success: false,
@@ -272,7 +272,7 @@ export class SchedulerController {
         success: true,
         data: logs
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao obter logs de execução:', error);
       res.status(500).json({
         success: false,

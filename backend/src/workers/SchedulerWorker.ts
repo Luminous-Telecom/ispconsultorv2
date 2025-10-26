@@ -292,7 +292,7 @@ if (!isMainThread && workerData) {
         }
       } as WorkerMessage);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
       
       // Atualizar contadores da rotina em caso de erro

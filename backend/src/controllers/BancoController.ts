@@ -22,12 +22,13 @@ export class BancoController {
         success: true,
         data: bancos
       });
-    } catch (error: any) {
-      logger.error('Erro ao buscar bancos ativos', { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao buscar bancos ativos', { error: errorMessage });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error.message
+        message: errorMessage
       });
     }
   }
@@ -83,7 +84,7 @@ export class BancoController {
           to: Math.min(offset + Number(limit), count)
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao listar bancos', {
         error: error.message
       });
@@ -113,7 +114,7 @@ export class BancoController {
         success: true,
         data: banco
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao buscar banco', {
         banco_id: req.params.id,
         error: error.message
@@ -163,7 +164,7 @@ export class BancoController {
         message: 'Banco cadastrado com sucesso!',
         data: banco
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao criar banco', {
         error: error.message
       });
@@ -214,7 +215,7 @@ export class BancoController {
         message: 'Banco atualizado com sucesso!',
         data: banco
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao atualizar banco', {
         banco_id: req.params.id,
         error: error.message
@@ -260,7 +261,7 @@ export class BancoController {
         success: true,
         message: 'Banco excluído com sucesso!'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao deletar banco', {
         banco_id: req.params.id,
         error: error.message
@@ -302,7 +303,7 @@ export class BancoController {
           message: 'Falha na conexão: ' + resultado.message
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao testar conexão', {
         banco_id: req.params.id,
         error: error.message
@@ -334,7 +335,7 @@ export class BancoController {
         success: false,
         message: 'Busca automática de dados não disponível para este banco. Configure manualmente.'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao buscar dados da API', {
         banco_id: req.params.id,
         error: error.message
@@ -380,7 +381,7 @@ export class BancoController {
           message: 'Configurações do banco não encontradas'
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao buscar URL padrão', {
         tipo_banco: req.params.tipoBanco,
         error: error.message

@@ -87,7 +87,7 @@ export class ServidorWhatsAppController {
         data: servidor,
         message: 'Servidor de WhatsApp criado com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao criar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -131,7 +131,7 @@ export class ServidorWhatsAppController {
         data: servidor,
         message: 'Servidor de WhatsApp atualizado com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao atualizar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -339,7 +339,7 @@ export class ServidorWhatsAppController {
           message: 'Servidor de WhatsApp criado com sucesso'
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao criar/atualizar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -393,7 +393,7 @@ export class ServidorWhatsAppController {
         message: 'Iniciando conexão com a instância...'
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao conectar instância:', error);
       
       res.status(500).json({
@@ -469,7 +469,7 @@ export class ServidorWhatsAppController {
         data: result
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao enviar mensagem de teste:', error);
       
       let errorMessage = 'Erro ao enviar mensagem de teste';

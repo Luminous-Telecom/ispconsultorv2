@@ -95,7 +95,7 @@ export class ModeloContratoController {
         data: documento,
         message: 'Documento criado com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao criar documento:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -139,7 +139,7 @@ export class ModeloContratoController {
         data: documento,
         message: 'Documento atualizado com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao atualizar documento:', error);
       
       if (error.name === 'SequelizeValidationError') {

@@ -55,7 +55,7 @@ export class VerificarVencimentosRoutine {
             plano: titulo.getPlano ? (await titulo.getPlano())?.nome_plano : 'N/A'
           });
 
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Erro ao marcar título como vencido', {
             titulo_id: titulo.id,
             error: error.message
@@ -107,7 +107,7 @@ export class VerificarVencimentosRoutine {
         data: resultado
       };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro na rotina de verificação de vencimentos', {
         error: error.message,
         stack: error.stack

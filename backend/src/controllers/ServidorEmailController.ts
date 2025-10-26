@@ -97,7 +97,7 @@ export class ServidorEmailController {
         data: servidor,
         message: 'Servidor de email criado com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao criar servidor de email:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -149,7 +149,7 @@ export class ServidorEmailController {
         data: servidor,
         message: 'Servidor de email atualizado com sucesso'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao atualizar servidor de email:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -315,7 +315,7 @@ export class ServidorEmailController {
         message: `E-mail de teste enviado com sucesso para ${email_teste}`
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao enviar e-mail de teste:', error);
       
       res.status(500).json({
@@ -428,7 +428,7 @@ export class ServidorEmailController {
           message: 'Servidor de email criado com sucesso'
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao criar/atualizar servidor de email:', error);
       
       if (error.name === 'SequelizeValidationError') {
