@@ -25,7 +25,6 @@ import Dropdown from '../../ui/Dropdown';
 import ConfirmModal from '../../ui/ConfirmModal';
 // Utilitários centralizados
 import { formatCurrency, formatDate, formatCNPJ, formatPhone, formatCEP } from '../../../utils/formatters';
-import { validateClienteForm } from '../../../utils/validators';
 import { ensureString } from '../../../utils/stringUtils';
 import { ContratoItem, TituloItem, ClienteFormData, ClienteFormErrors, BulkActionItem } from '../../../types/cliente';
 
@@ -46,12 +45,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   
   const formPrefix = useFormPrefix('ClienteEditModal');
   const { success, error } = useNotificationContext();
+  const queryClient = useQueryClient();
+  
   const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
     if (type === 'success') success(message);
     else if (type === 'error') error(message);
-    else success(message); // Para info, usar success
+    else success(message);
   };
-  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState<ClienteFormData>({
     cnpj: '',
