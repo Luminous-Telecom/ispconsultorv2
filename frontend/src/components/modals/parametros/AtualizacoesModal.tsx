@@ -98,6 +98,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {atualizacoes.map((atualizacao: Atualizacao, index: number) => {
                 const badge = getTipoBadge(atualizacao.tipo);
+                const isLatestVersion = index === atualizacoes.length - 1;
                 return (
                   <div key={atualizacao.versao} className="border" style={{ 
                     borderRadius: '0.5rem',
@@ -117,7 +118,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                       </div>
                       <div className="flex-grow-1" style={{ fontSize: '0.875rem' }}>
                         <div className="d-flex justify-content-between align-items-start mb-1">
-                          <div>
+                          <div className="flex-grow-1">
                             <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.95rem' }}>
                               v{atualizacao.versao}
                             </h6>
@@ -130,9 +131,25 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                               })}
                             </small>
                           </div>
-                          <span className={`badge ${badge.bgClass} ${badge.class} border-0`} style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}>
-                            {badge.label}
-                          </span>
+                          <div className="d-flex align-items-center gap-2">
+                            <span className={`badge ${badge.bgClass} ${badge.class} border-0`} style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}>
+                              {badge.label}
+                            </span>
+                            {!isLatestVersion && (
+                              <button 
+                                className="btn btn-sm btn-primary"
+                                onClick={() => {
+                                  if (window.confirm(`Deseja atualizar para a versão ${atualizacao.versao}?\n\nATENÇÃO: Isso irá fazer backup automático antes da atualização.`)) {
+                                    addNotification('info', 'Download e instalação em desenvolvimento');
+                                  }
+                                }}
+                                style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                              >
+                                <i className="bi bi-download me-1"></i>
+                                Atualizar
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="mb-0 text-secondary mt-1" style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
                           {atualizacao.descricao}
