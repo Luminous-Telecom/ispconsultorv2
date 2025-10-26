@@ -150,7 +150,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           ref={ref}
           type={type}
           className={getInputClasses()}
-          {...(value !== undefined ? { value } : { defaultValue: defaultValue || '' })}
+          value={value !== undefined ? value : ''}
           placeholder={placeholder}
           name={name}
           onChange={handleChange}
@@ -190,7 +190,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         ref={ref}
         type={type}
         className={getInputClasses()}
-        {...(value !== undefined ? { value } : { defaultValue: defaultValue || '' })}
+        value={value !== undefined ? value : ''}
         placeholder={placeholder}
         name={name}
         onChange={handleChange}
