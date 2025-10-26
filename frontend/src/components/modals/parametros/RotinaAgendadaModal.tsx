@@ -130,8 +130,9 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
       title={isEditMode ? 'Editar Rotina' : 'Nova Rotina'}
       size="lg"
     >
-      <form onSubmit={handleSubmit}>
-        <div className="row g-3">
+      <div style={{ padding: '1rem' }}>
+        <form onSubmit={handleSubmit}>
+          <div className="row g-3">
           <div className="col-12">
             <FormField
               name="nome"
@@ -231,7 +232,8 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
             </div>
           </div>
         </div>
-      </form>
+        </form>
+      </div>
     </DraggableModal>
   );
 };
