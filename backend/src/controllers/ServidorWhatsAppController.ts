@@ -474,23 +474,25 @@ export class ServidorWhatsAppController {
       });
 
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorMessageInitial = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao enviar mensagem de teste:', error);
       
       let errorMessage = 'Erro ao enviar mensagem de teste';
       let statusCode = 500;
       
-      if (error.name === 'AbortError' || error.cause?.name === 'ConnectTimeoutError') {
-        errorMessage = 'Timeout de conexão (30s): A Evolution API não está respondendo. Verifique se a URL está correta e se o servidor está online.';
-        statusCode = 504; // Gateway Timeout
-      } else if (errorMessage.includes('fetch failed')) {
-        errorMessage = 'Erro de conexão: Não foi possível conectar à Evolution API. Verifique a URL e se o servidor está acessível.';
-        statusCode = 503; // Service Unavailable
-      } else if (errorMessage.includes('ENOTFOUND')) {
-        errorMessage = 'Domínio não encontrado: Verifique se a URL da Evolution API está correta.';
-        statusCode = 404;
-      } else {
-        errorMessage = `Erro ao enviar mensagem: ${errorMessage}`;
+      if (error instanceof Error) {
+        if (error.name === 'AbortError' || (error as any).cause === 'ConnectTimeoutError') {
+          errorMessage = 'Timeout de conexão (30s): A Evolution API não está respondendo. Verifique se a URL está correta e se o servidor está online.';
+          statusCode = 504; // Gateway Timeout
+        } else if (errorMessageInitial.includes('fetch failed')) {
+          errorMessage = 'Erro de conexão: Não foi possível conectar à Evolution API. Verifique a URL e se o servidor está acessível.';
+          statusCode = 503; // Service Unavailable
+        } else if (errorMessageInitial.includes('ENOTFOUND')) {
+          errorMessage = 'Domínio não encontrado: Verifique se a URL da Evolution API está correta.';
+          statusCode = 404;
+        } else {
+          errorMessage = `Erro ao enviar mensagem: ${errorMessageInitial}`;
+        }
       }
       
       res.status(statusCode).json({
