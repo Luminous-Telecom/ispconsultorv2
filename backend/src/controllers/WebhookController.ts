@@ -333,7 +333,7 @@ export class WebhookController {
   /**
    * Processar notificação individual
    */
-  private static async processarNotificacaoIndividual(notificacao: any, banco: Banco): Promise<number> {
+  private static async processarNotificacaoIndividual(notificacao: any, _banco: Banco): Promise<number> {
     try {
       const type = notificacao.type || '';
       const identifiers = notificacao.identifiers || {};
@@ -466,7 +466,7 @@ export class WebhookController {
             if (/^\d{4}-\d{2}-\d{2}$/.test(dataWebhook)) {
               dataPagamento = dataWebhook;
             }
-          } catch (error) {
+          } catch {
             // Manter data atual se houver erro na conversão
           }
         }

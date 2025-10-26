@@ -907,7 +907,7 @@ export class TituloController {
       if (typeof ids === 'string') {
         try {
           ids = JSON.parse(ids);
-        } catch (e) {
+        } catch {
           // Se não for JSON válido, tentar split por vírgula
           ids = ids.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id));
         }
@@ -1065,7 +1065,7 @@ export class TituloController {
           // Garantir que seja sempre um array
           ids = Array.isArray(parsed) ? parsed : [parsed];
           logger.info('IDs parseados como JSON:', { ids });
-        } catch (e) {
+        } catch {
           // Se não for JSON válido, tentar split por vírgula
           ids = idsParam.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id));
           logger.info('IDs parseados como CSV:', { ids });

@@ -185,7 +185,7 @@ app.get('/health', (req, res) => {
 });
 
 // Middleware de tratamento de erros
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Erro:', err);
   
   if (err.name === 'ValidationError') {
