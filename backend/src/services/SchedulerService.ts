@@ -319,6 +319,10 @@ export class SchedulerService {
                 // Garantir valor mínimo de 0.01
                 valorTitulo = Math.max(0.01, valorTitulo);
 
+                // Gerar número de título único
+                const timestamp = Date.now();
+                const numeroTitulo = `T${contrato.id}-${timestamp}`;
+
                 // Criar título
                 await Titulo.create({
                   contrato_id: contrato.id,
@@ -330,7 +334,7 @@ export class SchedulerService {
                   status: 'pendente',
                   pago: false,
                   descricao: `Mensalidade - ${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
-                  numero_titulo: `T${contrato.id}-${String(títulosCriadosNoContrato + 1).padStart(3, '0')}`
+                  numero_titulo: numeroTitulo
                 });
 
                 titulosGerados++;
