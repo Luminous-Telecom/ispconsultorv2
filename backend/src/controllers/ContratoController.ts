@@ -328,7 +328,7 @@ export class ContratoController {
 
       // Recalcular valor_final se plano ou descontos mudaram
       if (value.plano_id !== undefined || value.desconto_percentual !== undefined || value.desconto_valor !== undefined) {
-        const novoValorFinal = await contrato.getValorFinal(true); // true = recalcular
+        const novoValorFinal = await contrato.getValorFinal(); // Sempre recalcula
         await contrato.update({ valor_final: novoValorFinal });
       }
 

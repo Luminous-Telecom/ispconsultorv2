@@ -83,13 +83,8 @@ export class Contrato extends Model<
     });
   }
 
-  async getValorFinal(recalcular = false): Promise<number> {
-    // Se não for para recalcular e já existe valor_final, retornar o valor salvo
-    if (!recalcular && this.valor_final) {
-      return parseFloat(this.valor_final.toString());
-    }
-
-    // Sempre recalcular baseado no plano atual
+  async getValorFinal(): Promise<number> {
+    // Sempre recalcular baseado no plano atual (ignorando valor_final salvo)
     const plano = await this.getPlano();
     let valor = parseFloat(plano.valor_mensal.toString());
 
@@ -101,7 +96,17 @@ export class Contrato extends Model<
       valor = Math.max(0, valor - this.desconto_valor);
     }
 
-    return valor;
+    // Atualizar valor_final no banco se mudou
+    const valorCalculado = parseFloat(valor.toFixed(2));
+    const valorAtual = this.valor_final ? parseFloat(this.valor_final.toString()) : 0;
+    
+    if (Math.abs(valorCalculado - valorAtual) > 0.01) {
+      // Valor mudou, atualizar no banco em background
+      this.valor_final = valorCalculado;
+      this.save().catch(err => console.error('Erro ao atualizar valor_final:', err));
+    }
+
+    return valorCalculado;
   }
 
   async isVigente(): Promise<boolean> {
