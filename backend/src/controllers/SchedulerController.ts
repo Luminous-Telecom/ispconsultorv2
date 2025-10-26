@@ -46,11 +46,12 @@ export class SchedulerController {
         }
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao listar rotinas:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -74,11 +75,12 @@ export class SchedulerController {
         data: routine
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao obter rotina:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -105,11 +107,12 @@ export class SchedulerController {
         data: routine
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao criar rotina:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -130,11 +133,12 @@ export class SchedulerController {
         data: routine
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao atualizar rotina:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -151,11 +155,12 @@ export class SchedulerController {
         message: 'Rotina deletada com sucesso'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao deletar rotina:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -182,11 +187,12 @@ export class SchedulerController {
         data: routine
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao alterar status da rotina:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -204,11 +210,12 @@ export class SchedulerController {
         data: resultado
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao executar rotina:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -224,11 +231,12 @@ export class SchedulerController {
         data: status
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao obter status do scheduler:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -254,11 +262,12 @@ export class SchedulerController {
         data: logs
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao obter logs de execução:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
@@ -273,11 +282,12 @@ export class SchedulerController {
         data: logs
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       console.error('Erro ao obter logs de execução:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error.message
+        error: errorMessage
       });
     }
   }
