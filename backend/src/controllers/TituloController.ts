@@ -455,14 +455,11 @@ export class TituloController {
       
       console.log('Valor do plano:', valorFinal);
       
-      // Aplicar desconto percentual
+      // Aplicar descontos (percentual OU em valor, não ambos)
       if (desconto_percentual && desconto_percentual > 0) {
         valorFinal = valorFinal * (1 - (desconto_percentual / 100));
         console.log('Após desconto %:', valorFinal);
-      }
-      
-      // Aplicar desconto em valor
-      if (desconto_valor && desconto_valor > 0) {
+      } else if (desconto_valor && desconto_valor > 0) {
         valorFinal = valorFinal - parseFloat(desconto_valor.toString());
         console.log('Após desconto R$:', valorFinal);
       }
@@ -482,11 +479,11 @@ export class TituloController {
       console.log('Valor final calculado:', valorFinal);
       
       // Validar se o valor final é válido
-      if (isNaN(valorFinal) || valorFinal <= 0) {
+      if (isNaN(valorFinal) || valorFinal < 0.01) {
         console.log('Valor final inválido!');
         res.status(400).json({
           success: false,
-          message: 'Descontos aplicados resultaram em valor inválido. O valor do título deve ser no mínimo R$ 0,01.'
+          message: 'Os descontos configurados no contrato resultaram em valor inválido (R$ ' + valorFinal.toFixed(2) + '). O valor do título deve ser no mínimo R$ 0,01. Ajuste os descontos no contrato.'
         });
         return;
       }
