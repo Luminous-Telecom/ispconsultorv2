@@ -40,6 +40,8 @@ export class Banco extends Model<
   declare identificador_conta: string | null;
   declare client_id_producao: string | null;
   declare client_secret_producao: string | null;
+  declare client_id_sandbox: string | null;
+  declare client_secret_sandbox: string | null;
   declare url_retorno: string | null;
   declare repassar_email_cliente: boolean;
   declare percentual_multa: number | null;
@@ -307,6 +309,14 @@ Banco.init(
       allowNull: true
     },
     client_secret_producao: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    client_id_sandbox: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    client_secret_sandbox: {
       type: DataTypes.STRING(255),
       allowNull: true
     },
