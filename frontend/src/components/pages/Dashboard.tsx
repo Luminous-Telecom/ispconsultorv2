@@ -202,37 +202,12 @@ const Dashboard: React.FC = () => {
   const receitaPendente = stats?.valorTotalReceber || 0;
 
   // Métricas adicionais (usando dados reais quando disponíveis)
-  // Ticket médio mensal = média dos valores de pagamento dos últimos 12 meses
-  const ticketMedio = (() => {
-    const agora = new Date();
-    const valoresMensais: number[] = [];
-    
-    // Pegar títulos dos últimos 12 meses
-    for (let i = 11; i >= 0; i--) {
-      const dataMes = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
-      const proximoMes = new Date(agora.getFullYear(), agora.getMonth() - i + 1, 0);
-      
-      const titulosMes = titulos.filter(titulo => {
-        if (!titulo.data_vencimento) return false;
-        const dataVenc = new Date(titulo.data_vencimento);
-        return dataVenc >= dataMes && dataVenc <= proximoMes;
-      });
-      
-      const valorMes = titulosMes.reduce((sum, t) => {
-        const valor = parseFloat(String(t.valor)) || 0;
-        return sum + valor;
-      }, 0);
-      
-      if (valorMes > 0) {
-        valoresMensais.push(valorMes);
-      }
-    }
-    
-    // Retornar média dos valores mensais
-    return valoresMensais.length > 0 
-      ? valoresMensais.reduce((a, b) => a + b, 0) / valoresMensais.length 
-      : 0;
-  })();
+  // Ticket médio = valor total de todas as vendas / clientes ativos
+  const valorTotalVendas = titulos.reduce((sum, titulo) => {
+    const valor = parseFloat(String(titulo.valor)) || 0;
+    return sum + valor;
+  }, 0);
+  const ticketMedio = clientesAtivos > 0 ? valorTotalVendas / clientesAtivos : 0;
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
