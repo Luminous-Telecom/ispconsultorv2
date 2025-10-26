@@ -382,9 +382,10 @@ export class BancoApiService {
 
         // Atualizar metadados com notification_url
         try {
-          const baseUrl = banco.url_retorno || `${process.env.BASE_URL}/webhook/efi`;
+          const baseUrl = banco.url_retorno;
           
-          logger.info('Configurando URL de notificação', {
+          if (baseUrl) {
+            logger.info('Configurando URL de notificação', {
             banco_id: banco.id,
             banco_nome: banco.nome,
             url_retorno_cadastrada: banco.url_retorno,
@@ -405,6 +406,12 @@ export class BancoApiService {
             charge_id: chargeId,
             notification_url: baseUrl
           });
+          } else {
+            logger.warn('URL de retorno não configurada, pulando atualização de metadados', {
+              banco_id: banco.id,
+              titulo_id: titulo.id
+            });
+          }
         } catch (metadataError: any) {
           logger.warn('Falha ao atualizar metadados, mas título foi criado', {
             titulo_id: titulo.id,
@@ -480,7 +487,11 @@ export class BancoApiService {
     plano: any, 
     config: BancoConfig
   ): Promise<any> {
-    const baseUrl = banco.url_retorno || `${process.env.BASE_URL}/webhook/efi`;
+    const baseUrl = banco.url_retorno;
+    
+    if (!baseUrl) {
+      throw new Error('URL de retorno não configurada no banco');
+    }
     
     logger.info('Gerando título com URL de notificação', {
       banco_id: banco.id,
