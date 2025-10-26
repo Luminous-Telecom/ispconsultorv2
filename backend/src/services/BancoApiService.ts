@@ -739,13 +739,14 @@ export class BancoApiService {
             break; // Sucesso, sair do loop
           }
         } catch (error: unknown) {
+          const errorResponse = (error as any).response;
           // Se não é a última tentativa e é erro temporário (502, 503, 504), tentar novamente
           if (tentativa < maxTentativas && 
               errorResponse?.status && 
-              [502, 503, 504].includes(error.response.status)) {
+              [502, 503, 504].includes(errorResponse.status)) {
             
             logger.warn(`Tentativa ${tentativa} falhou, tentando novamente em ${delay}ms`, {
-              status: error.response.status,
+              status: errorResponse.status,
               endpoint: endpoint
             });
             
