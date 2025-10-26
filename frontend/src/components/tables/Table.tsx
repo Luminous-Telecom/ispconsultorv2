@@ -292,6 +292,8 @@ function Table<T extends { id: number | string }>({
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => tableActions.toggleSelection(item)}
+                    id={`${uniqueTableId}-checkbox-${item.id}`}
+                    name={`${uniqueTableId}-checkbox-${item.id}`}
                   />
                 </td>
               )}
