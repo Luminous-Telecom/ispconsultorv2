@@ -182,6 +182,8 @@ export class SchedulerService {
     } catch (error: unknown) {
       console.error(`Erro ao executar rotina ${routine.nome}:`, error);
 
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
 
@@ -191,8 +193,8 @@ export class SchedulerService {
           status: 'erro',
           data_fim: endTime,
           duracao_ms: duration,
-          erro: error.message,
-          stack_trace: error.stack
+          erro: errorMessage,
+          stack_trace: errorStack
         });
       }
 
