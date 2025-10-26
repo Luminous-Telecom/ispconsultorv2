@@ -887,7 +887,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       <form id="contrato-edit-form" onSubmit={handleSubmit}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Navegação por Abas */}
-          <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ marginTop: '0.5rem', borderBottom: '1px solid #dee2e6' }}>
+          <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
@@ -918,7 +918,15 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </ul>
 
           {/* Conteúdo das Abas */}
-          <div className="tab-content" style={{ flex: 1, overflow: 'auto', padding: (activeTab === 'termos' || activeTab === 'financeiro') ? '0' : '1rem' }}>
+          <div 
+            className="tab-content" 
+            style={{ 
+              flex: 1, 
+              overflow: 'hidden', 
+              padding: (activeTab === 'termos' || activeTab === 'financeiro') ? '0' : '16px',
+              minHeight: 0
+            }}
+          >
             <>
             {/* Aba Contrato */}
             {activeTab === 'contrato' && (
