@@ -395,7 +395,12 @@ const Dashboard: React.FC = () => {
   const renderLineChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
     const maxValue = Math.max(...data.map(item => item.valor));
     const minValue = Math.min(...data.map(item => item.valor));
-    const range = maxValue - minValue || 1;
+    
+    // Se todos os valores são zero ou muito baixos, usar 0 como base
+    // Se há valores positivos, usar minValue como base mas normalizar melhor
+    const hasPositiveValues = maxValue > 0;
+    const actualMinValue = hasPositiveValues && minValue === 0 ? 0 : minValue;
+    const range = hasPositiveValues ? maxValue - actualMinValue || 1 : 1;
     
     const formatValue = (val: number) => {
       switch (format) {
@@ -407,7 +412,9 @@ const Dashboard: React.FC = () => {
     };
     
     const calculateY = (value: number, chartHeight: number) => {
-      return chartHeight - ((value - minValue) / range) * chartHeight;
+      const normalizedValue = hasPositiveValues ? value - actualMinValue : value;
+      const normalizedRange = range || 1;
+      return chartHeight - (normalizedValue / normalizedRange) * chartHeight;
     };
     
     const chartHeight = 200;
