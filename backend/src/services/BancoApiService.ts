@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { Banco } from '../models/Banco';
 import { logger } from '../utils/logger';
 import { efiConfig } from '../config/bancos/efi';

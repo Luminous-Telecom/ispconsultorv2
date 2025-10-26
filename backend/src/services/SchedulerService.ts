@@ -1,6 +1,5 @@
 import * as cron from 'node-cron';
 import { ScheduledRoutine, RoutineExecutionLog } from '../models';
-import { Op } from 'sequelize';
 
 export class SchedulerService {
   private static instance: SchedulerService;
