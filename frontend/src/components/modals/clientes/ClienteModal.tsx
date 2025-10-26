@@ -1407,32 +1407,43 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           }}
         >
           {/* Aba Dados Básicos */}
-          {activeTab === 'dados-basicos' && (
-            <Form
-              key={`dados-basicos-${clienteId}`}
-              config={dadosBasicosFormConfig}
-              formPrefix={formPrefix}
-              initialValues={{
-                cnpj: formData.cnpj || '',
-                razao_social: formData.razao_social || '',
-                nome_fantasia: formData.nome_fantasia || '',
-                ativo: formData.ativo
-              }}
-              onFieldChange={(name, value) => {
-                handleInputChange(name as keyof ClienteFormData, value);
-              }}
-              onSubmit={(data) => {
-                // Manter apenas os campos da aba dados básicos
-                handleInputChange('cnpj', data.cnpj);
-                handleInputChange('razao_social', data.razao_social);
-                handleInputChange('nome_fantasia', data.nome_fantasia);
-                handleInputChange('ativo', data.ativo);
-              }}
-              showSubmitButton={false}
-              showResetButton={false}
-              className="dados-basicos-form"
-            />
-          )}
+          {activeTab === 'dados-basicos' && (() => {
+            console.log('🔵 === Form dados-basicos initialValues ===');
+            console.log('formData completo:', formData);
+            const initialValues = {
+              cnpj: formData.cnpj || '',
+              razao_social: formData.razao_social || '',
+              nome_fantasia: formData.nome_fantasia || '',
+              ativo: formData.ativo
+            };
+            console.log('initialValues que será passado:', initialValues);
+            console.log('Tipo de cnpj em initialValues:', typeof initialValues.cnpj);
+            console.log('Tipo de razao_social em initialValues:', typeof initialValues.razao_social);
+            console.log('=========================================');
+            
+            return (
+              <Form
+                key={`dados-basicos-${clienteId}`}
+                config={dadosBasicosFormConfig}
+                formPrefix={formPrefix}
+                initialValues={initialValues}
+                onFieldChange={(name, value) => {
+                  console.log('🔵 Form onFieldChange:', name, 'value:', value, 'type:', typeof value);
+                  handleInputChange(name as keyof ClienteFormData, value);
+                }}
+                onSubmit={(data) => {
+                  // Manter apenas os campos da aba dados básicos
+                  handleInputChange('cnpj', data.cnpj);
+                  handleInputChange('razao_social', data.razao_social);
+                  handleInputChange('nome_fantasia', data.nome_fantasia);
+                  handleInputChange('ativo', data.ativo);
+                }}
+                showSubmitButton={false}
+                showResetButton={false}
+                className="dados-basicos-form"
+              />
+            );
+          })()}
 
             {/* Aba Contato */}
             {activeTab === 'contato' && (

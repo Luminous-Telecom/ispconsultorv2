@@ -29,6 +29,11 @@ export const FormProvider: React.FC<FormProviderProps> = ({
   validateOnSubmit = true,
   resetOnSubmit = false,
 }) => {
+  console.log('🟡 FormProvider - initialValues recebido:', initialValues);
+  Object.keys(initialValues).forEach(key => {
+    console.log(`🟡 FormProvider - ${key}:`, initialValues[key], 'type:', typeof initialValues[key]);
+  });
+  
   // Converter FieldConfig para validationRules
   const validationRules = config.fields.reduce((rules, field) => {
     if (field.validation) {
@@ -48,6 +53,11 @@ export const FormProvider: React.FC<FormProviderProps> = ({
     validateOnBlur: validateOnBlur ?? config.validateOnBlur,
     validateOnSubmit: validateOnSubmit ?? config.validateOnSubmit,
     resetOnSubmit: resetOnSubmit ?? config.resetOnSubmit,
+  });
+
+  console.log('🟡 FormProvider - state.data:', formHook.state.data);
+  Object.keys(formHook.state.data).forEach(key => {
+    console.log(`🟡 FormProvider - state.data.${key}:`, formHook.state.data[key], 'type:', typeof formHook.state.data[key]);
   });
 
   const contextValue: FormContextValue = {
