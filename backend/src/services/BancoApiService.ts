@@ -659,7 +659,7 @@ export class BancoApiService {
       }
     };
 
-    const payload: any = {
+    return {
       items: [{
         name: plano.nome_plano || 'Serviço de Internet',
         value: valorCentavos,
@@ -680,14 +680,6 @@ export class BancoApiService {
         custom_id: `titulo_${titulo.id}`
       }
     };
-
-    // Adicionar notification_url apenas se configurada
-    if (baseUrl) {
-      payload.notification_url = baseUrl;
-      payload.metadata.notification_url = baseUrl;
-    }
-
-    return payload;
   }
 
   /**
