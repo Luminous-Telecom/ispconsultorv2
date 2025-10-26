@@ -451,7 +451,7 @@ const BancoCreateModal: React.FC<BancoCreateModalProps> = ({
             className="btn btn-primary btn-sm"
             disabled={createBancoMutation.isPending}
           >
-            Salvar Banco
+            Salvar
           </button>
         </div>
       }
