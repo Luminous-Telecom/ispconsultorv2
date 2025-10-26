@@ -68,7 +68,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: CreateRotinaData) => SchedulerService.updateRotina(rotinaId!, data),
+    mutationFn: (data: UpdateRotinaData) => SchedulerService.updateRotina(rotinaId!, data),
     onSuccess: () => {
       addNotification('success', 'Rotina atualizada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
