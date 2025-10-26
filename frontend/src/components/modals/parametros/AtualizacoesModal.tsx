@@ -35,65 +35,99 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
   const getTipoBadge = (tipo: string) => {
     const badges = {
-      feature: { class: 'bg-primary', label: 'Nova Funcionalidade' },
-      bugfix: { class: 'bg-danger', label: 'Correção' },
-      security: { class: 'bg-warning', label: 'Segurança' },
-      melhoria: { class: 'bg-info', label: 'Melhoria' }
+      feature: { class: 'bg-primary', label: 'Nova Funcionalidade', icon: 'bi-star-fill' },
+      bugfix: { class: 'bg-danger', label: 'Correção', icon: 'bi-bug-fill' },
+      security: { class: 'bg-warning text-dark', label: 'Segurança', icon: 'bi-shield-fill' },
+      melhoria: { class: 'bg-info', label: 'Melhoria', icon: 'bi-arrow-up-circle-fill' }
     };
-    return badges[tipo as keyof typeof badges] || { class: 'bg-secondary', label: 'Outro' };
+    return badges[tipo as keyof typeof badges] || { class: 'bg-secondary', label: 'Outro', icon: 'bi-circle-fill' };
   };
 
   return (
     <DraggableModal
       show={show}
       onClose={onClose}
-      title="Atualizações"
+      title="Atualizações do Sistema"
       size="md"
       modalId="atualizacoes-modal"
     >
       <div style={{ padding: '1rem' }}>
         {isLoading && (
-          <div className="text-center p-4">
+          <div className="text-center p-5">
             <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Carregando...</span>
             </div>
+            <p className="mt-3 text-muted">Buscando atualizações...</p>
           </div>
         )}
 
         {error && (
-          <div className="alert alert-info">
-            <i className="bi bi-info-circle me-2"></i>
-            Nenhuma atualização disponível no momento.
+          <div className="alert alert-warning d-flex align-items-center" role="alert">
+            <i className="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>
+              <strong>Erro ao buscar atualizações</strong>
+              <p className="mb-0 small mt-1">Verifique a conexão ou configure o GitHub corretamente.</p>
+            </div>
           </div>
         )}
 
-        {!isLoading && atualizacoes && atualizacoes.length > 0 && (
+        {!isLoading && !error && atualizacoes && atualizacoes.length === 0 && (
+          <div className="alert alert-info d-flex align-items-center" role="alert">
+            <i className="bi bi-info-circle-fill me-2 fs-5"></i>
+            <div>
+              <strong>Nenhuma atualização disponível</strong>
+              <p className="mb-0 small mt-1">O sistema está atualizado com a versão mais recente.</p>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
           <div>
-            <div className="mb-3">
-              <strong>Versão Atual do Sistema:</strong>
-              <span className="badge bg-success ms-2">{atualizacoes[atualizacoes.length - 1].versao}</span>
+            <div className="card bg-light border mb-3" style={{ borderRadius: '0.5rem' }}>
+              <div className="card-body py-3">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <span className="text-muted small d-block mb-1">Versão Atual do Sistema</span>
+                    <h5 className="mb-0 fw-bold text-primary">v{atualizacoes[atualizacoes.length - 1].versao}</h5>
+                  </div>
+                  <i className="bi bi-check-circle-fill text-success fs-2"></i>
+                </div>
+              </div>
             </div>
 
-            <div className="list-group">
+            <div className="list-group gap-2">
               {atualizacoes.map((atualizacao: Atualizacao, index: number) => {
                 const badge = getTipoBadge(atualizacao.tipo);
                 return (
-                  <div key={atualizacao.versao} className="list-group-item">
+                  <div key={atualizacao.versao} className="list-group-item list-group-item-action" style={{ 
+                    borderRadius: '0.5rem',
+                    border: '1px solid var(--bs-border-color)',
+                    transition: 'all 0.2s ease'
+                  }}>
                     <div className="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                        <h6 className="mb-1">
-                          Versão {atualizacao.versao}
-                        </h6>
-                        <small className="text-muted">
-                          <i className="bi bi-calendar me-1"></i>
-                          {new Date(atualizacao.data).toLocaleDateString('pt-BR')}
-                        </small>
+                      <div className="d-flex align-items-start">
+                        <i className={`bi ${badge.icon} ${badge.class} me-2`} style={{ fontSize: '1.25rem' }}></i>
+                        <div>
+                          <h6 className="mb-1 fw-semibold">
+                            v{atualizacao.versao}
+                          </h6>
+                          <small className="text-muted d-flex align-items-center">
+                            <i className="bi bi-calendar3 me-1"></i>
+                            {new Date(atualizacao.data).toLocaleDateString('pt-BR', { 
+                              day: '2-digit', 
+                              month: 'long', 
+                              year: 'numeric' 
+                            })}
+                          </small>
+                        </div>
                       </div>
-                      <span className={`badge ${badge.class}`}>
+                      <span className={`badge ${badge.class} px-3 py-2`}>
                         {badge.label}
                       </span>
                     </div>
-                    <p className="mb-0">{atualizacao.descricao}</p>
+                    <p className="mb-0 text-secondary" style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
+                      {atualizacao.descricao}
+                    </p>
                   </div>
                 );
               })}
