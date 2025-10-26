@@ -224,10 +224,16 @@ export class SchedulerService {
     const { Contrato } = await import('../models/Contrato');
     const { Titulo } = await import('../models/Titulo');
     const { Plano } = await import('../models/Plano');
+    const { default: Parametros } = await import('../models/Parametros');
     const { Op } = await import('sequelize');
     
     try {
       console.log('Iniciando geração de títulos...');
+      
+      // Buscar configuração de total de títulos
+      const parametros = await Parametros.findOne();
+      const quantidadeMinimaTitulos = parametros?.total_titulos_financeiro || 12;
+      console.log(`Total de títulos configurado: ${quantidadeMinimaTitulos}`);
       
       // Buscar todos os contratos ativos
       const contratos = await Contrato.findAll({
@@ -268,9 +274,6 @@ export class SchedulerService {
               contrato_id: contrato.id
             }
           });
-
-          // Definir quantidade mínima de títulos (por padrão, 12 meses)
-          const quantidadeMinimaTitulos = 12;
 
           // Verificar se precisa gerar mais títulos
           const titulosGerar = quantidadeMinimaTitulos - titulosExistentes.length;
