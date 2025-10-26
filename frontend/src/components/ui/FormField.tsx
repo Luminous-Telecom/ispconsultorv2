@@ -153,7 +153,7 @@ const FormField: React.FC<FormFieldProps> = ({
     const commonProps = {
       id: fieldId,
       name,
-      value,
+      value: value ?? '',
       onChange: handleChange,
       placeholder,
       required,
