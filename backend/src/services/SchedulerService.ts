@@ -302,6 +302,9 @@ export class SchedulerService {
                   valorTitulo = valorTitulo - contrato.desconto_valor;
                 }
 
+                // Garantir valor mínimo de 0.01
+                valorTitulo = Math.max(0.01, valorTitulo);
+
                 // Criar título
                 await Titulo.create({
                   contrato_id: contrato.id,
