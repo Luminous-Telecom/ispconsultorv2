@@ -747,15 +747,16 @@ export class TituloController {
           
         } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
           logger.error('Erro ao registrar título no banco', { 
             titulo_id: titulo.id, 
             error: errorMessage,
-            stack: error.stack
+            stack: errorStack
           });
           
           res.status(500).json({
             success: false,
-            message: 'Erro ao registrar título no banco: ' + error.message,
+            message: 'Erro ao registrar título no banco: ' + errorMessage,
             error: 'ERRO_REGISTRO_BANCO'
           });
           return;
