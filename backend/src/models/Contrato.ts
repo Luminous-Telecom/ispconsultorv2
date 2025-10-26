@@ -83,11 +83,13 @@ export class Contrato extends Model<
     });
   }
 
-  async getValorFinal(): Promise<number> {
-    if (this.valor_final) {
+  async getValorFinal(recalcular = false): Promise<number> {
+    // Se não for para recalcular e já existe valor_final, retornar o valor salvo
+    if (!recalcular && this.valor_final) {
       return parseFloat(this.valor_final.toString());
     }
 
+    // Sempre recalcular baseado no plano atual
     const plano = await this.getPlano();
     let valor = parseFloat(plano.valor_mensal.toString());
 
