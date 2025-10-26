@@ -98,6 +98,7 @@ export class ServidorEmailController {
         message: 'Servidor de email criado com sucesso'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao criar servidor de email:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -150,6 +151,7 @@ export class ServidorEmailController {
         message: 'Servidor de email atualizado com sucesso'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao atualizar servidor de email:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -316,11 +318,12 @@ export class ServidorEmailController {
       });
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao enviar e-mail de teste:', error);
       
       res.status(500).json({
         success: false,
-        message: `Erro ao enviar e-mail de teste: ${error.message}`
+        message: `Erro ao enviar e-mail de teste: ${errorMessage}`
       });
     }
   }
@@ -429,6 +432,7 @@ export class ServidorEmailController {
         });
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao criar/atualizar servidor de email:', error);
       
       if (error.name === 'SequelizeValidationError') {
