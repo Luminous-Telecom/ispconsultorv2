@@ -391,8 +391,8 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  // Função para renderizar gráfico de linha temporal com Canvas
-  const renderLineChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
+  // Componente para gráfico de linha temporal com Canvas
+  const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'number' }> = ({ data, title }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     
     useEffect(() => {
@@ -465,6 +465,11 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
     );
+  };
+  
+  // Função para renderizar gráfico de linha temporal com Canvas
+  const renderLineChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
+    return <LineChart data={data} title={title} format={format} />;
   };
 
   if (loadingDashboard || loadingClientes || loadingPlanos || loadingContratos) {
