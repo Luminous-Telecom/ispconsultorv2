@@ -75,9 +75,9 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       <div className="line-chart-wrapper">
         <canvas 
           ref={canvasRef}
-          width="548"
+          width="800"
           height="170"
-          style={{ display: 'block', width: '100%', height: '170px' }}
+          style={{ display: 'block', width: '100%', maxWidth: '100%' }}
         />
       </div>
     </div>

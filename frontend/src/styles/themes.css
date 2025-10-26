@@ -948,6 +948,8 @@ body {
 .line-chart-wrapper canvas {
   max-width: 100%;
   height: auto;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 /* Card de Tabela */
