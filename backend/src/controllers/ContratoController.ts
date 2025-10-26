@@ -328,8 +328,19 @@ export class ContratoController {
 
       // Recalcular valor_final se plano ou descontos mudaram
       if (value.plano_id !== undefined || value.desconto_percentual !== undefined || value.desconto_valor !== undefined) {
-        const novoValorFinal = await contrato.getValorFinal(); // Sempre recalcula
-        await contrato.update({ valor_final: novoValorFinal });
+        // Recalcular baseado no plano e descontos (ignorando valor_final atual)
+        const plano = await contrato.getPlano();
+        let novoValorFinal = parseFloat(plano.valor_mensal.toString());
+
+        if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
+          novoValorFinal = novoValorFinal * (1 - contrato.desconto_percentual / 100);
+        }
+
+        if (contrato.desconto_valor && contrato.desconto_valor > 0) {
+          novoValorFinal = Math.max(0, novoValorFinal - contrato.desconto_valor);
+        }
+
+        await contrato.update({ valor_final: parseFloat(novoValorFinal.toFixed(2)) });
       }
 
       res.json({

@@ -920,30 +920,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'valor_final',
       label: 'Valor Final',
       sortable: true,
-      render: (contrato: ContratoItem) => {
-        // Calcular valor_final dinamicamente baseado no plano e descontos
-        let valorFinal = 0;
-        
-        if (contrato.plano?.valor_mensal) {
-          valorFinal = parseFloat(String(contrato.plano.valor_mensal));
-          
-          // Aplicar desconto percentual
-          if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
-            const desconto = (parseFloat(String(contrato.desconto_percentual)) / 100) * valorFinal;
-            valorFinal -= desconto;
-          }
-          
-          // Aplicar desconto em valor
-          if (contrato.desconto_valor && contrato.desconto_valor > 0) {
-            valorFinal -= parseFloat(String(contrato.desconto_valor));
-          }
-          
-          // Garantir que não seja negativo
-          valorFinal = Math.max(0, valorFinal);
-        }
-        
-        return formatCurrency(valorFinal);
-      }
+      render: (contrato: ContratoItem) => contrato.valor_final ? formatCurrency(contrato.valor_final) : '-'
     },
     {
       key: 'data_inicio',
