@@ -194,20 +194,22 @@ const Dashboard: React.FC = () => {
 
   // Análise de clientes por plano
   const getClientesPorPlano = () => {
+    // Contar clientes por plano baseado nos contratos
     const contagem = contratos.reduce((acc, contrato) => {
-      const planoNome = contrato.plano?.nome_plano || 'Sem plano';
-      acc[planoNome] = (acc[planoNome] || 0) + 1;
+      const planoId = contrato.plano_id;
+      if (planoId) {
+        acc[planoId] = (acc[planoId] || 0) + 1;
+      }
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<number, number>);
     
+    // Incluir todos os planos, mesmo os sem clientes
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8'];
-    return Object.entries(contagem)
-      .map(([plano, quantidade], index) => ({
-        label: plano,
-        value: quantidade,
-        color: cores[index % cores.length]
-      }))
-      .sort((a, b) => b.value - a.value);
+    return planos.map((plano, index) => ({
+      label: plano.nome_plano,
+      value: contagem[plano.id] || 0,
+      color: cores[index % cores.length]
+    })).sort((a, b) => b.value - a.value);
   };
 
   // Crescimento de receita (últimos 6 meses)
