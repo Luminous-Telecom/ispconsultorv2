@@ -376,7 +376,7 @@ const Dashboard: React.FC = () => {
   ];
 
   const ticketMedioChartData = [
-    { label: 'Ticket Médio por Boleto', value: ticketMedio, color: '#6f42c1' }
+    { label: 'Ticket Médio', value: ticketMedio, color: '#6f42c1' }
   ];
 
   const taxaPagamentoChartData = [
@@ -570,7 +570,7 @@ const Dashboard: React.FC = () => {
       <div className="row g-2 mb-2">
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
-            {renderValueChart(ticketMedioChartData, 'Ticket Médio por Boleto', 'currency')}
+            {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
           </div>
         </div>
       </div>
