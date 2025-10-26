@@ -77,6 +77,7 @@ export class BancoApiService {
    * Verificar se as credenciais estão configuradas
    */
   private static verificarCredenciais(banco: Banco, config: BancoConfig): boolean {
+    // Verificar credenciais (usa as mesmas para sandbox e produção)
     const clientId = banco.client_id_producao;
     const clientSecret = banco.client_secret_producao;
     
@@ -149,6 +150,7 @@ export class BancoApiService {
         let authData: any = {};
         
         if (config.auth_type === 'basic') {
+          // Usar credenciais (mesmas para sandbox e produção no modelo atual)
           authData = {
             [config.client_id_field]: banco.client_id_producao,
             [config.client_secret_field]: banco.client_secret_producao,
