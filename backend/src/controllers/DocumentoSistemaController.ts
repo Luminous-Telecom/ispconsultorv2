@@ -4,6 +4,8 @@ import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { logger } from '../utils/logger';
+import fs from 'fs/promises';
+import mammoth from 'mammoth';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 
 // @ts-ignore
