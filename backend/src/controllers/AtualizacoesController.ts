@@ -11,9 +11,10 @@ interface GitHubRelease {
 
 export class AtualizacoesController {
   static async get(req: Request, res: Response): Promise<void> {
+    // Buscar releases do GitHub
+    const githubRepo = process.env.GITHUB_REPO || 'Luminous-Telecom/ctm-telecom';
+    
     try {
-      // Buscar releases do GitHub
-      const githubRepo = process.env.GITHUB_REPO || 'Luminous-Telecom/ctm-telecom';
       const githubToken = process.env.GITHUB_TOKEN;
       const githubUrl = `https://api.github.com/repos/${githubRepo}/releases`;
       
@@ -68,7 +69,21 @@ export class AtualizacoesController {
         data: atualizacoes,
         versao_atual: atualizacoes[0]?.versao || 'N/A'
       });
-    } catch (error) {
+    } catch (error: any) {
+      // Se for 404, significa que o repositório não existe ou está privado
+      if (error.response?.status === 404) {
+        logger.warn('Repositório não encontrado ou privado, retornando lista vazia', { 
+          repo: githubRepo 
+        });
+        
+        res.json({
+          success: true,
+          data: [],
+          versao_atual: 'N/A'
+        });
+        return;
+      }
+      
       logger.error('Erro ao buscar atualizações do GitHub', { error });
       res.status(500).json({
         success: false,
