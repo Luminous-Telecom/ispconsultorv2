@@ -65,12 +65,6 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       ctx.lineWidth = 1;
       ctx.stroke();
       
-      // Formatar valor
-      let valorFormatado = item.valor.toString();
-      if (format === 'currency') {
-        valorFormatado = `R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      }
-      
       // Desenhar valor - ajustar posição para não sair do canvas
       const textY = y - 8;
       const adjustedTextY = textY < 15 ? y + 20 : textY; // Se texto está muito alto, mostrar abaixo
@@ -78,7 +72,7 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       ctx.fillStyle = 'white';
       ctx.font = 'bold 0.65rem sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(valorFormatado, x, adjustedTextY);
+      ctx.fillText(item.valor.toString(), x, adjustedTextY);
       
       // Desenhar mês
       ctx.fillStyle = 'var(--text-secondary)';
