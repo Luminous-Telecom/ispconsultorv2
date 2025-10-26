@@ -24,7 +24,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
 
   const [formData, setFormData] = useState<CreateRotinaData>({
     nome: '',
-    tipo: 'envio_boletos',
+    tipo: 'geracao_titulos',
     descricao: '',
     frequencia: 'diaria',
     hora_execucao: '00:00'
@@ -84,7 +84,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   const resetForm = () => {
     setFormData({
       nome: '',
-      tipo: 'envio_boletos',
+      tipo: 'geracao_titulos',
       descricao: '',
       frequencia: 'diaria',
       hora_execucao: '00:00'
@@ -153,6 +153,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
               onChange={(value) => setFormData({ ...formData, tipo: value as any })}
               required
               options={[
+                { value: 'geracao_titulos', label: 'Geração de Títulos' },
                 { value: 'envio_boletos', label: 'Envio de Boletos' },
                 { value: 'remessa_bancaria', label: 'Remessa Bancária' },
                 { value: 'verificar_vencimentos', label: 'Verificar Vencimentos' }
