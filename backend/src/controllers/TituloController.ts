@@ -302,6 +302,8 @@ export class TituloController {
   // Criar novo título
   static async create(req: Request, res: Response): Promise<void> {
     try {
+      console.log('Dados recebidos ao criar título:', JSON.stringify(req.body, null, 2));
+      
       const { 
         cliente_id, 
         plano_id, 

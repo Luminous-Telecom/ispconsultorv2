@@ -248,10 +248,10 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       plano_id: formData.plano_id,
       data_vencimento: formData.data_vencimento,
       observacoes: formData.observacoes || '',
-      desconto_percentual: formData.desconto_percentual || 0,
-      desconto_valor: formData.desconto_valor || 0,
-      acrescimo_percentual: formData.acrescimo_percentual || 0,
-      acrescimo_valor: formData.acrescimo_valor || 0,
+      desconto_percentual: formData.desconto_percentual > 0 ? formData.desconto_percentual : null,
+      desconto_valor: formData.desconto_valor > 0 ? formData.desconto_valor : null,
+      acrescimo_percentual: formData.acrescimo_percentual > 0 ? formData.acrescimo_percentual : null,
+      acrescimo_valor: formData.acrescimo_valor > 0 ? formData.acrescimo_valor : null,
       descricao: formData.descricao || '',
       cliente_id: clienteId
     };
