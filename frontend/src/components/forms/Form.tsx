@@ -63,7 +63,9 @@ const FormContent: React.FC<{
         type={field.type}
         label={field.label}
         name={field.name}
-        value={state.data[field.name] === null || state.data[field.name] === undefined ? '' : String(state.data[field.name])}
+        value={field.type === 'checkbox' 
+          ? state.data[field.name] 
+          : (state.data[field.name] === null || state.data[field.name] === undefined ? '' : String(state.data[field.name]))}
         onChange={(value) => actions.setValue(field.name, value)}
         placeholder={field.placeholder}
         required={field.required}
