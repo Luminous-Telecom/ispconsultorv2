@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 
 export class AtualizacoesController {
   static async get(req: Request, res: Response): Promise<void> {
