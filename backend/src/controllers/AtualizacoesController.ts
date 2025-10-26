@@ -47,14 +47,21 @@ export class AtualizacoesController {
           tipo = 'melhoria';
         }
         
-        // Extrair primeira linha da descrição como resumo
-        const descricaoTexto = release.body ? release.body.split('\n')[0].trim() : release.name;
+        // Extrair primeira linha da descrição como resumo, removendo markdown e links
+        let descricaoTexto = release.body ? release.body.split('\n')[0].trim() : release.name;
+        
+        // Remover markdown links, "Full Changelog", e outros links do GitHub
+        descricaoTexto = descricaoTexto
+          .replace(/\*\*Full Changelog\*\*:.*/g, '')
+          .replace(/https?:\/\/[^\s]+/g, '')
+          .replace(/\*\*/g, '')
+          .trim();
         
         return {
           id: index + 1,
           versao: tagVersion,
           data: publishedDate.toISOString().split('T')[0], // YYYY-MM-DD
-          descricao: descricaoTexto || `Versão ${tagVersion}`,
+          descricao: descricaoTexto || release.name || `Versão ${tagVersion}`,
           tipo
         };
       });
