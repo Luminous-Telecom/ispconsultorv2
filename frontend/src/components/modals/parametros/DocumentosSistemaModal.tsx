@@ -203,7 +203,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         show={show}
         onClose={onClose}
         title="Modelos de Documentos"
-        size="lg"
+        size="xl"
         modalId="documentos-sistema-modal"
       >
         <div>
