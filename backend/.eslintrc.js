@@ -15,14 +15,17 @@ module.exports = {
     es6: true,
   },
   rules: {
-    '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': 'off', // Desabilitado para desenvolvimento
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-unused-vars': ['warn', { 
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_'
+    }],
     '@typescript-eslint/no-empty-object-type': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/no-require-imports': 'off',
     'no-console': 'off',
     'no-empty': 'off',
-    'prefer-const': 'off',
+    'prefer-const': 'warn',
     'no-case-declarations': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
   },
