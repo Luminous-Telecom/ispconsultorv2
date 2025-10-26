@@ -383,8 +383,16 @@ export class WebhookController {
     try {
       // Buscar título pelo charge_id
       const { Titulo } = await import('../models/Titulo');
+      const { Banco } = await import('../models/Banco');
       const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId }
+        where: { charge_id: chargeId },
+        include: [
+          {
+            model: Banco,
+            as: 'banco',
+            attributes: ['id', 'nome', 'tipo_banco', 'codigo']
+          }
+        ]
       });
 
       if (!titulo) {
@@ -683,8 +691,8 @@ export class WebhookController {
         return { success: false, message: 'Charge ID não disponível' };
       }
 
-      // Buscar o banco do título
-      const banco = await titulo.getBanco();
+      // Acessar o banco do título (já incluído no findOne)
+      const banco = titulo.banco;
       
       if (!banco || banco.tipo_banco !== 'efi') {
         return { success: false, message: 'Banco EFI não encontrado' };
