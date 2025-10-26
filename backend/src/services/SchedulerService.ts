@@ -221,12 +221,126 @@ export class SchedulerService {
   }
 
   private async executeGeracaoTitulos(routine: ScheduledRoutine): Promise<any> {
-    // Geração de títulos não está mais disponível - funcionalidade de carnê foi removida
+    const { Contrato } = await import('../models/Contrato');
+    const { Titulo } = await import('../models/Titulo');
+    const { Plano } = await import('../models/Plano');
+    const { Op } = await import('sequelize');
     
-    return {
-      success: false,
-      message: 'Geração de títulos não está mais disponível - funcionalidade de carnê foi removida'
-    };
+    try {
+      // Buscar todos os contratos ativos
+      const contratos = await Contrato.findAll({
+        where: {
+          status: 'ativo'
+        },
+        include: [
+          {
+            model: Plano,
+            as: 'plano'
+          }
+        ]
+      });
+
+      let titulosGerados = 0;
+      let contratosProcessados = 0;
+      let erros = 0;
+
+      for (const contrato of contratos) {
+        try {
+          // Verificar se o contrato tem banco configurado
+          if (!contrato.conta_boleto) {
+            console.warn(`Contrato ${contrato.id} não tem banco configurado`);
+            continue;
+          }
+
+          // Verificar se o contrato tem dia de vencimento
+          if (!contrato.dia_vencimento) {
+            console.warn(`Contrato ${contrato.id} não tem dia de vencimento configurado`);
+            continue;
+          }
+
+          // Buscar títulos existentes para este contrato
+          const titulosExistentes = await Titulo.findAll({
+            where: {
+              contrato_id: contrato.id
+            }
+          });
+
+          // Definir quantidade mínima de títulos (por padrão, 12 meses)
+          const quantidadeMinimaTitulos = 12;
+
+          // Verificar se precisa gerar mais títulos
+          const titulosGerar = quantidadeMinimaTitulos - titulosExistentes.length;
+
+          if (titulosGerar > 0) {
+            // Buscar data inicial do contrato ou usar data atual
+            const dataInicio = contrato.data_inicio || new Date();
+            const diaVencimento = contrato.dia_vencimento;
+
+            // Gerar os títulos faltantes
+            for (let i = 0; i < titulosGerar; i++) {
+              const dataVencimento = new Date(dataInicio);
+              dataVencimento.setMonth(dataVencimento.getMonth() + i);
+              dataVencimento.setDate(Math.min(diaVencimento, 28)); // Garantir que o dia existe
+
+              // Verificar se já existe título para este mês
+              const mesAno = `${dataVencimento.getFullYear()}-${String(dataVencimento.getMonth() + 1).padStart(2, '0')}`;
+              const tituloExistente = titulosExistentes.find(t => {
+                const dataTitulo = new Date(t.data_vencimento);
+                const mesAnoTitulo = `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}`;
+                return mesAnoTitulo === mesAno;
+              });
+
+              if (!tituloExistente) {
+                // Calcular valor do título (aplicar descontos se houver)
+                let valorTitulo = contrato.valor_final || contrato.plano?.valor_mensal || 0;
+
+                // Aplicar descontos
+                if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
+                  valorTitulo = valorTitulo * (1 - contrato.desconto_percentual / 100);
+                } else if (contrato.desconto_valor && contrato.desconto_valor > 0) {
+                  valorTitulo = valorTitulo - contrato.desconto_valor;
+                }
+
+                // Criar título
+                await Titulo.create({
+                  contrato_id: contrato.id,
+                  cliente_id: contrato.cliente_id,
+                  plano_id: contrato.plano_id,
+                  banco_id: contrato.conta_boleto,
+                  valor: valorTitulo,
+                  data_vencimento: dataVencimento,
+                  status: 'pendente',
+                  pago: false,
+                  descricao: `Mensalidade - ${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
+                  numero_titulo: `T${contrato.id}-${String(i + 1).padStart(3, '0')}`
+                });
+
+                titulosGerados++;
+              }
+            }
+
+            contratosProcessados++;
+          }
+        } catch (error) {
+          console.error(`Erro ao processar contrato ${contrato.id}:`, error);
+          erros++;
+        }
+      }
+
+      return {
+        success: true,
+        titulos_gerados: titulosGerados,
+        contratos_processados: contratosProcessados,
+        contratos_com_erro: erros,
+        message: `Geração de títulos concluída. ${titulosGerados} títulos gerados em ${contratosProcessados} contratos.`
+      };
+    } catch (error) {
+      console.error('Erro na execução da rotina de geração de títulos:', error);
+      return {
+        success: false,
+        message: `Erro ao gerar títulos: ${error}`
+      };
+    }
   }
 
   private async executeEnvioBoletos(routine: ScheduledRoutine): Promise<any> {
