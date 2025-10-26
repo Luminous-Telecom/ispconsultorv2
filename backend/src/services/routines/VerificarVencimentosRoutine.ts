@@ -6,7 +6,7 @@ export interface VerificarVencimentosConfig {
 }
 
 export class VerificarVencimentosRoutine {
-  async execute(config: VerificarVencimentosConfig): Promise<{
+  async execute(_config: VerificarVencimentosConfig): Promise<{
     success: boolean;
     message: string;
     data: {

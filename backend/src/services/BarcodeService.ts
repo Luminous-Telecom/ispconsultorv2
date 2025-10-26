@@ -115,7 +115,7 @@ export class BarcodeService {
                     </div>
                 </div>
             `;
-        } catch (error) {
+        } catch {
             return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Erro ao gerar código de barras</div>';
         }
     }

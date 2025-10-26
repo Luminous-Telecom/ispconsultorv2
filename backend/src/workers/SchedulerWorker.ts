@@ -219,7 +219,7 @@ class SchedulerWorker {
 // Código executado no worker
 if (!isMainThread && workerData) {
   (async () => {
-    const { routineId, routineData, executionId } = workerData as WorkerData;
+    const { routineId, routineData: _routineData, executionId } = workerData as WorkerData;
     const startTime = Date.now();
 
     try {

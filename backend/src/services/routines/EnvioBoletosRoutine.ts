@@ -8,7 +8,7 @@ export interface EnvioBoletosConfig {
 }
 
 export class EnvioBoletosRoutine {
-  async execute(config: EnvioBoletosConfig): Promise<{
+  async execute(_config: EnvioBoletosConfig): Promise<{
     success: boolean;
     message: string;
     data: {

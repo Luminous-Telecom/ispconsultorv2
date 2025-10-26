@@ -7,7 +7,7 @@ export interface RemessaBancariaConfig {
 }
 
 export class RemessaBancariaRoutine {
-  async execute(config: RemessaBancariaConfig): Promise<{
+  async execute(_config: RemessaBancariaConfig): Promise<{
     success: boolean;
     message: string;
     data: {

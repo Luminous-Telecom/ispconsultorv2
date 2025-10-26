@@ -33,7 +33,7 @@ export class SchedulerService {
     }
 
     // Parar todos os cron jobs
-    this.cronJobs.forEach((job, routineId) => {
+    this.cronJobs.forEach((job, _routineId) => {
       job.destroy();
     });
 
