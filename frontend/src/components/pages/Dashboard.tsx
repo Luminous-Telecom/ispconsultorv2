@@ -444,7 +444,7 @@ const Dashboard: React.FC = () => {
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
         <div className="line-chart-wrapper" style={{ height: `${chartHeight + 50}px` }}>
-          <svg className="line-chart-svg" viewBox="0 0 100 170" preserveAspectRatio="none">
+          <svg className="line-chart-svg" viewBox="0 0 100 170" preserveAspectRatio="xMidYMid meet">
             {/* Linha */}
             <path
               d={pathData}
