@@ -554,6 +554,14 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Gráficos de Valor */}
+      <div className="row g-2 mb-2">
+        <div className="col-xl-6 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart(ticketMedioChartData, 'Ticket Médio por Boleto', 'currency')}
+          </div>
+        </div>
+      </div>
 
       {/* Gráficos Temporais */}
       <div className="row g-2 mb-2">
