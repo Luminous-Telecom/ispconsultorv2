@@ -54,6 +54,35 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   onShowBancoModal,
   onShowModeloContratoModal
 }) => {
+  // Função para calcular desconto_valor baseado no desconto_percentual
+  const calcularDescontoValor = (percentual: number) => {
+    if (!planoSelecionado?.valor_mensal || percentual <= 0) {
+      return 0;
+    }
+    const valorPlano = parseFloat(planoSelecionado.valor_mensal.toString());
+    return (valorPlano * percentual) / 100;
+  };
+
+  // Função para calcular desconto_percentual baseado no desconto_valor
+  const calcularDescontoPercentual = (valor: number) => {
+    if (!planoSelecionado?.valor_mensal || valor <= 0) {
+      return 0;
+    }
+    const valorPlano = parseFloat(planoSelecionado.valor_mensal.toString());
+    return (valor * 100) / valorPlano;
+  };
+
+  const handleDescontoPercentualChange = (value: number) => {
+    handleInputChange('desconto_percentual', value);
+    const descontoValor = calcularDescontoValor(value);
+    handleInputChange('desconto_valor', descontoValor);
+  };
+
+  const handleDescontoValorChange = (value: number) => {
+    handleInputChange('desconto_valor', value);
+    const descontoPercentual = calcularDescontoPercentual(value);
+    handleInputChange('desconto_percentual', descontoPercentual);
+  };
   return (
     <div className="row">
       {/* Plano */}
@@ -173,7 +202,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           placeholder="0.00"
           size="md"
           value={formData.desconto_percentual}
-          onChange={(e: any) => handleInputChange('desconto_percentual', parseFloat(e.value) || 0)}
+          onChange={(e: any) => handleDescontoPercentualChange(parseFloat(e.value) || 0)}
           error={errors.desconto_percentual?.toString()}
           isInvalid={!!errors.desconto_percentual}
           min={0}
@@ -191,7 +220,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           placeholder="0.00"
           size="md"
           value={formData.desconto_valor}
-          onChange={(e: any) => handleInputChange('desconto_valor', parseFloat(e.value) || 0)}
+          onChange={(e: any) => handleDescontoValorChange(parseFloat(e.value) || 0)}
           error={errors.desconto_valor?.toString()}
           isInvalid={!!errors.desconto_valor}
           min={0}
