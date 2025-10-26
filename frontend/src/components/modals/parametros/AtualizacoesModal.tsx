@@ -102,6 +102,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                   <div key={atualizacao.versao} className="list-group-item list-group-item-action" style={{ 
                     borderRadius: '0.5rem',
                     border: '1px solid var(--bs-border-color)',
+                    backgroundColor: 'var(--bs-body-bg)',
                     transition: 'all 0.2s ease'
                   }}>
                     <div className="d-flex justify-content-between align-items-start mb-2">
