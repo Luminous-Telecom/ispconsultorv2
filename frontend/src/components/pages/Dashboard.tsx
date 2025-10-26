@@ -15,7 +15,7 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
     if (!canvas) return;
     
     // Obter contexto 2D com configuração de alta resolução
-    const ctx = canvas.getContext('2d', { alpha: false });
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
     
     // Obter device pixel ratio para retina displays
