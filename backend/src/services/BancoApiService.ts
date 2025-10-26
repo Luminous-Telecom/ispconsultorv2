@@ -542,43 +542,77 @@ export class BancoApiService {
     const nomeFormatado = nomeCliente.includes(' ') ? nomeCliente : `${nomeCliente}  `;
     
     // Formatar telefone para EFI: formato ^[1-9]{2}9?[0-9]{8}$
+    // Formato esperado: DDD (2 dígitos) + 9 (opcional para celular) + 8 dígitos
     const formatarTelefoneEFI = (telefone: string): string => {
       // Remover tudo que não é dígito
       let numero = telefone.replace(/\D/g, '');
       
-      // Se tiver mais de 11 dígitos, pegar os últimos 11
+      logger.info('Formatando telefone para EFI', {
+        telefone_original: telefone,
+        telefone_limpo: numero,
+        tamanho: numero.length,
+        titulo_id: titulo.id
+      });
+      
+      // Extrair apenas os últimos 11 dígitos (caso tenha código do país)
       if (numero.length > 11) {
         numero = numero.substring(numero.length - 11);
       }
       
-      // Se tiver menos de 10 dígitos, adicionar zeros à esquerda até ter 10
-      if (numero.length < 10) {
-        numero = numero.padStart(10, '0');
+      // Se tiver exatamente 11 dígitos
+      if (numero.length === 11) {
+        // Verificar se já está no formato correto: DDD + 9 + 8 dígitos
+        const regex11 = /^[1-9]{1}[1-9]{1}9[0-9]{8}$/;
+        if (regex11.test(numero)) {
+          return numero;
+        }
+        
+        // Se não está no formato correto, tentar corrigir
+        // Assumir que os primeiros 2 dígitos são DDD
+        const ddd = numero.substring(0, 2);
+        const resto = numero.substring(2); // 9 dígitos
+        
+        // Para ter formato válido de celular: DDD + 9 + 8 dígitos
+        // Se resto tem 9 dígitos, precisa ajustar para 9 + 8
+        if (resto.length === 9) {
+          const primeiroDigito = resto.substring(0, 1);
+          
+          if (primeiroDigito === '9') {
+            // Se começa com 9, já está no formato: pegar apenas os próximos 8
+            const numeroFormatado = resto.substring(1); // 8 dígitos
+            numero = ddd + '9' + numeroFormatado;
+          } else {
+            // Se não começa com 9, assumir que precisa adicionar 9 e pegar os 8 primeiros
+            numero = ddd + '9' + resto.substring(0, 8);
+          }
+        }
       }
       
-      // Validar formato
-      // DDD deve começar com 1-9, segundo dígito 1-9
-      // Se tiver 11 dígitos, terceiro deve ser 9
-      const regex = /^[1-9]{1}[1-9]{1}9?[0-9]{8}$/;
+      // Se tiver 10 dígitos
+      if (numero.length === 10) {
+        // Verificar formato: DDD + 8 dígitos
+        const regex10 = /^[1-9]{1}[1-9]{1}[0-9]{8}$/;
+        if (regex10.test(numero)) {
+          // Formato fixo válido, retornar como está
+          return numero;
+        }
+      }
       
-      if (!regex.test(numero)) {
-        logger.warn('Telefone não está no formato esperado pela EFI', {
+      // Se tem menos de 10 dígitos, não é um número válido
+      // Usar um formato genérico válido: 11999999999
+      if (numero.length < 10) {
+        logger.warn('Telefone muito curto, usando formato genérico', {
           telefone_original: telefone,
           telefone_limpo: numero,
-          titulo_id: titulo.id,
-          cliente_id: cliente.id
+          titulo_id: titulo.id
         });
-        
-        // Tentar corrigir: se começar com 0, remover
-        if (numero.startsWith('0')) {
-          numero = numero.substring(1);
-        }
-        
-        // Se ainda não estiver no formato correto, usar um formato genérico válido
-        if (!regex.test(numero) && numero.length === 10) {
-          // Formatar como celular adicionando 9 no meio
-          numero = numero.substring(0, 2) + '9' + numero.substring(2);
-        }
+        return '11999999999';
+      }
+      
+      // Se chegou aqui e ainda tem problema, tentar corrigir
+      // Pegar primeiros 10 dígitos e validar
+      if (numero.length > 10) {
+        numero = numero.substring(0, 2) + numero.substring(numero.length - 8);
       }
       
       return numero;
