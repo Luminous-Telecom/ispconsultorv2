@@ -85,8 +85,9 @@ export class BancoController {
         }
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao listar bancos', {
-        error: error.message
+        error: errorMessage
       });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -115,9 +116,10 @@ export class BancoController {
         data: banco
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao buscar banco', {
         banco_id: req.params.id,
-        error: error.message
+        error: errorMessage
       });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -165,8 +167,9 @@ export class BancoController {
         data: banco
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar banco', {
-        error: error.message
+        error: errorMessage
       });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -216,9 +219,10 @@ export class BancoController {
         data: banco
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao atualizar banco', {
         banco_id: req.params.id,
-        error: error.message
+        error: errorMessage
       });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -262,9 +266,10 @@ export class BancoController {
         message: 'Banco excluído com sucesso!'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao deletar banco', {
         banco_id: req.params.id,
-        error: error.message
+        error: errorMessage
       });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -304,13 +309,14 @@ export class BancoController {
         });
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao testar conexão', {
         banco_id: req.params.id,
-        error: error.message
+        error: errorMessage
       });
       res.status(500).json({
         success: false,
-        message: 'Erro interno: ' + error.message
+        message: 'Erro interno: ' + errorMessage
       });
     }
   }
@@ -336,13 +342,14 @@ export class BancoController {
         message: 'Busca automática de dados não disponível para este banco. Configure manualmente.'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao buscar dados da API', {
         banco_id: req.params.id,
-        error: error.message
+        error: errorMessage
       });
       res.status(500).json({
         success: false,
-        message: 'Erro interno: ' + error.message
+        message: 'Erro interno: ' + errorMessage
       });
     }
   }
@@ -382,13 +389,14 @@ export class BancoController {
         });
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao buscar URL padrão', {
         tipo_banco: req.params.tipoBanco,
-        error: error.message
+        error: errorMessage
       });
       res.status(500).json({
         success: false,
-        message: 'Erro interno: ' + error.message
+        message: 'Erro interno: ' + errorMessage
       });
     }
   }
