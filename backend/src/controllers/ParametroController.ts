@@ -28,7 +28,7 @@ export class ParametroController {
         data: parametros
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao listar parâmetros:', error);
       res.status(500).json({
         success: false,
@@ -60,7 +60,7 @@ export class ParametroController {
         data: parametro
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao obter parâmetro:', error);
       res.status(500).json({
         success: false,
@@ -117,7 +117,7 @@ export class ParametroController {
         data: parametro
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao atualizar parâmetro:', error);
       res.status(500).json({
         success: false,
@@ -193,7 +193,7 @@ export class ParametroController {
         data: results
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao atualizar múltiplos parâmetros:', error);
       res.status(500).json({
         success: false,
@@ -221,7 +221,7 @@ export class ParametroController {
         data: parametros
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao obter parâmetros por categoria:', error);
       res.status(500).json({
         success: false,
@@ -275,7 +275,7 @@ export class ParametroController {
         data: results
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao resetar parâmetros:', error);
       res.status(500).json({
         success: false,
