@@ -53,11 +53,14 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       ctx.lineWidth = 1.5;
       ctx.stroke();
       
-      // Desenhar valor
+      // Desenhar valor - ajustar posição para não sair do canvas
+      const textY = y - 10;
+      const adjustedTextY = textY < 15 ? y + 25 : textY; // Se texto está muito alto, mostrar abaixo
+      
       ctx.fillStyle = 'white';
       ctx.font = 'bold 0.75rem sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(item.valor.toString(), x, y - 10);
+      ctx.fillText(item.valor.toString(), x, adjustedTextY);
       
       // Desenhar mês
       ctx.fillStyle = 'var(--text-secondary)';
