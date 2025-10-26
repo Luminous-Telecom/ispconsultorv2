@@ -393,13 +393,115 @@ export class SchedulerService {
   }
 
   private async executeRemessaBancaria(routine: ScheduledRoutine): Promise<any> {
-    // Implementar lógica de remessa bancária
+    const { Titulo } = await import('../models/Titulo');
+    const { Banco } = await import('../models/Banco');
+    const { Cliente } = await import('../models/Cliente');
+    const { Plano } = await import('../models/Plano');
+    const { BancoApiService } = await import('./BancoApiService');
+    const { logger } = await import('../utils/logger');
     
-    return {
-      remessas_geradas: 0,
-      bancos_processados: 0,
-      message: 'Remessa bancária executada'
-    };
+    try {
+      console.log('Iniciando remessa bancária...');
+      
+      // Buscar títulos pendentes que ainda não foram registrados no banco (sem charge_id)
+      const titulosParaRegistrar = await Titulo.findAll({
+        where: {
+          status: 'pendente',
+          charge_id: null // Apenas títulos que ainda não foram registrados
+        },
+        include: [
+          {
+            model: Banco,
+            as: 'banco',
+            required: true,
+            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox']
+          },
+          {
+            model: Cliente,
+            as: 'cliente',
+            required: true,
+            attributes: ['id', 'razao_social', 'cnpj', 'telefone', 'endereco', 'numero', 'bairro', 'cidade', 'uf', 'cep']
+          },
+          {
+            model: Plano,
+            as: 'plano',
+            required: true,
+            attributes: ['id', 'nome_plano']
+          }
+        ],
+        limit: 100 // Processar até 100 títulos por execução para não sobrecarregar
+      });
+
+      console.log(`Encontrados ${titulosParaRegistrar.length} títulos para registrar no banco`);
+
+      let registrados = 0;
+      let erros = 0;
+      const detalhes: any[] = [];
+
+      for (const titulo of titulosParaRegistrar) {
+        try {
+          const tituloCompleto = titulo as any;
+          console.log(`Registrando título ${titulo.id} no banco ${tituloCompleto.banco?.nome}...`);
+          
+          // Registrar título no banco
+          const resultado = await BancoApiService.gerarTitulo(tituloCompleto);
+          
+          if (resultado.success) {
+            registrados++;
+            const chargeId = (resultado as any).charge_id;
+            console.log(`Título ${titulo.id} registrado com sucesso. Charge ID: ${chargeId}`);
+            
+            detalhes.push({
+              titulo_id: titulo.id,
+              banco: tituloCompleto.banco?.nome,
+              status: 'sucesso',
+              message: 'Título registrado no banco',
+              charge_id: chargeId
+            });
+          } else {
+            erros++;
+            console.error(`Erro ao registrar título ${titulo.id}: ${resultado.message}`);
+            
+            detalhes.push({
+              titulo_id: titulo.id,
+              banco: tituloCompleto.banco?.nome,
+              status: 'erro',
+              message: resultado.message || 'Erro desconhecido'
+            });
+          }
+        } catch (error) {
+          erros++;
+          const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+          console.error(`Erro ao processar título ${titulo.id}:`, errorMsg);
+          
+          detalhes.push({
+            titulo_id: titulo.id,
+            banco: (titulo as any).banco?.nome,
+            status: 'erro',
+            message: errorMsg
+          });
+        }
+      }
+
+      console.log(`Remessa bancária concluída: ${registrados} títulos registrados, ${erros} erros`);
+
+      return {
+        titulos_registrados: registrados,
+        titulos_erro: erros,
+        total_processados: titulosParaRegistrar.length,
+        detalhes
+      };
+
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar remessa bancária', { error: errorMsg });
+      return {
+        titulos_registrados: 0,
+        titulos_erro: 0,
+        total_processados: 0,
+        message: `Erro ao executar remessa bancária: ${errorMsg}`
+      };
+    }
   }
 
   public async createRoutine(data: {
