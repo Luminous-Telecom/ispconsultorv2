@@ -317,15 +317,16 @@ export class BancoApiService {
           });
           break; // Sucesso, sair do loop
         } catch (error: unknown) {
-          const isTimeout = error.code === 'ECONNABORTED' || 
-                           error.response?.status === 504 || 
-                           error.response?.status === 502 || 
-                           error.response?.status === 503;
+          const isTimeout = (error as any).code === 'ECONNABORTED' || 
+                           (error as any).response?.status === 504 || 
+                           (error as any).response?.status === 502 || 
+                           (error as any).response?.status === 503;
+          const errorResponse = (error as any).response;
           
           if (tentativa < maxTentativas && isTimeout) {
             logger.warn(`Tentativa ${tentativa} falhou por timeout na criação do boleto, tentando novamente em ${delay}ms`, {
               titulo_id: titulo.id,
-              status: error.response?.status,
+              status: errorResponse?.status,
               tentativa
             });
             
@@ -437,12 +438,14 @@ export class BancoApiService {
         message: 'Erro ao gerar título'
       };
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorResponse = (error as any).response;
       const errorDetails = {
         titulo_id: titulo.id,
-        error: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
+        error: errorMessage,
+        status: errorResponse?.status,
+        statusText: errorResponse?.statusText,
+        data: errorResponse?.data,
         banco_id: banco.id,
         banco_nome: banco.nome,
         sandbox: banco.sandbox,
@@ -453,16 +456,16 @@ export class BancoApiService {
       logger.error('Erro ao gerar título', errorDetails);
 
       // Mensagem específica para erro 401
-      let errorMessage = 'Erro ao gerar título: ' + error.message;
-      if (error.response?.status === 401) {
-        errorMessage = 'Erro de autenticação (401): Verifique as credenciais (Client ID e Client Secret) do banco. ' +
+      let finalErrorMessage = 'Erro ao gerar título: ' + errorMessage;
+      if (errorResponse?.status === 401) {
+        finalErrorMessage = 'Erro de autenticação (401): Verifique as credenciais (Client ID e Client Secret) do banco. ' +
                       `Banco está em modo ${banco.sandbox ? 'SANDBOX' : 'PRODUÇÃO'}. ` +
                       'Certifique-se de que as credenciais correspondem ao ambiente correto.';
       }
 
       return {
         success: false,
-        message: errorMessage
+        message: finalErrorMessage
       };
     }
   }
@@ -634,15 +637,16 @@ export class BancoApiService {
           });
           break; // Sucesso, sair do loop
         } catch (error: unknown) {
-          const isTimeout = error.code === 'ECONNABORTED' || 
-                           error.response?.status === 504 || 
-                           error.response?.status === 502 || 
-                           error.response?.status === 503;
+          const errorResponse = (error as any).response;
+          const isTimeout = (error as any).code === 'ECONNABORTED' || 
+                           errorResponse?.status === 504 || 
+                           errorResponse?.status === 502 || 
+                           errorResponse?.status === 503;
           
           if (tentativa < maxTentativas && isTimeout) {
             logger.warn(`Tentativa ${tentativa} falhou por timeout na consulta de status, tentando novamente em ${delay}ms`, {
               titulo_id: titulo.id,
-              status: error.response?.status,
+              status: errorResponse?.status,
               tentativa
             });
             
@@ -672,13 +676,14 @@ export class BancoApiService {
         message: 'Erro ao consultar status'
       };
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao consultar status', { 
         titulo_id: titulo.id,
-        error: error.message 
+        error: errorMessage 
       });
       return {
         success: false,
-        message: 'Erro ao consultar status: ' + error.message
+        message: "Erro ao consultar status: " + errorMessage
       };
     }
   }
@@ -736,7 +741,7 @@ export class BancoApiService {
         } catch (error: unknown) {
           // Se não é a última tentativa e é erro temporário (502, 503, 504), tentar novamente
           if (tentativa < maxTentativas && 
-              error.response?.status && 
+              errorResponse?.status && 
               [502, 503, 504].includes(error.response.status)) {
             
             logger.warn(`Tentativa ${tentativa} falhou, tentando novamente em ${delay}ms`, {
@@ -765,26 +770,29 @@ export class BancoApiService {
         message: 'Erro ao consultar notificação'
       };
     } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        const errorResponse = (error as any).response;
+        
         // Se é erro de token inválido/expirado, logar como warning em vez de error
-        if (error.response?.data?.code === 3500010 || error.response?.status === 500) {
+        if (errorResponse?.data?.code === 3500010 || errorResponse?.status === 500) {
           logger.warn('Token de notificação inválido ou expirado', {
             banco_id: banco.id,
             token: notificationToken,
-            status: error.response?.status
+            status: errorResponse?.status
           });
         } else {
           logger.error('Erro ao consultar notificação por token', {
             banco_id: banco.id,
             token: notificationToken,
-            error: error.message,
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data
+            error: errorMessage,
+            status: errorResponse?.status,
+            statusText: errorResponse?.statusText,
+            data: errorResponse?.data
           });
         }
       
       // Se o erro for 3500010 (propriedade não existe), o token pode ter expirado
-      if (error.response?.data?.code === 3500010) {
+      if (errorResponse?.data?.code === 3500010) {
         return {
           success: false,
           message: 'Token de notificação não encontrado ou expirado'
@@ -793,7 +801,7 @@ export class BancoApiService {
       
       return {
         success: false,
-        message: 'Erro ao consultar notificação: ' + error.message 
+        message: "Erro ao consultar notificação: " + errorMessage
       };
     }
   }
@@ -859,15 +867,16 @@ export class BancoApiService {
           });
           break; // Sucesso, sair do loop
         } catch (error: unknown) {
-          const isTimeout = error.code === 'ECONNABORTED' || 
-                           error.response?.status === 504 || 
-                           error.response?.status === 502 || 
-                           error.response?.status === 503;
+          const errorResponse = (error as any).response;
+          const isTimeout = (error as any).code === 'ECONNABORTED' || 
+                           errorResponse?.status === 504 || 
+                           errorResponse?.status === 502 || 
+                           errorResponse?.status === 503;
           
           if (tentativa < maxTentativas && isTimeout) {
             logger.warn(`Tentativa ${tentativa} falhou por timeout no cancelamento, tentando novamente em ${delay}ms`, {
               titulo_id: titulo.id,
-              status: error.response?.status,
+              status: errorResponse?.status,
               tentativa
             });
             
@@ -898,14 +907,15 @@ export class BancoApiService {
         message: 'Erro ao cancelar título: ' + response.status
       };
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao cancelar título individual', {
         titulo_id: titulo.id,
         charge_id: titulo.charge_id,
-        error: error.message
+        error: errorMessage
       });
       return {
         success: false,
-        message: 'Erro ao cancelar título: ' + error.message
+        message: "Erro ao cancelar título: " + errorMessage
       };
     }
   }
@@ -988,14 +998,15 @@ export class BancoApiService {
       }
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao liquidar título', {
         titulo_id: titulo.id,
-        error: error.message
+        error: errorMessage
       });
 
       return {
         success: false,
-        message: 'Erro ao liquidar título: ' + error.message
+        message: 'Erro ao liquidar título: ' + errorMessage
       };
     }
   }
@@ -1025,14 +1036,15 @@ export class BancoApiService {
         }
       };
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao enviar remessa', { 
         banco_id: banco.id,
         banco_nome: banco.nome,
-        error: error.message 
+        error: errorMessage
       });
       return {
         success: false,
-        message: 'Erro ao enviar remessa: ' + error.message
+        message: 'Erro ao enviar remessa: ' + errorMessage
       };
     }
   }
