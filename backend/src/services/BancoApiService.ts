@@ -119,13 +119,14 @@ export class BancoApiService {
         message: 'Autenticação realizada com sucesso'
       };
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Exceção ao testar autenticação', {
         banco: banco.tipo_banco,
-        error: error.message
+        error: errorMessage
       });
       return {
         success: false,
-        message: 'Erro ao testar autenticação: ' + error.message
+        message: 'Erro ao testar autenticação: ' + errorMessage
       };
     }
   }
@@ -178,16 +179,18 @@ export class BancoApiService {
         });
         return null;
       } catch (error: unknown) {
-        const isTimeout = error.code === 'ECONNABORTED' || 
-                         error.response?.status === 504 || 
-                         error.response?.status === 502 || 
-                         error.response?.status === 503;
+        const isTimeout = (error as any).code === 'ECONNABORTED' || 
+                         (error as any).response?.status === 504 || 
+                         (error as any).response?.status === 502 || 
+                         (error as any).response?.status === 503;
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        const errorResponse = (error as any).response;
         
         if (tentativa < maxTentativas && isTimeout) {
           logger.warn(`Tentativa ${tentativa} falhou por timeout, tentando novamente em ${delay}ms`, {
             banco_id: banco.id,
-            error: error.message,
-            status: error.response?.status,
+            error: errorMessage,
+            status: errorResponse?.status,
             tentativa
           });
           
@@ -198,9 +201,9 @@ export class BancoApiService {
         
         logger.error('Erro ao obter token', { 
           banco_id: banco.id,
-          error: error.message,
-          status: error.response?.status,
-          statusText: error.response?.statusText,
+          error: errorMessage,
+          status: errorResponse?.status,
+          statusText: errorResponse?.statusText,
           tentativa,
           isTimeout
         });
