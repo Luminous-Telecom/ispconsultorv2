@@ -95,11 +95,11 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
               </div>
             </div>
 
-            <div className="list-group gap-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {atualizacoes.map((atualizacao: Atualizacao, index: number) => {
                 const badge = getTipoBadge(atualizacao.tipo);
                 return (
-                  <div key={atualizacao.versao} className="list-group-item list-group-item-action" style={{ 
+                  <div key={atualizacao.versao} className="border" style={{ 
                     borderRadius: '0.5rem',
                     border: '1px solid var(--bs-border-color)',
                     backgroundColor: 'var(--bs-body-bg)',
