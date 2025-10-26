@@ -86,7 +86,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     }
   }, [show]);
   
-  // Sincronizar Form com valores formatados (sem forçar re-render completo)
   const [showCancelados, setShowCancelados] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
@@ -240,6 +239,19 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
   // Configuração do formulário unificado para dados básicos
   const dadosBasicosFormConfig: FormConfig = {
+    formatValue: (name: string, value: any) => {
+      // Aplicar formatação durante a digitação
+      if (typeof value === 'string') {
+        if (name === 'cnpj') {
+          return formatCNPJ(value);
+        } else if (name === 'telefone' || name === 'whatsapp') {
+          return formatPhone(value);
+        } else if (name === 'cep') {
+          return formatCEP(value);
+        }
+      }
+      return value;
+    },
     fields: [
       {
         name: 'cnpj',
@@ -1077,6 +1089,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     },
   });
 
+  // Estado de submissão
+  const isSubmitting = updateClienteMutation.isPending || createClienteMutation.isPending;
+
   // Dados iniciais do formulário
   const initialFormData: ClienteFormData = {
     cnpj: '',
@@ -1377,43 +1392,60 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         >
           {/* Aba Dados Básicos */}
           {activeTab === 'dados-basicos' && (
-            <Form
-              key={`dados-basicos-${clienteId}`}
-              config={dadosBasicosFormConfig}
-              formPrefix={formPrefix}
-              initialValues={{
-                cnpj: formData.cnpj || '',
-                razao_social: formData.razao_social || '',
-                nome_fantasia: formData.nome_fantasia || '',
-                ativo: formData.ativo
-              }}
-              onFieldChange={(name, value) => {
-                // Aplicar formatação ANTES de atualizar o estado
-                let formattedValue = value;
-                if (typeof value === 'string') {
-                  if (name === 'cnpj') {
-                    formattedValue = formatCNPJ(value);
-                  } else if (name === 'telefone' || name === 'whatsapp') {
-                    formattedValue = formatPhone(value);
-                  } else if (name === 'cep') {
-                    formattedValue = formatCEP(value);
-                  }
-                }
-                
-                // Atualizar estado com valor formatado
-                setFormData(prev => {
-                  const newData = { ...prev, [name]: formattedValue };
-                  return newData;
-                });
-              }}
-              validateOnChange={false}
-              onSubmit={(data) => {
-                // Não fazer nada no submit, pois os dados já estão atualizados via onFieldChange
-              }}
-              showSubmitButton={false}
-              showResetButton={false}
-              className="dados-basicos-form"
-            />
+            <div className="row">
+              <div className="col-md-4">
+                <FormField
+                  name="cnpj"
+                  type="text"
+                  label="CNPJ"
+                  placeholder="00.000.000/0000-00"
+                  required={true}
+                  size="md"
+                  value={formData.cnpj || ''}
+                  onChange={(value) => handleInputChange('cnpj', value)}
+                  disabled={isSubmitting}
+                  formPrefix={formPrefix}
+                />
+              </div>
+              <div className="col-md-8">
+                <FormField
+                  name="razao_social"
+                  type="text"
+                  label="Razão Social"
+                  placeholder="Razão social da empresa"
+                  required={true}
+                  size="md"
+                  value={formData.razao_social || ''}
+                  onChange={(value) => handleInputChange('razao_social', value)}
+                  disabled={isSubmitting}
+                  formPrefix={formPrefix}
+                />
+              </div>
+              <div className="col-md-6">
+                <FormField
+                  name="nome_fantasia"
+                  type="text"
+                  label="Nome Fantasia"
+                  placeholder="Nome fantasia da empresa"
+                  size="md"
+                  value={formData.nome_fantasia || ''}
+                  onChange={(value) => handleInputChange('nome_fantasia', value)}
+                  disabled={isSubmitting}
+                  formPrefix={formPrefix}
+                />
+              </div>
+              <div className="col-md-6">
+                <FormField
+                  name="ativo"
+                  type="checkbox"
+                  label="Cliente Ativo"
+                  value={formData.ativo}
+                  onChange={(value) => handleInputChange('ativo', value)}
+                  disabled={isSubmitting}
+                  formPrefix={formPrefix}
+                />
+              </div>
+            </div>
           )}
 
             {/* Aba Contato */}

@@ -66,7 +66,14 @@ const FormContent: React.FC<{
         value={field.type === 'checkbox' 
           ? state.data[field.name] 
           : (state.data[field.name] === null || state.data[field.name] === undefined ? '' : String(state.data[field.name]))}
-        onChange={(value) => actions.setValue(field.name, value)}
+        onChange={(value) => {
+          // Aplicar formatação se configurado
+          let finalValue = value;
+          if (config.formatValue && typeof config.formatValue === 'function') {
+            finalValue = config.formatValue(field.name, value);
+          }
+          actions.setValue(field.name, finalValue);
+        }}
         placeholder={field.placeholder}
         required={field.required}
         disabled={field.disabled || config.disabled}

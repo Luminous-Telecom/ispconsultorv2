@@ -56,6 +56,7 @@ export interface FormConfig {
   onSubmit?: (data: Record<string, any>) => void | Promise<void>;
   onReset?: () => void;
   onFieldChange?: (name: string, value: any, allData: Record<string, any>) => void;
+  formatValue?: (name: string, value: any) => any;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
   validateOnSubmit?: boolean;
