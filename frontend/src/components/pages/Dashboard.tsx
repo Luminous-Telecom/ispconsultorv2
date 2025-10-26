@@ -425,13 +425,13 @@ const Dashboard: React.FC = () => {
     };
     
     const chartHeight = 120;
-    const chartWidth = 150;
+    const chartWidth = 100;
     const pointRadius = 5;
     
     // Criar path da linha
     let pathData = '';
     data.forEach((item, index) => {
-      const x = (index / (data.length - 1)) * chartWidth;
+      const x = (index / (data.length - 1 || 1)) * chartWidth;
       const y = calculateY(item.valor, chartHeight);
       if (index === 0) {
         pathData += `M ${x} ${y}`;
@@ -444,7 +444,7 @@ const Dashboard: React.FC = () => {
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
         <div className="line-chart-wrapper" style={{ height: `${chartHeight + 50}px` }}>
-          <svg className="line-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight + 50}`}>
+          <svg className="line-chart-svg" viewBox="0 0 100 170" preserveAspectRatio="none">
             {/* Linha */}
             <path
               d={pathData}
@@ -456,7 +456,7 @@ const Dashboard: React.FC = () => {
             />
             {/* Pontos e labels */}
             {data.map((item, index) => {
-              const x = (index / (data.length - 1)) * chartWidth;
+              const x = (index / (data.length - 1 || 1)) * chartWidth;
               const y = calculateY(item.valor, chartHeight);
               return (
                 <g key={index}>
