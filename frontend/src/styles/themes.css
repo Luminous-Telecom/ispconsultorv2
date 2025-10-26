@@ -870,7 +870,7 @@ body {
   align-items: end;
   justify-content: center;
   gap: 0.5rem;
-  height: 60px;
+  height: 150px;
   margin-bottom: 0.5rem;
 }
 
@@ -886,18 +886,22 @@ body {
   width: 100%;
   min-height: 20px;
   border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
 }
 
 .bar-label {
   font-size: 0.5rem;
   color: var(--text-secondary);
   text-align: center;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .bar-value {
   font-size: 0.625rem;
   font-weight: 600;
   color: var(--text-primary);
+  text-align: center;
 }
 
 /* Gráfico de Valor Único */
