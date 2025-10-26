@@ -154,15 +154,26 @@ Cliente.init(
     },
     cep: {
       type: DataTypes.STRING(10),
-      allowNull: true
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [8, 10]
+      }
     },
     endereco: {
       type: DataTypes.STRING(255),
-      allowNull: true
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [3, 255]
+      }
     },
     numero: {
       type: DataTypes.STRING(10),
-      allowNull: true
+      allowNull: false,
+      validate: {
+        notEmpty: true
+      }
     },
     complemento: {
       type: DataTypes.STRING(100),
@@ -170,16 +181,25 @@ Cliente.init(
     },
     bairro: {
       type: DataTypes.STRING(100),
-      allowNull: true
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [2, 100]
+      }
     },
     cidade: {
       type: DataTypes.STRING(100),
-      allowNull: true
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [2, 100]
+      }
     },
     estado: {
       type: DataTypes.STRING(2),
-      allowNull: true,
+      allowNull: false,
       validate: {
+        notEmpty: true,
         len: [2, 2]
       }
     },

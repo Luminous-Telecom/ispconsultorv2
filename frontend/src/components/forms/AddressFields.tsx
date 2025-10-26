@@ -33,11 +33,9 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       name: 'cep',
       label: 'CEP',
       placeholder: '00000-000',
-      fieldRequired: false, // CEP é opcional no backend
-      validation: required ? [
+      fieldRequired: true,
+      validation: [
         { type: 'required', message: 'CEP é obrigatório' },
-        { type: 'pattern', value: /^\d{5}-?\d{3}$/, message: 'CEP inválido' }
-      ] : [
         { type: 'pattern', value: /^\d{5}-?\d{3}$/, message: 'CEP inválido' }
       ]
     },
@@ -45,55 +43,52 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       name: 'endereco',
       label: 'Endereço',
       placeholder: 'Rua, Avenida...',
-      fieldRequired: false, // Endereço é opcional no backend
-      validation: required ? [
+      fieldRequired: true,
+      validation: [
         { type: 'required', message: 'Endereço é obrigatório' }
-      ] : []
+      ]
     },
     {
       name: 'numero',
       label: 'Número',
       placeholder: '123',
-      fieldRequired: false, // Número é opcional no backend
-      validation: required ? [
+      fieldRequired: true,
+      validation: [
         { type: 'required', message: 'Número é obrigatório' }
-      ] : []
+      ]
     },
     {
       name: 'complemento',
       label: 'Complemento',
       placeholder: 'Apto, Sala...',
-      fieldRequired: false, // Complemento é opcional no backend
+      fieldRequired: false,
       validation: []
     },
     {
       name: 'bairro',
       label: 'Bairro',
       placeholder: 'Nome do bairro',
-      fieldRequired: false, // Bairro é opcional no backend
-      validation: required ? [
+      fieldRequired: true,
+      validation: [
         { type: 'required', message: 'Bairro é obrigatório' }
-      ] : []
+      ]
     },
     {
       name: 'cidade',
       label: 'Cidade',
       placeholder: 'Nome da cidade',
-      fieldRequired: false, // Cidade é opcional no backend
-      validation: required ? [
+      fieldRequired: true,
+      validation: [
         { type: 'required', message: 'Cidade é obrigatória' }
-      ] : []
+      ]
     },
     {
       name: 'estado',
       label: 'Estado',
       placeholder: 'SP',
-      fieldRequired: false, // Estado é opcional no backend
-      validation: required ? [
+      fieldRequired: true,
+      validation: [
         { type: 'required', message: 'Estado é obrigatório' },
-        { type: 'minLength', value: 2, message: 'Estado deve ter pelo menos 2 caracteres' },
-        { type: 'maxLength', value: 2, message: 'Estado deve ter no máximo 2 caracteres' }
-      ] : [
         { type: 'minLength', value: 2, message: 'Estado deve ter pelo menos 2 caracteres' },
         { type: 'maxLength', value: 2, message: 'Estado deve ter no máximo 2 caracteres' }
       ]

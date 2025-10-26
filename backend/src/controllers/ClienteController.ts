@@ -22,13 +22,34 @@ export class ClienteController {
     }),
     telefone: Joi.string().max(20).allow(null, ''),
     whatsapp: Joi.string().max(20).allow(null, ''),
-    cep: Joi.string().max(10).allow(null, ''),
-    endereco: Joi.string().max(255).allow(null, ''),
-    numero: Joi.string().max(10).allow(null, ''),
+    cep: Joi.string().pattern(/^\d{5}-?\d{3}$/).required().messages({
+      'string.pattern.base': 'CEP inválido',
+      'any.required': 'CEP é obrigatório'
+    }),
+    endereco: Joi.string().min(3).max(255).required().messages({
+      'string.min': 'Endereço deve ter pelo menos 3 caracteres',
+      'string.max': 'Endereço deve ter no máximo 255 caracteres',
+      'any.required': 'Endereço é obrigatório'
+    }),
+    numero: Joi.string().max(10).required().messages({
+      'string.max': 'Número deve ter no máximo 10 caracteres',
+      'any.required': 'Número é obrigatório'
+    }),
     complemento: Joi.string().max(100).allow(null, ''),
-    bairro: Joi.string().max(100).allow(null, ''),
-    cidade: Joi.string().max(100).allow(null, ''),
-    estado: Joi.string().length(2).allow(null, ''),
+    bairro: Joi.string().min(2).max(100).required().messages({
+      'string.min': 'Bairro deve ter pelo menos 2 caracteres',
+      'string.max': 'Bairro deve ter no máximo 100 caracteres',
+      'any.required': 'Bairro é obrigatório'
+    }),
+    cidade: Joi.string().min(2).max(100).required().messages({
+      'string.min': 'Cidade deve ter pelo menos 2 caracteres',
+      'string.max': 'Cidade deve ter no máximo 100 caracteres',
+      'any.required': 'Cidade é obrigatória'
+    }),
+    estado: Joi.string().length(2).required().messages({
+      'string.length': 'Estado deve ter exatamente 2 caracteres',
+      'any.required': 'Estado é obrigatório'
+    }),
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean().default(true),
     tipo_cobranca: Joi.string().valid('titulo', 'carne').allow(null),
