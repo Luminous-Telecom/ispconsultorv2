@@ -5,6 +5,82 @@ import { PlanoService } from '../../services/planoService';
 import { ContratoService } from '../../services/ContratoService';
 import { useDashboard } from '../../hooks/useDashboard';
 
+// Componente para gráfico de linha temporal com Canvas
+const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'number' }> = ({ data, title }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const maxValue = Math.max(...data.map(item => item.valor));
+    const chartWidth = canvas.width;
+    const chartHeight = 120;
+    const padding = 20;
+    const pointRadius = 5;
+    
+    // Limpar canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Desenhar linha e pontos
+    data.forEach((item, index) => {
+      const x = (index / (data.length - 1 || 1)) * (chartWidth - padding * 2) + padding;
+      const percentage = maxValue > 0 ? item.valor / maxValue : 0;
+      const y = chartHeight - (percentage * chartHeight) + 10;
+      
+      // Desenhar linha
+      if (index === 0) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = '#007bff';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+      
+      // Desenhar ponto
+      ctx.beginPath();
+      ctx.arc(x, y, pointRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#007bff';
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      
+      // Desenhar valor
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 0.75rem sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.valor.toString(), x, y - 10);
+      
+      // Desenhar mês
+      ctx.fillStyle = 'var(--text-secondary)';
+      ctx.font = '0.65rem sans-serif';
+      ctx.fillText(item.mes, x, chartHeight + 28);
+    });
+  }, [data]);
+  
+  return (
+    <div className="chart-container">
+      <h6 className="chart-title">{title}</h6>
+      <div className="line-chart-wrapper">
+        <canvas 
+          ref={canvasRef}
+          width="548"
+          height="170"
+          style={{ display: 'block', width: '100%', height: '170px' }}
+        />
+      </div>
+    </div>
+  );
+};
+
 const Dashboard: React.FC = () => {
   // Estados para controlar itens ocultos em cada gráfico
   const [hiddenClientes, setHiddenClientes] = useState<Set<number>>(new Set());
@@ -386,82 +462,6 @@ const Dashboard: React.FC = () => {
           <div className="value-display" style={{ color: data[0]?.color || '#6f42c1' }}>
             {formatValue(value)}
           </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Componente para gráfico de linha temporal com Canvas
-  const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'number' }> = ({ data, title }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      const maxValue = Math.max(...data.map(item => item.valor));
-      const chartWidth = canvas.width;
-      const chartHeight = 120;
-      const padding = 20;
-      const pointRadius = 5;
-      
-      // Limpar canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Desenhar linha e pontos
-      data.forEach((item, index) => {
-        const x = (index / (data.length - 1 || 1)) * (chartWidth - padding * 2) + padding;
-        const percentage = maxValue > 0 ? item.valor / maxValue : 0;
-        const y = chartHeight - (percentage * chartHeight) + 10;
-        
-        // Desenhar linha
-        if (index === 0) {
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-          ctx.strokeStyle = '#007bff';
-          ctx.lineWidth = 3;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          ctx.stroke();
-        }
-        
-        // Desenhar ponto
-        ctx.beginPath();
-        ctx.arc(x, y, pointRadius, 0, Math.PI * 2);
-        ctx.fillStyle = '#007bff';
-        ctx.fill();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        
-        // Desenhar valor
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 0.75rem sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(item.valor.toString(), x, y - 10);
-        
-        // Desenhar mês
-        ctx.fillStyle = 'var(--text-secondary)';
-        ctx.font = '0.65rem sans-serif';
-        ctx.fillText(item.mes, x, chartHeight + 28);
-      });
-    }, [data]);
-    
-    return (
-      <div className="chart-container">
-        <h6 className="chart-title">{title}</h6>
-        <div className="line-chart-wrapper">
-          <canvas 
-            ref={canvasRef}
-            width="548"
-            height="170"
-            style={{ display: 'block', width: '100%', height: '170px' }}
-          />
         </div>
       </div>
     );
