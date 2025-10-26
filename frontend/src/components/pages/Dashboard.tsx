@@ -429,8 +429,8 @@ const Dashboard: React.FC = () => {
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
-        <div className="line-chart-wrapper" style={{ height: `${chartHeight + 50}px` }}>
-          <svg className="line-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight + 50}`}>
+        <div className="line-chart-wrapper" style={{ height: `${chartHeight + 60}px` }}>
+          <svg className="line-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight + 60}`}>
             {/* Linha */}
             <path
               d={pathData}
@@ -469,7 +469,7 @@ const Dashboard: React.FC = () => {
                   {/* Mês */}
                   <text
                     x={x}
-                    y={chartHeight + 12}
+                    y={chartHeight + 15}
                     textAnchor="middle"
                     fill="var(--text-secondary)"
                     fontSize="2.5"
