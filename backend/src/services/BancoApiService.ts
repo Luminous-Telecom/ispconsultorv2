@@ -541,9 +541,52 @@ export class BancoApiService {
     const nomeCliente = cliente.razao_social || 'Cliente';
     const nomeFormatado = nomeCliente.includes(' ') ? nomeCliente : `${nomeCliente}  `;
     
+    // Formatar telefone para EFI: formato ^[1-9]{2}9?[0-9]{8}$
+    const formatarTelefoneEFI = (telefone: string): string => {
+      // Remover tudo que não é dígito
+      let numero = telefone.replace(/\D/g, '');
+      
+      // Se tiver mais de 11 dígitos, pegar os últimos 11
+      if (numero.length > 11) {
+        numero = numero.substring(numero.length - 11);
+      }
+      
+      // Se tiver menos de 10 dígitos, adicionar zeros à esquerda até ter 10
+      if (numero.length < 10) {
+        numero = numero.padStart(10, '0');
+      }
+      
+      // Validar formato
+      // DDD deve começar com 1-9, segundo dígito 1-9
+      // Se tiver 11 dígitos, terceiro deve ser 9
+      const regex = /^[1-9]{1}[1-9]{1}9?[0-9]{8}$/;
+      
+      if (!regex.test(numero)) {
+        logger.warn('Telefone não está no formato esperado pela EFI', {
+          telefone_original: telefone,
+          telefone_limpo: numero,
+          titulo_id: titulo.id,
+          cliente_id: cliente.id
+        });
+        
+        // Tentar corrigir: se começar com 0, remover
+        if (numero.startsWith('0')) {
+          numero = numero.substring(1);
+        }
+        
+        // Se ainda não estiver no formato correto, usar um formato genérico válido
+        if (!regex.test(numero) && numero.length === 10) {
+          // Formatar como celular adicionando 9 no meio
+          numero = numero.substring(0, 2) + '9' + numero.substring(2);
+        }
+      }
+      
+      return numero;
+    };
+    
     const customerData: any = {
       name: nomeFormatado,
-      phone_number: cliente.telefone.replace(/\D/g, ''),
+      phone_number: formatarTelefoneEFI(cliente.telefone),
       juridical_person: {
         corporate_name: nomeFormatado,
         cnpj: cliente.cnpj.replace(/\D/g, ''),
