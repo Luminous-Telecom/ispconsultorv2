@@ -95,7 +95,7 @@ export class ParametroController {
       } else if (parametro.tipo === 'json') {
         try {
           valorConvertido = JSON.parse(valor);
-        } catch (e) {
+        } catch {
           res.status(400).json({
             success: false,
             message: 'Valor JSON inválido'
@@ -156,7 +156,7 @@ export class ParametroController {
           } else if (parametro.tipo === 'json') {
             try {
               valorConvertido = JSON.parse(valor);
-            } catch (e) {
+            } catch {
               results.push({
                 chave,
                 success: false,

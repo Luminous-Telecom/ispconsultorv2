@@ -374,7 +374,7 @@ export class BancoController {
           success: true,
           url: url
         });
-      } catch (importError) {
+      } catch {
         res.status(404).json({
           success: false,
           message: 'Configurações do banco não encontradas'

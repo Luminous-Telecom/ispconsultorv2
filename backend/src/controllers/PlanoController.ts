@@ -79,7 +79,7 @@ export class PlanoController {
         if (typeof planoData.servicos_inclusos === 'string') {
           try {
             planoData.servicos_inclusos = JSON.parse(planoData.servicos_inclusos);
-          } catch (e) {
+          } catch {
             planoData.servicos_inclusos = [];
           }
         }
@@ -126,7 +126,7 @@ export class PlanoController {
       if (typeof planoData.servicos_inclusos === 'string') {
         try {
           planoData.servicos_inclusos = JSON.parse(planoData.servicos_inclusos);
-        } catch (e) {
+        } catch {
           planoData.servicos_inclusos = [];
         }
       }

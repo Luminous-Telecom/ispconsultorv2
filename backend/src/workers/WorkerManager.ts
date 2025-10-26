@@ -205,7 +205,7 @@ export class WorkerManager extends EventEmitter {
    */
   private async updateNextExecution(routine: ScheduledRoutine): Promise<void> {
     const [hours, minutes] = routine.hora_execucao.split(':');
-    let nextExecution = new Date();
+    const nextExecution = new Date();
     
     // Definir a hora configurada
     nextExecution.setHours(parseInt(hours), parseInt(minutes), 0, 0);
