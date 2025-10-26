@@ -36,6 +36,27 @@ export class TituloController {
     const topoTemplate = fs.readFileSync(topoTemplatePath, 'utf8');
     const corpoTemplate = fs.readFileSync(corpoTemplatePath, 'utf8');
 
+    // Verificar logo do banco antes de criar templateVars
+    let logoBanco = '';
+    if ((titulo.banco as any).logo) {
+      logoBanco = (titulo.banco as any).logo;
+      logger.info('Logo do banco encontrada', {
+        titulo_id: titulo.id,
+        banco_id: titulo.banco_id,
+        banco_nome: titulo.banco.nome,
+        logo: logoBanco.substring(0, 50) + '...'
+      });
+    } else {
+      logoBanco = TituloController.getLogoBancoPadrao(titulo.banco.tipo_banco) || dadosEmpresa.logo || '';
+      logger.warn('Logo do banco não encontrada, usando padrão', {
+        titulo_id: titulo.id,
+        banco_id: titulo.banco_id,
+        banco_nome: titulo.banco.nome,
+        tipo_banco: titulo.banco.tipo_banco,
+        logo_final: logoBanco.substring(0, 50) + '...'
+      });
+    }
+
     // Variáveis para substituição no template - Padrão FEBRABAN
     const templateVars = {
       // Dados da empresa (Beneficiário)
@@ -49,7 +70,7 @@ export class TituloController {
       EMPRESAESTADO: dadosEmpresa.estado || '',
       
       // Dados do banco - FEBRABAN
-      LOGOBANCO: (titulo.banco as any).logo || TituloController.getLogoBancoPadrao(titulo.banco.tipo_banco) || dadosEmpresa.logo || '',
+      LOGOBANCO: logoBanco,
       CODIGO_BANCO_COM_DV: titulo.banco.codigo ? `${titulo.banco.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
       LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
       AGENCIA_CODIGO: titulo.banco.agencia_codigo || 'Não configurado',
