@@ -46,6 +46,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
           type="text"
           className="form-control text-center id-field"
           placeholder="ID"
+          name={`${label.toLowerCase().replace(/\s+/g, '_')}_id_field`}
           onChange={(e) => {
             const id = parseInt(e.target.value) || 0;
             onChange(id);
@@ -59,6 +60,7 @@ const EntitySelectField: React.FC<EntitySelectFieldProps> = ({
           tabIndex={-1}
           type="text"
           className="form-control"
+          name={`${label.toLowerCase().replace(/\s+/g, '_')}_nome_field`}
           value={selectedEntity?.nome || ''}
           style={{ borderRight: 'none' }}
         />
