@@ -568,7 +568,7 @@ const Dashboard: React.FC = () => {
       <div className="row g-2 mb-2">
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
-            {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal (12 meses)', 'currency')}
+            {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal R$ (12 meses)', 'currency')}
           </div>
         </div>
 
