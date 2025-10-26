@@ -205,8 +205,7 @@ const Dashboard: React.FC = () => {
   // Métricas adicionais (usando dados reais quando disponíveis)
   const totalBoletos = titulos.length;
   const valorTotalBoletos = titulos.reduce((sum, titulo) => {
-    // Tentar diferentes campos de valor
-    const valor = parseFloat(String(titulo.valor || titulo.valor_titulo || titulo.valor_original || 0)) || 0;
+    const valor = parseFloat(String(titulo.valor || 0)) || 0;
     return sum + valor;
   }, 0);
   
