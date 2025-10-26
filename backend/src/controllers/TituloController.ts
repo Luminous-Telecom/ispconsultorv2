@@ -227,7 +227,7 @@ export class TituloController {
             attributes: ['id', 'nome', 'tipo_banco']
           }
         ],
-        order: [['created_at', 'DESC']],
+        order: [['id', 'DESC']], // Maior ID para o menor
         limit: Number(limit),
         offset
       });

@@ -64,7 +64,7 @@ export class BancoController {
       // Buscar bancos com includes
       const bancos = await Banco.findAll({
         where,
-        order: [['nome', 'ASC']],
+        order: [['id', 'DESC']], // Maior ID para o menor
         limit: Number(limit),
         offset,
         include: [

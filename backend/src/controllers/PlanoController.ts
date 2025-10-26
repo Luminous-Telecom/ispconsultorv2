@@ -34,7 +34,7 @@ export class PlanoController {
       }
 
       // Construir ordenação
-      let order: any[] = [['created_at', 'DESC']]; // Padrão
+      let order: any[] = [['id', 'DESC']]; // Padrão: Maior ID para o menor
       if (sortColumn && sortDirection) {
         // Validar colunas permitidas para ordenação
         const allowedColumns = [

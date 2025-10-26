@@ -137,7 +137,7 @@ export class ClienteController {
           { association: 'titulos', attributes: ['id', 'numero_titulo', 'status', 'valor'] },
           { association: 'contratos' }
         ],
-        order: [['razao_social', 'ASC']],
+        order: [['id', 'DESC']], // Maior ID para o menor
         limit,
         offset
       });

@@ -67,7 +67,7 @@ export class ContratoController {
           { model: Plano, as: 'plano' },
           { model: Banco, as: 'bancoBoleto' }
         ],
-        order: [['created_at', 'DESC']],
+        order: [['id', 'DESC']], // Maior ID para o menor
         limit: limitNum,
         offset
       });
