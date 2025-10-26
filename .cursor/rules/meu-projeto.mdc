@@ -1,3 +1,6 @@
+---
+alwaysApply: true
+---
 # Regras e Boas Práticas - CTM Telecom ERP
 
 ## Estrutura de Código
@@ -33,31 +36,21 @@
 ### DataTable - Funcionalidades Obrigatórias
 ```typescript
 <DataTable
-  data={getSortedData()}           // Dados ordenados localmente
-  columns={columns}                // Definição de colunas
-  isLoading={isLoading}            // Estado de carregamento
-  
-  // Paginação
-  pagination={pagination}          // Objeto com currentPage, totalPages, total, from, to
+  data={getSortedData()}
+  columns={columns}
+  isLoading={isLoading}
+  pagination={pagination}
   limit={limit}
   setLimit={setLimit}
   setPage={setPage}
-  
-  // Ordenação - SEMPRE começar com ID decrescente (últimos primeiro)
-  onSort={handleSort}              // Ordenação LOCAL, não servidor
-  sortColumn={sortColumn}          // Estado inicial: 'id'
-  sortDirection={sortDirection}    // Estado inicial: 'desc'
-  
-  // Busca e Ações
+  onSort={handleSort}
+  sortColumn={sortColumn}
+  sortDirection={sortDirection}
   onSearch={setSearch}
   searchPlaceholder="Buscar..."
-  onRefresh={refetch}              // Botão recarregar
-  
-  // Ações em Lote
+  onRefresh={refetch}
   bulkActions={bulkActions}
   onSelectionChange={setSelectedItems}
-  
-  // Estados
   emptyMessage="Nenhum registro encontrado"
   showHeader={true}
 />
@@ -65,17 +58,11 @@
 
 ### Ordenação Local
 - SEMPRE implemente ordenação LOCAL, não no servidor
-- **Estado inicial padrão: `sortColumn='id'` e `sortDirection='desc'`**
-- **Últimos registros (ID maior) aparecem primeiro por padrão**
+- Estado inicial padrão: `sortColumn='id'` e `sortDirection='desc'`
+- Últimos registros (ID maior) aparecem primeiro por padrão
 - Use hook `useSorting` para ordenar dados
 - Suporte ordenação por: strings, números, datas
 - Trate valores `null` e `undefined` na ordenação
-
-Exemplo de estado inicial:
-```typescript
-const [sortColumn, setSortColumn] = useState<string>('id');
-const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-```
 
 ### Bulk Actions
 - Sempre valide se há itens selecionados
@@ -97,36 +84,16 @@ const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 - Use estado `errors` para armazenar erros
 - Limpe erros quando usuário começar a digitar
 
-### Estados de Formulário
-- Use `useState` para cada campo do formulário
-- Implemente `handleInputChange` genérico
-- Desabilite botões durante submissão
-- Mostre loading states apropriados
-
 ## API e Services
 
 ### Estrutura de Services
 ```typescript
 export class EntityService {
-  static async list(filters: Filters): Promise<PaginatedResponse<Entity>> {
-    // GET /api/entities
-  }
-  
-  static async getById(id: number): Promise<{ success: boolean; data: Entity }> {
-    // GET /api/entities/:id
-  }
-  
-  static async create(data: CreateEntity): Promise<{ success: boolean; message: string; data: Entity }> {
-    // POST /api/entities
-  }
-  
-  static async update(id: number, data: Partial<Entity>): Promise<{ success: boolean; message: string }> {
-    // PUT /api/entities/:id
-  }
-  
-  static async delete(id: number): Promise<void> {
-    // DELETE /api/entities/:id
-  }
+  static async list(filters: Filters): Promise<PaginatedResponse<Entity>> {}
+  static async getById(id: number): Promise<{ success: boolean; data: Entity }> {}
+  static async create(data: CreateEntity): Promise<{ success: boolean; message: string; data: Entity }> {}
+  static async update(id: number, data: Partial<Entity>): Promise<{ success: boolean; message: string }> {}
+  static async delete(id: number): Promise<void> {}
 }
 ```
 
@@ -138,12 +105,10 @@ export class EntityService {
 - Use notificações do sistema para feedback
 
 ### Invalidação de Queries
-Após mutations, sempre invalide:
 ```typescript
-queryClient.invalidateQueries({ queryKey: ['entity'] }); // Invalida TODAS as queries
-queryClient.invalidateQueries({ queryKey: ['entity', filters] }); // Query específica
-queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // Atualizar dashboard
-refetch(); // Refetch imediato se necessário
+queryClient.invalidateQueries({ queryKey: ['entity'] });
+queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+refetch();
 ```
 
 ## Notificações
@@ -153,33 +118,25 @@ refetch(); // Refetch imediato se necessário
 - Use `error()` para erros
 - Use `warning()` para avisos
 - Use `info()` para informações
-- Notificações somem automaticamente
 
 ### Confirmações
 - Use `window.confirm()` para confirmações destrutivas
 - Mensagens claras: "Tem certeza que deseja deletar X item(ns)?"
 - NÃO use modais customizados para confirmações
-- Confirme antes de deletar, sempre
 
 ## Padrões de Nomenclatura
 
 ### Arquivos
-- Componentes: `PascalCase.tsx` (ex: `ClienteEditModal.tsx`)
-- Services: `camelCase.ts` (ex: `clienteService.ts`)
-- Hooks: `camelCase.ts` (ex: `useClientes.ts`)
-- Types: `camelCase.ts` ou `index.ts`
+- Componentes: `PascalCase.tsx`
+- Services: `camelCase.ts`
+- Hooks: `camelCase.ts`
 
 ### Variáveis e Funções
 - Variáveis: `camelCase`
 - Constantes: `UPPER_SNAKE_CASE`
 - Funções: `camelCase`
-- Handlers: prefixo `handle` (ex: `handleSubmit`)
-- Booleans: prefixo `is`, `has`, `should` (ex: `isLoading`)
-
-### Componentes
-- Props interface: `ComponentNameProps`
-- Form data: `ComponentForm` ou `EntityForm`
-- Estado local: descritivo (ex: `selectedItems`, `showModal`)
+- Handlers: prefixo `handle`
+- Booleans: prefixo `is`, `has`, `should`
 
 ## Banco de Dados e Backend
 
@@ -187,41 +144,17 @@ refetch(); // Refetch imediato se necessário
 - SEMPRE em JavaScript, não TypeScript
 - Use `queryInterface` para operações
 - Implemente `up` e `down` para reversão
-- Teste migrations antes de commit
 
 ### Models (Sequelize)
 - Use TypeScript com tipos do Sequelize
 - Defina associations corretamente
 - Use `allowNull`, `defaultValue` apropriadamente
-- Valide dados no model quando possível
 
 ### Controllers
 - Valide dados de entrada
 - Use try/catch para tratamento de erros
 - Retorne objetos padronizados: `{ success, message, data }`
-- Log erros mas não exponha detalhes sensíveis
 - Use status codes HTTP corretos
-
-### Associações de Dados
-- SEMPRE associe dados quando criar (ex: `contrato_id` ao criar título)
-- Valide IDs antes de criar associações
-- Use transações para operações críticas
-- Implemente CASCADE ou SET NULL apropriadamente
-
-## Performance
-
-### Otimizações
-- Use paginação para listas grandes
-- Implemente busca/filtro no frontend quando possível
-- Cache queries do React Query apropriadamente
-- Lazy load componentes pesados
-- Otimize re-renders com `memo`, `useCallback`, `useMemo`
-
-### Queries
-- Não faça N+1 queries
-- Use `include` do Sequelize para eager loading
-- Limite campos retornados quando possível
-- Use índices no banco de dados
 
 ## UI/UX
 
@@ -229,205 +162,153 @@ refetch(); // Refetch imediato se necessário
 - SEMPRE use classes Bootstrap para estilos
 - Use sistema de grid: `container`, `row`, `col-*`
 - Use utilitários: `mb-3`, `p-4`, `text-center`, etc
-- Use componentes: `btn`, `form-control`, `card`, etc
 - NÃO use estilos inline
 
 ### Badges e Status
 - Use cores semânticas: `success`, `danger`, `warning`, `info`
 - Capitalize primeira letra de status
-- Use ícones quando apropriado (Bootstrap Icons)
 
 ### Loading States
 - Mostre spinners durante carregamento
 - Desabilite botões durante submissão
 - Use skeleton screens para listas
-- Feedback visual para todas as ações
-
-### Mensagens ao Usuário
-- Sucesso: "Entidade criada/atualizada/excluída com sucesso!"
-- Erro: Mensagem específica do backend
-- Confirmação: "Tem certeza que deseja..."
-- Sempre em português
-
-## Git e Commits
-
-### Commits
-- Use conventional commits quando possível
-- Mensagens descritivas em português
-- Commits pequenos e focados
-- Teste antes de commitar
-
-### Exemplos de Commits
-```
-feat: adicionar funcionalidade de deleção de contratos
-fix: corrigir atualização de títulos após criação
-refactor: remover logs de debug
-style: ajustar espaçamento em tabelas
-docs: atualizar documentação de APIs
-```
 
 ## O QUE PODE FAZER ✅
 
 ### Código
-- ✅ Use `const` e `let` para declarações de variáveis
+- ✅ Use `const` e `let`
 - ✅ Use TypeScript com tipagem forte
-- ✅ Use `async/await` para operações assíncronas
-- ✅ Trate todos os erros com try/catch
-- ✅ Use ESLint e Prettier para formatação
+- ✅ Use `async/await`
+- ✅ Trate erros com try/catch
 - ✅ Separe componentes reutilizáveis
-- ✅ Organize páginas por pastas
-- ✅ Sempre olhe erros de compilação TypeScript
 
-### Backend (Node.js/TypeScript)
-- ✅ Use validação de dados com Joi
-- ✅ Implemente tratamento de erros adequado
-- ✅ Use variáveis de ambiente (.env) para configurações sensíveis
-- ✅ Mantenha logs limpos (sem URLs, tokens, payloads desnecessários)
-- ✅ Use transações para operações críticas no banco
+### Backend
+- ✅ Use validação com Joi
+- ✅ Use variáveis de ambiente (.env)
+- ✅ Mantenha logs limpos
+- ✅ Use transações para operações críticas
 
-### Frontend (React/TypeScript)
+### Frontend
 - ✅ Use componentes funcionais com hooks
-- ✅ Implemente TypeScript com interfaces bem definidas
-- ✅ Use Bootstrap para todos os estilos
-- ✅ Implemente loading states e tratamento de erros
-- ✅ Use contextos para estado global quando necessário
-- ✅ Separe componentes reutilizáveis em arquivos próprios
+- ✅ Use Bootstrap para estilos
+- ✅ Implemente loading states
 
 ### Banco de Dados
-- ✅ Migrations sempre em JavaScript (`.js`)
-- ✅ Use migrations para mudanças de schema
+- ✅ Migrations em JavaScript (`.js`)
 - ✅ Implemente índices adequados
-- ✅ Valide dados antes de inserir/atualizar
-- ✅ Não especifique o banco no código (já existe no cadastro do cliente)
+- ✅ Não especifique banco no código
 
 ### UI/UX
-- ✅ Sempre use Bootstrap para estilos
-- ✅ Use ordenações nas colunas de tabelas
-- ✅ Coloque apenas um dado por linha nas tabelas
-- ✅ Botões sem ícones (preferência do projeto)
-- ✅ Botões de salvar com texto fixo "Salvar" (sem spinners ou texto condicional)
-- ✅ Mostre ID em todas as tabelas de listagem
-- ✅ Use modais para criar/editar/listar (exceto Dashboard)
-
-### Git
-- ✅ Commits descritivos em português
-- ✅ Use conventional commits quando possível
-- ✅ Teste funcionalidade ANTES de commitar
-- ✅ Commits pequenos e focados
+- ✅ Use Bootstrap
+- ✅ Use ordenações nas colunas
+- ✅ Um dado por linha nas tabelas
+- ✅ Botões sem ícones
+- ✅ Botões de salvar com texto fixo "Salvar"
+- ✅ Mostre ID em tabelas
+- ✅ Use modais para criar/editar
 
 ## O QUE NÃO PODE FAZER ❌
 
 ### Código
-- ❌ NÃO use `var`, sempre `const` ou `let`
-- ❌ NÃO use `any` sem necessidade
-- ❌ NÃO ignore erros de TypeScript
+- ❌ NÃO use `var`
+- ❌ NÃO use `any`
+- ❌ NÃO ignore erros TypeScript
 - ❌ NÃO deixe `console.log` em produção
-- ❌ NÃO use callbacks quando `async/await` é possível
-- ❌ NÃO crie scripts auxiliares desnecessários
-- ❌ NÃO use URLs hardcoded no código
+- ❌ NÃO use URLs hardcoded
 
 ### React
-- ❌ NÃO use class components (prefira functional)
-- ❌ NÃO deixe componentes muito grandes (>300 linhas)
+- ❌ NÃO use class components
+- ❌ NÃO deixe componentes >300 linhas
 - ❌ NÃO modifique state diretamente
 - ❌ NÃO esqueça dependências em useEffect
-- ❌ NÃO ignore warnings do React
 
 ### Backend
 - ❌ NÃO deixe senhas em texto plano
 - ❌ NÃO ignore validação de entrada
-- ❌ NÃO deixe portas hardcoded
 - ❌ NÃO exponha dados sensíveis em logs
-- ❌ NÃO especifique banco de dados no código
-- ❌ NÃO use carnê (não será usado no projeto)
+- ❌ NÃO especifique banco no código
+- ❌ NÃO use carnê
 
 ### Frontend/UI
-- ❌ NÃO use jQuery (use React hooks)
-- ❌ NÃO use inline styles (use Bootstrap)
+- ❌ NÃO use jQuery
+- ❌ NÃO use inline styles
 - ❌ NÃO use botões nas linhas de tabelas
 - ❌ NÃO use ícones nos botões
-- ❌ NÃO coloque mais de um dado na mesma linha das tabelas
+- ❌ NÃO coloque mais de um dado por linha
 - ❌ NÃO crie tabelas sem ordenação
-- ❌ NÃO use ícones ou spinners em botões de ação
-- ❌ NÃO mude o texto dos botões durante loading (mantenha texto fixo)
-- ❌ NÃO use URLs em códigos frontend
+- ❌ NÃO mude texto dos botões durante loading
+- ❌ NÃO use URLs em códigos
 
 ### Banco de Dados
 - ❌ NÃO faça queries N+1
-- ❌ NÃO crie migrations em TypeScript (sempre JavaScript)
-- ❌ NÃO ignore índices em tabelas grandes
+- ❌ NÃO crie migrations em TypeScript
+- ❌ NÃO ignore índices
 
 ### Git
-- ❌ NÃO commite arquivos .env ou dados sensíveis
+- ❌ NÃO commite .env ou dados sensíveis
 - ❌ NÃO commite node_modules
 - ❌ NÃO force push para main/master
-- ❌ NÃO commite sem testar o código
-- ❌ NÃO use commits genéricos ("fix", "update")
+- ❌ NÃO commite sem testar
+- ❌ NÃO use commits genéricos
 - ❌ NÃO atualize git config
-- ❌ NÃO rode comandos destrutivos (hard reset, force push)
+- ❌ NÃO rode comandos destrutivos
 
-### Ambiente de Desenvolvimento
-- ❌ NÃO reinicie o PM2 ao fazer mudanças (reload automático)
-- ❌ NÃO rode comandos de logs do PM2 (terminal fica travado)
-- ❌ NÃO rode `npm run build` em desenvolvimento
-- ❌ NÃO rode `pm2 logs` (trava o terminal)
-- ❌ NÃO olhe logs do PM2 pelo terminal
+### Ambiente
+- ❌ NÃO reinicie PM2 manualmente
+- ❌ NÃO rode `pm2 logs`
+- ❌ NÃO rode `npm run build` em dev
 
-### Rotas e URLs
+### Rotas
 - ❌ NÃO use URLs hardcoded
-- ❌ Toda URL e rota deve ser dentro do código do banco emissor (pertencer somente a ele)
+- ❌ URLs devem pertencer ao banco emissor
 
-## Regras Específicas do Projeto CTM Telecom
+## Regras Específicas do Projeto
 
 ### Tabelas
-- Sempre mostre a coluna ID (primeira coluna)
-- ID em texto normal (sem `#` ou formatação especial)
-- Nunca coloque mais de um dado na mesma linha
-- Sempre use ordenação nas colunas
-- Ordenação padrão: ID decrescente (últimos primeiro)
+- Mostre coluna ID (primeira coluna)
+- ID em texto normal
+- Nunca mais de um dado por linha
+- Sempre ordenação nas colunas
+- Ordenação padrão: ID decrescente
 
 ### Botões
-- **SEM ícones** em nenhum botão
-- **SEM spinners** durante loading
-- **Texto fixo** mesmo durante isPending
-- Botões de salvar: apenas "Salvar" (não "Salvar Alterações")
-- Botões de criar: "Criar [Entidade]"
-- Mantém `disabled={isPending}` para prevenir múltiplos cliques
+- SEM ícones
+- SEM spinners durante loading
+- Texto fixo mesmo durante isPending
+- Salvar: apenas "Salvar"
+- Criar: "Criar [Entidade]"
+- Mantém `disabled={isPending}`
 
 ### Modais
-- Use modais para todas as funcionalidades exceto Dashboard
-- Dashboard é a única "página" real (rota `/`)
-- Clientes, Planos, Bancos, Contratos: tudo em modais
-- Use `DraggableModal` para todos os modais
-- Modais de listagem seguem padrão: `DataTable` com `showHeader={false}` e `ModalHeaderActions`
+- Use modais exceto Dashboard
+- Dashboard é rota `/`
+- Tudo em modais: Clientes, Planos, Bancos, Contratos
+- Use `DraggableModal`
 
 ### Banco de Dados
-- NÃO especifique nome do banco no código
-- Banco já está no cadastro do cliente
-- Código do banco é automático baseado no tipo
-- Migrations sempre em `.js` (JavaScript)
+- NÃO especifique nome do banco
+- Banco no cadastro do cliente
+- Código automático por tipo
+- Migrations em `.js`
 
 ### URLs e APIs
-- URLs nunca no código (use variáveis de ambiente)
-- Cada banco emissor tem suas próprias rotas/URLs
-- URL da API do banco pertence apenas ao banco emissor
+- URLs em variáveis de ambiente
+- Cada banco tem suas rotas
+- URL pertence ao banco emissor
 
-### Email de Cliente
-- NUNCA envie email do cliente para o banco ao gerar títulos
-- Removida toda lógica de `repassar_email_cliente`
+### Email
+- NUNCA envie email do cliente ao banco
+- Removida lógica `repassar_email_cliente`
 
-### PM2 e Desenvolvimento
-- PM2 faz hot reload automático
-- Não rode `pm2 restart`
-- Não rode `pm2 logs` (trava terminal)
-- Não rode `npm run build` (é desenvolvimento)
+### PM2
+- Hot reload automático
+- Não `pm2 restart`
+- Não `pm2 logs`
+- Não `npm run build`
 
 ### Testes
 - Teste PRIMEIRO
 - Confirme funcionando
-- Depois faça commit
-- Sempre verifique erros de compilação TypeScript
-- Nunca utilize urls nos codigos
----
-alwaysApply: true
----
+- Depois commit
+- Verifique erros TypeScript
+- Nunca URLs em códigos

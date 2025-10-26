@@ -115,7 +115,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       }
     ],
     searchPlaceholder: 'Buscar por CNPJ, razão social...',
-    multiSelect: !onSelectClient
+    multiSelect: false // Sempre permitir apenas 1 seleção
   });
 
   // Hooks para gerenciar clientes
