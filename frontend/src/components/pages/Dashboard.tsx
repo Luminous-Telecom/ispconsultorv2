@@ -2,18 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
+import { ContratoService } from '../../services/ContratoService';
 import { useDashboard } from '../../hooks/useDashboard';
 
 const Dashboard: React.FC = () => {
-  const [chartData, setChartData] = useState<any>(null);
-  
   // Estados para controlar itens ocultos em cada gráfico
   const [hiddenClientes, setHiddenClientes] = useState<Set<number>>(new Set());
   const [hiddenPlanos, setHiddenPlanos] = useState<Set<number>>(new Set());
   const [hiddenPagamentos, setHiddenPagamentos] = useState<Set<number>>(new Set());
   const [hiddenDistribuicao, setHiddenDistribuicao] = useState<Set<number>>(new Set());
-  const [hiddenClientesStatus, setHiddenClientesStatus] = useState<Set<number>>(new Set());
   const [hiddenTaxaPagamento, setHiddenTaxaPagamento] = useState<Set<number>>(new Set());
+  const [hiddenContratos, setHiddenContratos] = useState<Set<number>>(new Set());
 
   // Funções de toggle para cada gráfico
   const toggleCliente = (index: number) => {
@@ -30,7 +29,6 @@ const Dashboard: React.FC = () => {
     setHiddenPlanos(newHidden);
   };
 
-
   const togglePagamento = (index: number) => {
     const newHidden = new Set(hiddenPagamentos);
     if (newHidden.has(index)) newHidden.delete(index);
@@ -45,18 +43,18 @@ const Dashboard: React.FC = () => {
     setHiddenDistribuicao(newHidden);
   };
 
-  const toggleClienteStatus = (index: number) => {
-    const newHidden = new Set(hiddenClientesStatus);
-    if (newHidden.has(index)) newHidden.delete(index);
-    else newHidden.add(index);
-    setHiddenClientesStatus(newHidden);
-  };
-
   const toggleTaxaPagamento = (index: number) => {
     const newHidden = new Set(hiddenTaxaPagamento);
     if (newHidden.has(index)) newHidden.delete(index);
     else newHidden.add(index);
     setHiddenTaxaPagamento(newHidden);
+  };
+
+  const toggleContratos = (index: number) => {
+    const newHidden = new Set(hiddenContratos);
+    if (newHidden.has(index)) newHidden.delete(index);
+    else newHidden.add(index);
+    setHiddenContratos(newHidden);
   };
 
   // Queries para buscar dados
@@ -74,10 +72,16 @@ const Dashboard: React.FC = () => {
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: contratosData, isLoading: loadingContratos } = useQuery({
+    queryKey: ['contratos-dashboard'],
+    queryFn: () => ContratoService.list({ limit: 1000 }),
+    placeholderData: (previousData) => previousData,
+  });
 
   // Processar dados
   const clientes = clientesData?.data || [];
   const planos = planosData?.data || [];
+  const contratos = contratosData?.data || [];
   const stats = dashboardData?.stats;
 
   // Estatísticas de clientes
@@ -89,6 +93,12 @@ const Dashboard: React.FC = () => {
   const totalPlanos = planos.length;
   const planosAtivos = stats?.planosAtivos || planos.filter(p => p.status === 'ativo').length;
   const planosInativos = totalPlanos - planosAtivos;
+
+  // Estatísticas de contratos
+  const totalContratos = contratos.length;
+  const contratosAtivos = contratos.filter(c => c.status === 'ativo').length;
+  const contratosInativos = contratos.filter(c => c.status === 'inativo').length;
+  const contratosSuspensos = contratos.filter(c => c.status === 'suspenso').length;
 
   // Receitas reais do backend
   const receitaTotal = (stats?.valorTotalRecebido || 0) + (stats?.valorTotalReceber || 0);
@@ -219,19 +229,6 @@ const Dashboard: React.FC = () => {
     return meses;
   };
 
-  // Análise de clientes por status
-  const getClientesPorStatus = () => {
-    const status = {
-      ativo: clientes.filter(c => c.ativo).length,
-      inativo: clientes.filter(c => !c.ativo).length
-    };
-    
-    return [
-      { label: 'Ativos', value: status.ativo, color: '#28a745' },
-      { label: 'Inativos', value: status.inativo, color: '#dc3545' }
-    ];
-  };
-
   // Métricas de performance (simuladas)
   const getMetricasPerformance = () => {
     const totalBoletos = 0;
@@ -257,12 +254,6 @@ const Dashboard: React.FC = () => {
     { label: 'Inativos', value: planosInativos, color: '#6c757d' }
   ];
 
-
-  const receitasChartData = [
-    { label: 'Recebido', value: receitaPaga, color: '#28a745' },
-    { label: 'Pendente', value: receitaPendente, color: '#ffc107' }
-  ];
-
   const ticketMedioChartData = [
     { label: 'Ticket Médio por Boleto', value: ticketMedio, color: '#6f42c1' }
   ];
@@ -272,8 +263,10 @@ const Dashboard: React.FC = () => {
     { label: 'Pendente', value: 100 - taxaPagamento, color: '#ffc107' }
   ];
 
-  const produtividadeChartData = [
-    { label: 'Receita/Cliente', value: receitaPorCliente, color: '#6f42c1' }
+  const contratosChartData = [
+    { label: 'Ativos', value: contratosAtivos, color: '#28a745' },
+    { label: 'Inativos', value: contratosInativos, color: '#dc3545' },
+    { label: 'Suspensos', value: contratosSuspensos, color: '#ffc107' }
   ];
 
   // Função para renderizar gráfico de pizza simples
@@ -426,7 +419,7 @@ const Dashboard: React.FC = () => {
     );
   };
 
-  if (loadingDashboard || loadingClientes || loadingPlanos) {
+  if (loadingDashboard || loadingClientes || loadingPlanos || loadingContratos) {
     return (
       <div className="dashboard-container">
         <div className="text-center">
@@ -440,115 +433,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Cards de Métricas Principais */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-3 col-md-6">
-          <div className="metric-card metric-card-primary">
-            <div className="metric-icon">
-              <i className="bi bi-people"></i>
-                </div>
-            <div className="metric-content">
-              <div className="metric-number">{totalClientes}</div>
-              <div className="metric-label">Total de Clientes</div>
-              <div className="metric-detail">
-                <span className="text-success">{clientesAtivos} ativos</span>
-                <span className="text-muted"> • </span>
-                <span className="text-danger">{clientesInativos} inativos</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <div className="metric-card metric-card-info">
-            <div className="metric-icon">
-              <i className="bi bi-wifi"></i>
-            </div>
-            <div className="metric-content">
-              <div className="metric-number">{totalPlanos}</div>
-              <div className="metric-label">Total de Planos</div>
-              <div className="metric-detail">
-                <span className="text-success">{planosAtivos} ativos</span>
-                <span className="text-muted"> • </span>
-                <span className="text-muted">{planosInativos} inativos</span>
-              </div>
-                  </div>
-                  </div>
-                </div>
-
-        <div className="col-xl-3 col-md-6">
-          <div className="metric-card metric-card-success">
-            <div className="metric-icon">
-              <i className="bi bi-currency-dollar"></i>
-                </div>
-            <div className="metric-content">
-              <div className="metric-number">{totalBoletos}</div>
-              <div className="metric-label">Total de Boletos</div>
-              <div className="metric-detail">
-                <span className="text-info">0 pendentes</span>
-                <span className="text-muted"> • </span>
-                <span className="text-success">0 pagos</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6">
-          <div className="metric-card metric-card-warning">
-            <div className="metric-icon">
-              <i className="bi bi-exclamation-triangle"></i>
-                  </div>
-            <div className="metric-content">
-              <div className="metric-number">0</div>
-              <div className="metric-label">Boletos Vencidos</div>
-              <div className="metric-detail">
-                <span className="text-warning">Em atraso</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Cards de Receitas */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-4 col-md-6">
-          <div className="revenue-card revenue-total">
-            <div className="revenue-icon">
-              <i className="bi bi-currency-dollar"></i>
-            </div>
-            <div className="revenue-content">
-              <div className="revenue-number">R$ {receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-              <div className="revenue-label">Receita Total</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-4 col-md-6">
-          <div className="revenue-card revenue-received">
-            <div className="revenue-icon">
-              <i className="bi bi-check-circle"></i>
-              </div>
-            <div className="revenue-content">
-              <div className="revenue-number">R$ {receitaPaga.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-              <div className="revenue-label">Receita Recebida</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-4 col-md-6">
-          <div className="revenue-card revenue-pending">
-            <div className="revenue-icon">
-              <i className="bi bi-clock"></i>
-            </div>
-            <div className="revenue-content">
-              <div className="revenue-number">R$ {receitaPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-              <div className="revenue-label">Receita Pendente</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Gráficos de Pizza - 6 em linha */}
+      {/* Gráficos de Pizza */}
       <div className="row g-2 mb-2">
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
@@ -561,7 +446,6 @@ const Dashboard: React.FC = () => {
             {renderPieChart(planosChartData, 'Status dos Planos', hiddenPlanos, togglePlano)}
           </div>
         </div>
-
 
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
@@ -577,23 +461,23 @@ const Dashboard: React.FC = () => {
 
         <div className="col-xl-2 col-lg-4 col-md-6">
           <div className="chart-card">
-            {renderPieChart(getClientesPorStatus(), 'Clientes por Status', hiddenClientesStatus, toggleClienteStatus)}
+            {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento', hiddenTaxaPagamento, toggleTaxaPagamento)}
+          </div>
+        </div>
+
+        <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="chart-card">
+            {renderPieChart(contratosChartData, 'Status dos Contratos', hiddenContratos, toggleContratos)}
           </div>
         </div>
       </div>
 
 
-      {/* Novos Gráficos */}
+      {/* Gráficos de Valor */}
       <div className="row g-2 mb-2">
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderValueChart(ticketMedioChartData, 'Ticket Médio por Boleto', 'currency')}
-          </div>
-        </div>
-
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento', hiddenTaxaPagamento, toggleTaxaPagamento)}
           </div>
         </div>
       </div>
@@ -620,21 +504,6 @@ const Dashboard: React.FC = () => {
         <div className="col-12">
           <div className="chart-card">
             {renderBarChart(getValoresPorPlano(), 'Valores por Plano', 'currency')}
-          </div>
-        </div>
-      </div>
-
-      {/* Gráficos de Performance e Análise */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart([{ label: 'Total Boletos', value: getMetricasPerformance().totalBoletos, color: '#007bff' }], 'Total de Boletos', 'number')}
-          </div>
-        </div>
-
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart([{ label: 'Taxa Inadimplência', value: getMetricasPerformance().taxaInadimplencia, color: '#dc3545' }], 'Taxa de Inadimplência', 'percentage')}
           </div>
         </div>
       </div>

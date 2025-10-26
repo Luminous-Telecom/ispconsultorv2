@@ -3,6 +3,7 @@ import { Contrato } from '../models/Contrato';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
+import { Op } from 'sequelize';
 import * as Joi from 'joi';
 
 export class ContratoController {
@@ -38,6 +39,54 @@ export class ContratoController {
     data_validade_desconto: Joi.date().allow(null, '').optional(),
     modelo_contrato_id: Joi.number().integer().min(1).required()
   });
+
+  // Listar todos os contratos com paginação
+  static async list(req: Request, res: Response): Promise<void> {
+    try {
+      const { page = 1, limit = 10, search = '', status } = req.query;
+      const pageNum = Number(page);
+      const limitNum = Number(limit);
+      const offset = (pageNum - 1) * limitNum;
+
+      const whereClause: any = {};
+      
+      if (search) {
+        whereClause[Op.or] = [
+          { observacoes: { [Op.like]: `%${search}%` } }
+        ];
+      }
+
+      if (status) {
+        whereClause.status = status;
+      }
+
+      const { count, rows } = await Contrato.findAndCountAll({
+        where: whereClause,
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { model: Banco, as: 'bancoBoleto' }
+        ],
+        order: [['created_at', 'DESC']],
+        limit: limitNum,
+        offset
+      });
+
+      res.json({
+        data: rows,
+        total: count,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(count / limitNum)
+      });
+    } catch (error) {
+      console.error('Erro ao listar contratos:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
 
   // Listar contratos por cliente
   static async getByCliente(req: Request, res: Response): Promise<void> {
