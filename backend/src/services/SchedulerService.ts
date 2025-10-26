@@ -420,7 +420,7 @@ export class SchedulerService {
             model: Cliente,
             as: 'cliente',
             required: true,
-            attributes: ['id', 'razao_social', 'cnpj', 'telefone', 'endereco', 'numero', 'bairro', 'cidade', 'uf', 'cep']
+            attributes: ['id', 'razao_social', 'cnpj', 'telefone', 'endereco', 'numero', 'bairro', 'cidade', 'estado', 'cep']
           },
           {
             model: Plano,
