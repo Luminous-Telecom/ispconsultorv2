@@ -194,7 +194,7 @@ const Dashboard: React.FC = () => {
     
     for (let i = 11; i >= 0; i--) {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-      const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      const mesAno = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
       
       const faturamentoMes = 0; // Simulado
       
@@ -215,7 +215,7 @@ const Dashboard: React.FC = () => {
     
     for (let i = 11; i >= 0; i--) {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-      const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      const mesAno = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
       
       const clientesMes = clientes.filter(cliente => {
         const dataCliente = new Date(cliente.created_at);
