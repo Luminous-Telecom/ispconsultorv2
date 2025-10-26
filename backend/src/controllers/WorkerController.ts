@@ -15,7 +15,7 @@ export class WorkerController {
         data: status
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao obter status dos workers:', error);
       res.status(500).json({
         success: false,
@@ -38,7 +38,7 @@ export class WorkerController {
         data: health
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao obter status de saúde:', error);
       res.status(500).json({
         success: false,
@@ -72,7 +72,7 @@ export class WorkerController {
         data: stats
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao obter estatísticas:', error);
       res.status(500).json({
         success: false,
@@ -106,7 +106,7 @@ export class WorkerController {
         message: 'Rotina executada com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao executar rotina:', error);
       res.status(500).json({
         success: false,
@@ -151,7 +151,7 @@ export class WorkerController {
         data: logs
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao obter logs de execução:', error);
       res.status(500).json({
         success: false,
@@ -185,7 +185,7 @@ export class WorkerController {
         data: logs
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       console.error('Erro ao obter logs recentes:', error);
       res.status(500).json({
         success: false,
