@@ -13,17 +13,29 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const ctx = canvas.getContext('2d');
+    // Obter contexto 2D com configuração de alta resolução
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
     
-      const maxValue = Math.max(...data.map(item => item.valor));
-      const chartWidth = canvas.width;
-      const chartHeight = 120;
-      const padding = 20;
-      const pointRadius = 3;
+    // Obter device pixel ratio para retina displays
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Ajustar tamanho do canvas para resolução nativa
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    // Escalar contexto para device pixel ratio
+    ctx.scale(dpr, dpr);
+    
+    const maxValue = Math.max(...data.map(item => item.valor));
+    const chartWidth = rect.width;
+    const chartHeight = 120;
+    const padding = 20;
+    const pointRadius = 3;
     
     // Limpar canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
     
     // Desenhar linha e pontos
     data.forEach((item, index) => {
@@ -75,9 +87,7 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       <div className="line-chart-wrapper">
         <canvas 
           ref={canvasRef}
-          width="800"
-          height="170"
-          style={{ display: 'block', width: '100%', maxWidth: '100%' }}
+          style={{ display: 'block', width: '100%', height: '170px' }}
         />
       </div>
     </div>
