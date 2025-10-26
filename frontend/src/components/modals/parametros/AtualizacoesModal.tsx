@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 
@@ -22,13 +23,10 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   const { data: atualizacoes, isLoading, error } = useQuery({
     queryKey: ['atualizacoes'],
     queryFn: async () => {
-      // Buscar da API
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/atualizacoes`);
-      if (!response.ok) {
-        throw new Error('Erro ao buscar atualizações');
-      }
-      const data = await response.json();
-      return data.data; // Retornar apenas os dados
+      // Buscar da API - usar axios como outros services
+      const response = await axios.get('/api/atualizacoes');
+      // Retornar data.data pois a API retorna { success: true, data: [...] }
+      return response.data.success ? response.data.data : response.data;
     },
     enabled: show,
     refetchOnWindowFocus: false,
