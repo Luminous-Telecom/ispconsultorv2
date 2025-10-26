@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional, HasOneGetAssociationMixin, HasOneSetAssociationMixin, HasOneCreateAssociationMixin } from 'sequelize';
+import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
 interface ModeloContratoAttributes {
