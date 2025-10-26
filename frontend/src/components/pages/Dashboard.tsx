@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
 import { ContratoService } from '../../services/ContratoService';
+import { TituloService } from '../../services/tituloService';
 import { useDashboard } from '../../hooks/useDashboard';
 
 // Componente para gráfico de linha temporal com Canvas
@@ -167,10 +168,16 @@ const Dashboard: React.FC = () => {
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: titulosData } = useQuery({
+    queryKey: ['titulos-dashboard'],
+    queryFn: () => TituloService.list({ limit: 1000 }),
+  });
+
   // Processar dados
   const clientes = clientesData?.data || [];
   const planos = planosData?.data || [];
   const contratos = contratosData?.data || [];
+  const titulos = titulosData?.data || [];
   const stats = dashboardData?.stats;
 
   // Estatísticas de clientes
@@ -195,8 +202,37 @@ const Dashboard: React.FC = () => {
   const receitaPendente = stats?.valorTotalReceber || 0;
 
   // Métricas adicionais (usando dados reais quando disponíveis)
-  // Ticket médio = receita total / número de contratos ativos
-  const ticketMedio = contratosAtivos > 0 ? receitaTotal / contratosAtivos : 0;
+  // Ticket médio mensal = média dos valores de pagamento dos últimos 12 meses
+  const ticketMedio = (() => {
+    const agora = new Date();
+    const valoresMensais: number[] = [];
+    
+    // Pegar títulos dos últimos 12 meses
+    for (let i = 11; i >= 0; i--) {
+      const dataMes = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+      const proximoMes = new Date(agora.getFullYear(), agora.getMonth() - i + 1, 0);
+      
+      const titulosMes = titulos.filter(titulo => {
+        if (!titulo.data_vencimento) return false;
+        const dataVenc = new Date(titulo.data_vencimento);
+        return dataVenc >= dataMes && dataVenc <= proximoMes;
+      });
+      
+      const valorMes = titulosMes.reduce((sum, t) => {
+        const valor = parseFloat(String(t.valor)) || 0;
+        return sum + valor;
+      }, 0);
+      
+      if (valorMes > 0) {
+        valoresMensais.push(valorMes);
+      }
+    }
+    
+    // Retornar média dos valores mensais
+    return valoresMensais.length > 0 
+      ? valoresMensais.reduce((a, b) => a + b, 0) / valoresMensais.length 
+      : 0;
+  })();
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
