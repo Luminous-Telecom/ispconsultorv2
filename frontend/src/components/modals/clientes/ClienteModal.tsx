@@ -78,6 +78,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
   const [errors, setErrors] = useState<ClienteFormErrors>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
+  
+  // Resetar aba ativa quando modal abrir
+  useEffect(() => {
+    if (show) {
+      setActiveTab('dados-basicos');
+    }
+  }, [show]);
   const [showCancelados, setShowCancelados] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
