@@ -88,6 +88,7 @@ export class ServidorWhatsAppController {
         message: 'Servidor de WhatsApp criado com sucesso'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao criar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -132,6 +133,7 @@ export class ServidorWhatsAppController {
         message: 'Servidor de WhatsApp atualizado com sucesso'
       });
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao atualizar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -340,6 +342,7 @@ export class ServidorWhatsAppController {
         });
       }
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao criar/atualizar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -394,11 +397,12 @@ export class ServidorWhatsAppController {
       });
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao conectar instância:', error);
       
       res.status(500).json({
         success: false,
-        message: `Erro ao conectar instância: ${error.message}`
+        message: `Erro ao conectar instância: ${errorMessage}`
       });
     }
   }
@@ -470,6 +474,7 @@ export class ServidorWhatsAppController {
       });
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
       logger.error('Erro ao enviar mensagem de teste:', error);
       
       let errorMessage = 'Erro ao enviar mensagem de teste';
@@ -478,14 +483,14 @@ export class ServidorWhatsAppController {
       if (error.name === 'AbortError' || error.cause?.name === 'ConnectTimeoutError') {
         errorMessage = 'Timeout de conexão (30s): A Evolution API não está respondendo. Verifique se a URL está correta e se o servidor está online.';
         statusCode = 504; // Gateway Timeout
-      } else if (error.message.includes('fetch failed')) {
+      } else if (errorMessage.includes('fetch failed')) {
         errorMessage = 'Erro de conexão: Não foi possível conectar à Evolution API. Verifique a URL e se o servidor está acessível.';
         statusCode = 503; // Service Unavailable
-      } else if (error.message.includes('ENOTFOUND')) {
+      } else if (errorMessage.includes('ENOTFOUND')) {
         errorMessage = 'Domínio não encontrado: Verifique se a URL da Evolution API está correta.';
         statusCode = 404;
       } else {
-        errorMessage = `Erro ao enviar mensagem: ${error.message}`;
+        errorMessage = `Erro ao enviar mensagem: ${errorMessage}`;
       }
       
       res.status(statusCode).json({
