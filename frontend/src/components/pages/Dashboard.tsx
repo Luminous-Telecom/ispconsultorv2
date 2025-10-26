@@ -394,6 +394,8 @@ const Dashboard: React.FC = () => {
   // Função para renderizar gráfico de linha temporal
   const renderLineChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
     const maxValue = Math.max(...data.map(item => item.valor));
+    const minValue = Math.min(...data.map(item => item.valor));
+    const range = maxValue - minValue || 1;
     
     const formatValue = (val: number) => {
       switch (format) {
@@ -404,23 +406,80 @@ const Dashboard: React.FC = () => {
       }
     };
     
+    const calculateY = (value: number, chartHeight: number) => {
+      return chartHeight - ((value - minValue) / range) * chartHeight;
+    };
+    
+    const chartHeight = 150;
+    const chartWidth = 100;
+    const pointRadius = 4;
+    
+    // Criar path da linha
+    let pathData = '';
+    data.forEach((item, index) => {
+      const x = (index / (data.length - 1)) * chartWidth;
+      const y = calculateY(item.valor, chartHeight);
+      if (index === 0) {
+        pathData += `M ${x} ${y}`;
+      } else {
+        pathData += ` L ${x} ${y}`;
+      }
+    });
+    
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
-        <div className="line-chart">
-          {data.map((item, index) => {
-            const height = maxValue > 0 ? (item.valor / maxValue) * 100 : 0;
-            return (
-              <div key={index} className="line-item">
-                <div className="line-bar" style={{
-                  height: `${height}%`,
-                  backgroundColor: item.valor > 0 ? item.color : 'transparent'
-                }}></div>
-                <div className="line-label">{item.mes}</div>
-                <div className="line-value">{formatValue(item.valor)}</div>
-              </div>
-            );
-          })}
+        <div className="line-chart-wrapper" style={{ height: `${chartHeight + 40}px` }}>
+          <svg className="line-chart-svg" viewBox={`0 0 ${chartWidth} ${chartHeight + 40}`}>
+            {/* Linha */}
+            <path
+              d={pathData}
+              fill="none"
+              stroke="#007bff"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Pontos e labels */}
+            {data.map((item, index) => {
+              const x = (index / (data.length - 1)) * chartWidth;
+              const y = calculateY(item.valor, chartHeight);
+              return (
+                <g key={index}>
+                  {/* Círculo no ponto */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={pointRadius}
+                    fill="#007bff"
+                    stroke="white"
+                    strokeWidth="1.5"
+                  />
+                  {/* Valor */}
+                  <text
+                    x={x}
+                    y={y - 10}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize="3"
+                    fontWeight="700"
+                  >
+                    {item.valor}
+                  </text>
+                  {/* Mês */}
+                  <text
+                    x={x}
+                    y={chartHeight + 8}
+                    textAnchor="middle"
+                    fill="var(--text-secondary)"
+                    fontSize="2.5"
+                  >
+                    {item.mes}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
         </div>
       </div>
     );
