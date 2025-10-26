@@ -355,7 +355,7 @@ export class SchedulerService {
     const now = new Date();
     const [hours, minutes] = routine.hora_execucao.split(':');
     
-    let nextExecution = new Date();
+    const nextExecution = new Date();
     nextExecution.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
     // Se já passou hoje, agendar para o próximo período baseado na frequência
