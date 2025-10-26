@@ -31,9 +31,6 @@ export function useFormReset<T>({
 
   // Função para garantir que valores string sejam sempre strings
   const processData = (data: T): T => {
-    console.log('=== useFormReset processData ===');
-    console.log('Dados recebidos:', data);
-    
     const typedData = data as Record<string, any>;
     const typedInitialData = initialData as Record<string, any>;
     
@@ -41,27 +38,15 @@ export function useFormReset<T>({
       const value = typedData[key];
       const initialValue = typedInitialData[key];
       
-      console.log(`Campo ${key}:`, {
-        valorOriginal: value,
-        tipoOriginal: typeof value,
-        valorInicialTipo: typeof initialValue,
-        vaiProcessar: typeof initialValue === 'string'
-      });
-      
       // Se o valor inicial é string, garantir que seja string
       if (typeof initialValue === 'string') {
-        const processed = ensureString(value);
-        console.log(`Campo ${key} processado de ${typeof value} para string:`, processed);
-        acc[key] = processed;
+        acc[key] = ensureString(value);
       } else {
         acc[key] = value;
       }
       
       return acc;
     }, {} as Record<string, any>) as T;
-    
-    console.log('Resultado final:', result);
-    console.log('==============================');
     
     return result;
   };

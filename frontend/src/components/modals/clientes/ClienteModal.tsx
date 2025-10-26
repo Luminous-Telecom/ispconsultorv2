@@ -178,14 +178,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   // Carregar dados do cliente quando disponíveis
   useEffect(() => {
     if (cliente) {
-      console.log('=== Carregando dados do cliente ===');
-      console.log('Cliente objeto completo:', cliente);
-      console.log('Tipo de cnpj:', typeof cliente.cnpj, 'Valor:', cliente.cnpj);
-      console.log('Tipo de razao_social:', typeof cliente.razao_social, 'Valor:', cliente.razao_social);
-      console.log('Tipo de nome_fantasia:', typeof cliente.nome_fantasia, 'Valor:', cliente.nome_fantasia);
-      console.log('Tipo de email:', typeof cliente.email, 'Valor:', cliente.email);
-      
-      const processedData = {
+      setFormData({
         cnpj: ensureString(cliente.cnpj),
         razao_social: ensureString(cliente.razao_social),
         nome_fantasia: ensureString(cliente.nome_fantasia),
@@ -206,14 +199,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         recebe_sms: cliente.recebe_sms ?? false,
         recebe_whatsapp: cliente.recebe_whatsapp ?? true,
         observacoes: ensureString(cliente.observacoes)
-      };
-      
-      console.log('Dados processados:', processedData);
-      console.log('Tipo processado de cnpj:', typeof processedData.cnpj);
-      console.log('Tipo processado de razao_social:', typeof processedData.razao_social);
-      console.log('=================================');
-      
-      setFormData(processedData);
+      });
     }
   }, [cliente]);
 
@@ -1407,43 +1393,32 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           }}
         >
           {/* Aba Dados Básicos */}
-          {activeTab === 'dados-basicos' && (() => {
-            console.log('🔵 === Form dados-basicos initialValues ===');
-            console.log('formData completo:', formData);
-            const initialValues = {
-              cnpj: formData.cnpj || '',
-              razao_social: formData.razao_social || '',
-              nome_fantasia: formData.nome_fantasia || '',
-              ativo: formData.ativo
-            };
-            console.log('initialValues que será passado:', initialValues);
-            console.log('Tipo de cnpj em initialValues:', typeof initialValues.cnpj);
-            console.log('Tipo de razao_social em initialValues:', typeof initialValues.razao_social);
-            console.log('=========================================');
-            
-            return (
-              <Form
-                key={`dados-basicos-${clienteId}`}
-                config={dadosBasicosFormConfig}
-                formPrefix={formPrefix}
-                initialValues={initialValues}
-                onFieldChange={(name, value) => {
-                  console.log('🔵 Form onFieldChange:', name, 'value:', value, 'type:', typeof value);
-                  handleInputChange(name as keyof ClienteFormData, value);
-                }}
-                onSubmit={(data) => {
-                  // Manter apenas os campos da aba dados básicos
-                  handleInputChange('cnpj', data.cnpj);
-                  handleInputChange('razao_social', data.razao_social);
-                  handleInputChange('nome_fantasia', data.nome_fantasia);
-                  handleInputChange('ativo', data.ativo);
-                }}
-                showSubmitButton={false}
-                showResetButton={false}
-                className="dados-basicos-form"
-              />
-            );
-          })()}
+          {activeTab === 'dados-basicos' && (
+            <Form
+              key={`dados-basicos-${clienteId}`}
+              config={dadosBasicosFormConfig}
+              formPrefix={formPrefix}
+              initialValues={{
+                cnpj: formData.cnpj || '',
+                razao_social: formData.razao_social || '',
+                nome_fantasia: formData.nome_fantasia || '',
+                ativo: formData.ativo
+              }}
+              onFieldChange={(name, value) => {
+                handleInputChange(name as keyof ClienteFormData, value);
+              }}
+              onSubmit={(data) => {
+                // Manter apenas os campos da aba dados básicos
+                handleInputChange('cnpj', data.cnpj);
+                handleInputChange('razao_social', data.razao_social);
+                handleInputChange('nome_fantasia', data.nome_fantasia);
+                handleInputChange('ativo', data.ativo);
+              }}
+              showSubmitButton={false}
+              showResetButton={false}
+              className="dados-basicos-form"
+            />
+          )}
 
             {/* Aba Contato */}
             {activeTab === 'contato' && (
