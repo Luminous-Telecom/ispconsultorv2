@@ -411,7 +411,7 @@ const Dashboard: React.FC = () => {
     };
     
     const chartHeight = 200;
-    const chartWidth = 100;
+    const chartWidth = 150;
     const pointRadius = 5;
     
     // Criar path da linha
