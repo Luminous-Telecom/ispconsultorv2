@@ -413,8 +413,15 @@ const Dashboard: React.FC = () => {
     
     const calculateY = (value: number, chartHeight: number) => {
       // Sempre começa do 0 para preencher melhor o espaço
-      const percentage = maxValue > 0 ? (value / maxValue) : 0;
-      return chartHeight - (percentage * chartHeight);
+      // Adiciona padding de 10% no topo e fundo
+      const padding = 0.1;
+      const chartAreaHeight = chartHeight * (1 - padding * 2);
+      const chartAreaTop = chartHeight * padding;
+      
+      if (maxValue === 0) return chartHeight - chartAreaTop;
+      
+      const percentage = value / maxValue;
+      return chartHeight - chartAreaTop - (percentage * chartAreaHeight);
     };
     
     const chartHeight = 120;
