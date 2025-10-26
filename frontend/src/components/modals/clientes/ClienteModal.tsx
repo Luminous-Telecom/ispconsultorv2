@@ -1711,7 +1711,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         {/* Modal de criação de contrato */}
         <ContratoCreateModal
           show={showContratoCreateModal}
-          clienteId={cliente?.id}
+          clienteId={cliente?.id || createdClienteId || undefined}
           onClose={() => setShowContratoCreateModal(false)}
           onSuccess={() => {
             setShowContratoCreateModal(false);
