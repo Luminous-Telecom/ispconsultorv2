@@ -7,9 +7,6 @@ export { default as FormFieldWrapper } from './FormFieldWrapper';
 export { default as AddressFields } from './AddressFields';
 export { default as ContactFields } from './ContactFields';
 
-// Exportar exemplo de uso
-export { default as FormsExample } from './FormsExample';
-
 // Exportar hooks
 export { useForm } from './useForm';
 export { useFormContext, useFormField } from './FormProvider';
