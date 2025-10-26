@@ -88,7 +88,7 @@ export class ServidorWhatsAppController {
         message: 'Servidor de WhatsApp criado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -133,7 +133,7 @@ export class ServidorWhatsAppController {
         message: 'Servidor de WhatsApp atualizado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao atualizar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -342,7 +342,7 @@ export class ServidorWhatsAppController {
         });
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar/atualizar servidor de WhatsApp:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -397,7 +397,7 @@ export class ServidorWhatsAppController {
       });
 
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao conectar instância:', error);
       
       res.status(500).json({
@@ -474,7 +474,7 @@ export class ServidorWhatsAppController {
       });
 
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao enviar mensagem de teste:', error);
       
       let errorMessage = 'Erro ao enviar mensagem de teste';
