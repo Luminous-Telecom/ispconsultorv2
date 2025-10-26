@@ -283,20 +283,28 @@ export class SchedulerService {
             const diaVencimento = contrato.dia_vencimento;
 
             // Gerar os títulos faltantes
-            for (let i = 0; i < titulosGerar; i++) {
-              const dataVencimento = new Date(dataInicio);
-              dataVencimento.setMonth(dataVencimento.getMonth() + i);
-              dataVencimento.setDate(Math.min(diaVencimento, 28)); // Garantir que o dia existe
+            const hoje = new Date();
+            let mesAtual = hoje.getMonth();
+            let anoAtual = hoje.getFullYear();
+            let tentativas = 0;
+            let títulosCriadosNoContrato = 0;
+
+            while (títulosCriadosNoContrato < titulosGerar && tentativas < 100) {
+              tentativas++;
+              const dataVencimento = new Date(anoAtual, mesAtual, Math.min(diaVencimento, 28));
+              
+              console.log(`Tentando criar título para contrato ${contrato.id}, mês: ${mesAtual + 1}/${anoAtual}`);
 
               // Verificar se já existe título para este mês
-              const mesAno = `${dataVencimento.getFullYear()}-${String(dataVencimento.getMonth() + 1).padStart(2, '0')}`;
+              const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
               const tituloExistente = titulosExistentes.find(t => {
                 const dataTitulo = new Date(t.data_vencimento);
                 const mesAnoTitulo = `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}`;
                 return mesAnoTitulo === mesAno;
               });
 
-              if (!tituloExistente) {
+              if (!tituloExistente && dataVencimento > hoje) {
+                console.log(`Título não existe e data é futura, criando...`);
                 // Calcular valor do título (aplicar descontos se houver)
                 const plano = (contrato as any).plano;
                 let valorTitulo = contrato.valor_final || (plano?.valor_mensal || 0);
@@ -322,11 +330,19 @@ export class SchedulerService {
                   status: 'pendente',
                   pago: false,
                   descricao: `Mensalidade - ${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
-                  numero_titulo: `T${contrato.id}-${String(i + 1).padStart(3, '0')}`
+                  numero_titulo: `T${contrato.id}-${String(títulosCriadosNoContrato + 1).padStart(3, '0')}`
                 });
 
                 titulosGerados++;
+                títulosCriadosNoContrato++;
                 console.log(`Título criado para contrato ${contrato.id}, valor: R$ ${valorTitulo.toFixed(2)}, vencimento: ${dataVencimento.toLocaleDateString('pt-BR')}`);
+              }
+
+              // Avançar para o próximo mês
+              mesAtual++;
+              if (mesAtual > 11) {
+                mesAtual = 0;
+                anoAtual++;
               }
             }
 
