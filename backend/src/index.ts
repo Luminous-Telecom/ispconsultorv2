@@ -44,6 +44,7 @@ import modeloCartaRoutes from './routes/modeloCartaRoutes';
 import diasVencimentoRoutes from './routes/diasVencimentoRoutes';
 import termosContratoRoutes from './routes/termosContrato';
 import modelosTermoRoutes from './routes/modelosTermo';
+import atualizacoesRoutes from './routes/atualizacoesRoutes';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -165,6 +166,7 @@ app.use('/api/modelos-carta', modeloCartaRoutes);
 app.use('/api/dias-vencimento', diasVencimentoRoutes);
 app.use('/api/termos-contrato', termosContratoRoutes);
 app.use('/api/modelos-termo', modelosTermoRoutes);
+app.use('/api/atualizacoes', atualizacoesRoutes);
 
 // Rotas de webhook
 app.use('/webhook', webhookRoutes);

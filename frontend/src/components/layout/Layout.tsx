@@ -15,6 +15,7 @@ import ServidorEmailModal from '../modals/parametros/ServidorEmailModal';
 import ServidorWhatsappModal from '../modals/parametros/ServidorWhatsappModal';
 import DocumentosSistemaModal from '../modals/parametros/DocumentosSistemaModal';
 import DiasVencimentoModal from '../modals/parametros/DiasVencimentoModal';
+import AtualizacoesModal from '../modals/parametros/AtualizacoesModal';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -53,6 +54,7 @@ const Layout: React.FC = () => {
     { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', icon: 'bi-whatsapp', onClick: () => openModal('servidor-whatsapp') },
     { id: 'documentos-sistema', label: 'Documentos do Sistema', icon: 'bi-file-earmark-text', onClick: () => openModal('documentos-sistema') },
     { id: 'dias-vencimento', label: 'Dias de Vencimento', icon: 'bi-calendar', onClick: () => openModal('dias-vencimento') },
+    { id: 'atualizacoes', label: 'Atualizações', icon: 'bi-arrow-up-circle', onClick: () => openModal('atualizacoes') },
   ];
 
   return (
@@ -197,6 +199,11 @@ const Layout: React.FC = () => {
       
       <DiasVencimentoModal
         show={activeModal === 'dias-vencimento'}
+        onClose={closeModal}
+      />
+
+      <AtualizacoesModal
+        show={activeModal === 'atualizacoes'}
         onClose={closeModal}
       />
 
