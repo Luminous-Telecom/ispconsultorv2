@@ -26,6 +26,7 @@ import ConfirmModal from '../../ui/ConfirmModal';
 // Utilitários centralizados
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { validateClienteForm } from '../../../utils/validators';
+import { ensureString } from '../../../utils/stringUtils';
 import { ContratoItem, TituloItem, ClienteFormData, ClienteFormErrors, BulkActionItem } from '../../../types/cliente';
 
 interface ClienteModalProps {
@@ -177,14 +178,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   // Carregar dados do cliente quando disponíveis
   useEffect(() => {
     if (cliente) {
-      // Função helper para garantir que valores sejam strings e não objetos
-      const ensureString = (value: any): string => {
-        if (!value) return '';
-        if (typeof value === 'string') return value;
-        if (typeof value === 'object') return JSON.stringify(value);
-        return String(value);
-      };
-
       setFormData({
         cnpj: ensureString(cliente.cnpj),
         razao_social: ensureString(cliente.razao_social),

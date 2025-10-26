@@ -24,6 +24,7 @@ import { Banco } from '../../../types';
 import { DocumentoSistema } from '../../../services/documentoSistemaService';
 import { ContratoTab, TermosTab, FinanceiroTab, ContratoForm } from './contrato';
 import { TermoEditModal, SelecionarTermoModal } from './contrato/modals';
+import { ensureString } from '../../../utils/stringUtils';
 
 interface ContratoEditModalProps {
   show: boolean;
@@ -171,12 +172,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   // Dados customizados do contrato (quando editando)
   const customFormData = contratoData && typeof contratoData === 'object' && contratoData.id ? {
     plano_id: contratoData.plano_id || 0,
-    desconto_percentual: parseFloat(contratoData.desconto_percentual) || 0,
-    desconto_valor: parseFloat(contratoData.desconto_valor) || 0,
+    desconto_percentual: parseFloat(String(contratoData.desconto_percentual || 0)) || 0,
+    desconto_valor: parseFloat(String(contratoData.desconto_valor || 0)) || 0,
     data_inicio: contratoData.data_inicio ? contratoData.data_inicio.split('T')[0] : '',
     data_fim: contratoData.data_fim ? contratoData.data_fim.split('T')[0] : '',
     status: contratoData.status || 'ativo',
-    observacoes: contratoData.observacoes || '',
+    observacoes: ensureString(contratoData.observacoes),
     isento_mensalidade: contratoData.isento_mensalidade || false,
     dia_vencimento: contratoData.dia_vencimento || 10,
     conta_boleto: contratoData.conta_boleto || 0,

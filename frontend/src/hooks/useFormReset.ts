@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { ensureString } from '../utils/stringUtils';
 
 interface UseFormResetOptions<T> {
   show: boolean;
@@ -10,6 +11,7 @@ interface UseFormResetOptions<T> {
 
 /**
  * Hook personalizado para resetar formulários quando modais abrem/fecham
+ * Garante que valores string sejam sempre strings (evita [object Object])
  * @param show - Estado de visibilidade do modal
  * @param initialData - Dados iniciais do formulário
  * @param setFormData - Função para definir os dados do formulário
@@ -27,6 +29,23 @@ export function useFormReset<T>({
   const hasLoadedCustomData = useRef(false);
   const previousCustomDataStr = useRef<string>('');
 
+  // Função para garantir que valores string sejam sempre strings
+  const processData = (data: T): T => {
+    return Object.keys(data).reduce((acc, key) => {
+      const value = data[key];
+      const initialValue = initialData[key];
+      
+      // Se o valor inicial é string, garantir que seja string
+      if (typeof initialValue === 'string') {
+        acc[key] = ensureString(value) as any;
+      } else {
+        acc[key] = value;
+      }
+      
+      return acc;
+    }, {} as T);
+  };
+
   useEffect(() => {
     // Só executa quando show muda
     if (show !== previousShow.current) {
@@ -37,7 +56,7 @@ export function useFormReset<T>({
         // Se há dados customizados disponíveis, carrega eles; senão usa os iniciais
         if (customData) {
           const customDataStr = JSON.stringify(customData);
-          setFormData(customData);
+          setFormData(processData(customData));
           hasLoadedCustomData.current = true;
           previousCustomDataStr.current = customDataStr;
         } else {
@@ -66,7 +85,7 @@ export function useFormReset<T>({
       const currentCustomDataStr = JSON.stringify(customData);
       // Só atualiza se o conteúdo realmente mudou e ainda não foi carregado
       if (currentCustomDataStr !== previousCustomDataStr.current) {
-        setFormData(customData);
+        setFormData(processData(customData));
         hasLoadedCustomData.current = true;
         previousCustomDataStr.current = currentCustomDataStr;
       }
