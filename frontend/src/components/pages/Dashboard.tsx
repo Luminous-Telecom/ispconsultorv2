@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ClienteService } from '../../services/clienteService';
 import { PlanoService } from '../../services/planoService';
 import { ContratoService } from '../../services/ContratoService';
+import { TituloService } from '../../services/tituloService';
 import { useDashboard } from '../../hooks/useDashboard';
 
 // Componente para gráfico de linha temporal com Canvas
@@ -167,10 +168,17 @@ const Dashboard: React.FC = () => {
     placeholderData: (previousData) => previousData,
   });
 
+  const { data: titulosData, isLoading: loadingTitulos } = useQuery({
+    queryKey: ['titulos-dashboard'],
+    queryFn: () => TituloService.list({ limit: 1000 }),
+    placeholderData: (previousData) => previousData,
+  });
+
   // Processar dados
   const clientes = clientesData?.data || [];
   const planos = planosData?.data || [];
   const contratos = contratosData?.data || [];
+  const titulos = titulosData?.data || [];
   const stats = dashboardData?.stats;
 
   // Estatísticas de clientes
@@ -195,8 +203,12 @@ const Dashboard: React.FC = () => {
   const receitaPendente = stats?.valorTotalReceber || 0;
 
   // Métricas adicionais (usando dados reais quando disponíveis)
-  const totalBoletos = stats?.carnesAtivos || 0;
-  const ticketMedio = receitaTotal > 0 && totalBoletos > 0 ? receitaTotal / totalBoletos : 0;
+  const totalBoletos = titulos.length;
+  const valorTotalBoletos = titulos.reduce((sum, titulo) => {
+    const valor = parseFloat(String(titulo.valor)) || 0;
+    return sum + valor;
+  }, 0);
+  const ticketMedio = totalBoletos > 0 ? valorTotalBoletos / totalBoletos : 0;
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
@@ -501,7 +513,7 @@ const Dashboard: React.FC = () => {
     return <LineChart data={data} title={title} format={format} />;
   };
 
-  if (loadingDashboard || loadingClientes || loadingPlanos || loadingContratos) {
+  if (loadingDashboard || loadingClientes || loadingPlanos || loadingContratos || loadingTitulos) {
     return (
       <div className="dashboard-container">
         <div className="text-center">
