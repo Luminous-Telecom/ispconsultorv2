@@ -83,7 +83,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
         {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
           <div>
-            <div className="card bg-light border mb-3" style={{ borderRadius: '0.5rem' }}>
+            <div className="card mb-3 border" style={{ borderRadius: '0.5rem', backgroundColor: 'var(--bs-body-bg)', borderColor: 'var(--bs-border-color) !important' }}>
               <div className="card-body py-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
