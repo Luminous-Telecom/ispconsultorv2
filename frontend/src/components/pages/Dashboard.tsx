@@ -440,26 +440,16 @@ const Dashboard: React.FC = () => {
       }
     });
     
-    // ID único para o gradiente
-    const gradientId = `lineGradient-${title.replace(/\s+/g, '-').toLowerCase()}`;
-    
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
         <div className="line-chart-wrapper" style={{ height: `${chartHeight + 50}px` }}>
           <svg className="line-chart-svg" viewBox="0 0 100 170" preserveAspectRatio="xMidYMid meet">
-            {/* Gradiente para a linha */}
-            <defs>
-              <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#4dabf7" stopOpacity="0.8"/>
-                <stop offset="100%" stopColor="#007bff" stopOpacity="1"/>
-              </linearGradient>
-            </defs>
             {/* Linha */}
             <path
               d={pathData}
               fill="none"
-              stroke={`url(#${gradientId})`}
+              stroke="#007bff"
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
