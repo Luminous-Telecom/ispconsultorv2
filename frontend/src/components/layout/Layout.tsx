@@ -16,6 +16,7 @@ import ServidorWhatsappModal from '../modals/parametros/ServidorWhatsappModal';
 import DocumentosSistemaModal from '../modals/parametros/DocumentosSistemaModal';
 import DiasVencimentoModal from '../modals/parametros/DiasVencimentoModal';
 import AtualizacoesModal from '../modals/parametros/AtualizacoesModal';
+import AgendadorTarefasModal from '../modals/parametros/AgendadorTarefasModal';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -50,6 +51,7 @@ const Layout: React.FC = () => {
 
   const parametrosDropdownItems = [
     { id: 'recursos-sistema', label: 'Recursos do Sistema', icon: 'bi-gear', onClick: () => openModal('recursos-sistema') },
+    { id: 'agendador-tarefas', label: 'Agendador de Tarefas', icon: 'bi-clock-history', onClick: () => openModal('agendador-tarefas') },
     { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => openModal('servidor-email') },
     { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', icon: 'bi-whatsapp', onClick: () => openModal('servidor-whatsapp') },
     { id: 'documentos-sistema', label: 'Documentos do Sistema', icon: 'bi-file-earmark-text', onClick: () => openModal('documentos-sistema') },
@@ -204,6 +206,11 @@ const Layout: React.FC = () => {
 
       <AtualizacoesModal
         show={activeModal === 'atualizacoes'}
+        onClose={closeModal}
+      />
+
+      <AgendadorTarefasModal
+        show={activeModal === 'agendador-tarefas'}
         onClose={closeModal}
       />
 
