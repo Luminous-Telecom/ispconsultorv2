@@ -98,7 +98,7 @@ export class ModeloContratoController {
         message: 'Documento criado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar documento:', error);
       
       if (error.name === 'SequelizeValidationError') {
@@ -143,7 +143,7 @@ export class ModeloContratoController {
         message: 'Documento atualizado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? errorMessage : 'Erro desconhecido';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao atualizar documento:', error);
       
       if (error.name === 'SequelizeValidationError') {
