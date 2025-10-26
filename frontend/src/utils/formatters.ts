@@ -66,12 +66,27 @@ export const formatPercentage = (value: number | string): string => {
 export const formatCNPJ = (cnpj: string): string => {
   if (!cnpj) return '';
   
+  // Remove todos os caracteres não numéricos
   const numbers = cnpj.replace(/\D/g, '');
-  if (numbers.length <= 2) return numbers;
-  if (numbers.length <= 5) return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
-  if (numbers.length <= 8) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5)}`;
-  if (numbers.length <= 12) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8)}`;
-  return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8, 12)}-${numbers.slice(12, 14)}`;
+  
+  // Limita a 14 dígitos (tamanho máximo do CNPJ)
+  const limitedNumbers = numbers.slice(0, 14);
+  
+  // Retorna sem formatação se tiver menos de 3 dígitos
+  if (limitedNumbers.length <= 2) return limitedNumbers;
+  
+  // Formata progressivamente
+  if (limitedNumbers.length <= 5) {
+    return `${limitedNumbers.slice(0, 2)}.${limitedNumbers.slice(2)}`;
+  }
+  if (limitedNumbers.length <= 8) {
+    return `${limitedNumbers.slice(0, 2)}.${limitedNumbers.slice(2, 5)}.${limitedNumbers.slice(5)}`;
+  }
+  if (limitedNumbers.length <= 12) {
+    return `${limitedNumbers.slice(0, 2)}.${limitedNumbers.slice(2, 5)}.${limitedNumbers.slice(5, 8)}/${limitedNumbers.slice(8)}`;
+  }
+  
+  return `${limitedNumbers.slice(0, 2)}.${limitedNumbers.slice(2, 5)}.${limitedNumbers.slice(5, 8)}/${limitedNumbers.slice(8, 12)}-${limitedNumbers.slice(12, 14)}`;
 };
 
 /**
@@ -83,10 +98,12 @@ export const formatCPF = (cpf: string): string => {
   if (!cpf) return '';
   
   const numbers = cpf.replace(/\D/g, '');
-  if (numbers.length <= 3) return numbers;
-  if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
-  if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
-  return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+  const limitedNumbers = numbers.slice(0, 11); // Limita a 11 dígitos
+  
+  if (limitedNumbers.length <= 3) return limitedNumbers;
+  if (limitedNumbers.length <= 6) return `${limitedNumbers.slice(0, 3)}.${limitedNumbers.slice(3)}`;
+  if (limitedNumbers.length <= 9) return `${limitedNumbers.slice(0, 3)}.${limitedNumbers.slice(3, 6)}.${limitedNumbers.slice(6)}`;
+  return `${limitedNumbers.slice(0, 3)}.${limitedNumbers.slice(3, 6)}.${limitedNumbers.slice(6, 9)}-${limitedNumbers.slice(9, 11)}`;
 };
 
 /**
@@ -98,10 +115,12 @@ export const formatPhone = (phone: string): string => {
   if (!phone) return '';
   
   const numbers = phone.replace(/\D/g, '');
-  if (numbers.length <= 2) return numbers ? `(${numbers}` : numbers;
-  if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-  if (numbers.length <= 10) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
-  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  const limitedNumbers = numbers.slice(0, 11); // Limita a 11 dígitos (DDD + 9 dígitos)
+  
+  if (limitedNumbers.length <= 2) return limitedNumbers ? `(${limitedNumbers}` : limitedNumbers;
+  if (limitedNumbers.length <= 6) return `(${limitedNumbers.slice(0, 2)}) ${limitedNumbers.slice(2)}`;
+  if (limitedNumbers.length <= 10) return `(${limitedNumbers.slice(0, 2)}) ${limitedNumbers.slice(2, 6)}-${limitedNumbers.slice(6)}`;
+  return `(${limitedNumbers.slice(0, 2)}) ${limitedNumbers.slice(2, 7)}-${limitedNumbers.slice(7, 11)}`;
 };
 
 /**
@@ -113,6 +132,8 @@ export const formatCEP = (cep: string): string => {
   if (!cep) return '';
   
   const numbers = cep.replace(/\D/g, '');
-  if (numbers.length <= 5) return numbers;
-  return `${numbers.slice(0, 5)}-${numbers.slice(5, 8)}`;
+  const limitedNumbers = numbers.slice(0, 8); // Limita a 8 dígitos
+  
+  if (limitedNumbers.length <= 5) return limitedNumbers;
+  return `${limitedNumbers.slice(0, 5)}-${limitedNumbers.slice(5, 8)}`;
 };
