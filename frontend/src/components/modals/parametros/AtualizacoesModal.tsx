@@ -88,7 +88,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
                     <span className="text-muted small d-block mb-1" style={{ fontSize: '0.75rem' }}>Versão Atual</span>
-                    <h6 className="mb-0 fw-bold text-primary" style={{ fontSize: '1.1rem' }}>v{atualizacoes[atualizacoes.length - 1].versao}</h6>
+                    <h6 className="mb-0 fw-bold text-primary" style={{ fontSize: '1.1rem' }}>v{atualizacoes[0].versao}</h6>
                   </div>
                   <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '1.5rem' }}></i>
                 </div>
@@ -98,7 +98,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {atualizacoes.map((atualizacao: Atualizacao, index: number) => {
                 const badge = getTipoBadge(atualizacao.tipo);
-                const isLatestVersion = index === atualizacoes.length - 1;
+                const isLatestVersion = index === 0; // Primeira versão é a mais recente
                 return (
                   <div key={atualizacao.versao} className="border" style={{ 
                     borderRadius: '0.5rem',
