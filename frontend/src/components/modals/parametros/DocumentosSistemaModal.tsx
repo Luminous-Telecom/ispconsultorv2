@@ -208,45 +208,46 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       >
         <div>
           {/* Abas */}
-          <ul className="nav nav-tabs mb-2">
+          <ul className="nav nav-tabs mb-3" style={{ marginLeft: '1rem', marginRight: '1rem', marginTop: '1rem' }}>
             <li className="nav-item">
               <button
-                className={`nav-link py-1 px-2 small ${activeTab === 'contrato' ? 'active' : ''}`}
+                className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
                 onClick={() => handleTabChange('contrato')}
               >
-                <i className="bi bi-file-earmark-text me-1"></i>
+                <i className="bi bi-file-earmark-text me-2"></i>
                 Contratos
               </button>
             </li>
             <li className="nav-item">
               <button
-                className={`nav-link py-1 px-2 small ${activeTab === 'recibo' ? 'active' : ''}`}
+                className={`nav-link ${activeTab === 'recibo' ? 'active' : ''}`}
                 onClick={() => handleTabChange('recibo')}
               >
-                <i className="bi bi-receipt me-1"></i>
+                <i className="bi bi-receipt me-2"></i>
                 Recibos
               </button>
             </li>
             <li className="nav-item">
               <button
-                className={`nav-link py-1 px-2 small ${activeTab === 'carta_cobranca' ? 'active' : ''}`}
+                className={`nav-link ${activeTab === 'carta_cobranca' ? 'active' : ''}`}
                 onClick={() => handleTabChange('carta_cobranca')}
               >
-                <i className="bi bi-envelope me-1"></i>
+                <i className="bi bi-envelope me-2"></i>
                 Cartas de Cobrança
               </button>
             </li>
             <li className="nav-item">
               <button
-                className={`nav-link py-1 px-2 small ${activeTab === 'termo' ? 'active' : ''}`}
+                className={`nav-link ${activeTab === 'termo' ? 'active' : ''}`}
                 onClick={() => handleTabChange('termo')}
               >
-                <i className="bi bi-file-text me-1"></i>
+                <i className="bi bi-file-text me-2"></i>
                 Termos
               </button>
             </li>
           </ul>
 
+          <div style={{ marginLeft: '1rem', marginRight: '1rem', marginBottom: '1rem' }}>
           <Table
             config={{
               columns,
@@ -276,6 +277,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             onSearch={setSearch}
             onRefresh={() => refetch()}
           />
+          </div>
         </div>
 
         {/* Modal Unificado */}
