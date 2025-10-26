@@ -489,6 +489,15 @@ export class BancoApiService {
   ): Promise<any> {
     const baseUrl = banco.url_retorno;
     
+    logger.info('Verificando URL de retorno do banco', {
+      banco_id: banco.id,
+      banco_nome: banco.nome,
+      url_retorno_cadastrada: banco.url_retorno,
+      url_retorno_tipo: typeof banco.url_retorno,
+      url_retorno_length: banco.url_retorno?.length,
+      titulo_id: titulo.id
+    });
+    
     if (baseUrl) {
       logger.info('Gerando título com URL de notificação', {
         banco_id: banco.id,
