@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
-import { SchedulerService, CreateRotinaData } from '../../../services/schedulerService';
+import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '../../../services/schedulerService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import FormField from '../../ui/FormField';
 
@@ -27,9 +27,10 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
     tipo: 'envio_boletos',
     descricao: '',
     frequencia: 'diaria',
-    hora_execucao: '00:00',
-    ativo: true
+    hora_execucao: '00:00'
   });
+
+  const [ativo, setAtivo] = useState(true);
 
   const { data: rotinaData, isLoading } = useQuery({
     queryKey: ['rotina', rotinaId],
@@ -47,9 +48,9 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
         tipo: rotinaData.tipo || 'envio_boletos',
         descricao: rotinaData.descricao || '',
         frequencia: rotinaData.frequencia || 'diaria',
-        hora_execucao: rotinaData.hora_execucao || '00:00',
-        ativo: rotinaData.ativo
+        hora_execucao: rotinaData.hora_execucao || '00:00'
       });
+      setAtivo(rotinaData.ativo);
     }
   }, [rotinaData, isEditMode]);
 
@@ -86,16 +87,20 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
       tipo: 'envio_boletos',
       descricao: '',
       frequencia: 'diaria',
-      hora_execucao: '00:00',
-      ativo: true
+      hora_execucao: '00:00'
     });
+    setAtivo(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isEditMode) {
-      updateMutation.mutate(formData);
+      const updateData: UpdateRotinaData = {
+        ...formData,
+        ativo
+      };
+      updateMutation.mutate(updateData);
     } else {
       createMutation.mutate(formData);
     }
@@ -198,8 +203,8 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
                 className="form-check-input"
                 type="checkbox"
                 id="ativo"
-                checked={formData.ativo}
-                onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
+                checked={ativo}
+                onChange={(e) => setAtivo(e.target.checked)}
               />
               <label className="form-check-label" htmlFor="ativo">
                 Ativo
