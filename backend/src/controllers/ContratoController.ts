@@ -290,6 +290,22 @@ export class ContratoController {
       if (value.data_inicio === '') value.data_inicio = null;
       if (value.data_fim === '') value.data_fim = null;
       if (value.data_validade_desconto === '') value.data_validade_desconto = null;
+      
+      // Normalizar descontos: strings vazias ou 0 para null
+      if (value.desconto_percentual === '' || value.desconto_percentual === 0 || value.desconto_percentual === '0') {
+        value.desconto_percentual = null;
+      }
+      if (value.desconto_valor === '' || value.desconto_valor === 0 || value.desconto_valor === '0') {
+        value.desconto_valor = null;
+      }
+      
+      // Converter strings para números se necessário
+      if (typeof value.desconto_percentual === 'string' && value.desconto_percentual !== null) {
+        value.desconto_percentual = parseFloat(value.desconto_percentual);
+      }
+      if (typeof value.desconto_valor === 'string' && value.desconto_valor !== null) {
+        value.desconto_valor = parseFloat(value.desconto_valor);
+      }
 
       const contrato = await Contrato.findByPk(id);
       if (!contrato) {
@@ -328,7 +344,10 @@ export class ContratoController {
 
       // Recalcular valor_final se plano ou descontos mudaram
       if (value.plano_id !== undefined || value.desconto_percentual !== undefined || value.desconto_valor !== undefined) {
-        // Recalcular baseado no plano e descontos (ignorando valor_final atual)
+        // Recarregar contrato para pegar valores atualizados
+        await contrato.reload();
+        
+        // Recalcular baseado no plano e descontos
         const plano = await contrato.getPlano();
         let novoValorFinal = parseFloat(plano.valor_mensal.toString());
 
