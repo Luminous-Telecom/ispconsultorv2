@@ -220,7 +220,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         </div>
       }
     >
-      <form id="contrato-cliente-create-form" onSubmit={handleSubmit} style={{ padding: '16px' }}>
+      <form id="contrato-cliente-create-form" onSubmit={handleSubmit} style={{ padding: '1rem' }}>
         <div className="row">
           <div className="col-md-6">
             <EntitySelectField
@@ -239,7 +239,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           </div>
 
           <div className="col-md-6">
-            <div className="mb-3">
+            <div className="mb-2">
               <label htmlFor="status" className="form-label small">Status</label>
               <select
                 className="form-select"
@@ -258,7 +258,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3">
+            <div className="mb-2">
               <FormField
                 name="data_inicio"
                 type="date"
@@ -275,7 +275,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           </div>
 
           <div className="col-md-6">
-            <div className="mb-3">
+            <div className="mb-2">
               <FormField
                 name="data_fim"
                 type="date"
@@ -291,7 +291,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3">
+            <div className="mb-2">
               <FormField
                 name="desconto_percentual"
                 type="number"
@@ -309,7 +309,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           </div>
 
           <div className="col-md-6">
-            <div className="mb-3">
+            <div className="mb-2">
               <FormField
                 name="desconto_valor"
                 type="number"
@@ -328,7 +328,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3">
+            <div className="mb-2">
               <FormField
                 name="dia_vencimento"
                 type="number"
@@ -382,7 +382,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
 
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3">
+            <div className="mb-2">
               <FormField
                 name="data_validade_desconto"
                 type="date"
@@ -396,7 +396,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           </div>
 
           <div className="col-md-6">
-            <div className="mb-3">
+            <div className="mb-2">
               <div className="form-check mt-4">
                 <input
                   type="checkbox"
@@ -415,7 +415,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
           </div>
         </div>
 
-        <div className="mb-3">
+        <div className="mb-2">
           <FormField
             name="observacoes"
             type="textarea"
