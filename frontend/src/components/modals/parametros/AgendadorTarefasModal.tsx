@@ -1,246 +1,248 @@
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import DraggableModal from '../../common/DraggableModal';
+import React, { useState, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import ListModal from '../../common/ListModal';
+import { useModalSelect } from '../../../hooks/useModalSelect';
+import { useListModal } from '../../../hooks/useListModal';
 import { SchedulerService, RotinaAgendada } from '../../../services/schedulerService';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { TableConfig } from '../../tables/types';
-import Table from '../../tables/Table';
-import Button from '../../ui/Button';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
   onClose: () => void;
 }
 
-const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ show, onClose }) => {
-  const { addNotification } = useNotificationContext();
+const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({ 
+  show, 
+  onClose
+}) => {
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
 
-  const { data, isLoading, refetch } = useQuery({
+  const {
+    selectedItem,
+    handleSelectionChange,
+    clearSelection
+  } = useModalSelect<RotinaAgendada>();
+
+  const modal = useListModal({
+    title: "Agendador de Tarefas",
+    columns: [
+      {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        render: (item: RotinaAgendada) => <span>{item.id}</span>
+      },
+      {
+        key: 'nome',
+        label: 'Nome',
+        sortable: true,
+        render: (item: RotinaAgendada) => <strong>{item.nome}</strong>
+      },
+      {
+        key: 'tipo',
+        label: 'Tipo',
+        sortable: true,
+        render: (item: RotinaAgendada) => {
+          const tipos: Record<string, string> = {
+            'envio_boletos': 'Envio de Boletos',
+            'remessa_bancaria': 'Remessa Bancária',
+            'verificar_vencimentos': 'Verificar Vencimentos',
+          };
+          return <span className="badge bg-info">{tipos[item.tipo] || item.tipo}</span>;
+        }
+      },
+      {
+        key: 'frequencia',
+        label: 'Frequência',
+        sortable: true,
+        render: (item: RotinaAgendada) => {
+          const frequencias: Record<string, string> = {
+            'diaria': 'Diária',
+            'semanal': 'Semanal',
+            'mensal': 'Mensal',
+          };
+          return frequencias[item.frequencia] || item.frequencia;
+        }
+      },
+      {
+        key: 'hora_execucao',
+        label: 'Horário',
+        sortable: true,
+        render: (item: RotinaAgendada) => {
+          if (!item.hora_execucao) return '-';
+          const [hour, minute] = item.hora_execucao.split(':');
+          return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+        }
+      },
+      {
+        key: 'proxima_execucao',
+        label: 'Próxima Execução',
+        render: (item: RotinaAgendada) => {
+          if (!item.proxima_execucao) return '-';
+          return new Date(item.proxima_execucao).toLocaleString('pt-BR');
+        }
+      },
+      {
+        key: 'ativo',
+        label: 'Status',
+        sortable: true,
+        render: (item: RotinaAgendada) => (
+          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
+            {item.ativo ? 'Ativo' : 'Inativo'}
+          </span>
+        )
+      },
+      {
+        key: 'total_execucoes',
+        label: 'Execuções',
+        sortable: true,
+        render: (item: RotinaAgendada) => item.total_execucoes || 0
+      },
+      {
+        key: 'execucoes_com_erro',
+        label: 'Erros',
+        sortable: true,
+        render: (item: RotinaAgendada) => item.execucoes_com_erro || 0
+      }
+    ],
+    searchPlaceholder: 'Buscar por nome, tipo ou descrição...',
+    multiSelect: false
+  });
+
+  const { data: rotinasData, isLoading, refetch } = useQuery({
     queryKey: ['agendador-tarefas'],
     queryFn: async () => {
       const response = await SchedulerService.getRotinas({
         page: 1,
-        limit: 100,
+        limit: 1000,
       });
       return response;
     },
     enabled: show,
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await SchedulerService.deleteRotina(id);
-    },
-    onSuccess: () => {
-      addNotification('success', 'Rotina deletada com sucesso');
-      queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
-      refetch();
-    },
-    onError: (error: any) => {
-      addNotification('error', `Erro ao deletar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
-    },
-  });
+  const filteredRotinas = useMemo(() => {
+    if (!rotinasData?.data) return [];
+    
+    let filtered = [...rotinasData.data];
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(r => 
+        r.nome?.toLowerCase().includes(searchLower) ||
+        r.id?.toString().includes(searchLower) ||
+        r.tipo?.toLowerCase().includes(searchLower) ||
+        r.descricao?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  }, [rotinasData, search]);
 
-  const toggleMutation = useMutation({
-    mutationFn: async ({ id, ativo }: { id: number; ativo: boolean }) => {
-      await SchedulerService.toggleRotina(id, ativo);
-    },
-    onSuccess: () => {
-      addNotification('success', 'Status da rotina atualizado com sucesso');
-      queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
-      refetch();
-    },
-    onError: (error: any) => {
-      addNotification('error', `Erro ao atualizar status: ${error?.response?.data?.message || 'Erro desconhecido'}`);
-    },
-  });
+  const paginatedRotinas = useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return filteredRotinas.slice(startIndex, startIndex + limit);
+  }, [filteredRotinas, page, limit]);
 
-  const executeMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await SchedulerService.executeRotina(id);
-    },
-    onSuccess: () => {
-      addNotification('success', 'Rotina executada com sucesso');
-      queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
-      refetch();
-    },
-    onError: (error: any) => {
-      addNotification('error', `Erro ao executar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
-    },
-  });
+  const pagination = {
+    from: (page - 1) * limit + 1,
+    to: Math.min(page * limit, filteredRotinas.length),
+    total: filteredRotinas.length,
+    current_page: page,
+    last_page: Math.ceil(filteredRotinas.length / limit),
+    per_page: limit
+  };
 
-  const handleDelete = (id: number, nome: string) => {
-    if (window.confirm(`Tem certeza que deseja deletar a rotina "${nome}"?`)) {
-      deleteMutation.mutate(id);
+  const handleToggle = async (rotina: RotinaAgendada) => {
+    try {
+      await SchedulerService.toggleRotina(rotina.id, !rotina.ativo);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
+    } catch (error: any) {
+      alert(`Erro ao atualizar status: ${error?.response?.data?.message || 'Erro desconhecido'}`);
     }
   };
 
-  const handleToggle = (rotina: RotinaAgendada) => {
-    toggleMutation.mutate({ id: rotina.id, ativo: !rotina.ativo });
-  };
-
-  const handleExecute = (rotina: RotinaAgendada) => {
-    if (window.confirm(`Deseja executar a rotina "${rotina.nome}" agora?`)) {
-      executeMutation.mutate(rotina.id);
+  const handleExecute = async (rotina: RotinaAgendada) => {
+    if (!window.confirm(`Deseja executar a rotina "${rotina.nome}" agora?`)) {
+      return;
+    }
+    try {
+      await SchedulerService.executeRotina(rotina.id);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
+    } catch (error: any) {
+      alert(`Erro ao executar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
     }
   };
 
-  const tableConfig: TableConfig<RotinaAgendada> = {
-    columns: [
-      {
-        key: 'id',
-        label: 'ID',
-        sortable: true,
-      },
-      {
-        key: 'nome',
-        label: 'Nome',
-        sortable: true,
-      },
-      {
-        key: 'tipo',
-        label: 'Tipo',
-        render: (rotina) => {
-          const tipos: Record<string, string> = {
-            'envio_boletos': 'Envio de Boletos',
-            'remessa_bancaria': 'Remessa Bancária',
-            'verificar_vencimentos': 'Verificar Vencimentos',
-          };
-          return tipos[rotina.tipo] || rotina.tipo;
-        },
-      },
-      {
-        key: 'frequencia',
-        label: 'Frequência',
-        render: (rotina) => {
-          const frequencias: Record<string, string> = {
-            'diaria': 'Diária',
-            'semanal': 'Semanal',
-            'mensal': 'Mensal',
-          };
-          return frequencias[rotina.frequencia] || rotina.frequencia;
-        },
-      },
-      {
-        key: 'hora_execucao',
-        label: 'Horário',
-        render: (rotina) => {
-          if (!rotina.hora_execucao) return '-';
-          const [hour, minute] = rotina.hora_execucao.split(':');
-          return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
-        },
-      },
-      {
-        key: 'proxima_execucao',
-        label: 'Próxima Execução',
-        render: (rotina) => {
-          if (!rotina.proxima_execucao) return '-';
-          return new Date(rotina.proxima_execucao).toLocaleString('pt-BR');
-        },
-      },
-      {
-        key: 'ativo',
-        label: 'Status',
-        render: (rotina) => (
-          <span className={`badge ${rotina.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {rotina.ativo ? 'Ativo' : 'Inativo'}
-          </span>
-        ),
-      },
-      {
-        key: 'total_execucoes',
-        label: 'Execuções',
-        sortable: true,
-      },
-      {
-        key: 'execucoes_com_erro',
-        label: 'Erros',
-        sortable: true,
-        render: (rotina) => rotina.execucoes_com_erro || 0,
-      },
-      {
-        key: 'actions',
-        label: 'Ações',
-        render: (rotina) => (
-          <div className="d-flex gap-1">
-            <Button
-              variant={rotina.ativo ? 'secondary' : 'success'}
-              size="sm"
-              onClick={() => handleToggle(rotina)}
-            >
-              <i className={`bi ${rotina.ativo ? 'bi-pause-circle' : 'bi-play-circle'}`}></i>
-              {rotina.ativo ? ' Desativar' : ' Ativar'}
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => handleExecute(rotina)}
-            >
-              <i className="bi bi-play-fill"></i>
-              {' Executar'}
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => handleDelete(rotina.id, rotina.nome)}
-            >
-              <i className="bi bi-trash"></i>
-            </Button>
-          </div>
-        ),
-      },
-    ],
-    data: data?.data || [],
-    loading: isLoading,
-    pagination: data?.pagination ? {
-      current_page: data.pagination.page,
-      last_page: data.pagination.pages,
-      per_page: data.pagination.limit,
-      total: data.pagination.total,
-    } : undefined,
-    searchable: true,
-    searchPlaceholder: 'Buscar por nome, tipo ou descrição...',
-    sortable: true,
-    emptyMessage: 'Nenhuma rotina encontrada',
-    actions: [
-      {
-        key: 'toggle',
-        label: 'Ativar/Desativar',
-        onClick: (rotina) => handleToggle(rotina),
-      },
-      {
-        key: 'execute',
-        label: 'Executar',
-        onClick: (rotina) => handleExecute(rotina),
-      },
-      {
-        key: 'delete',
-        label: 'Deletar',
-        onClick: (rotina) => handleDelete(rotina.id, rotina.nome),
-        variant: 'danger',
-        confirm: {
-          title: 'Confirmar Exclusão',
-          message: 'Tem certeza que deseja deletar esta rotina?',
-        },
-      },
-    ],
+  const handleDelete = async (rotina: RotinaAgendada) => {
+    if (!window.confirm(`Tem certeza que deseja deletar a rotina "${rotina.nome}"?`)) {
+      return;
+    }
+    try {
+      await SchedulerService.deleteRotina(rotina.id);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
+    } catch (error: any) {
+      alert(`Erro ao deletar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
+    }
   };
+
+  const bulkActions = [
+    {
+      label: 'Ativar',
+      variant: 'success' as const,
+      disabled: () => !selectedItem || selectedItem.ativo,
+      action: () => selectedItem && handleToggle(selectedItem)
+    },
+    {
+      label: 'Desativar',
+      variant: 'secondary' as const,
+      disabled: () => !selectedItem || !selectedItem.ativo,
+      action: () => selectedItem && handleToggle(selectedItem)
+    },
+    {
+      label: 'Executar',
+      variant: 'primary' as const,
+      disabled: () => !selectedItem,
+      action: () => selectedItem && handleExecute(selectedItem)
+    },
+    {
+      label: 'Excluir',
+      variant: 'danger' as const,
+      disabled: () => !selectedItem,
+      action: () => selectedItem && handleDelete(selectedItem)
+    }
+  ];
 
   return (
-    <DraggableModal
+    <ListModal
       show={show}
-      onClose={onClose}
-      title="Agendador de Tarefas"
-      size="xl"
-    >
-      <Table
-        config={tableConfig}
-        onRefresh={refetch}
-      />
-    </DraggableModal>
+      onClose={() => {
+        clearSelection();
+        onClose();
+      }}
+      config={modal.config}
+      data={paginatedRotinas}
+      loading={isLoading}
+      selectedItems={selectedItem ? [selectedItem] : []}
+      onSelectionChange={handleSelectionChange}
+      search={search}
+      onSearchChange={setSearch}
+      pagination={pagination}
+      onPageChange={setPage}
+      limit={limit}
+      onLimitChange={setLimit}
+      onRefresh={() => {
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
+      }}
+      bulkActions={bulkActions}
+    />
   );
 };
 
 export default AgendadorTarefasModal;
-
