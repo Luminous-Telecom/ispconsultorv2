@@ -918,7 +918,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </ul>
 
           {/* Conteúdo das Abas */}
-          <div className="tab-content" style={{ flex: 1, overflow: 'auto', padding: (activeTab === 'termos' || activeTab === 'financeiro') ? '0' : '16px' }}>
+          <div className="tab-content" style={{ flex: 1, overflow: 'auto', padding: (activeTab === 'termos' || activeTab === 'financeiro') ? '0' : '1rem' }}>
             <>
             {/* Aba Contrato */}
             {activeTab === 'contrato' && (
