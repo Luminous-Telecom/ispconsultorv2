@@ -716,6 +716,12 @@ export class TituloController {
         return;
       }
 
+      logger.info('Verificando status do título para impressão', {
+        titulo_id: titulo.id,
+        tem_charge_id: !!titulo.charge_id,
+        charge_id: titulo.charge_id
+      });
+
       // Verificar se já está registrado no banco
       if (!titulo.charge_id) {
         logger.info('Título não registrado no banco, registrando agora antes de imprimir...', {
