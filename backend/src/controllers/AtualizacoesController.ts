@@ -14,14 +14,20 @@ export class AtualizacoesController {
     try {
       // Buscar releases do GitHub
       const githubRepo = process.env.GITHUB_REPO || 'Luminous-Telecom/ctm-telecom';
+      const githubToken = process.env.GITHUB_TOKEN;
       const githubUrl = `https://api.github.com/repos/${githubRepo}/releases`;
       
-      const response = await axios.get<GitHubRelease[]>(githubUrl, {
-        headers: {
-          'Accept': 'application/vnd.github+json',
-          'User-Agent': 'CTM-Telecom-ERP'
-        }
-      });
+      // Montar headers com token se disponível
+      const headers: any = {
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'CTM-Telecom-ERP'
+      };
+      
+      if (githubToken) {
+        headers['Authorization'] = `Bearer ${githubToken}`;
+      }
+      
+      const response = await axios.get<GitHubRelease[]>(githubUrl, { headers });
       
       // Converter releases do GitHub para formato do sistema
       const atualizacoes = response.data.map((release, index) => {
