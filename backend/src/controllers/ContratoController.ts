@@ -199,7 +199,7 @@ export class ContratoController {
       console.error('Erro ao criar contrato:', error);
       
       // Tratar erro de constraint de unicidade
-      if (error.name === 'SequelizeUniqueConstraintError') {
+      if (error instanceof Error && error.name === 'SequelizeUniqueConstraintError') {
         res.status(409).json({
           success: false,
           message: 'Já existe um contrato para este cliente, plano e data de início'
