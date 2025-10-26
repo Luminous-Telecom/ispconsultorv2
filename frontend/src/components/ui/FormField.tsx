@@ -103,6 +103,42 @@ const FormField: React.FC<FormFieldProps> = ({
   // Gerar ID único usando prefixo do formulário
   const fieldId = id || `${formPrefix ? `${formPrefix}-` : ''}field-${name}`;
 
+  // Função para determinar autocomplete baseado no name ou type
+  const getAutoComplete = () => {
+    if (autoComplete) return autoComplete;
+    
+    // Mapear nomes comuns para valores de autocomplete
+    const nameMap: Record<string, string> = {
+      email: 'email',
+      telefone: 'tel',
+      whatsapp: 'tel',
+      celular: 'tel',
+      cnpj: 'off',
+      cpf: 'off',
+      cep: 'postal-code',
+      endereco: 'street-address',
+      rua: 'street-address',
+      numero: 'address-line2',
+      complemento: 'address-line2',
+      bairro: 'address-level2',
+      cidade: 'address-level1',
+      estado: 'address-level1',
+      password: 'current-password',
+      senha: 'current-password',
+      nome: 'name',
+      razao_social: 'organization',
+      nome_fantasia: 'organization',
+    };
+
+    if (nameMap[name]) return nameMap[name];
+    
+    if (type === 'email') return 'email';
+    if (type === 'tel') return 'tel';
+    if (type === 'password') return 'current-password';
+    
+    return 'off';
+  };
+
   // Handler para onChange
   const handleChange = (changeValue: any, changeName?: string) => {
     if (onChange) {
@@ -246,7 +282,7 @@ const FormField: React.FC<FormFieldProps> = ({
             minLength={minLength}
             maxLength={maxLength}
             pattern={pattern}
-            autoComplete={autoComplete}
+            autoComplete={getAutoComplete()}
             autoFocus={autoFocus}
             readOnly={readOnly}
             icon={icon}
