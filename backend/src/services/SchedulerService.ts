@@ -292,7 +292,8 @@ export class SchedulerService {
 
               if (!tituloExistente) {
                 // Calcular valor do título (aplicar descontos se houver)
-                let valorTitulo = contrato.valor_final || contrato.plano?.valor_mensal || 0;
+                const plano = (contrato as any).plano;
+                let valorTitulo = contrato.valor_final || (plano?.valor_mensal || 0);
 
                 // Aplicar descontos
                 if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
