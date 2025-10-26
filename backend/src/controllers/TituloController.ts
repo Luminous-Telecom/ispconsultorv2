@@ -1174,7 +1174,7 @@ export class TituloController {
             logger.info('Registrando título no banco antes de gerar PDF', {
               titulo_id: titulo.id,
               banco_id: titulo.banco_id,
-              banco_disponivel: !!titulo.banco
+              banco_disponivel: !!(titulo as any).banco
             });
 
             const resultado = await BancoApiService.gerarTitulo(titulo as any);
