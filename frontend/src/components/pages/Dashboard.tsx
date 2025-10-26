@@ -16,11 +16,11 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    const maxValue = Math.max(...data.map(item => item.valor));
-    const chartWidth = canvas.width;
-    const chartHeight = 120;
-    const padding = 20;
-    const pointRadius = 5;
+      const maxValue = Math.max(...data.map(item => item.valor));
+      const chartWidth = canvas.width;
+      const chartHeight = 120;
+      const padding = 20;
+      const pointRadius = 3;
     
     // Limpar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -31,18 +31,18 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       const percentage = maxValue > 0 ? item.valor / maxValue : 0;
       const y = chartHeight - (percentage * chartHeight) + 10;
       
-      // Desenhar linha
-      if (index === 0) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = '#007bff';
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
-      }
+        // Desenhar linha
+        if (index === 0) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = '#007bff';
+          ctx.lineWidth = 2;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+        }
       
       // Desenhar ponto
       ctx.beginPath();
@@ -50,21 +50,21 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       ctx.fillStyle = '#007bff';
       ctx.fill();
       ctx.strokeStyle = 'white';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
       ctx.stroke();
       
       // Desenhar valor - ajustar posição para não sair do canvas
-      const textY = y - 10;
-      const adjustedTextY = textY < 15 ? y + 25 : textY; // Se texto está muito alto, mostrar abaixo
+      const textY = y - 8;
+      const adjustedTextY = textY < 15 ? y + 20 : textY; // Se texto está muito alto, mostrar abaixo
       
       ctx.fillStyle = 'white';
-      ctx.font = 'bold 0.75rem sans-serif';
+      ctx.font = 'bold 0.65rem sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(item.valor.toString(), x, adjustedTextY);
       
       // Desenhar mês
       ctx.fillStyle = 'var(--text-secondary)';
-      ctx.font = '0.65rem sans-serif';
+      ctx.font = '0.55rem sans-serif';
       ctx.fillText(item.mes, x, chartHeight + 28);
     });
   }, [data]);
@@ -199,7 +199,23 @@ const Dashboard: React.FC = () => {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const mesAno = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
       
-      const faturamentoMes = 0; // Simulado
+      // Calcular faturamento real do mês baseado nos contratos ativos
+      const faturamentoMes = contratos
+        .filter(contrato => {
+          if (contrato.status !== 'ativo') return false;
+          const dataInicio = contrato.data_inicio ? new Date(contrato.data_inicio) : null;
+          const dataFim = contrato.data_fim ? new Date(contrato.data_fim) : null;
+          
+          // Se já começou e não terminou, ou começou neste mês
+          const jaComecou = !dataInicio || dataInicio <= data;
+          const naoTerminou = !dataFim || dataFim >= new Date(data.getFullYear(), data.getMonth() + 1, 0);
+          
+          return jaComecou && naoTerminou;
+        })
+        .reduce((total, contrato) => {
+          const valor = parseFloat(String(contrato.valor_final || contrato.plano?.valor_mensal || 0));
+          return total + valor;
+        }, 0);
       
       meses.push({
         mes: mesAno,
