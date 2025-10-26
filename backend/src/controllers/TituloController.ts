@@ -455,12 +455,13 @@ export class TituloController {
       
       console.log('Valor do plano:', valorFinal);
       
-      // Aplicar descontos (percentual OU em valor, não ambos)
+      // Aplicar desconto (percentual tem prioridade sobre valor)
+      // Os dois campos podem existir (representam a mesma coisa), mas aplicamos apenas um
       if (desconto_percentual && desconto_percentual > 0) {
         valorFinal = valorFinal * (1 - (desconto_percentual / 100));
         console.log('Após desconto %:', valorFinal);
       } else if (desconto_valor && desconto_valor > 0) {
-        valorFinal = valorFinal - parseFloat(desconto_valor.toString());
+        valorFinal = valorFinal - desconto_valor;
         console.log('Após desconto R$:', valorFinal);
       }
       
