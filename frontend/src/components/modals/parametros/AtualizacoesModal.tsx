@@ -83,15 +83,19 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
         {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
           <div>
-            <div className="border mb-2" style={{ borderRadius: '0.5rem', backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-color)', padding: '0.75rem' }}>
-              <div className="py-2">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <span className="text-muted small d-block mb-1" style={{ fontSize: '0.75rem' }}>Versão Atual</span>
-                    <h6 className="mb-0 fw-bold text-primary" style={{ fontSize: '1.1rem' }}>v{atualizacoes[0].versao}</h6>
-                  </div>
-                  <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '1.5rem' }}></i>
-                </div>
+            <div className="d-flex justify-content-center mb-3">
+              <div className="border text-center" style={{ 
+                borderRadius: '0.5rem', 
+                backgroundColor: 'var(--bg-tertiary)', 
+                borderColor: 'var(--border-color)', 
+                padding: '0.5rem 1.5rem',
+                minWidth: '200px'
+              }}>
+                <span className="text-muted small d-block mb-1" style={{ fontSize: '0.7rem' }}>Versão Atual</span>
+                <h6 className="mb-0 fw-bold text-primary" style={{ fontSize: '1rem' }}>
+                  <i className="bi bi-check-circle-fill text-success me-1" style={{ fontSize: '0.875rem' }}></i>
+                  v{atualizacoes[0].versao}
+                </h6>
               </div>
             </div>
 
