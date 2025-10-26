@@ -83,7 +83,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
         {!isLoading && !error && atualizacoes && atualizacoes.length > 0 && (
           <div>
-            <div className="border mb-2" style={{ borderRadius: '0.5rem', backgroundColor: '#2c2c2c', borderColor: 'var(--bs-border-color)', padding: '0.75rem' }}>
+            <div className="border mb-2" style={{ borderRadius: '0.5rem', backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-color)', padding: '0.75rem' }}>
               <div className="py-2">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -101,8 +101,8 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                 return (
                   <div key={atualizacao.versao} className="border" style={{ 
                     borderRadius: '0.5rem',
-                    border: '1px solid var(--bs-border-color)',
-                    backgroundColor: '#2c2c2c',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-tertiary)',
                     padding: '0.75rem',
                     transition: 'all 0.2s ease'
                   }}>
