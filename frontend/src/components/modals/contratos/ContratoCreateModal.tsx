@@ -349,12 +349,12 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 label="Data de Início"
                 required={true}
                 size="md"
-                value={formData.data_inicio}
-                onChange={(e: any) => handleInputChange('data_inicio', e.value)}
-                error={errors.data_inicio}
-                isInvalid={!!errors.data_inicio}
-                disabled={createContratoMutation.isPending}
-              />
+          value={formData.data_inicio}
+          onChange={(value, name) => handleInputChange('data_inicio', value)}
+          error={errors.data_inicio}
+          isInvalid={!!errors.data_inicio}
+          disabled={createContratoMutation.isPending}
+        />
             </div>
           </div>
         </div>
@@ -368,7 +368,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 label="Data de Fim"
                 size="md"
                 value={formData.data_fim}
-                onChange={(e: any) => handleInputChange('data_fim', e.value)}
+                onChange={(value, name) => handleInputChange('data_fim', value)}
                 disabled={createContratoMutation.isPending}
               />
             </div>
@@ -497,10 +497,10 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 type="date"
                 label="Validade do Desconto"
                 size="md"
-                value={formData.data_validade_desconto}
-                onChange={(e: any) => handleInputChange('data_validade_desconto', e.value)}
-                disabled={createContratoMutation.isPending}
-              />
+          value={formData.data_validade_desconto}
+          onChange={(value, name) => handleInputChange('data_validade_desconto', value)}
+          disabled={createContratoMutation.isPending}
+        />
             </div>
           </div>
         </div>
