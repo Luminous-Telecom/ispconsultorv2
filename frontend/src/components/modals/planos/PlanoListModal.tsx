@@ -281,6 +281,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         planoId={showEditModal ? selectedPlanoId : null}
         onSuccess={() => {
           refetch();
+          queryClient.invalidateQueries({ queryKey: ['planos'] });
           setShowCreateModal(false);
           setShowEditModal(false);
           setSelectedPlanoId(null);

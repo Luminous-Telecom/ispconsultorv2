@@ -1,68 +1,67 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('banco_configuracoes', {
+    await queryInterface.createTable('bancos', {
       id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      banco_id: {
         type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false
+      },
+      nome: {
+        type: Sequelize.STRING(255),
+        allowNull: false
+      },
+      codigo: {
+        type: Sequelize.STRING(10),
+        allowNull: true
+      },
+      descricao: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
+      ativo: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
-        references: {
-          model: 'bancos',
-          key: 'id'
-        },
-        onDelete: 'CASCADE'
+        defaultValue: true
       },
       tipo_banco: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM('efi', 'asaas', 'bancario', 'outros'),
         allowNull: false,
-        defaultValue: 'geral'
+        defaultValue: 'bancario'
       },
-      
-      // Configurações gerais da API
       api_url: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(500),
         allowNull: true
       },
       api_key: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       api_secret: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       sandbox: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: false
-      },
-      
-      // Configurações específicas da Efi
-      cedente: {
-        type: Sequelize.STRING,
-        allowNull: true
+        defaultValue: true
       },
       identificador_conta: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(100),
         allowNull: true
       },
       client_id_producao: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       client_secret_producao: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       url_retorno: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(500),
         allowNull: true
       },
       repassar_email_cliente: {
@@ -70,32 +69,24 @@ module.exports = {
         allowNull: false,
         defaultValue: false
       },
-      
-      // Multa, mora e desconto
       percentual_multa: {
         type: Sequelize.DECIMAL(5, 2),
-        allowNull: false,
-        defaultValue: 0
+        allowNull: true,
+        defaultValue: 2.00
       },
       percentual_juros: {
         type: Sequelize.DECIMAL(5, 2),
-        allowNull: false,
-        defaultValue: 0
+        allowNull: true,
+        defaultValue: 1.00
       },
-      
-      // Desconto até vencimento
       desconto_tipo: {
-        type: Sequelize.ENUM('fixo', 'percentual'),
-        allowNull: false,
-        defaultValue: 'fixo'
+        type: Sequelize.STRING(50),
+        allowNull: true
       },
       desconto_valor: {
         type: Sequelize.DECIMAL(10, 2),
-        allowNull: false,
-        defaultValue: 0
+        allowNull: true
       },
-      
-      // Cálculo automático
       contra_apresentacao: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
@@ -104,32 +95,23 @@ module.exports = {
       recalcular_segunda_via: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: false
+        defaultValue: true
       },
       maximo_dias_recalcular: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 0
+        allowNull: true,
+        defaultValue: 30
       },
-      
-      // Layout do boleto
       layout_web: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: 'pdf'
+        type: Sequelize.TEXT,
+        allowNull: true
       },
       layout_pdf: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: 'pdf'
-      },
-      layout_carne: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: '3folhas'
+        type: Sequelize.TEXT,
+        allowNull: true
       },
       local_pagamento: {
-        type: Sequelize.TEXT,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       dados_avalista: {
@@ -141,84 +123,78 @@ module.exports = {
         allowNull: false,
         defaultValue: false
       },
-      
-      // Configuração de pagamento
-      documento_cpf_cnpj: {
-        type: Sequelize.STRING,
-        allowNull: true
-      },
       taxa_cobranca: {
         type: Sequelize.DECIMAL(10, 2),
-        allowNull: false,
-        defaultValue: 0
+        allowNull: true
       },
       incluir_taxa: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false
       },
-      
-      // Observações (4 linhas)
       observacao_linha_1: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       observacao_linha_2: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       observacao_linha_3: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       observacao_linha_4: {
-        type: Sequelize.TEXT,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
-      
-      // Instruções ao caixa (5 linhas)
       instrucao_linha_1: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       instrucao_linha_2: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       instrucao_linha_3: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       instrucao_linha_4: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
       instrucao_linha_5: {
-        type: Sequelize.TEXT,
+        type: Sequelize.STRING(255),
         allowNull: true
       },
-      
-      // Configurações adicionais em JSON para campos específicos de cada banco
-      configuracoes_extras: {
+      configuracoes: {
         type: Sequelize.JSON,
         allowNull: true
       },
-      
+      logo: {
+        type: Sequelize.STRING(500),
+        allowNull: true
+      },
       created_at: {
+        type: Sequelize.DATE,
         allowNull: false,
-        type: Sequelize.DATE
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updated_at: {
+        type: Sequelize.DATE,
         allowNull: false,
-        type: Sequelize.DATE
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
       }
     });
 
-    // Índices
-    await queryInterface.addIndex('banco_configuracoes', ['banco_id', 'tipo_banco']);
+    await queryInterface.addIndex('bancos', ['ativo']);
+    await queryInterface.addIndex('bancos', ['tipo_banco']);
+    await queryInterface.addIndex('bancos', ['nome']);
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('banco_configuracoes');
+    await queryInterface.dropTable('bancos');
   }
 };
+

@@ -1,3 +1,24 @@
+# BackNet ERP - Sistema ERP para Assessoria Técnica
+
+## 🐳 Docker
+
+Este projeto está configurado para rodar com Docker. Veja [DOCKER.md](DOCKER.md) para instruções completas.
+
+### Início Rápido com Docker
+
+```bash
+# Construir e iniciar todos os containers (MySQL, Redis, Backend, Frontend)
+docker-compose up --build
+
+# Acessar a aplicação
+# Frontend: http://localhost:3000
+# Backend: http://localhost:3001
+# MySQL: localhost:3306
+# Redis: localhost:6379
+```
+
+---
+
 # CTM Telecom ERP - Plano de Refatoração
 
 ## 📋 Visão Geral do Projeto Atual
