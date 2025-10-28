@@ -54,34 +54,29 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   onShowBancoModal,
   onShowModeloContratoModal
 }) => {
-  // Função para calcular desconto_valor baseado no desconto_percentual
-  const calcularDescontoValor = (percentual: number) => {
-    if (!planoSelecionado?.valor_mensal || percentual <= 0) {
-      return 0;
+  // Handlers simplificados para desconto
+  const handleDescontoPercentualChange = (value: string | number) => {
+    const percentual = typeof value === 'string' ? parseFloat(value) || 0 : value;
+    handleInputChange('desconto_percentual', percentual);
+    
+    // Calcular valor do desconto baseado no valor do plano selecionado
+    if (planoSelecionado?.valor_mensal) {
+      const valorPlano = parseFloat(String(planoSelecionado.valor_mensal));
+      const descontoValor = percentual > 0 ? (valorPlano * percentual) / 100 : 0;
+      handleInputChange('desconto_valor', descontoValor);
     }
-    const valorPlano = parseFloat(planoSelecionado.valor_mensal.toString());
-    return (valorPlano * percentual) / 100;
   };
 
-  // Função para calcular desconto_percentual baseado no desconto_valor
-  const calcularDescontoPercentual = (valor: number) => {
-    if (!planoSelecionado?.valor_mensal || valor <= 0) {
-      return 0;
+  const handleDescontoValorChange = (value: string | number) => {
+    const valor = typeof value === 'string' ? parseFloat(value) || 0 : value;
+    handleInputChange('desconto_valor', valor);
+    
+    // Calcular percentual do desconto baseado no valor do plano selecionado
+    if (planoSelecionado?.valor_mensal) {
+      const valorPlano = parseFloat(String(planoSelecionado.valor_mensal));
+      const percentual = valor > 0 && valorPlano > 0 ? (valor * 100) / valorPlano : 0;
+      handleInputChange('desconto_percentual', percentual);
     }
-    const valorPlano = parseFloat(planoSelecionado.valor_mensal.toString());
-    return (valor * 100) / valorPlano;
-  };
-
-  const handleDescontoPercentualChange = (value: number) => {
-    handleInputChange('desconto_percentual', value);
-    const descontoValor = calcularDescontoValor(value);
-    handleInputChange('desconto_valor', descontoValor);
-  };
-
-  const handleDescontoValorChange = (value: number) => {
-    handleInputChange('desconto_valor', value);
-    const descontoPercentual = calcularDescontoPercentual(value);
-    handleInputChange('desconto_percentual', descontoPercentual);
   };
   return (
     <div className="row">
@@ -135,7 +130,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           required={true}
           size="md"
           value={formData.data_inicio}
-          onChange={(e: any) => handleInputChange('data_inicio', e.value)}
+          onChange={(value, name) => handleInputChange('data_inicio', value)}
           error={errors.data_inicio}
           isInvalid={!!errors.data_inicio}
         />
@@ -149,7 +144,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           label="Data de Fim"
           size="md"
           value={formData.data_fim}
-          onChange={(e: any) => handleInputChange('data_fim', e.value)}
+          onChange={(value, name) => handleInputChange('data_fim', value)}
         />
       </div>
 
@@ -202,7 +197,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           placeholder="0.00"
           size="md"
           value={formData.desconto_percentual}
-          onChange={(e: any) => handleDescontoPercentualChange(parseFloat(e.value) || 0)}
+          onChange={handleDescontoPercentualChange}
           error={errors.desconto_percentual?.toString()}
           isInvalid={!!errors.desconto_percentual}
           min={0}
@@ -220,7 +215,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           placeholder="0.00"
           size="md"
           value={formData.desconto_valor}
-          onChange={(e: any) => handleDescontoValorChange(parseFloat(e.value) || 0)}
+          onChange={handleDescontoValorChange}
           error={errors.desconto_valor?.toString()}
           isInvalid={!!errors.desconto_valor}
           min={0}
@@ -236,7 +231,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           label="Data Validade Desconto"
           size="md"
           value={formData.data_validade_desconto}
-          onChange={(e: any) => handleInputChange('data_validade_desconto', e.value)}
+          onChange={(value, name) => handleInputChange('data_validade_desconto', value)}
         />
       </div>
 

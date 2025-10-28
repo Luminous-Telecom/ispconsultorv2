@@ -266,7 +266,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 required={true}
                 size="md"
                 value={formData.data_inicio}
-                onChange={(e: any) => handleInputChange('data_inicio', e.value)}
+                onChange={(value, name) => handleInputChange('data_inicio', value)}
                 error={errors.data_inicio}
                 isInvalid={!!errors.data_inicio}
                 disabled={createContratoMutation.isPending}
@@ -282,7 +282,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 label="Data de Fim"
                 size="md"
                 value={formData.data_fim}
-                onChange={(e: any) => handleInputChange('data_fim', e.value)}
+                onChange={(value, name) => handleInputChange('data_fim', value)}
                 disabled={createContratoMutation.isPending}
               />
             </div>
@@ -299,7 +299,15 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 placeholder="0.00"
                 size="md"
                 value={formData.desconto_percentual || ''}
-                onChange={(e: any) => handleInputChange('desconto_percentual', parseFloat(e.value) || 0)}
+                onChange={(value, name) => {
+                  const percentual = typeof value === 'string' ? parseFloat(value) || 0 : (value as number);
+                  setFormData(prev => ({ ...prev, desconto_percentual: percentual }));
+                  if (planoSelecionado?.valor_mensal) {
+                    const valorPlano = parseFloat(String(planoSelecionado.valor_mensal));
+                    const descontoValor = percentual > 0 ? (valorPlano * percentual) / 100 : 0;
+                    setFormData(prev => ({ ...prev, desconto_valor: descontoValor }));
+                  }
+                }}
                 disabled={createContratoMutation.isPending}
                 step={0.01}
                 min={0}
@@ -317,7 +325,15 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 placeholder="0.00"
                 size="md"
                 value={formData.desconto_valor || ''}
-                onChange={(e: any) => handleInputChange('desconto_valor', parseFloat(e.value) || 0)}
+                onChange={(value, name) => {
+                  const valor = typeof value === 'string' ? parseFloat(value) || 0 : (value as number);
+                  setFormData(prev => ({ ...prev, desconto_valor: valor }));
+                  if (planoSelecionado?.valor_mensal) {
+                    const valorPlano = parseFloat(String(planoSelecionado.valor_mensal));
+                    const percentual = valor > 0 && valorPlano > 0 ? (valor * 100) / valorPlano : 0;
+                    setFormData(prev => ({ ...prev, desconto_percentual: percentual }));
+                  }
+                }}
                 disabled={createContratoMutation.isPending}
                 step={0.01}
                 min={0}
@@ -389,7 +405,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 label="Validade do Desconto"
                 size="md"
                 value={formData.data_validade_desconto}
-                onChange={(e: any) => handleInputChange('data_validade_desconto', e.value)}
+                onChange={(value, name) => handleInputChange('data_validade_desconto', value)}
                 disabled={createContratoMutation.isPending}
               />
             </div>
