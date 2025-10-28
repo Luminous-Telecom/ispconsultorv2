@@ -69,9 +69,22 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
     enabled: isEditing && !!planoId,
   });
 
+
   // Carregar dados do plano quando modal abrir em modo edição
   useEffect(() => {
-    if (isEditing && planoData && show) {
+    if (isEditing && planoData) {
+      let dataInicio = '';
+      if (planoData.data_inicio) {
+        const d = new Date(planoData.data_inicio);
+        dataInicio = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : '';
+      }
+      
+      let dataFim = '';
+      if (planoData.data_fim) {
+        const d = new Date(planoData.data_fim);
+        dataFim = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : '';
+      }
+      
       setFormData({
         nome_plano: planoData.nome_plano || '',
         tipo_servico: planoData.tipo_servico || 'internet',
@@ -80,19 +93,20 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
         desconto_percentual: Number(planoData.desconto_percentual) || 0,
         desconto_valor: Number(planoData.desconto_valor) || 0,
         desconto_ativo: planoData.desconto_ativo || false,
-        quantidade_usuarios: planoData.quantidade_usuarios || 1,
+        quantidade_usuarios: Number(planoData.quantidade_usuarios) || 1,
         periodicidade: planoData.periodicidade || 'mensal',
-        servicos_inclusos: planoData.servicos_inclusos || [],
-        renovacao_automatica: planoData.renovacao_automatica || false,
+        servicos_inclusos: Array.isArray(planoData.servicos_inclusos) ? planoData.servicos_inclusos : [],
+        renovacao_automatica: planoData.renovacao_automatica ?? true,
         status: planoData.status || 'ativo',
-        data_inicio: planoData.data_inicio || new Date().toISOString().split('T')[0],
-        data_fim: planoData.data_fim || '',
+        data_inicio: dataInicio || new Date().toISOString().split('T')[0],
+        data_fim: dataFim,
         observacoes: planoData.observacoes || ''
       });
+      setErrors({});
     }
-  }, [isEditing, planoData, show]);
+  }, [planoData, isEditing]);
 
-  // Usar hook personalizado para reset do formulário
+  // Usar hook personalizado para reset do formulário apenas quando não estiver editando
   useFormReset({
     show: show && !isEditing, // Apenas resetar quando não estiver editando
     initialData: initialFormData,
@@ -129,29 +143,6 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
     }
   });
 
-  // Limpar formulário quando modal fechar
-  React.useEffect(() => {
-    if (!show) {
-      setFormData({
-        nome_plano: '',
-        tipo_servico: 'internet',
-        descricao: '',
-        valor_mensal: 0,
-        desconto_percentual: 0,
-        desconto_valor: 0,
-        desconto_ativo: false,
-        quantidade_usuarios: 1,
-        periodicidade: 'mensal',
-        servicos_inclusos: [],
-        renovacao_automatica: true,
-        status: 'ativo',
-        data_inicio: new Date().toISOString().split('T')[0],
-        data_fim: '',
-        observacoes: ''
-      });
-      setErrors({});
-    }
-  }, [show]);
 
   const handleInputChange = (field: keyof PlanoForm, value: string | number | boolean | string[]) => {
     setFormData(prev => ({
@@ -280,7 +271,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   required={true}
                   size="sm"
                   value={formData.tipo_servico}
-                  onChange={(e: any) => handleInputChange('tipo_servico', e.value)}
+                  onChange={(value, name) => handleInputChange('tipo_servico', value)}
                   error={errors.tipo_servico}
                   isInvalid={!!errors.tipo_servico}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
@@ -306,7 +297,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   placeholder="Descrição detalhada do plano"
                   size="sm"
                   value={formData.descricao}
-                  onChange={(e: any) => handleInputChange('descricao', e.value)}
+                  onChange={(value, name) => handleInputChange('descricao', value)}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                   rows={2}
                 />
@@ -322,8 +313,12 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   placeholder="0.00"
                   required={true}
                   size="md"
-                  value={formData.valor_mensal}
-                  onChange={(e: any) => handleInputChange('valor_mensal', parseFloat(e.value) || 0)}
+                  value={formData.valor_mensal === 0 ? '' : formData.valor_mensal}
+                  onChange={(e: any) => {
+                    const rawValue = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
+                    const numValue = rawValue === '' ? 0 : parseFloat(rawValue);
+                    handleInputChange('valor_mensal', isNaN(numValue) ? 0 : numValue);
+                  }}
                   error={errors.valor_mensal?.toString()}
                   isInvalid={!!errors.valor_mensal}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
@@ -339,8 +334,12 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   type="number"
                   label="Quantidade de Usuários"
                   size="sm"
-                  value={formData.quantidade_usuarios}
-                  onChange={(e: any) => handleInputChange('quantidade_usuarios', parseInt(e.value) || 1)}
+                  value={formData.quantidade_usuarios === 0 ? '' : formData.quantidade_usuarios}
+                  onChange={(e: any) => {
+                    const rawValue = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
+                    const intValue = rawValue === '' ? 0 : parseInt(rawValue);
+                    handleInputChange('quantidade_usuarios', isNaN(intValue) ? 0 : intValue);
+                  }}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                   min={1}
                 />
@@ -358,7 +357,10 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   required={true}
                   size="md"
                   value={formData.data_inicio}
-                  onChange={(e: any) => handleInputChange('data_inicio', e.value)}
+                  onChange={(e: any) => {
+                    const rawValue = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
+                    handleInputChange('data_inicio', rawValue);
+                  }}
                   error={errors.data_inicio}
                   isInvalid={!!errors.data_inicio}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
@@ -374,7 +376,10 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   label="Data de Fim"
                   size="sm"
                   value={formData.data_fim}
-                  onChange={(e: any) => handleInputChange('data_fim', e.value)}
+                  onChange={(e: any) => {
+                    const rawValue = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
+                    handleInputChange('data_fim', rawValue);
+                  }}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                 />
               </div>

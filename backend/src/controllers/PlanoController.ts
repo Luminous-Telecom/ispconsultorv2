@@ -140,7 +140,22 @@ export class PlanoController {
 
   static async create(req: Request, res: Response): Promise<void> {
     try {
-      const plano = await Plano.create(req.body);
+      const body = { ...req.body };
+      
+      // Normalizar strings vazias e 'Invalid date' para null
+      if (body.data_inicio === '' || body.data_inicio === 'Invalid date') {
+        body.data_inicio = null;
+      }
+      if (body.data_fim === '' || body.data_fim === 'Invalid date') {
+        body.data_fim = null;
+      }
+      
+      // Normalizar descricao undefined para null
+      if (body.descricao === undefined) {
+        body.descricao = null;
+      }
+      
+      const plano = await Plano.create(body);
       res.status(201).json(plano);
     } catch (error) {
       console.error('Erro ao criar plano:', error);
@@ -195,7 +210,13 @@ export class PlanoController {
               }
             }
           } else {
-            updateData[key] = req.body[key];
+            // Normalizar undefined para null
+            const value = req.body[key];
+            if (value === undefined) {
+              updateData[key] = null;
+            } else {
+              updateData[key] = value;
+            }
           }
         }
       });
