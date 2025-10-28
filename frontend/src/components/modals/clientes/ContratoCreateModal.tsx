@@ -353,7 +353,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 size="md"
                 required
                 value={formData.dia_vencimento || ''}
-                onChange={(e: any) => handleInputChange('dia_vencimento', parseInt(e.value) || 0)}
+                onChange={(value, name) => handleInputChange('dia_vencimento', parseInt(value as string) || 0)}
                 disabled={createContratoMutation.isPending}
                 min={1}
                 max={31}

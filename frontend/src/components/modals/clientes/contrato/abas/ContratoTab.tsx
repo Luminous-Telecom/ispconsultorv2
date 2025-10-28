@@ -158,7 +158,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           required={true}
           size="md"
           value={formData.dia_vencimento}
-          onChange={(e: any) => handleInputChange('dia_vencimento', parseInt(e.value))}
+          onChange={(value, name) => handleInputChange('dia_vencimento', parseInt(value as string) || 0)}
           error={errors.dia_vencimento?.toString()}
           isInvalid={!!errors.dia_vencimento}
           min={1}
