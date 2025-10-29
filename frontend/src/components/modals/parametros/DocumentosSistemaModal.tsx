@@ -293,7 +293,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
               setSortDirection(direction);
             }}
             onSearch={setSearch}
-            onRefresh={() => refetch()}
+            onRefresh={refetch}
           />
           </div>
         </div>

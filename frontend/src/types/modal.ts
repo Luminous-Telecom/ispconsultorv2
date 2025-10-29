@@ -38,6 +38,9 @@ export interface ListModalProps<T> {
   limit?: number;
   onLimitChange?: (limit: number) => void;
   onRefresh?: () => void;
+  // Props para refresh automático
+  refreshQueryKeys?: string[];
+  refreshQueryFn?: () => void;
   bulkActions?: Array<{
     label: string;
     variant?: 'primary' | 'secondary' | 'danger';

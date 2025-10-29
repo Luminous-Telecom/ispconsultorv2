@@ -103,7 +103,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
-  
 
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
@@ -964,6 +963,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             setSelectedTermosItems={setSelectedTermosItems}
             columns={termosColumns}
             isGeneratingPdf={isGeneratingPdf}
+            onRefresh={refetchTermos}
           />
         )}
 
@@ -981,6 +981,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             setSelectedItems={setSelectedItems}
             columns={columns}
             isGeneratingPdf={isGeneratingPdf}
+            onRefresh={refetchTitulos}
           />
         )}
             </>

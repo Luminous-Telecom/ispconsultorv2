@@ -273,10 +273,8 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         onPageChange={setPage}
         limit={limit}
         onLimitChange={setLimit}
-        onRefresh={() => {
-          refetch();
-          queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
-        }}
+        refreshQueryKeys={['agendador-tarefas']}
+        refreshQueryFn={refetch}
         bulkActions={bulkActions}
       />
 

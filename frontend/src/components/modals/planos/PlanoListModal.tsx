@@ -263,10 +263,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         onPageChange={setPage}
         limit={limit}
         onLimitChange={setLimit}
-        onRefresh={() => {
-          refetch();
-          queryClient.invalidateQueries({ queryKey: ['planos'] });
-        }}
+        refreshQueryKeys={['planos']}
+        refreshQueryFn={refetch}
         bulkActions={bulkActions}
       />
 

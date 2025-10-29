@@ -14,6 +14,7 @@ interface FinanceiroTabProps {
   setSelectedItems: (items: any[]) => void;
   columns: any[]; 
   isGeneratingPdf: boolean;
+  onRefresh?: () => void;
 }
 
 const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
@@ -27,7 +28,9 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   selectedItems,
   setSelectedItems,
   columns,
-  isGeneratingPdf
+  isGeneratingPdf,
+  onRefresh,
+
 }) => {
   return (
     <div className="row" style={{ margin: 0, padding: 0 }}>
@@ -59,6 +62,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             onSelectionChange={setSelectedItems}
             onPageChange={setPage}
             onPageSizeChange={setLimit}
+            onRefresh={onRefresh}
           />
 
         {/* Resumo Financeiro */}

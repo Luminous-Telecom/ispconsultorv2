@@ -234,10 +234,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         onPageChange={setPage}
         limit={limit}
         onLimitChange={setLimit}
-        onRefresh={() => {
-          refetch();
-          queryClient.invalidateQueries({ queryKey: ['bancos'] });
-        }}
+        refreshQueryKeys={['bancos']}
+        refreshQueryFn={refetch}
         bulkActions={bulkActions}
       />
 

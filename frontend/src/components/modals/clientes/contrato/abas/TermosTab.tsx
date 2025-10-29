@@ -14,6 +14,7 @@ interface TermosTabProps {
   setSelectedTermosItems: (items: any[]) => void;
   columns: any[];
   isGeneratingPdf: boolean;
+  onRefresh?: () => void;
 }
 
 const TermosTab: React.FC<TermosTabProps> = ({
@@ -27,7 +28,8 @@ const TermosTab: React.FC<TermosTabProps> = ({
   selectedTermosItems,
   setSelectedTermosItems,
   columns,
-  isGeneratingPdf
+  isGeneratingPdf,
+  onRefresh,
 }) => {
   return (
     <div className="row" style={{ margin: 0, padding: 0 }}>
@@ -58,6 +60,7 @@ const TermosTab: React.FC<TermosTabProps> = ({
             onSelectionChange={setSelectedTermosItems}
             onPageChange={setPage}
             onPageSizeChange={setLimit}
+            onRefresh={onRefresh}
           />
       </div>
     </div>

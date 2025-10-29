@@ -220,10 +220,8 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         onPageChange={setPage}
         limit={limit}
         onLimitChange={setLimit}
-        onRefresh={() => {
-          refetch();
-          queryClient.invalidateQueries({ queryKey: ['clientes'] });
-        }}
+        refreshQueryKeys={['clientes']}
+        refreshQueryFn={refetch}
         bulkActions={bulkActions}
       />
 
