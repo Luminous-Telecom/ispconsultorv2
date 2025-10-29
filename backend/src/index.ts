@@ -38,6 +38,7 @@ import parametrosRoutes from './routes/parametrosRoutes';
 import contratoRoutes from './routes/contratos';
 import servidorEmailRoutes from './routes/servidorEmailRoutes';
 import servidorWhatsAppRoutes from './routes/servidorWhatsAppRoutes';
+import mensagemWhatsAppRoutes from './routes/mensagemWhatsAppRoutes';
 import modeloContratoRoutes from './routes/modeloContratoRoutes';
 import modeloReciboRoutes from './routes/modeloReciboRoutes';
 import modeloCartaRoutes from './routes/modeloCartaRoutes';
@@ -160,6 +161,7 @@ app.use('/api/parametros', parametrosRoutes);
 // Rotas dos servidores e configurações
 app.use('/api/servidores-email', servidorEmailRoutes);
 app.use('/api/servidores-whatsapp', servidorWhatsAppRoutes);
+app.use('/api/mensagens-whatsapp', mensagemWhatsAppRoutes);
 app.use('/api/modelos-contrato', modeloContratoRoutes);
 app.use('/api/modelos-recibo', modeloReciboRoutes);
 app.use('/api/modelos-carta', modeloCartaRoutes);

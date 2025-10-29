@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ServidorWhatsApp } from '../models/ServidorWhatsApp';
+import { MensagemWhatsApp } from '../models/MensagemWhatsApp';
 import { logger } from '../utils/logger';
 
 export class ServidorWhatsAppController {
@@ -502,6 +503,90 @@ export class ServidorWhatsAppController {
       res.status(statusCode).json({
         success: false,
         message: errorMessage
+      });
+    }
+  }
+
+  /**
+   * Buscar mensagem por tipo
+   */
+  static async getMensagemByTipo(req: Request, res: Response): Promise<void> {
+    try {
+      const { tipo } = req.params;
+
+      const mensagem = await MensagemWhatsApp.findOne({
+        where: { tipo }
+      });
+
+      if (!mensagem) {
+        res.status(404).json({
+          success: false,
+          message: 'Mensagem não encontrada'
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: mensagem
+      });
+    } catch (error) {
+      logger.error('Erro ao buscar mensagem por tipo:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Salvar mensagem WhatsApp
+   */
+  static async saveMensagem(req: Request, res: Response): Promise<void> {
+    try {
+      const { tipo, tipo_envio, mensagem_padrao, interacao1, interacao2, interacao3, ativo } = req.body;
+
+      if (!tipo || !tipo_envio || !mensagem_padrao) {
+        res.status(400).json({
+          success: false,
+          message: 'Tipo, tipo de envio e mensagem padrão são obrigatórios'
+        });
+        return;
+      }
+
+      const mensagemData = {
+        tipo,
+        tipo_envio,
+        mensagem_padrao,
+        interacao1: interacao1 || null,
+        interacao2: interacao2 || null,
+        interacao3: interacao3 || null,
+        ativo
+      };
+
+      // Buscar mensagem existente
+      let mensagem = await MensagemWhatsApp.findOne({
+        where: { tipo }
+      });
+
+      if (mensagem) {
+        // Atualizar existente
+        await mensagem.update(mensagemData);
+      } else {
+        // Criar novo
+        mensagem = await MensagemWhatsApp.create(mensagemData);
+      }
+
+      res.json({
+        success: true,
+        message: 'Mensagem salva com sucesso',
+        data: mensagem
+      });
+    } catch (error) {
+      logger.error('Erro ao salvar mensagem:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
       });
     }
   }

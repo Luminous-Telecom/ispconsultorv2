@@ -35,7 +35,35 @@ export interface CreateServidorWhatsApp {
 
 export interface UpdateServidorWhatsApp extends Partial<CreateServidorWhatsApp> {}
 
+export interface MensagemWhatsApp {
+  id?: number;
+  tipo: string;
+  tipo_envio: 'desativado' | 'pdf';
+  mensagem_padrao: string;
+  interacao1?: string;
+  interacao2?: string;
+  interacao3?: string;
+  ativo: boolean;
+}
+
 export class ServidorWhatsAppService {
+  static async getByTipo(mensagemType: string): Promise<MensagemWhatsApp | null> {
+    try {
+      const response = await apiService.get<{ success: boolean; data: MensagemWhatsApp }>(`/mensagens-whatsapp/tipo/${mensagemType}`);
+      return response.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  static async saveMensagem(data: MensagemWhatsApp): Promise<{ success: boolean; message: string; data: MensagemWhatsApp }> {
+    const response = await apiService.post<{ success: boolean; message: string; data: MensagemWhatsApp }>('/mensagens-whatsapp', data);
+    return response;
+  }
+
   static async list(): Promise<{ success: boolean; data: ServidorWhatsApp[]; message: string }> {
     const response = await apiService.get<{ success: boolean; data: ServidorWhatsApp[]; message: string }>('/servidores-whatsapp');
     return response;

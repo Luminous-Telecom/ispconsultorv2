@@ -1,5 +1,6 @@
 import * as cron from 'node-cron';
 import { ScheduledRoutine, RoutineExecutionLog } from '../models';
+import { logger } from '../utils/logger';
 
 export class SchedulerService {
   private static instance: SchedulerService;
@@ -296,9 +297,13 @@ export class SchedulerService {
 
             while (títulosCriadosNoContrato < titulosGerar && tentativas < 100) {
               tentativas++;
-              const dataVencimento = new Date(anoAtual, mesAtual, Math.min(diaVencimento, 28));
               
-              console.log(`Tentando criar título para contrato ${contrato.id}, mês: ${mesAtual + 1}/${anoAtual}`);
+              // Criar data de vencimento com o dia correto
+              // Se o dia não existir no mês (ex: dia 31 em fevereiro), ajusta para o último dia válido
+              const ultimoDiaDoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
+              const diaCorreto = Math.min(diaVencimento, ultimoDiaDoMes);
+              const dataVencimento = new Date(anoAtual, mesAtual, diaCorreto);
+              
 
               // Verificar se já existe título para este mês
               const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
@@ -329,13 +334,14 @@ export class SchedulerService {
                 const numeroTitulo = `T${contrato.id}-${timestamp}`;
 
                 // Criar título
-                await Titulo.create({
+                // dataVencimento já é um Date local, mas garantimos que está correto
+                const novoTitulo = await Titulo.create({
                   contrato_id: contrato.id,
                   cliente_id: contrato.cliente_id,
                   plano_id: contrato.plano_id,
                   banco_id: contrato.conta_boleto,
                   valor: valorTitulo,
-                  data_vencimento: dataVencimento,
+                  data_vencimento: dataVencimento instanceof Date ? dataVencimento : new Date(dataVencimento),
                   status: 'pendente',
                   pago: false,
                   descricao: `Mensalidade - ${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
@@ -383,13 +389,33 @@ export class SchedulerService {
   }
 
   private async executeEnvioBoletos(routine: ScheduledRoutine): Promise<any> {
-    // Implementar lógica de envio de boletos
-    
-    return {
-      boletos_enviados: 0,
-      emails_enviados: 0,
-      message: 'Envio de boletos executado'
-    };
+    try {
+      const { WhatsAppService } = await import('./WhatsAppService');
+      
+      // Dias antes do vencimento, mesmo dia e depois do vencimento
+      const configuracoes = {
+        antesVencimento: [10, 5], // 10 e 5 dias antes do vencimento
+        mesmoDia: true, // Mesmo dia do vencimento
+        depoisVencimento: [5, 10, 15] // 5, 10 e 15 dias depois do vencimento
+      };
+      
+      const resultado = await WhatsAppService.enviarBoletos(configuracoes);
+      
+      return {
+        success: resultado.sucesso,
+        mensagens_enviadas: resultado.mensagensEnviadas,
+        erros: resultado.erros,
+        message: `Envio de boletos executado: ${resultado.mensagensEnviadas} mensagens enviadas, ${resultado.erros} erros`
+      };
+    } catch (error: any) {
+      logger.error('Erro ao executar envio de boletos:', error);
+      return {
+        success: false,
+        mensagens_enviadas: 0,
+        erros: 1,
+        message: `Erro ao enviar boletos: ${error.message}`
+      };
+    }
   }
 
   private async executeRemessaBancaria(routine: ScheduledRoutine): Promise<any> {
@@ -414,13 +440,13 @@ export class SchedulerService {
             model: Banco,
             as: 'banco',
             required: true,
-            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox', 'client_id_producao', 'client_secret_producao']
+            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'sandbox', 'client_id_producao', 'client_secret_producao', 'url_retorno', 'percentual_multa', 'percentual_juros']
           },
           {
             model: Cliente,
             as: 'cliente',
             required: true,
-            attributes: ['id', 'razao_social', 'cnpj', 'telefone', 'endereco', 'numero', 'bairro', 'cidade', 'estado', 'cep']
+            attributes: ['id', 'razao_social', 'cnpj', 'telefone', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep']
           },
           {
             model: Plano,
@@ -448,7 +474,7 @@ export class SchedulerService {
           
           if (resultado.success) {
             registrados++;
-            const chargeId = (resultado as any).charge_id;
+            const chargeId = resultado.data?.charge_id;
             console.log(`Título ${titulo.id} registrado com sucesso. Charge ID: ${chargeId}`);
             
             detalhes.push({

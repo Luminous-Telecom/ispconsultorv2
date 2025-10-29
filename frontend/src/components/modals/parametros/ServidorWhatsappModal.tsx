@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { ServidorWhatsAppService, ServidorWhatsApp } from '../../../services/servidorWhatsAppService';
+import { ServidorWhatsAppService } from '../../../services/servidorWhatsAppService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormField } from '../../ui';
+import axios from 'axios';
 
 interface ServidorWhatsappModalProps {
   show: boolean;
@@ -21,7 +22,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const queryClient = useQueryClient();
   
   const initialFormData: ServidorWhatsAppForm = {
-    evolution_api_url: '',
+    evolution_api_url: 'https://evo-api.example.com',
     evolution_api_key: '',
     instance_name: ''
   };
@@ -29,22 +30,95 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const [formData, setFormData] = useState<ServidorWhatsAppForm>(initialFormData);
   const [testPhone, setTestPhone] = useState<string>('');
   const [testMessage, setTestMessage] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens'>('servidor');
+  
+  // Estados para mensagens
+  const [mensagemType, setMensagemType] = useState<string>('');
+  const [tipoEnvio, setTipoEnvio] = useState<'desativado' | 'pdf'>('pdf');
+  const [mensagemPadrao, setMensagemPadrao] = useState<string>('');
+  const [interacao1, setInteracao1] = useState<string>('');
+  const [interacao2, setInteracao2] = useState<string>('');
+  const [interacao3, setInteracao3] = useState<string>('');
+
+  // Buscar mensagem quando tipo for selecionado
+  const { data: mensagemData } = useQuery({
+    queryKey: ['mensagem-whatsapp', mensagemType],
+    queryFn: async () => {
+      if (!mensagemType) return null;
+      try {
+        return await ServidorWhatsAppService.getByTipo(mensagemType);
+      } catch (error: unknown) {
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'response' in error &&
+          (error as any).response?.status === 404
+        ) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    enabled: !!mensagemType
+  });
+
+  // Buscar variáveis disponíveis da API
+  const { data: variaveisData } = useQuery({
+    queryKey: ['variaveis-documento'],
+    queryFn: async () => {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/modelos-contrato/variaveis`);
+      return response.data.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+
+  // Carregar dados da mensagem quando buscar
+  useEffect(() => {
+    if (mensagemData) {
+      setTipoEnvio(mensagemData.tipo_envio);
+      setMensagemPadrao(mensagemData.mensagem_padrao);
+      setInteracao1(mensagemData.interacao1 || '');
+      setInteracao2(mensagemData.interacao2 || '');
+      setInteracao3(mensagemData.interacao3 || '');
+    } else {
+      // Limpar campos se não houver mensagem
+      setTipoEnvio('pdf');
+      setMensagemPadrao('');
+      setInteracao1('');
+      setInteracao2('');
+      setInteracao3('');
+    }
+  }, [mensagemData]);
 
   // Buscar servidor ativo
   const { data: servidorAtivo, isLoading } = useQuery({
     queryKey: ['servidor-whatsapp-ativo'],
-    queryFn: () => ServidorWhatsAppService.getActive(),
+    queryFn: async () => {
+      try {
+        return await ServidorWhatsAppService.getActive();
+      } catch (error: any) {
+        if (error?.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      }
+    },
     enabled: show,
     retry: false,
   });
 
+  // Mutation para criar/atualizar servidor único
   const saveServidorMutation = useMutation({
-    mutationFn: (data: ServidorWhatsAppForm) => ServidorWhatsAppService.createOrUpdate(data),
+    mutationFn: (data: ServidorWhatsAppForm) => {
+      return ServidorWhatsAppService.createOrUpdate(data);
+    },
     onSuccess: () => {
-      success('Servidor salvo com sucesso!');
+      success('Configurações do servidor de WhatsApp salvas com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
     },
-    onError: (error: any) => showError(error?.response?.data?.message || 'Erro ao salvar')
+    onError: (error: any) => {
+      showError(error?.response?.data?.message || 'Erro ao salvar configurações');
+    }
   });
 
   // Mutation para enviar mensagem de teste
@@ -60,29 +134,58 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     }
   });
 
-  // Resetar ao fechar modal
-  useEffect(() => {
-    if (!show) {
-      setFormData(initialFormData);
-      setTestPhone('');
-      setTestMessage('');
+  // Mutation para salvar mensagem
+  const saveMensagemMutation = useMutation({
+    mutationFn: (data: any) => {
+      return ServidorWhatsAppService.saveMensagem(data);
+    },
+    onSuccess: () => {
+      success('Mensagem salva com sucesso!');
+    },
+    onError: (error: any) => {
+      showError(error?.response?.data?.message || 'Erro ao salvar mensagem');
     }
-  }, [show]);
+  });
 
-  // Carregar dados quando servidor disponível
+  // Carregar dados do servidor existente
   useEffect(() => {
-    if (show && !isLoading && servidorAtivo?.data) {
+    if (servidorAtivo?.data) {
       setFormData({
         evolution_api_url: servidorAtivo.data.evolution_api_url,
-        evolution_api_key: '',
+        evolution_api_key: '', // Não carregar chave por segurança
         instance_name: servidorAtivo.data.instance_name
       });
+    } else {
+      setFormData(initialFormData);
     }
-  }, [show, isLoading, servidorAtivo?.data?.id]);
+  }, [servidorAtivo]);
+
+  // Forçar carregamento quando modal abrir
+  useEffect(() => {
+    if (show) {
+      queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
+    }
+  }, [show, queryClient]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await saveServidorMutation.mutateAsync(formData);
+  };
+
+  const handleSaveMensagem = async () => {
+    if (!mensagemType) {
+      showError('Selecione um tipo de mensagem');
+      return;
+    }
+    await saveMensagemMutation.mutateAsync({
+      tipo: mensagemType,
+      tipo_envio: tipoEnvio,
+      mensagem_padrao: mensagemPadrao,
+      interacao1: interacao1 || undefined,
+      interacao2: interacao2 || undefined,
+      interacao3: interacao3 || undefined,
+      ativo: true
+    });
   };
 
   const handleReset = async () => {
@@ -155,12 +258,20 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       headerActions={
         <div className="d-flex gap-2">
           <button
-            type="submit"
-            form="servidor-whatsapp-form"
+            type="button"
             className="btn btn-primary btn-sm"
-            disabled={saveServidorMutation.isPending}
+            onClick={(e) => {
+              if (activeTab === 'servidor') {
+                const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
+                form?.requestSubmit();
+              } else {
+                e.preventDefault();
+                handleSaveMensagem();
+              }
+            }}
+            disabled={saveServidorMutation.isPending || saveMensagemMutation.isPending}
           >
-            {saveServidorMutation.isPending ? 'Salvando...' : 'Salvar'}
+            {(saveServidorMutation.isPending || saveMensagemMutation.isPending) ? 'Salvando...' : 'Salvar'}
           </button>
           <button
             type="button"
@@ -182,8 +293,31 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       }
     >
       <div className="modal-body p-2">
-        {/* Formulário de configuração */}
-        <form id="servidor-whatsapp-form" onSubmit={handleSubmit}>
+        {/* Navegação de Abas */}
+        <ul className="nav nav-tabs mb-3" role="tablist">
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'servidor' ? 'active' : ''}`}
+              onClick={() => setActiveTab('servidor')}
+              type="button"
+            >
+              Servidor
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${activeTab === 'mensagens' ? 'active' : ''}`}
+              onClick={() => setActiveTab('mensagens')}
+              type="button"
+            >
+              Mensagens
+            </button>
+          </li>
+        </ul>
+
+        {/* Conteúdo da Aba Servidor */}
+        {activeTab === 'servidor' && (
+          <form id="servidor-whatsapp-form" onSubmit={handleSubmit}>
           <div className="card">
             <div className="card-header py-1 px-2">
               <small className="fw-bold mb-0">
@@ -196,17 +330,13 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                   <FormField
                     name="evolution_api_url"
                     type="url"
-                    label="URL do Servidor"
-                    placeholder="https://exemplo.com.br"
+                    label="Servidor"
+                    placeholder="https://evo-api.example.com"
                     required={true}
                     size="sm"
                     value={formData.evolution_api_url}
-                    onChange={(value) => setFormData(prev => ({ ...prev, evolution_api_url: value }))}
-                    autoComplete="off"
+                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_url: e }))}
                   />
-                  <small className="form-text text-secondary">
-                    Exemplo: https://evo-api.seudominio.com.br
-                  </small>
                 </div>
               </div>
 
@@ -216,16 +346,13 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     name="instance_name"
                     type="text"
                     label="Nome da Instância"
-                    placeholder="minha-instancia"
+                    placeholder="example"
                     required={true}
                     size="sm"
                     value={formData.instance_name}
-                    onChange={(value) => setFormData(prev => ({ ...prev, instance_name: value }))}
-                    autoComplete="off"
+                    onChange={(e) => setFormData(prev => ({ ...prev, instance_name: e }))}
+                    autoComplete="username"
                   />
-                  <small className="form-text text-secondary">
-                    Exemplo: minha-instancia ou instancia-producao
-                  </small>
                 </div>
               </div>
 
@@ -239,7 +366,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     required={!servidorAtivo?.data}
                     size="sm"
                     value={formData.evolution_api_key}
-                    onChange={(value) => setFormData(prev => ({ ...prev, evolution_api_key: value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_key: e }))}
                     autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
                   />
                   {servidorAtivo?.data && (
@@ -251,16 +378,15 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
               </div>
             </div>
           </div>
-        </form>
 
-        {/* Seção de Teste de Mensagem */}
-        {servidorAtivo?.data && (
-          <div className="row mt-3">
-            <div className="col-12">
-              <small className="fw-bold text-primary mb-3">
-                <i className="bi bi-chat-dots me-2"></i>
-                Enviar Mensagem de Teste
-              </small>
+          {/* Seção de Teste de Mensagem */}
+          {servidorAtivo?.data && (
+            <div className="row mt-3">
+              <div className="col-12">
+                <small className="fw-bold text-primary mb-3">
+                  <i className="bi bi-chat-dots me-2"></i>
+                  Enviar Mensagem de Teste
+                </small>
               <div className="row g-2">
                 <div className="col-md-6">
                   <FormField
@@ -270,7 +396,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     placeholder="5511999999999"
                     size="sm"
                     value={testPhone}
-                    onChange={(value) => setTestPhone(value)}
+                    onChange={(e) => setTestPhone(e)}
                   />
                   <small className="form-text text-secondary">
                     Digite o número com código do país (ex: 5511999999999)
@@ -284,7 +410,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     placeholder="Mensagem de teste do sistema CTM Telecom"
                     size="sm"
                     value={testMessage}
-                    onChange={(value) => setTestMessage(value)}
+                    onChange={(e) => setTestMessage(e)}
                   />
                 </div>
               </div>
@@ -307,6 +433,201 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     </>
                   )}
                 </button>
+              </div>
+            </div>
+          </div>
+          )}
+          </form>
+        )}
+
+        {/* Conteúdo da Aba Mensagens */}
+        {activeTab === 'mensagens' && (
+          <div>
+            <div className="card">
+              <div className="card-header py-1 px-2">
+                <small className="fw-bold mb-0">
+                  Configuração de Mensagens
+                </small>
+              </div>
+              <div className="card-body p-2">
+                <div className="row g-2">
+                  <div className="col-12">
+                    <FormField
+                      name="mensagemType"
+                      type="select"
+                      label="Mensagem"
+                      required={true}
+                      size="sm"
+                      value={mensagemType}
+                      onChange={(value) => setMensagemType(value)}
+                      options={[
+                        { value: '10_dias_antes_vencimento', label: '10 dias antes do vencimento' },
+                        { value: '05_dias_antes_vencimento', label: '05 dias antes do vencimento' },
+                        { value: 'mesmo_dia_vencimento', label: 'Mesmo dia do vencimento' },
+                        { value: '05_dias_depois_vencimento', label: '05 dias depois do vencimento' },
+                        { value: '10_dias_depois_vencimento', label: '10 dias depois do vencimento' },
+                        { value: '15_dias_depois_vencimento', label: '15 dias depois do vencimento' },
+                        { value: 'corte_cliente', label: 'Corte do cliente' }
+                      ]}
+                    />
+                  </div>
+                </div>
+
+                {mensagemType && (
+                  <>
+                    {/* Tipo de Envio */}
+                    <div className="row g-2 mt-2">
+                      <div className="col-12">
+                        <div className="form-label small">Tipo de Envio</div>
+                        <div className="btn-group w-100" role="group">
+                          <input
+                            type="radio"
+                            className="btn-check"
+                            name="tipoEnvio"
+                            id="envio-desativado"
+                            value="desativado"
+                            checked={tipoEnvio === 'desativado'}
+                            onChange={(e) => setTipoEnvio(e.target.value as any)}
+                          />
+                          <label className="btn btn-outline-secondary" htmlFor="envio-desativado">
+                            Desativar
+                          </label>
+
+                          <input
+                            type="radio"
+                            className="btn-check"
+                            name="tipoEnvio"
+                            id="envio-pdf"
+                            value="pdf"
+                            checked={tipoEnvio === 'pdf'}
+                            onChange={(e) => setTipoEnvio(e.target.value as any)}
+                          />
+                          <label className="btn btn-outline-secondary" htmlFor="envio-pdf">
+                            Anexa PDF
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mensagem Padrão */}
+                    <div className="row g-2 mt-2">
+                      <div className="col-12">
+                        <FormField
+                          name="mensagemPadrao"
+                          type="textarea"
+                          label="Mensagem Padrão"
+                          placeholder="Digite a mensagem padrão"
+                          rows={10}
+                          size="sm"
+                          value={mensagemPadrao}
+                            onChange={(value) => setMensagemPadrao(value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Container de Variáveis */}
+                    <div className="row g-2 mt-2">
+                      <div className="col-12">
+                        <div className="card">
+                          <div className="card-header py-1 px-2">
+                            <small className="fw-bold mb-0">Variáveis Disponíveis para Mensagens</small>
+                          </div>
+                          <div className="card-body p-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            {variaveisData ? (
+                              <div className="row g-2">
+                                {Object.entries(variaveisData).map(([chave, grupo]: [string, any]) => (
+                                  <div className="col-md-6" key={chave}>
+                                    <div className="mb-2">
+                                      <small className="fw-bold d-block mb-1">{grupo.titulo}</small>
+                                      <div className="d-flex flex-wrap gap-1 align-items-center">
+                                        {grupo.variaveis.map((variavel: any) => (
+                                          <div key={variavel.variavel} className="d-flex align-items-center gap-1">
+                                            <span
+                                              className="badge bg-secondary"
+                                              style={{ cursor: 'pointer', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                                              onClick={() => setMensagemPadrao(prev => prev + variavel.variavel)}
+                                              title={`${variavel.descricao}. Clique para inserir.`}
+                                            >
+                                              {variavel.variavel}
+                                            </span>
+                                            <button
+                                              type="button"
+                                              className="btn btn-sm btn-link p-0"
+                                              onClick={() => {
+                                                navigator.clipboard.writeText(variavel.variavel);
+                                                success('Variável copiada!');
+                                              }}
+                                              title="Copiar variável"
+                                            >
+                                              <i className="bi bi-clipboard" style={{ fontSize: '0.75rem' }}></i>
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center p-3">
+                                <div className="spinner-border spinner-border-sm" role="status">
+                                  <span className="visually-hidden">Carregando variáveis...</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interações (opcionais) */}
+                    <div className="row g-2 mt-2">
+                      <div className="col-12">
+                        <FormField
+                          name="interacao1"
+                          type="textarea"
+                          label="Interação 01"
+                          placeholder="Digite a primeira mensagem"
+                          rows={3}
+                          size="sm"
+                          value={interacao1}
+                          onChange={(value) => setInteracao1(value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="row g-2">
+                      <div className="col-12">
+                        <FormField
+                          name="interacao2"
+                          type="textarea"
+                          label="Interação 02"
+                          placeholder="Digite a segunda mensagem"
+                          rows={3}
+                          size="sm"
+                          value={interacao2}
+                          onChange={(value) => setInteracao2(value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="row g-2">
+                      <div className="col-12">
+                        <FormField
+                          name="interacao3"
+                          type="textarea"
+                          label="Interação 03"
+                          placeholder="Digite a terceira mensagem"
+                          rows={3}
+                          size="sm"
+                          value={interacao3}
+                          onChange={(value) => setInteracao3(value)}
+                        />
+                      </div>
+                    </div>
+
+                  </>
+                )}
               </div>
             </div>
           </div>

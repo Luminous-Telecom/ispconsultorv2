@@ -81,15 +81,6 @@ export class BancoApiService {
     const clientId = banco.client_id_producao;
     const clientSecret = banco.client_secret_producao;
     
-    logger.info('Verificando credenciais do banco', {
-      banco_id: banco.id,
-      banco_nome: banco.nome,
-      has_client_id: !!clientId,
-      has_client_secret: !!clientSecret,
-      client_id_length: clientId?.length || 0,
-      client_secret_length: clientSecret?.length || 0
-    });
-    
     return !!(clientId && clientSecret);
   }
 
@@ -395,14 +386,6 @@ export class BancoApiService {
           const baseUrl = banco.url_retorno;
           
           if (baseUrl) {
-            logger.info('Configurando URL de notificação', {
-            banco_id: banco.id,
-            banco_nome: banco.nome,
-            url_retorno_cadastrada: banco.url_retorno,
-            url_final_usada: baseUrl,
-            titulo_id: titulo.id
-          });
-          
           const metadataEndpoint = `${baseUrlCobranca}/v1/charge/${chargeId}/metadata`;
           const metadataPayload = {
             notification_url: baseUrl,
@@ -499,30 +482,6 @@ export class BancoApiService {
   ): Promise<any> {
     const baseUrl = banco.url_retorno;
     
-    logger.info('Verificando URL de retorno do banco', {
-      banco_id: banco.id,
-      banco_nome: banco.nome,
-      url_retorno_cadastrada: banco.url_retorno,
-      url_retorno_tipo: typeof banco.url_retorno,
-      url_retorno_length: banco.url_retorno?.length,
-      titulo_id: titulo.id
-    });
-    
-    if (baseUrl) {
-      logger.info('Gerando título com URL de notificação', {
-        banco_id: banco.id,
-        banco_nome: banco.nome,
-        url_retorno_cadastrada: banco.url_retorno,
-        titulo_id: titulo.id
-      });
-    } else {
-      logger.warn('URL de retorno não configurada no banco', {
-        banco_id: banco.id,
-        banco_nome: banco.nome,
-        titulo_id: titulo.id
-      });
-    }
-    
     // Buscar dados da empresa (recebedor)
     const { DadosEmpresa } = await import('../models/DadosEmpresa');
     const dadosEmpresa = await DadosEmpresa.findOne();
@@ -535,9 +494,7 @@ export class BancoApiService {
     if (!cliente.razao_social) {
       throw new Error('Cliente deve ter razão social preenchida');
     }
-    if (!cliente.email) {
-      throw new Error('Cliente deve ter email preenchido');
-    }
+    // Email não é validado pois não é enviado ao banco (seguindo regras do projeto)
     if (!cliente.telefone) {
       throw new Error('Cliente deve ter telefone preenchido');
     }
@@ -579,13 +536,6 @@ export class BancoApiService {
     const formatarTelefoneEFI = (telefone: string): string => {
       // Remover tudo que não é dígito
       let numero = telefone.replace(/\D/g, '');
-      
-      logger.info('Formatando telefone para EFI', {
-        telefone_original: telefone,
-        telefone_limpo: numero,
-        tamanho: numero.length,
-        titulo_id: titulo.id
-      });
       
       // Extrair apenas os últimos 11 dígitos (caso tenha código do país)
       if (numero.length > 11) {

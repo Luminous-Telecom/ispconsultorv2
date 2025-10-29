@@ -57,6 +57,9 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
   
   // Hook para gerenciar seleção de plano
   const planoSelect = useEntitySelectField<{ id: number }>();
+  
+  // Ref para rastrear se já inicializou o formulário
+  const hasInitializedRef = useRef(false);
 
   // Queries para buscar dados
   const { data: planos } = useQuery({
@@ -95,7 +98,16 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
 
   // Preencher com dados do contrato quando contratoId for fornecido
   useEffect(() => {
-    if (show && contratoData) {
+    if (!show) {
+      hasInitializedRef.current = false;
+      return;
+    }
+    
+    if (hasInitializedRef.current) {
+      return;
+    }
+    
+    if (contratoData) {
       const contrato = contratoData;
       
       if (contrato.plano_id) {
@@ -110,21 +122,21 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         }
         
         // Atualizar formulário com dados do contrato
-        setFormData(prev => ({
-          ...prev,
+        const novoFormData = {
           plano_id: contrato.plano_id,
           contrato_id: contrato.id,
           desconto_percentual: contrato.desconto_percentual || 0,
           desconto_valor: contrato.desconto_valor || 0,
-          data_vencimento: dataVencimento
-        }));
+          data_vencimento: dataVencimento,
+          observacoes: '',
+          acrescimo_percentual: 0,
+          acrescimo_valor: 0,
+          descricao: ''
+        };
+        setFormData(novoFormData);
+        hasInitializedRef.current = true;
       }
-    }
-  }, [show, contratoData]);
-
-  // Pré-selecionar plano ativo do cliente e data de vencimento (quando não há contratoId)
-  useEffect(() => {
-    if (show && !contratoId && clienteData?.contratos && clienteData.contratos.length > 0) {
+    } else if (!contratoId && clienteData?.contratos && clienteData.contratos.length > 0) {
       const contratoAtivo = clienteData.contratos.find((contrato: any) => contrato.status === 'ativo');
       
       if (contratoAtivo && contratoAtivo.plano_id) {
@@ -138,44 +150,29 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
           dataVencimento = calcularProximaDataVencimento(15);
         }
         
-        // Só atualizar se os valores forem diferentes dos atuais
-        setFormData(prev => {
-          if (prev.plano_id === contratoAtivo.plano_id && 
-              prev.contrato_id === contratoAtivo.id && 
-              prev.data_vencimento === dataVencimento) {
-            return prev; // Não atualizar se os valores já estão corretos
-          }
-          
-          return {
-            ...prev,
-            plano_id: contratoAtivo.plano_id,
-            contrato_id: contratoAtivo.id,
-            data_vencimento: dataVencimento
-          };
-        });
+        const novoFormDataCliente = {
+          plano_id: contratoAtivo.plano_id,
+          contrato_id: contratoAtivo.id,
+          data_vencimento: dataVencimento,
+          observacoes: '',
+          desconto_percentual: 0,
+          desconto_valor: 0,
+          acrescimo_percentual: 0,
+          acrescimo_valor: 0,
+          descricao: ''
+        };
+        setFormData(novoFormDataCliente);
+        hasInitializedRef.current = true;
       }
     }
-  }, [show, clienteData, contratoId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show]);
 
-  // Limpar formulário quando modal fechar (usar ref para evitar conflitos)
-  const prevShowRef = useRef(show);
+  // Limpar formulário quando modal fechar
   useEffect(() => {
-    // Só limpar quando o modal estava aberto e agora está fechando
-    if (prevShowRef.current && !show) {
-      setFormData({
-        plano_id: 0,
-        contrato_id: undefined,
-        data_vencimento: '',
-        observacoes: '',
-        desconto_percentual: 0,
-        desconto_valor: 0,
-        acrescimo_percentual: 0,
-        acrescimo_valor: 0,
-        descricao: '',
-      });
+    if (!show) {
       setErrors({});
     }
-    prevShowRef.current = show;
   }, [show]);
 
   // Mutation para criar parcela
@@ -322,7 +319,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 required={true}
                 size="sm"
                 value={formData.data_vencimento}
-                onChange={(e: any) => handleInputChange('data_vencimento', e.value)}
+                onChange={(value: any) => handleInputChange('data_vencimento', value)}
                 error={errors.data_vencimento}
                 isInvalid={!!errors.data_vencimento}
                 disabled={createParcelaMutation.isPending}
@@ -338,7 +335,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="Descrição do título..."
                 size="sm"
                 value={formData.descricao}
-                onChange={(e: any) => handleInputChange('descricao', e.value)}
+                onChange={(value: any) => handleInputChange('descricao', value)}
                 disabled={createParcelaMutation.isPending}
               />
             </div>
@@ -356,7 +353,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="0.00"
                 size="sm"
                 value={formData.desconto_percentual}
-                onChange={(e: any) => handleInputChange('desconto_percentual', parseFloat(e.value) || 0)}
+                onChange={(value: any) => handleInputChange('desconto_percentual', parseFloat(value) || 0)}
                 disabled={createParcelaMutation.isPending}
                 min={0}
                 max={100}
@@ -373,7 +370,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="0.00"
                 size="sm"
                 value={formData.desconto_valor}
-                onChange={(e: any) => handleInputChange('desconto_valor', parseFloat(e.value) || 0)}
+                onChange={(value: any) => handleInputChange('desconto_valor', parseFloat(value) || 0)}
                 disabled={createParcelaMutation.isPending}
                 min={0}
                 step={0.01}
@@ -393,7 +390,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="0.00"
                 size="sm"
                 value={formData.acrescimo_percentual}
-                onChange={(e: any) => handleInputChange('acrescimo_percentual', parseFloat(e.value) || 0)}
+                onChange={(value: any) => handleInputChange('acrescimo_percentual', parseFloat(value) || 0)}
                 disabled={createParcelaMutation.isPending}
                 min={0}
                 max={100}
@@ -410,7 +407,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="0.00"
                 size="sm"
                 value={formData.acrescimo_valor}
-                onChange={(e: any) => handleInputChange('acrescimo_valor', parseFloat(e.value) || 0)}
+                onChange={(value: any) => handleInputChange('acrescimo_valor', parseFloat(value) || 0)}
                 disabled={createParcelaMutation.isPending}
                 min={0}
                 step={0.01}
@@ -429,7 +426,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="Observações sobre a parcela..."
                 size="sm"
                 value={formData.observacoes}
-                onChange={(e: any) => handleInputChange('observacoes', e.value)}
+                onChange={(value: any) => handleInputChange('observacoes', value)}
                 disabled={createParcelaMutation.isPending}
                 rows={3}
               />

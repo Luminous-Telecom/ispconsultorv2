@@ -469,6 +469,14 @@ export class TituloController {
 
       // Calcular data de vencimento se não foi informada
       let dataVencimentoFinal = data_vencimento;
+      if (dataVencimentoFinal) {
+        // Se a data veio como string "YYYY-MM-DD", converter para Date local para evitar problemas de fuso horário
+        if (typeof dataVencimentoFinal === 'string') {
+          const [year, month, day] = dataVencimentoFinal.split('-').map(Number);
+          dataVencimentoFinal = new Date(year, month - 1, day);
+        }
+      }
+      
       if (!dataVencimentoFinal) {
         // Buscar contrato ativo para pegar o dia de vencimento
         const contratoAtivo = await Contrato.findOne({
@@ -485,11 +493,23 @@ export class TituloController {
 
         // Calcular próxima data de vencimento
         const hoje = new Date();
-        const proximoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, diaVencimento);
+        
+        // Ajustar dia se não existir no mês
+        const ultimoDiaAtualMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+        const diaCorretoAtualMes = Math.min(diaVencimento, ultimoDiaAtualMes);
+        const vencimento = new Date(hoje.getFullYear(), hoje.getMonth(), diaCorretoAtualMes);
         
         // Se o dia já passou neste mês, usar o próximo mês
-        const vencimento = new Date(hoje.getFullYear(), hoje.getMonth(), diaVencimento);
-        const dataFinal = vencimento > hoje ? vencimento : proximoMes;
+        let dataFinal;
+        if (vencimento > hoje) {
+          dataFinal = vencimento;
+        } else {
+          // Calcular próximo mês com ajuste de dia
+          const ultimoDiaProxMes = new Date(hoje.getFullYear(), hoje.getMonth() + 2, 0).getDate();
+          const diaCorretoProxMes = Math.min(diaVencimento, ultimoDiaProxMes);
+          const proximoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, diaCorretoProxMes);
+          dataFinal = proximoMes;
+        }
         
         dataVencimentoFinal = dataFinal.toISOString().split('T')[0];
       }
@@ -567,6 +587,11 @@ export class TituloController {
       valorFinal = Math.max(0.01, valorFinal);
 
       // Criar título
+      // Garantir que data_vencimento é um objeto Date para evitar problemas de fuso horário
+      const dataVencimentoParaSalvar = dataVencimentoFinal instanceof Date 
+        ? dataVencimentoFinal 
+        : new Date(dataVencimentoFinal);
+      
       const titulo = await Titulo.create({
         cliente_id,
         plano_id: plano.id,
@@ -575,7 +600,7 @@ export class TituloController {
         numero_titulo: gerarNumeroTitulo(),
         valor: valorFinal, // Usar valorFinal (com descontos) ao invés do plano.valor_mensal
         valor_final: valorFinal,
-        data_vencimento: dataVencimentoFinal,
+        data_vencimento: dataVencimentoParaSalvar,
         observacoes: observacoes || '',
         desconto_percentual: desconto_percentual || null,
         desconto_valor: desconto_valor || null,
@@ -688,9 +713,16 @@ export class TituloController {
       }
 
       // Atualizar título
+      // Converter data_vencimento para Date local se vier como string
+      let dataVencimentoAtualizada = data_vencimento;
+      if (dataVencimentoAtualizada && typeof dataVencimentoAtualizada === 'string') {
+        const [year, month, day] = dataVencimentoAtualizada.split('-').map(Number);
+        dataVencimentoAtualizada = new Date(year, month - 1, day);
+      }
+      
       await titulo.update({
         status: status || titulo.status,
-        data_vencimento: data_vencimento || titulo.data_vencimento,
+        data_vencimento: dataVencimentoAtualizada || titulo.data_vencimento,
         observacoes: observacoes !== undefined ? observacoes : titulo.observacoes
       });
 
