@@ -1,41 +1,27 @@
 /* Proteções contra cópia - CTM Telecom ERP */
 
-/* Proteção contra seleção de texto */
-* {
+/* Proteção contra seleção de texto apenas em dashboards e tabelas */
+.table,
+.card,
+.badge {
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
   user-select: none !important;
   -webkit-touch-callout: none !important;
-  -webkit-tap-highlight-color: transparent !important;
 }
 
-/* Permitir seleção em formulários e campos de entrada */
-form,
-.form-group,
-.form-control,
+/* Permitir seleção em formulários, editores e inputs */
 input,
 textarea,
 select,
 option,
 [contenteditable="true"],
-.form-check,
-.form-check-input,
-.form-check-label,
-.form-label,
-.form-text,
-.invalid-feedback,
-.valid-feedback,
+.form-control,
 .form-select,
-.help-text,
-.form-help,
-.input-group,
-.form-row,
-.form-floating,
-.form-floating > label,
-.form-floating > input,
-.form-floating > textarea,
-.form-floating > select {
+.ckeditor-wrapper *,
+.ck-editor *,
+.ck-content * {
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
   -ms-user-select: text !important;

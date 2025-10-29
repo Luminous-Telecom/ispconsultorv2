@@ -38,12 +38,11 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [clienteTesteId, setClienteTesteId] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'contrato' | 'adesao' | 'permanencia'>('contrato');
-  const [openImprimirDropdown, setOpenImprimirDropdown] = useState(false);
+  const [showImprimirDropdown, setShowImprimirDropdown] = useState(false);
 
   const queryClient = useQueryClient();
   const { addNotification } = useNotificationContext();
 
-  // Função para obter o label do tipo
   const getTipoLabel = (tipo: string) => {
     const labels = {
       contrato: 'Contrato',
@@ -54,43 +53,30 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     return labels[tipo as keyof typeof labels] || 'Documento';
   };
 
-  // Buscar lista de clientes para teste (apenas se estiver editando)
   const { data: clientesData } = useQuery({
     queryKey: ['clientes'],
     queryFn: () => ClienteService.list({ limit: 100 }),
     enabled: isEditing
   });
 
-  // Carregar dados do documento quando o modal abrir (apenas se estiver editando)
+  // Carregar dados do documento
   useEffect(() => {
-    if (documento && show && isEditing) {
+    if (!show) return;
+
+    if (isEditing && documento) {
       const loadData = async () => {
-        // Se for contrato, buscar modelos específicos das tabelas separadas
         if (tipo === 'contrato') {
           try {
             const response = await DocumentoSistemaService.getModelosByModeloContrato(documento.id);
-            if (response.success) {
-              setFormData({
-                nome: documento.nome,
-                descricao: documento.descricao || '',
-                conteudo: documento.conteudo,
-                conteudo_contrato: response.data.modelo_contrato_conteudo || '',
-                conteudo_adesao: response.data.modelo_termo_adesao || '',
-                conteudo_permanencia: response.data.modelo_contrato_permanencia || '',
-              });
-            } else {
-              // Fallback para dados padrão
-              setFormData({
-                nome: documento.nome,
-                descricao: documento.descricao || '',
-                conteudo: documento.conteudo,
-                conteudo_contrato: documento.conteudo,
-                conteudo_adesao: '',
-                conteudo_permanencia: '',
-              });
-            }
-          } catch (error) {
-            // Fallback para dados padrão em caso de erro
+            setFormData({
+              nome: documento.nome,
+              descricao: documento.descricao || '',
+              conteudo: documento.conteudo,
+              conteudo_contrato: response.success ? (response.data.modelo_contrato_conteudo || '') : documento.conteudo,
+              conteudo_adesao: response.success ? (response.data.modelo_termo_adesao || '') : '',
+              conteudo_permanencia: response.success ? (response.data.modelo_contrato_permanencia || '') : '',
+            });
+          } catch {
             setFormData({
               nome: documento.nome,
               descricao: documento.descricao || '',
@@ -111,123 +97,79 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           });
         }
       };
-      
       loadData();
-    } else if (!isEditing && show) {
-      // Limpar formulário para criação
-      setFormData({
-        nome: '',
-        descricao: '',
-        conteudo: '',
-        conteudo_contrato: '',
-        conteudo_adesao: '',
-        conteudo_permanencia: '',
-      });
+    } else {
+      setFormData({ nome: '', descricao: '', conteudo: '', conteudo_contrato: '', conteudo_adesao: '', conteudo_permanencia: '' });
     }
   }, [documento, show, tipo, isEditing]);
 
-  // Limpar PDF URL quando o modal for fechado
   useEffect(() => {
     if (!show && pdfUrl) {
       window.URL.revokeObjectURL(pdfUrl);
       setPdfUrl(null);
     }
+    if (!show) {
+      setShowImprimirDropdown(false);
+    }
   }, [show, pdfUrl]);
 
-  // Fechar dropdown quando clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (openImprimirDropdown) {
-        const target = event.target as HTMLElement;
-        if (!target.closest('.dropdown')) {
-          setOpenImprimirDropdown(false);
-        }
-      }
-    };
+  // Service functions
+  const getService = () => {
+    switch (tipo) {
+      case 'contrato': return DocumentoSistemaService;
+      case 'recibo': return ModeloReciboService;
+      case 'carta_cobranca': return ModeloCartaService;
+      case 'termo': return ModeloTermoService;
+      default: return DocumentoSistemaService;
+    }
+  };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openImprimirDropdown]);
-
-  // Mutation para criar documento
   const createDocumentoMutation = useMutation({
     mutationFn: async (data: any) => {
-      switch (tipo) {
-        case 'contrato':
-          return DocumentoSistemaService.create({ ...data, tipo });
-        case 'recibo':
-          return ModeloReciboService.create(data);
-        case 'carta_cobranca':
-          return ModeloCartaService.create(data);
-        case 'termo':
-          return ModeloTermoService.create(data);
-        default:
-          return DocumentoSistemaService.create({ ...data, tipo });
-      }
+      // Se for contrato, precisa adicionar o campo 'tipo'
+      const dataToSend = tipo === 'contrato' ? { ...data, tipo } : data;
+      return getService().create(dataToSend);
     },
     onSuccess: () => {
       addNotification('success', 'Documento criado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccess?.();
     },
     onError: (error: any) => {
       addNotification('error', error.message || 'Erro ao criar documento');
     }
   });
 
-  // Mutation para atualizar documento
   const updateDocumentoMutation = useMutation({
     mutationFn: async (data: any) => {
-      switch (tipo) {
-        case 'contrato':
-          // Para contratos, salvar cada modelo específico
-          const promises = [];
-          
-          if (data.conteudo_contrato !== undefined) {
-            promises.push(DocumentoSistemaService.saveModeloContratoConteudo(documento!.id, data.conteudo_contrato || ''));
-          }
-          
-          if (data.conteudo_adesao !== undefined) {
-            promises.push(DocumentoSistemaService.saveModeloTermoAdesao(documento!.id, data.conteudo_adesao || ''));
-          }
-          
-          if (data.conteudo_permanencia !== undefined) {
-            promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, data.conteudo_permanencia || ''));
-          }
-          
-          // Também atualizar dados básicos se fornecidos
-          if (data.nome || data.descricao || data.conteudo) {
-            promises.push(DocumentoSistemaService.update(documento!.id, {
-              nome: data.nome,
-              descricao: data.descricao,
-              conteudo: data.conteudo
-            }));
-          }
-          
-          await Promise.all(promises);
-          return { success: true };
-        case 'recibo':
-          return ModeloReciboService.update(documento!.id, data);
-        case 'carta_cobranca':
-          return ModeloCartaService.update(documento!.id, data);
-        case 'termo':
-          return ModeloTermoService.update(documento!.id, data);
-        default:
-          return DocumentoSistemaService.update(documento!.id, data);
+      const service = getService();
+      
+      if (tipo === 'contrato') {
+        const promises = [];
+        if (data.conteudo_contrato !== undefined) {
+          promises.push(DocumentoSistemaService.saveModeloContratoConteudo(documento!.id, data.conteudo_contrato || ''));
+        }
+        if (data.conteudo_adesao !== undefined) {
+          promises.push(DocumentoSistemaService.saveModeloTermoAdesao(documento!.id, data.conteudo_adesao || ''));
+        }
+        if (data.conteudo_permanencia !== undefined) {
+          promises.push(DocumentoSistemaService.saveModeloContratoPermanencia(documento!.id, data.conteudo_permanencia || ''));
+        }
+        if (data.nome || data.descricao || data.conteudo) {
+          promises.push(DocumentoSistemaService.update(documento!.id, { nome: data.nome, descricao: data.descricao, conteudo: data.conteudo }));
+        }
+        await Promise.all(promises);
+        return { success: true };
       }
+      
+      return service.update(documento!.id, data);
     },
     onSuccess: () => {
       addNotification('success', 'Documento salvo com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccess?.();
     },
     onError: (error: any) => {
       addNotification('error', error.message || 'Erro ao salvar documento');
@@ -236,394 +178,156 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.nome) {
       addNotification('error', 'Nome é obrigatório');
       return;
     }
 
-    // Se não for contrato, validar conteúdo obrigatório
-    if (tipo !== 'contrato') {
-      if (!formData.conteudo) {
-        addNotification('error', 'Conteúdo é obrigatório');
-        return;
-      }
+    if (tipo !== 'contrato' && !formData.conteudo) {
+      addNotification('error', 'Conteúdo é obrigatório');
+      return;
     }
 
     try {
       if (isEditing) {
-        // Atualizar documento existente
-        // Usar a mutation para garantir notificações
-        await updateDocumentoMutation.mutateAsync({
-          nome: formData.nome,
-          descricao: formData.descricao,
-          conteudo: formData.conteudo,
-          conteudo_contrato: formData.conteudo_contrato,
-          conteudo_adesao: formData.conteudo_adesao,
-          conteudo_permanencia: formData.conteudo_permanencia
-        });
+        const data = { nome: formData.nome, descricao: formData.descricao, conteudo: formData.conteudo, conteudo_contrato: formData.conteudo_contrato, conteudo_adesao: formData.conteudo_adesao, conteudo_permanencia: formData.conteudo_permanencia };
+        await updateDocumentoMutation.mutateAsync(data);
       } else {
-        // Criar novo documento
-        await createDocumentoMutation.mutateAsync({
-          nome: formData.nome,
-          descricao: formData.descricao,
-          conteudo: formData.conteudo
-        });
+        // Para criação, usar conteudo_contrato se for contrato, senão conteudo
+        const conteudoToSend = tipo === 'contrato' ? formData.conteudo_contrato || '' : formData.conteudo;
+        const data = { nome: formData.nome, descricao: formData.descricao, conteudo: conteudoToSend };
+        await createDocumentoMutation.mutateAsync(data);
       }
     } catch (error: any) {
       addNotification('error', error.message || 'Erro ao salvar documento');
     }
   };
 
-  const handleReset = () => {
-    if (isEditing && documento) {
-      // Recarregar dados originais
-      if (tipo === 'contrato') {
-        // Para contratos, recarregar dados específicos
-        const loadData = async () => {
-          try {
-            const response = await DocumentoSistemaService.getModelosByModeloContrato(documento.id);
-            if (response.success) {
-              setFormData({
-                nome: documento.nome,
-                descricao: documento.descricao || '',
-                conteudo: documento.conteudo,
-                conteudo_contrato: response.data.modelo_contrato_conteudo || '',
-                conteudo_adesao: response.data.modelo_termo_adesao || '',
-                conteudo_permanencia: response.data.modelo_contrato_permanencia || '',
-              });
-            } else {
-              setFormData({
-                nome: documento.nome,
-                descricao: documento.descricao || '',
-                conteudo: documento.conteudo,
-                conteudo_contrato: documento.conteudo,
-                conteudo_adesao: '',
-                conteudo_permanencia: '',
-              });
-            }
-          } catch (error) {
-            setFormData({
-              nome: documento.nome,
-              descricao: documento.descricao || '',
-              conteudo: documento.conteudo,
-              conteudo_contrato: documento.conteudo,
-              conteudo_adesao: '',
-              conteudo_permanencia: '',
-            });
-          }
-        };
-        loadData();
-      } else {
-        setFormData({
-          nome: documento.nome,
-          descricao: documento.descricao || '',
-          conteudo: documento.conteudo,
-          conteudo_contrato: '',
-          conteudo_adesao: '',
-          conteudo_permanencia: '',
-        });
-      }
-    } else {
-      // Limpar formulário para criação
-      setFormData({
-        nome: '',
-        descricao: '',
-        conteudo: '',
-        conteudo_contrato: '',
-        conteudo_adesao: '',
-        conteudo_permanencia: '',
-      });
-    }
-  };
-
   const handleClose = () => {
-    handleReset();
-    setClienteTesteId(0); // Limpar cliente selecionado
+    setClienteTesteId(0);
     onClose();
   };
 
   const editorRef = useRef<any>(null);
-
   const handleInsertVariable = (variable: string) => {
-    if (editorRef.current && editorRef.current.insertVariable) {
-      editorRef.current.insertVariable(variable);
-    }
+    editorRef.current?.insertVariable?.(variable);
   };
 
-  // Funções para gerenciar conteúdo baseado na aba ativa (apenas para contratos)
   const getCurrentContent = () => {
-    if (tipo === 'contrato') {
-      switch (activeTab) {
-        case 'contrato':
-          return formData.conteudo_contrato;
-        case 'adesao':
-          return formData.conteudo_adesao;
-        case 'permanencia':
-          return formData.conteudo_permanencia;
-        default:
-          return formData.conteudo_contrato;
-      }
+    if (tipo !== 'contrato') return formData.conteudo;
+    switch (activeTab) {
+      case 'contrato': return formData.conteudo_contrato;
+      case 'adesao': return formData.conteudo_adesao;
+      case 'permanencia': return formData.conteudo_permanencia;
+      default: return formData.conteudo_contrato;
     }
-    return formData.conteudo;
   };
 
   const updateCurrentContent = (value: string) => {
     if (tipo === 'contrato') {
-      switch (activeTab) {
-        case 'contrato':
-          setFormData(prev => ({ ...prev, conteudo_contrato: value }));
-          break;
-        case 'adesao':
-          setFormData(prev => ({ ...prev, conteudo_adesao: value }));
-          break;
-        case 'permanencia':
-          setFormData(prev => ({ ...prev, conteudo_permanencia: value }));
-          break;
-      }
+      setFormData(prev => ({ ...prev, [`conteudo_${activeTab}`]: value }));
     } else {
       setFormData(prev => ({ ...prev, conteudo: value }));
     }
   };
 
-  // Funções de impressão (apenas para edição)
-  const handlePrint = async () => {
+  const getContentByType = (documentoTipo: 'contrato' | 'adesao' | 'permanencia') => {
+    switch (documentoTipo) {
+      case 'contrato': return formData.conteudo_contrato;
+      case 'adesao': return formData.conteudo_adesao;
+      case 'permanencia': return formData.conteudo_permanencia;
+      default: return '';
+    }
+  };
+
+  const handlePrint = async (documentoTipo?: 'contrato' | 'adesao' | 'permanencia') => {
     if (!isEditing || !documento) return;
 
     setIsGeneratingPdf(true);
     try {
-      // Usar requestIdleCallback para melhorar performance
-      await new Promise(resolve => {
-        if (window.requestIdleCallback) {
-          window.requestIdleCallback(resolve);
-        } else {
-          setTimeout(resolve, 0);
-        }
-      });
-      
-      let blob;
-      
-      // Se tiver cliente selecionado, gera PDF com dados do cliente
-      // Se não, gera PDF do modelo sem preencher variáveis
-      if (clienteTesteId) {
-        switch (tipo) {
-          case 'contrato':
-            blob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
-            break;
-          case 'recibo':
-            blob = await ModeloReciboService.generateTestPdf(documento.id, clienteTesteId);
-            break;
-          case 'carta_cobranca':
-            blob = await ModeloCartaService.generateTestPdf(documento.id, clienteTesteId);
-            break;
-          case 'termo':
-            blob = await ModeloTermoService.generateTestPdf(documento.id, clienteTesteId);
-            break;
-          default:
-            blob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
-        }
-      } else {
-        switch (tipo) {
-          case 'contrato':
-            blob = await DocumentoSistemaService.generatePdf(documento.id);
-            break;
-          case 'recibo':
-            blob = await ModeloReciboService.generatePdf(documento.id);
-            break;
-          case 'carta_cobranca':
-            blob = await ModeloCartaService.generatePdf(documento.id);
-            break;
-          case 'termo':
-            blob = await ModeloTermoService.generatePdf(documento.id);
-            break;
-          default:
-            blob = await DocumentoSistemaService.generatePdf(documento.id);
+      if (tipo === 'contrato' && documentoTipo) {
+        const conteudo = getContentByType(documentoTipo);
+        if (conteudo) {
+          const blob = clienteTesteId
+            ? await DocumentoSistemaService.generateTestPdfWithContent(documento.id, clienteTesteId, conteudo)
+            : await DocumentoSistemaService.generatePdfWithContent(documento.id, conteudo);
+          
+          const url = window.URL.createObjectURL(blob);
+          if (pdfUrl) window.URL.revokeObjectURL(pdfUrl);
+          setPdfUrl(url);
+          setShowPreview(true);
+          return;
         }
       }
 
+      const service = getService();
+      const blob = clienteTesteId 
+        ? await service.generateTestPdf(documento.id, clienteTesteId)
+        : await service.generatePdf(documento.id);
+      
       const url = window.URL.createObjectURL(blob);
+      if (pdfUrl) window.URL.revokeObjectURL(pdfUrl);
       setPdfUrl(url);
       setShowPreview(true);
     } catch (error) {
-      addNotification('error', 'Erro ao gerar PDF');
+      addNotification('error', error instanceof Error ? error.message : 'Erro ao gerar PDF');
     } finally {
       setIsGeneratingPdf(false);
     }
   };
 
-  const handleDownload = async () => {
-    if (!isEditing || !documento) return;
-    
-    try {
-      let blob;
-      
-      // Se tiver cliente selecionado, gera PDF com dados do cliente
-      // Se não, gera PDF do modelo sem preencher variáveis
-      if (clienteTesteId) {
-        switch (tipo) {
-          case 'contrato':
-            blob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
-            break;
-          case 'recibo':
-            blob = await ModeloReciboService.generateTestPdf(documento.id, clienteTesteId);
-            break;
-          case 'carta_cobranca':
-            blob = await ModeloCartaService.generateTestPdf(documento.id, clienteTesteId);
-            break;
-          case 'termo':
-            blob = await ModeloTermoService.generateTestPdf(documento.id, clienteTesteId);
-            break;
-          default:
-            blob = await DocumentoSistemaService.generateTestPdf(documento.id, clienteTesteId);
-        }
-      } else {
-        switch (tipo) {
-          case 'contrato':
-            blob = await DocumentoSistemaService.generatePdf(documento.id);
-            break;
-          case 'recibo':
-            blob = await ModeloReciboService.generatePdf(documento.id);
-            break;
-          case 'carta_cobranca':
-            blob = await ModeloCartaService.generatePdf(documento.id);
-            break;
-          case 'termo':
-            blob = await ModeloTermoService.generatePdf(documento.id);
-            break;
-          default:
-            blob = await DocumentoSistemaService.generatePdf(documento.id);
-        }
-      }
 
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${documento.nome}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      addNotification('error', 'Erro ao baixar PDF');
-    }
-  };
-
-  // Ações para o header do modal
   const headerActions = (
-    <div className="d-flex gap-1 align-items-center">
-      {/* Select de cliente para teste (apenas para edição) */}
+    <div className="d-flex gap-2 align-items-center">
       {isEditing && (
-        <label htmlFor="select-cliente-teste" style={{ margin: 0, display: 'inline-flex', alignItems: 'center' }}>
-          <span style={{
-            position: 'absolute',
-            width: '1px',
-            height: '1px',
-            padding: 0,
-            margin: '-1px',
-            overflow: 'hidden',
-            clip: 'rect(0, 0, 0, 0)',
-            whiteSpace: 'nowrap',
-            borderWidth: 0
-          }}>
-            Selecionar cliente para teste:
-          </span>
-          <select
-            id="select-cliente-teste"
-            name="cliente-teste"
-            className="form-select form-select-sm"
-            style={{ width: 'auto', fontSize: '0.875rem' }}
-            value={clienteTesteId}
-            onChange={(e) => setClienteTesteId(Number(e.target.value))}
-            aria-label="Selecionar cliente para teste"
-          >
-            <option value={0}>Selecionar cliente...</option>
-            {clientesData?.data?.map((cliente: any) => (
-              <option key={cliente.id} value={cliente.id}>
-                {cliente.razao_social}
-              </option>
-            ))}
-          </select>
-        </label>
+        <select
+          className="form-select form-select-sm"
+          style={{ width: 'auto' }}
+          value={clienteTesteId}
+          onChange={(e) => setClienteTesteId(Number(e.target.value))}
+        >
+          <option value={0}>Selecionar cliente...</option>
+          {clientesData?.data?.map((cliente: any) => (
+            <option key={cliente.id} value={cliente.id}>{cliente.razao_social}</option>
+          ))}
+        </select>
       )}
       
-      {/* Botões de impressão apenas para edição */}
       {isEditing && (
-        <div className="dropdown me-2">
-          <button
-            className="btn btn-primary btn-sm dropdown-toggle"
-            type="button"
-            id="imprimirDropdown"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
+        <div className="dropdown">
+          <button 
+            className="btn btn-primary btn-sm dropdown-toggle" 
+            type="button" 
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setOpenImprimirDropdown(!openImprimirDropdown);
+              setShowImprimirDropdown(!showImprimirDropdown);
             }}
-            onMouseDown={(e) => e.stopPropagation()}
             disabled={isGeneratingPdf}
-            style={{
-              position: 'relative'
-            }}
           >
             {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
-            <i className="bi bi-chevron-down ms-1"></i>
           </button>
-          {openImprimirDropdown && (
-            <div 
-              className="dropdown-menu show" 
-              style={{ 
-                position: 'absolute', 
-                top: '100%', 
-                left: 0, 
-                zIndex: 1050,
-                display: 'block',
-                minWidth: '200px'
-              }}
-            >
-              <button
-                className="dropdown-item"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setOpenImprimirDropdown(false);
-                  await handlePrint();
-                }}
-                disabled={isGeneratingPdf}
-                style={{ display: 'block', width: '100%', textAlign: 'left' }}
-              >
-                Visualizar
-              </button>
-              <button
-                className="dropdown-item"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setOpenImprimirDropdown(false);
-                  await handleDownload();
-                }}
-                disabled={isGeneratingPdf}
-                style={{ display: 'block', width: '100%', textAlign: 'left' }}
-              >
-                Baixar PDF
-              </button>
-            </div>
+          {showImprimirDropdown && (
+            <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
+              {tipo === 'contrato' ? (
+                <>
+                  <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('contrato'); }} disabled={isGeneratingPdf}>Modelo Contrato</button></li>
+                  <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('adesao'); }} disabled={isGeneratingPdf}>Termo Adesão</button></li>
+                  <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint('permanencia'); }} disabled={isGeneratingPdf}>Contrato Permanência</button></li>
+                </>
+              ) : (
+                <li><button className="dropdown-item" type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowImprimirDropdown(false); handlePrint(); }} disabled={isGeneratingPdf}>{getTipoLabel(tipo)}</button></li>
+              )}
+            </ul>
           )}
         </div>
       )}
       
-      <button
-        type="button"
-        className="btn btn-primary btn-sm"
-        onClick={handleSubmit}
-        disabled={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}
-      >
-        {(createDocumentoMutation.isPending || updateDocumentoMutation.isPending) ? 'Salvando...' : 'Salvar'}
+      <button type="button" className="btn btn-primary btn-sm" onClick={handleSubmit} disabled={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}>
+        Salvar
       </button>
-      <button
-        type="button"
-        className="btn btn-secondary btn-sm"
-        onClick={handleClose}
-      >
+      <button type="button" className="btn btn-secondary btn-sm" onClick={handleClose}>
         Cancelar
       </button>
     </div>
@@ -631,43 +335,18 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 
   return (
     <>
-      <DraggableModal
-        show={show}
-        onClose={handleClose}
-        title={`${isEditing ? 'Editar' : 'Novo'} ${getTipoLabel(tipo)}`}
-        size="xl"
-        headerActions={headerActions}
-      >
-        <div className="p-2">
+      <DraggableModal show={show} onClose={handleClose} title={`${isEditing ? 'Editar' : 'Novo'} ${getTipoLabel(tipo)}`} size="xl" headerActions={headerActions}>
+        <div className="p-3">
           <form onSubmit={handleSubmit}>
-            {/* Campos superiores em linha única */}
-            <div className="row g-2 mb-2">
+            <div className="row g-2 mb-3">
               <div className="col-md-6">
-                <FormField
-                  name="nome"
-                  type="text"
-                  label="Nome"
-                  value={formData.nome}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, nome: e.value }))}
-                  placeholder={isEditing ? undefined : `Ex: ${getTipoLabel(tipo)} Padrão`}
-                  required
-                  size="sm"
-                />
+                <FormField name="nome" type="text" label="Nome" value={formData.nome} onChange={(value) => setFormData(prev => ({ ...prev, nome: value }))} placeholder={isEditing ? undefined : `Ex: ${getTipoLabel(tipo)} Padrão`} required size="sm" />
               </div>
               <div className="col-md-6">
-                <FormField
-                  name="descricao"
-                  type="text"
-                  label="Descrição"
-                  value={formData.descricao}
-                  onChange={(e: any) => setFormData(prev => ({ ...prev, descricao: e.value }))}
-                  placeholder="Breve descrição"
-                  size="sm"
-                />
+                <FormField name="descricao" type="text" label="Descrição" value={formData.descricao} onChange={(value) => setFormData(prev => ({ ...prev, descricao: value }))} placeholder="Breve descrição" size="sm" />
               </div>
             </div>
 
-            {/* Editor de conteúdo - ocupa todo o espaço restante */}
             <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <span id="conteudo-label" className="form-label small mb-0">
@@ -675,35 +354,16 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                 </span>
               </div>
               
-              {/* Abas para contratos */}
               {tipo === 'contrato' && (
                 <ul className="nav nav-tabs mb-2" role="tablist">
                   <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
-                      type="button"
-                      onClick={() => setActiveTab('contrato')}
-                    >
-                      Modelo Contrato
-                    </button>
+                    <button className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('contrato')}>Modelo Contrato</button>
                   </li>
                   <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link ${activeTab === 'adesao' ? 'active' : ''}`}
-                      type="button"
-                      onClick={() => setActiveTab('adesao')}
-                    >
-                      Termo Adesão
-                    </button>
+                    <button className={`nav-link ${activeTab === 'adesao' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('adesao')}>Termo Adesão</button>
                   </li>
                   <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link ${activeTab === 'permanencia' ? 'active' : ''}`}
-                      type="button"
-                      onClick={() => setActiveTab('permanencia')}
-                    >
-                      Contrato Permanência
-                    </button>
+                    <button className={`nav-link ${activeTab === 'permanencia' ? 'active' : ''}`} type="button" onClick={() => setActiveTab('permanencia')}>Contrato Permanência</button>
                   </li>
                 </ul>
               )}
@@ -725,21 +385,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         </div>
       </DraggableModal>
 
-      {/* Modal de impressão (apenas para edição) */}
       {isEditing && (
-        <ImprimirModal
-          show={showPreview}
-          onClose={() => {
-            setShowPreview(false);
-            if (pdfUrl) {
-              window.URL.revokeObjectURL(pdfUrl);
-              setPdfUrl(null);
-            }
-          }}
-          pdfUrl={pdfUrl}
-          title="Visualizar Documento"
-          modalId="documento-imprimir-modal"
-        />
+        <ImprimirModal show={showPreview} onClose={() => { setShowPreview(false); if (pdfUrl) { window.URL.revokeObjectURL(pdfUrl); setPdfUrl(null); } }} pdfUrl={pdfUrl} title="Visualizar Documento" modalId="documento-imprimir-modal" />
       )}
     </>
   );
