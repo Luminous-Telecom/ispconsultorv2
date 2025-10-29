@@ -36,54 +36,29 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         render: (item: RotinaAgendada) => <span>{item.id}</span>
       },
       {
-        key: 'nome',
-        label: 'Nome',
-        sortable: true,
-        render: (item: RotinaAgendada) => <strong>{item.nome}</strong>
-      },
-      {
         key: 'tipo',
         label: 'Tipo',
         sortable: true,
-        render: (item: RotinaAgendada) => {
-          const tipos: Record<string, string> = {
-            'envio_boletos': 'Envio de Boletos',
-            'remessa_bancaria': 'Remessa Bancária',
-            'verificar_vencimentos': 'Verificar Vencimentos',
-          };
-          return <span className="badge bg-info">{tipos[item.tipo] || item.tipo}</span>;
-        }
+        render: (item: RotinaAgendada) => (
+          <span className="badge bg-info">{item.tipo.replace(/_/g, ' ')}</span>
+        )
       },
       {
         key: 'frequencia',
         label: 'Frequência',
         sortable: true,
-        render: (item: RotinaAgendada) => {
-          const frequencias: Record<string, string> = {
-            'diaria': 'Diária',
-            'semanal': 'Semanal',
-            'mensal': 'Mensal',
-          };
-          return frequencias[item.frequencia] || item.frequencia;
-        }
+        render: (item: RotinaAgendada) => item.frequencia
       },
       {
         key: 'hora_execucao',
         label: 'Horário',
         sortable: true,
-        render: (item: RotinaAgendada) => {
-          if (!item.hora_execucao) return '-';
-          const [hour, minute] = item.hora_execucao.split(':');
-          return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
-        }
+        render: (item: RotinaAgendada) => item.hora_execucao || '-'
       },
       {
         key: 'proxima_execucao',
         label: 'Próxima Execução',
-        render: (item: RotinaAgendada) => {
-          if (!item.proxima_execucao) return '-';
-          return new Date(item.proxima_execucao).toLocaleString('pt-BR');
-        }
+        render: (item: RotinaAgendada) => item.proxima_execucao ? new Date(item.proxima_execucao).toLocaleString('pt-BR') : '-'
       },
       {
         key: 'ativo',
@@ -99,47 +74,35 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         key: 'total_execucoes',
         label: 'Execuções',
         sortable: true,
-        render: (item: RotinaAgendada) => item.total_execucoes || 0
+        render: (item: RotinaAgendada) => item.total_execucoes
       },
       {
         key: 'execucoes_com_erro',
         label: 'Erros',
         sortable: true,
-        render: (item: RotinaAgendada) => item.execucoes_com_erro || 0
+        render: (item: RotinaAgendada) => item.execucoes_com_erro
       }
     ],
-    searchPlaceholder: 'Buscar por nome, tipo ou descrição...',
+    searchPlaceholder: 'Buscar por tipo ou descrição...',
     multiSelect: false
   });
 
   const { data: rotinasData, isLoading, refetch } = useQuery({
     queryKey: ['agendador-tarefas'],
-    queryFn: async () => {
-      const response = await SchedulerService.getRotinas({
-        page: 1,
-        limit: 1000,
-      });
-      return response;
-    },
+    queryFn: () => SchedulerService.getRotinas({ page: 1, limit: 1000 }),
     enabled: show,
   });
 
   const filteredRotinas = useMemo(() => {
     if (!rotinasData?.data) return [];
+    if (!search) return rotinasData.data;
     
-    let filtered = [...rotinasData.data];
-    
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(r => 
-        r.nome?.toLowerCase().includes(searchLower) ||
-        r.id?.toString().includes(searchLower) ||
-        r.tipo?.toLowerCase().includes(searchLower) ||
-        r.descricao?.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    return filtered;
+    const searchLower = search.toLowerCase();
+    return rotinasData.data.filter(r => 
+      r.id?.toString().includes(searchLower) ||
+      r.tipo?.toLowerCase().includes(searchLower) ||
+      r.descricao?.toLowerCase().includes(searchLower)
+    );
   }, [rotinasData, search]);
 
   const paginatedRotinas = useMemo(() => {
@@ -159,7 +122,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   const handleToggle = async (rotina: RotinaAgendada) => {
     try {
       await SchedulerService.toggleRotina(rotina.id, !rotina.ativo);
-      refetch();
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
     } catch (error: any) {
       alert(`Erro ao atualizar status: ${error?.response?.data?.message || 'Erro desconhecido'}`);
@@ -167,12 +129,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   };
 
   const handleExecute = async (rotina: RotinaAgendada) => {
-    if (!window.confirm(`Deseja executar a rotina "${rotina.nome}" agora?`)) {
-      return;
-    }
+    if (!window.confirm('Deseja executar a rotina agora?')) return;
     try {
       await SchedulerService.executeRotina(rotina.id);
-      refetch();
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
     } catch (error: any) {
       alert(`Erro ao executar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
@@ -180,12 +139,9 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   };
 
   const handleDelete = async (rotina: RotinaAgendada) => {
-    if (!window.confirm(`Tem certeza que deseja deletar a rotina "${rotina.nome}"?`)) {
-      return;
-    }
+    if (!window.confirm('Tem certeza que deseja deletar esta rotina?')) return;
     try {
       await SchedulerService.deleteRotina(rotina.id);
-      refetch();
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
     } catch (error: any) {
       alert(`Erro ao deletar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
@@ -212,7 +168,6 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     setShowEditModal(false);
     setSelectedRotinaId(null);
     clearSelection();
-    refetch();
     queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
   };
 
@@ -232,25 +187,19 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       label: 'Executar',
       variant: 'primary' as const,
       disabled: () => !selectedItem,
-      action: () => {
-        if (selectedItem) handleExecute(selectedItem);
-      }
+      action: () => selectedItem && handleExecute(selectedItem)
     },
     {
       label: 'Desativar',
       variant: 'secondary' as const,
       disabled: () => !selectedItem || !selectedItem.ativo,
-      action: () => {
-        if (selectedItem) handleToggle(selectedItem);
-      }
+      action: () => selectedItem && handleToggle(selectedItem)
     },
     {
       label: 'Excluir',
       variant: 'danger' as const,
       disabled: () => !selectedItem,
-      action: () => {
-        if (selectedItem) handleDelete(selectedItem);
-      }
+      action: () => selectedItem && handleDelete(selectedItem)
     }
   ];
 
