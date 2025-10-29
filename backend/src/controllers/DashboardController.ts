@@ -3,6 +3,7 @@ import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { Titulo } from '../models/Titulo';
+import { Contrato } from '../models/Contrato';
 import { Op } from 'sequelize';
 
 export class DashboardController {
@@ -10,16 +11,24 @@ export class DashboardController {
   static async getDashboardData(req: Request, res: Response): Promise<void> {
     try {
       // Buscar todas as estatísticas e dados em paralelo
-      const [statsData, titulosRecentes, titulosVencidos] = await Promise.all([
+      const [statsData, titulosRecentes, titulosVencidos, clientes, planos, contratos, titulos] = await Promise.all([
         DashboardController.getStatsData(),
         DashboardController.getTitulosRecentesData(5),
-        DashboardController.getTitulosVencidosData(10)
+        DashboardController.getTitulosVencidosData(10),
+        Cliente.findAll({ attributes: ['id', 'ativo', 'created_at'] }),
+        Plano.findAll({ attributes: ['id', 'status', 'nome_plano', 'tipo_servico'] }),
+        Contrato.findAll({ attributes: ['id', 'status', 'plano_id', 'valor_final', 'data_inicio', 'data_fim', 'created_at'] }),
+        Titulo.findAll({ attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'] })
       ]);
 
       const dashboardData = {
         stats: statsData,
         titulosRecentes,
         titulosVencidos,
+        clientes: clientes.map(c => c.toJSON()),
+        planos: planos.map(p => p.toJSON()),
+        contratos: contratos.map(c => c.toJSON()),
+        titulos: titulos.map(t => t.toJSON()),
         receitaUltimosMeses: {
           labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
           data: [0, 0, 0, 0, 0, 0] // Placeholder - pode ser implementado depois

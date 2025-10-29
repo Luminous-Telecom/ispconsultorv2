@@ -1,9 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ClienteService } from '../../services/clienteService';
-import { PlanoService } from '../../services/planoService';
-import { ContratoService } from '../../services/ContratoService';
-import { TituloService } from '../../services/tituloService';
 import { useDashboard } from '../../hooks/useDashboard';
 
 // Componente para gráfico de linha temporal com Canvas
@@ -147,37 +142,14 @@ const Dashboard: React.FC = () => {
     setHiddenContratos(newHidden);
   };
 
-  // Queries para buscar dados
+  // Query única para buscar todos os dados do dashboard
   const { data: dashboardData, isLoading: loadingDashboard } = useDashboard();
-  
-  const { data: clientesData, isLoading: loadingClientes } = useQuery({
-    queryKey: ['clientes-dashboard'],
-    queryFn: () => ClienteService.list({ limit: 1000 }),
-    placeholderData: (previousData) => previousData,
-  });
 
-  const { data: planosData, isLoading: loadingPlanos } = useQuery({
-    queryKey: ['planos-dashboard'],
-    queryFn: () => PlanoService.list({ limit: 1000 }),
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: contratosData, isLoading: loadingContratos } = useQuery({
-    queryKey: ['contratos-dashboard'],
-    queryFn: () => ContratoService.list({ limit: 1000 }),
-    placeholderData: (previousData) => previousData,
-  });
-
-  const { data: titulosData } = useQuery({
-    queryKey: ['titulos-dashboard'],
-    queryFn: () => TituloService.list({ limit: 1000 }),
-  });
-
-  // Processar dados
-  const clientes = clientesData?.data || [];
-  const planos = planosData?.data || [];
-  const contratos = contratosData?.data || [];
-  const titulos = titulosData?.data || [];
+  // Processar dados vindos do backend
+  const clientes = dashboardData?.clientes || [];
+  const planos = dashboardData?.planos || [];
+  const contratos = dashboardData?.contratos || [];
+  const titulos = dashboardData?.titulos || [];
   const stats = dashboardData?.stats;
 
   // Estatísticas de clientes
@@ -202,14 +174,11 @@ const Dashboard: React.FC = () => {
   const receitaPendente = stats?.valorTotalReceber || 0;
 
   // Métricas adicionais (usando dados reais quando disponíveis)
-  // Ticket médio = valor total de todas as vendas / clientes ativos
-  const valorTotalVendas = titulos.reduce((sum, titulo) => {
-    const valor = parseFloat(String(titulo.valor)) || 0;
-    return sum + valor;
-  }, 0);
-  const ticketMedio = clientesAtivos > 0 ? valorTotalVendas / clientesAtivos : 0;
+  // Ticket médio = valor total recebido / clientes ativos
+  const ticketMedio = clientesAtivos > 0 ? receitaPaga / clientesAtivos : 0;
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
+
 
   // Faturamento mensal (últimos 12 meses)
   const getFaturamentoMensal = () => {
@@ -220,29 +189,11 @@ const Dashboard: React.FC = () => {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const mesAno = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
       
-      // Calcular faturamento real do mês baseado nos contratos ativos
       const faturamentoMes = contratos
-        .filter(contrato => {
-          if (contrato.status !== 'ativo') return false;
-          const dataInicio = contrato.data_inicio ? new Date(contrato.data_inicio) : null;
-          const dataFim = contrato.data_fim ? new Date(contrato.data_fim) : null;
-          
-          // Se já começou e não terminou, ou começou neste mês
-          const jaComecou = !dataInicio || dataInicio <= data;
-          const naoTerminou = !dataFim || dataFim >= new Date(data.getFullYear(), data.getMonth() + 1, 0);
-          
-          return jaComecou && naoTerminou;
-        })
-        .reduce((total, contrato) => {
-          const valor = parseFloat(String(contrato.valor_final || contrato.plano?.valor_mensal || 0));
-          return total + valor;
-        }, 0);
+        .filter(c => c.status === 'ativo' && (!c.data_inicio || new Date(c.data_inicio) <= data) && (!c.data_fim || new Date(c.data_fim) >= data))
+        .reduce((total, c) => total + (parseFloat(String(c.valor_final || 0))), 0);
       
-      meses.push({
-        mes: mesAno,
-        valor: faturamentoMes,
-        color: i === 11 ? '#28a745' : '#6c757d'
-      });
+      meses.push({ mes: mesAno, valor: faturamentoMes, color: i === 11 ? '#28a745' : '#6c757d' });
     }
     
     return meses;
@@ -272,14 +223,19 @@ const Dashboard: React.FC = () => {
     return meses;
   };
 
-  // Status de pagamento dos carnês
+  // Status de pagamento dos títulos
   const getStatusPagamento = () => {
+    const titulosPagos = titulos.filter(t => t.status === 'pago').length;
+    const titulosPendentes = titulos.filter(t => t.status === 'pendente').length;
+    const titulosVencidosCount = titulos.filter(t => t.status === 'vencido').length;
+    const titulosCancelados = titulos.filter(t => t.status === 'cancelado').length;
+    
     return [
-      { label: 'Pagos', value: 0, color: '#28a745' },
-      { label: 'Pendentes', value: 0, color: '#17a2b8' },
-      { label: 'Vencidos', value: 0, color: '#ffc107' },
-      { label: 'Cancelados', value: 0, color: '#dc3545' }
-    ];
+      { label: 'Pagos', value: titulosPagos, color: '#28a745' },
+      { label: 'Pendentes', value: titulosPendentes, color: '#17a2b8' },
+      { label: 'Vencidos', value: titulosVencidosCount, color: '#ffc107' },
+      { label: 'Cancelados', value: titulosCancelados, color: '#dc3545' }
+    ].filter(item => item.value > 0);
   };
 
   // Distribuição por tipo de plano
@@ -298,15 +254,6 @@ const Dashboard: React.FC = () => {
     }));
   };
 
-  // Métricas adicionais (simuladas)
-  const getMetricasAdicionais = () => {
-    return {
-      totalParcelas: 0,
-      parcelasPagas: 0,
-      parcelasPendentes: 0,
-      taxaPagamentoParcelas: 0
-    };
-  };
 
   // Análise de clientes por plano
   const getClientesPorPlano = () => {
@@ -328,40 +275,7 @@ const Dashboard: React.FC = () => {
     })).sort((a, b) => b.value - a.value);
   };
 
-  // Crescimento de receita (últimos 6 meses)
-  const getCrescimentoReceita = () => {
-    const meses = [];
-    const hoje = new Date();
-    
-    for (let i = 5; i >= 0; i--) {
-      const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-      const mesAno = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-      
-      const receitaMes = 0; // Simulado
-      
-      meses.push({
-        mes: mesAno,
-        valor: receitaMes,
-        color: i === 5 ? '#28a745' : '#6c757d'
-      });
-    }
-    
-    return meses;
-  };
 
-  // Métricas de performance (simuladas)
-  const getMetricasPerformance = () => {
-    const totalBoletos = 0;
-    const boletosVencidos = 0;
-    
-    const taxaInadimplencia = totalBoletos > 0 ? (boletosVencidos / totalBoletos) * 100 : 0;
-    
-    return {
-      totalBoletos,
-      boletosVencidos,
-      taxaInadimplencia
-    };
-  };
 
   // Dados para gráficos
   const clientesChartData = [
@@ -512,7 +426,7 @@ const Dashboard: React.FC = () => {
     return <LineChart data={data} title={title} format={format} />;
   };
 
-  if (loadingDashboard || loadingClientes || loadingPlanos || loadingContratos) {
+  if (loadingDashboard) {
     return (
       <div className="dashboard-container">
         <div className="text-center">
@@ -565,15 +479,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Gráficos de Valor */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
-          </div>
-        </div>
-      </div>
-
       {/* Gráficos Temporais */}
       <div className="row g-2 mb-2">
         <div className="col-xl-6 col-lg-6">
@@ -589,10 +494,14 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-
-
-      {/* Gráficos de Valores e Performance */}
+      {/* Gráficos de Valor e Performance */}
       <div className="row g-2 mb-2">
+        <div className="col-xl-6 col-lg-6">
+          <div className="chart-card">
+            {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
+          </div>
+        </div>
+
         <div className="col-xl-6 col-lg-6">
           <div className="chart-card">
             {renderBarChart(getClientesPorPlano(), 'Clientes por Plano', 'number')}

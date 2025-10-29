@@ -21,8 +21,12 @@ export interface DashboardChart {
 
 export interface DashboardData {
   stats: DashboardStats;
-  carnesRecentes: any[];
-  parcelasVencidas: any[];
+  titulosRecentes: any[];
+  titulosVencidos: any[];
+  clientes: any[];
+  planos: any[];
+  contratos: any[];
+  titulos: any[];
   receitaUltimosMeses: DashboardChart;
   clientesPorStatus: DashboardChart;
 }
@@ -31,8 +35,8 @@ export class DashboardService {
   // Buscar dados do dashboard
   static async getDashboardData(): Promise<DashboardData> {
     try {
-      const response = await apiService.get<DashboardData>('/dashboard');
-      return response;
+      const response = await apiService.get<{ success: boolean; data: DashboardData }>('/dashboard');
+      return response.data;
     } catch (error) {
       console.error('Erro ao buscar dados do dashboard:', error);
       throw error;
