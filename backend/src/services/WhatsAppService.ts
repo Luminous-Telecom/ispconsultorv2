@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { ServidorWhatsApp } from '../models/ServidorWhatsApp';
 import { MensagemWhatsApp } from '../models/MensagemWhatsApp';
 import { Titulo } from '../models/Titulo';
@@ -34,31 +35,17 @@ export class WhatsAppService {
       let mensagensEnviadas = 0;
       let erros = 0;
 
-      // Processar mensagens ANTES do vencimento
-      if (config.antesVencimento) {
-        for (const dias of config.antesVencimento) {
-          const tipo = `${String(dias).padStart(2, '0')}_dias_antes_vencimento`;
-          const resultado = await this.processarEnvio(mensagens, servidor, tipo, dias, 'antes');
-          mensagensEnviadas += resultado.enviadas;
-          erros += resultado.erros;
-        }
-      }
+      // Processar todas as configurações de envio
+      const envios = [
+        ...(config.antesVencimento?.map(dias => ({ dias, tipo: 'antes' as const, tipoMensagem: `${String(dias).padStart(2, '0')}_dias_antes_vencimento` })) || []),
+        ...(config.mesmoDia ? [{ dias: 0, tipo: 'mesmo' as const, tipoMensagem: 'mesmo_dia_vencimento' }] : []),
+        ...(config.depoisVencimento?.map(dias => ({ dias, tipo: 'depois' as const, tipoMensagem: `${String(dias).padStart(2, '0')}_dias_depois_vencimento` })) || [])
+      ];
 
-      // Processar MESMO DIA
-      if (config.mesmoDia) {
-        const resultado = await this.processarEnvio(mensagens, servidor, 'mesmo_dia_vencimento', 0, 'mesmo');
+      for (const envio of envios) {
+        const resultado = await this.processarEnvio(mensagens, servidor, envio.tipoMensagem, envio.dias, envio.tipo);
         mensagensEnviadas += resultado.enviadas;
         erros += resultado.erros;
-      }
-
-      // Processar mensagens DEPOIS do vencimento
-      if (config.depoisVencimento) {
-        for (const dias of config.depoisVencimento) {
-          const tipo = `${String(dias).padStart(2, '0')}_dias_depois_vencimento`;
-          const resultado = await this.processarEnvio(mensagens, servidor, tipo, dias, 'depois');
-          mensagensEnviadas += resultado.enviadas;
-          erros += resultado.erros;
-        }
       }
 
       return { sucesso: mensagensEnviadas > 0, mensagensEnviadas, erros };
@@ -80,27 +67,25 @@ export class WhatsAppService {
       return { enviadas: 0, erros: 0 };
     }
 
-    // Calcular data
+    // Calcular data de vencimento baseada no tipo
     const hoje = new Date();
-    const dataBusca = new Date();
+    hoje.setHours(0, 0, 0, 0);
     
+    const dataVencimento = new Date(hoje);
     if (tipo === 'antes') {
-      dataBusca.setDate(hoje.getDate() + dias);
+      dataVencimento.setDate(hoje.getDate() + dias);
     } else if (tipo === 'depois') {
-      dataBusca.setDate(hoje.getDate() - dias);
+      dataVencimento.setDate(hoje.getDate() - dias);
     }
     
-    dataBusca.setHours(0, 0, 0, 0);
-    const proximoDia = new Date(dataBusca);
+    const proximoDia = new Date(dataVencimento);
     proximoDia.setDate(proximoDia.getDate() + 1);
 
-    // Buscar títulos
-    const { Op } = await import('sequelize');
     const titulos = await Titulo.findAll({
       where: {
         status: 'pendente',
         pago: false,
-        data_vencimento: { [Op.gte]: dataBusca, [Op.lt]: proximoDia }
+        data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia }
       },
       include: [
         { model: Cliente, as: 'cliente', required: true },
@@ -108,36 +93,25 @@ export class WhatsAppService {
       ]
     });
 
-    logger.info(`Encontrados ${titulos.length} títulos para ${tipoMensagem}`);
-
     let enviadas = 0;
     let erros = 0;
 
-    // Enviar para cada título
     for (const titulo of titulos) {
       try {
-        const tituloData = titulo.get({ plain: true }) as any;
-        const cliente = tituloData.cliente as Cliente;
+        const cliente = (titulo.get({ plain: true }) as any).cliente as Cliente;
         
-      if (!cliente?.telefone) {
-        erros++;
-        continue;
-      }
+        if (!cliente?.telefone) {
+          erros++;
+          continue;
+        }
 
-        // Usar o serviço existente para processar variáveis
         const msg = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
           cliente,
           titulo,
           dataReferencia: new Date()
         });
 
-        let telefone = cliente.telefone.replace(/\D/g, '');
-        
-        // Adicionar código do país (55 = Brasil) se não tiver
-        if (!telefone.startsWith('55')) {
-          telefone = '55' + telefone;
-        }
-        
+        const telefone = this.formatarTelefone(cliente.telefone);
         const enviou = await this.enviarMensagem(servidor, telefone, msg);
         
         if (enviou) {
@@ -149,6 +123,7 @@ export class WhatsAppService {
           erros++;
         }
       } catch (error: unknown) {
+        logger.error(`Erro ao enviar boleto ${titulo.id}:`, error);
         erros++;
       }
     }
@@ -156,26 +131,42 @@ export class WhatsAppService {
     return { enviadas, erros };
   }
 
-  private static async enviarMensagem(servidor: ServidorWhatsApp, telefone: string, msg: string): Promise<boolean> {
+  private static formatarTelefone(telefone: string): string {
+    const apenasNumeros = telefone.replace(/\D/g, '');
+    return apenasNumeros.startsWith('55') ? apenasNumeros : `55${apenasNumeros}`;
+  }
+
+  private static getBaseUrl(servidor: ServidorWhatsApp): string {
+    return servidor.evolution_api_url.replace(/\/$/, '');
+  }
+
+  private static async fazerRequisicao(
+    url: string,
+    servidor: ServidorWhatsApp,
+    body: any
+  ): Promise<boolean> {
     try {
-      const baseUrl = servidor.evolution_api_url.replace(/\/$/, '');
-      const url = `${baseUrl}/message/sendText/${servidor.instance_name}`;
-      
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), servidor.timeout);
 
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': servidor.evolution_api_key },
-        body: JSON.stringify({ number: telefone, text: msg }),
+        body: JSON.stringify(body),
         signal: controller.signal
       });
 
       clearTimeout(timeout);
       return response.ok;
-    } catch (error: unknown) {
+    } catch {
       return false;
     }
+  }
+
+  private static async enviarMensagem(servidor: ServidorWhatsApp, telefone: string, msg: string): Promise<boolean> {
+    const baseUrl = this.getBaseUrl(servidor);
+    const url = `${baseUrl}/message/sendText/${servidor.instance_name}`;
+    return this.fazerRequisicao(url, servidor, { number: telefone, text: msg });
   }
 
   private static async enviarPdf(servidor: ServidorWhatsApp, telefone: string, urlBoleto: string): Promise<boolean> {
@@ -184,26 +175,15 @@ export class WhatsAppService {
       const buffer = await response.arrayBuffer();
       const base64 = Buffer.from(buffer).toString('base64');
 
-      const baseUrl = servidor.evolution_api_url.replace(/\/$/, '');
+      const baseUrl = this.getBaseUrl(servidor);
       const url = `${baseUrl}/message/sendMedia/${servidor.instance_name}`;
       
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), servidor.timeout);
-
-      const sendResponse = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': servidor.evolution_api_key },
-        body: JSON.stringify({
-          number: telefone,
-          mediatype: 'document',
-          media: `data:application/pdf;base64,${base64}`,
-          fileName: 'boleto.pdf'
-        }),
-        signal: controller.signal
+      return this.fazerRequisicao(url, servidor, {
+        number: telefone,
+        mediatype: 'document',
+        media: `data:application/pdf;base64,${base64}`,
+        fileName: 'boleto.pdf'
       });
-
-      clearTimeout(timeout);
-      return sendResponse.ok;
     } catch {
       return false;
     }

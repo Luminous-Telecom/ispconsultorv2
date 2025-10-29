@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
@@ -136,9 +135,6 @@ app.use(fileProtectionMiddleware);
 app.use(apiProtectionMiddleware);
 app.use(imageProtectionMiddleware);
 app.use(configProtectionMiddleware);
-
-// Middleware de logging
-app.use(morgan('combined'));
 
 // Servir arquivos estáticos (imagens, etc.)
 app.use('/images', express.static(path.join(__dirname, '../images')));

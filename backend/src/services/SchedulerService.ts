@@ -390,30 +390,28 @@ export class SchedulerService {
 
   private async executeEnvioBoletos(routine: ScheduledRoutine): Promise<any> {
     try {
-      const { WhatsAppService } = await import('./WhatsAppService');
+      const { EnvioBoletosRoutine } = await import('./routines/EnvioBoletosRoutine');
+      const envioBoletosRoutine = new EnvioBoletosRoutine();
       
-      // Dias antes do vencimento, mesmo dia e depois do vencimento
-      const configuracoes = {
-        antesVencimento: [10, 5], // 10 e 5 dias antes do vencimento
-        mesmoDia: true, // Mesmo dia do vencimento
-        depoisVencimento: [5, 10, 15] // 5, 10 e 15 dias depois do vencimento
-      };
+      // Ler configurações da rotina ou usar padrões
+      const config = routine.configuracao || {};
       
-      const resultado = await WhatsAppService.enviarBoletos(configuracoes);
+      const resultado = await envioBoletosRoutine.execute(config);
       
       return {
-        success: resultado.sucesso,
-        mensagens_enviadas: resultado.mensagensEnviadas,
-        erros: resultado.erros,
-        message: `Envio de boletos executado: ${resultado.mensagensEnviadas} mensagens enviadas, ${resultado.erros} erros`
+        success: resultado.success,
+        mensagens_enviadas: resultado.data.boletosEnviados,
+        erros: resultado.data.erros,
+        message: resultado.message
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao executar envio de boletos:', error);
       return {
         success: false,
         mensagens_enviadas: 0,
         erros: 1,
-        message: `Erro ao enviar boletos: ${error.message}`
+        message: `Erro ao enviar boletos: ${errorMessage}`
       };
     }
   }

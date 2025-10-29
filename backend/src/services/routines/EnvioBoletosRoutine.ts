@@ -1,14 +1,14 @@
-// TODO: Implementar quando os modelos Carne e CarneParcela estiverem disponíveis
+import { WhatsAppService } from '../WhatsAppService';
+import { logger } from '../../utils/logger';
+
 export interface EnvioBoletosConfig {
-  dias_antes_vencimento?: number; // Enviar X dias antes do vencimento (padrão: 5)
-  incluir_vencidos?: boolean; // Se deve incluir boletos vencidos
-  incluir_pagos?: boolean; // Se deve incluir boletos já pagos
-  clientes_ids?: number[]; // IDs específicos de clientes (opcional)
-  bancos_ids?: number[]; // IDs específicos de bancos (opcional)
+  antesVencimento?: number[]; // Array de dias antes do vencimento (ex: [10, 5])
+  mesmoDia?: boolean; // Enviar no mesmo dia do vencimento
+  depoisVencimento?: number[]; // Array de dias depois do vencimento (ex: [5, 10, 15])
 }
 
 export class EnvioBoletosRoutine {
-  async execute(_config: EnvioBoletosConfig): Promise<{
+  async execute(config: EnvioBoletosConfig = {}): Promise<{
     success: boolean;
     message: string;
     data: {
@@ -17,14 +17,39 @@ export class EnvioBoletosRoutine {
       erros: number;
     };
   }> {
-    return {
-      success: true,
-      message: 'Rotina de envio de boletos não implementada - modelos Carne e CarneParcela não disponíveis',
-      data: {
-        parcelasProcessadas: 0,
-        boletosEnviados: 0,
-        erros: 0
-      }
-    };
+    try {
+      // Usar configurações padrão se não fornecido ou vazio
+      const configuracoes = {
+        antesVencimento: (config?.antesVencimento?.length ?? 0) > 0 ? config.antesVencimento : [10, 5],
+        mesmoDia: config?.mesmoDia ?? true,
+        depoisVencimento: (config?.depoisVencimento?.length ?? 0) > 0 ? config.depoisVencimento : [5, 10, 15]
+      };
+
+      // Executar envio via WhatsAppService
+      const resultado = await WhatsAppService.enviarBoletos(configuracoes);
+
+      return {
+        success: resultado.sucesso,
+        message: `Envio de boletos executado: ${resultado.mensagensEnviadas} mensagens enviadas, ${resultado.erros} erros`,
+        data: {
+          parcelasProcessadas: resultado.mensagensEnviadas,
+          boletosEnviados: resultado.mensagensEnviadas,
+          erros: resultado.erros
+        }
+      };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao executar envio de boletos:', error);
+      
+      return {
+        success: false,
+        message: `Erro ao enviar boletos: ${errorMessage}`,
+        data: {
+          parcelasProcessadas: 0,
+          boletosEnviados: 0,
+          erros: 1
+        }
+      };
+    }
   }
 }
