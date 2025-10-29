@@ -238,7 +238,7 @@ Contrato.init(
       allowNull: true,
       comment: 'ID do modelo de contrato a ser utilizado',
       references: {
-        model: 'documentos_sistema',
+        model: 'modelo_contrato',
         key: 'id'
       }
     },

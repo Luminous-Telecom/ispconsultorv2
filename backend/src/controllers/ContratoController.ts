@@ -3,6 +3,7 @@ import { Contrato } from '../models/Contrato';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
+import { ModeloContrato } from '../models/ModeloContrato';
 import { Op } from 'sequelize';
 import * as Joi from 'joi';
 
@@ -211,6 +212,18 @@ export class ContratoController {
         }
       }
 
+      // Verificar se o modelo de contrato existe (se fornecido)
+      if (value.modelo_contrato_id) {
+        const modeloContrato = await ModeloContrato.findByPk(value.modelo_contrato_id);
+        if (!modeloContrato) {
+          res.status(404).json({
+            success: false,
+            message: 'Modelo de contrato não encontrado'
+          });
+          return;
+        }
+      }
+
       // Calcular valor_final se não fornecido
       if (!value.valor_final) {
         const plano = await Plano.findByPk(value.plano_id);
@@ -254,6 +267,18 @@ export class ContratoController {
           message: 'Já existe um contrato para este cliente, plano e data de início'
         });
         return;
+      }
+      
+      // Tratar erro de constraint de chave estrangeira
+      if (error instanceof Error && error.name === 'SequelizeForeignKeyConstraintError') {
+        const fkError = error as any;
+        if (fkError.table === 'modelo_contrato' || fkError.fields?.includes('modelo_contrato_id')) {
+          res.status(404).json({
+            success: false,
+            message: 'Modelo de contrato não encontrado'
+          });
+          return;
+        }
       }
       
       res.status(500).json({
@@ -335,6 +360,18 @@ export class ContratoController {
           res.status(404).json({
             success: false,
             message: 'Banco não encontrado'
+          });
+          return;
+        }
+      }
+
+      // Verificar se o modelo de contrato existe (se fornecido)
+      if (value.modelo_contrato_id) {
+        const modeloContrato = await ModeloContrato.findByPk(value.modelo_contrato_id);
+        if (!modeloContrato) {
+          res.status(404).json({
+            success: false,
+            message: 'Modelo de contrato não encontrado'
           });
           return;
         }
