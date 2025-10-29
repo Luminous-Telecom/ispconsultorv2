@@ -3,14 +3,8 @@ import { DiasVencimentoController } from '../controllers/DiasVencimentoControlle
 
 const router = Router();
 
-// Rotas para configuração de dias de vencimento
-router.get('/', DiasVencimentoController.get);
-router.post('/', DiasVencimentoController.create);
-router.put('/', DiasVencimentoController.update);
-router.get('/historico', DiasVencimentoController.list);
-
-// Rotas específicas para cálculos
-router.post('/calcular-proximo', DiasVencimentoController.calculateNextDueDate);
-router.post('/validar-data', DiasVencimentoController.validateDueDate);
+router.get('/', (req, res) => DiasVencimentoController.get(req, res));
+router.post('/', (req, res) => DiasVencimentoController.create(req, res));
+router.put('/', (req, res) => DiasVencimentoController.update(req, res));
 
 export default router;

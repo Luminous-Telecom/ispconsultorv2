@@ -2,41 +2,19 @@ import { apiService } from './api';
 
 export interface DiasVencimento {
   id: number;
+  dia?: number;
   dia_padrao: number;
-  dias_tolerancia: number;
-  percentual_multa: number;
-  juros_por_dia: number;
-  vence_sabado: boolean;
-  vence_domingo: boolean;
-  considera_feriados: boolean;
-  feriados_fixos?: string;
-  feriados_moveis?: string;
   ativo: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface UpdateDiasVencimento {
-  dia_padrao?: number;
-  dias_tolerancia?: number;
-  percentual_multa?: number;
-  juros_por_dia?: number;
-  vence_sabado?: boolean;
-  vence_domingo?: boolean;
-  considera_feriados?: boolean;
-  feriados_fixos?: string;
-  feriados_moveis?: string;
-  ativo?: boolean;
+  dias: number[];
 }
 
-export interface CreateDiasVencimento extends UpdateDiasVencimento {
-  dia_padrao: number;
-  dias_tolerancia: number;
-  percentual_multa: number;
-  juros_por_dia: number;
-  vence_sabado: boolean;
-  vence_domingo: boolean;
-  considera_feriados: boolean;
+export interface CreateDiasVencimento {
+  dias: number[];
 }
 
 export interface CalculateNextDueDateRequest {
@@ -49,18 +27,18 @@ export interface ValidateDueDateRequest {
 }
 
 export class DiasVencimentoService {
-  static async get(): Promise<{ success: boolean; data: DiasVencimento; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: DiasVencimento; message: string }>('/dias-vencimento');
+  static async get(): Promise<{ success: boolean; data: DiasVencimento[]; message: string }> {
+    const response = await apiService.get<any>('/dias-vencimento');
     return response;
   }
 
   static async create(data: CreateDiasVencimento): Promise<{ success: boolean; data: DiasVencimento; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: DiasVencimento; message: string }>('/dias-vencimento', data);
+    const response = await apiService.post<any>('/dias-vencimento', data);
     return response;
   }
 
   static async update(data: UpdateDiasVencimento): Promise<{ success: boolean; data: DiasVencimento; message: string }> {
-    const response = await apiService.put<{ success: boolean; data: DiasVencimento; message: string }>('/dias-vencimento', data);
+    const response = await apiService.put<any>('/dias-vencimento', data);
     return response;
   }
 
