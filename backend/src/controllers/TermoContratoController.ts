@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { TermoContrato } from '../models/TermoContrato';
 import { Contrato } from '../models/Contrato';
+import { ModeloTermo } from '../models/ModeloTermo';
 
 export class TermoContratoController {
   // Listar termos de um contrato específico
@@ -22,11 +23,12 @@ export class TermoContratoController {
         success: true,
         data: termos
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao buscar termos do contrato:', error);
       res.status(500).json({
         success: false,
-        message: 'Erro interno do servidor'
+        message: 'Erro interno do servidor',
+        error: error?.message || 'Unknown error'
       });
     }
   }
@@ -93,9 +95,21 @@ export class TermoContratoController {
         return;
       }
 
+      // Buscar o modelo de termo
+      const modeloTermo = await ModeloTermo.findByPk(modelo_termo_id);
+      if (!modeloTermo) {
+        res.status(404).json({
+          success: false,
+          message: 'Modelo de termo não encontrado'
+        });
+        return;
+      }
+
       const termo = await TermoContrato.create({
         contrato_id: parseInt(contratoId),
         modelo_termo_id: modelo_termo_id,
+        tipo_termo: modeloTermo.tipo_termo,
+        conteudo: modeloTermo.conteudo,
         assinado: assinado || 'NAO',
         ativo: true
       });

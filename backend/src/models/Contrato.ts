@@ -23,6 +23,7 @@ import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
 import { TermoContrato } from './TermoContrato';
+import { ModeloTermo } from './ModeloTermo';
 
 export class Contrato extends Model<
   InferAttributes<Contrato>,
@@ -136,9 +137,16 @@ export class Contrato extends Model<
   }
 
   async adicionarTermo(modeloTermoId: number, assinado: 'SIM' | 'NAO' = 'NAO'): Promise<TermoContrato> {
+    const modeloTermo = await ModeloTermo.findByPk(modeloTermoId);
+    if (!modeloTermo) {
+      throw new Error('Modelo de termo não encontrado');
+    }
+    
     return this.createTermo({
       contrato_id: this.id,
       modelo_termo_id: modeloTermoId,
+      tipo_termo: modeloTermo.tipo_termo,
+      conteudo: modeloTermo.conteudo,
       assinado: assinado,
       ativo: true
     });

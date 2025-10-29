@@ -10,6 +10,7 @@ import {
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Contrato } from './Contrato';
+import { ModeloTermo } from './ModeloTermo';
 
 export class TermoContrato extends Model<
   InferAttributes<TermoContrato>,
@@ -18,9 +19,12 @@ export class TermoContrato extends Model<
   declare id: CreationOptional<number>;
   declare contrato_id: number;
   declare modelo_termo_id: number | null;
+  declare tipo_termo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao';
+  declare conteudo: string;
   declare assinado: 'SIM' | 'NAO';
   declare data_aceite: Date | null;
   declare aceito_por: string | null;
+  declare observacoes: string | null;
   declare ativo: boolean;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -29,6 +33,10 @@ export class TermoContrato extends Model<
   declare getContrato: BelongsToGetAssociationMixin<Contrato>;
   declare setContrato: BelongsToSetAssociationMixin<Contrato, number>;
   declare createContrato: BelongsToCreateAssociationMixin<Contrato>;
+
+  declare getModeloTermo: BelongsToGetAssociationMixin<ModeloTermo>;
+  declare setModeloTermo: BelongsToSetAssociationMixin<ModeloTermo, number>;
+  declare createModeloTermo: BelongsToCreateAssociationMixin<ModeloTermo>;
 
   // Métodos de instância
   static async findByContrato(contratoId: number): Promise<TermoContrato[]> {
@@ -57,6 +65,7 @@ export class TermoContrato extends Model<
   async marcarComoAceito(aceitoPor: string): Promise<void> {
     this.data_aceite = new Date();
     this.aceito_por = aceitoPor;
+    this.assinado = 'SIM';
     await this.save();
   }
 }
@@ -84,6 +93,14 @@ TermoContrato.init(
         key: 'id'
       }
     },
+    tipo_termo: {
+      type: DataTypes.ENUM('adesao', 'permanencia', 'cancelamento', 'alteracao'),
+      allowNull: false
+    },
+    conteudo: {
+      type: DataTypes.TEXT('long'),
+      allowNull: false
+    },
     assinado: {
       type: DataTypes.ENUM('SIM', 'NAO'),
       allowNull: false,
@@ -95,6 +112,10 @@ TermoContrato.init(
     },
     aceito_por: {
       type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    observacoes: {
+      type: DataTypes.TEXT,
       allowNull: true
     },
     ativo: {
