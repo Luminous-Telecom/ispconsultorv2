@@ -3,8 +3,7 @@ import { useBancos, useDeleteBanco } from '../../../hooks/useBancos';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import ListModal from '../../common/ListModal';
-import BancoCreateModal from './BancoCreateModal';
-import BancoEditModal from './BancoEditModal';
+import BancoModal from './BancoModal';
 import { Banco } from '../../../types';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -25,8 +24,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showBancoModal, setShowBancoModal] = useState(false);
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
   
   // Usar hook customizado para gerenciar seleção
@@ -67,9 +65,27 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         key: 'tipo',
         label: 'Tipo',
         sortable: true,
+        render: (item: Banco) => {
+          const tipos: Record<string, string> = {
+            'efi': 'EFI',
+            'asaas': 'Asaas',
+            'bancario': 'Bancário',
+            'outros': 'Outros'
+          };
+          return (
+            <span className="badge bg-info">
+              {tipos[item.tipo_banco] || 'N/A'}
+            </span>
+          );
+        }
+      },
+      {
+        key: 'sandbox',
+        label: 'Sandbox',
+        sortable: true,
         render: (item: Banco) => (
-          <span className="badge bg-info">
-            {item.tipo === 'efi' ? 'EFI' : 'Asaas'}
+          <span className={`badge ${item.sandbox ? 'bg-warning' : 'bg-primary'}`}>
+            {item.sandbox ? 'Sim' : 'Não'}
           </span>
         )
       },
@@ -171,7 +187,10 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     {
       label: 'Novo',
       variant: 'primary' as const,
-      action: () => setShowCreateModal(true)
+      action: () => {
+        setSelectedBancoId(null);
+        setShowBancoModal(true);
+      }
     },
     {
       label: 'Editar',
@@ -180,7 +199,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       action: () => {
         if (selectedBanco) {
           setSelectedBancoId(selectedBanco.id);
-          setShowEditModal(true);
+          setShowBancoModal(true);
         }
       }
     },
@@ -222,27 +241,17 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         bulkActions={bulkActions}
       />
 
-      {/* Modal de Criação */}
-      <BancoCreateModal
-        show={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={() => {
-          refetch();
-          setShowCreateModal(false);
-        }}
-      />
-
-      {/* Modal de Edição */}
-      <BancoEditModal
-        show={showEditModal}
+      {/* Modal Unificado (Criação e Edição) */}
+      <BancoModal
+        show={showBancoModal}
         onClose={() => {
-          setShowEditModal(false);
+          setShowBancoModal(false);
           setSelectedBancoId(null);
         }}
         bancoId={selectedBancoId}
         onSuccess={() => {
           refetch();
-          setShowEditModal(false);
+          setShowBancoModal(false);
           setSelectedBancoId(null);
         }}
       />

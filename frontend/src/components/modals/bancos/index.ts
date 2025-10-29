@@ -1,2 +1,2 @@
-export { default as BancoCreateModal } from './BancoCreateModal';
+export { default as BancoModal } from './BancoModal';
 export { default as BancoListModal } from './BancoListModal';

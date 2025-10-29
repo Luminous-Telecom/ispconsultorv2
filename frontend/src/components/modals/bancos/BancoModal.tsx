@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
@@ -48,79 +48,25 @@ interface BancoForm {
   instrucao_linha_5: string;
 }
 
-interface BancoEditModalProps {
+interface BancoModalProps {
   show: boolean;
   onClose: () => void;
-  bancoId: number | null;
+  bancoId?: number | null;
   onSuccess?: () => void;
 }
 
-const BancoEditModal: React.FC<BancoEditModalProps> = ({ 
+const BancoModal: React.FC<BancoModalProps> = ({ 
   show, 
   onClose, 
   bancoId,
   onSuccess 
 }) => {
-  const formPrefix = useFormPrefix('BancoEditModal');
-  const [formData, setFormData] = useState<BancoForm>({
-    nome: '',
-    codigo: '',
-    descricao: '',
-    ativo: true,
-    tipo_banco: 'efi',
-    api_url: '',
-    api_key: '',
-    api_secret: '',
-    sandbox: true,
-    identificador_conta: '',
-    client_id_producao: '',
-    client_secret_producao: '',
-    url_retorno: `${window.location.origin}/webhook/efi`,
-    repassar_email_cliente: false,
-    percentual_multa: 0,
-    percentual_juros: 0,
-    desconto_tipo: '',
-    desconto_valor: 0,
-    contra_apresentacao: false,
-    recalcular_segunda_via: false,
-    maximo_dias_recalcular: 0,
-    layout_web: '',
-    layout_pdf: '',
-    layout_carne: '',
-    local_pagamento: '',
-    dados_avalista: '',
-    exibir_mes_referente: false,
-    taxa_cobranca: 0,
-    incluir_taxa: false,
-    observacao_linha_1: '',
-    observacao_linha_2: '',
-    observacao_linha_3: '',
-    observacao_linha_4: '',
-    instrucao_linha_1: '',
-    instrucao_linha_2: '',
-    instrucao_linha_3: '',
-    instrucao_linha_4: '',
-    instrucao_linha_5: '',
-  });
-
-  const [errors, setErrors] = useState<Partial<BancoForm>>({});
-  const [testResult, setTestResult] = useState<string>('');
-  const { success, error } = useNotificationContext();
-  const queryClient = useQueryClient();
-
-  // Query para buscar dados do banco
-  const { data: banco, isLoading } = useQuery({
-    queryKey: ['banco', bancoId],
-    queryFn: () => BancoService.getById(bancoId!),
-    enabled: !!bancoId,
-    staleTime: 60 * 1000,
-    refetchOnMount: false,
-  });
-
-  // Dados iniciais do formulário
+  const isEdit = !!bancoId;
+  const formPrefix = useFormPrefix(isEdit ? 'BancoEditModal' : 'BancoCreateModal');
+  
   const initialFormData: BancoForm = {
     nome: '',
-    codigo: '',
+    codigo: '364',
     descricao: '',
     ativo: true,
     tipo_banco: 'efi',
@@ -133,15 +79,15 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     client_secret_producao: '',
     url_retorno: `${window.location.origin}/webhook/efi`,
     repassar_email_cliente: false,
-    percentual_multa: 0,
-    percentual_juros: 0,
-    desconto_tipo: '',
+    percentual_multa: 2,
+    percentual_juros: 0.03,
+    desconto_tipo: 'fixo',
     desconto_valor: 0,
     contra_apresentacao: false,
     recalcular_segunda_via: false,
     maximo_dias_recalcular: 0,
-    layout_web: '',
-    layout_pdf: '',
+    layout_web: 'normal',
+    layout_pdf: 'normal',
     layout_carne: '',
     local_pagamento: '',
     dados_avalista: '',
@@ -159,8 +105,23 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     instrucao_linha_5: '',
   };
 
-  // Dados customizados do banco (quando editando)
-  const customFormData = useMemo(() => banco ? {
+  const [formData, setFormData] = useState<BancoForm>(initialFormData);
+  const [errors, setErrors] = useState<Partial<BancoForm>>({});
+  const [testResult, setTestResult] = useState<string>('');
+  const { success, error } = useNotificationContext();
+  const queryClient = useQueryClient();
+
+  // Query para buscar dados do banco (apenas em modo edição)
+  const { data: banco, isLoading } = useQuery({
+    queryKey: ['banco', bancoId],
+    queryFn: () => BancoService.getById(bancoId!),
+    enabled: isEdit && !!bancoId,
+    staleTime: 60 * 1000,
+    refetchOnMount: false,
+  });
+
+  // Converter banco para formato do formulário
+  const bankoFormData: BancoForm | undefined = banco ? {
     nome: banco.nome || '',
     codigo: banco.codigo || '',
     descricao: banco.descricao || '',
@@ -175,15 +136,15 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     client_secret_producao: banco.client_secret_producao || '',
     url_retorno: banco.url_retorno || `${window.location.origin}/webhook/efi`,
     repassar_email_cliente: banco.repassar_email_cliente ?? false,
-    percentual_multa: banco.percentual_multa || 0,
-    percentual_juros: banco.percentual_juros || 0,
-    desconto_tipo: banco.desconto_tipo || '',
+    percentual_multa: banco.percentual_multa || 2,
+    percentual_juros: banco.percentual_juros || 0.03,
+    desconto_tipo: banco.desconto_tipo || 'fixo',
     desconto_valor: banco.desconto_valor || 0,
     contra_apresentacao: banco.contra_apresentacao ?? false,
     recalcular_segunda_via: banco.recalcular_segunda_via ?? false,
     maximo_dias_recalcular: banco.maximo_dias_recalcular || 0,
-    layout_web: banco.layout_web || '',
-    layout_pdf: banco.layout_pdf || '',
+    layout_web: banco.layout_web || 'normal',
+    layout_pdf: banco.layout_pdf || 'normal',
     layout_carne: banco.layout_carne || '',
     local_pagamento: banco.local_pagamento || '',
     dados_avalista: banco.dados_avalista || '',
@@ -199,7 +160,7 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     instrucao_linha_3: banco.instrucao_linha_3 || '',
     instrucao_linha_4: banco.instrucao_linha_4 || '',
     instrucao_linha_5: banco.instrucao_linha_5 || '',
-  } : undefined, [banco]);
+  } : undefined;
 
   // Usar hook personalizado para reset do formulário
   useFormReset({
@@ -207,22 +168,30 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     initialData: initialFormData,
     setFormData,
     setErrors,
-    customData: banco ? customFormData : undefined
+    customData: bankoFormData
   });
 
   // Limpar resultado do teste quando o modal abre
   useEffect(() => {
     if (show) {
       setTestResult('');
+      setErrors({});
     }
   }, [show]);
 
-  // Atualizar formData quando banco for carregado
-  useEffect(() => {
-    if (banco && show && customFormData) {
-      setFormData(customFormData);
+  // Mutation para criar banco
+  const createBancoMutation = useMutation({
+    mutationFn: (data: BancoForm) => BancoService.create(data),
+    onSuccess: () => {
+      success('Banco criado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['bancos'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      onSuccess?.();
+    },
+    onError: (err: any) => {
+      error(err.response?.data?.message || 'Erro ao criar banco');
     }
-  }, [banco, show, customFormData]);
+  });
 
   // Mutation para atualizar banco
   const updateBancoMutation = useMutation({
@@ -231,19 +200,37 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       success('Banco atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
       queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onSuccess?.();
-      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao atualizar banco');
     }
   });
 
+  const isPending = createBancoMutation.isPending || updateBancoMutation.isPending;
+
   const handleInputChange = (field: keyof BancoForm, value: string | boolean | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Atualizar código e url_retorno quando tipo_banco mudar
+      if (field === 'tipo_banco' && !isEdit) {
+        const codigos: Record<string, string> = {
+          'efi': '364',
+          'asaas': '461',
+          'bancario': '',
+          'outros': ''
+        };
+        newData.codigo = codigos[value as string] || '';
+        newData.url_retorno = `${window.location.origin}/webhook/${value}`;
+      }
+      
+      return newData;
+    });
 
     if (errors[field]) {
       setErrors(prev => ({
@@ -257,7 +244,6 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     const newErrors: Partial<BancoForm> = {};
 
     if (!formData.nome.trim()) newErrors.nome = 'Nome é obrigatório';
-    if (!formData.codigo.trim()) newErrors.codigo = 'Código é obrigatório';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -270,57 +256,23 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       return;
     }
 
-    updateBancoMutation.mutate(formData);
+    if (isEdit) {
+      updateBancoMutation.mutate(formData);
+    } else {
+      createBancoMutation.mutate(formData);
+    }
   };
 
   const handleCancel = () => {
     setErrors({});
-    setFormData({
-      nome: '',
-      codigo: '',
-      descricao: '',
-      ativo: true,
-      tipo_banco: 'efi',
-      api_url: '',
-      api_key: '',
-      api_secret: '',
-      sandbox: true,
-      identificador_conta: '',
-      client_id_producao: '',
-      client_secret_producao: '',
-      url_retorno: `${window.location.origin}/webhook/efi`,
-      repassar_email_cliente: false,
-      percentual_multa: 0,
-      percentual_juros: 0,
-      desconto_tipo: '',
-      desconto_valor: 0,
-      contra_apresentacao: false,
-      recalcular_segunda_via: false,
-      maximo_dias_recalcular: 0,
-      layout_web: '',
-      layout_pdf: '',
-      layout_carne: '',
-      local_pagamento: '',
-      dados_avalista: '',
-      exibir_mes_referente: false,
-      taxa_cobranca: 0,
-      incluir_taxa: false,
-      observacao_linha_1: '',
-      observacao_linha_2: '',
-      observacao_linha_3: '',
-      observacao_linha_4: '',
-      instrucao_linha_1: '',
-      instrucao_linha_2: '',
-      instrucao_linha_3: '',
-      instrucao_linha_4: '',
-      instrucao_linha_5: '',
-    });
+    setFormData(initialFormData);
+    setTestResult('');
     onClose();
   };
 
   const handleTestConnection = async () => {
     if (!bancoId) {
-      error('ID do banco não encontrado');
+      error('Salve o banco antes de testar a conexão');
       return;
     }
 
@@ -369,13 +321,13 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     label="Identificador da Conta"
                     placeholder="Disponibilizado no menu configurações da API"
                     required={true}
-                    size="md"
+                    size="sm"
                     value={formData.identificador_conta}
-                    onChange={(e: any) => handleInputChange('identificador_conta', e.value)}
-                    disabled={updateBancoMutation.isPending}
+                    onChange={(value) => handleInputChange('identificador_conta', value)}
+                    disabled={isPending}
                     autoComplete="off"
                   />
-                  <small className="text-secondary text-secondary">Disponível nas configurações da API Efi</small>
+                  <small className="text-secondary">Disponível nas configurações da API Efi</small>
                 </div>
               </div>
             </div>
@@ -388,10 +340,10 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     type="number"
                     label="Percentual de Multa (%)"
                     placeholder="2.00"
-                    size="md"
+                    size="sm"
                     value={formData.percentual_multa}
-                    onChange={(e: any) => handleInputChange('percentual_multa', parseFloat(e.value) || 0)}
-                    disabled={updateBancoMutation.isPending}
+                    onChange={(value) => handleInputChange('percentual_multa', parseFloat(value) || 0)}
+                    disabled={isPending}
                     step={0.01}
                   />
                 </div>
@@ -404,10 +356,10 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     type="number"
                     label="Percentual de Juros (% ao dia)"
                     placeholder="0.03"
-                    size="md"
+                    size="sm"
                     value={formData.percentual_juros}
-                    onChange={(e: any) => handleInputChange('percentual_juros', parseFloat(e.value) || 0)}
-                    disabled={updateBancoMutation.isPending}
+                    onChange={(value) => handleInputChange('percentual_juros', parseFloat(value) || 0)}
+                    disabled={isPending}
                     step={0.01}
                   />
                 </div>
@@ -422,10 +374,10 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     type="text"
                     label="Local de Pagamento"
                     placeholder="Pagável em qualquer banco até o vencimento"
-                    size="md"
+                    size="sm"
                     value={formData.local_pagamento}
-                    onChange={(e: any) => handleInputChange('local_pagamento', e.value)}
-                    disabled={updateBancoMutation.isPending}
+                    onChange={(value) => handleInputChange('local_pagamento', value)}
+                    disabled={isPending}
                   />
                 </div>
               </div>
@@ -445,13 +397,13 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     label="API Key"
                     placeholder="Sua chave da API Asaas"
                     required={true}
-                    size="md"
+                    size="sm"
                     value={formData.api_key}
-                    onChange={(e: any) => handleInputChange('api_key', e.value)}
-                    disabled={updateBancoMutation.isPending}
+                    onChange={(value) => handleInputChange('api_key', value)}
+                    disabled={isPending}
                     autoComplete="off"
                   />
-                  <small className="text-secondary text-secondary">Disponível no painel administrativo da Asaas</small>
+                  <small className="text-secondary">Disponível no painel administrativo da Asaas</small>
                 </div>
               </div>
             </div>
@@ -464,10 +416,10 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     type="number"
                     label="Taxa de Cobrança (R$)"
                     placeholder="0.00"
-                    size="md"
+                    size="sm"
                     value={formData.taxa_cobranca}
-                    onChange={(e: any) => handleInputChange('taxa_cobranca', parseFloat(e.value) || 0)}
-                    disabled={updateBancoMutation.isPending}
+                    onChange={(value) => handleInputChange('taxa_cobranca', parseFloat(value) || 0)}
+                    disabled={isPending}
                     step={0.01}
                   />
                 </div>
@@ -480,8 +432,8 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                     type="checkbox"
                     label="Incluir Taxa no Boleto"
                     value={formData.incluir_taxa}
-                    onChange={(e: any) => handleInputChange('incluir_taxa', e.value)}
-                    disabled={updateBancoMutation.isPending}
+                    onChange={(value) => handleInputChange('incluir_taxa', value)}
+                    disabled={isPending}
                     formPrefix={formPrefix}
                     switch={true}
                   />
@@ -496,13 +448,13 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
     }
   };
 
-  if (isLoading) {
+  if (isEdit && isLoading) {
     return (
       <DraggableModal
         show={show}
         onClose={onClose}
         title="Banco"
-        modalId="banco-edit-modal-loading"
+        modalId="banco-modal-loading"
       >
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
@@ -520,32 +472,32 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
       onClose={handleCancel}
       title="Banco"
       size="xl"
-      modalId="banco-edit-modal"
+      modalId="banco-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={handleCancel}
-            disabled={updateBancoMutation.isPending}
+            disabled={isPending}
           >
             Cancelar
           </button>
           <button
             type="submit"
-            form="banco-edit-form"
+            form="banco-form"
             className="btn btn-primary btn-sm"
-            disabled={updateBancoMutation.isPending}
+            disabled={isPending}
           >
             Salvar
           </button>
         </div>
       }
     >
-      <form id="banco-edit-form" onSubmit={handleSubmit}>
+      <form id="banco-form" onSubmit={handleSubmit} className="p-3">
         {/* Informações Básicas */}
-        <div className="mb-4">
-          <h6 className="border-bottom pb-2 mb-3">Informações Básicas</h6>
+        <div className="mb-3">
+          <h6 className="border-bottom pb-2 mb-2">Informações Básicas</h6>
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
@@ -555,15 +507,15 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                   label="Nome do Banco"
                   placeholder="Ex: EFI - Conta Principal"
                   required={true}
-                  size="md"
+                  size="sm"
                   value={formData.nome}
-                  onChange={(e: any) => handleInputChange('nome', e.value)}
+                  onChange={(value) => handleInputChange('nome', value)}
                   error={errors.nome}
                   isInvalid={!!errors.nome}
-                  disabled={updateBancoMutation.isPending}
+                  disabled={isPending}
                   autoComplete="organization"
                 />
-                <small className="text-secondary text-secondary">Nome para identificar esta conta do banco</small>
+                <small className="text-secondary">Nome para identificar esta conta do banco</small>
               </div>
             </div>
           </div>
@@ -577,27 +529,27 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                   label="Tipo de Banco"
                   size="sm"
                   value={formData.tipo_banco}
-                  onChange={(e: any) => handleInputChange('tipo_banco', e.value)}
-                  disabled={updateBancoMutation.isPending}
+                  onChange={(value) => handleInputChange('tipo_banco', value)}
+                  disabled={isPending}
                   formPrefix={formPrefix}
                   options={[
                     { value: 'efi', label: 'EFI (Código: 364)' },
                     { value: 'asaas', label: 'Asaas (Código: 461)' }
                   ]}
                 />
-                <small className="text-secondary text-secondary">Código do banco é definido automaticamente</small>
+                <small className="text-secondary">Código do banco é definido automaticamente</small>
               </div>
             </div>
 
             <div className="col-md-6">
-              <div className="mb-3">
+              <div className="mb-4">
                 <FormField
                   name="ativo"
                   type="checkbox"
                   label={formData.ativo ? 'Ativo' : 'Inativo'}
                   value={formData.ativo}
                   onChange={(value: any) => handleInputChange('ativo', value)}
-                  disabled={updateBancoMutation.isPending}
+                  disabled={isPending}
                   formPrefix={formPrefix}
                   switch={true}
                 />
@@ -605,24 +557,24 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
             </div>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-2">
             <FormField
               name="descricao"
               type="textarea"
               label="Descrição"
               placeholder="Descrição do banco..."
-              size="md"
+              size="sm"
               value={formData.descricao}
-              onChange={(e: any) => handleInputChange('descricao', e.value)}
-              disabled={updateBancoMutation.isPending}
+              onChange={(value) => handleInputChange('descricao', value)}
+              disabled={isPending}
               rows={3}
             />
           </div>
         </div>
 
         {/* Configurações da API */}
-        <div className="mb-4">
-          <h6 className="border-bottom pb-2 mb-3">Configurações da API</h6>
+        <div className="mb-3">
+          <h6 className="border-bottom pb-2 mb-2">Configurações da API</h6>
           
           {/* Campos comuns para EFI e ASAAS */}
           {(formData.tipo_banco === 'efi' || formData.tipo_banco === 'asaas') && (
@@ -630,37 +582,37 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
               <div className="row">
                 <div className="col-md-6">
                   <div className="mb-3">
-                      <FormField
-                        name="client_id_producao"
-                        type="text"
-                        label={formData.tipo_banco === 'efi' ? 'Client ID Produção' : 'Client ID'}
-                        placeholder="Client ID para produção"
-                        required={formData.tipo_banco === 'efi'}
-                        size="md"
-                        value={formData.client_id_producao}
-                        onChange={(e: any) => handleInputChange('client_id_producao', e.value)}
-                        disabled={updateBancoMutation.isPending}
-                        autoComplete="off"
-                        formPrefix={formPrefix}
-                      />
+                    <FormField
+                      name="client_id_producao"
+                      type="text"
+                      label={formData.tipo_banco === 'efi' ? 'Client ID Produção' : 'Client ID'}
+                      placeholder="Client ID para produção"
+                      required={formData.tipo_banco === 'efi'}
+                      size="sm"
+                      value={formData.client_id_producao}
+                      onChange={(value) => handleInputChange('client_id_producao', value)}
+                      disabled={isPending}
+                      autoComplete="off"
+                      formPrefix={formPrefix}
+                    />
                   </div>
                 </div>
 
                 <div className="col-md-6">
                   <div className="mb-3">
-                      <FormField
-                        name="client_secret_producao"
-                        type="password"
-                        label={formData.tipo_banco === 'efi' ? 'Client Secret Produção' : 'Client Secret'}
-                        placeholder="Client Secret para produção"
-                        required={formData.tipo_banco === 'efi'}
-                        size="md"
-                        value={formData.client_secret_producao}
-                        onChange={(e: any) => handleInputChange('client_secret_producao', e.value)}
-                        disabled={updateBancoMutation.isPending}
-                        autoComplete="off"
-                        formPrefix={formPrefix}
-                      />
+                    <FormField
+                      name="client_secret_producao"
+                      type="password"
+                      label={formData.tipo_banco === 'efi' ? 'Client Secret Produção' : 'Client Secret'}
+                      placeholder="Client Secret para produção"
+                      required={formData.tipo_banco === 'efi'}
+                      size="sm"
+                      value={formData.client_secret_producao}
+                      onChange={(value) => handleInputChange('client_secret_producao', value)}
+                      disabled={isPending}
+                      autoComplete="off"
+                      formPrefix={formPrefix}
+                    />
                   </div>
                 </div>
               </div>
@@ -668,19 +620,19 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
               <div className="row">
                 <div className="col-md-12">
                   <div className="mb-3">
-                      <FormField
-                        name="url_retorno"
-                        type="url"
-                        label="URL de Retorno (Webhook)"
-                        placeholder="URL para retorno de webhooks"
-                        size="md"
-                        value={formData.url_retorno}
-                        onChange={(e: any) => handleInputChange('url_retorno', e.value)}
-                        disabled={updateBancoMutation.isPending}
-                        autoComplete="url"
-                        formPrefix={formPrefix}
-                      />
-                    <small className="text-secondary text-secondary">URL para receber notificações de pagamento</small>
+                    <FormField
+                      name="url_retorno"
+                      type="url"
+                      label="URL de Retorno (Webhook)"
+                      placeholder="URL para retorno de webhooks"
+                      size="sm"
+                      value={formData.url_retorno}
+                      onChange={(value) => handleInputChange('url_retorno', value)}
+                      disabled={isPending}
+                      autoComplete="url"
+                      formPrefix={formPrefix}
+                    />
+                    <small className="text-secondary">URL para receber notificações de pagamento</small>
                   </div>
                 </div>
               </div>
@@ -694,11 +646,11 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
                       label="Modo Sandbox (Testes)"
                       value={formData.sandbox}
                       onChange={(value: any) => handleInputChange('sandbox', value)}
-                      disabled={updateBancoMutation.isPending}
+                      disabled={isPending}
                       formPrefix={formPrefix}
                       switch={true}
                     />
-                    <small className="text-secondary text-secondary">
+                    <small className="text-secondary">
                       Ative para usar ambiente de testes. Desative para produção.
                     </small>
                   </div>
@@ -715,12 +667,12 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
               type="button"
               className="btn btn-outline-primary btn-sm"
               onClick={handleTestConnection}
-              disabled={updateBancoMutation.isPending}
+              disabled={isPending}
             >
-              <i className="bi bi-wifi"></i> Testar Conexão
+              Testar Conexão
             </button>
             {testResult && (
-              <span className={`ms-2 badge ${testResult.includes('sucesso') ? 'bg-success' : 'bg-danger'}`}>
+              <span className={`ms-2 badge ${testResult.includes('✅') ? 'bg-success' : 'bg-danger'}`}>
                 {testResult}
               </span>
             )}
@@ -732,4 +684,5 @@ const BancoEditModal: React.FC<BancoEditModalProps> = ({
   );
 };
 
-export default BancoEditModal;
+export default BancoModal;
+
