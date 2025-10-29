@@ -40,21 +40,34 @@ export class TituloController {
     let logoBanco = '';
     if ((titulo.banco as any).logo) {
       logoBanco = (titulo.banco as any).logo;
-      logger.info('Logo do banco encontrada', {
+      logger.info('Logo do banco encontrada no cadastro', {
         titulo_id: titulo.id,
         banco_id: titulo.banco_id,
         banco_nome: titulo.banco.nome,
         logo: logoBanco.substring(0, 50) + '...'
       });
     } else {
-      logoBanco = TituloController.getLogoBancoPadrao(titulo.banco.tipo_banco) || dadosEmpresa.logo || '';
-      logger.warn('Logo do banco não encontrada, usando padrão', {
-        titulo_id: titulo.id,
-        banco_id: titulo.banco_id,
-        banco_nome: titulo.banco.nome,
-        tipo_banco: titulo.banco.tipo_banco,
-        logo_final: logoBanco.substring(0, 50) + '...'
-      });
+      // Tentar carregar logo padrão do banco
+      const logoPadrao = TituloController.getLogoBancoPadrao(titulo.banco.tipo_banco);
+      
+      if (logoPadrao) {
+        logoBanco = logoPadrao;
+        logger.info('Usando logo padrão do banco', {
+          titulo_id: titulo.id,
+          banco_id: titulo.banco_id,
+          banco_nome: titulo.banco.nome,
+          tipo_banco: titulo.banco.tipo_banco
+        });
+      } else {
+        // Fallback para logo da empresa
+        logoBanco = dadosEmpresa.logo || '';
+        logger.warn('Logo do banco não encontrada, usando logo da empresa', {
+          titulo_id: titulo.id,
+          banco_id: titulo.banco_id,
+          banco_nome: titulo.banco.nome,
+          tipo_banco: titulo.banco.tipo_banco
+        });
+      }
     }
     
     // Converter logo do banco para base64 se necessário
@@ -143,73 +156,47 @@ export class TituloController {
 
     return `${topoProcessado}${corpoProcessado}`;
   }
-  
-  // Método para processar template do topo
-  private static processarTemplateTopo(template: string, variables: any): string {
-    let resultado = template;
-    
-    // Substituir variáveis do template
-    Object.keys(variables).forEach(key => {
-      const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-      resultado = resultado.replace(regex, variables[key] || '');
-    });
-    
-    return resultado;
-  }
-
-
-
-
 
   // Converter logo para base64 se for URL HTTP
   private static converterLogoParaBase64(logo: string): string {
-    if (!logo) return '';
+    if (!logo || logo.startsWith('data:image/')) {
+      return logo || '';
+    }
     
-    // Se já é data URI, retornar como está
-    if (logo.startsWith('data:image/')) {
+    if (!logo.startsWith('http://') && !logo.startsWith('https://')) {
       return logo;
     }
     
-    // Se é URL HTTP/HTTPS, tentar converter para base64
-    if (logo.startsWith('http://') || logo.startsWith('https://')) {
-      try {
-        // Extrair nome do arquivo da URL
-        const url = new URL(logo);
-        const fileName = url.pathname.split('/').pop() || '';
-        
-        if (fileName.includes('efi.png')) {
-          return this.getLogoBancoPadrao('efi');
-        } else if (fileName.includes('asaas.png')) {
-          return this.getLogoBancoPadrao('asaas');
-        } else if (fileName.includes('boletoproprio.png')) {
-          return this.getLogoBancoPadrao('bancario');
-        }
-        
-        // Tentar ler arquivo do caminho public
-        const fs = require('fs');
-        const path = require('path');
-        
-        // Remover base URL se estiver na URL
-        let cleanPath = url.pathname;
-        if (cleanPath.startsWith('/images/')) {
-          cleanPath = cleanPath.substring(1);
-        }
-        
-        const imagePath = path.join(__dirname, '../../public', cleanPath);
-        
-        if (fs.existsSync(imagePath)) {
-          const imageBuffer = fs.readFileSync(imagePath);
-          const base64Image = imageBuffer.toString('base64');
-          const ext = fileName.substring(fileName.lastIndexOf('.') + 1);
-          const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-          return `data:${mimeType};base64,${base64Image}`;
-        }
-      } catch (error) {
-        logger.warn('Erro ao converter URL para base64', { logo, error });
+    try {
+      const url = new URL(logo);
+      const fileName = url.pathname.split('/').pop() || '';
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Verificar se é logo padrão de banco
+      if (fileName.includes('efi.png')) return this.getLogoBancoPadrao('efi');
+      if (fileName.includes('asaas.png')) return this.getLogoBancoPadrao('asaas');
+      if (fileName.includes('boletoproprio.png')) return this.getLogoBancoPadrao('bancario');
+      
+      // Converter caminho da URL para caminho local
+      let cleanPath = url.pathname;
+      if (cleanPath.startsWith('/images/') || cleanPath.startsWith('/uploads/')) {
+        cleanPath = cleanPath.substring(1);
       }
+      
+      const imagePath = path.join(__dirname, '../..', cleanPath);
+      
+      if (fs.existsSync(imagePath)) {
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64Image = imageBuffer.toString('base64');
+        const ext = fileName.substring(fileName.lastIndexOf('.') + 1);
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        return `data:${mimeType};base64,${base64Image}`;
+      }
+    } catch (error) {
+      logger.warn('Erro ao converter URL para base64', { logo, error });
     }
     
-    // Se não conseguiu converter, retornar como está
     return logo;
   }
 
@@ -227,7 +214,7 @@ export class TituloController {
       };
       
       const fileName = logosPadrao[tipoBanco] || logosPadrao['outros'];
-      const imagePath = path.join(__dirname, '../../public/images/bancos', fileName);
+      const imagePath = path.join(__dirname, '../../images/bancos', fileName);
       
       // Ler arquivo e converter para base64
       if (fs.existsSync(imagePath)) {
@@ -402,8 +389,6 @@ export class TituloController {
   // Criar novo título
   static async create(req: Request, res: Response): Promise<void> {
     try {
-      console.log('Dados recebidos ao criar título:', JSON.stringify(req.body, null, 2));
-      
       const { 
         cliente_id, 
         plano_id, 
@@ -422,8 +407,6 @@ export class TituloController {
       const desconto_valor = descontoValorRaw ? parseFloat(descontoValorRaw.toString()) : null;
       const acrescimo_percentual = acrescimoPercentualRaw ? parseFloat(acrescimoPercentualRaw.toString()) : null;
       const acrescimo_valor = acrescimoValorRaw ? parseFloat(acrescimoValorRaw.toString()) : null;
-
-      console.log('Dados convertidos:', { desconto_percentual, desconto_valor, acrescimo_percentual, acrescimo_valor });
 
       // Validar dados obrigatórios
       if (!cliente_id) {
@@ -553,35 +536,26 @@ export class TituloController {
       // Calcular valor final com desconto/acréscimo
       let valorFinal = parseFloat(plano.valor_mensal.toString());
       
-      console.log('Valor do plano:', valorFinal);
-      
       // Aplicar desconto (percentual tem prioridade sobre valor)
       // Os dois campos podem existir (representam a mesma coisa), mas aplicamos apenas um
       if (desconto_percentual && desconto_percentual > 0) {
         valorFinal = valorFinal * (1 - (desconto_percentual / 100));
-        console.log('Após desconto %:', valorFinal);
       } else if (desconto_valor && desconto_valor > 0) {
         valorFinal = valorFinal - desconto_valor;
-        console.log('Após desconto R$:', valorFinal);
       }
       
       // Aplicar acréscimo percentual
       if (acrescimo_percentual && acrescimo_percentual > 0) {
         valorFinal = valorFinal * (1 + (acrescimo_percentual / 100));
-        console.log('Após acréscimo %:', valorFinal);
       }
       
       // Aplicar acréscimo em valor
       if (acrescimo_valor && acrescimo_valor > 0) {
         valorFinal = valorFinal + parseFloat(acrescimo_valor.toString());
-        console.log('Após acréscimo R$:', valorFinal);
       }
-      
-      console.log('Valor final calculado:', valorFinal);
       
       // Validar se o valor final é válido
       if (isNaN(valorFinal) || valorFinal < 0.01) {
-        console.log('Valor final inválido!');
         res.status(400).json({
           success: false,
           message: 'Os descontos configurados no contrato resultaram em valor inválido (R$ ' + valorFinal.toFixed(2) + '). O valor do título deve ser no mínimo R$ 0,01. Ajuste os descontos no contrato.'
@@ -591,7 +565,6 @@ export class TituloController {
       
       // Garantir que o valor final seja pelo menos R$ 0,01 (valor mínimo permitido)
       valorFinal = Math.max(0.01, valorFinal);
-      console.log('Valor final após garantia mínima:', valorFinal);
 
       // Criar título
       const titulo = await Titulo.create({
@@ -1213,19 +1186,15 @@ export class TituloController {
       let ids: number[] = [];
       const idsParam = req.query.ids as string;
       
-      logger.info('Query params recebidos:', { query: req.query, idsParam });
-      
       if (idsParam) {
         try {
           // Tentar parse como JSON primeiro
           const parsed = JSON.parse(idsParam);
           // Garantir que seja sempre um array
           ids = Array.isArray(parsed) ? parsed : [parsed];
-          logger.info('IDs parseados como JSON:', { ids });
         } catch {
           // Se não for JSON válido, tentar split por vírgula
           ids = idsParam.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id));
-          logger.info('IDs parseados como CSV:', { ids });
         }
       }
 
@@ -1236,8 +1205,6 @@ export class TituloController {
         });
         return;
       }
-
-      logger.info('IDs recebidos para PDF:', { ids });
 
       const titulos = await Titulo.findAll({
         where: { id: { [Op.in]: ids } },
@@ -1332,23 +1299,11 @@ export class TituloController {
         </html>
       `;
 
-      logger.info('Template HTML gerado:', { 
-        length: template.length,
-        hasQuantidade: template.includes('QUANTIDADE'),
-        hasInOperator: template.includes(' in '),
-        hasTemplateVars: template.includes('{{')
-      });
-
       // Limpar variáveis não processadas para evitar erro do html-pdf-node
       const templateLimpo = template
         .replace(/\{\{QUANTIDADE\}\}/g, '1')
         .replace(/\{\{VALOR_UNITARIO\}\}/g, '1')
         .replace(/\{\{[^}]+\}\}/g, ''); // Remove qualquer variável {{}} restante
-
-      logger.info('Template limpo:', { 
-        length: templateLimpo.length,
-        hasTemplateVars: templateLimpo.includes('{{')
-      });
 
       // Converter HTML para PDF usando html-pdf-node
       const htmlPdf = require('html-pdf-node');

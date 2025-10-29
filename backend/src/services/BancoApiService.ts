@@ -313,11 +313,6 @@ export class BancoApiService {
       // Preparar dados do boleto
       const dadosBoleto = await this.prepararDadosBoleto(banco, titulo, cliente, plano, config);
 
-      // Log detalhado do payload
-      logger.info('Payload enviado para EFI:', {
-        titulo_id: titulo.id,
-        dadosBoleto: JSON.stringify(dadosBoleto, null, 2)
-      });
 
       // Criar boleto individual
       // Usar URL correta baseada no ambiente (sandbox vs produção)
@@ -364,11 +359,6 @@ export class BancoApiService {
         }
       }
       
-      logger.info('Resposta da EFI:', {
-        status: response.status,
-        data: response.data
-      });
-      
       if (response.status >= 200 && response.status < 300) {
         const dados = response.data;
         const chargeId = this.getNestedValue(dados, config.api_response_mapping.boleto.id);
@@ -386,11 +376,6 @@ export class BancoApiService {
           if (barcodeLimpo.length === 47) {
             // É linha digitável, pegar os primeiros 44 dígitos
             codigoBarrasFinal = barcodeLimpo.substring(0, 44);
-            logger.info('Linha digitável convertida para código de barras', {
-              titulo_id: titulo.id,
-              linha_original: barcode,
-              codigo_gerado: codigoBarrasFinal
-            });
           }
         }
 
@@ -684,6 +669,10 @@ export class BancoApiService {
       }
     };
 
+    // Criar mensagem do boleto (máximo 4 linhas, 100 caracteres cada)
+    const mensagem = `Cobrança referente ao serviço ${plano.nome_plano || 'Internet'} - Título ${titulo.numero_titulo}`;
+    const mensagemFormatada = this.formatarMensagemEFI(mensagem);
+    
     return {
       items: [{
         name: plano.nome_plano || 'Serviço de Internet',
@@ -698,13 +687,71 @@ export class BancoApiService {
             fine: fineBp,
             interest: interestBp
           },
-          message: `Cobrança referente ao serviço ${plano.nome_plano || 'Internet'} - Título ${titulo.numero_titulo}`
+          message: mensagemFormatada
         }
       },
       metadata: {
         custom_id: `titulo_${titulo.id}`
       }
     };
+  }
+
+  /**
+   * Formatar mensagem para EFI (máximo 4 linhas, 100 caracteres cada)
+   * Padrão: ^[^\n]{0,100}(\n[^\n]{0,100}){0,3}$
+   */
+  private static formatarMensagemEFI(mensagem: string): string {
+    const maxCharsPorLinha = 100;
+    const maxLinhas = 4;
+    
+    // Remover quebras de linha existentes e espaços extras
+    let texto = mensagem.replace(/\s+/g, ' ').trim();
+    
+    // Se a mensagem cabe em uma linha, retornar como está
+    if (texto.length <= maxCharsPorLinha) {
+      return texto;
+    }
+    
+    // Dividir em palavras
+    const palavras = texto.split(' ');
+    const linhas: string[] = [];
+    let linhaAtual = '';
+    
+    for (const palavra of palavras) {
+      // Verificar se adicionar a palavra excederia o limite da linha
+      const novaLinha = linhaAtual ? `${linhaAtual} ${palavra}` : palavra;
+      
+      if (novaLinha.length <= maxCharsPorLinha) {
+        linhaAtual = novaLinha;
+      } else {
+        // Se já temos uma linha, adicioná-la
+        if (linhaAtual) {
+          linhas.push(linhaAtual);
+          linhaAtual = palavra;
+        } else {
+          // Palavra muito grande, truncar
+          linhas.push(palavra.substring(0, maxCharsPorLinha));
+          linhaAtual = palavra.substring(maxCharsPorLinha);
+        }
+        
+        // Verificar se atingimos o limite de linhas
+        if (linhas.length >= maxLinhas - 1) {
+          // Última linha: truncar se necessário
+          const linhaRestante = linhaAtual.length > maxCharsPorLinha 
+            ? linhaAtual.substring(0, maxCharsPorLinha)
+            : linhaAtual;
+          linhas.push(linhaRestante);
+          return linhas.join('\n');
+        }
+      }
+    }
+    
+    // Adicionar última linha se ainda houver
+    if (linhaAtual && linhas.length < maxLinhas) {
+      linhas.push(linhaAtual);
+    }
+    
+    return linhas.join('\n');
   }
 
   /**

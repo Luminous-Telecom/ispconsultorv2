@@ -445,7 +445,7 @@ Titulo.init(
       allowNull: true
     },
     qrcode_image: {
-      type: DataTypes.STRING(500),
+      type: DataTypes.TEXT,
       allowNull: true
     },
     observacoes: {
