@@ -94,7 +94,6 @@ dist
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -130,7 +129,6 @@ Thumbs.db
 
 # Upload directories
 uploads/
-public/uploads/
 
 # SSL certificates
 *.pem

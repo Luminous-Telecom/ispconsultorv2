@@ -132,9 +132,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     onClose();
   };
 
-  const onLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onLogoChange = async (file: File | null) => {
     try {
-      const file = e.target.files?.[0];
       if (!file) return;
       
       const resp = await DadosEmpresaService.uploadLogo(file);
@@ -340,6 +339,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 <div className="flex-grow-1">
                   <FormField
                     name="logo"
+                    id="logo"
                     type="file"
                     value=""
                     onChange={onLogoChange}

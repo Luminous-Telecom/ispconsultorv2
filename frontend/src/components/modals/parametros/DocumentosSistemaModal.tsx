@@ -206,40 +206,48 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
         size="xl"
         modalId="documentos-sistema-modal"
       >
-        <div style={{ padding: '1rem' }}>
-          {/* Abas */}
-          <ul className="nav nav-tabs mb-3">
-            <li className="nav-item">
+        <div style={{ 
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          {/* Navegação por Abas - Fixa */}
+          <ul className="nav nav-tabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
+            <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
                 onClick={() => handleTabChange('contrato')}
+                type="button"
               >
                 <i className="bi bi-file-earmark-text me-2"></i>
                 Contratos
               </button>
             </li>
-            <li className="nav-item">
+            <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'recibo' ? 'active' : ''}`}
                 onClick={() => handleTabChange('recibo')}
+                type="button"
               >
                 <i className="bi bi-receipt me-2"></i>
                 Recibos
               </button>
             </li>
-            <li className="nav-item">
+            <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'carta_cobranca' ? 'active' : ''}`}
                 onClick={() => handleTabChange('carta_cobranca')}
+                type="button"
               >
                 <i className="bi bi-envelope me-2"></i>
                 Cartas de Cobrança
               </button>
             </li>
-            <li className="nav-item">
+            <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'termo' ? 'active' : ''}`}
                 onClick={() => handleTabChange('termo')}
+                type="button"
               >
                 <i className="bi bi-file-text me-2"></i>
                 Termos
@@ -247,7 +255,17 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             </li>
           </ul>
 
-          <Table
+          {/* Conteúdo das Abas */}
+          <div 
+            className="tab-content" 
+            style={{ 
+              flex: 1, 
+              overflow: 'hidden', 
+              padding: 0, 
+              minHeight: 0 
+            }}
+          >
+            <Table
             config={{
               columns,
               data: documentos?.data as DocumentoUnion[] || [],
@@ -265,7 +283,8 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
                 onClick: action.action,
                 ...('disabled' in action && { disabled: action.disabled as boolean | ((selectedItems: DocumentoUnion[]) => boolean) })
               })),
-              emptyMessage: `Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`
+              emptyMessage: `Nenhum modelo de ${getTipoLabel(activeTab).toLowerCase()} cadastrado ainda.`,
+              className: 'no-padding'
             }}
             tableId={`documentos-${activeTab}`}
             onSelectionChange={setSelectedItems}
@@ -276,6 +295,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             onSearch={setSearch}
             onRefresh={() => refetch()}
           />
+          </div>
         </div>
 
         {/* Modal Unificado */}
