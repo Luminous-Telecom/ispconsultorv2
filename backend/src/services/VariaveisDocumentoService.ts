@@ -117,6 +117,8 @@ export class VariaveisDocumentoService {
           { variavel: '#titulo.juros#', descricao: 'Valor de juros' },
           { variavel: '#titulo.multa#', descricao: 'Valor de multa' },
           { variavel: '#titulo.descricao#', descricao: 'Descrição do título' },
+          { variavel: '#titulo.codigo_pix#', descricao: 'Código PIX EMV (texto para copiar e colar)' },
+          { variavel: '#titulo.codigo_barras#', descricao: 'Linha digitável' },
         ]
       },
       sistema: {
@@ -322,6 +324,8 @@ export class VariaveisDocumentoService {
       '#titulo.juros#': this.formatarMoeda(juros),
       '#titulo.multa#': this.formatarMoeda(multa),
       '#titulo.descricao#': titulo.descricao || '',
+      '#titulo.codigo_pix#': titulo.qrcode || '',
+      '#titulo.codigo_barras#': titulo.linha_digitavel || '',
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {
