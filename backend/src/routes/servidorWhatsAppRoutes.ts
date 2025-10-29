@@ -4,8 +4,8 @@ import { ServidorWhatsAppController } from '../controllers/ServidorWhatsAppContr
 const router = Router();
 
 // Rotas CRUD básicas
-router.get('/', ServidorWhatsAppController.list);
 router.get('/ativo', ServidorWhatsAppController.getActive);
+router.get('/', ServidorWhatsAppController.list);
 router.get('/:id', ServidorWhatsAppController.show);
 router.post('/', ServidorWhatsAppController.create);
 router.put('/:id', ServidorWhatsAppController.update);

@@ -46,9 +46,17 @@ export class ServidorWhatsAppService {
     return response;
   }
 
-  static async getActive(): Promise<{ success: boolean; data: ServidorWhatsApp; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ServidorWhatsApp; message: string }>('/servidores-whatsapp/ativo');
-    return response;
+  static async getActive(): Promise<{ success: boolean; data: ServidorWhatsApp; message: string } | null> {
+    try {
+      const response = await apiService.get<{ success: boolean; data: ServidorWhatsApp; message: string }>('/servidores-whatsapp/ativo');
+      return response;
+    } catch (error: any) {
+      // Se não há servidor ativo, retornar null
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   static async create(data: CreateServidorWhatsApp): Promise<{ success: boolean; data: ServidorWhatsApp; message: string }> {

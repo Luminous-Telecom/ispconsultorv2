@@ -21,7 +21,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const queryClient = useQueryClient();
   
   const initialFormData: ServidorWhatsAppForm = {
-    evolution_api_url: 'https://evo-api.luminoustelecom.com.br',
+    evolution_api_url: '',
     evolution_api_key: '',
     instance_name: ''
   };
@@ -33,32 +33,18 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   // Buscar servidor ativo
   const { data: servidorAtivo, isLoading } = useQuery({
     queryKey: ['servidor-whatsapp-ativo'],
-    queryFn: async () => {
-      try {
-        return await ServidorWhatsAppService.getActive();
-      } catch (error: any) {
-        if (error?.response?.status === 404) {
-          return null;
-        }
-        throw error;
-      }
-    },
+    queryFn: () => ServidorWhatsAppService.getActive(),
     enabled: show,
     retry: false,
   });
 
-  // Mutation para criar/atualizar servidor único
   const saveServidorMutation = useMutation({
-    mutationFn: (data: ServidorWhatsAppForm) => {
-      return ServidorWhatsAppService.createOrUpdate(data);
-    },
+    mutationFn: (data: ServidorWhatsAppForm) => ServidorWhatsAppService.createOrUpdate(data),
     onSuccess: () => {
-      success('Configurações do servidor de WhatsApp salvas com sucesso!');
+      success('Servidor salvo com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
     },
-    onError: (error: any) => {
-      showError(error?.response?.data?.message || 'Erro ao salvar configurações');
-    }
+    onError: (error: any) => showError(error?.response?.data?.message || 'Erro ao salvar')
   });
 
   // Mutation para enviar mensagem de teste
@@ -74,25 +60,20 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     }
   });
 
-  // Carregar dados do servidor existente
+  // Carregar dados do servidor existente quando modal abrir
   useEffect(() => {
+    if (!show || isLoading) return;
+    
     if (servidorAtivo?.data) {
       setFormData({
         evolution_api_url: servidorAtivo.data.evolution_api_url,
-        evolution_api_key: '', // Não carregar chave por segurança
+        evolution_api_key: '',
         instance_name: servidorAtivo.data.instance_name
       });
     } else {
       setFormData(initialFormData);
     }
-  }, [servidorAtivo]);
-
-  // Forçar carregamento quando modal abrir
-  useEffect(() => {
-    if (show) {
-      queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
-    }
-  }, [show, queryClient]);
+  }, [show, isLoading, servidorAtivo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,13 +191,16 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                   <FormField
                     name="evolution_api_url"
                     type="url"
-                    label="Servidor"
-                    placeholder="https://evo-api.luminoustelecom.com.br"
+                    label="URL do Servidor"
+                    placeholder="https://exemplo.com.br"
                     required={true}
                     size="sm"
                     value={formData.evolution_api_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_url: e.value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, evolution_api_url: value }))}
                   />
+                  <small className="form-text text-secondary">
+                    Exemplo: https://evo-api.seudominio.com.br
+                  </small>
                 </div>
               </div>
 
@@ -226,13 +210,16 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     name="instance_name"
                     type="text"
                     label="Nome da Instância"
-                    placeholder="mkauth"
+                    placeholder="minha-instancia"
                     required={true}
                     size="sm"
                     value={formData.instance_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, instance_name: e.value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, instance_name: value }))}
                     autoComplete="username"
                   />
+                  <small className="form-text text-secondary">
+                    Exemplo: minha-instancia ou instancia-producao
+                  </small>
                 </div>
               </div>
 
@@ -246,7 +233,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     required={!servidorAtivo?.data}
                     size="sm"
                     value={formData.evolution_api_key}
-                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_key: e.value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, evolution_api_key: value }))}
                     autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
                   />
                   {servidorAtivo?.data && (
@@ -277,7 +264,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     placeholder="5511999999999"
                     size="sm"
                     value={testPhone}
-                    onChange={(e) => setTestPhone(e.value)}
+                    onChange={(value) => setTestPhone(value)}
                   />
                   <small className="form-text text-secondary">
                     Digite o número com código do país (ex: 5511999999999)
@@ -291,7 +278,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     placeholder="Mensagem de teste do sistema CTM Telecom"
                     size="sm"
                     value={testMessage}
-                    onChange={(e) => setTestMessage(e.value)}
+                    onChange={(value) => setTestMessage(value)}
                   />
                 </div>
               </div>
