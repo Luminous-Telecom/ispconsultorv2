@@ -953,13 +953,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         {/* Aba Termos */}
         {activeTab === 'termos' && (
           <TermosTab
-            termosData={termosArray}
             isLoading={isLoadingTermosContrato}
             bulkActions={termosBulkActions}
-            searchTermos={searchTermos}
-            setSearchTermos={setSearchTermos}
-            showInativos={showInativos}
-            setShowInativos={setShowInativos}
             limit={limit}
             setLimit={setLimit}
             page={page}
@@ -967,10 +962,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             sortedData={sortedTermosData}
             selectedTermosItems={selectedTermosItems}
             setSelectedTermosItems={setSelectedTermosItems}
-            onRefresh={refetchTermos}
             columns={termosColumns}
-            openDropdown={openDropdown}
-            setOpenDropdown={setOpenDropdown}
             isGeneratingPdf={isGeneratingPdf}
           />
         )}
@@ -978,13 +970,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         {/* Aba Financeiro */}
         {activeTab === 'financeiro' && (
           <FinanceiroTab
-            titulosData={titulosData?.data || []}
             isLoading={isLoadingTitulos}
             bulkActions={bulkActions}
-            search={search}
-            setSearch={setSearch}
-            showCancelados={showCancelados}
-            setShowCancelados={setShowCancelados}
             limit={limit}
             setLimit={setLimit}
             page={page}
@@ -992,10 +979,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
             sortedData={sortedData}
             selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
-            onRefresh={refetchTitulos}
             columns={columns}
-            openDropdown={openDropdown}
-            setOpenDropdown={setOpenDropdown}
             isGeneratingPdf={isGeneratingPdf}
           />
         )}

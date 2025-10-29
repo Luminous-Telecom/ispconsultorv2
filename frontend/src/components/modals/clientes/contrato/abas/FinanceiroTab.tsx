@@ -3,13 +3,8 @@ import Table from '../../../../tables/Table';
 import { BulkAction } from '../types';
 
 interface FinanceiroTabProps {
-  titulosData: any[];
   isLoading: boolean;
   bulkActions: BulkAction[];
-  search: string;
-  setSearch: (value: string) => void;
-  showCancelados: boolean;
-  setShowCancelados: (value: boolean) => void;
   limit: number;
   setLimit: (value: number) => void;
   page: number;
@@ -17,21 +12,13 @@ interface FinanceiroTabProps {
   sortedData: any[];
   selectedItems: any[];
   setSelectedItems: (items: any[]) => void;
-  onRefresh: () => void;
-  columns: any[];
-  openDropdown: number | null;
-  setOpenDropdown: (value: number | null) => void;
+  columns: any[]; 
   isGeneratingPdf: boolean;
 }
 
 const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
-  titulosData,
   isLoading,
   bulkActions,
-  search,
-  setSearch,
-  showCancelados,
-  setShowCancelados,
   limit,
   setLimit,
   page,
@@ -39,10 +26,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   sortedData,
   selectedItems,
   setSelectedItems,
-  onRefresh,
   columns,
-  openDropdown,
-  setOpenDropdown,
   isGeneratingPdf
 }) => {
   return (

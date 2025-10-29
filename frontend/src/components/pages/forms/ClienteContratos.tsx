@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
-import { ContratoCreateModal } from '../../modals/contratos';
+import { ContratoCreateModal } from '../../modals/clientes';
 import { useContratos } from '../../../hooks/useContratos';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { useImprimir } from '../../../hooks/useImprimir';

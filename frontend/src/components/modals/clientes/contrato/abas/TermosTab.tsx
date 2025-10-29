@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
 import Table from '../../../../tables/Table';
-import { TermoContrato } from '../../../../../services/TermoContratoService';
 import { BulkAction } from '../types';
 
 interface TermosTabProps {
-  termosData: any[];
   isLoading: boolean;
   bulkActions: BulkAction[];
-  searchTermos: string;
-  setSearchTermos: (value: string) => void;
-  showInativos: boolean;
-  setShowInativos: (value: boolean) => void;
   limit: number;
   setLimit: (value: number) => void;
   page: number;
@@ -18,21 +12,13 @@ interface TermosTabProps {
   sortedData: any[];
   selectedTermosItems: any[];
   setSelectedTermosItems: (items: any[]) => void;
-  onRefresh: () => void;
   columns: any[];
-  openDropdown: number | null;
-  setOpenDropdown: (value: number | null) => void;
   isGeneratingPdf: boolean;
 }
 
 const TermosTab: React.FC<TermosTabProps> = ({
-  termosData,
   isLoading,
   bulkActions,
-  searchTermos,
-  setSearchTermos,
-  showInativos,
-  setShowInativos,
   limit,
   setLimit,
   page,
@@ -40,10 +26,7 @@ const TermosTab: React.FC<TermosTabProps> = ({
   sortedData,
   selectedTermosItems,
   setSelectedTermosItems,
-  onRefresh,
   columns,
-  openDropdown,
-  setOpenDropdown,
   isGeneratingPdf
 }) => {
   return (
