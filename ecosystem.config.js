@@ -3,8 +3,9 @@ module.exports = {
     {
       name: 'ctm-backend-dev',
       cwd: './backend',
-      script: 'npm',
-      args: 'run dev',
+      script: process.platform === 'win32' ? 'cmd' : 'npm',
+      args: process.platform === 'win32' ? '/c npm run dev' : 'run dev',
+      interpreter: 'none',
       watch: false,
       env: {
         NODE_ENV: 'development',
@@ -23,8 +24,9 @@ module.exports = {
     {
       name: 'ctm-frontend-dev',
       cwd: './frontend',
-      script: 'npm',
-      args: 'start',
+      script: process.platform === 'win32' ? 'cmd' : 'npm',
+      args: process.platform === 'win32' ? '/c npm start' : 'start',
+      interpreter: 'none',
       watch: false,
       env: {
         NODE_ENV: 'development',
