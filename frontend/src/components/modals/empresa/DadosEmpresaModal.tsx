@@ -68,37 +68,12 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
 
   const [dados, setDados] = useState<DadosEmpresaType>(initialFormData);
 
-  // Dados customizados da empresa (quando editando)
-  const customFormData = dadosEmpresa ? {
-    id: dadosEmpresa.id || 1,
-    razao_social: dadosEmpresa.razao_social || '',
-    nome_fantasia: dadosEmpresa.nome_fantasia || '',
-    cnpj: dadosEmpresa.cnpj || '',
-    inscricao_estadual: dadosEmpresa.inscricao_estadual || '',
-    inscricao_municipal: dadosEmpresa.inscricao_municipal || '',
-    cep: dadosEmpresa.cep || '',
-    endereco: dadosEmpresa.endereco || '',
-    numero: dadosEmpresa.numero || '',
-    complemento: dadosEmpresa.complemento || '',
-    bairro: dadosEmpresa.bairro || '',
-    cidade: dadosEmpresa.cidade || '',
-    estado: dadosEmpresa.estado || '',
-    telefone: dadosEmpresa.telefone || '',
-    celular: dadosEmpresa.celular || '',
-    email: dadosEmpresa.email || '',
-    site: dadosEmpresa.site || '',
-    responsavel_nome: dadosEmpresa.responsavel_nome || '',
-    responsavel_cpf: dadosEmpresa.responsavel_cpf || '',
-    responsavel_cargo: dadosEmpresa.responsavel_cargo || '',
-    logo: dadosEmpresa.logo || undefined,
-  } : undefined;
-
   // Usar hook personalizado para reset do formulário
   useFormReset({
     show,
     initialData: initialFormData,
     setFormData: setDados,
-    customData: customFormData
+    customData: dadosEmpresa
   });
 
   const handleInputChange = (field: keyof DadosEmpresaType, value: string) => {
@@ -126,9 +101,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   };
 
   const handleCancel = () => {
-    if (dadosEmpresa) {
-      setDados(dadosEmpresa as DadosEmpresaType);
-    }
     onClose();
   };
 
@@ -148,24 +120,6 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       error('Erro ao enviar a logo');
     }
   };
-
-  if (isLoading) {
-    return (
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title="Empresa"
-        size="xl"
-        modalId="dados-empresa-modal-loading"
-      >
-        <div className="text-center p-4">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
-        </div>
-      </DraggableModal>
-    );
-  }
 
   return (
     <DraggableModal
