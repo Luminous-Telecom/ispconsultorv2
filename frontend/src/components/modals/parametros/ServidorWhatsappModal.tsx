@@ -60,20 +60,25 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     }
   });
 
-  // Carregar dados do servidor existente quando modal abrir
+  // Resetar ao fechar modal
   useEffect(() => {
-    if (!show || isLoading) return;
-    
-    if (servidorAtivo?.data) {
+    if (!show) {
+      setFormData(initialFormData);
+      setTestPhone('');
+      setTestMessage('');
+    }
+  }, [show]);
+
+  // Carregar dados quando servidor disponível
+  useEffect(() => {
+    if (show && !isLoading && servidorAtivo?.data) {
       setFormData({
         evolution_api_url: servidorAtivo.data.evolution_api_url,
         evolution_api_key: '',
         instance_name: servidorAtivo.data.instance_name
       });
-    } else {
-      setFormData(initialFormData);
     }
-  }, [show, isLoading, servidorAtivo]);
+  }, [show, isLoading, servidorAtivo?.data?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,6 +202,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     size="sm"
                     value={formData.evolution_api_url}
                     onChange={(value) => setFormData(prev => ({ ...prev, evolution_api_url: value }))}
+                    autoComplete="off"
                   />
                   <small className="form-text text-secondary">
                     Exemplo: https://evo-api.seudominio.com.br
@@ -215,7 +221,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     size="sm"
                     value={formData.instance_name}
                     onChange={(value) => setFormData(prev => ({ ...prev, instance_name: value }))}
-                    autoComplete="username"
+                    autoComplete="off"
                   />
                   <small className="form-text text-secondary">
                     Exemplo: minha-instancia ou instancia-producao

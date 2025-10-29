@@ -435,8 +435,9 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      // Construir URL da Evolution API
-      const evolutionUrl = `${servidor.evolution_api_url}/message/sendText/${servidor.instance_name}`;
+      // Construir URL da Evolution API (remover barra final se existir)
+      const baseUrl = servidor.evolution_api_url.replace(/\/$/, '');
+      const evolutionUrl = `${baseUrl}/message/sendText/${servidor.instance_name}`;
       
       // Dados da mensagem conforme documentação Evolution API
       const messageData = {
