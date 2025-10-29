@@ -17,10 +17,17 @@
     "start": "cd backend && npm start",
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
-  "keywords": ["erp", "assessoria", "react", "typescript", "nodejs"],
+  "keywords": [
+    "erp",
+    "assessoria",
+    "react",
+    "typescript",
+    "nodejs"
+  ],
   "author": "Lucas",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "pm2": "^6.0.13"
   }
 }
