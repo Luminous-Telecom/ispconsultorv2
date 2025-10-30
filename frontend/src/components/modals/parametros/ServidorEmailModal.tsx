@@ -241,7 +241,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     required={true}
                     size="sm"
                     value={formData.host}
-                    onChange={(e) => setFormData(prev => ({ ...prev, host: e.value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, host: value }))}
                   />
                 </div>
                 <div className="col-md-6">
@@ -253,7 +253,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     required={true}
                     size="sm"
                     value={formData.porta.toString()}
-                    onChange={(e) => setFormData(prev => ({ ...prev, porta: parseInt(e.value) }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, porta: parseInt(value as string) || 587 }))}
                   />
                 </div>
               </div>
@@ -268,7 +268,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     required={true}
                     size="sm"
                     value={formData.usuario}
-                    onChange={(e) => setFormData(prev => ({ ...prev, usuario: e.value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, usuario: value }))}
                     autoComplete="username"
                   />
                 </div>
@@ -281,7 +281,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     required={!servidorAtivo?.data}
                     size="sm"
                     value={formData.senha}
-                    onChange={(e) => setFormData(prev => ({ ...prev, senha: e.value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, senha: value }))}
                     autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
                   />
                   {servidorAtivo?.data && (
@@ -302,7 +302,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     required={true}
                     size="sm"
                     value={formData.nome_remetente}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nome_remetente: e.value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, nome_remetente: value }))}
                   />
                 </div>
                 <div className="col-md-6">
@@ -314,7 +314,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     required={true}
                     size="sm"
                     value={formData.email_remetente}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email_remetente: e.value }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, email_remetente: value }))}
                   />
                 </div>
               </div>
@@ -343,7 +343,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     label="Timeout (ms)"
                     size="sm"
                     value={formData.timeout.toString()}
-                    onChange={(e) => setFormData(prev => ({ ...prev, timeout: parseInt(e.value) }))}
+                    onChange={(value) => setFormData(prev => ({ ...prev, timeout: parseInt(value as string) || 30000 }))}
                   />
                 </div>
               </div>
@@ -363,7 +363,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                         placeholder="Digite o e-mail para teste"
                         size="sm"
                         value={emailTeste}
-                        onChange={(e) => setEmailTeste(e.value)}
+                        onChange={(value) => setEmailTeste(value as string)}
                         className="flex-grow-1"
                       />
                       <button
