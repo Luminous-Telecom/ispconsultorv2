@@ -24,13 +24,11 @@ export class WhatsAppService {
     try {
       const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
       if (!servidor) {
-        logger.warn('Nenhum servidor de WhatsApp ativo encontrado');
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
 
       const mensagens = await MensagemWhatsApp.findAll({ where: { ativo: true } });
       if (mensagens.length === 0) {
-        logger.warn('Nenhuma mensagem de WhatsApp configurada');
         return { sucesso: false, mensagensEnviadas: 0, erros: 0 };
       }
 
@@ -117,20 +115,26 @@ export class WhatsAppService {
         });
 
         const telefone = this.formatarTelefone(cliente.telefone);
-        const enviou = await this.enviarMensagem(servidor, telefone, msg);
-        
-        if (enviou) {
-          if (mensagem.tipo_envio === 'pdf') {
-            const base64 = await TituloController.gerarPdfBase64(titulo);
-            if (base64) {
-              await this.enviarPdfBase64(servidor, telefone, base64);
+        if (mensagem.tipo_envio === 'pdf') {
+          const base64 = await TituloController.gerarPdfBase64(titulo);
+          if (base64) {
+            const enviouPdf = await this.enviarPdfBase64(servidor, telefone, base64, msg);
+            if (enviouPdf) {
+              enviadas++;
             } else {
-              logger.error('Falha ao gerar PDF do boleto');
+              erros++;
             }
+          } else {
+            logger.error('Falha ao gerar PDF do boleto');
+            erros++;
           }
-          enviadas++;
         } else {
-          erros++;
+          const enviouTexto = await this.enviarMensagem(servidor, telefone, msg);
+          if (enviouTexto) {
+            enviadas++;
+          } else {
+            erros++;
+          }
         }
       } catch (error: unknown) {
         logger.error(`Erro ao enviar boleto ${titulo.id}:`, error);
@@ -171,7 +175,6 @@ export class WhatsAppService {
       const responseData = await response.json().catch(() => ({}));
       
       if (response.ok) {
-        logger.info('Requisição WhatsApp bem-sucedida:', { url, status: response.status, data: responseData });
         return true;
       } else {
         logger.error('Erro na requisição WhatsApp:', { url, status: response.status, data: responseData });
@@ -189,18 +192,22 @@ export class WhatsAppService {
     return this.fazerRequisicao(url, servidor, { number: telefone, text: msg });
   }
 
-  private static async enviarPdfBase64(servidor: ServidorWhatsApp, telefone: string, base64: string): Promise<boolean> {
+  private static async enviarPdfBase64(
+    servidor: ServidorWhatsApp,
+    telefone: string,
+    base64: string,
+    descricao?: string
+  ): Promise<boolean> {
     try {
       const baseUrl = this.getBaseUrl(servidor);
       const url = `${baseUrl}/message/sendMedia/${servidor.instance_name}`;
-      
-      logger.info('Enviando PDF via WhatsApp:', { telefone, url });
       
       return this.fazerRequisicao(url, servidor, {
         number: telefone,
         mediatype: 'document',
         media: base64,
-        fileName: 'boleto.pdf'
+        fileName: 'boleto.pdf',
+        caption: descricao || undefined
       });
     } catch (error: unknown) {
       logger.error('Erro ao enviar PDF via WhatsApp:', error);

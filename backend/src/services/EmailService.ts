@@ -25,13 +25,11 @@ export class EmailService {
     try {
       const servidor = await ServidorEmail.findOne({ where: { ativo: true } });
       if (!servidor) {
-        logger.warn('Nenhum servidor de email ativo encontrado');
         return { sucesso: false, emailsEnviados: 0, erros: 0 };
       }
 
       const mensagens = await MensagemEmail.findAll({ where: { ativo: true } });
       if (mensagens.length === 0) {
-        logger.warn('Nenhuma mensagem de email configurada');
         return { sucesso: false, emailsEnviados: 0, erros: 0 };
       }
 
@@ -65,9 +63,7 @@ export class EmailService {
     tipo: 'antes' | 'mesmo' | 'depois'
   ): Promise<{ enviadas: number; erros: number }> {
     const mensagem = mensagens.find((msg) => msg.tipo === tipoMensagem);
-    if (!mensagem) {
-      logger.warn('Mensagem de e-mail não configurada para o tipo selecionado. Usando corpo padrão.', { tipoMensagem });
-    } else if (mensagem.tipo_envio === 'desativado') {
+    if (!mensagem || mensagem.tipo_envio === 'desativado') {
       return { enviadas: 0, erros: 0 };
     }
 
@@ -187,7 +183,6 @@ export class EmailService {
       };
 
       if (base64Pdf) {
-        logger.info('Anexando PDF ao email');
         mailOptions.attachments = [{
           filename: 'boleto.pdf',
           content: base64Pdf,
@@ -197,7 +192,6 @@ export class EmailService {
       }
 
       await transporter.sendMail(mailOptions);
-      logger.info('Email enviado com sucesso:', { to: emailDestino, attachments: mailOptions.attachments?.length || 0 });
       return true;
     } catch (error: unknown) {
       logger.error('Erro ao enviar email:', error);
