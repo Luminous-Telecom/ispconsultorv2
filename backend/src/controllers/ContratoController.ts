@@ -19,7 +19,7 @@ export class ContratoController {
     status: Joi.string().valid('ativo', 'inativo', 'suspenso').default('ativo'),
     observacoes: Joi.string().allow(null, ''),
     isento_mensalidade: Joi.boolean().default(false),
-    dia_vencimento: Joi.number().integer().min(1).max(31).required(),
+    dia_vencimento_id: Joi.number().integer().min(1).required(),
     conta_boleto: Joi.number().integer().min(1).required(),
     data_validade_desconto: Joi.date().allow(null, '').optional(),
     modelo_contrato_id: Joi.number().integer().min(1).required()
@@ -35,10 +35,10 @@ export class ContratoController {
     status: Joi.string().valid('ativo', 'inativo', 'suspenso'),
     observacoes: Joi.string().allow(null, ''),
     isento_mensalidade: Joi.boolean(),
-    dia_vencimento: Joi.number().integer().min(1).max(31).required(),
-    conta_boleto: Joi.number().integer().min(1).required(),
+    dia_vencimento_id: Joi.number().integer().min(1),
+    conta_boleto: Joi.number().integer().min(1),
     data_validade_desconto: Joi.date().allow(null, '').optional(),
-    modelo_contrato_id: Joi.number().integer().min(1).required()
+    modelo_contrato_id: Joi.number().integer().min(1)
   });
 
   // Listar todos os contratos com paginação
@@ -311,27 +311,6 @@ export class ContratoController {
         return;
       }
 
-      // Normalizar strings vazias para null
-      if (value.data_inicio === '') value.data_inicio = null;
-      if (value.data_fim === '') value.data_fim = null;
-      if (value.data_validade_desconto === '') value.data_validade_desconto = null;
-      
-      // Normalizar descontos: strings vazias ou 0 para null
-      if (value.desconto_percentual === '' || value.desconto_percentual === 0 || value.desconto_percentual === '0') {
-        value.desconto_percentual = null;
-      }
-      if (value.desconto_valor === '' || value.desconto_valor === 0 || value.desconto_valor === '0') {
-        value.desconto_valor = null;
-      }
-      
-      // Converter strings para números se necessário
-      if (typeof value.desconto_percentual === 'string' && value.desconto_percentual !== null) {
-        value.desconto_percentual = parseFloat(value.desconto_percentual);
-      }
-      if (typeof value.desconto_valor === 'string' && value.desconto_valor !== null) {
-        value.desconto_valor = parseFloat(value.desconto_valor);
-      }
-
       const contrato = await Contrato.findByPk(id);
       if (!contrato) {
         res.status(404).json({
@@ -341,40 +320,12 @@ export class ContratoController {
         return;
       }
 
-      // Verificar se o plano existe (se fornecido)
-      if (value.plano_id) {
-        const plano = await Plano.findByPk(value.plano_id);
-        if (!plano) {
-          res.status(404).json({
-            success: false,
-            message: 'Plano não encontrado'
-          });
-          return;
-        }
+      // Normalizar datas inválidas para null
+      if (value.data_fim === 'Invalid date' || value.data_fim === '' || (typeof value.data_fim === 'string' && isNaN(Date.parse(value.data_fim)))) {
+        delete value.data_fim;
       }
-
-      // Verificar se o banco existe (se fornecido)
-      if (value.conta_boleto) {
-        const banco = await Banco.findByPk(value.conta_boleto);
-        if (!banco) {
-          res.status(404).json({
-            success: false,
-            message: 'Banco não encontrado'
-          });
-          return;
-        }
-      }
-
-      // Verificar se o modelo de contrato existe (se fornecido)
-      if (value.modelo_contrato_id) {
-        const modeloContrato = await ModeloContrato.findByPk(value.modelo_contrato_id);
-        if (!modeloContrato) {
-          res.status(404).json({
-            success: false,
-            message: 'Modelo de contrato não encontrado'
-          });
-          return;
-        }
+      if (value.data_validade_desconto === 'Invalid date' || value.data_validade_desconto === '' || (typeof value.data_validade_desconto === 'string' && isNaN(Date.parse(value.data_validade_desconto)))) {
+        delete value.data_validade_desconto;
       }
 
       await contrato.update(value);

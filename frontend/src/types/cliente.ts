@@ -21,7 +21,7 @@ export interface ContratoItem {
   data_inicio: string;
   data_fim: string | null;
   isento_mensalidade: boolean;
-  dia_vencimento: number | null;
+  dia_vencimento_id: number | null;
   bancoBoleto: BancoInfo | null;
 }
 

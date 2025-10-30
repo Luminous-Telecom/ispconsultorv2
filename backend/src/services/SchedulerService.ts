@@ -1,5 +1,6 @@
 import * as cron from 'node-cron';
 import { ScheduledRoutine, RoutineExecutionLog } from '../models';
+import { DiasVencimento } from '../models/DiasVencimento';
 import { logger } from '../utils/logger';
 
 export class SchedulerService {
@@ -264,7 +265,7 @@ export class SchedulerService {
           }
 
           // Verificar se o contrato tem dia de vencimento
-          if (!contrato.dia_vencimento) {
+          if (!contrato.dia_vencimento_id) {
             console.warn(`Contrato ${contrato.id} não tem dia de vencimento configurado`);
             continue;
           }
@@ -286,7 +287,8 @@ export class SchedulerService {
           if (titulosGerar > 0) {
             // Buscar data inicial do contrato ou usar data atual
             const dataInicio = contrato.data_inicio || new Date();
-            const diaVencimento = contrato.dia_vencimento;
+            const diaVencimentoConfig = await DiasVencimento.findByPk(contrato.dia_vencimento_id);
+            const diaVencimento = diaVencimentoConfig?.dia || 15;
 
             // Gerar os títulos faltantes
             const hoje = new Date();

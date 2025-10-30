@@ -31,7 +31,7 @@ export interface Cliente extends BaseEntity {
   recebe_email: boolean;
   recebe_sms: boolean;
   recebe_whatsapp: boolean;
-  dia_vencimento?: number;
+  dia_vencimento_id?: number;
   conta_boleto?: number;
   data_validade_desconto?: string;
   
@@ -198,7 +198,7 @@ export interface Contrato extends BaseEntity {
   status: 'ativo' | 'inativo' | 'cancelado';
   observacoes?: string;
   isento_mensalidade?: boolean;
-  dia_vencimento?: number;
+  dia_vencimento_id?: number;
   conta_boleto?: number;
   data_validade_desconto?: string;
   modelo_contrato_id?: number;

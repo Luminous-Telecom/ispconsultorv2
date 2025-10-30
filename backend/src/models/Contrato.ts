@@ -40,7 +40,7 @@ export class Contrato extends Model<
   declare status: 'ativo' | 'inativo' | 'suspenso';
   declare observacoes: string | null;
   declare isento_mensalidade: boolean;
-  declare dia_vencimento: number | null;
+  declare dia_vencimento_id: number | null;
   declare conta_boleto: number | null;
   declare data_validade_desconto: Date | null;
   declare modelo_contrato_id: number | null;
@@ -218,13 +218,13 @@ Contrato.init(
       defaultValue: false,
       comment: 'Se o cliente está isento de mensalidade'
     },
-    dia_vencimento: {
+    dia_vencimento_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: 'Dia do mês para vencimento da mensalidade',
-      validate: {
-        min: 1,
-        max: 31
+      comment: 'ID do dia de vencimento configurado',
+      references: {
+        model: 'dias_vencimento',
+        key: 'id'
       }
     },
     conta_boleto: {

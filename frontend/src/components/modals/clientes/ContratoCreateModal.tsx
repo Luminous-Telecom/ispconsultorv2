@@ -7,6 +7,7 @@ import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import { useQuery } from '@tanstack/react-query';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
+import { DiasVencimentoService } from '../../../services/diasVencimentoService';
 import { Plano, Banco } from '../../../types';
 import { DocumentoSistema } from '../../../services/documentoSistemaService';
 import PlanoListModal from '../planos/PlanoListModal';
@@ -24,7 +25,7 @@ interface ContratoForm {
   status: 'ativo' | 'inativo' | 'suspenso';
   observacoes?: string;
   isento_mensalidade: boolean;
-  dia_vencimento: number;
+  dia_vencimento_id: number;
   conta_boleto: number;
   data_validade_desconto?: string;
   modelo_contrato_id: number;
@@ -52,7 +53,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     status: 'ativo',
     observacoes: '',
     isento_mensalidade: false,
-    dia_vencimento: 10,
+    dia_vencimento_id: 0,
     conta_boleto: 0,
     data_validade_desconto: '',
     modelo_contrato_id: 0
@@ -69,10 +70,16 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     queryFn: () => DocumentoSistemaService.getByType('contrato'),
     enabled: show,
   });
+  const { data: diasVencimentoData } = useQuery({
+    queryKey: ['dias-vencimento'],
+    queryFn: () => DiasVencimentoService.get(),
+    enabled: show,
+  });
   
   const planos = Array.isArray(planosData) ? planosData : (planosData?.data || []);
   const bancos = Array.isArray(bancosData) ? bancosData : (bancosData?.data || []);
   const modelosContrato = modelosContratoData?.data || [];
+  const diasVencimento = (diasVencimentoData?.data && Array.isArray(diasVencimentoData.data)) ? diasVencimentoData.data : [];
   
   // Mutation para criar contrato
   const createContratoMutation = useCreateContrato();
@@ -99,7 +106,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         status: 'ativo',
         observacoes: '',
         isento_mensalidade: false,
-        dia_vencimento: 10,
+        dia_vencimento_id: 0,
         conta_boleto: 0,
         data_validade_desconto: '',
         modelo_contrato_id: 0
@@ -130,6 +137,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     if (!formData.modelo_contrato_id || formData.modelo_contrato_id === 0) {
       newErrors.modelo_contrato_id = 'Modelo de contrato é obrigatório';
     }
+    if (!formData.dia_vencimento_id || formData.dia_vencimento_id === 0) newErrors.dia_vencimento_id = 'Dia de vencimento é obrigatório';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -155,7 +163,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       status: formData.status,
       observacoes: formData.observacoes || undefined,
       isento_mensalidade: formData.isento_mensalidade,
-      dia_vencimento: formData.dia_vencimento,
+      dia_vencimento_id: formData.dia_vencimento_id,
       conta_boleto: formData.conta_boleto,
       data_validade_desconto: formData.data_validade_desconto || undefined,
       modelo_contrato_id: formData.modelo_contrato_id
@@ -347,19 +355,24 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
         <div className="row">
           <div className="col-md-6">
             <div className="mb-2">
-              <FormField
-                name="dia_vencimento"
-                type="number"
-                label="Dia de Vencimento"
-                placeholder="10"
-                size="md"
-                required
-                value={formData.dia_vencimento || ''}
-                onChange={(value, name) => handleInputChange('dia_vencimento', parseInt(value as string) || 0)}
+              <label htmlFor="dia_vencimento_id" className="form-label small">Dia de Vencimento *</label>
+              <select
+                className="form-select"
+                id="dia_vencimento_id"
+                value={formData.dia_vencimento_id}
+                onChange={(e) => handleInputChange('dia_vencimento_id', parseInt(e.target.value))}
                 disabled={createContratoMutation.isPending}
-                min={1}
-                max={31}
-              />
+              >
+                <option value={0}>Selecione</option>
+                {diasVencimento
+                  .filter((item: any) => item.ativo)
+                  .map((item: any) => (
+                    <option key={item.id} value={item.id}>
+                      Dia {String(item.dia).padStart(2, '0')}
+                    </option>
+                  ))}
+              </select>
+              {errors.dia_vencimento_id && <div className="text-danger small">{errors.dia_vencimento_id}</div>}
             </div>
           </div>
 

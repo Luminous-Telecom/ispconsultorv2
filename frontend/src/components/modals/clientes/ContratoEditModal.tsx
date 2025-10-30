@@ -16,6 +16,7 @@ import TituloCreateModal from '../titulos/TituloCreateModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
+import { DiasVencimentoService } from '../../../services/diasVencimentoService';
 import PlanoListModal from '../planos/PlanoListModal';
 import BancoListModal from '../bancos/BancoListModal';
 import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
@@ -48,7 +49,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     status: 'ativo',
     observacoes: '',
     isento_mensalidade: false,
-    dia_vencimento: 10,
+    dia_vencimento_id: 0,
     conta_boleto: 0,
     data_validade_desconto: '',
     modelo_contrato_id: 0
@@ -111,10 +112,16 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     queryFn: () => DocumentoSistemaService.getByType('contrato'),
     enabled: show,
   });
+  const { data: diasVencimentoData } = useQuery({
+    queryKey: ['dias-vencimento'],
+    queryFn: () => DiasVencimentoService.get(),
+    enabled: show,
+  });
   
   const planos = Array.isArray(planosData) ? planosData : (planosData?.data || []);
   const bancos = Array.isArray(bancosData) ? bancosData : (bancosData?.data || []);
   const modelosContrato = modelosContratoData?.data || [];
+  const diasVencimento = (diasVencimentoData?.data && Array.isArray(diasVencimentoData.data)) ? diasVencimentoData.data : [];
   
   // Hooks para termos
   const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(contratoId || 0);
@@ -162,7 +169,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     status: 'ativo',
     observacoes: '',
     isento_mensalidade: false,
-    dia_vencimento: 10,
+    dia_vencimento_id: 0,
     conta_boleto: 0,
     data_validade_desconto: '',
     modelo_contrato_id: 0
@@ -178,7 +185,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     status: contratoData.status || 'ativo',
     observacoes: ensureString(contratoData.observacoes),
     isento_mensalidade: contratoData.isento_mensalidade || false,
-    dia_vencimento: contratoData.dia_vencimento || 10,
+    dia_vencimento_id: contratoData.dia_vencimento_id || 0,
     conta_boleto: contratoData.conta_boleto || 0,
     data_validade_desconto: contratoData.data_validade_desconto ? contratoData.data_validade_desconto.split('T')[0] : '',
     modelo_contrato_id: contratoData.modelo_contrato_id || 0
@@ -254,10 +261,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       newErrors.modelo_contrato_id = 'Modelo de contrato é obrigatório';
     }
 
-    if (!formData.dia_vencimento || formData.dia_vencimento === 0) {
-      newErrors.dia_vencimento = 'Dia de vencimento é obrigatório';
-    } else if (formData.dia_vencimento < 1 || formData.dia_vencimento > 31) {
-      newErrors.dia_vencimento = 'Dia de vencimento deve estar entre 1 e 31';
+    if (!formData.dia_vencimento_id || formData.dia_vencimento_id === 0) {
+      newErrors.dia_vencimento_id = 'Dia de vencimento é obrigatório';
     }
 
     if (!formData.conta_boleto || formData.conta_boleto === 0) {
@@ -826,7 +831,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         ...formData
       });
 
-      // Notificação removida - não mostrar ao salvar automaticamente
+      success('Contrato atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['contratos'] });
       queryClient.invalidateQueries({ queryKey: ['cliente', contratoData?.data?.cliente_id] });
       
@@ -943,6 +948,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 planosData={planosData}
                 bancosData={bancosData}
                 modelosContratoData={modelosContratoData}
+                diasVencimento={diasVencimento}
                 onShowPlanoModal={() => setShowPlanoModal(true)}
                 onShowBancoModal={() => setShowBancoModal(true)}
                 onShowModeloContratoModal={() => setShowModeloContratoModal(true)}

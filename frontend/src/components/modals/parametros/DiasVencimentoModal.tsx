@@ -31,8 +31,12 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
   };
 
   const handleSave = async () => {
-    await DiasVencimentoService.update({ dias: diasAtivos });
-    success('Dias de vencimento salvos com sucesso!');
+    try {
+      await DiasVencimentoService.update({ dias: diasAtivos });
+      success('Dias de vencimento salvos com sucesso!');
+    } catch (err: any) {
+      error(err?.response?.data?.message || 'Erro ao salvar dias de vencimento');
+    }
   };
 
   return (

@@ -13,7 +13,7 @@ interface ContratoForm {
   status: 'ativo' | 'inativo' | 'suspenso';
   observacoes: string;
   isento_mensalidade: boolean;
-  dia_vencimento: number;
+  dia_vencimento_id: number;
   conta_boleto: number;
   data_validade_desconto: string;
   modelo_contrato_id: number;
@@ -32,6 +32,7 @@ interface ContratoTabProps {
   planosData: any;
   bancosData: any;
   modelosContratoData: any;
+  diasVencimento: any[];
   onShowPlanoModal: () => void;
   onShowBancoModal: () => void;
   onShowModeloContratoModal: () => void;
@@ -50,6 +51,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   planosData,
   bancosData,
   modelosContratoData,
+  diasVencimento,
   onShowPlanoModal,
   onShowBancoModal,
   onShowModeloContratoModal
@@ -150,20 +152,26 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
 
       {/* Dia de Vencimento */}
       <div className="col-md-6 mb-2">
-        <FormField
-          name="dia_vencimento"
-          type="number"
-          label="Dia de Vencimento"
-          placeholder="Ex: 10"
-          required={true}
-          size="md"
-          value={formData.dia_vencimento}
-          onChange={(value, name) => handleInputChange('dia_vencimento', parseInt(value as string) || 0)}
-          error={errors.dia_vencimento?.toString()}
-          isInvalid={!!errors.dia_vencimento}
-          min={1}
-          max={31}
-        />
+        <label htmlFor="dia_vencimento_id" className="form-label">
+          Dia de Vencimento <span className="text-danger ms-1">*</span>
+        </label>
+        <select
+          id="dia_vencimento_id"
+          name="dia_vencimento_id"
+          className={`form-select ${errors.dia_vencimento_id ? 'is-invalid' : ''}`}
+          value={formData.dia_vencimento_id || 0}
+          onChange={(e) => handleInputChange('dia_vencimento_id', parseInt(e.target.value))}
+        >
+          <option value={0}>Selecione</option>
+          {diasVencimento
+            .filter((item: any) => item.ativo)
+            .map((item: any) => (
+              <option key={item.id} value={item.id}>
+                Dia {String(item.dia).padStart(2, '0')}
+              </option>
+            ))}
+        </select>
+        {errors.dia_vencimento_id && <div className="invalid-feedback">{errors.dia_vencimento_id}</div>}
       </div>
 
       {/* Banco para Boleto */}

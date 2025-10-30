@@ -4,6 +4,7 @@ import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
+import { DiasVencimento } from '../models/DiasVencimento';
 import { BancoApiService } from '../services/BancoApiService';
 import { BarcodeService } from '../services/BarcodeService';
 import { logger } from '../utils/logger';
@@ -487,8 +488,11 @@ export class TituloController {
         });
 
         let diaVencimento = 15; // Dia padrão
-        if (contratoAtivo && contratoAtivo.dia_vencimento) {
-          diaVencimento = contratoAtivo.dia_vencimento;
+        if (contratoAtivo && contratoAtivo.dia_vencimento_id) {
+          const diaVencimentoConfig = await DiasVencimento.findByPk(contratoAtivo.dia_vencimento_id);
+          if (diaVencimentoConfig && diaVencimentoConfig.dia) {
+            diaVencimento = diaVencimentoConfig.dia;
+          }
         }
 
         // Calcular próxima data de vencimento

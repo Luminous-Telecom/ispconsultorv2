@@ -970,7 +970,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'dia_vencimento',
       label: 'Dia Venc.',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.dia_vencimento ? contrato.dia_vencimento : '-'
+      render: (contrato: ContratoItem) => contrato.dia_vencimento_id ? contrato.dia_vencimento_id : '-'
     },
     {
       key: 'banco_nome',

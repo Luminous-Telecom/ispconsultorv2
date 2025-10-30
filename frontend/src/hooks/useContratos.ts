@@ -13,7 +13,7 @@ export interface Contrato {
   status: 'ativo' | 'inativo' | 'suspenso';
   observacoes: string | null;
   isento_mensalidade: boolean;
-  dia_vencimento: number | null;
+  dia_vencimento_id: number | null;
   conta_boleto: number | null;
   data_validade_desconto: string | null;
   modelo_contrato_id: number | null;
@@ -45,7 +45,7 @@ export interface CreateContratoData {
   status?: 'ativo' | 'inativo' | 'suspenso';
   observacoes?: string;
   isento_mensalidade?: boolean;
-  dia_vencimento: number;
+  dia_vencimento_id: number;
   conta_boleto: number;
   data_validade_desconto?: string;
   modelo_contrato_id: number;

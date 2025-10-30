@@ -113,13 +113,8 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       if (contrato.plano_id) {
         let dataVencimento = '';
         
-        // Se tem dia de vencimento configurado no contrato, usar ele
-        if (contrato.dia_vencimento) {
-          dataVencimento = calcularProximaDataVencimento(contrato.dia_vencimento);
-        } else {
-          // Se não tem dia configurado, usar o dia 15 do próximo mês como padrão
-          dataVencimento = calcularProximaDataVencimento(15);
-        }
+        // Usar dia 15 como padrão (o dia real será calculado pelo backend)
+        dataVencimento = calcularProximaDataVencimento(15);
         
         // Atualizar formulário com dados do contrato
         const novoFormData = {
@@ -142,13 +137,8 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       if (contratoAtivo && contratoAtivo.plano_id) {
         let dataVencimento = '';
         
-        // Se tem dia de vencimento configurado no contrato, usar ele
-        if ((contratoAtivo as any).dia_vencimento) {
-          dataVencimento = calcularProximaDataVencimento((contratoAtivo as any).dia_vencimento);
-        } else {
-          // Se não tem dia configurado, usar o dia 15 do próximo mês como padrão
-          dataVencimento = calcularProximaDataVencimento(15);
-        }
+        // Usar dia 15 como padrão (o dia real será calculado pelo backend)
+        dataVencimento = calcularProximaDataVencimento(15);
         
         const novoFormDataCliente = {
           plano_id: contratoAtivo.plano_id,
