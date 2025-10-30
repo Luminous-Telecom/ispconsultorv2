@@ -302,6 +302,8 @@ interface RichTextEditorProps {
   name?: string;
   ariaLabelledBy?: string;
   onInsertVariable?: (variable: string) => void;
+  disableColors?: boolean;
+  disableVariables?: boolean;
 }
 
 const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorProps> = ({
@@ -312,7 +314,9 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
   id,
   name,
   ariaLabelledBy,
-  onInsertVariable
+  onInsertVariable,
+  disableColors = false,
+  disableVariables = false
 }, ref) => {
   const editorInstanceRef = useRef<any>(null);
 
@@ -383,9 +387,8 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
             Font,
             FontSize,
             FontFamily,
-            FontColor,
-            FontBackgroundColor,
-            VariablePlugin,
+            ...(disableColors ? [] : [FontColor, FontBackgroundColor]),
+            ...(disableVariables ? [] : [VariablePlugin]),
             RemoveFormat,
             Undo,
             SourceEditing,
@@ -400,9 +403,10 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
             items: [
               'undo', 'redo', '|',
               'sourceEditing', '|',
-              'heading', 'variables', '|',
+              ...(disableVariables ? [] : ['heading', 'variables', '|']),
+              ...(disableVariables ? ['heading', '|'] : []),
               'bold', 'italic', 'underline', '|',
-              'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
+              'fontSize', 'fontFamily', ...(disableColors ? [] : ['fontColor', 'fontBackgroundColor']), '|',
               'alignment', '|',
               'bulletedList', 'numberedList', '|',
               'outdent', 'indent', '|',

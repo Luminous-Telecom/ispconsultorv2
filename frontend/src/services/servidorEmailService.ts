@@ -35,6 +35,14 @@ export interface CreateServidorEmail {
 
 export interface UpdateServidorEmail extends Partial<CreateServidorEmail> {}
 
+export interface MensagemEmail {
+  id?: number;
+  tipo: string;
+  tipo_envio: 'desativado' | 'pdf';
+  mensagem_padrao: string;
+  ativo: boolean;
+}
+
 export class ServidorEmailService {
   static async list(): Promise<{ success: boolean; data: ServidorEmail[]; message: string }> {
     const response = await apiService.get<{ success: boolean; data: ServidorEmail[]; message: string }>('/servidores-email');
@@ -80,6 +88,23 @@ export class ServidorEmailService {
 
   static async createOrUpdate(data: CreateServidorEmail): Promise<{ success: boolean; data: ServidorEmail; message: string }> {
     const response = await apiService.post<{ success: boolean; data: ServidorEmail; message: string }>('/servidores-email/configurar', data);
+    return response;
+  }
+
+  static async getMensagemByTipo(mensagemType: string): Promise<MensagemEmail | null> {
+    try {
+      const response = await apiService.get<{ success: boolean; data: MensagemEmail }>(`/mensagens-email/tipo/${mensagemType}`);
+      return response.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  static async saveMensagem(data: MensagemEmail): Promise<{ success: boolean; message: string; data: MensagemEmail }> {
+    const response = await apiService.post<{ success: boolean; message: string; data: MensagemEmail }>('/mensagens-email', data);
     return response;
   }
 }
