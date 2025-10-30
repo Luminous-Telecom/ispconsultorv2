@@ -2,6 +2,7 @@ import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Titulo } from '../models/Titulo';
 import { Plano } from '../models/Plano';
+import { DiasVencimento } from '../models/DiasVencimento';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import { Op } from 'sequelize';
 import axios from 'axios';
@@ -271,12 +272,24 @@ export class VariaveisDocumentoService {
       }
     }
 
+    // Resolver dia de vencimento (migrado para FK dia_vencimento_id)
+    let diaVencimentoStr = '';
+    try {
+      const diaId = (contrato as any).dia_vencimento_id;
+      if (diaId) {
+        const cfg = await DiasVencimento.findByPk(diaId);
+        if (cfg && (cfg as any).dia != null) {
+          diaVencimentoStr = String((cfg as any).dia);
+        }
+      }
+    } catch {}
+
     // Calcular valor do contrato (valor_final ou valor_mensal do plano)
     const valorContrato = contrato.valor_final || contrato.plano?.valor_mensal || 0;
     
     const substituicoes: Record<string, string> = {
       '#contrato.id#': String(contrato.id),
-      '#contrato.plano#': contrato.plano?.nome_plano || '',
+      '#contrato.plano#': contrato.plano?.nome_plano || (contrato.plano?.nome || ''),
       '#contrato.valor_contrato#': this.formatarMoeda(valorContrato),
       '#contrato.valor_mensal#': this.formatarMoeda(contrato.plano?.valor_mensal || 0),
       '#contrato.valor_final#': this.formatarMoeda(contrato.valor_final || 0),
@@ -286,7 +299,7 @@ export class VariaveisDocumentoService {
       '#contrato.data_fim#': contrato.data_fim ? this.formatarData(new Date(contrato.data_fim)) : '',
       '#contrato.data_validade_desconto#': contrato.data_validade_desconto ? this.formatarData(new Date(contrato.data_validade_desconto)) : '',
       '#contrato.status#': contrato.status || '',
-      '#contrato.dia_vencimento#': String(contrato.dia_vencimento || ''),
+      '#contrato.dia_vencimento#': diaVencimentoStr,
       '#contrato.isento_mensalidade#': contrato.isento_mensalidade ? 'Sim' : 'Não',
     };
 

@@ -8,10 +8,44 @@ import { DiasVencimento } from '../models/DiasVencimento';
 import { BancoApiService } from '../services/BancoApiService';
 import { BarcodeService } from '../services/BarcodeService';
 import { logger } from '../utils/logger';
+import puppeteer from 'puppeteer';
 import { Op } from 'sequelize';
 
 export class TituloController {
   
+  // Método estático para gerar PDF em base64
+  static async gerarPdfBase64(titulo: any): Promise<string | null> {
+    try {
+      const html = await this.processarBoletoHtml(titulo);
+      
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+
+      const pdfBuffer = await page.pdf({
+        format: 'a4',
+        printBackground: true,
+        margin: {
+          top: '0.5cm',
+          right: '0.5cm',
+          bottom: '0.5cm',
+          left: '0.5cm'
+        }
+      });
+
+      await browser.close();
+
+      return pdfBuffer.toString('base64');
+    } catch (error) {
+      logger.error('Erro ao gerar PDF do boleto:', error);
+      return null;
+    }
+  }
+
   // Método auxiliar para processar um único boleto
   private static async processarBoletoHtml(titulo: any): Promise<string> {
     // Carregar dados da empresa
