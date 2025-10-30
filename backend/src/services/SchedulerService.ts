@@ -75,8 +75,11 @@ export class SchedulerService {
       return;
     }
 
-    const job = cron.schedule(cronExpression, async () => {
-      await this.runRoutine(routine);
+    const job = cron.schedule(cronExpression, () => {
+      // Executar em background sem aguardar
+      this.runRoutine(routine).catch((error) => {
+        console.error(`Erro ao executar rotina ${routine.id} em background:`, error);
+      });
     });
 
     job.start();
@@ -137,32 +140,7 @@ export class SchedulerService {
 
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
-
-      // Verificar se houve erros nos resultados da rotina
-      let statusFinal = 'sucesso';
-      let temErros = false;
-
-      if (resultado && typeof resultado === 'object') {
-        // Para rotina de geração de títulos
-        if (resultado.carnês_erro && resultado.carnês_erro > 0) {
-          temErros = true;
-        }
-        if (resultado.títulos_erro && resultado.títulos_erro > 0) {
-          temErros = true;
-        }
-        
-        // Para outras rotinas, verificar se há erros nos detalhes
-        if (resultado.detalhes && Array.isArray(resultado.detalhes)) {
-          const errosDetalhes = resultado.detalhes.filter((d: any) => d.status === 'erro');
-          if (errosDetalhes.length > 0) {
-            temErros = true;
-          }
-        }
-      }
-
-      if (temErros) {
-        statusFinal = 'erro';
-      }
+      const statusFinal = resultado?.success === false ? 'erro' : 'sucesso';
 
       // Atualizar log com status correto
       await executionLog.update({
@@ -184,19 +162,16 @@ export class SchedulerService {
     } catch (error: unknown) {
       console.error(`Erro ao executar rotina ${routine.nome}:`, error);
 
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
 
-      // Atualizar log com erro
       if (executionLog) {
         await executionLog.update({
           status: 'erro',
           data_fim: endTime,
           duracao_ms: duration,
-          erro: errorMessage,
-          stack_trace: errorStack
+          erro: errorMessage
         });
       }
 
@@ -556,29 +531,14 @@ export class SchedulerService {
       throw new Error('Rotina não encontrada');
     }
 
-    // Se a hora de execução ou frequência mudaram, recalcular próxima execução
-    const shouldRecalculateNextExecution = 
-      data.hora_execucao !== undefined || 
-      data.frequencia !== undefined || 
-      data.dia_execucao !== undefined || 
-      data.dia_semana !== undefined;
-
-
-    if (shouldRecalculateNextExecution) {
-      // Usar os novos dados ou os existentes para recalcular
-      const updatedData = { 
-        ...routine.get({ plain: true }), 
-        ...data 
-      };
+    if (data.hora_execucao !== undefined || data.frequencia !== undefined || 
+        data.dia_execucao !== undefined || data.dia_semana !== undefined) {
+      const updatedData = { ...routine.get({ plain: true }), ...data };
       data.proxima_execucao = this.calculateNextExecution(updatedData);
     }
 
     await routine.update(data);
     
-    // Recarregar a rotina do banco para verificar se foi salva
-    const _updatedRoutine = await ScheduledRoutine.findByPk(id);
-    
-    // Reagendar se a rotina estiver ativa
     if (routine.ativo) {
       await this.scheduleRoutine(routine);
     } else {
@@ -594,12 +554,8 @@ export class SchedulerService {
       throw new Error('Rotina não encontrada');
     }
 
-    // Parar cron job
     this.unscheduleRoutine(id);
-    
-    // Deletar rotina
     await routine.destroy();
-
   }
 
   public async toggleRoutine(id: number, ativo: boolean): Promise<ScheduledRoutine> {
@@ -625,12 +581,12 @@ export class SchedulerService {
       throw new Error('Rotina não encontrada');
     }
 
+    // Executar em background sem aguardar
+    this.runRoutine(routine).catch((error) => {
+      console.error(`Erro ao executar rotina ${id} em background:`, error);
+    });
     
-    // Usar runRoutine para criar logs completos - isso já executa a rotina
-    await this.runRoutine(routine);
-    
-    // Não executar novamente - runRoutine já fez isso
-    return { message: 'Rotina executada com sucesso' };
+    return { message: 'Rotina iniciada em background' };
   }
 
 

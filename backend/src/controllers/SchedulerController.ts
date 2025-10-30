@@ -206,7 +206,7 @@ export class SchedulerController {
 
       res.json({
         success: true,
-        message: 'Rotina executada com sucesso',
+        message: 'Rotina iniciada em background',
         data: resultado
       });
     } catch (error: unknown) {

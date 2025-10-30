@@ -5,6 +5,7 @@ import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import { SchedulerService, RotinaAgendada } from '../../../services/schedulerService';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -16,6 +17,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
   onClose
 }) => {
   const queryClient = useQueryClient();
+  const { success, error: showError } = useNotificationContext();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
@@ -132,9 +134,10 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     if (!window.confirm('Deseja executar a rotina agora?')) return;
     try {
       await SchedulerService.executeRotina(rotina.id);
+      success('Rotina iniciada em background');
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
     } catch (error: any) {
-      alert(`Erro ao executar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
+      showError(`Erro ao executar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
     }
   };
 
