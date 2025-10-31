@@ -25,7 +25,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
   onSuccess
 }) => {
   const [formData, setFormData] = useState({
-    data_pagamento: new Date().toISOString().split('T')[0], // Inicializar com data atual
+    data_pagamento: new Date().toISOString().split('T')[0],
     valor_pago: '',
     observacoes: ''
   });
@@ -35,11 +35,9 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
 
   useEffect(() => {
     if (isOpen && parcela) {
-      // Sempre usar a data atual quando o modal abrir
-      const hoje = new Date().toISOString().split('T')[0];
       setFormData({
-        data_pagamento: hoje,
-        valor_pago: (Number(parcela.valor_parcela) || 0).toString(),
+        data_pagamento: new Date().toISOString().split('T')[0],
+        valor_pago: (parcela.valor_parcela || 0).toString(),
         observacoes: ''
       });
       setErrors({});
@@ -92,7 +90,6 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
       });
 
       onSuccess?.();
-      // Não fechar o modal automaticamente
     } catch (error) {
       console.error('Erro ao marcar como pago:', error);
     }
@@ -105,15 +102,10 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
     }
   };
 
-  const formatCurrency = (value: string) => {
+  const handleValorChange = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
     const floatValue = parseFloat(numericValue) / 100;
-    return floatValue.toFixed(2);
-  };
-
-  const handleValorChange = (value: string) => {
-    const formatted = formatCurrency(value);
-    handleInputChange('valor_pago', formatted);
+    handleInputChange('valor_pago', floatValue.toFixed(2));
   };
 
   if (!parcela) return null;
@@ -125,33 +117,31 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
       title={`Receber - Título ${parcela.numero_titulo}`}
       size="lg"
     >
-      <form onSubmit={handleSubmit}>
-        {/* Informações da parcela */}
+      <form onSubmit={handleSubmit} className="p-3">
         <div className="card mb-3">
-          <div className="card-header">
+          <div className="card-header py-2">
             <h6 className="mb-0">Informações da Parcela</h6>
           </div>
-          <div className="card-body">
-            <div className="row">
+          <div className="card-body py-2">
+            <div className="row g-2">
               <div className="col-md-6">
-                <strong>Cliente:</strong><br />
-                {parcela.cliente?.razao_social || 'N/A'}
+                <small className="text-muted">Cliente:</small><br />
+                <span className="text-secondary">{parcela.cliente?.razao_social || 'N/A'}</span>
               </div>
               <div className="col-md-6">
-                <strong>Vencimento:</strong><br />
-                {new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}
+                <small className="text-muted">Vencimento:</small><br />
+                <span className="text-secondary">{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</span>
               </div>
             </div>
-            <div className="row mt-2">
+            <div className="row g-2 mt-2">
               <div className="col-md-6">
-                <strong>Valor Original:</strong><br />
-                R$ {(Number(parcela.valor_parcela) || 0).toFixed(2)}
+                <small className="text-muted">Valor Original:</small><br />
+                <span className="text-secondary">R$ {(Number(parcela.valor_parcela) || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Dados do pagamento */}
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
@@ -175,32 +165,30 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
               <label htmlFor="valor_pago" className="form-label">
                 Valor Pago *
               </label>
-              <div className="input-group">
-                <span className="input-group-text" style={{ 
-                  padding: 0,
-                  backgroundColor: 'var(--bs-tertiary-bg)',
-                  color: 'var(--bs-body-color)',
-                  borderColor: 'var(--bs-border-color)',
-                  border: '1px solid var(--bs-border-color)'
-                }}>R$</span>
-                <FormField
+              <div className="input-group has-validation">
+                <span className="input-group-text" style={{ padding: '0 0.75rem' }}>R$</span>
+                <input
+                  id="valor_pago"
                   name="valor_pago"
                   type="text"
+                  className={`form-control ${errors.valor_pago ? 'is-invalid' : ''}`}
                   placeholder="0,00"
                   required={true}
-                  size="md"
                   value={formData.valor_pago}
-                  onChange={(e: any) => handleValorChange(e.value)}
-                  error={errors.valor_pago}
-                  isInvalid={!!errors.valor_pago}
+                  onChange={(e) => handleValorChange(e.target.value)}
                   disabled={marcarPagoMutation.isPending}
                 />
+                {errors.valor_pago && (
+                  <div className="invalid-feedback">
+                    {errors.valor_pago}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mb-3">
+        <div className="mb-4">
           <FormField
             name="observacoes"
             type="textarea"
@@ -214,13 +202,12 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             disabled={marcarPagoMutation.isPending}
             rows={3}
           />
-          <div className="text-secondary">
+          <div className="text-secondary mt-2">
             {formData.observacoes.length}/500 caracteres
           </div>
         </div>
 
-        {/* Botões */}
-        <div className="d-flex justify-content-end gap-2 mt-3">
+        <div className="d-flex justify-content-end gap-2 mt-4">
           <button
             type="button"
             className="btn btn-secondary"
