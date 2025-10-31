@@ -124,6 +124,7 @@ const Button: React.FC<ButtonProps> = ({
         id={id}
         data-testid={dataTestId}
         title={tooltip}
+        aria-label={tooltip || (icon && (!children || (typeof children === 'string' && children.trim() === '')) ? `Botão ${icon}` : undefined)}
         data-bs-toggle={tooltip ? 'tooltip' : undefined}
         data-bs-placement={tooltip ? tooltipPosition : undefined}
         data-bs-title={tooltip}
@@ -143,6 +144,7 @@ const Button: React.FC<ButtonProps> = ({
       id={id}
       data-testid={dataTestId}
       title={tooltip}
+      aria-label={tooltip || (icon && (!children || (typeof children === 'string' && children.trim() === '')) ? `Botão ${icon}` : undefined)}
       data-bs-toggle={tooltip ? 'tooltip' : undefined}
       data-bs-placement={tooltip ? tooltipPosition : undefined}
       data-bs-title={tooltip}

@@ -114,6 +114,7 @@ const Layout: React.FC = () => {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="d-md-none me-3"
               style={{ color: 'var(--text-primary)' }}
+              tooltip="Abrir/Fechar menu"
             >
               {''}
             </Button>
