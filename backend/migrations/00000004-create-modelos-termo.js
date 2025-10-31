@@ -38,11 +38,10 @@ module.exports = {
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
       }
     });
 
-    // Adicionar índices
     await queryInterface.addIndex('modelos_termo', ['tipo_termo']);
     await queryInterface.addIndex('modelos_termo', ['ativo']);
     await queryInterface.addIndex('modelos_termo', ['nome']);
@@ -52,3 +51,4 @@ module.exports = {
     await queryInterface.dropTable('modelos_termo');
   }
 };
+

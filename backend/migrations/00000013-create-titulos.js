@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('titulos', {
       id: {
         type: Sequelize.INTEGER,
@@ -93,7 +93,7 @@ module.exports = {
         allowNull: true
       },
       qrcode_image: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.TEXT,
         allowNull: true
       },
       observacoes: {
@@ -158,7 +158,7 @@ module.exports = {
     await queryInterface.addIndex('titulos', ['numero_titulo'], { unique: true, name: 'titulos_numero_unique' });
   },
 
-  async down(queryInterface, Sequelize) {
+  down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('titulos');
   }
 };

@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('contratos', {
       id: {
         type: Sequelize.INTEGER,
@@ -61,9 +61,15 @@ module.exports = {
         allowNull: false,
         defaultValue: false
       },
-      dia_vencimento: {
+      dia_vencimento_id: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
+        references: {
+          model: 'dias_vencimento',
+          key: 'id'
+        },
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE'
       },
       conta_boleto: {
         type: Sequelize.INTEGER,
@@ -82,10 +88,11 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
-          model: 'documentos_sistema',
+          model: 'modelo_contrato',
           key: 'id'
         },
-        onDelete: 'SET NULL'
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE'
       },
       created_at: {
         type: Sequelize.DATE,
@@ -105,7 +112,8 @@ module.exports = {
     await queryInterface.addIndex('contratos', ['cliente_id', 'plano_id'], { unique: true, name: 'contratos_cliente_plano_unique' });
   },
 
-  async down(queryInterface, Sequelize) {
-      await queryInterface.dropTable('contratos');
-    }
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('contratos');
+  }
 };
+

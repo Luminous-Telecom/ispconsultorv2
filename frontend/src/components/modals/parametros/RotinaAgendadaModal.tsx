@@ -23,7 +23,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   const isEditMode = !!rotinaId;
 
   const [formData, setFormData] = useState<CreateRotinaData>({
-    nome: '',
+    nome: 'Geração de Títulos', // Gerado automaticamente baseado no tipo
     tipo: 'geracao_titulos',
     descricao: '',
     frequencia: 'diaria',
@@ -44,7 +44,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   useEffect(() => {
     if (rotinaData && isEditMode) {
       setFormData({
-        nome: rotinaData.nome || '',
+        nome: rotinaData.nome || '', // Mantido no estado mas não exibido no formulário
         tipo: rotinaData.tipo || 'envio_boletos',
         descricao: rotinaData.descricao || '',
         frequencia: rotinaData.frequencia || 'diaria',
@@ -83,7 +83,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
 
   const resetForm = () => {
     setFormData({
-      nome: '',
+      nome: 'Geração de Títulos', // Gerado automaticamente baseado no tipo
       tipo: 'geracao_titulos',
       descricao: '',
       frequencia: 'diaria',
@@ -135,22 +135,25 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
           <div className="row g-3">
           <div className="col-12">
             <FormField
-              name="nome"
-              label="Nome da Rotina"
-              type="text"
-              value={formData.nome}
-              onChange={(value) => setFormData({ ...formData, nome: value })}
-              required
-            />
-          </div>
-
-          <div className="col-12">
-            <FormField
               name="tipo"
               label="Tipo"
               type="select"
               value={formData.tipo}
-              onChange={(value) => setFormData({ ...formData, tipo: value as any })}
+              onChange={(value) => {
+                const tipoValue = value as any;
+                // Gerar nome automaticamente baseado no tipo
+                const nomesPorTipo: Record<string, string> = {
+                  'geracao_titulos': 'Geração de Títulos',
+                  'envio_boletos': 'Envio de Boletos',
+                  'remessa_bancaria': 'Remessa Bancária',
+                  'verificar_vencimentos': 'Verificar Vencimentos'
+                };
+                setFormData({ 
+                  ...formData, 
+                  tipo: tipoValue,
+                  nome: nomesPorTipo[tipoValue] || 'Rotina Personalizada'
+                });
+              }}
               required
               options={[
                 { value: 'geracao_titulos', label: 'Geração de Títulos' },

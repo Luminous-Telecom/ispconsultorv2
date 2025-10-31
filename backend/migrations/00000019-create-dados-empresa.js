@@ -1,8 +1,7 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('dados_empresa', {
       id: {
         allowNull: false,
@@ -10,8 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      
-      // Dados básicos da empresa
       razao_social: {
         type: Sequelize.STRING,
         allowNull: false
@@ -33,8 +30,6 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
-      
-      // Endereço
       cep: {
         type: Sequelize.STRING(9),
         allowNull: false
@@ -63,8 +58,6 @@ module.exports = {
         type: Sequelize.STRING(2),
         allowNull: false
       },
-      
-      // Contato
       telefone: {
         type: Sequelize.STRING,
         allowNull: true
@@ -81,8 +74,6 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
-      
-      // Responsável
       responsavel_nome: {
         type: Sequelize.STRING,
         allowNull: false
@@ -95,25 +86,25 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
-      
-      // Logo da empresa
       logo: {
         type: Sequelize.STRING,
         allowNull: true
       },
-      
       created_at: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updated_at: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
       }
     });
   },
 
-  async down(queryInterface, Sequelize) {
+  down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('dados_empresa');
   }
 };
+

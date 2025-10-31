@@ -2,7 +2,6 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // Criar tabela sem foreign key primeiro
     await queryInterface.createTable('termos_contrato', {
       id: {
         allowNull: false,
@@ -12,7 +11,22 @@ module.exports = {
       },
       contrato_id: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+          model: 'contratos',
+          key: 'id'
+        },
+        onDelete: 'CASCADE'
+      },
+      modelo_termo_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'modelos_termo',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL'
       },
       tipo_termo: {
         type: Sequelize.ENUM('adesao', 'permanencia', 'cancelamento', 'alteracao'),
@@ -29,6 +43,11 @@ module.exports = {
       aceito_por: {
         type: Sequelize.STRING(255),
         allowNull: true
+      },
+      assinado: {
+        type: Sequelize.ENUM('SIM', 'NAO'),
+        allowNull: false,
+        defaultValue: 'NAO'
       },
       observacoes: {
         type: Sequelize.TEXT,
@@ -47,14 +66,14 @@ module.exports = {
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
       }
     });
 
-    // Adicionar índices
     await queryInterface.addIndex('termos_contrato', ['contrato_id']);
     await queryInterface.addIndex('termos_contrato', ['tipo_termo']);
     await queryInterface.addIndex('termos_contrato', ['ativo']);
+    await queryInterface.addIndex('termos_contrato', ['modelo_termo_id']);
     await queryInterface.addIndex('termos_contrato', ['contrato_id', 'tipo_termo'], {
       unique: true,
       name: 'unique_contrato_tipo_termo'
@@ -65,3 +84,4 @@ module.exports = {
     await queryInterface.dropTable('termos_contrato');
   }
 };
+

@@ -136,7 +136,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['planos', planoId] });
       queryClient.invalidateQueries({ queryKey: ['plano', planoId] });
       onSuccess?.();
-      onClose();
+      // Não fechar o modal automaticamente
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao atualizar plano');

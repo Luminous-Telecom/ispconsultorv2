@@ -11,104 +11,70 @@ module.exports = {
       },
       host: {
         type: Sequelize.STRING(255),
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+        allowNull: false
       },
       porta: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-        validate: {
-          min: 1,
-          max: 65535,
-        },
+        allowNull: false
       },
       usuario: {
         type: Sequelize.STRING(255),
-        allowNull: false,
-        validate: {
-          isEmail: true,
-          notEmpty: true,
-        },
+        allowNull: false
       },
       senha: {
         type: Sequelize.STRING(255),
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+        allowNull: false
       },
       ssl: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: false,
+        defaultValue: false
       },
       tls: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: true,
+        defaultValue: true
       },
       ativo: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: true,
+        defaultValue: true
       },
       nome_remetente: {
         type: Sequelize.STRING(255),
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
+        allowNull: false
       },
       email_remetente: {
         type: Sequelize.STRING(255),
-        allowNull: false,
-        validate: {
-          isEmail: true,
-          notEmpty: true,
-        },
+        allowNull: false
       },
       timeout: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 30000,
-        validate: {
-          min: 1000,
-          max: 300000,
-        },
+        defaultValue: 30000
       },
       tentativas: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 3,
-        validate: {
-          min: 1,
-          max: 10,
-        },
+        defaultValue: 3
       },
       intervalo_tentativas: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 5000,
-        validate: {
-          min: 1000,
-          max: 60000,
-        },
+        defaultValue: 5000
       },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
       }
     });
 
-    // Adicionar índice para ativo
     await queryInterface.addIndex('servidores_email', ['ativo']);
   },
 
@@ -116,3 +82,4 @@ module.exports = {
     await queryInterface.dropTable('servidores_email');
   }
 };
+

@@ -92,7 +92,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
       });
 
       onSuccess?.();
-      onClose();
+      // Não fechar o modal automaticamente
     } catch (error) {
       console.error('Erro ao marcar como pago:', error);
     }
