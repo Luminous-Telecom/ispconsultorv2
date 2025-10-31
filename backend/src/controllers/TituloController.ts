@@ -39,7 +39,7 @@ export class TituloController {
 
       await browser.close();
 
-      return pdfBuffer.toString('base64');
+      return Buffer.from(pdfBuffer).toString('base64');
     } catch (error) {
       logger.error('Erro ao gerar PDF do boleto:', error);
       return null;
