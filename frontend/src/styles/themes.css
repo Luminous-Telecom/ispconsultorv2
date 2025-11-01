@@ -1837,6 +1837,19 @@ th {
   }
 }
 
+/* Override para animação de upload do CKEditor - usa transform em vez de width/height
+   para evitar repaint/reflow e melhorar performance */
+@keyframes ck-upload-complete-icon-check {
+  0% {
+    opacity: 1;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .ckeditor-wrapper .ck-source-editing-area textarea:focus {
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
