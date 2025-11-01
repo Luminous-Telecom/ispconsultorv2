@@ -1,5 +1,4 @@
 import { apiService } from './api';
-import { ApiResponse } from '../types';
 
 export interface TermoContrato {
   id: number;

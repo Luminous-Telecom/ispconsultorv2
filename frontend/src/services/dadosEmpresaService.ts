@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { API_CONFIG } from '../config/api';
 
 export interface DadosEmpresa {
   id: number;
@@ -115,7 +116,7 @@ export class DadosEmpresaService {
   static async uploadLogo(file: File): Promise<{ success: boolean; logo: string }> {
     const formData = new FormData();
     formData.append('logo', file);
-    const response = await fetch(`${(apiService as any).api.defaults.baseURL}/dados-empresa/logo`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL_WITHOUT_API}/dados-empresa/logo`, {
       method: 'POST',
       body: formData
     });

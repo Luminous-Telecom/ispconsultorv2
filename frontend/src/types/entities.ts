@@ -322,13 +322,45 @@ export interface ClienteFormData {
 }
 
 // ============================================
+// Rotina Agendada
+// ============================================
+export interface RotinaAgendada {
+  id: number;
+  nome: string;
+  tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
+  descricao?: string;
+  frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
+  hora_execucao: string;
+  ativo: boolean;
+  ultima_execucao?: string;
+  proxima_execucao?: string;
+  total_execucoes: number;
+  execucoes_com_sucesso: number;
+  execucoes_com_erro: number;
+  created_at: string;
+}
+
+export interface RoutineExecutionLog {
+  id: number;
+  routine_id: number;
+  status: 'executando' | 'sucesso' | 'erro';
+  data_inicio: string;
+  data_fim?: string;
+  duracao_ms?: number;
+  resultado?: Record<string, unknown>;
+  erro?: string;
+  stack_trace?: string;
+  created_at: string;
+}
+
+// ============================================
 // Error Types
 // ============================================
 
 export interface ApiError {
   message: string;
   error?: string;
-  details?: any;
+  details?: Record<string, unknown>;
   statusCode?: number;
 }
 

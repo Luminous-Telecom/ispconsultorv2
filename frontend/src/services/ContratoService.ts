@@ -1,5 +1,4 @@
 import { apiService } from './api';
-import { ApiResponse } from '../types';
 import { Contrato, CreateContratoData, UpdateContratoData } from '../hooks/useContratos';
 
 interface ListParams {

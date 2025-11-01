@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { AxiosError } from 'axios';
 
 export interface ServidorWhatsApp {
   id: number;
@@ -51,11 +52,9 @@ export class ServidorWhatsAppService {
     try {
       const response = await apiService.get<{ success: boolean; data: MensagemWhatsApp }>(`/mensagens-whatsapp/tipo/${mensagemType}`);
       return response.data;
-    } catch (error: unknown) {
-      const errorResponse = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { status?: number } }).response 
-        : null;
-      if (errorResponse?.status === 404) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      if (axiosError.response?.status === 404) {
         return null;
       }
       throw error;
@@ -81,12 +80,9 @@ export class ServidorWhatsAppService {
     try {
       const response = await apiService.get<{ success: boolean; data: ServidorWhatsApp; message: string }>('/servidores-whatsapp/ativo');
       return response;
-    } catch (error: unknown) {
-      // Se não há servidor ativo, retornar null
-      const errorResponse = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { status?: number } }).response 
-        : null;
-      if (errorResponse?.status === 404) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      if (axiosError.response?.status === 404) {
         return null;
       }
       throw error;

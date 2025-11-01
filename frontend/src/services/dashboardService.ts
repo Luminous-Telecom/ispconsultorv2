@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { Titulo, Cliente, Plano, Contrato } from '../types/entities';
 
 export interface DashboardStats {
   totalClientes: number;
@@ -21,14 +22,27 @@ export interface DashboardChart {
 
 export interface DashboardData {
   stats: DashboardStats;
-  titulosRecentes: any[];
-  titulosVencidos: any[];
-  clientes: any[];
-  planos: any[];
-  contratos: any[];
-  titulos: any[];
+  titulosRecentes: Titulo[];
+  titulosVencidos: Titulo[];
+  clientes: Cliente[];
+  planos: Plano[];
+  contratos: Contrato[];
+  titulos: Titulo[];
   receitaUltimosMeses: DashboardChart;
   clientesPorStatus: DashboardChart;
+}
+
+export interface RelatorioVendas {
+  periodo: string;
+  totalVendas: number;
+  quantidadeVendas: number;
+  ticketMedio: number;
+  crescimento?: number;
+  dados?: Array<{
+    data: string;
+    valor: number;
+    quantidade: number;
+  }>;
 }
 
 export class DashboardService {
@@ -55,9 +69,9 @@ export class DashboardService {
   }
 
   // Buscar carnês recentes
-  static async getCarnesRecentes(limit: number = 5): Promise<any[]> {
+  static async getCarnesRecentes(limit: number = 5): Promise<Titulo[]> {
     try {
-      const response = await apiService.get<any[]>(`/dashboard/carnes-recentes?limit=${limit}`);
+      const response = await apiService.get<Titulo[]>(`/dashboard/carnes-recentes?limit=${limit}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar carnês recentes:', error);
@@ -66,9 +80,9 @@ export class DashboardService {
   }
 
   // Buscar parcelas vencidas
-  static async getParcelasVencidas(limit: number = 10): Promise<any[]> {
+  static async getParcelasVencidas(limit: number = 10): Promise<Titulo[]> {
     try {
-      const response = await apiService.get<any[]>(`/dashboard/parcelas-vencidas?limit=${limit}`);
+      const response = await apiService.get<Titulo[]>(`/dashboard/parcelas-vencidas?limit=${limit}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar parcelas vencidas:', error);
@@ -99,9 +113,9 @@ export class DashboardService {
   }
 
   // Buscar relatório de vendas
-  static async getRelatorioVendas(periodo: 'dia' | 'semana' | 'mes' | 'ano'): Promise<any> {
+  static async getRelatorioVendas(periodo: 'dia' | 'semana' | 'mes' | 'ano'): Promise<RelatorioVendas> {
     try {
-      const response = await apiService.get<any>(`/dashboard/relatorio-vendas?periodo=${periodo}`);
+      const response = await apiService.get<RelatorioVendas>(`/dashboard/relatorio-vendas?periodo=${periodo}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar relatório de vendas:', error);

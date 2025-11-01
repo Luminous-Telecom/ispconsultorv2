@@ -57,37 +57,35 @@ class ModeloReciboService {
 
   static async generatePdf(id: number): Promise<Blob> {
     try {
-      const response = await (apiService as any).api.get(`/modelos-recibo/${id}/pdf`, {
-        responseType: 'blob'
-      });
+      const response = await apiService.get<Blob>(`/modelos-recibo/${id}/pdf`, undefined, { responseType: 'blob' });
 
-      const blob = response instanceof Blob ? response : response.data;
+      const blob = response instanceof Blob ? response : (response as unknown as { data: Blob }).data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
       return blob;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF');
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF');
     }
   }
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
     try {
-      const response = await (apiService as any).api.get(`/modelos-recibo/${id}/pdf-teste?cliente_id=${clienteId}`, {
-        responseType: 'blob'
-      });
+      const response = await apiService.get<Blob>(`/modelos-recibo/${id}/pdf-teste?cliente_id=${clienteId}`, undefined, { responseType: 'blob' });
 
-      const blob = response instanceof Blob ? response : response.data;
+      const blob = response instanceof Blob ? response : (response as unknown as { data: Blob }).data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
       return blob;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF de teste');
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF de teste');
     }
   }
 }

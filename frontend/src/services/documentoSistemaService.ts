@@ -1,4 +1,6 @@
 import { apiService } from './api';
+import { API_CONFIG } from '../config/api';
+import { AxiosError, AxiosResponse } from 'axios';
 
 export interface DocumentoSistema {
   id: number;
@@ -77,7 +79,7 @@ class DocumentoSistemaService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${(apiService as any).api.defaults.baseURL}/modelos-contrato/converter-word`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL_WITHOUT_API}/modelos-contrato/converter-word`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -93,107 +95,150 @@ class DocumentoSistemaService {
 
   static async generatePdf(id: number): Promise<Blob> {
     try {
-      const response = await (apiService as any).api.get(`/modelos-contrato/${id}/pdf`, {
+      const response = await apiService.get<Blob>(`/modelos-contrato/${id}/pdf`, undefined, {
         responseType: 'blob'
       });
 
       // Axios com responseType: 'blob' retorna o blob em response.data
-      const blob = response instanceof Blob ? response : response.data;
+      const blob = response instanceof Blob ? response : response;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
       return blob;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF');
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF');
     }
   }
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
     try {
-      const response = await (apiService as any).api.get(`/modelos-contrato/${id}/pdf-teste?cliente_id=${clienteId}`, {
+      const response = await apiService.get<Blob>(`/modelos-contrato/${id}/pdf-teste?cliente_id=${clienteId}`, undefined, {
         responseType: 'blob'
       });
 
       // Axios com responseType: 'blob' retorna o blob em response.data
-      const blob = response instanceof Blob ? response : response.data;
+      const blob = response instanceof Blob ? response : response;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
       return blob;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF de teste');
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF de teste');
     }
   }
 
   static async generatePdfWithContent(id: number, conteudo: string): Promise<Blob> {
     try {
-      const response = await (apiService as any).api.post(`/modelos-contrato/${id}/pdf-conteudo`, 
-        { conteudo },
-        { responseType: 'blob' }
-      );
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_CONFIG.BASE_URL_WITHOUT_API}/modelos-contrato/${id}/pdf-conteudo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ conteudo }),
+        credentials: 'include',
+      });
 
-      const blob = response instanceof Blob ? response : response.data;
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Erro ao gerar PDF com conteúdo' }));
+        throw new Error(error.message || 'Erro ao gerar PDF com conteúdo');
+      }
 
+      const blob = await response.blob();
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
       return blob;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF com conteúdo');
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Erro ao gerar PDF com conteúdo');
     }
   }
 
   static async generateTestPdfWithContent(id: number, clienteId: number, conteudo: string): Promise<Blob> {
     try {
-      const response = await (apiService as any).api.post(`/modelos-contrato/${id}/pdf-teste-conteudo`, 
-        { cliente_id: clienteId, conteudo },
-        { responseType: 'blob' }
-      );
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_CONFIG.BASE_URL_WITHOUT_API}/modelos-contrato/${id}/pdf-teste-conteudo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ cliente_id: clienteId, conteudo }),
+        credentials: 'include',
+      });
 
-      const blob = response instanceof Blob ? response : response.data;
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Erro ao gerar PDF de teste com conteúdo' }));
+        throw new Error(error.message || 'Erro ao gerar PDF de teste com conteúdo');
+      }
 
+      const blob = await response.blob();
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
       return blob;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF de teste com conteúdo');
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Erro ao gerar PDF de teste com conteúdo');
     }
   }
 
+export interface ModeloContratoResponse {
+  id: number;
+  modelo_contrato_id: number;
+  modelo: string;
+  tipo?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ModelosByContratoData {
+  modelo_contrato_conteudo?: ModeloContratoResponse;
+  modelo_termo_adesao?: ModeloContratoResponse;
+  modelo_contrato_permanencia?: ModeloContratoResponse;
+}
+
   // Métodos para modelos específicos
-  static async saveModeloContratoConteudo(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: any; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: any; message: string }>('/modelos-contrato/modelo-contrato-conteudo', {
+  static async saveModeloContratoConteudo(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
+    const response = await apiService.post<{ success: boolean; data: ModeloContratoResponse; message: string }>('/modelos-contrato/modelo-contrato-conteudo', {
       modelo_contrato_id: modeloContratoId,
       modelo
     });
     return response;
   }
 
-  static async saveModeloTermoAdesao(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: any; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: any; message: string }>('/modelos-contrato/modelo-termo-adesao', {
+  static async saveModeloTermoAdesao(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
+    const response = await apiService.post<{ success: boolean; data: ModeloContratoResponse; message: string }>('/modelos-contrato/modelo-termo-adesao', {
       modelo_contrato_id: modeloContratoId,
       modelo
     });
     return response;
   }
 
-  static async saveModeloContratoPermanencia(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: any; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: any; message: string }>('/modelos-contrato/modelo-contrato-permanencia', {
+  static async saveModeloContratoPermanencia(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
+    const response = await apiService.post<{ success: boolean; data: ModeloContratoResponse; message: string }>('/modelos-contrato/modelo-contrato-permanencia', {
       modelo_contrato_id: modeloContratoId,
       modelo
     });
     return response;
   }
 
-  static async getModelosByModeloContrato(id: number): Promise<{ success: boolean; data: any; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: any; message: string }>(`/modelos-contrato/${id}/modelos`);
+  static async getModelosByModeloContrato(id: number): Promise<{ success: boolean; data: ModelosByContratoData; message: string }> {
+    const response = await apiService.get<{ success: boolean; data: ModelosByContratoData; message: string }>(`/modelos-contrato/${id}/modelos`);
     return response;
   }
 }

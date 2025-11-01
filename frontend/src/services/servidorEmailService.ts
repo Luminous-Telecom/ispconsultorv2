@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { AxiosError } from 'axios';
 
 export interface ServidorEmail {
   id: number;
@@ -95,11 +96,9 @@ export class ServidorEmailService {
     try {
       const response = await apiService.get<{ success: boolean; data: MensagemEmail }>(`/mensagens-email/tipo/${mensagemType}`);
       return response.data;
-    } catch (error: unknown) {
-      const errorResponse = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { status?: number } }).response 
-        : null;
-      if (errorResponse?.status === 404) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      if (axiosError.response?.status === 404) {
         return null;
       }
       throw error;

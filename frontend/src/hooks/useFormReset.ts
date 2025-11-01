@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { ensureString } from '../utils/stringUtils';
 
 interface UseFormResetOptions<T> {
   show: boolean;
   initialData: T;
   setFormData: (data: T) => void;
-  setErrors?: (errors: any) => void;
+  setErrors?: (errors: Record<string, string> | Record<string, unknown>) => void;
   customData?: T;
 }
 
@@ -30,9 +30,9 @@ export function useFormReset<T>({
   const previousCustomDataStr = useRef<string>('');
 
   // Função para garantir que valores string sejam sempre strings
-  const processData = (data: T): T => {
-    const typedData = data as Record<string, any>;
-    const typedInitialData = initialData as Record<string, any>;
+  const processData = useCallback((data: T): T => {
+    const typedData = data as Record<string, unknown>;
+    const typedInitialData = initialData as Record<string, unknown>;
     
     const result = Object.keys(typedData).reduce((acc, key) => {
       const value = typedData[key];
@@ -46,10 +46,10 @@ export function useFormReset<T>({
       }
       
       return acc;
-    }, {} as Record<string, any>) as T;
+    }, {} as Record<string, unknown>) as T;
     
     return result;
-  };
+  }, [initialData]);
 
   useEffect(() => {
     // Só executa quando show muda
@@ -82,7 +82,7 @@ export function useFormReset<T>({
       
       previousShow.current = show;
     }
-  }, [show]);
+  }, [show, customData, initialData, processData, setFormData, setErrors]);
   
   // Atualizar customData quando ele estiver disponível após o modal abrir
   useEffect(() => {
