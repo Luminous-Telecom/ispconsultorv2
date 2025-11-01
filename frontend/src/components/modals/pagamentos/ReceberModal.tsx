@@ -96,7 +96,8 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const normalizedValue = value ?? '';
+    setFormData(prev => ({ ...prev, [field]: normalizedValue }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -151,8 +152,8 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                 label="Data de Pagamento"
                 required={true}
                 size="md"
-                value={formData.data_pagamento}
-                onChange={(e: any) => handleInputChange('data_pagamento', e.value)}
+                value={formData.data_pagamento || ''}
+                onChange={(value: any) => handleInputChange('data_pagamento', value || '')}
                 error={errors.data_pagamento}
                 isInvalid={!!errors.data_pagamento}
                 disabled={marcarPagoMutation.isPending}
@@ -195,15 +196,15 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             label="Observações"
             placeholder="Observações sobre o pagamento (opcional)"
             size="md"
-            value={formData.observacoes}
-            onChange={(e: any) => handleInputChange('observacoes', e.value)}
+            value={formData.observacoes || ''}
+            onChange={(value: any) => handleInputChange('observacoes', value || '')}
             error={errors.observacoes}
             isInvalid={!!errors.observacoes}
             disabled={marcarPagoMutation.isPending}
             rows={3}
           />
           <div className="text-secondary mt-2">
-            {formData.observacoes.length}/500 caracteres
+            {(formData.observacoes || '').length}/500 caracteres
           </div>
         </div>
 
