@@ -294,6 +294,7 @@ if (!isMainThread && workerData) {
 
     } catch (error: unknown) {
       const duration = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       
       // Atualizar contadores da rotina em caso de erro
       try {
@@ -314,7 +315,7 @@ if (!isMainThread && workerData) {
         type: 'error',
         routineId,
         executionId,
-        error: error.message,
+        error: errorMessage,
         data: { duration }
       } as WorkerMessage);
     }

@@ -186,8 +186,9 @@ export class WorkerManager extends EventEmitter {
         return;
 
       } catch (error: unknown) {
-        lastError = error;
-        console.error(`❌ Tentativa ${attempt} falhou para rotina ${routine.id}:`, error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        lastError = error instanceof Error ? error : new Error(errorMessage);
+        console.error(`❌ Tentativa ${attempt} falhou para rotina ${routine.id}:`, errorMessage);
 
         if (attempt < this.config.retryAttempts) {
           await this.delay(this.config.retryDelay);

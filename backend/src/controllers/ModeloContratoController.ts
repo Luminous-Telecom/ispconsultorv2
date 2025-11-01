@@ -5,6 +5,8 @@ import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
+import * as fs from 'fs/promises';
+import * as mammoth from 'mammoth';
 
 // @ts-ignore
 import * as htmlPdf from 'html-pdf-node';
@@ -98,11 +100,12 @@ export class ModeloContratoController {
     } catch (error: unknown) {
       logger.error('Erro ao criar documento:', error);
       
-      if (error.name === 'SequelizeValidationError') {
+      if (error instanceof Error && 'name' in error && error.name === 'SequelizeValidationError') {
+        const validationError = error as any;
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: error.errors.map((err: any) => err.message)
+          errors: validationError.errors?.map((err: any) => err.message) || []
         });
         return;
       }
@@ -142,11 +145,12 @@ export class ModeloContratoController {
     } catch (error: unknown) {
       logger.error('Erro ao atualizar documento:', error);
       
-      if (error.name === 'SequelizeValidationError') {
+      if (error instanceof Error && 'name' in error && error.name === 'SequelizeValidationError') {
+        const validationError = error as any;
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: error.errors.map((err: any) => err.message)
+          errors: validationError.errors?.map((err: any) => err.message) || []
         });
         return;
       }

@@ -56,9 +56,10 @@ export class VerificarVencimentosRoutine {
           });
 
         } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           logger.error('Erro ao marcar título como vencido', {
             titulo_id: titulo.id,
-            error: error.message
+            error: errorMessage
           });
         }
       }
@@ -108,14 +109,17 @@ export class VerificarVencimentosRoutine {
       };
 
     } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       logger.error('Erro na rotina de verificação de vencimentos', {
-        error: error.message,
-        stack: error.stack
+        error: errorMessage,
+        stack: errorStack
       });
 
       return {
         success: false,
-        message: `Erro na rotina: ${error.message}`,
+        message: `Erro na rotina: ${errorMessage}`,
         data: {
           titulosVerificados: 0,
           titulosMarcadosVencidos: 0,
