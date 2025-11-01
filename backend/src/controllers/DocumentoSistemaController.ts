@@ -906,6 +906,9 @@ export class ModeloContratoController {
       const { id } = req.params;
       const { cliente_id, conteudo } = req.body;
 
+      logger.info(`[generateTestPdfWithContent] Request received - id: ${id}, cliente_id: ${cliente_id}`);
+      logger.info(`[generateTestPdfWithContent] Content length: ${conteudo?.length || 0}`);
+
       const documento = await ModeloContrato.findByPk(id);
 
       if (!documento) {
