@@ -40,9 +40,6 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
   // Headers para prevenir indexação por motores de busca
   res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
   
-  // Headers para prevenir hotlinking
-  res.setHeader('X-Content-Security-Policy', "default-src 'self'");
-  
   // Headers para prevenir clickjacking
   res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
   
