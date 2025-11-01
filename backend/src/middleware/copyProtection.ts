@@ -2,6 +2,23 @@ import { Request, Response, NextFunction } from 'express';
 
 // Middleware de proteção contra cópia e screenshots
 export const copyProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  // Wrap setHeader to normalize certain headers (ensure charset for text/* responses)
+  const originalSetHeader = (res as any).setHeader.bind(res);
+  (res as any).setHeader = (name: string, value: number | string | ReadonlyArray<string>) => {
+    try {
+      if (String(name).toLowerCase() === 'content-type') {
+        const v = String(value || '');
+        // If it's a text/* content type and no charset specified, append utf-8
+        if (/^text\//i.test(v) && !/charset=/i.test(v)) {
+          value = v + '; charset=utf-8';
+        }
+      }
+    } catch (e) {
+      // swallow and continue with original behavior
+    }
+    return originalSetHeader(name, value as any);
+  };
+
   // Headers específicos para proteção contra cópia
   // Use header name in lowercase to satisfy tools that expect lowercase keys
   res.setHeader('x-content-type-options', 'nosniff');

@@ -1824,6 +1824,20 @@ th {
   text-align: inherit;
 }
 
+/* Mitigar `forced-color-adjust` vindo de CSS de terceiros (ex.: CKEditor build).
+   Alguns builds definem `forced-color-adjust: preserve-parent-color` que não é
+   suportado em todos os navegadores. Aplicamos um override carregado depois
+   para evitar efeitos indesejados em navegadores que não implementam a
+   propriedade corretamente. */
+@media (forced-colors: active) {
+  .ck .ck-placeholder,
+  .ck.ck-placeholder {
+    /* Use auto para deixar o user agent decidir; navegadores que não suportam
+       simplesmente ignoram esta propriedade. */
+    forced-color-adjust: auto;
+  }
+}
+
 .ckeditor-wrapper .ck-source-editing-area textarea:focus {
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;

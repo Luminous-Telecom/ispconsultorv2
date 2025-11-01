@@ -74,14 +74,9 @@ export const useMarcarTituloPago = () => {
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas-carne'] });
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas-vencidas'] });
       queryClient.invalidateQueries({ queryKey: ['carnes'] });
+      queryClient.invalidateQueries({ queryKey: ['carnes-ativos'] });
       
       success(response.message);
-      
-      // Se um novo carnê foi gerado, invalidar também as queries de carnês
-      if (response.novo_carne_gerado) {
-        queryClient.invalidateQueries({ queryKey: ['carnes'] });
-        queryClient.invalidateQueries({ queryKey: ['carnes-ativos'] });
-      }
     },
     onError: (err: any) => {
       error(err.response?.data?.message || 'Erro ao marcar parcela como paga');
