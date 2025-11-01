@@ -10,6 +10,7 @@ import {
   Op
 } from 'sequelize';
 import { sequelize } from '../config/database';
+import { logger } from '../utils/logger';
 import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
@@ -164,24 +165,54 @@ export class Titulo extends Model<
     // Integrar com banco externo se tiver charge_id
     if (this.charge_id) {
       try {
+        logger.info('Iniciando liquidação no banco externo', {
+          titulo_id: this.id,
+          charge_id: this.charge_id,
+          banco_id: this.banco_id
+        });
+
         const { BancoApiService } = await import('../services/BancoApiService');
         
         // Carregar dados do banco para a liquidação
         const banco = await this.getBanco();
+        if (!banco) {
+          logger.error('Banco não encontrado para título', {
+            titulo_id: this.id,
+            banco_id: this.banco_id
+          });
+          return;
+        }
+
         const tituloComBanco = { ...this.toJSON(), banco };
         
         // Liquidar título no banco externo
         const resultado = await BancoApiService.liquidarTitulo(tituloComBanco);
         
         if (!resultado.success) {
-          console.warn('Falha ao liquidar título no banco externo:', resultado.message);
+          logger.warn('Falha ao liquidar título no banco externo', {
+            titulo_id: this.id,
+            charge_id: this.charge_id,
+            message: resultado.message
+          });
         } else {
-          // Título liquidado com sucesso no banco externo
+          logger.info('Título liquidado com sucesso no banco externo', {
+            titulo_id: this.id,
+            charge_id: this.charge_id
+          });
         }
       } catch (error) {
-        console.error('Erro ao integrar com banco externo:', error);
+        logger.error('Erro ao integrar com banco externo', {
+          titulo_id: this.id,
+          charge_id: this.charge_id,
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
         // Não falhar a operação se a integração externa falhar
       }
+    } else {
+      logger.info('Título não possui charge_id, pulando liquidação no banco', {
+        titulo_id: this.id,
+        banco_id: this.banco_id
+      });
     }
   }
 
