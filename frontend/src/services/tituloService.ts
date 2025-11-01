@@ -75,9 +75,13 @@ export class TituloService {
     dataPagamento?: string, 
     valorPago?: number, 
     observacoes?: string
-  ): Promise<{ success: boolean; message: string; novo_carne_gerado?: any }> {
+  ): Promise<{ success: boolean; message: string; novo_carne_gerado?: Record<string, unknown> }> {
     try {
-      const payload: any = {
+      const payload: {
+        data_pagamento: string;
+        valor_pago?: number;
+        observacoes?: string;
+      } = {
         data_pagamento: dataPagamento || new Date().toISOString().split('T')[0]
       };
 
@@ -89,7 +93,7 @@ export class TituloService {
         payload.observacoes = observacoes;
       }
 
-      const response = await apiService.post<{ success: boolean; message: string; novo_carne_gerado?: any }>(
+      const response = await apiService.post<{ success: boolean; message: string; novo_carne_gerado?: Record<string, unknown> }>(
         `${API_ENDPOINTS.TITULOS}/${id}/pagar`, 
         payload
       );
@@ -169,9 +173,9 @@ export class TituloService {
   }
 
   // Consultar recebimento na API do banco
-  static async consultarRecebimento(id: number): Promise<{ success: boolean; message: string; data?: any }> {
+  static async consultarRecebimento(id: number): Promise<{ success: boolean; message: string; data?: Record<string, unknown> }> {
     try {
-      const response = await apiService.post<{ success: boolean; message: string; data?: any }>(
+      const response = await apiService.post<{ success: boolean; message: string; data?: Record<string, unknown> }>(
         `${API_ENDPOINTS.TITULOS}/${id}/consultar-recebimento`
       );
       return response;

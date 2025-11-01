@@ -2,7 +2,7 @@
  * Garante que um valor seja convertido para string
  * Evita problemas de [object Object] em formulários
  */
-export const ensureString = (value: any): string => {
+export const ensureString = (value: unknown): string => {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
@@ -14,7 +14,7 @@ export const ensureString = (value: any): string => {
 /**
  * Garante que um array de valores seja convertido para array de strings
  */
-export const ensureStringArray = (values: any[]): string[] => {
+export const ensureStringArray = (values: unknown[]): string[] => {
   return values.map(ensureString);
 };
 
