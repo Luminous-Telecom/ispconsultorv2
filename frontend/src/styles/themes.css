@@ -1821,7 +1821,6 @@ button.dropdown-toggle .bi-chevron-down,
 th {
   text-align: -webkit-match-parent;
   text-align: match-parent;
-  text-align: inherit;
 }
 
 /* Mitigar `forced-color-adjust` vindo de CSS de terceiros (ex.: CKEditor build).
