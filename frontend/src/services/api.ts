@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { ApiResponse } from '../types';
 import { API_CONFIG } from '../config/api';
 
@@ -58,18 +58,18 @@ class ApiService {
   }
 
   // Métodos HTTP genéricos
-  async get<T>(url: string, params?: unknown, config?: Record<string, unknown>): Promise<T> {
+  async get<T>(url: string, params?: AxiosRequestConfig['params'], config?: AxiosRequestConfig): Promise<T> {
     const response = await this.api.get(url, { params, ...config });
     return response as T;
   }
 
-  async post<T>(url: string, data?: unknown): Promise<T> {
-    const response = await this.api.post(url, data);
+  async post<T>(url: string, data?: AxiosRequestConfig['data'], config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.api.post(url, data, config);
     return response as T;
   }
 
-  async put<T>(url: string, data?: unknown): Promise<T> {
-    const response = await this.api.put(url, data);
+  async put<T>(url: string, data?: AxiosRequestConfig['data'], config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.api.put(url, data, config);
     return response as T;
   }
 
@@ -78,7 +78,7 @@ class ApiService {
     return response as T;
   }
 
-  async patch<T>(url: string, data?: unknown): Promise<T> {
+  async patch<T>(url: string, data?: AxiosRequestConfig['data']): Promise<T> {
     const response = await this.api.patch(url, data);
     return response as T;
   }

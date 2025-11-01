@@ -5,16 +5,18 @@ const router = Router();
 
 // Rotas para recibos
 router.get('/', ModeloReciboController.list);
-router.get('/:id', ModeloReciboController.show);
 router.post('/', ModeloReciboController.create);
-router.put('/:id', ModeloReciboController.update);
-router.delete('/:id', ModeloReciboController.delete);
+
+// Rotas para variáveis
+router.get('/variaveis/disponiveis', ModeloReciboController.listarVariaveis);
 
 // Rotas para PDFs
 router.get('/:id/pdf', ModeloReciboController.generatePdf);
 router.get('/:id/pdf-teste', ModeloReciboController.generateTestPdf);
 
-// Rotas para variáveis
-router.get('/variaveis/disponiveis', ModeloReciboController.listarVariaveis);
+// Rotas CRUD por ID
+router.get('/:id', ModeloReciboController.show);
+router.put('/:id', ModeloReciboController.update);
+router.delete('/:id', ModeloReciboController.delete);
 
 export default router;

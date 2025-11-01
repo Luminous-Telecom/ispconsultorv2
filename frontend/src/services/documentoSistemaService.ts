@@ -1,6 +1,6 @@
 import { apiService } from './api';
 import { API_CONFIG } from '../config/api';
-import { AxiosError, AxiosResponse } from 'axios';
+import { AxiosError } from 'axios';
 
 export interface DocumentoSistema {
   id: number;
@@ -32,6 +32,22 @@ export interface CreateDocumentoSistema {
 }
 
 export interface UpdateDocumentoSistema extends Partial<CreateDocumentoSistema> {}
+
+export interface ModeloContratoResponse {
+  id: number;
+  modelo_contrato_id: number;
+  modelo: string;
+  tipo?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ModelosByContratoData {
+  modelo_contrato?: DocumentoSistema;
+  modelo_contrato_conteudo?: string;
+  modelo_termo_adesao?: string;
+  modelo_contrato_permanencia?: string;
+}
 
 class DocumentoSistemaService {
   static async list(tipo?: string): Promise<{ success: boolean; data: DocumentoSistema[]; message: string }> {
@@ -79,18 +95,18 @@ class DocumentoSistemaService {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_CONFIG.BASE_URL_WITHOUT_API}/modelos-contrato/converter-word`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
+    const axios = (await import('axios')).default;
+    const baseURL = API_CONFIG.BASE_URL;
+    const token = localStorage.getItem('auth_token');
+    
+    const response = await axios.post(`${baseURL}/modelos-contrato/converter-word`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erro ao converter arquivo');
-    }
-
-    return response.json();
+    return response.data;
   }
 
   static async generatePdf(id: number): Promise<Blob> {
@@ -135,82 +151,41 @@ class DocumentoSistemaService {
 
   static async generatePdfWithContent(id: number, conteudo: string): Promise<Blob> {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_CONFIG.BASE_URL_WITHOUT_API}/modelos-contrato/${id}/pdf-conteudo`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ conteudo }),
-        credentials: 'include',
+      const response = await apiService.post<Blob>(`/modelos-contrato/${id}/pdf-conteudo`, { conteudo }, {
+        responseType: 'blob'
       });
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Erro ao gerar PDF com conteúdo' }));
-        throw new Error(error.message || 'Erro ao gerar PDF com conteúdo');
-      }
+      const blob = response instanceof Blob ? response : response;
 
-      const blob = await response.blob();
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
       return blob;
     } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Erro ao gerar PDF com conteúdo');
+      const axiosError = error as AxiosError<{ message?: string }>;
+      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF com conteúdo');
     }
   }
 
   static async generateTestPdfWithContent(id: number, clienteId: number, conteudo: string): Promise<Blob> {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_CONFIG.BASE_URL_WITHOUT_API}/modelos-contrato/${id}/pdf-teste-conteudo`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ cliente_id: clienteId, conteudo }),
-        credentials: 'include',
+      const response = await apiService.post<Blob>(`/modelos-contrato/${id}/pdf-teste-conteudo`, { cliente_id: clienteId, conteudo }, {
+        responseType: 'blob'
       });
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Erro ao gerar PDF de teste com conteúdo' }));
-        throw new Error(error.message || 'Erro ao gerar PDF de teste com conteúdo');
-      }
+      const blob = response instanceof Blob ? response : response;
 
-      const blob = await response.blob();
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
       return blob;
     } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Erro ao gerar PDF de teste com conteúdo');
+      const axiosError = error as AxiosError<{ message?: string }>;
+      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF de teste com conteúdo');
     }
   }
-
-export interface ModeloContratoResponse {
-  id: number;
-  modelo_contrato_id: number;
-  modelo: string;
-  tipo?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ModelosByContratoData {
-  modelo_contrato_conteudo?: ModeloContratoResponse;
-  modelo_termo_adesao?: ModeloContratoResponse;
-  modelo_contrato_permanencia?: ModeloContratoResponse;
-}
 
   // Métodos para modelos específicos
   static async saveModeloContratoConteudo(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
