@@ -41,7 +41,14 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
   res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
   
   // Headers para prevenir clickjacking
-  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  // Evitar enviar CSP desnecessariamente em respostas de API (webhint/performance)
+  // Aplica apenas quando for uma navegação HTML (não /api)
+  const isApiRequest = req.path.startsWith('/api/');
+  const acceptHeader = req.get('accept') || '';
+  const expectsHtml = /text\/html/i.test(acceptHeader);
+  if (!isApiRequest && expectsHtml) {
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  }
   
   next();
 };

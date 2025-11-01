@@ -1776,6 +1776,11 @@ button.dropdown-toggle .bi-chevron-down,
   transform: none !important;
 }
 
+.ck.ck-search > .ck-labeled-field-view.ck-search__query_with-reset .ck-search__reset {
+  /* Firefox não suporta min-height: auto; usar 0 como reset seguro */
+  min-height: 0 !important;
+}
+
 .ckeditor-wrapper .ck-editor__editable {
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
