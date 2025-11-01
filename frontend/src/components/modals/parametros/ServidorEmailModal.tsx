@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { ServidorEmailService, ServidorEmail, MensagemEmail } from '../../../services/servidorEmailService';
+import { ServidorEmailService } from '../../../services/servidorEmailService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormField, Checkbox } from '../../ui';
 import RichTextEditor from '../../common/RichTextEditor';
@@ -31,7 +31,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
   const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens'>('servidor');
   const [emailTeste, setEmailTeste] = useState<string>('');
 
-  const initialFormData: ServidorEmailForm = {
+  const initialFormData: ServidorEmailForm = useMemo(() => ({
     host: '',
     porta: 587,
     usuario: '',
@@ -43,9 +43,9 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
     timeout: 30000,
     tentativas: 3,
     intervalo_tentativas: 5000
-  };
+  }), []);
 
-  const [formData, setFormData] = useState<ServidorEmailForm>(initialFormData);
+  const [formData, setFormData] = useState<ServidorEmailForm>(() => initialFormData);
   const [mensagemTexto, setMensagemTexto] = useState<string>('<p></p>');
   const [tipoEnvio, setTipoEnvio] = useState<'desativado' | 'pdf'>('pdf');
   const [mensagemType, setMensagemType] = useState<string>('');
@@ -458,7 +458,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                           id="envio-desativado-email"
                           value="desativado"
                           checked={tipoEnvio === 'desativado'}
-                          onChange={(e) => setTipoEnvio(e.target.value as any)}
+                          onChange={(e) => setTipoEnvio(e.target.value as 'desativado' | 'pdf')}
                         />
                         <label className="btn btn-outline-secondary" htmlFor="envio-desativado-email">
                           Desativar
@@ -471,7 +471,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                           id="envio-pdf-email"
                           value="pdf"
                           checked={tipoEnvio === 'pdf'}
-                          onChange={(e) => setTipoEnvio(e.target.value as any)}
+                          onChange={(e) => setTipoEnvio(e.target.value as 'desativado' | 'pdf')}
                         />
                         <label className="btn btn-outline-secondary" htmlFor="envio-pdf-email">
                           Anexa PDF

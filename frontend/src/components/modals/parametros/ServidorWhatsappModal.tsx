@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ServidorWhatsAppService } from '../../../services/servidorWhatsAppService';
@@ -21,11 +21,11 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
   
-  const initialFormData: ServidorWhatsAppForm = {
+  const initialFormData: ServidorWhatsAppForm = useMemo(() => ({
     evolution_api_url: 'https://evo-api.example.com',
     evolution_api_key: '',
     instance_name: ''
-  };
+  }), []);
 
   const [formData, setFormData] = useState<ServidorWhatsAppForm>(initialFormData);
   const [testPhone, setTestPhone] = useState<string>('');
@@ -69,7 +69,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/modelos-contrato/variaveis`);
       return response.data.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000
   });
 
   // Carregar dados da mensagem quando buscar
