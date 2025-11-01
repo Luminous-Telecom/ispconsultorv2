@@ -51,8 +51,11 @@ export class ServidorWhatsAppService {
     try {
       const response = await apiService.get<{ success: boolean; data: MensagemWhatsApp }>(`/mensagens-whatsapp/tipo/${mensagemType}`);
       return response.data;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const errorResponse = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { status?: number } }).response 
+        : null;
+      if (errorResponse?.status === 404) {
         return null;
       }
       throw error;
@@ -78,9 +81,12 @@ export class ServidorWhatsAppService {
     try {
       const response = await apiService.get<{ success: boolean; data: ServidorWhatsApp; message: string }>('/servidores-whatsapp/ativo');
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Se não há servidor ativo, retornar null
-      if (error?.response?.status === 404) {
+      const errorResponse = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { status?: number } }).response 
+        : null;
+      if (errorResponse?.status === 404) {
         return null;
       }
       throw error;
@@ -112,8 +118,8 @@ export class ServidorWhatsAppService {
     return response;
   }
 
-  static async sendTestMessage(id: number, phone: string, message: string): Promise<{ success: boolean; message: string; data?: any }> {
-    const response = await apiService.post<{ success: boolean; message: string; data?: any }>(`/servidores-whatsapp/${id}/enviar-mensagem-teste`, {
+  static async sendTestMessage(id: number, phone: string, message: string): Promise<{ success: boolean; message: string; data?: Record<string, unknown> }> {
+    const response = await apiService.post<{ success: boolean; message: string; data?: Record<string, unknown> }>(`/servidores-whatsapp/${id}/enviar-mensagem-teste`, {
       phone,
       message
     });

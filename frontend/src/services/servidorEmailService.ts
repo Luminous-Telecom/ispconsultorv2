@@ -74,8 +74,8 @@ export class ServidorEmailService {
     return response;
   }
 
-  static async testConnection(id: number): Promise<{ success: boolean; message: string; details?: any }> {
-    const response = await apiService.post<{ success: boolean; message: string; details?: any }>(`/servidores-email/${id}/test`);
+  static async testConnection(id: number): Promise<{ success: boolean; message: string; details?: Record<string, unknown> }> {
+    const response = await apiService.post<{ success: boolean; message: string; details?: Record<string, unknown> }>(`/servidores-email/${id}/test`);
     return response;
   }
 
@@ -95,8 +95,11 @@ export class ServidorEmailService {
     try {
       const response = await apiService.get<{ success: boolean; data: MensagemEmail }>(`/mensagens-email/tipo/${mensagemType}`);
       return response.data;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const errorResponse = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { status?: number } }).response 
+        : null;
+      if (errorResponse?.status === 404) {
         return null;
       }
       throw error;
