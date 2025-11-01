@@ -45,6 +45,19 @@ import 'ckeditor5/ckeditor5.css';
 const editorStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
   
+  /* Override para animação de upload do CKEditor - usa transform em vez de width/height
+     para evitar repaint/reflow e melhorar performance */
+  @keyframes ck-upload-complete-icon-check {
+    0% {
+      opacity: 1;
+      transform: scale(0);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
   /* Estilos base para imagens */
   img {
     display: block;
