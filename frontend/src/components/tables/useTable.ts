@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { UseTableOptions, UseTableReturn, TableState, TableActions, SortDirection } from './types';
 import { FilterValue } from '../../types/common';
 
@@ -22,6 +22,14 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     onRefresh,
   } = options;
 
+  // Ref para armazenar callback de seleção (evita problemas de closure e setState durante render)
+  const onSelectionChangeRef = useRef(onSelectionChange);
+  
+  // Atualizar ref quando callback mudar
+  useEffect(() => {
+    onSelectionChangeRef.current = onSelectionChange;
+  }, [onSelectionChange]);
+
   // Estado inicial
   const [state, setState] = useState<TableState<T>>({
     data: data || [],
@@ -37,6 +45,17 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     isFiltered: false,
     isSorted: false,
   });
+  
+  // Estado para rastrear mudanças de seleção e chamar callback após render
+  const [pendingSelectionChange, setPendingSelectionChange] = useState<T[] | null>(null);
+  
+  // Efeito para chamar callback após atualização do estado
+  useEffect(() => {
+    if (pendingSelectionChange !== null) {
+      onSelectionChangeRef.current?.(pendingSelectionChange);
+      setPendingSelectionChange(null);
+    }
+  }, [pendingSelectionChange]);
 
   // Atualizar dados quando props mudarem
   useEffect(() => {
@@ -232,35 +251,51 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
     selectAll: useCallback(() => {
       if (!selectable) return;
-      const allItems = paginatedData;
-      setState(prev => ({ ...prev, selectedItems: allItems }));
-      onSelectionChange?.(allItems);
-    }, [selectable, paginatedData, onSelectionChange]),
+      if (multiSelect) {
+        // Seleção múltipla: seleciona todos os itens da página atual
+        const allItems = paginatedData;
+        setState(prev => ({ ...prev, selectedItems: allItems }));
+        setPendingSelectionChange(allItems);
+      } else {
+        // Seleção única: seleciona apenas o primeiro item da página atual
+        const firstItem = paginatedData[0];
+        if (firstItem) {
+          setState(prev => ({ ...prev, selectedItems: [firstItem] }));
+          setPendingSelectionChange([firstItem]);
+        }
+      }
+    }, [selectable, multiSelect, paginatedData]),
 
     clearSelection: useCallback(() => {
       setState(prev => ({ ...prev, selectedItems: [] }));
-      onSelectionChange?.([]);
-    }, [onSelectionChange]),
+      setPendingSelectionChange([]);
+    }, []),
 
     toggleSelection: useCallback((item: T) => {
       if (!selectable) return;
       
-      const isSelected = state.selectedItems.some(selected => selected.id === item.id);
-      let newSelection: T[];
-      
-      if (isSelected) {
-        newSelection = state.selectedItems.filter(selected => selected.id !== item.id);
-      } else {
-        if (multiSelect) {
-          newSelection = [...state.selectedItems, item];
+      // Usar estado anterior dentro do setState para evitar stale closure
+      setState(prev => {
+        const isSelected = prev.selectedItems.some(selected => selected.id === item.id);
+        let newSelection: T[];
+        
+        if (isSelected) {
+          newSelection = prev.selectedItems.filter(selected => selected.id !== item.id);
         } else {
-          newSelection = [item];
+          if (multiSelect) {
+            newSelection = [...prev.selectedItems, item];
+          } else {
+            // Seleção única: substitui qualquer seleção anterior
+            newSelection = [item];
+          }
         }
-      }
-      
-      setState(prev => ({ ...prev, selectedItems: newSelection }));
-      onSelectionChange?.(newSelection);
-    }, [selectable, multiSelect, state.selectedItems, onSelectionChange]),
+        
+        // Marca para chamar callback após render (evita setState durante render)
+        setPendingSelectionChange(newSelection);
+        
+        return { ...prev, selectedItems: newSelection };
+      });
+    }, [selectable, multiSelect]),
   };
 
   return {

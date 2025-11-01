@@ -140,7 +140,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             },
             loading: isLoadingContratos,
             selectable: true,
-            multiSelect: true,
+            multiSelect: false,
             searchable: true,
             searchPlaceholder: 'Buscar por plano, status, valor...',
             sortable: true,

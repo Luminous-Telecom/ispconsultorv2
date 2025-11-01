@@ -1,5 +1,3 @@
-// Tipos específicos para substituir 'any' no ClienteEditModal
-
 export interface PlanoInfo {
   id: number;
   nome_plano: string;

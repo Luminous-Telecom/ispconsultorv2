@@ -11,7 +11,7 @@ import * as path from 'path';
 
 interface DadosVariaveis {
   cliente?: Cliente;
-  contrato?: Contrato;
+  contrato?: Contrato | (Partial<Contrato> & { id: number });
   titulo?: Titulo;
   dataReferencia?: Date;
 }

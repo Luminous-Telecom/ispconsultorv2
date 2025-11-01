@@ -9,7 +9,7 @@ import { Cliente, CarneParcela, CreateCliente } from '../../../../types';
 import DraggableModal from '../../../common/DraggableModal';
 import { useFormPrefix } from '../../../../hooks/useFormId';
 import ImprimirModal from '../../../common/ImprimirModal';
-import TituloEditModal from '../../titulos/TituloEditModal';
+import { TituloModal } from '../../titulos/titulo';
 import ReceberModal from '../../pagamentos/ReceberModal';
 import { useContratos, useDeleteContrato, Contrato } from '../../../../hooks/useContratos';
 import ContratoModal from '../contrato/ContratoModal';
@@ -285,9 +285,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'editar',
       label: 'Editar',
       variant: 'primary',
-      disabled: (selectedItems) => selectedItems.length !== 1,
+      disabled: (selectedItems) => selectedItems.length === 0,
       onClick: (selectedItems) => {
-        if (selectedItems.length === 1) {
+        if (selectedItems.length > 0) {
           setSelectedContratoId(selectedItems[0].id);
           setShowContratoEditModal(true);
         }
@@ -1160,8 +1160,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
         {/* Modal de edição de título */}
         <>
-          <TituloEditModal
+          <TituloModal
           show={showTituloEditModal}
+          tituloId={selectedTituloId || null}
           onClose={() => {
             setShowTituloEditModal(false);
             setSelectedTituloId(null);
@@ -1177,7 +1178,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
             // Também invalidar queries para garantir atualização
             queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
           }}
-          parcelaId={selectedTituloId || 0}
         />
 
         {/* Modal para receber */}

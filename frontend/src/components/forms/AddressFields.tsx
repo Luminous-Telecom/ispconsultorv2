@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FormValue } from '../../types/common';
 import FormField from '../ui/FormField';
 
@@ -41,31 +41,42 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
 
   // Buscar CEP automaticamente quando o CEP tiver 8 dígitos
   const cepValue = getFieldValue('cep');
+  const lastSearchedCep = useRef<string>('');
+  const isSearching = useRef<boolean>(false);
+  
   useEffect(() => {
     const cep = typeof cepValue === 'string' ? cepValue : String(cepValue || '');
     const cepNumbers = cep.replace(/\D/g, '');
     
-    if (cepNumbers.length === 8) {
+    // Evitar requisições duplicadas
+    if (cepNumbers.length === 8 && cepNumbers !== lastSearchedCep.current && !isSearching.current) {
+      isSearching.current = true;
+      lastSearchedCep.current = cepNumbers;
+      
       // Buscar endereço via API ViaCEP
       fetch(`https://viacep.com.br/ws/${cepNumbers}/json/`)
         .then(response => response.json())
         .then((data: ViaCEPResponse) => {
-          if (!data.erro) {
+          if (!data.erro && onChange) {
             // Preencher campos automaticamente
-            if (onChange) {
-              if (data.logradouro) onChange(getFieldName('endereco'), data.logradouro);
-              if (data.bairro) onChange(getFieldName('bairro'), data.bairro);
-              if (data.localidade) onChange(getFieldName('cidade'), data.localidade);
-              if (data.uf) onChange(getFieldName('estado'), data.uf);
-            }
+            if (data.logradouro) onChange(getFieldName('endereco'), data.logradouro);
+            if (data.bairro) onChange(getFieldName('bairro'), data.bairro);
+            if (data.localidade) onChange(getFieldName('cidade'), data.localidade);
+            if (data.uf) onChange(getFieldName('estado'), data.uf);
           }
+          isSearching.current = false;
         })
         .catch(error => {
           console.error('Erro ao buscar CEP:', error);
+          isSearching.current = false;
+          lastSearchedCep.current = '';
         });
+    } else if (cepNumbers.length !== 8) {
+      // Reset quando o CEP não tem 8 dígitos
+      lastSearchedCep.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cepValue, onChange]);
+  }, [cepValue]);
 
   const addressFields = [
     {

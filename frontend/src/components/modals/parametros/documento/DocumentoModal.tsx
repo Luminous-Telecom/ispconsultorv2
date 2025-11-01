@@ -1,31 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import DraggableModal from '../../common/DraggableModal';
-import ImprimirModal from '../../common/ImprimirModal';
-import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
-import ModeloReciboService, { ModeloRecibo } from '../../../services/modeloReciboService';
-import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaService';
-import ModeloTermoService, { ModeloTermo } from '../../../services/modeloTermoService';
-import RichTextEditor, { type RichTextEditorRef } from '../../common/RichTextEditor';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
-import FormField from '../../ui/FormField';
-import { ClienteService } from '../../../services/clienteService';
-
-type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta | ModeloTermo;
-
-interface DocumentoModalProps {
-  show: boolean;
-  onClose: () => void;
-  documento?: DocumentoUnion | null;
-  tipo: 'contrato' | 'recibo' | 'carta_cobranca' | 'termo';
-  onSuccess?: () => void;
-}
+import DraggableModal from '../../../common/DraggableModal';
+import ImprimirModal from '../../../common/ImprimirModal';
+import DocumentoSistemaService from '../../../../services/documentoSistemaService';
+import ModeloReciboService from '../../../../services/modeloReciboService';
+import ModeloCartaService from '../../../../services/modeloCartaService';
+import ModeloTermoService from '../../../../services/modeloTermoService';
+import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import FormField from '../../../ui/FormField';
+import { ClienteService } from '../../../../services/clienteService';
+import { DocumentoForm, DocumentoModalProps } from './types';
+import ContratoTab from './abas/ContratoTab';
+import AdesaoTab from './abas/AdesaoTab';
+import PermanenciaTab from './abas/PermanenciaTab';
+import ConteudoTab from './abas/ConteudoTab';
 
 const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, documento, tipo, onSuccess }) => {
   const isEditing = !!documento;
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<DocumentoForm>({
     nome: '',
     descricao: '',
     conteudo: '',
@@ -241,27 +235,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     onClose();
   };
 
-  const editorRef = useRef<RichTextEditorRef | null>(null);
-  const handleInsertVariable = (variable: string) => {
-    editorRef.current?.insertVariable?.(variable);
-  };
-
-  const getCurrentContent = () => {
-    if (tipo !== 'contrato') return formData.conteudo;
-    switch (activeTab) {
-      case 'contrato': return formData.conteudo_contrato;
-      case 'adesao': return formData.conteudo_adesao;
-      case 'permanencia': return formData.conteudo_permanencia;
-      default: return formData.conteudo_contrato;
-    }
-  };
-
-  const updateCurrentContent = (value: string) => {
-    if (tipo === 'contrato') {
-      setFormData(prev => ({ ...prev, [`conteudo_${activeTab}`]: value }));
-    } else {
-      setFormData(prev => ({ ...prev, conteudo: value }));
-    }
+  const handleInsertVariable = (_variable: string) => {
+    // Esta função será passada para as abas se necessário
   };
 
   const getContentByType = (documentoTipo: 'contrato' | 'adesao' | 'permanencia') => {
@@ -308,7 +283,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       setIsGeneratingPdf(false);
     }
   };
-
 
   const headerActions = (
     <div className="d-flex gap-2 align-items-center">
@@ -400,18 +374,42 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                 </ul>
               )}
               
-              <RichTextEditor
-                ref={editorRef}
-                key={`${isEditing ? documento?.id : 'create'}-${activeTab}`}
-                id="conteudo"
-                name="conteudo"
-                ariaLabelledBy="conteudo-label"
-                value={getCurrentContent()}
-                onChange={updateCurrentContent}
-                placeholder={`Digite o conteúdo ${tipo === 'contrato' ? `do ${activeTab === 'contrato' ? 'modelo de contrato' : activeTab === 'adesao' ? 'termo de adesão' : 'contrato de permanência'}` : 'do documento'}...`}
-                height="100%"
-                onInsertVariable={handleInsertVariable}
-              />
+              {tipo === 'contrato' ? (
+                <>
+                  {activeTab === 'contrato' && (
+                    <ContratoTab
+                      value={formData.conteudo_contrato}
+                      onChange={(value) => setFormData(prev => ({ ...prev, conteudo_contrato: value }))}
+                      onInsertVariable={handleInsertVariable}
+                      editorKey={`${isEditing ? documento?.id : 'create'}-contrato`}
+                    />
+                  )}
+                  {activeTab === 'adesao' && (
+                    <AdesaoTab
+                      value={formData.conteudo_adesao}
+                      onChange={(value) => setFormData(prev => ({ ...prev, conteudo_adesao: value }))}
+                      onInsertVariable={handleInsertVariable}
+                      editorKey={`${isEditing ? documento?.id : 'create'}-adesao`}
+                    />
+                  )}
+                  {activeTab === 'permanencia' && (
+                    <PermanenciaTab
+                      value={formData.conteudo_permanencia}
+                      onChange={(value) => setFormData(prev => ({ ...prev, conteudo_permanencia: value }))}
+                      onInsertVariable={handleInsertVariable}
+                      editorKey={`${isEditing ? documento?.id : 'create'}-permanencia`}
+                    />
+                  )}
+                </>
+              ) : (
+                <ConteudoTab
+                  value={formData.conteudo}
+                  onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
+                  onInsertVariable={handleInsertVariable}
+                  editorKey={`${isEditing ? documento?.id : 'create'}-conteudo`}
+                  placeholder={`Digite o conteúdo do ${getTipoLabel(tipo).toLowerCase()}...`}
+                />
+              )}
             </div>
           </form>
         </div>
@@ -425,3 +423,4 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
 };
 
 export default DocumentoModal;
+

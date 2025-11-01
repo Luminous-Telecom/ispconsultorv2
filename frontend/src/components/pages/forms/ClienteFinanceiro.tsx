@@ -5,7 +5,7 @@ import { TableConfig } from '../../tables/types';
 import { useTitulos } from '../../../hooks/useTitulos';
 import { useMarcarTituloPago } from '../../../hooks/useTitulos';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { TituloEditModal, TituloCreateModal } from '../../modals/titulos';
+import { TituloModal } from '../../modals/titulos/titulo';
 import { TituloService } from '../../../services/tituloService';
 import { Cliente, CarneParcela } from '../../../types';
 import { useImprimir } from '../../../hooks/useImprimir';
@@ -294,15 +294,15 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
             />
 
       {/* Modal de edição de parcela */}
-      <TituloEditModal
+      <TituloModal
         show={showParcelaEditModal}
         onClose={handleCloseParcelaEditModal}
-        parcelaId={selectedParcelaId || 0}
+        tituloId={selectedParcelaId || null}
         onSuccess={handleParcelaEditSuccess}
       />
 
       {/* Modal de criação de parcela */}
-      <TituloCreateModal
+      <TituloModal
         show={showParcelaCreateModal}
         onClose={handleCloseParcelaCreateModal}
         onSuccess={handleParcelaCreateSuccess}

@@ -12,17 +12,15 @@ import { Titulo, Plano } from '../../../../types';
 import DraggableModal from '../../../common/DraggableModal';
 import ImprimirModal from '../../../common/ImprimirModal';
 import ModeloTermoService from '../../../../services/modeloTermoService';
-import TituloCreateModal from '../../titulos/TituloCreateModal';
-import TituloEditModal from '../../titulos/TituloEditModal';
+import { TituloModal } from '../../titulos/titulo';
 import ReceberModal from '../../pagamentos/ReceberModal';
-import DocumentoSistemaService from '../../../../services/documentoSistemaService';
+import DocumentoSistemaService, { DocumentoSistema } from '../../../../services/documentoSistemaService';
 import { DiasVencimentoService } from '../../../../services/diasVencimentoService';
 import PlanoListModal from '../../planos/PlanoListModal';
 import BancoListModal from '../../bancos/BancoListModal';
 import ModeloContratoSelectModal from '../../parametros/ModeloContratoSelectModal';
 import '../../contratos/ContratoModals.css';
 import { Banco } from '../../../../types';
-import { DocumentoSistema } from '../../../../services/documentoSistemaService';
 import ContratoTab from './abas/ContratoTab';
 import TermosTab from './abas/TermosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
@@ -185,7 +183,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         modelo_contrato_id: contratoData.modelo_contrato_id || 0
       });
       setErrors({});
-    } else if (!show) {
+    } else if (!isEditMode && show) {
+      // Resetar formulário quando abrir em modo criação
       setFormData({
         plano_id: 0,
         desconto_percentual: 0,
@@ -902,10 +901,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       {/* Modais - apenas no modo edição */}
       {isEditMode && internalContratoId && (
         <>
-          <TituloCreateModal
+          <TituloModal
             show={showTituloCreateModal}
             clienteId={contratoData?.cliente_id}
-            contratoId={internalContratoId}
+            contratoId={internalContratoId || undefined}
             onClose={() => setShowTituloCreateModal(false)}
             onSuccess={() => {
               setShowTituloCreateModal(false);
@@ -918,9 +917,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             }}
           />
 
-          <TituloEditModal
+          <TituloModal
             show={showTituloEditModal}
-            parcelaId={selectedTituloId || 0}
+            tituloId={selectedTituloId || null}
             onClose={() => {
               setShowTituloEditModal(false);
               setSelectedTituloId(null);

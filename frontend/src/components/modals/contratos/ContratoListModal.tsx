@@ -101,7 +101,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: false,
       searchable: true,
       render: (item: Contrato) => 
-        item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2)}` : '-'
+        item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2).replace('.', ',')}` : '-'
     },
     {
       key: 'valor_final_str',
@@ -109,22 +109,34 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: false,
       searchable: true,
       render: (item: Contrato) => 
-        item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2)}` : '-'
+        item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2).replace('.', ',')}` : '-'
     },
     {
       key: 'status',
       label: 'Status',
       sortable: true,
       searchable: true,
-      render: (item: Contrato) => (
-        <span className={`badge ${
-          item.status === 'ativo' ? 'bg-success' :
-          item.status === 'inativo' ? 'bg-danger' :
-          'bg-warning text-dark'
-        }`}>
-          {item.status}
-        </span>
-      )
+      render: (item: Contrato) => {
+        const getStatusColor = (status: string) => {
+          switch (status?.toLowerCase()) {
+            case 'ativo':
+              return 'bg-success';
+            case 'inativo':
+              return 'bg-danger';
+            case 'suspenso':
+              return 'bg-warning text-dark';
+            case 'cancelado':
+              return 'bg-secondary';
+            default:
+              return 'bg-warning text-dark';
+          }
+        };
+        return (
+          <span className={`badge ${getStatusColor(item.status || '')}`}>
+            {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase() : '-'}
+          </span>
+        );
+      }
     },
     {
       key: 'data_inicio',
@@ -144,12 +156,12 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     {
       label: 'Editar',
       action: (selectedItems: Contrato[]) => {
-        if (selectedItems.length === 1) {
+        if (selectedItems.length > 0) {
           setSelectedContratoId(selectedItems[0].id);
           setShowEditModal(true);
         }
       },
-      disabled: (selectedItems: Contrato[]) => selectedItems.length !== 1
+      disabled: (selectedItems: Contrato[]) => selectedItems.length === 0
     },
     {
       label: 'Excluir',
@@ -186,6 +198,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             striped: true,
             hover: true,
             responsive: true,
+            selectable: true,
+            multiSelect: !onSelectContrato, // Seleção múltipla se não for modo de seleção única
             bulkActions: bulkActions.map(action => ({
               key: action.label.toLowerCase().replace(/\s+/g, '-'),
               label: action.label,
@@ -195,8 +209,24 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             emptyMessage: 'Nenhum contrato encontrado'
           }}
           tableId="contrato-list-modal"
-              onSelectionChange={setSelectedItems}
-              onRefresh={refetch}
+          onSelectionChange={(items) => {
+            setSelectedItems(items);
+            // Se é modo seleção única (onSelectContrato presente)
+            if (onSelectContrato) {
+              if (items.length > 0) {
+                // Sempre pega o último item selecionado (mais recente)
+                const selectedItem = items[items.length - 1];
+                onSelectContrato(selectedItem);
+                onClose();
+              }
+            }
+          }}
+          onRowClick={onSelectContrato ? (item) => {
+            // Clique na linha seleciona e fecha quando em modo seleção
+            onSelectContrato(item);
+            onClose();
+          } : undefined}
+          onRefresh={refetch}
         />
       </div>
 

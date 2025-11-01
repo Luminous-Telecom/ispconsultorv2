@@ -186,7 +186,7 @@ function Table<T extends { id: number | string }>({
     return (
       <thead>
         <tr>
-          {/* Checkbox de seleção múltipla */}
+          {/* Checkbox de seleção - renderiza sempre que selectable for true */}
           {selectable && (
             <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '40px' }}>
               <input

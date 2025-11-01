@@ -5,6 +5,7 @@ import { Titulo } from '../models/Titulo';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
+import { Contrato } from '../models/Contrato';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import nodemailer, { SendMailOptions } from 'nodemailer';
@@ -108,11 +109,10 @@ export class EmailService {
 
         let corpoHtml = '';
         if (mensagem?.mensagem_padrao) {
-          const contratoRef = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
+          const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
           corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
             cliente,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            contrato: contratoRef as any,
+            contrato: contratoRef,
             titulo,
             dataReferencia: new Date()
           });
