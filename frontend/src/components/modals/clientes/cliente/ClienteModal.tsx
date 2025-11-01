@@ -1,33 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { ClienteService } from '../../../services/clienteService';
-import { PlanoService } from '../../../services/planoService';
-import { BancoService } from '../../../services/bancoService';
-import { TituloService } from '../../../services/tituloService';
-import DocumentoSistemaService from '../../../services/documentoSistemaService';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { Cliente, CarneParcela, CreateCliente } from '../../../types';
-import DraggableModal from '../../common/DraggableModal';
-import FormField from '../../ui/FormField';
-import { useFormPrefix } from '../../../hooks/useFormId';
-import ImprimirModal from '../../common/ImprimirModal';
-import TituloEditModal from '../titulos/TituloEditModal';
-import ReceberModal from '../pagamentos/ReceberModal';
-import { useContratos, useDeleteContrato, Contrato } from '../../../hooks/useContratos';
-import ContratoCreateModal from './ContratoCreateModal';
-import ContratoEditModal from './ContratoEditModal';
-import { useFormReset } from '../../../hooks/useFormReset';
-import AddressFields from '../../forms/AddressFields';
-import ContactFields from '../../forms/ContactFields';
-import ConfirmModal from '../../ui/ConfirmModal';
-import Table from '../../tables/Table';
+import { ClienteService } from '../../../../services/clienteService';
+import { TituloService } from '../../../../services/tituloService';
+import DocumentoSistemaService from '../../../../services/documentoSistemaService';
+import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import { Cliente, CarneParcela, CreateCliente } from '../../../../types';
+import DraggableModal from '../../../common/DraggableModal';
+import { useFormPrefix } from '../../../../hooks/useFormId';
+import ImprimirModal from '../../../common/ImprimirModal';
+import TituloEditModal from '../../titulos/TituloEditModal';
+import ReceberModal from '../../pagamentos/ReceberModal';
+import { useContratos, useDeleteContrato, Contrato } from '../../../../hooks/useContratos';
+import ContratoModal from '../contrato/ContratoModal';
+import { useFormReset } from '../../../../hooks/useFormReset';
+import ConfirmModal from '../../../ui/ConfirmModal';
 // Utilitários centralizados
-import { formatCurrency, formatDate, formatCNPJ, formatPhone, formatCEP } from '../../../utils/formatters';
-import { ensureString } from '../../../utils/stringUtils';
-import { TituloItem, ClienteFormData, ClienteFormErrors } from '../../../types/cliente';
-import { FormConfig } from '../../forms/types';
-import { FormValue } from '../../../types/common';
+import { formatCurrency, formatDate, formatCNPJ, formatPhone, formatCEP } from '../../../../utils/formatters';
+import { ensureString } from '../../../../utils/stringUtils';
+import { TituloItem, ClienteFormData, ClienteFormErrors } from '../../../../types/cliente';
+import DadosBasicosTab from './abas/DadosBasicosTab';
+import ContatoTab from './abas/ContatoTab';
+import EnderecoTab from './abas/EnderecoTab';
+import ContratosTab from './abas/ContratosTab';
+import FinanceiroTab from './abas/FinanceiroTab';
+import ObservacoesTab from './abas/ObservacoesTab';
+import { FormValue } from '../../../../types/common';
 
 interface ClienteModalProps {
   show: boolean;
@@ -94,7 +92,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const [showContratoEditModal, setShowContratoEditModal] = useState(false);
   const [showImprimirModal, setShowImprimirModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [showImprimirDropdown, setShowImprimirDropdown] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
@@ -102,13 +99,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const [selectedItems, setSelectedItems] = useState<TituloItem[]>([]);
   const [selectedContratosItems, setSelectedContratosItems] = useState<Contrato[]>([]);
   const [showInativosContratos, setShowInativosContratos] = useState(false);
-  const [_searchContratos, _setSearchContratos] = useState('');
-  const [_searchFinanceiro, _setSearchFinanceiro] = useState('');
-  const [_page, _setPage] = useState(1);
-  const [_limit, _setLimit] = useState(10);
-  const [_sortColumn, _setSortColumn] = useState<string>('id');
-  const [_sortDirection, _setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [_showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [confirmMessage, setConfirmMessage] = useState('');
@@ -118,13 +108,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const canEditContratosFinanceiro = useMemo(() => {
     return isEditing || !!createdClienteId;
   }, [isEditing, createdClienteId]);
-
-  // Função helper para mostrar confirmação
-  const _showConfirmation = (message: string, action: () => void) => {
-    setConfirmMessage(message);
-    setConfirmAction(() => action);
-    setShowConfirmModal(true);
-  };
 
   const handleConfirm = () => {
     if (confirmAction) {
@@ -140,41 +123,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     setConfirmAction(null);
     setConfirmMessage('');
   };
-
-  // Fechar dropdown ao clicar fora
-  React.useEffect(() => {
-    const handleClickOutside = () => setOpenDropdown(null);
-    if (openDropdown !== null) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [openDropdown]);
-
-  // Fechar dropdown ao clicar fora
-  React.useEffect(() => {
-    const handleClickOutside = () => setOpenDropdown(null);
-    if (openDropdown !== null) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [openDropdown]);
-
-
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.dropdown')) {
-        setShowImprimirDropdown(false);
-      }
-    };
-
-    if (showImprimirDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [showImprimirDropdown]);
 
 
   // Buscar dados do cliente (apenas se estiver editando)
@@ -212,21 +160,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     }
   }, [cliente]);
 
-  // Buscar planos
-  const { data: _planosData } = useQuery({
-    queryKey: ['planos'],
-    queryFn: () => PlanoService.list({ page: 1, limit: 100 }),
-  });
-
-  // Buscar bancos
-  const { data: _bancosData } = useQuery({
-    queryKey: ['bancos'],
-    queryFn: () => BancoService.list({ page: 1, limit: 100 }),
-  });
-
   // Buscar contratos do cliente (usar clienteId quando editando, ou createdClienteId quando criou)
   const effectiveClienteIdForContratos = clienteId || createdClienteId || undefined;
-  const { data: contratosData, isLoading: isLoadingContratos, error: _contratosError, refetch: refetchContratos } = useContratos(effectiveClienteIdForContratos);
+  const { data: contratosData, isLoading: isLoadingContratos, refetch: refetchContratos } = useContratos(effectiveClienteIdForContratos);
   
   // Hook para deletar contrato
   const deleteContratoMutation = useDeleteContrato();
@@ -237,65 +173,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     queryFn: () => TituloService.list({ cliente_id: effectiveClienteIdForContratos!, limit: 100 }),
     enabled: !!effectiveClienteIdForContratos,
   });
-
-  // Configuração do formulário unificado para dados básicos
-  const _dadosBasicosFormConfig: FormConfig = {
-    formatValue: (name: string, value: FormValue) => {
-      // Aplicar formatação durante a digitação
-      if (typeof value === 'string') {
-        if (name === 'cnpj') {
-          return formatCNPJ(value);
-        } else if (name === 'telefone' || name === 'whatsapp') {
-          return formatPhone(value);
-        } else if (name === 'cep') {
-          return formatCEP(value);
-        }
-      }
-      return value;
-    },
-    fields: [
-      {
-        name: 'cnpj',
-        type: 'text',
-        label: 'CNPJ',
-        placeholder: '00.000.000/0000-00',
-        required: true,
-        size: 'md',
-        validation: [
-          { type: 'required', message: 'CNPJ é obrigatório' },
-          { type: 'pattern', value: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, message: 'CNPJ inválido' }
-        ]
-      },
-      {
-        name: 'razao_social',
-        type: 'text',
-        label: 'Razão Social',
-        placeholder: 'Razão social da empresa',
-        required: true,
-        size: 'md',
-        validation: [
-          { type: 'required', message: 'Razão Social é obrigatória' }
-        ]
-      },
-      {
-        name: 'nome_fantasia',
-        type: 'text',
-        label: 'Nome Fantasia',
-        placeholder: 'Nome fantasia da empresa',
-        size: 'md'
-      },
-      {
-        name: 'ativo',
-        type: 'checkbox',
-        label: 'Cliente Ativo',
-        description: 'Cliente está ativo no sistema',
-        switch: false
-      }
-    ],
-    layout: 'vertical',
-    columns: 2,
-    spacing: 'md'
-  };
 
   // Filtrar e agrupar dados baseado nos checkboxes
   const getFilteredData = () => {
@@ -312,94 +189,23 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       return true;
     });
 
-    // Aplicar filtro de busca
-    if (_searchFinanceiro && typeof _searchFinanceiro === 'string' && _searchFinanceiro.trim()) {
-      const searchTerm = _searchFinanceiro.toLowerCase().trim();
-      filteredData = filteredData.filter((titulo: CarneParcela) => {
-        const id = titulo.id?.toString() || '';
-        const numeroTitulo = titulo.numero_titulo || '';
-        const valor = titulo.valor?.toString() || '';
-        const status = titulo.status || '';
-        
-        return (
-          id.includes(searchTerm) ||
-          numeroTitulo.toLowerCase().includes(searchTerm) ||
-          valor.includes(searchTerm) ||
-          status.toLowerCase().includes(searchTerm)
-        );
-      });
-    }
-
+    // A busca será feita pelo componente Table
     return filteredData;
   };
 
   const filteredData = getFilteredData();
 
-  // Função para ordenar os dados
-  const getSortedData = () => {
-    if (!_sortColumn) return filteredData;
-    
-    return [...filteredData].sort((a, b) => {
-      let valueA: string | number | Date;
-      let valueB: string | number | Date;
-      
-      switch (_sortColumn) {
-        case 'id':
-          valueA = a.id;
-          valueB = b.id;
-          break;
-        case 'status':
-          valueA = a.status === 'pago' ? 0 : a.status === 'vencido' ? 1 : a.status === 'pendente' ? 2 : 3;
-          valueB = b.status === 'pago' ? 0 : b.status === 'vencido' ? 1 : b.status === 'pendente' ? 2 : 3;
-          break;
-        case 'numero_carne':
-          valueA = a.carne?.numero_carne || '';
-          valueB = b.carne?.numero_carne || '';
-          break;
-        case 'quantidade_parcelas':
-          valueA = (a.numero_parcela || a.numero_titulo || a.id).toString();
-          valueB = (b.numero_parcela || b.numero_titulo || b.id).toString();
-          break;
-        case 'data_vencimento':
-          valueA = new Date(a.data_vencimento);
-          valueB = new Date(b.data_vencimento);
-          break;
-        case 'valor':
-          valueA = Number(a.valor_parcela || 0);
-          valueB = Number(b.valor_parcela || 0);
-          break;
-        case 'valor_pago':
-          valueA = a.pago ? Number(a.valor_pago || a.valor_parcela || 0) : 0;
-          valueB = b.pago ? Number(b.valor_pago || b.valor_parcela || 0) : 0;
-          break;
-        case 'valor_aberto':
-          valueA = (a.pago || a.status === 'cancelado') ? 0 : Number(a.valor_parcela || 0);
-          valueB = (b.pago || b.status === 'cancelado') ? 0 : Number(b.valor_parcela || 0);
-          break;
-        default:
-          valueA = a[_sortColumn as keyof CarneParcela] as string | number || '';
-          valueB = b[_sortColumn as keyof CarneParcela] as string | number || '';
-      }
-      
-      // Comparação
-      if (valueA < valueB) return _sortDirection === 'asc' ? -1 : 1;
-      if (valueA > valueB) return _sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
+  // Adicionar campos virtuais aos dados para busca funcionar
+  const sortedData = filteredData.map((titulo: CarneParcela) => ({
+    ...titulo,
+    // Adicionar campos virtuais para busca funcionar com campos aninhados
+    plano_nome: titulo.plano?.nome_plano || '',
+    numero_titulo_str: (titulo.numero_titulo || titulo.numero_parcela || titulo.id).toString(),
+    valor_str: (titulo.valor || titulo.valor_parcela || 0).toString(),
+    valor_pago_str: (titulo.valor_pago || 0).toString()
+  }));
 
-  const sortedData = getSortedData();
-
-  // Aplicar paginação aos dados ordenados
-  const getPaginatedData = () => {
-    const startIndex = (_page - 1) * _limit;
-    const endIndex = startIndex + _limit;
-    return sortedData.slice(startIndex, endIndex);
-  };
-
-  const _paginatedData = getPaginatedData();
-
-  // Funções de impressão
+  // Funções de impressão para aba Financeiro
   const handleImprimirSelecionados = async () => {
     if (selectedItems.length > 0) {
       setIsGeneratingPdf(true);
@@ -844,163 +650,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     }
   };
 
-  // Processamento dos dados de contratos
-  const sortedContratosData = React.useMemo(() => {
-    if (!contratosData) return [];
-    
-    let filtered = contratosData.filter((contrato: Contrato) => {
-      // Filtro por busca
-      if (_searchContratos) {
-        const searchLower = _searchContratos.toLowerCase();
-        const matchesSearch = 
-          contrato.plano?.nome_plano?.toLowerCase().includes(searchLower) ||
-          contrato.status?.toLowerCase().includes(searchLower) ||
-          contrato.valor_final?.toString().includes(searchLower) ||
-          contrato.id?.toString().includes(searchLower);
-        if (!matchesSearch) return false;
-      }
-      
-      return true;
-    });
+  // Processamento dos dados de contratos - apenas retornar os dados, a busca e ordenação serão feitas pelo Table
+  const sortedContratosData = contratosData || [];
 
-    // Ordenação
-    if (_sortColumn) {
-      filtered = [...filtered].sort((a: Contrato, b: Contrato) => {
-        let aValue: string | number = '';
-        let bValue: string | number = '';
-        
-        // Tratar campos especiais
-        if (_sortColumn === 'plano') {
-          aValue = a.plano?.nome_plano || '';
-          bValue = b.plano?.nome_plano || '';
-        } else if (_sortColumn === 'valor_plano') {
-          aValue = Number(a.plano?.valor_mensal || 0);
-          bValue = Number(b.plano?.valor_mensal || 0);
-        } else if (_sortColumn === 'valor_final') {
-          aValue = Number(a.valor_final || 0);
-          bValue = Number(b.valor_final || 0);
-        } else if (_sortColumn === 'id') {
-          aValue = a.id;
-          bValue = b.id;
-        } else if (_sortColumn === 'status') {
-          aValue = a.status || '';
-          bValue = b.status || '';
-        } else if (_sortColumn === 'data_inicio') {
-          aValue = a.data_inicio || '';
-          bValue = b.data_inicio || '';
-        } else {
-          // Para campos genéricos
-          const valueA = a[_sortColumn as keyof Contrato];
-          const valueB = b[_sortColumn as keyof Contrato];
-          aValue = valueA !== null && valueA !== undefined ? String(valueA) : '';
-          bValue = valueB !== null && valueB !== undefined ? String(valueB) : '';
-        }
-        
-        if (typeof aValue === 'string') aValue = aValue.toLowerCase();
-        if (typeof bValue === 'string') bValue = bValue.toLowerCase();
-        
-        if (aValue < bValue) return _sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return _sortDirection === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    
-    return filtered;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contratosData, _searchContratos, _sortColumn, _sortDirection]);
-
-  const _paginatedContratosData = React.useMemo(() => {
-    const startIndex = (_page - 1) * _limit;
-    return sortedContratosData.slice(startIndex, startIndex + _limit);
-  }, [sortedContratosData, _page, _limit]);
-
-  // Colunas para contratos
-  const contratosColumns = [
-    {
-      key: 'id',
-      label: 'ID',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.id
-    },
-    {
-      key: 'nome_plano',
-      label: 'Plano',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.plano?.nome_plano || '-'
-    },
-    {
-      key: 'valor_plano',
-      label: 'Valor Plano',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.plano?.valor_mensal ? formatCurrency(contrato.plano.valor_mensal) : '-'
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        <span className={`badge ${
-          contrato.status === 'ativo' ? 'bg-success' :
-          contrato.status === 'inativo' ? 'bg-danger' :
-          'bg-warning'
-        }`}>
-          {contrato.status}
-        </span>
-      )
-    },
-    {
-      key: 'desconto_percentual',
-      label: 'Desconto %',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
-    },
-    {
-      key: 'desconto_valor',
-      label: 'Desconto R$',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.desconto_valor ? formatCurrency(contrato.desconto_valor) : '-'
-    },
-    {
-      key: 'valor_final',
-      label: 'Valor Final',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.valor_final ? formatCurrency(contrato.valor_final) : '-'
-    },
-    {
-      key: 'data_inicio',
-      label: 'Data Início',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.data_inicio ? formatDate(contrato.data_inicio) : '-'
-    },
-    {
-      key: 'data_fim',
-      label: 'Data Fim',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.data_fim ? formatDate(contrato.data_fim) : '-'
-    },
-    {
-      key: 'isento_mensalidade',
-      label: 'Isento',
-      sortable: true,
-      render: (contrato: Contrato) => (
-        <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
-          {contrato.isento_mensalidade ? 'Sim' : 'Não'}
-        </span>
-      )
-    },
-    {
-      key: 'dia_vencimento',
-      label: 'Dia Venc.',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.dia_vencimento_id ? contrato.dia_vencimento_id : '-'
-    },
-    {
-      key: 'banco_nome',
-      label: 'Banco',
-      sortable: true,
-      render: (contrato: Contrato) => contrato.bancoBoleto?.nome || '-'
-    }
-  ];
 
   // Colunas para a tabela de títulos
   const columns = [
@@ -1008,12 +660,14 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
+      searchable: true,
       render: (item: CarneParcela) => item.id
     },
     {
       key: 'status',
       label: 'Status',
       sortable: true,
+      searchable: true,
       render: (item: CarneParcela) => {
         return (
           <span className={`badge bg-${getStatusColor(item.status)}`}>
@@ -1023,17 +677,19 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       }
     },
     {
-      key: 'plano',
+      key: 'plano_nome',
       label: 'Plano',
       sortable: true,
-      render: (item: CarneParcela) => {
-        return item.plano?.nome_plano || '-';
+      searchable: true,
+      render: (item: CarneParcela & { plano_nome?: string }) => {
+        return item.plano?.nome_plano || item.plano_nome || '-';
       }
     },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
       sortable: true,
+      searchable: false,
       render: (item: CarneParcela) => {
         return formatDate(item.data_vencimento);
       }
@@ -1042,6 +698,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'valor',
       label: 'Valor',
       sortable: true,
+      searchable: true,
       render: (item: CarneParcela) => {
         return formatCurrency(item.valor || 0);
       }
@@ -1050,6 +707,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'valor_pago',
       label: 'Valor baixado',
       sortable: true,
+      searchable: true,
       render: (item: CarneParcela) => {
         return item.status === 'pago' ? formatCurrency(item.valor_pago || item.valor || 0) : formatCurrency(0);
       }
@@ -1057,7 +715,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
-      sortable: true,
+      sortable: false,
+      searchable: false,
       render: (item: CarneParcela) => {
         return (item.status === 'pago' || item.status === 'cancelado') ? formatCurrency(0) : formatCurrency(item.valor || 0);
       }
@@ -1066,6 +725,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'data_pagamento',
       label: 'Data Pagamento',
       sortable: true,
+      searchable: false,
       render: (item: CarneParcela) => {
         return item.data_pagamento ? formatDate(item.data_pagamento) : '-';
       }
@@ -1074,6 +734,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'charge_id',
       label: 'Charge ID',
       sortable: true,
+      searchable: true,
       render: (item: CarneParcela) => {
         return item.charge_id || '-';
       }
@@ -1245,8 +906,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     if (!validateForm()) return;
 
     // Preparar dados para envio com conversão de tipos correta
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dataToSend: any = {
+    const dataToSend: Partial<CreateCliente> = {
       cnpj: formData.cnpj,
       razao_social: formData.razao_social,
       nome_fantasia: formData.nome_fantasia,
@@ -1271,9 +931,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
     // Remover apenas campos undefined
     Object.keys(dataToSend).forEach(key => {
-      const value = dataToSend[key];
+      const value = (dataToSend as Record<string, unknown>)[key];
       if (value === undefined) {
-        delete dataToSend[key];
+        delete (dataToSend as Record<string, unknown>)[key];
       }
     });
 
@@ -1418,305 +1078,83 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         >
           {/* Aba Dados Básicos */}
           {activeTab === 'dados-basicos' && (
-            <div className="row">
-              <div className="col-md-4">
-                <FormField
-                  name="cnpj"
-                  type="text"
-                  label="CNPJ"
-                  placeholder="00.000.000/0000-00"
-                  required={true}
-                  size="md"
-                  value={formData.cnpj || ''}
-                  onChange={(value) => handleInputChange('cnpj', value)}
-                  disabled={isSubmitting}
-                  formPrefix={formPrefix}
-                />
-              </div>
-              <div className="col-md-8">
-                <FormField
-                  name="razao_social"
-                  type="text"
-                  label="Razão Social"
-                  placeholder="Razão social da empresa"
-                  required={true}
-                  size="md"
-                  value={formData.razao_social || ''}
-                  onChange={(value) => handleInputChange('razao_social', value)}
-                  disabled={isSubmitting}
-                  formPrefix={formPrefix}
-                />
-              </div>
-              <div className="col-md-6">
-                <FormField
-                  name="nome_fantasia"
-                  type="text"
-                  label="Nome Fantasia"
-                  placeholder="Nome fantasia da empresa"
-                  size="md"
-                  value={formData.nome_fantasia || ''}
-                  onChange={(value) => handleInputChange('nome_fantasia', value)}
-                  disabled={isSubmitting}
-                  formPrefix={formPrefix}
-                />
-              </div>
-              <div className="col-md-6">
-                <FormField
-                  name="ativo"
-                  type="checkbox"
-                  label="Cliente Ativo"
-                  value={formData.ativo}
-                  onChange={(value) => handleInputChange('ativo', value)}
-                  disabled={isSubmitting}
-                  formPrefix={formPrefix}
-                />
-              </div>
-            </div>
+            <DadosBasicosTab
+              formData={formData}
+              errors={errors}
+              handleInputChange={handleInputChange}
+              isSubmitting={isSubmitting}
+              formPrefix={formPrefix}
+            />
           )}
 
-            {/* Aba Contato */}
-            {activeTab === 'contato' && (
-              <div className="row">
-                <div className="col-md-8">
-                  <ContactFields 
-                    required={true}
-                    size="md"
-                    includeEmail={true}
-                    includeWhatsApp={true}
-                    formData={formData as unknown as Record<string, FormValue>}
-                    onChange={(name: string, value: FormValue) => handleInputChange(name as keyof ClienteFormData, value)}
-                    errors={errors as unknown as Record<string, string>}
-                  />
-                </div>
-                
-                <div className="col-md-4">
-                  <h6 className="text-primary mb-3">Preferências de Comunicação</h6>
-                  
-                  <div className="mb-3">
-                    <FormField
-                      name="recebe_email"
-                      type="checkbox"
-                      label="Recebe Email"
-                      value={formData.recebe_email}
-                      onChange={(value) => handleInputChange('recebe_email', value)}
-                      formPrefix={formPrefix}
-                    />
-                  </div>
+          {/* Aba Contato */}
+          {activeTab === 'contato' && (
+            <ContatoTab
+              formData={formData}
+              errors={errors}
+              handleInputChange={handleInputChange}
+              isSubmitting={isSubmitting}
+              formPrefix={formPrefix}
+            />
+          )}
 
-                  <div className="mb-3">
-                    <FormField
-                      name="recebe_sms"
-                      type="checkbox"
-                      label="Recebe SMS"
-                      value={formData.recebe_sms}
-                      onChange={(value) => handleInputChange('recebe_sms', value)}
-                      formPrefix={formPrefix}
-                    />
-                  </div>
+          {/* Aba Endereço */}
+          {activeTab === 'endereco' && (
+            <EnderecoTab
+              formData={formData}
+              errors={errors}
+              handleInputChange={handleInputChange}
+              isSubmitting={isSubmitting}
+              formPrefix={formPrefix}
+            />
+          )}
 
-                  <div className="mb-3">
-                    <FormField
-                      name="recebe_whatsapp"
-                      type="checkbox"
-                      label="Recebe WhatsApp"
-                      value={formData.recebe_whatsapp}
-                      onChange={(value) => handleInputChange('recebe_whatsapp', value)}
-                      formPrefix={formPrefix}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* Aba Contratos */}
+          {activeTab === 'contratos' && (
+            <ContratosTab
+              isLoadingContratos={isLoadingContratos}
+              sortedContratosData={sortedContratosData}
+              selectedContratosItems={selectedContratosItems}
+              setSelectedContratosItems={setSelectedContratosItems}
+              contratosBulkActions={contratosBulkActions}
+              showInativosContratos={showInativosContratos}
+              setShowInativosContratos={setShowInativosContratos}
+              onRefresh={() => refetchContratos()}
+              onShowCreateModal={() => setShowContratoCreateModal(true)}
+              onShowEditModal={(contratoId) => {
+                setSelectedContratoId(contratoId);
+                setShowContratoEditModal(true);
+              }}
+              isGeneratingPdf={isGeneratingPdf}
+            />
+          )}
 
-            {/* Aba Endereço */}
-            {activeTab === 'endereco' && (
-              <AddressFields 
-                required={false}
-                size="md"
-                formData={formData as unknown as Record<string, FormValue>}
-                onChange={(name: string, value: FormValue) => handleInputChange(name as keyof ClienteFormData, value)}
-                errors={errors as unknown as Record<string, string>}
-              />
-            )}
+          {/* Aba Financeiro */}
+          {activeTab === 'financeiro' && (
+            <FinanceiroTab
+              sortedData={sortedData}
+              isLoadingParcelas={isLoadingParcelas}
+              selectedItems={selectedItems}
+              setSelectedItems={setSelectedItems}
+              bulkActions={bulkActions}
+              showCancelados={showCancelados}
+              setShowCancelados={setShowCancelados}
+              onRefresh={() => refetchParcelas()}
+              isGeneratingPdf={isGeneratingPdf}
+              columns={columns}
+            />
+          )}
 
-
-            {/* Aba Contratos */}
-            {activeTab === 'contratos' && (
-              <div className="row">
-                <div className="col-12">
-                  <Table
-                    config={{
-                      columns: contratosColumns,
-                      data: contratosData || [],
-                      loading: isLoadingContratos,
-                      selectable: true,
-                      multiSelect: true,
-                      searchable: true,
-                      searchPlaceholder: 'Buscar por plano, status, valor...',
-                      sortable: true,
-                      striped: true,
-                      hover: true,
-                      responsive: true,
-                      bulkActions: contratosBulkActions,
-                      emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
-                      className: 'no-padding',
-                      customFilters: (data: Contrato[]) => {
-                        return data.filter((contrato: Contrato) => {
-                          if (contrato.status === 'inativo' && !showInativosContratos) {
-                            return false;
-                          }
-                          return true;
-                        });
-                      },
-                      customControls: (
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            id="showInativosContratos"
-                            checked={showInativosContratos}
-                            onChange={(e) => setShowInativosContratos(e.target.checked)}
-                          />
-                          <label className="form-check-label" htmlFor="showInativosContratos">
-                            Mostrar inativos
-                          </label>
-                        </div>
-                      )
-                    }}
-                    onSelectionChange={setSelectedContratosItems}
-                    onRefresh={() => refetchContratos()}
-                  />
-
-                  {/* Resumo de Contratos */}
-                  {sortedContratosData.length > 0 && (
-                    <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded" style={{ margin: '1rem' }}>
-                      <div className="d-flex align-items-center">
-                        <i className="bi bi-info-circle text-muted me-2"></i>
-                        <span className="small text-muted">Resumo de contratos</span>
-                      </div>
-                      <div className="d-flex gap-4">
-                        <div className="text-end">
-                          <div className="small text-muted">Total de contratos:</div>
-                          <strong>{sortedContratosData.length}</strong>
-                        </div>
-                        <div className="text-end">
-                          <div className="small text-muted">Contratos ativos:</div>
-                          <strong>{sortedContratosData.filter((c: Contrato) => c.status === 'ativo').length}</strong>
-                        </div>
-                        <div className="text-end">
-                          <div className="small text-muted">Valor total mensal:</div>
-                          <strong>R$ {sortedContratosData.reduce((sum: number, contrato: Contrato) => {
-                            return sum + Number(contrato.valor_final || 0);
-                          }, 0).toFixed(2)}</strong>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Aba Financeiro */}
-            {activeTab === 'financeiro' && (
-              <div className="row">
-                <div className="col-12">
-                  <Table
-                    config={{
-                      columns: columns,
-                      data: sortedData,
-                      loading: isLoadingParcelas,
-                      selectable: true,
-                      multiSelect: true,
-                      searchable: true,
-                      searchPlaceholder: 'Buscar por ID, carnê, valor...',
-                      sortable: true,
-                      striped: true,
-                      hover: true,
-                      responsive: true,
-                      bulkActions: bulkActions,
-                      emptyMessage: 'Este cliente ainda não possui títulos cadastrados.',
-                      className: 'no-padding',
-                      customControls: (
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            id="showCancelados"
-                            checked={showCancelados}
-                            onChange={(e) => setShowCancelados(e.target.checked)}
-                          />
-                          <label className="form-check-label" htmlFor="showCancelados">
-                            Mostrar cancelados
-                          </label>
-                        </div>
-                      )
-                    }}
-                      onSelectionChange={(items: CarneParcela[]) => setSelectedItems(items as TituloItem[])}
-                    onRefresh={() => refetchParcelas()}
-                  />
-
-                  {/* Resumo Financeiro */}
-                  {sortedData.length > 0 && (
-                    <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded" style={{ margin: '1rem' }}>
-                      <div className="d-flex align-items-center">
-                        <i className="bi bi-info-circle text-muted me-2"></i>
-                        <span className="small text-muted">Legenda de cores</span>
-                      </div>
-                      <div className="d-flex gap-4">
-                        <div className="text-end">
-                          <div className="small text-muted">Valor:</div>
-                          <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
-                            return sum + Number(item.valor || item.valor_parcela || 0);
-                          }, 0).toFixed(2)}</strong>
-                        </div>
-                        <div className="text-end">
-                          <div className="small text-muted">Valor baixado:</div>
-                          <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
-                            // Só considerar como baixado se estiver pago E não cancelado
-                            if (item.pago && item.status === 'pago') {
-                              return sum + Number(item.valor_pago || 0);
-                            }
-                            return sum;
-                          }, 0).toFixed(2)}</strong>
-                        </div>
-                        <div className="text-end">
-                          <div className="small text-muted">Valor aberto:</div>
-                          <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
-                            return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || item.valor_parcela || 0));
-                          }, 0).toFixed(2)}</strong>
-                        </div>
-                        <div className="text-end">
-                          <div className="small text-muted">Valor cancelado:</div>
-                          <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
-                            return sum + (item.status === 'cancelado' ? Number(item.valor || item.valor_parcela || 0) : 0);
-                          }, 0).toFixed(2)}</strong>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Aba Observações */}
-            {activeTab === "observacoes" && (
-              <div className="row">
-                <div className="col-12">
-                  <div className="mb-3">
-                    <label htmlFor={`${formPrefix}-observacoes`} className="form-label">Observações</label>
-                    <textarea
-                      className="form-control"
-                      id={`${formPrefix}-observacoes`}
-                      name="observacoes"
-                      rows={8}
-                      value={formData.observacoes}
-                      onChange={(e) => handleInputChange('observacoes', e.target.value)}
-                      placeholder="Observações sobre o cliente..."
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* Aba Observações */}
+          {activeTab === "observacoes" && (
+            <ObservacoesTab
+              formData={formData}
+              errors={errors}
+              handleInputChange={handleInputChange}
+              isSubmitting={isSubmitting}
+              formPrefix={formPrefix}
+            />
+          )}
           </div>
         </div>
 
@@ -1769,27 +1207,19 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           }}
         />
 
-        {/* Modal de criação de contrato */}
-        <ContratoCreateModal
-          show={showContratoCreateModal}
+        {/* Modal de contrato (criação e edição unificados) */}
+        <ContratoModal
+          show={showContratoCreateModal || showContratoEditModal}
           clienteId={cliente?.id || createdClienteId || undefined}
-          onClose={() => setShowContratoCreateModal(false)}
-          onSuccess={() => {
-            setShowContratoCreateModal(false);
-            // Refetch contratos
-          }}
-        />
-
-        {/* Modal de edição de contrato */}
-        <ContratoEditModal
-          show={showContratoEditModal}
-          contratoId={selectedContratoId}
+          contratoId={showContratoEditModal ? selectedContratoId : null}
           onClose={() => {
+            setShowContratoCreateModal(false);
             setShowContratoEditModal(false);
             setSelectedContratoId(null);
           }}
           onSuccess={() => {
-            // Refetch contratos
+            // Não fechar o modal automaticamente - permitir criar múltiplos contratos
+            // Refetch contratos será feito automaticamente pela query invalidation
           }}
         />
 

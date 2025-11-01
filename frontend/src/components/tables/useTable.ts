@@ -58,8 +58,9 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
   const filteredData = useMemo(() => {
     let result = [...state.data];
 
-    // Aplicar busca
-    if (state.searchTerm && searchable) {
+    // Aplicar busca apenas se não houver paginação do servidor (busca é feita no servidor)
+    // Se há paginação, a busca já foi feita no servidor, então não filtrar localmente
+    if (state.searchTerm && searchable && !pagination) {
       const searchLower = state.searchTerm.toLowerCase();
       result = result.filter(item => {
         return columns.some(column => {
@@ -85,7 +86,7 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     });
 
     return result;
-  }, [state.data, state.searchTerm, state.filters, columns, searchable]);
+  }, [state.data, state.searchTerm, state.filters, columns, searchable, pagination]);
 
   // Ordenar dados
   const sortedData = useMemo(() => {

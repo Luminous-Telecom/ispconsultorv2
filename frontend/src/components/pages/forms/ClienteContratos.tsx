@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Cliente } from '../../../types';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
-import { ContratoCreateModal } from '../../modals/clientes';
+import ContratoModal from '../../modals/clientes/contrato/ContratoModal';
 import { useContratos, Contrato } from '../../../hooks/useContratos';
 import { useImprimir } from '../../../hooks/useImprimir';
 import TermosContrato from './TermosContrato';
@@ -15,8 +15,6 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
   cliente
 }) => {
   const [activeTab, setActiveTab] = useState<'contratos' | 'termos'>('contratos');
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showContratoCreateModal, setShowContratoCreateModal] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Contrato[]>([]);
 
@@ -34,37 +32,20 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
 
   const contratosAtivos = contratos.filter((c: Contrato) => c.status === 'ativo');
 
-  // Funções de ordenação
-  const handleSort = (column: string, direction: 'asc' | 'desc') => {
-    setSortColumn(column);
-    setSortDirection(direction);
-  };
-
-  const getSortedContratos = () => {
-    if (!contratos || !sortColumn) {
-      return contratos;
-    }
-
-    return [...contratos].sort((a, b) => {
-      const aValue = a[sortColumn as keyof Contrato];
-      const bValue = b[sortColumn as keyof Contrato];
-
-      // Tratar campos especiais
-      if (sortColumn === 'valor_final' || sortColumn === 'valor_plano') {
-        const aNum = typeof aValue === 'number' ? aValue : parseFloat(String(aValue || 0)) || 0;
-        const bNum = typeof bValue === 'number' ? bValue : parseFloat(String(bValue || 0)) || 0;
-        return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
-      }
-
-      // Converter para string se necessário para comparação
-      const aStr = String(aValue || '').toLowerCase();
-      const bStr = String(bValue || '').toLowerCase();
-
-      if (aStr < bStr) return sortDirection === 'asc' ? -1 : 1;
-      if (aStr > bStr) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
+  // Adicionar campos virtuais para busca funcionar com campos aninhados
+  const contratosWithVirtualFields = React.useMemo(() => {
+    return contratos.map((c: Contrato) => ({
+      ...c,
+      // Adicionar campos virtuais para busca funcionar com campos aninhados
+      plano_nome: c.plano?.nome_plano || '',
+      banco_nome: c.bancoBoleto?.nome || '',
+      valor_plano_str: (c.plano?.valor_mensal || 0).toString(),
+      valor_final_str: (c.valor_final || 0).toString(),
+      desconto_percentual_str: (c.desconto_percentual || 0).toString(),
+      desconto_valor_str: (c.desconto_valor || 0).toString(),
+      dia_vencimento_str: (c.dia_vencimento_id || 0).toString()
+    }));
+  }, [contratos]);
 
 
   const handleDeletarContrato = (selectedItems: Contrato[]) => {
@@ -91,24 +72,27 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
     }
   };
 
-  const contratosColumns: TableConfig<Contrato>['columns'] = [
-    { key: 'id', label: 'ID', sortable: true },
+  const contratosColumns: TableConfig<Contrato & { plano_nome?: string; banco_nome?: string; valor_plano_str?: string; valor_final_str?: string; desconto_percentual_str?: string; desconto_valor_str?: string; dia_vencimento_str?: string }>['columns'] = [
+    { key: 'id', label: 'ID', sortable: true, searchable: true },
     { 
-      key: 'plano', 
+      key: 'plano_nome', 
       label: 'Plano', 
       sortable: true,
-      render: (contrato: Contrato) => contrato.plano?.nome_plano || '-'
+      searchable: true,
+      render: (contrato: Contrato & { plano_nome?: string }) => contrato.plano?.nome_plano || contrato.plano_nome || '-'
     },
     { 
-      key: 'valor_plano', 
+      key: 'valor_plano_str', 
       label: 'Valor Plano', 
-      sortable: true,
+      sortable: false,
+      searchable: true,
       render: (contrato: Contrato) => contrato.plano?.valor_mensal ? `R$ ${Number(contrato.plano.valor_mensal).toFixed(2).replace('.', ',')}` : '-'
     },
     { 
       key: 'status', 
       label: 'Status',
       sortable: true,
+      searchable: true,
       render: (contrato: Contrato) => (
         <span className={`badge bg-${getStatusColor(contrato.status)}`}>
           {contrato.status.charAt(0).toUpperCase() + contrato.status.slice(1)}
@@ -116,21 +100,24 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
       )
     },
     { 
-      key: 'desconto_percentual', 
+      key: 'desconto_percentual_str', 
       label: 'Desconto %', 
       sortable: true,
+      searchable: true,
       render: (contrato: Contrato) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
     },
     { 
-      key: 'desconto_valor', 
+      key: 'desconto_valor_str', 
       label: 'Desconto R$', 
       sortable: true,
+      searchable: true,
       render: (contrato: Contrato) => contrato.desconto_valor ? `R$ ${Number(contrato.desconto_valor).toFixed(2).replace('.', ',')}` : '-'
     },
     { 
-      key: 'valor_final', 
+      key: 'valor_final_str', 
       label: 'Valor Final', 
       sortable: true,
+      searchable: true,
       render: (contrato: Contrato) => {
         const valor = contrato.valor_final || contrato.plano?.valor_mensal || 0;
         return `R$ ${Number(valor).toFixed(2).replace('.', ',')}`;
@@ -140,18 +127,21 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
       key: 'data_inicio', 
       label: 'Data Início', 
       sortable: true,
+      searchable: false,
       render: (contrato: Contrato) => contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-'
     },
     { 
       key: 'data_fim', 
       label: 'Data Fim', 
       sortable: true,
+      searchable: false,
       render: (contrato: Contrato) => contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-'
     },
     { 
-      key: 'isento', 
+      key: 'isento_mensalidade', 
       label: 'Isento', 
       sortable: true,
+      searchable: true,
       render: (contrato: Contrato) => (
         <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
           {contrato.isento_mensalidade ? 'Sim' : 'Não'}
@@ -159,16 +149,18 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
       )
     },
     { 
-      key: 'dia_vencimento', 
+      key: 'dia_vencimento_str', 
       label: 'Dia Venc.', 
       sortable: true,
+      searchable: true,
       render: (contrato: Contrato) => contrato.dia_vencimento_id ? `Dia ${contrato.dia_vencimento_id}` : '-'
     },
     { 
-      key: 'banco', 
+      key: 'banco_nome', 
       label: 'Banco', 
       sortable: true,
-      render: (contrato: Contrato) => contrato.bancoBoleto?.nome || '-'
+      searchable: true,
+      render: (contrato: Contrato & { banco_nome?: string }) => contrato.bancoBoleto?.nome || contrato.banco_nome || '-'
     }
   ];
 
@@ -217,7 +209,7 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
             <Table
               config={{
                 columns: contratosColumns,
-                data: getSortedContratos(),
+                data: contratosWithVirtualFields,
                 loading: contratosLoading,
                 searchable: true,
                 searchPlaceholder: 'Buscar contratos...',
@@ -268,7 +260,6 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
                 emptyMessage: 'Nenhum contrato encontrado'
               }}
               tableId="cliente-contratos"
-              onSort={handleSort}
               onRefresh={refetchContratos}
               onSelectionChange={setSelectedItems}
             />
@@ -316,15 +307,16 @@ const ClienteContratos: React.FC<ClienteContratosProps> = ({
         )}
       </div>
 
-      {/* Modal de criação de contrato */}
-      <ContratoCreateModal
+      {/* Modal de contrato (criação e edição unificados) */}
+      <ContratoModal
         show={showContratoCreateModal}
+        clienteId={cliente?.id}
+        contratoId={null}
         onClose={() => setShowContratoCreateModal(false)}
         onSuccess={() => {
-          setShowContratoCreateModal(false);
+          // Não fechar o modal automaticamente - permitir criar múltiplos contratos
           refetchContratos();
         }}
-        clienteId={cliente?.id}
       />
     </div>
   );

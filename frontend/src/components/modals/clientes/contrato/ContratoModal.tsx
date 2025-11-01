@@ -1,46 +1,70 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { usePlanos } from '../../../hooks/usePlanos';
-import { useBancos } from '../../../hooks/useBancos';
-import { useUpdateContrato } from '../../../hooks/useContratos';
-import { useTermosContrato, useDeleteTermoContrato } from '../../../hooks/useTermosContrato';
-import { TermoContrato } from '../../../services/TermoContratoService';
-import { TituloService } from '../../../services/tituloService';
-import { Titulo, Plano } from '../../../types';
-import DraggableModal from '../../common/DraggableModal';
-import ImprimirModal from '../../common/ImprimirModal';
-import ModeloTermoService from '../../../services/modeloTermoService';
-import { useFormReset } from '../../../hooks/useFormReset';
-import TituloCreateModal from '../titulos/TituloCreateModal';
-import TituloEditModal from '../titulos/TituloEditModal';
-import ReceberModal from '../pagamentos/ReceberModal';
-import DocumentoSistemaService from '../../../services/documentoSistemaService';
-import { DiasVencimentoService } from '../../../services/diasVencimentoService';
-import PlanoListModal from '../planos/PlanoListModal';
-import BancoListModal from '../bancos/BancoListModal';
-import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
-import '../contratos/ContratoModals.css';
-import { Banco } from '../../../types';
-import { DocumentoSistema } from '../../../services/documentoSistemaService';
-import { ContratoTab, TermosTab, FinanceiroTab, ContratoForm } from './contrato';
-import { TermoEditModal, SelecionarTermoModal } from './contrato/modals';
-import { ensureString } from '../../../utils/stringUtils';
-import { BulkAction } from './contrato/types';
+import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import { usePlanos } from '../../../../hooks/usePlanos';
+import { useBancos } from '../../../../hooks/useBancos';
+import { useCreateContrato, useUpdateContrato, CreateContratoData } from '../../../../hooks/useContratos';
+import { useTermosContrato, useDeleteTermoContrato } from '../../../../hooks/useTermosContrato';
+import { TermoContrato } from '../../../../services/TermoContratoService';
+import { TituloService } from '../../../../services/tituloService';
+import { ContratoService } from '../../../../services/ContratoService';
+import { Titulo, Plano } from '../../../../types';
+import DraggableModal from '../../../common/DraggableModal';
+import ImprimirModal from '../../../common/ImprimirModal';
+import ModeloTermoService from '../../../../services/modeloTermoService';
+import TituloCreateModal from '../../titulos/TituloCreateModal';
+import TituloEditModal from '../../titulos/TituloEditModal';
+import ReceberModal from '../../pagamentos/ReceberModal';
+import DocumentoSistemaService from '../../../../services/documentoSistemaService';
+import { DiasVencimentoService } from '../../../../services/diasVencimentoService';
+import PlanoListModal from '../../planos/PlanoListModal';
+import BancoListModal from '../../bancos/BancoListModal';
+import ModeloContratoSelectModal from '../../parametros/ModeloContratoSelectModal';
+import '../../contratos/ContratoModals.css';
+import { Banco } from '../../../../types';
+import { DocumentoSistema } from '../../../../services/documentoSistemaService';
+import ContratoTab from './abas/ContratoTab';
+import TermosTab from './abas/TermosTab';
+import FinanceiroTab from './abas/FinanceiroTab';
+import { ContratoForm } from './types';
+import { TermoEditModal, SelecionarTermoModal } from './modals';
+import { ensureString } from '../../../../utils/stringUtils';
+import { BulkAction } from './types';
 
-interface ContratoEditModalProps {
+interface ContratoModalProps {
   show: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  contratoId: number | null;
+  contratoId?: number | null; // Se tiver, é edição; se não tiver, é criação
+  clienteId?: number; // Obrigatório para criação
 }
 
-const ContratoEditModal: React.FC<ContratoEditModalProps> = ({ 
+const ContratoModal: React.FC<ContratoModalProps> = ({ 
   show, 
   onClose, 
   onSuccess,
-  contratoId 
+  contratoId = null,
+  clienteId
 }) => {
+  // Estado interno para controlar o contratoId após criação
+  const [internalContratoId, setInternalContratoId] = useState<number | null>(contratoId);
+  
+  // Atualizar estado interno quando prop contratoId mudar
+  useEffect(() => {
+    setInternalContratoId(contratoId);
+  }, [contratoId]);
+  
+  // Resetar estado interno quando modal fechar
+  useEffect(() => {
+    if (!show) {
+      setInternalContratoId(contratoId);
+      setActiveTab('contrato');
+    }
+  }, [show, contratoId]);
+  
+  // Determina se é modo criação ou edição
+  const isEditMode = !!internalContratoId;
+  
   const [formData, setFormData] = useState<ContratoForm>({
     plano_id: 0,
     desconto_percentual: 0,
@@ -58,8 +82,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
   const [activeTab, setActiveTab] = useState('contrato');
-  const [showCancelados] = useState(false);
-  const [showInativos] = useState(false);
   const [showTermoModal, setShowTermoModal] = useState(false);
   const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
   const [editingTermo, setEditingTermo] = useState<TermoContrato | null>(null);
@@ -90,12 +112,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [bancoSelecionado, setBancoSelecionado] = useState<Banco | null>(null);
   const [modeloContratoSelecionado, setModeloContratoSelecionado] = useState<DocumentoSistema | null>(null);
   
-  const [search] = useState('');
-  const [searchTermos] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [sortColumn] = useState<string>('id');
-  const [sortDirection] = useState<'asc' | 'desc'>('desc');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -117,82 +135,77 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const modelosContrato = useMemo(() => modelosContratoData?.data || [], [modelosContratoData]);
   const diasVencimento = useMemo(() => (diasVencimentoData?.data && Array.isArray(diasVencimentoData.data)) ? diasVencimentoData.data : [], [diasVencimentoData]);
   
-  // Hooks para termos
-  const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(contratoId || 0);
+  // Hooks para termos (apenas no modo edição)
+  const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(isEditMode ? (internalContratoId || 0) : 0);
   const deleteTermoMutation = useDeleteTermoContrato();
 
   // Garantir que termosData seja sempre um array
   const termosArray = Array.isArray(termosData) ? termosData : [];
   
-  // Buscar dados do contrato
+  // Buscar dados do contrato (apenas no modo edição)
   const { data: contratoData, isLoading } = useQuery({
-    queryKey: ['contrato', contratoId],
-    queryFn: async () => {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/contratos/${contratoId}`);
-      if (!response.ok) throw new Error('Erro ao buscar contrato');
-      return response.json();
-    },
-    enabled: !!contratoId,
+    queryKey: ['contrato', internalContratoId],
+    queryFn: () => ContratoService.getById(internalContratoId!),
+    enabled: isEditMode && !!internalContratoId,
     staleTime: 60 * 1000,
-    refetchOnMount: false,
   });
 
-  // Buscar títulos/financeiros do contrato
+  // Buscar títulos/financeiros do contrato (apenas no modo edição)
   const { data: titulosData, isLoading: isLoadingTitulos, refetch: refetchTitulos } = useQuery({
-    queryKey: ['titulos', 'contrato', contratoId],
+    queryKey: ['titulos', 'contrato', internalContratoId],
     queryFn: async () => {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/titulos/contrato/${contratoId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/titulos/contrato/${internalContratoId}`);
       if (!response.ok) throw new Error('Erro ao buscar títulos');
-      return response.json();
+      const json = await response.json();
+      return { data: Array.isArray(json) ? json : (json?.data || []) };
     },
-    enabled: !!contratoId,
+    enabled: isEditMode && !!internalContratoId,
     staleTime: 30 * 1000,
-    refetchOnMount: false,
   });
 
-  // Mutation para atualizar contrato
+  // Mutations para criar e atualizar
+  const createContratoMutation = useCreateContrato();
   const updateContratoMutation = useUpdateContrato();
 
-  // Dados iniciais do formulário
-  const initialFormData: ContratoForm = {
-    plano_id: 0,
-    desconto_percentual: 0,
-    desconto_valor: 0,
-    data_inicio: new Date().toISOString().split('T')[0],
-    data_fim: '',
-    status: 'ativo',
-    observacoes: '',
-    isento_mensalidade: false,
-    dia_vencimento_id: 0,
-    conta_boleto: 0,
-    data_validade_desconto: '',
-    modelo_contrato_id: 0
-  };
-
-  // Dados customizados do contrato (quando editando)
-  const customFormData = contratoData && typeof contratoData === 'object' && contratoData.id ? {
-    plano_id: contratoData.plano_id || 0,
-    desconto_percentual: parseFloat(String(contratoData.desconto_percentual || 0)) || 0,
-    desconto_valor: parseFloat(String(contratoData.desconto_valor || 0)) || 0,
-    data_inicio: contratoData.data_inicio ? contratoData.data_inicio.split('T')[0] : '',
-    data_fim: contratoData.data_fim ? contratoData.data_fim.split('T')[0] : '',
-    status: contratoData.status || 'ativo',
-    observacoes: ensureString(contratoData.observacoes),
-    isento_mensalidade: contratoData.isento_mensalidade || false,
-    dia_vencimento_id: contratoData.dia_vencimento_id || 0,
-    conta_boleto: contratoData.conta_boleto || 0,
-    data_validade_desconto: contratoData.data_validade_desconto ? contratoData.data_validade_desconto.split('T')[0] : '',
-    modelo_contrato_id: contratoData.modelo_contrato_id || 0
-  } : undefined;
-
-  // Usar hook personalizado para reset do formulário
-  useFormReset({
-    show,
-    initialData: initialFormData,
-    setFormData,
-    setErrors,
-    customData: customFormData
-  });
+  // Carregar dados do contrato quando entrar em modo edição
+  useEffect(() => {
+    if (isEditMode && contratoData) {
+      setFormData({
+        plano_id: contratoData.plano_id || 0,
+        desconto_percentual: parseFloat(String(contratoData.desconto_percentual || 0)) || 0,
+        desconto_valor: parseFloat(String(contratoData.desconto_valor || 0)) || 0,
+        data_inicio: contratoData.data_inicio ? contratoData.data_inicio.split('T')[0] : new Date().toISOString().split('T')[0],
+        data_fim: contratoData.data_fim ? contratoData.data_fim.split('T')[0] : '',
+        status: contratoData.status || 'ativo',
+        observacoes: ensureString(contratoData.observacoes),
+        isento_mensalidade: contratoData.isento_mensalidade || false,
+        dia_vencimento_id: contratoData.dia_vencimento_id || 0,
+        conta_boleto: contratoData.conta_boleto || 0,
+        data_validade_desconto: contratoData.data_validade_desconto ? contratoData.data_validade_desconto.split('T')[0] : '',
+        modelo_contrato_id: contratoData.modelo_contrato_id || 0
+      });
+      setErrors({});
+    } else if (!show) {
+      setFormData({
+        plano_id: 0,
+        desconto_percentual: 0,
+        desconto_valor: 0,
+        data_inicio: new Date().toISOString().split('T')[0],
+        data_fim: '',
+        status: 'ativo',
+        observacoes: '',
+        isento_mensalidade: false,
+        dia_vencimento_id: 0,
+        conta_boleto: 0,
+        data_validade_desconto: '',
+        modelo_contrato_id: 0
+      });
+      setErrors({});
+      setPlanoSelecionado(null);
+      setBancoSelecionado(null);
+      setModeloContratoSelecionado(null);
+    }
+  }, [isEditMode, contratoData, show]);
 
   // Carregar objetos selecionados quando os dados do contrato forem carregados
   useEffect(() => {
@@ -299,8 +312,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   };
 
-
-  // Funções para impressão
+  // Funções para impressão (apenas no modo edição)
   const handleImprimirSelecionados = async () => {
     if (selectedItems.length === 0) return;
     setIsGeneratingPdf(true);
@@ -351,8 +363,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   };
 
-  // Bulk actions para títulos
-  const bulkActions: BulkAction<Titulo>[] = [
+  // Bulk actions para títulos (apenas no modo edição)
+  const bulkActions: BulkAction<Titulo>[] = isEditMode ? [
     {
       label: 'Novo',
       action: () => {
@@ -423,7 +435,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 error(message);
               }
               
-              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
+              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
             } catch (err) {
               error('Erro ao cancelar títulos');
             }
@@ -452,7 +464,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               try {
                 await TituloService.estornar(item.id);
                 success('Título estornado com sucesso!');
-                queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
+                queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
               } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
                 error(errorMessage);
@@ -483,10 +495,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         }
       ]
     }
-  ];
+  ] : [];
 
-  // Bulk actions para termos
-  const termosBulkActions: BulkAction<TermoContrato>[] = [
+  // Bulk actions para termos (apenas no modo edição)
+  const termosBulkActions: BulkAction<TermoContrato>[] = isEditMode ? [
     {
       label: 'Novo',
       action: () => {
@@ -527,7 +539,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 await deleteTermoMutation.mutateAsync(item.id);
               }
               success('Termo(s) deletado(s) com sucesso!');
-              queryClient.invalidateQueries({ queryKey: ['termos-contrato', contratoId] });
+              queryClient.invalidateQueries({ queryKey: ['termos-contrato', internalContratoId] });
             } catch (err) {
               error('Erro ao deletar termo(s)');
             }
@@ -540,12 +552,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       variant: 'primary',
       disabled: () => selectedTermosItems.length === 0,
       action: async () => {
-        if (selectedTermosItems.length > 0) {
+        if (selectedTermosItems.length > 0 && internalContratoId) {
           const termo = selectedTermosItems[0];
-          if (termo.modelo_termo_id && contratoId) {
+          if (termo.modelo_termo_id && internalContratoId) {
             setIsGeneratingPdf(true);
             try {
-              const blob = await ModeloTermoService.generatePdfWithContrato(termo.modelo_termo_id, contratoId);
+              const blob = await ModeloTermoService.generatePdfWithContrato(termo.modelo_termo_id, internalContratoId);
               const url = window.URL.createObjectURL(blob);
               setPdfUrl(url);
               setShowPreview(true);
@@ -559,241 +571,95 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         }
       }
     }
-  ];
+  ] : [];
 
   // Colunas para a tabela de títulos
   const columns = [
-    {
-      key: 'id',
-      label: 'ID',
-      sortable: true,
-      render: (item: Titulo) => item.id
-    },
+    { key: 'id', label: 'ID', sortable: true, render: (item: Titulo) => item.id },
     {
       key: 'status',
       label: 'Status',
-      render: (item: Titulo) => {
-        return (
-          <span className={`badge bg-${getStatusColor(item.status)}`}>
-            {item.status}
-          </span>
-        );
-      }
+      render: (item: Titulo) => (
+        <span className={`badge bg-${getStatusColor(item.status)}`}>{item.status}</span>
+      )
     },
-    {
-      key: 'plano',
-      label: 'Plano',
-      render: (item: Titulo) => {
-        return item.plano?.nome_plano || '-';
-      }
-    },
-    {
-      key: 'numero_titulo',
-      label: 'Nº Título',
-      render: (item: Titulo) => {
-        return item.numero_titulo || '-';
-      }
-    },
+    { key: 'plano', label: 'Plano', render: (item: Titulo) => item.plano?.nome_plano || '-' },
+    { key: 'numero_titulo', label: 'Nº Título', render: (item: Titulo) => item.numero_titulo || '-' },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
-      render: (item: Titulo) => {
-        return new Date(item.data_vencimento).toLocaleDateString('pt-BR');
-      }
+      render: (item: Titulo) => new Date(item.data_vencimento).toLocaleDateString('pt-BR')
     },
     {
       key: 'valor',
       label: 'Valor',
-      render: (item: Titulo) => {
-        return `R$ ${Number(item.valor || 0).toFixed(2)}`;
-      }
+      render: (item: Titulo) => `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
       key: 'valor_pago',
       label: 'Valor baixado',
-      render: (item: Titulo) => {
-        return item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00';
-      }
+      render: (item: Titulo) => item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00'
     },
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
-      render: (item: Titulo) => {
-        return (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`;
-      }
+      render: (item: Titulo) => (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
       key: 'data_pagamento',
       label: 'Data Pagamento',
-      render: (item: Titulo) => {
-        return item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-';
-      }
+      render: (item: Titulo) => item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'
     },
-    {
-      key: 'charge_id',
-      label: 'Charge ID',
-      render: (item: Titulo) => {
-        return item.charge_id || '-';
-      }
-    }
+    { key: 'charge_id', label: 'Charge ID', render: (item: Titulo) => item.charge_id || '-' }
   ];
 
-  // Colunas para a tabela de títulos de termos
+  // Colunas para a tabela de termos
   const termosColumns = [
-    {
-      key: 'id',
-      label: 'ID',
-      sortable: true,
-    },
-    {
-      key: 'nome_termo',
-      label: 'Nome do Termo',
-      sortable: true,
-      render: (item: TermoContrato) => {
-        return item.modeloTermo?.nome || '-';
-      }
-    },
+    { key: 'id', label: 'ID', sortable: true },
+    { key: 'nome_termo', label: 'Nome do Termo', sortable: true, render: (item: TermoContrato) => item.modeloTermo?.nome || '-' },
     {
       key: 'assinado',
       label: 'Assinado',
       sortable: true,
-      render: (item: TermoContrato) => {
-        return (
-          <span className={`badge ${item.assinado === 'SIM' ? 'bg-success' : 'bg-secondary'}`}>
-            {item.assinado}
-          </span>
-        );
-      }
+      render: (item: TermoContrato) => (
+        <span className={`badge ${item.assinado === 'SIM' ? 'bg-success' : 'bg-secondary'}`}>{item.assinado}</span>
+      )
     },
     {
       key: 'data_aceite',
       label: 'Data Aceite',
       sortable: true,
-      render: (item: TermoContrato) => {
-        return item.data_aceite ? new Date(item.data_aceite).toLocaleDateString('pt-BR') : '-';
-      }
+      render: (item: TermoContrato) => item.data_aceite ? new Date(item.data_aceite).toLocaleDateString('pt-BR') : '-'
     },
-    {
-      key: 'aceito_por',
-      label: 'Aceito Por',
-      sortable: true,
-      render: (item: TermoContrato) => {
-        return item.aceito_por || '-';
-      }
-    },
+    { key: 'aceito_por', label: 'Aceito Por', sortable: true, render: (item: TermoContrato) => item.aceito_por || '-' },
     {
       key: 'ativo',
       label: 'Status',
       sortable: true,
-      render: (item: TermoContrato) => {
-        return (
-          <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
-            {item.ativo ? 'Ativo' : 'Inativo'}
-          </span>
-        );
-      }
+      render: (item: TermoContrato) => (
+        <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>{item.ativo ? 'Ativo' : 'Inativo'}</span>
+      )
     },
     {
       key: 'created_at',
       label: 'Criado em',
       sortable: true,
-      render: (item: TermoContrato) => {
-        return new Date(item.created_at).toLocaleDateString('pt-BR');
-      }
+      render: (item: TermoContrato) => new Date(item.created_at).toLocaleDateString('pt-BR')
     }
   ];
 
-  // Funções para filtrar e paginar dados dos títulos
-  const getFilteredData = () => {
-    if (!titulosData?.data) return [];
-    
-    let allData = titulosData.data;
+  // Filtrar dados (remover cancelados e inativos)
+  const filteredData = isEditMode && titulosData?.data 
+    ? titulosData.data.filter((titulo: Titulo) => titulo.status !== 'cancelado')
+    : [];
+  
+  const filteredTermosData = isEditMode && termosArray.length > 0
+    ? termosArray.filter((termo: TermoContrato) => termo.ativo)
+    : [];
 
-    // Filtro para mostrar/ocultar cancelados
-    if (!showCancelados) {
-      allData = allData.filter((titulo: Titulo) => titulo.status !== 'cancelado');
-    }
-
-    // Aplicar filtro de busca
-    if (search.trim()) {
-      const searchTerm = search.toLowerCase().trim();
-      return allData.filter((titulo: Titulo) => {
-        const id = titulo.id?.toString() || '';
-        const numeroTitulo = titulo.numero_titulo || '';
-        const valor = titulo.valor?.toString() || '';
-        const status = titulo.status || '';
-        const plano = titulo.plano?.nome_plano?.toLowerCase() || '';
-        
-        return (
-          id.includes(searchTerm) ||
-          numeroTitulo.toLowerCase().includes(searchTerm) ||
-          valor.includes(searchTerm) ||
-          status.toLowerCase().includes(searchTerm) ||
-          plano.includes(searchTerm)
-        );
-      });
-    }
-
-    return allData;
-  };
-
-  // Funções para filtrar e paginar dados dos termos
-  const getFilteredTermosData = () => {
-    if (!termosArray) return [];
-    
-    let allData = [...termosArray];
-
-    // Filtro para mostrar/ocultar inativos
-    if (!showInativos) {
-      allData = allData.filter((termo: TermoContrato) => termo.ativo);
-    }
-
-    // Aplicar filtro de busca
-    if (searchTermos.trim()) {
-      const searchTerm = searchTermos.toLowerCase().trim();
-      return allData.filter((termo: TermoContrato) => {
-        const id = termo.id?.toString() || '';
-        const tipoTermo = termo.tipo_termo || '';
-        const aceitoPor = termo.aceito_por || '';
-        
-        return (
-          id.includes(searchTerm) ||
-          tipoTermo.toLowerCase().includes(searchTerm) ||
-          aceitoPor.toLowerCase().includes(searchTerm)
-        );
-      });
-    }
-
-    return allData;
-  };
-
-  const filteredData = getFilteredData();
-  const filteredTermosData = getFilteredTermosData();
-
-  const sortedData = [...filteredData].sort((a: Titulo, b: Titulo) => {
-    if (!sortColumn) return 0;
-    const aVal = a[sortColumn as keyof Titulo] ?? '';
-    const bVal = b[sortColumn as keyof Titulo] ?? '';
-    
-    if (sortDirection === 'asc') {
-      return aVal > bVal ? 1 : -1;
-    } else {
-      return aVal < bVal ? 1 : -1;
-    }
-  });
-
-  const sortedTermosData = [...filteredTermosData].sort((a: TermoContrato, b: TermoContrato) => {
-    if (!sortColumn) return 0;
-    const aVal = a[sortColumn as keyof TermoContrato] ?? '';
-    const bVal = b[sortColumn as keyof TermoContrato] ?? '';
-    
-    if (sortDirection === 'asc') {
-      return aVal > bVal ? 1 : -1;
-    } else {
-      return aVal < bVal ? 1 : -1;
-    }
-  });
-
+  // Ordenar por ID decrescente
+  const sortedData = [...filteredData].sort((a: Titulo, b: Titulo) => (b.id || 0) - (a.id || 0));
+  const sortedTermosData = [...filteredTermosData].sort((a: TermoContrato, b: TermoContrato) => (b.id || 0) - (a.id || 0));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -803,32 +669,64 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
 
     try {
-      await updateContratoMutation.mutateAsync({
-        id: contratoId!,
-        ...formData
-      });
+      if (isEditMode && internalContratoId) {
+        // Modo edição
+        await updateContratoMutation.mutateAsync({
+          id: internalContratoId,
+          ...formData
+        });
 
-      success('Contrato atualizado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['contratos'] });
-      queryClient.invalidateQueries({ queryKey: ['cliente', contratoData?.data?.cliente_id] });
-      
+        success('Contrato atualizado com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['contratos'] });
+        queryClient.invalidateQueries({ queryKey: ['cliente', contratoData?.cliente_id] });
+      } else if (!isEditMode && clienteId) {
+        // Modo criação
+        const contratoData: CreateContratoData = {
+          cliente_id: clienteId,
+          plano_id: formData.plano_id,
+          desconto_percentual: formData.desconto_percentual || undefined,
+          desconto_valor: formData.desconto_valor || undefined,
+          data_inicio: formData.data_inicio || undefined,
+          data_fim: formData.data_fim || undefined,
+          status: formData.status,
+          observacoes: formData.observacoes || undefined,
+          isento_mensalidade: formData.isento_mensalidade,
+          dia_vencimento_id: formData.dia_vencimento_id,
+          conta_boleto: formData.conta_boleto,
+          data_validade_desconto: formData.data_validade_desconto || undefined,
+          modelo_contrato_id: formData.modelo_contrato_id
+        };
+
+        const novoContrato = await createContratoMutation.mutateAsync(contratoData);
+        success('Contrato criado com sucesso!');
+        
+        // Atualizar para modo edição usando o ID do contrato criado
+        setInternalContratoId(novoContrato.id);
+        // Não limpar formulário - manter dados para adicionar termos e financeiro
+        // Invalidar queries para recarregar dados do contrato criado
+        queryClient.invalidateQueries({ queryKey: ['contrato', novoContrato.id] });
+        queryClient.invalidateQueries({ queryKey: ['termos-contrato', novoContrato.id] });
+        queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', novoContrato.id] });
+      }
+
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar contrato';
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 
+        (isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao criar contrato');
       error(errorMessage);
     }
   };
 
-  if (isLoading) {
+  if (isEditMode && isLoading) {
     return (
       <DraggableModal
         show={show}
         onClose={onClose}
         title="Carregando..."
         size="lg"
-        modalId="contrato-edit-modal-loading"
+        modalId="contrato-modal-loading"
       >
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
@@ -844,9 +742,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     <DraggableModal
       show={show}
       onClose={onClose}
-      title={`Contrato - ${contratoData?.plano?.nome_plano || 'Carregando...'}`}
+      title={isEditMode ? `Contrato - ${contratoData?.plano?.nome_plano || 'Carregando...'}` : 'Criar Contrato'}
       size="xl"
-      modalId="contrato-edit-modal"
+      modalId="contrato-modal"
       headerActions={
         <div className="d-flex gap-2">
           <button 
@@ -858,16 +756,17 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
           </button>
           <button 
             type="submit" 
-            form="contrato-edit-form"
+            form="contrato-form"
             className="btn btn-primary btn-sm"
-            disabled={updateContratoMutation.isPending}
+            disabled={isEditMode ? updateContratoMutation.isPending : createContratoMutation.isPending}
           >
-            Salvar
+            {isEditMode ? 'Salvar' : 'Criar Contrato'}
           </button>
         </div>
       }
     >
-      <form id="contrato-edit-form" onSubmit={handleSubmit}>
+      <form id="contrato-form" onSubmit={handleSubmit}>
+        {/* Sempre mostrar estrutura com abas */}
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Navegação por Abas */}
           <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
@@ -884,7 +783,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <button
                 className={`nav-link ${activeTab === 'termos' ? 'active' : ''}`}
                 type="button"
-                onClick={() => setActiveTab('termos')}
+                onClick={() => {
+                  if (isEditMode) {
+                    setActiveTab('termos');
+                  }
+                }}
+                disabled={!isEditMode}
+                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
               >
                 Termos
               </button>
@@ -893,7 +798,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               <button
                 className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
                 type="button"
-                onClick={() => setActiveTab('financeiro')}
+                onClick={() => {
+                  if (isEditMode) {
+                    setActiveTab('financeiro');
+                  }
+                }}
+                disabled={!isEditMode}
+                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
               >
                 Financeiro
               </button>
@@ -910,7 +821,6 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               minHeight: 0
             }}
           >
-            <>
             {/* Aba Contrato */}
             {activeTab === 'contrato' && (
               <ContratoTab
@@ -933,149 +843,157 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               />
             )}
 
-        {/* Aba Termos */}
-        {activeTab === 'termos' && (
-          <TermosTab
-            isLoading={isLoadingTermosContrato}
-            bulkActions={termosBulkActions as unknown as BulkAction[]}
-            limit={limit}
-            setLimit={setLimit}
-            page={page}
-            setPage={setPage}
-            sortedData={sortedTermosData}
-            selectedTermosItems={selectedTermosItems}
-            setSelectedTermosItems={setSelectedTermosItems}
-            columns={termosColumns}
-            isGeneratingPdf={isGeneratingPdf}
-            onRefresh={refetchTermos}
-          />
-        )}
+            {/* Aba Termos */}
+            {activeTab === 'termos' && (
+              isEditMode ? (
+                <TermosTab
+                  isLoading={isLoadingTermosContrato}
+                  bulkActions={termosBulkActions as unknown as BulkAction[]}
+                  limit={limit}
+                  setLimit={setLimit}
+                  page={page}
+                  setPage={setPage}
+                  sortedData={sortedTermosData}
+                  selectedTermosItems={selectedTermosItems}
+                  setSelectedTermosItems={setSelectedTermosItems}
+                  columns={termosColumns}
+                  isGeneratingPdf={isGeneratingPdf}
+                  onRefresh={refetchTermos}
+                />
+              ) : (
+                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                  <div className="text-center">
+                    <p className="text-muted">Crie o contrato primeiro para gerenciar termos.</p>
+                  </div>
+                </div>
+              )
+            )}
 
-        {/* Aba Financeiro */}
-        {activeTab === 'financeiro' && (
-          <FinanceiroTab
-            isLoading={isLoadingTitulos}
-            bulkActions={bulkActions}
-            limit={limit}
-            setLimit={setLimit}
-            page={page}
-            setPage={setPage}
-            sortedData={sortedData}
-            selectedItems={selectedItems}
-            setSelectedItems={setSelectedItems}
-            columns={columns}
-            isGeneratingPdf={isGeneratingPdf}
-            onRefresh={refetchTitulos}
-          />
-        )}
-            </>
+            {/* Aba Financeiro */}
+            {activeTab === 'financeiro' && (
+              isEditMode ? (
+                <FinanceiroTab
+                  isLoading={isLoadingTitulos}
+                  bulkActions={bulkActions}
+                  limit={limit}
+                  setLimit={setLimit}
+                  page={page}
+                  setPage={setPage}
+                  sortedData={sortedData}
+                  selectedItems={selectedItems}
+                  setSelectedItems={setSelectedItems}
+                  columns={columns}
+                  isGeneratingPdf={isGeneratingPdf}
+                  onRefresh={refetchTitulos}
+                />
+              ) : (
+                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                  <div className="text-center">
+                    <p className="text-muted">Crie o contrato primeiro para gerenciar títulos financeiros.</p>
+                  </div>
+                </div>
+              )
+            )}
           </div>
         </div>
       </form>
       </DraggableModal>
 
-      {/* Modais */}
-      <TituloCreateModal
-        show={showTituloCreateModal}
-        clienteId={contratoData?.cliente_id}
-        contratoId={contratoId ?? undefined}
-        onClose={() => setShowTituloCreateModal(false)}
-        onSuccess={() => {
-          setShowTituloCreateModal(false);
-          
-          // Invalidar query específica do contrato
-          queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
-          
-          // Invalidar query de títulos do cliente
-          if (contratoData?.cliente_id) {
-            queryClient.invalidateQueries({ queryKey: ['titulos', { cliente_id: contratoData.cliente_id }] });
-          }
-          
-          // Invalidar todas as queries de títulos para garantir
-          queryClient.invalidateQueries({ queryKey: ['titulos'] });
-          
-          // Refetch imediatamente
-          refetchTitulos();
-        }}
-      />
+      {/* Modais - apenas no modo edição */}
+      {isEditMode && internalContratoId && (
+        <>
+          <TituloCreateModal
+            show={showTituloCreateModal}
+            clienteId={contratoData?.cliente_id}
+            contratoId={internalContratoId}
+            onClose={() => setShowTituloCreateModal(false)}
+            onSuccess={() => {
+              setShowTituloCreateModal(false);
+              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
+              if (contratoData?.cliente_id) {
+                queryClient.invalidateQueries({ queryKey: ['titulos', { cliente_id: contratoData.cliente_id }] });
+              }
+              queryClient.invalidateQueries({ queryKey: ['titulos'] });
+              refetchTitulos();
+            }}
+          />
 
-      <TituloEditModal
-        show={showTituloEditModal}
-        parcelaId={selectedTituloId || 0}
-        onClose={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-        }}
-        onSuccess={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-          queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
-        }}
-      />
+          <TituloEditModal
+            show={showTituloEditModal}
+            parcelaId={selectedTituloId || 0}
+            onClose={() => {
+              setShowTituloEditModal(false);
+              setSelectedTituloId(null);
+            }}
+            onSuccess={() => {
+              setShowTituloEditModal(false);
+              setSelectedTituloId(null);
+              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
+            }}
+          />
 
-      <ReceberModal
-        isOpen={showReceberModal}
-        parcela={selectedParcela ? {
-          id: selectedParcela.id,
-          numero_titulo: selectedParcela.numero_titulo,
-          valor_parcela: selectedParcela.valor,
-          data_vencimento: selectedParcela.data_vencimento,
-          cliente: selectedParcela.cliente
-        } : null}
-        onClose={() => {
-          setShowReceberModal(false);
-          setSelectedParcela(null);
-        }}
-      />
+          <ReceberModal
+            isOpen={showReceberModal}
+            parcela={selectedParcela ? {
+              id: selectedParcela.id,
+              numero_titulo: selectedParcela.numero_titulo,
+              valor_parcela: selectedParcela.valor,
+              data_vencimento: selectedParcela.data_vencimento,
+              cliente: selectedParcela.cliente
+            } : null}
+            onClose={() => {
+              setShowReceberModal(false);
+              setSelectedParcela(null);
+            }}
+          />
 
-      {/* Modal para criar/editar termo */}
-      <TermoEditModal
-        show={showTermoModal}
-        onClose={() => {
-          setShowTermoModal(false);
-          setEditingTermo(null);
-          setTermoFormData({
-            assinado: 'NAO',
-            termoCadastradoId: 0
-          });
-        }}
-        editingTermo={editingTermo}
-        contratoId={contratoId!}
-        termoFormData={termoFormData}
-        setTermoFormData={setTermoFormData}
-        onShowSelecionarTermo={() => setShowSelecionarTermoModal(true)}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['termos-contrato', contratoId] });
-        }}
-      />
+          <TermoEditModal
+            show={showTermoModal}
+            onClose={() => {
+              setShowTermoModal(false);
+              setEditingTermo(null);
+              setTermoFormData({
+                assinado: 'NAO',
+                termoCadastradoId: 0
+              });
+            }}
+            editingTermo={editingTermo}
+            contratoId={internalContratoId!}
+            termoFormData={termoFormData}
+            setTermoFormData={setTermoFormData}
+            onShowSelecionarTermo={() => setShowSelecionarTermoModal(true)}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['termos-contrato', internalContratoId] });
+            }}
+          />
 
-      {/* Modal para selecionar termo cadastrado */}
-      <SelecionarTermoModal
-        show={showSelecionarTermoModal}
-        onClose={() => setShowSelecionarTermoModal(false)}
-        onSelect={(termo) => {
-          setTermoFormData({
-            ...termoFormData, 
-            termoCadastradoId: termo.id
-          });
-          setShowSelecionarTermoModal(false);
-        }}
-      />
+          <SelecionarTermoModal
+            show={showSelecionarTermoModal}
+            onClose={() => setShowSelecionarTermoModal(false)}
+            onSelect={(termo) => {
+              setTermoFormData({
+                ...termoFormData, 
+                termoCadastradoId: termo.id
+              });
+              setShowSelecionarTermoModal(false);
+            }}
+          />
 
-      {/* Modal de impressão */}
-      <ImprimirModal
-        show={showPreview}
-        onClose={() => {
-          setShowPreview(false);
-          if (pdfUrl) {
-            window.URL.revokeObjectURL(pdfUrl);
-          }
-          setPdfUrl(null);
-        }}
-        pdfUrl={pdfUrl}
-        title="Visualizar Termo"
-        modalId="termo-imprimir-modal"
-      />
+          <ImprimirModal
+            show={showPreview}
+            onClose={() => {
+              setShowPreview(false);
+              if (pdfUrl) {
+                window.URL.revokeObjectURL(pdfUrl);
+              }
+              setPdfUrl(null);
+            }}
+            pdfUrl={pdfUrl}
+            title="Visualizar Termo"
+            modalId="termo-imprimir-modal"
+          />
+        </>
+      )}
 
       {/* Modais de seleção */}
       <PlanoListModal
@@ -1102,4 +1020,5 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   );
 };
 
-export default ContratoEditModal;
+export default ContratoModal;
+

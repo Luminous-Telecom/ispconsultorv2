@@ -1,6 +1,8 @@
 import React from 'react';
 import Table from '../../../../tables/Table';
 import { BulkAction } from '../types';
+import { TermoContrato } from '../../../../../services/TermoContratoService';
+import { TableColumn } from '../../../../tables/types';
 
 interface TermosTabProps {
   isLoading: boolean;
@@ -9,14 +11,10 @@ interface TermosTabProps {
   setLimit: (value: number) => void;
   page: number;
   setPage: (value: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sortedData: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  selectedTermosItems: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setSelectedTermosItems: (items: any[]) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  columns: any[];
+  sortedData: TermoContrato[];
+  selectedTermosItems: TermoContrato[];
+  setSelectedTermosItems: (items: TermoContrato[]) => void;
+  columns: TableColumn<TermoContrato>[];
   isGeneratingPdf: boolean;
   onRefresh?: () => void;
 }
@@ -53,13 +51,18 @@ const TermosTab: React.FC<TermosTabProps> = ({
                 total: sortedData.length,
                 last_page: Math.ceil(sortedData.length / limit)
               },
-              bulkActions: bulkActions.map(action => ({
-                key: action.label,
-                label: action.label === 'Imprimir' && isGeneratingPdf ? 'Gerando...' : action.label,
-                variant: action.variant || 'primary',
-                onClick: action.action,
-                disabled: action.label === 'Imprimir' ? (isGeneratingPdf || (action.disabled ? action.disabled(selectedTermosItems) : false)) : action.disabled
-              }))
+              bulkActions: bulkActions.map(action => {
+                const disabledFn = action.disabled as ((selectedItems: TermoContrato[]) => boolean) | undefined;
+                return {
+                  key: action.label,
+                  label: action.label === 'Imprimir' && isGeneratingPdf ? 'Gerando...' : action.label,
+                  variant: action.variant || 'primary',
+                  onClick: action.action as ((selectedItems: TermoContrato[]) => void) | undefined,
+                  disabled: action.label === 'Imprimir' 
+                    ? (isGeneratingPdf || (disabledFn ? disabledFn(selectedTermosItems) : false))
+                    : (disabledFn ? disabledFn(selectedTermosItems) : false)
+                };
+              })
             }}
             onSelectionChange={setSelectedTermosItems}
             onPageChange={setPage}

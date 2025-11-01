@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useListModal } from '../../../hooks/useListModal';
 import { useModalSelect } from '../../../hooks/useModalSelect';
@@ -19,7 +19,6 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
   title = "Selecionar Modelo de Contrato"
 }) => {
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
 
   // Usar hook customizado para gerenciar seleção
@@ -76,43 +75,12 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
 
   // Query para buscar modelos de contrato
   const { data: modelosData, isLoading, refetch } = useQuery({
-    queryKey: ['modelos-contrato', search, page, limit],
+    queryKey: ['modelos-contrato'],
     queryFn: () => DocumentoSistemaService.getByType('contrato'),
     enabled: show,
   });
 
-  // Filtrar dados localmente
-  const filteredData = useMemo(() => {
-    if (!modelosData?.data) return [];
-    
-    let filtered = [...modelosData.data];
-    
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(item => 
-        item.nome?.toLowerCase().includes(searchLower) ||
-        item.id?.toString().includes(searchLower)
-      );
-    }
-    
-    return filtered;
-  }, [modelosData?.data, search]);
-
-  // Paginar dados localmente
-  const paginatedData = useMemo(() => {
-    const startIndex = (page - 1) * limit;
-    return filteredData.slice(startIndex, startIndex + limit);
-  }, [filteredData, page, limit]);
-
-  // Paginação
-  const pagination = {
-    from: (page - 1) * limit + 1,
-    to: Math.min(page * limit, filteredData.length),
-    total: filteredData.length,
-    current_page: page,
-    last_page: Math.ceil(filteredData.length / limit),
-    per_page: limit
-  };
+  // Dados prontos para busca (não precisa filtrar/paginar manualmente - o Table faz isso)
 
   const handleSelect = () => {
     if (selectedItem) {
@@ -148,17 +116,15 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         clearSelection();
         onClose();
       }}
-      config={modal.config}
-      data={paginatedData}
-      loading={isLoading}
-      selectedItems={selectedItem ? [selectedItem] : []}
-      onSelectionChange={handleSelectionChange}
-      search={search}
-      onSearchChange={setSearch}
-      pagination={pagination}
-      onPageChange={setPage}
-      limit={limit}
-      onLimitChange={setLimit}
+        config={modal.config}
+        data={modelosData?.data || []}
+        loading={isLoading}
+        selectedItems={selectedItem ? [selectedItem] : []}
+        onSelectionChange={handleSelectionChange}
+        search={search}
+        onSearchChange={setSearch}
+        limit={limit}
+        onLimitChange={setLimit}
       onRefresh={refetch}
       bulkActions={bulkActions}
     />

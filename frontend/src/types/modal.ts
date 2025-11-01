@@ -2,6 +2,7 @@ export interface ListModalColumn<T> {
   key: string;
   label: string;
   sortable?: boolean;
+  searchable?: boolean;
   width?: string;
   render: (item: T) => React.ReactNode;
 }

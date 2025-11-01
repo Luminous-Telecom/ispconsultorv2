@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
@@ -114,48 +114,36 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     multiSelect: false
   });
 
-  // Query para buscar planos (buscando todos para filtrar localmente)
+  // Debounce da busca para evitar muitas requisições
+  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
+  
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParam(search || undefined);
+      setPage(1); // Resetar para primeira página ao buscar
+    }, 300); // 300ms de debounce
+    
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Query para buscar planos no backend com paginação
   const { data: planosData, isLoading, refetch } = usePlanos({
-    search: undefined,
+    search: searchParam,
     status: status || undefined,
-    page: 1,
-    limit: 1000
+    page,
+    limit
   });
 
   const deletePlanoMutation = useDeletePlano();
 
-  // Filtrar planos localmente
-  const filteredPlanos = useMemo(() => {
-    if (!planosData?.data) return [];
-    
-    let filtered = [...planosData.data];
-    
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.nome_plano?.toLowerCase().includes(searchLower) ||
-        p.id?.toString().includes(searchLower) ||
-        p.descricao?.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    return filtered;
-  }, [planosData, search]);
-
-  // Paginar planos
-  const paginatedPlanos = useMemo(() => {
-    const startIndex = (page - 1) * limit;
-    return filteredPlanos.slice(startIndex, startIndex + limit);
-  }, [filteredPlanos, page, limit]);
-
-  // Criar paginação manual
+  // Paginação do backend
   const pagination = {
-    from: (page - 1) * limit + 1,
-    to: Math.min(page * limit, filteredPlanos.length),
-    total: filteredPlanos.length,
     current_page: page,
-    last_page: Math.ceil(filteredPlanos.length / limit),
-    per_page: limit
+    last_page: planosData?.pagination?.last_page || 1,
+    per_page: limit,
+    total: planosData?.pagination?.total || 0,
+    from: planosData?.pagination?.from || (page - 1) * limit + 1,
+    to: planosData?.pagination?.to || Math.min(page * limit, planosData?.pagination?.total || 0)
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -253,7 +241,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
           onClose();
         }}
         config={modal.config}
-        data={paginatedPlanos}
+        data={planosData?.data || []}
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}

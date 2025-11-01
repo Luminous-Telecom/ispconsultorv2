@@ -17,8 +17,6 @@ interface ClienteFinanceiroProps {
 const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({ 
   cliente
 }) => {
-  const [sortColumnParcelas, setSortColumnParcelas] = useState<string>('id');
-  const [sortDirectionParcelas, setSortDirectionParcelas] = useState<'asc' | 'desc'>('desc');
   const [showParcelaEditModal, setShowParcelaEditModal] = useState(false);
   const [selectedParcelaId, setSelectedParcelaId] = useState<number | null>(null);
   const [showParcelaCreateModal, setShowParcelaCreateModal] = useState(false);
@@ -39,39 +37,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     filterLabel: 'Todos em Aberto'
   });
 
-  // Funções de ordenação
-  const handleSortParcelas = (column: string, direction: 'asc' | 'desc') => {
-    setSortColumnParcelas(column);
-    setSortDirectionParcelas(direction);
-  };
-
-  const getSortedParcelas = () => {
-    if (!parcelas || !sortColumnParcelas) {
-      return parcelas;
-    }
-
-    return [...parcelas].sort((a, b) => {
-      let aValue: string | number | null | undefined = a[sortColumnParcelas as keyof CarneParcela] as string | number | null | undefined;
-      let bValue: string | number | null | undefined = b[sortColumnParcelas as keyof CarneParcela] as string | number | null | undefined;
-
-      // Converter para string se necessário para comparação
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-      }
-      if (typeof bValue === 'string') {
-        bValue = bValue.toLowerCase();
-      }
-
-      // Tratar valores null/undefined
-      if (aValue == null) aValue = '';
-      if (bValue == null) bValue = '';
-
-      if (aValue < bValue) return sortDirectionParcelas === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirectionParcelas === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
-
   // Buscar parcelas do cliente
   const { data: parcelasData, isLoading: parcelasLoading, refetch: refetchParcelas } = useTitulos({ 
     cliente_id: cliente?.id 
@@ -81,6 +46,17 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   const marcarPagoMutation = useMarcarTituloPago();
 
   const parcelas = parcelasData?.data || [];
+
+  // Adicionar campos virtuais para busca funcionar
+  const parcelasWithVirtualFields = React.useMemo(() => {
+    return parcelas.map((p: CarneParcela) => ({
+      ...p,
+      // Adicionar campos virtuais para busca funcionar
+      numero_titulo_str: (p.numero_titulo || p.numero_parcela || p.id).toString(),
+      valor_str: (p.valor || p.valor_parcela || 0).toString(),
+      valor_pago_str: (p.valor_pago || 0).toString()
+    }));
+  }, [parcelas]);
 
   const handleMarcarPago = async (selectedItems: CarneParcela[]) => {
     try {
@@ -141,25 +117,50 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     }
   };
 
-  const parcelasColumns: TableConfig<CarneParcela>['columns'] = [
-    { key: 'id', label: 'ID', sortable: true },
-    { key: 'numero_titulo', label: 'Título', sortable: true },
+  const parcelasColumns: TableConfig<CarneParcela & { numero_titulo_str?: string; valor_str?: string; valor_pago_str?: string }>['columns'] = [
+    { key: 'id', label: 'ID', sortable: true, searchable: true },
+    { 
+      key: 'numero_titulo_str', 
+      label: 'Título', 
+      sortable: true,
+      searchable: true,
+      render: (item: CarneParcela & { numero_titulo_str?: string }) => item.numero_titulo || item.numero_parcela || item.numero_titulo_str || '-'
+    },
     { 
       key: 'status', 
-      label: 'Status', 
+      label: 'Status',
+      sortable: true,
+      searchable: true,
       render: (item: CarneParcela) => (
         <span className={`badge bg-${getStatusColor(item.status)}`}>
           {item.status}
         </span>
       )
     },
-    { key: 'valor', label: 'Valor', render: (item: CarneParcela) => {
-        const valor = parseFloat(String(item.valor_parcela)) || 0;
+    { 
+      key: 'valor_str', 
+      label: 'Valor',
+      sortable: true,
+      searchable: true,
+      render: (item: CarneParcela) => {
+        const valor = parseFloat(String(item.valor || item.valor_parcela || 0)) || 0;
         return `R$ ${valor.toFixed(2)}`;
       }
     },
-    { key: 'data_vencimento', label: 'Vencimento', sortable: true },
-    { key: 'data_pagamento', label: 'Pagamento', sortable: true }
+    { 
+      key: 'data_vencimento', 
+      label: 'Vencimento', 
+      sortable: true,
+      searchable: false,
+      render: (item: CarneParcela) => item.data_vencimento ? new Date(item.data_vencimento).toLocaleDateString('pt-BR') : '-'
+    },
+    { 
+      key: 'data_pagamento', 
+      label: 'Pagamento', 
+      sortable: true,
+      searchable: false,
+      render: (item: CarneParcela) => item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'
+    }
   ];
 
   if (!cliente) {
@@ -182,10 +183,10 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
             <Table
               config={{
                 columns: parcelasColumns,
-                data: getSortedParcelas(),
+                data: parcelasWithVirtualFields,
                 loading: parcelasLoading,
                 searchable: true,
-                searchPlaceholder: 'Número da parcela',
+                searchPlaceholder: 'Buscar por ID, título, valor, status...',
                 sortable: true,
                 striped: true,
                 hover: true,
@@ -288,7 +289,6 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                 emptyMessage: 'Nenhuma parcela encontrada'
               }}
               tableId="cliente-financeiro"
-              onSort={handleSortParcelas}
               onRefresh={refetchParcelas}
               onSelectionChange={setSelectedItems}
             />

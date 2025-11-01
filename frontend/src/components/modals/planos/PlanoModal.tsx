@@ -4,8 +4,7 @@ import { PlanoService } from '../../../services/planoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
-import FormField from '../../ui/FormField';
-import { FormValue } from '../../../types/common';
+import { InformacoesBasicasTab, DescontosConfiguracoesTab, ServicosObservacoesTab } from './plano';
 
 interface PlanoForm {
   nome_plano: string;
@@ -60,6 +59,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
 
   const [formData, setFormData] = useState<PlanoForm>(initialFormData);
   const [errors, setErrors] = useState<Partial<PlanoForm>>({});
+  const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -242,195 +242,87 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
             </div>
           </div>
         ) : (
-          <form id={isEditing ? 'plano-edit-form' : 'plano-create-form'} onSubmit={handleSubmit} style={{ padding: '1rem' }}>
-          <div className="row g-2">
-            <div className="col-md-6">
-              <div className="mb-2">
-                <FormField
-                  name="nome_plano"
-                  type="text"
-                  label="Nome do Plano"
-                  placeholder="Ex: Plano Premium"
-                  required={true}
-                  size="sm"
-                  value={formData.nome_plano}
-                  onChange={(value: FormValue) => {
-                    const stringValue = typeof value === 'string' ? value : String(value || '');
-                    handleInputChange('nome_plano', stringValue);
-                  }}
-                  error={errors.nome_plano}
-                  isInvalid={!!errors.nome_plano}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                />
-              </div>
-          </div>
+          <form id={isEditing ? 'plano-edit-form' : 'plano-create-form'} onSubmit={handleSubmit}>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              {/* Navegação por Abas */}
+              <ul className="nav nav-tabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link ${activeTab === 'informacoes-basicas' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('informacoes-basicas')}
+                  >
+                    Informações Básicas
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link ${activeTab === 'descontos-configuracoes' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('descontos-configuracoes')}
+                  >
+                    Descontos e Configurações
+                  </button>
+                </li>
+                <li className="nav-item" role="presentation">
+                  <button
+                    className={`nav-link ${activeTab === 'servicos-observacoes' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setActiveTab('servicos-observacoes')}
+                  >
+                    Serviços e Observações
+                  </button>
+                </li>
+              </ul>
 
-          <div className="col-md-6">
-              <div className="mb-2">
-                <FormField
-                  name="tipo_servico"
-                  type="select"
-                  label="Tipo de Serviço"
-                  required={true}
-                  size="sm"
-                  value={formData.tipo_servico}
-                  onChange={(value: FormValue) => {
-                    const stringValue = typeof value === 'string' ? value : String(value || '');
-                    handleInputChange('tipo_servico', stringValue as PlanoForm['tipo_servico']);
-                  }}
-                  error={errors.tipo_servico}
-                  isInvalid={!!errors.tipo_servico}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                  options={[
-                    { value: 'internet', label: 'Internet' },
-                    { value: 'telefonia', label: 'Telefonia' },
-                    { value: 'tv', label: 'TV por Assinatura' },
-                    { value: 'suporte', label: 'Suporte' },
-                    { value: 'infraestrutura', label: 'Infraestrutura' },
-                    { value: 'consultoria', label: 'Consultoria' },
-                    { value: 'outros', label: 'Outros' }
-                  ]}
-                />
+              {/* Conteúdo das Abas */}
+              <div 
+                className="tab-content" 
+                style={{ 
+                  flex: 1, 
+                  overflow: 'auto', 
+                  padding: '16px',
+                  minHeight: 0
+                }}
+              >
+                {/* Aba Informações Básicas */}
+                {activeTab === 'informacoes-basicas' && (
+                  <InformacoesBasicasTab
+                    formData={formData}
+                    errors={errors}
+                    handleInputChange={handleInputChange}
+                    handleServiceToggle={handleServiceToggle}
+                    servicosDisponiveis={servicosDisponiveis}
+                    isSubmitting={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
+                  />
+                )}
+
+                {/* Aba Descontos e Configurações */}
+                {activeTab === 'descontos-configuracoes' && (
+                  <DescontosConfiguracoesTab
+                    formData={formData}
+                    errors={errors}
+                    handleInputChange={handleInputChange}
+                    handleServiceToggle={handleServiceToggle}
+                    servicosDisponiveis={servicosDisponiveis}
+                    isSubmitting={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
+                  />
+                )}
+
+                {/* Aba Serviços e Observações */}
+                {activeTab === 'servicos-observacoes' && (
+                  <ServicosObservacoesTab
+                    formData={formData}
+                    errors={errors}
+                    handleInputChange={handleInputChange}
+                    handleServiceToggle={handleServiceToggle}
+                    servicosDisponiveis={servicosDisponiveis}
+                    isSubmitting={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
+                  />
+                )}
               </div>
             </div>
-        </div>
-
-              <div className="mb-2">
-                <FormField
-                  name="descricao"
-                  type="textarea"
-                  label="Descrição"
-                  placeholder="Descrição detalhada do plano"
-                  size="sm"
-                  value={formData.descricao}
-                  onChange={(value: FormValue) => {
-                    const stringValue = typeof value === 'string' ? value : String(value || '');
-                    handleInputChange('descricao', stringValue);
-                  }}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                  rows={2}
-                />
-              </div>
-
-        <div className="row">
-          <div className="col-md-6">
-              <div className="mb-2">
-                <FormField
-                  name="valor_mensal"
-                  type="number"
-                  label="Valor Mensal"
-                  placeholder="0.00"
-                  required={true}
-                  size="md"
-                  value={formData.valor_mensal === 0 ? '' : formData.valor_mensal}
-                  onChange={(value: FormValue) => {
-                    const rawValue = typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
-                    const numValue = rawValue === '' || rawValue === 0 ? 0 : parseFloat(String(rawValue));
-                    handleInputChange('valor_mensal', isNaN(numValue) ? 0 : numValue);
-                  }}
-                  error={errors.valor_mensal?.toString()}
-                  isInvalid={!!errors.valor_mensal}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                  step={0.01}
-                />
-              </div>
-          </div>
-
-          <div className="col-md-6">
-              <div className="mb-2">
-                <FormField
-                  name="quantidade_usuarios"
-                  type="number"
-                  label="Quantidade de Usuários"
-                  size="sm"
-                  value={formData.quantidade_usuarios === 0 ? '' : formData.quantidade_usuarios}
-                  onChange={(value: FormValue) => {
-                    const rawValue = typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
-                    const intValue = rawValue === '' || rawValue === 0 ? 0 : parseInt(String(rawValue), 10);
-                    handleInputChange('quantidade_usuarios', isNaN(intValue) ? 0 : intValue);
-                  }}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                  min={1}
-                />
-              </div>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6">
-              <div className="mb-2">
-                <FormField
-                  name="data_inicio"
-                  type="date"
-                  label="Data de Início"
-                  required={true}
-                  size="md"
-                  value={formData.data_inicio}
-                  onChange={(value: FormValue) => {
-                    const stringValue = typeof value === 'string' ? value : String(value || '');
-                    handleInputChange('data_inicio', stringValue);
-                  }}
-                  error={errors.data_inicio}
-                  isInvalid={!!errors.data_inicio}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                />
-              </div>
-          </div>
-
-          <div className="col-md-6">
-              <div className="mb-2">
-                <FormField
-                  name="data_fim"
-                  type="date"
-                  label="Data de Fim"
-                  size="sm"
-                  value={formData.data_fim}
-                  onChange={(value: FormValue) => {
-                    const stringValue = typeof value === 'string' ? value : String(value || '');
-                    handleInputChange('data_fim', stringValue);
-                  }}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                />
-              </div>
-          </div>
-        </div>
-
-              <div className="mb-2">
-          <label className="form-label small">Serviços Inclusos</label>
-          <div className="row">
-            {servicosDisponiveis.map((servico) => (
-              <div key={servico} className="col-md-4 mb-2">
-                <FormField
-                  name={`servico_${servico}`}
-                  type="checkbox"
-                  label={servico}
-                  value={formData.servicos_inclusos.includes(servico)}
-                  onChange={() => handleServiceToggle(servico)}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-              <div className="mb-2">
-                <FormField
-                  name="observacoes"
-                  type="textarea"
-                  label="Observações"
-                  placeholder="Observações adicionais sobre o plano"
-                  size="sm"
-                  value={formData.observacoes}
-                  onChange={(value: FormValue) => {
-                    const stringValue = typeof value === 'string' ? value : String(value || '');
-                    handleInputChange('observacoes', stringValue);
-                  }}
-                  disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
-                  rows={2}
-                />
-              </div>
-
-      </form>
+          </form>
         )}
     </DraggableModal>
   );

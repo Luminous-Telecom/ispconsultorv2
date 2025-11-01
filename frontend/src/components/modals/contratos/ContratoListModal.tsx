@@ -6,8 +6,7 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
-import ContratoCreateModal from '../clientes/ContratoCreateModal';
-import ContratoEditModal from '../clientes/ContratoEditModal';
+import ContratoModal from '../clientes/contrato/ContratoModal';
 import { AxiosError } from 'axios';
 
 interface ContratoListModalProps {
@@ -23,11 +22,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   onSelectContrato,
   title = "Contratos"
 }) => {
-  const [search, setSearch] = useState('');
-  const [page] = useState(1);
-  const [limit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
@@ -63,85 +57,57 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     }
   };
 
-  // Filtrar e ordenar dados
-  const filteredData = React.useMemo(() => {
+  // Adicionar campos virtuais para busca funcionar com campos aninhados
+  const dataWithVirtualFields = React.useMemo(() => {
     if (!contratos) return [];
     
-    let filtered = [...contratos];
-    
-    // Aplicar busca
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(c => 
-        c.cliente?.razao_social?.toLowerCase().includes(searchLower) ||
-        c.plano?.nome_plano?.toLowerCase().includes(searchLower) ||
-        c.status?.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    // Aplicar ordenação
-    filtered.sort((a, b) => {
-      let aVal: string | number | null | undefined = a[sortColumn as keyof Contrato] as string | number | null | undefined;
-      let bVal: string | number | null | undefined = b[sortColumn as keyof Contrato] as string | number | null | undefined;
-      
-      // Tratamento especial para campos aninhados
-      if (sortColumn === 'cliente') {
-        aVal = a.cliente?.razao_social || '';
-        bVal = b.cliente?.razao_social || '';
-      } else if (sortColumn === 'plano') {
-        aVal = a.plano?.nome_plano || '';
-        bVal = b.plano?.nome_plano || '';
-      }
-      
-      if (aVal === bVal) return 0;
-      if (aVal == null) return 1;
-      if (bVal == null) return -1;
-      
-      const comparison = aVal < bVal ? -1 : 1;
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
-    
-    return filtered;
-  }, [contratos, search, sortColumn, sortDirection]);
+    return contratos.map((c: Contrato) => ({
+      ...c,
+      // Adicionar campos virtuais para busca funcionar com campos aninhados
+      cliente_razao_social: c.cliente?.razao_social || '',
+      plano_nome: c.plano?.nome_plano || '',
+      valor_plano_str: (c.plano?.valor_mensal || 0).toString(),
+      valor_final_str: (c.valor_final || 0).toString()
+    }));
+  }, [contratos]);
 
-  // Paginar dados
-  const paginatedData = React.useMemo(() => {
-    const startIndex = (page - 1) * limit;
-    return filteredData.slice(startIndex, startIndex + limit);
-  }, [filteredData, page, limit]);
-
-  const columns: TableConfig<Contrato>['columns'] = [
+  const columns: TableConfig<Contrato & { cliente_razao_social?: string; plano_nome?: string; valor_plano_str?: string; valor_final_str?: string }>['columns'] = [
     {
       key: 'id',
       label: 'ID',
       sortable: true,
+      searchable: true,
       render: (item: Contrato) => <span>{item.id}</span>
     },
     {
-      key: 'cliente',
+      key: 'cliente_razao_social',
       label: 'Cliente',
       sortable: true,
-      render: (item: Contrato) => (
-        <div className="fw-bold">{item.cliente?.razao_social || '-'}</div>
+      searchable: true,
+      render: (item: Contrato & { cliente_razao_social?: string }) => (
+        <div className="fw-bold">{item.cliente?.razao_social || item.cliente_razao_social || '-'}</div>
       )
     },
     {
-      key: 'plano',
+      key: 'plano_nome',
       label: 'Plano',
       sortable: true,
-      render: (item: Contrato) => item.plano?.nome_plano || '-'
+      searchable: true,
+      render: (item: Contrato & { plano_nome?: string }) => item.plano?.nome_plano || item.plano_nome || '-'
     },
     {
-      key: 'valor_plano',
+      key: 'valor_plano_str',
       label: 'Valor Plano',
-      sortable: true,
+      sortable: false,
+      searchable: true,
       render: (item: Contrato) => 
         item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2)}` : '-'
     },
     {
-      key: 'valor_final',
+      key: 'valor_final_str',
       label: 'Valor Final',
-      sortable: true,
+      sortable: false,
+      searchable: true,
       render: (item: Contrato) => 
         item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2)}` : '-'
     },
@@ -149,6 +115,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       key: 'status',
       label: 'Status',
       sortable: true,
+      searchable: true,
       render: (item: Contrato) => (
         <span className={`badge ${
           item.status === 'ativo' ? 'bg-success' :
@@ -163,6 +130,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       key: 'data_inicio',
       label: 'Data Início',
       sortable: true,
+      searchable: false,
       render: (item: Contrato) => 
         item.data_inicio ? new Date(item.data_inicio).toLocaleDateString('pt-BR') : '-'
     }
@@ -210,7 +178,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         <Table
           config={{
             columns,
-            data: paginatedData,
+            data: dataWithVirtualFields,
             loading: isLoading,
             searchable: true,
             searchPlaceholder: 'Buscar por cliente ou plano...',
@@ -227,36 +195,23 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             emptyMessage: 'Nenhum contrato encontrado'
           }}
           tableId="contrato-list-modal"
-          onSort={(column: string, direction: 'asc' | 'desc') => {
-            setSortColumn(column);
-            setSortDirection(direction);
-          }}
-          onSelectionChange={setSelectedItems}
-          onSearch={setSearch}
-          onRefresh={refetch}
+              onSelectionChange={setSelectedItems}
+              onRefresh={refetch}
         />
       </div>
 
-      {/* Modal de Criação */}
-      <ContratoCreateModal
-        show={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={() => {
-          setShowCreateModal(false);
-          refetch();
-        }}
-      />
-
-      {/* Modal de Edição */}
-      <ContratoEditModal
-        show={showEditModal}
+      {/* Modal de Contrato (criação e edição unificados) */}
+      <ContratoModal
+        show={showCreateModal || showEditModal}
+        clienteId={undefined}
+        contratoId={showEditModal ? selectedContratoId : null}
         onClose={() => {
+          setShowCreateModal(false);
           setShowEditModal(false);
           setSelectedContratoId(null);
         }}
-        contratoId={selectedContratoId}
         onSuccess={() => {
-          // Não fecha o modal para permitir múltiplas edições
+          // Não fechar o modal automaticamente - permitir criar múltiplos contratos
           refetch();
         }}
       />

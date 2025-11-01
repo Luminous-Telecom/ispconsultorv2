@@ -183,23 +183,6 @@ export class ContratoController {
         return;
       }
 
-      // Verificar se já existe um contrato para o mesmo cliente, plano e data
-      const contratoExistente = await Contrato.findOne({
-        where: {
-          cliente_id: value.cliente_id,
-          plano_id: value.plano_id,
-          data_inicio: value.data_inicio
-        }
-      });
-
-      if (contratoExistente) {
-        res.status(409).json({
-          success: false,
-          message: 'Já existe um contrato para este cliente, plano e data de início'
-        });
-        return;
-      }
-
       // Verificar se o banco existe (se fornecido)
       if (value.conta_boleto) {
         const banco = await Banco.findByPk(value.conta_boleto);
@@ -264,7 +247,7 @@ export class ContratoController {
       if (error instanceof Error && error.name === 'SequelizeUniqueConstraintError') {
         res.status(409).json({
           success: false,
-          message: 'Já existe um contrato para este cliente, plano e data de início'
+          message: 'Erro de constraint de unicidade no banco de dados'
         });
         return;
       }

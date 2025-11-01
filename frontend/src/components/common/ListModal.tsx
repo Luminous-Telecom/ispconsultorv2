@@ -33,10 +33,13 @@ function ListModal<T extends { id: number | string }>({
     key: col.key,
     label: col.label,
     sortable: col.sortable,
+    searchable: col.searchable !== false, // Por padrão, todas as colunas são pesquisáveis, exceto se explicitamente definido como false
     width: col.width,
     render: col.render
   }));
 
+  // Se há paginação do servidor, a busca é feita no servidor via onSearchChange
+  // Se não há paginação, permite busca local no Table
   return (
     <DraggableModal
       show={show}

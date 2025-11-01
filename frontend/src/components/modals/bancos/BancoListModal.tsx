@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useBancos, useDeleteBanco } from '../../../hooks/useBancos';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
@@ -101,48 +101,36 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     multiSelect: false
   });
 
-  // Query para buscar bancos (buscando todos para filtrar localmente)
+  // Debounce da busca para evitar muitas requisições
+  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
+  
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParam(search || undefined);
+      setPage(1); // Resetar para primeira página ao buscar
+    }, 300); // 300ms de debounce
+    
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Query para buscar bancos no backend com paginação
   const { data: bancosData, isLoading, refetch } = useBancos({
-    search: undefined,
+    search: searchParam,
     tipo_banco: undefined,
-    page: 1,
-    limit: 1000
+    page,
+    limit
   });
 
   const deleteBancoMutation = useDeleteBanco();
 
-  // Filtrar bancos localmente
-  const filteredBancos = useMemo(() => {
-    if (!bancosData?.data) return [];
-    
-    let filtered = [...bancosData.data];
-    
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(b => 
-        b.nome?.toLowerCase().includes(searchLower) ||
-        b.id?.toString().includes(searchLower) ||
-        b.descricao?.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    return filtered;
-  }, [bancosData, search]);
-
-  // Paginar bancos
-  const paginatedBancos = useMemo(() => {
-    const startIndex = (page - 1) * limit;
-    return filteredBancos.slice(startIndex, startIndex + limit);
-  }, [filteredBancos, page, limit]);
-
-  // Criar paginação manual
+  // Paginação do backend
   const pagination = {
-    from: (page - 1) * limit + 1,
-    to: Math.min(page * limit, filteredBancos.length),
-    total: filteredBancos.length,
     current_page: page,
-    last_page: Math.ceil(filteredBancos.length / limit),
-    per_page: limit
+    last_page: bancosData?.pagination?.last_page || 1,
+    per_page: limit,
+    total: bancosData?.pagination?.total || 0,
+    from: bancosData?.pagination?.from || (page - 1) * limit + 1,
+    to: bancosData?.pagination?.to || Math.min(page * limit, bancosData?.pagination?.total || 0)
   };
 
   const handleSelect = () => {
@@ -221,7 +209,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
           onClose();
         }}
         config={modal.config}
-        data={paginatedBancos}
+        data={bancosData?.data || []}
         loading={isLoading}
         selectedItems={selectedBanco ? [selectedBanco] : []}
         onSelectionChange={handleSelectionChange}

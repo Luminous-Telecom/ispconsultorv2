@@ -8,6 +8,7 @@ import { useFormReset } from '../../../hooks/useFormReset';
 import FormField from '../../ui/FormField';
 import { useFormPrefix } from '../../../hooks/useFormId';
 import { FormValue } from '../../../types/common';
+import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 
 interface BancoForm {
   nome: string;
@@ -110,6 +111,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
   const [formData, setFormData] = useState<BancoForm>(initialFormData);
   const [errors, setErrors] = useState<Partial<BancoForm>>({});
   const [testResult, setTestResult] = useState<string>('');
+  const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -519,191 +521,69 @@ const BancoModal: React.FC<BancoModalProps> = ({
         </div>
       }
     >
-      <form id="banco-form" onSubmit={handleSubmit} className="p-3">
-        {/* Informações Básicas */}
-        <div className="mb-3">
-          <h6 className="border-bottom pb-2 mb-2">Informações Básicas</h6>
-          <div className="row">
-            <div className="col-md-12">
-              <div className="mb-3">
-                <FormField
-                  name="nome"
-                  type="text"
-                  label="Nome do Banco"
-                  placeholder="Ex: EFI - Conta Principal"
-                  required={true}
-                  size="sm"
-                  value={formData.nome}
-                  onChange={(value) => handleInputChange('nome', value)}
-                  error={errors.nome}
-                  isInvalid={!!errors.nome}
-                  disabled={isPending}
-                  autoComplete="organization"
-                />
-                <small className="text-secondary">Nome para identificar esta conta do banco</small>
-              </div>
-            </div>
-          </div>
+      <form id="banco-form" onSubmit={handleSubmit}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {/* Navegação por Abas */}
+          <ul className="nav nav-tabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'informacoes-basicas' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('informacoes-basicas')}
+              >
+                Informações Básicas
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'configuracoes-api' ? 'active' : ''}`}
+                type="button"
+                onClick={() => setActiveTab('configuracoes-api')}
+              >
+                Configurações da API
+              </button>
+            </li>
+          </ul>
 
-          <div className="row">
-            <div className="col-md-6">
-              <div className="mb-3">
-                <FormField
-                  name="tipo_banco"
-                  type="select"
-                  label="Tipo de Banco"
-                  size="sm"
-                  value={formData.tipo_banco}
-                  onChange={(value) => handleInputChange('tipo_banco', value)}
-                  disabled={isPending}
-                  formPrefix={formPrefix}
-                  options={[
-                    { value: 'efi', label: 'EFI (Código: 364)' },
-                    { value: 'asaas', label: 'Asaas (Código: 461)' }
-                  ]}
-                />
-                <small className="text-secondary">Código do banco é definido automaticamente</small>
-              </div>
-            </div>
+          {/* Conteúdo das Abas */}
+          <div 
+            className="tab-content" 
+            style={{ 
+              flex: 1, 
+              overflow: 'auto', 
+              padding: '16px',
+              minHeight: 0
+            }}
+          >
+            {/* Aba Informações Básicas */}
+            {activeTab === 'informacoes-basicas' && (
+              <InformacoesBasicasTab
+                formData={formData}
+                errors={errors}
+                handleInputChange={handleInputChange}
+                isPending={isPending}
+                formPrefix={formPrefix}
+                renderBancoEspecificoCampos={renderBancoEspecificoCampos}
+                handleTestConnection={handleTestConnection}
+                testResult={testResult}
+              />
+            )}
 
-            <div className="col-md-6">
-              <div className="mb-4">
-                <FormField
-                  name="ativo"
-                  type="checkbox"
-                  label={formData.ativo ? 'Ativo' : 'Inativo'}
-                  value={formData.ativo}
-                  onChange={(value) => handleInputChange('ativo', value as boolean)}
-                  disabled={isPending}
-                  formPrefix={formPrefix}
-                  switch={true}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-2">
-            <FormField
-              name="descricao"
-              type="textarea"
-              label="Descrição"
-              placeholder="Descrição do banco..."
-              size="sm"
-              value={formData.descricao}
-              onChange={(value) => handleInputChange('descricao', value)}
-              disabled={isPending}
-              rows={3}
-            />
-          </div>
-        </div>
-
-        {/* Configurações da API */}
-        <div className="mb-3">
-          <h6 className="border-bottom pb-2 mb-2">Configurações da API</h6>
-          
-          {/* Campos comuns para EFI e ASAAS */}
-          {(formData.tipo_banco === 'efi' || formData.tipo_banco === 'asaas') && (
-            <>
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <FormField
-                      name="client_id_producao"
-                      type="text"
-                      label={formData.tipo_banco === 'efi' ? 'Client ID Produção' : 'Client ID'}
-                      placeholder="Client ID para produção"
-                      required={formData.tipo_banco === 'efi'}
-                      size="sm"
-                      value={formData.client_id_producao}
-                      onChange={(value) => handleInputChange('client_id_producao', value)}
-                      disabled={isPending}
-                      autoComplete="off"
-                      formPrefix={formPrefix}
-                    />
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <FormField
-                      name="client_secret_producao"
-                      type="password"
-                      label={formData.tipo_banco === 'efi' ? 'Client Secret Produção' : 'Client Secret'}
-                      placeholder="Client Secret para produção"
-                      required={formData.tipo_banco === 'efi'}
-                      size="sm"
-                      value={formData.client_secret_producao}
-                      onChange={(value) => handleInputChange('client_secret_producao', value)}
-                      disabled={isPending}
-                      autoComplete="off"
-                      formPrefix={formPrefix}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="mb-3">
-                    <FormField
-                      name="url_retorno"
-                      type="url"
-                      label="URL de Retorno (Webhook)"
-                      placeholder="URL para retorno de webhooks"
-                      size="sm"
-                      value={formData.url_retorno}
-                      onChange={(value) => handleInputChange('url_retorno', value)}
-                      disabled={isPending}
-                      autoComplete="url"
-                      formPrefix={formPrefix}
-                    />
-                    <small className="text-secondary">URL para receber notificações de pagamento</small>
-                  </div>
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="mb-3">
-                    <FormField
-                      name="sandbox"
-                      type="checkbox"
-                      label="Modo Sandbox (Testes)"
-                      value={formData.sandbox}
-                      onChange={(value) => handleInputChange('sandbox', value as boolean)}
-                      disabled={isPending}
-                      formPrefix={formPrefix}
-                      switch={true}
-                    />
-                    <small className="text-secondary">
-                      Ative para usar ambiente de testes. Desative para produção.
-                    </small>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Campos específicos de cada tipo de banco */}
-          {renderBancoEspecificoCampos()}
-
-          <div className="mt-3">
-            <button
-              type="button"
-              className="btn btn-outline-primary btn-sm"
-              onClick={handleTestConnection}
-              disabled={isPending}
-            >
-              Testar Conexão
-            </button>
-            {testResult && (
-              <span className={`ms-2 badge ${testResult.includes('✅') ? 'bg-success' : 'bg-danger'}`}>
-                {testResult}
-              </span>
+            {/* Aba Configurações da API */}
+            {activeTab === 'configuracoes-api' && (
+              <ConfiguracoesApiTab
+                formData={formData}
+                errors={errors}
+                handleInputChange={handleInputChange}
+                isPending={isPending}
+                formPrefix={formPrefix}
+                renderBancoEspecificoCampos={renderBancoEspecificoCampos}
+                handleTestConnection={handleTestConnection}
+                testResult={testResult}
+              />
             )}
           </div>
         </div>
-
       </form>
     </DraggableModal>
   );

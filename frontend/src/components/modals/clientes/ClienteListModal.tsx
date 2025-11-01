@@ -3,7 +3,7 @@ import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import ListModal from '../../common/ListModal';
-import { ClienteModal } from './index';
+import ClienteModal from './cliente/ClienteModal';
 
 interface Cliente {
   id: number;
@@ -116,8 +116,21 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   });
 
   // Hooks para gerenciar clientes
+  // Usar useEffect para atualizar busca sem recriar o hook
+  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
+  
+  // Debounce da busca para evitar muitas requisições
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParam(search || undefined);
+      setPage(1); // Resetar para primeira página ao buscar
+    }, 300); // 300ms de debounce
+    
+    return () => clearTimeout(timer);
+  }, [search]);
+  
   const { data: clientesData, isLoading, refetch } = useClientes({
-    search: search || undefined,
+    search: searchParam,
     page,
     limit
   });

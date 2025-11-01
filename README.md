@@ -1,57 +1,79 @@
 # BackNet ERP - Sistema ERP para Assessoria Técnica
 
-## 🐳 Docker
+## 📑 Índice
 
-Este projeto está configurado para rodar com Docker. Veja [DOCKER.md](DOCKER.md) para instruções completas.
-
-### Início Rápido com Docker
-
-```bash
-# Construir e iniciar todos os containers (MySQL, Redis, Backend, Frontend)
-docker-compose up --build
-
-# Acessar a aplicação
-# Frontend: http://localhost:3000
-# Backend: http://localhost:3001
-# MySQL: localhost:3306
-# Redis: localhost:6379
-```
+- [Visão Geral do Projeto](#-visão-geral-do-projeto)
+- [Problemas Identificados](#-problemas-identificados)
+- [Status Geral da Refatoração](#-status-geral-da-refatoração)
+- [Plano de Refatoração por Etapas](#-plano-de-refatoração-por-etapas)
+- [Estrutura de Pastas Proposta](#-estrutura-de-pastas-proposta)
+- [Checklist de Cada Etapa](#-checklist-de-cada-etapa)
+- [Prioridades de Refatoração](#-prioridades-de-refatoração)
+- [Como Começar](#-como-começar)
+- [Notas Importantes](#-notas-importantes)
 
 ---
 
-# BackNet - Plano de Refatoração
+## 🔄 BackNet - Plano de Refatoração
 
 ## 📋 Visão Geral do Projeto Atual
 
 ### Estrutura de Pastas Existente
 ```
-BackNet-telecom/
-├── backend/                    # API Node.js/TypeScript
+BackNet-ERP/
+├── backend/                           # API Node.js/TypeScript
 │   ├── src/
-│   │   ├── controllers/        # Controllers das entidades
-│   │   ├── models/            # Modelos Sequelize
-│   │   ├── routes/            # Definição de rotas
-│   │   ├── services/          # Lógica de negócio
-│   │   ├── middleware/        # Middlewares customizados
-│   │   ├── utils/             # Utilitários
-│   │   ├── migrations/        # Migrações do banco
-│   │   └── templates/         # Templates HTML/PDF
-│   └── package.json
-├── frontend/                   # React/TypeScript
+│   │   ├── controllers/               # Controllers das entidades (23 controllers)
+│   │   ├── models/                    # Modelos Sequelize (30+ models)
+│   │   ├── routes/                    # Definição de rotas (23+ arquivos)
+│   │   ├── services/                  # Lógica de negócio
+│   │   │   └── routines/              # Rotinas agendadas
+│   │   ├── middleware/                # Middlewares customizados
+│   │   ├── utils/                     # Utilitários
+│   │   ├── migrations/                # Migrações do banco de dados
+│   │   ├── templates/                 # Templates HTML/PDF
+│   │   ├── config/                    # Configurações
+│   │   ├── interfaces/                # Interfaces TypeScript
+│   │   ├── types/                     # Tipos TypeScript
+│   │   └── workers/                    # Workers/Jobs
+│   ├── config/                        # Configurações do Sequelize
+│   ├── migrations/                    # Migrações (raiz)
+│   ├── uploads/                       # Arquivos enviados
+│   ├── images/                        # Imagens do sistema
+│   └── logs/                          # Logs da aplicação
+│
+├── frontend/                          # React/TypeScript
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/        # Componentes reutilizáveis
-│   │   │   ├── modals/        # Modais específicos
-│   │   │   ├── layout/        # Layout principal
-│   │   │   └── pages/         # Páginas da aplicação
-│   │   ├── hooks/             # Hooks customizados
-│   │   ├── services/          # Serviços de API
-│   │   ├── types/             # Definições TypeScript
-│   │   ├── contexts/          # Contextos React
-│   │   ├── utils/             # Utilitários
-│   │   └── config/            # Configurações
-│   └── package.json
-└── package.json               # Scripts do projeto
+│   │   │   ├── ui/                    # ✅ Componentes UI base (NOVO)
+│   │   │   ├── modals/                # Modais específicos
+│   │   │   │   ├── clientes/          # Modais de clientes
+│   │   │   │   ├── planos/            # Modais de planos
+│   │   │   │   ├── bancos/            # Modais de bancos
+│   │   │   │   ├── contratos/         # Modais de contratos
+│   │   │   │   ├── titulos/           # Modais de títulos
+│   │   │   │   ├── parametros/         # Modais de parâmetros
+│   │   │   │   ├── empresa/            # Modais da empresa
+│   │   │   │   └── pagamentos/        # Modais de pagamentos
+│   │   │   ├── common/                # Componentes reutilizáveis
+│   │   │   ├── tables/                # Componentes de tabela
+│   │   │   ├── forms/                 # Formulários
+│   │   │   ├── layout/                # Layout principal
+│   │   │   ├── pages/                 # Páginas da aplicação
+│   │   │   └── notifications/         # Sistema de notificações
+│   │   ├── hooks/                     # Hooks customizados (20+ hooks)
+│   │   ├── services/                  # Serviços de API (20+ services)
+│   │   ├── types/                     # Definições TypeScript
+│   │   ├── contexts/                  # Contextos React
+│   │   ├── utils/                     # Utilitários
+│   │   ├── config/                    # Configurações
+│   │   └── styles/                    # Estilos globais
+│   ├── public/                        # Arquivos estáticos
+│   └── build/                         # Build de produção
+│
+├── ecosystem.config.js                # Configuração PM2
+├── package.json                       # Scripts do projeto
+└── README.md                          # Documentação
 ```
 
 ### Principais Funcionalidades
@@ -93,27 +115,72 @@ BackNet-telecom/
 - **APIs**: Chamadas HTTP com padrões similares
 - **Utilitários**: Funções helper espalhadas
 
+## 📊 Status Geral da Refatoração
+
+**Progresso Geral**: 🟡 **7.5% concluído** (1 de 10 etapas parcialmente concluída)
+
+### 📈 Resumo das Etapas
+
+| Etapa | Status | Progresso | Prioridade |
+|-------|--------|-----------|------------|
+| 1. Componentes UI Base | 🟡 Em Progresso | 75% | ⚡ Alta |
+| 2. Sistema de Formulários | ⏳ Aguardando | 0% | ⚡ Alta |
+| 3. Sistema de Tabelas | ⏳ Aguardando | 0% | ⚡ Alta |
+| 4. Sistema de Modais | ⏳ Aguardando | 0% | ⚡ Alta |
+| 5. Hooks Customizados | ⏳ Aguardando | 0% | ⚡ Alta |
+| 6. Serviços de API | ⏳ Aguardando | 0% | 🔄 Média |
+| 7. Utilitários Centralizados | ⏳ Aguardando | 0% | 🔄 Média |
+| 8. Sistema de Tipos | ⏳ Aguardando | 0% | 📋 Baixa |
+| 9. Refatoração de Modais | ⏳ Aguardando | 0% | 📋 Baixa |
+| 10. Otimização Final | ⏳ Aguardando | 0% | 🔄 Média |
+
+### 📝 Última Atualização
+- ✅ **Componentes UI base criados** e parcialmente integrados
+- ✅ **9 componentes implementados**: `Button`, `Input`, `Select`, `Checkbox`, `FormField`, `Dropdown`, `EntitySelectField`, `ConfirmModal`, `types.ts`
+- ✅ **Em uso**: `Button` no Layout e `EntitySelectField` em modais de contratos
+- ⏳ **Pendente**: Implementar `Modal.tsx` base e completar migração de componentes existentes
+
+---
+
 ## 🚀 Plano de Refatoração por Etapas
 
-### [ ] Etapa 1: Componentes UI Base
+### [🟡 Em Progresso] Etapa 1: Componentes UI Base
 **Objetivo**: Criar componentes UI fundamentais e reutilizáveis
+**Status**: Parcialmente concluída (75%)
 **Arquivos afetados**: 
-- `frontend/src/components/ui/` (nova pasta)
-- Todos os modais existentes
-- Componentes que usam botões e inputs
+- `frontend/src/components/ui/` ✅ Criada
+- Todos os modais existentes (em migração)
+- Componentes que usam botões e inputs (em migração)
 
-**Componentes a criar/refatorar**:
-- `Button.tsx` - Botão base com variantes
-- `Input.tsx` - Input base com validação
-- `Select.tsx` - Select base com busca
-- `Checkbox.tsx` - Checkbox base
-- `Modal.tsx` - Modal base simplificado
-- `FormField.tsx` - Campo de formulário completo
+**Componentes criados**:
+- ✅ `Button.tsx` - Botão base com variantes (implementado e sendo usado no Layout)
+- ✅ `Input.tsx` - Input base com validação (implementado)
+- ✅ `Select.tsx` - Select base com busca (implementado)
+- ✅ `Checkbox.tsx` - Checkbox base (implementado)
+- ✅ `FormField.tsx` - Campo de formulário completo (implementado)
+- ✅ `Dropdown.tsx` - Dropdown reutilizável (implementado)
+- ✅ `EntitySelectField.tsx` - Select para entidades (implementado e em uso)
+- ✅ `ConfirmModal.tsx` - Modal de confirmação (implementado)
+- ✅ `types.ts` - Tipos TypeScript unificados (implementado)
+- ✅ `ui.css` - Estilos dos componentes (implementado)
+- ✅ `index.ts` - Exports centralizados (implementado)
+- ⏳ `Modal.tsx` - Modal base simplificado (a ser implementado)
+
+**Documentação**: Veja [README dos Componentes UI](frontend/src/components/ui/README.md) para detalhes de uso.
+
+**Componentes já em uso**:
+- `Button` usado em `Layout.tsx`
+- `EntitySelectField` usado em modais de contratos
+
+**Próximos passos**:
+- Migrar mais componentes para usar os novos componentes UI
+- Implementar `Modal.tsx` base
+- Completar integração com todos os modais
 
 **Testes necessários**:
-- Renderização dos componentes
-- Validações funcionando
-- Integração com formulários existentes
+- ✅ Renderização dos componentes
+- ⏳ Validações funcionando (parcialmente testado)
+- ⏳ Integração completa com formulários existentes
 
 **Estimativa de complexidade**: Baixa
 
@@ -453,41 +520,47 @@ frontend/src/
 
 ## 🎯 Prioridades de Refatoração
 
-### Alta Prioridade
-1. **Componentes UI Base** - Base para tudo
-2. **Sistema de Formulários** - Usado em todos os modais
-3. **Sistema de Tabelas** - Usado em toda aplicação
-4. **Hooks Customizados** - Padronização de lógica
+### Alta Prioridade ⚡
+1. ✅ ~~**Componentes UI Base**~~ - Base para tudo (75% concluído)
+2. **Sistema de Formulários** - Usado em todos os modais (reduzirá muito código duplicado)
+3. **Sistema de Tabelas** - Usado em toda aplicação (unificar DataTable e ModernTable)
+4. **Hooks Customizados** - Padronização de lógica CRUD (reduzirá duplicação significativa)
 
-### Média Prioridade
-5. **Sistema de Modais** - Melhora UX
+### Média Prioridade 🔄
+5. **Sistema de Modais** - Melhora UX e padronização
 6. **Serviços de API** - Padronização de comunicação
 7. **Utilitários Centralizados** - Reutilização de código
 
-### Baixa Prioridade
+### Baixa Prioridade 📋
 8. **Sistema de Tipos** - Organização e manutenibilidade
-9. **Refatoração de Modais Específicos** - Aplicação do sistema
+9. **Refatoração de Modais Específicos** - Aplicação do sistema unificado
 10. **Otimização Final** - Performance e limpeza
 
 ## 🚀 Como Começar
 
 1. **Criar branch para refatoração**:
    ```bash
-   git checkout -b refactor/etapa-1-componentes-ui
+   git checkout -b refactor/etapa-[numero]-[nome-da-etapa]
+   # Exemplo: git checkout -b refactor/etapa-2-formularios-unificados
    ```
 
-2. **Começar pela Etapa 1**:
-   - Criar pasta `frontend/src/components/ui/`
-   - Implementar componentes base
-   - Testar integração
+2. **Próxima etapa recomendada**:
+   - ✅ Etapa 1 está 75% concluída - completar implementação do `Modal.tsx` base e migração de componentes
+   - 🎯 Próxima: **Etapa 2 - Sistema de Formulários Unificado** (alta prioridade)
+   - Criar pasta `frontend/src/components/forms/`
+   - Implementar sistema base de formulários
+   - Testar integração com componentes UI existentes
 
 3. **Para cada etapa concluída**:
    - Fazer commit com mensagem descritiva
-   - Criar tag para a etapa
+   - Criar tag para a etapa (opcional)
    - Testar funcionalidade completa
+   - Atualizar este README com progresso
    - Documentar mudanças
 
-4. **Usar Cursor Composer** (Cmd/Ctrl + I) para trabalhar em múltiplos arquivos simultaneamente durante a refatoração.
+4. **Ferramentas úteis**:
+   - Use **Cursor Composer** (Cmd/Ctrl + I) para trabalhar em múltiplos arquivos simultaneamente
+   - Consulte o [README dos Componentes UI](frontend/src/components/ui/README.md) ao trabalhar com componentes base
 
 ## 📝 Notas Importantes
 
@@ -502,4 +575,7 @@ frontend/src/
 
 ---
 
-**Próximo passo**: Começar pela Etapa 1 - Componentes UI Base. Crie os arquivos necessários e me mostre o código dos componentes a serem criados.
+**Próximos passos recomendados**:
+1. **Completar Etapa 1**: Implementar `Modal.tsx` base e finalizar migração de componentes para usar os novos componentes UI
+2. **Iniciar Etapa 2**: Criar sistema de formulários unificado para reduzir duplicação de código nos modais
+3. **Atualizar este README**: Conforme cada etapa for concluída, atualizar o status e progresso
