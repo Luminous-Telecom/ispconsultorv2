@@ -5,6 +5,7 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
 import FormField from '../../ui/FormField';
+import { FormValue } from '../../../types/common';
 
 interface PlanoForm {
   nome_plano: string;
@@ -123,8 +124,9 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
       onSuccess?.();
       // Não fechar o modal automaticamente
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar plano');
+    onError: (err: unknown) => {
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao criar plano';
+      error(errorMessage);
     }
   });
 
@@ -138,8 +140,9 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
       onSuccess?.();
       // Não fechar o modal automaticamente
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao atualizar plano');
+    onError: (err: unknown) => {
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar plano';
+      error(errorMessage);
     }
   });
 
@@ -168,7 +171,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: any = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.nome_plano.trim()) newErrors.nome_plano = 'Nome do plano é obrigatório';
     if (!formData.tipo_servico) newErrors.tipo_servico = 'Tipo de serviço é obrigatório';
@@ -251,9 +254,9 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   required={true}
                   size="sm"
                   value={formData.nome_plano}
-                  onChange={(e) => {
-                    const value = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
-                    handleInputChange('nome_plano', value);
+                  onChange={(value: FormValue) => {
+                    const stringValue = typeof value === 'string' ? value : String(value || '');
+                    handleInputChange('nome_plano', stringValue);
                   }}
                   error={errors.nome_plano}
                   isInvalid={!!errors.nome_plano}
@@ -271,7 +274,10 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   required={true}
                   size="sm"
                   value={formData.tipo_servico}
-                  onChange={(value, name) => handleInputChange('tipo_servico', value)}
+                  onChange={(value: FormValue) => {
+                    const stringValue = typeof value === 'string' ? value : String(value || '');
+                    handleInputChange('tipo_servico', stringValue as PlanoForm['tipo_servico']);
+                  }}
                   error={errors.tipo_servico}
                   isInvalid={!!errors.tipo_servico}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
@@ -297,7 +303,10 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   placeholder="Descrição detalhada do plano"
                   size="sm"
                   value={formData.descricao}
-                  onChange={(value, name) => handleInputChange('descricao', value)}
+                  onChange={(value: FormValue) => {
+                    const stringValue = typeof value === 'string' ? value : String(value || '');
+                    handleInputChange('descricao', stringValue);
+                  }}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                   rows={2}
                 />
@@ -314,9 +323,9 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   required={true}
                   size="md"
                   value={formData.valor_mensal === 0 ? '' : formData.valor_mensal}
-                  onChange={(e: any) => {
-                    const rawValue = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
-                    const numValue = rawValue === '' ? 0 : parseFloat(rawValue);
+                  onChange={(value: FormValue) => {
+                    const rawValue = typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
+                    const numValue = rawValue === '' || rawValue === 0 ? 0 : parseFloat(String(rawValue));
                     handleInputChange('valor_mensal', isNaN(numValue) ? 0 : numValue);
                   }}
                   error={errors.valor_mensal?.toString()}
@@ -335,9 +344,9 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   label="Quantidade de Usuários"
                   size="sm"
                   value={formData.quantidade_usuarios === 0 ? '' : formData.quantidade_usuarios}
-                  onChange={(e: any) => {
-                    const rawValue = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
-                    const intValue = rawValue === '' ? 0 : parseInt(rawValue);
+                  onChange={(value: FormValue) => {
+                    const rawValue = typeof value === 'string' || typeof value === 'number' ? value : String(value || '');
+                    const intValue = rawValue === '' || rawValue === 0 ? 0 : parseInt(String(rawValue), 10);
                     handleInputChange('quantidade_usuarios', isNaN(intValue) ? 0 : intValue);
                   }}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
@@ -357,9 +366,9 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   required={true}
                   size="md"
                   value={formData.data_inicio}
-                  onChange={(e: any) => {
-                    const rawValue = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
-                    handleInputChange('data_inicio', rawValue);
+                  onChange={(value: FormValue) => {
+                    const stringValue = typeof value === 'string' ? value : String(value || '');
+                    handleInputChange('data_inicio', stringValue);
                   }}
                   error={errors.data_inicio}
                   isInvalid={!!errors.data_inicio}
@@ -376,9 +385,9 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   label="Data de Fim"
                   size="sm"
                   value={formData.data_fim}
-                  onChange={(e: any) => {
-                    const rawValue = typeof e === 'object' && e !== null && 'value' in e ? e.value : e;
-                    handleInputChange('data_fim', rawValue);
+                  onChange={(value: FormValue) => {
+                    const stringValue = typeof value === 'string' ? value : String(value || '');
+                    handleInputChange('data_fim', stringValue);
                   }}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                 />
@@ -412,7 +421,10 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                   placeholder="Observações adicionais sobre o plano"
                   size="sm"
                   value={formData.observacoes}
-                  onChange={(e: any) => handleInputChange('observacoes', e.value)}
+                  onChange={(value: FormValue) => {
+                    const stringValue = typeof value === 'string' ? value : String(value || '');
+                    handleInputChange('observacoes', stringValue);
+                  }}
                   disabled={isEditing ? updatePlanoMutation.isPending : createPlanoMutation.isPending}
                   rows={2}
                 />

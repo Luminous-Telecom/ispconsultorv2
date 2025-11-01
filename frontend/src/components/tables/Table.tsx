@@ -1,19 +1,20 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { TableConfig, TableColumn as TableColumnType, TableAction, BulkAction, SortDirection } from './types';
+import { TableConfig, TableAction, BulkAction, SortDirection } from './types';
+import { FilterValue } from '../../types/common';
 import { useTable } from './useTable';
 import TableColumn from './TableColumn';
 import TableActions from './TableActions';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';
 
-interface TableProps<T = any> {
+interface TableProps<T = Record<string, unknown>> {
   config: TableConfig<T>;
   onActionClick?: (action: TableAction<T>, item: T, index: number) => void;
   onBulkActionClick?: (action: BulkAction<T>, selectedItems: T[]) => void;
   onRowClick?: (item: T, index: number) => void;
   onSelectionChange?: (selectedItems: T[]) => void;
   onSort?: (column: string, direction: SortDirection) => void;
-  onFilter?: (filters: Record<string, any>) => void;
+  onFilter?: (filters: Record<string, FilterValue>) => void;
   onSearch?: (term: string) => void;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
@@ -24,7 +25,7 @@ interface TableProps<T = any> {
 
 function Table<T extends { id: number | string }>({
   config,
-  onActionClick,
+  onActionClick: _onActionClick,
   onBulkActionClick,
   onRowClick,
   onSelectionChange,
@@ -46,7 +47,7 @@ function Table<T extends { id: number | string }>({
     loading = false,
     pagination,
     filters = [],
-    actions = [],
+    actions: _actions = [],
     bulkActions = [],
     searchable = true,
     searchPlaceholder = 'Buscar...',
@@ -54,23 +55,23 @@ function Table<T extends { id: number | string }>({
     selectable = true,
     multiSelect = false,
     emptyMessage = 'Nenhum dado encontrado',
-    loadingMessage = 'Carregando...',
-    size = 'md',
-    variant = 'default',
-    striped = false,
-    hover = true,
-    bordered = false,
-    borderless = false,
-    responsive = true,
-    stickyHeader = false,
-    stickyActions = false,
+    loadingMessage: _loadingMessage = 'Carregando...',
+    size: _size = 'md',
+    variant: _variant = 'default',
+    striped: _striped = false,
+    hover: _hover = true,
+    bordered: _bordered = false,
+    borderless: _borderless = false,
+    responsive: _responsive = true,
+    stickyHeader: _stickyHeader = false,
+    stickyActions: _stickyActions = false,
     customControls,
     customFilters,
   } = config;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-  const tableRef = useRef<HTMLTableElement>(null);
+  const _tableRef = useRef<HTMLTableElement>(null);
 
   // Memoizar dados filtrados para evitar loops infinitos
   const filteredData = useMemo(() => {
@@ -83,9 +84,9 @@ function Table<T extends { id: number | string }>({
     paginatedData,
     totalPages,
     hasNextPage,
-    hasPreviousPage,
-    isAllSelected,
-    isPartiallySelected,
+    hasPreviousPage: _hasPreviousPage,
+    isAllSelected: _isAllSelected,
+    isPartiallySelected: _isPartiallySelected,
   } = useTable({
     data: filteredData,
     columns,
@@ -131,30 +132,30 @@ function Table<T extends { id: number | string }>({
   }, [openDropdown]);
 
   // Construir classes da tabela
-  const getTableClasses = () => {
+  const _getTableClasses = () => {
     const classes = ['table'];
     
-    if (size !== 'md') {
-      classes.push(`table-${size}`);
+    if (_size !== 'md') {
+      classes.push(`table-${_size}`);
     }
     
-    if (variant !== 'default') {
-      classes.push(`table-${variant}`);
+    if (_variant !== 'default') {
+      classes.push(`table-${_variant}`);
     }
     
-    if (striped) {
+    if (_striped) {
       classes.push('table-striped');
     }
     
-    if (hover) {
+    if (_hover) {
       classes.push('table-hover');
     }
     
-    if (bordered) {
+    if (_bordered) {
       classes.push('table-bordered');
     }
     
-    if (borderless) {
+    if (_borderless) {
       classes.push('table-borderless');
     }
     
@@ -162,14 +163,14 @@ function Table<T extends { id: number | string }>({
   };
 
   // Construir classes do container
-  const getContainerClasses = () => {
+  const _getContainerClasses = () => {
     const classes = ['table-container'];
     
-    if (responsive) {
+    if (_responsive) {
       classes.push('table-responsive');
     }
     
-    if (stickyHeader) {
+    if (_stickyHeader) {
       classes.push('sticky-header');
     }
     
@@ -193,9 +194,9 @@ function Table<T extends { id: number | string }>({
                 type="checkbox"
                 id={`select-all-${Math.random().toString(36).substr(2, 9)}`}
                 name="selectAll"
-                checked={isAllSelected}
+                checked={_isAllSelected}
                 onChange={() => {
-                  if (isAllSelected) {
+                  if (_isAllSelected) {
                     tableActions.clearSelection();
                   } else {
                     tableActions.selectAll();
@@ -328,7 +329,7 @@ function Table<T extends { id: number | string }>({
   };
 
   // Renderizar barra de ferramentas
-  const renderToolbar = () => {
+  const _renderToolbar = () => {
     return (
       <div className="table-toolbar d-flex justify-content-between align-items-center mb-3">
         <div className="d-flex align-items-center gap-3">
@@ -339,7 +340,7 @@ function Table<T extends { id: number | string }>({
                 type="text"
                 name="search"
                 value={searchTerm}
-                onChange={(val) => setSearchTerm(val)}
+                onChange={(val) => setSearchTerm(val as string)}
                 placeholder={searchPlaceholder}
                 icon="search"
                 size="sm"
@@ -438,7 +439,7 @@ function Table<T extends { id: number | string }>({
                 <button
                   key={index}
                   className="btn btn-sm btn-primary"
-                  onClick={(event) => {
+                  onClick={(_event) => {
                     if (!isDisabled && bulkAction.onClick) {
                       bulkAction.onClick(state.selectedItems);
                     }

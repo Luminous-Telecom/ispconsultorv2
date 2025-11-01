@@ -1,4 +1,5 @@
 // Tipos para sistema de formulários unificado
+import { FormValue } from '../../types/common';
 
 export type ValidationRule = 
   | { type: 'required'; message?: string }
@@ -10,7 +11,7 @@ export type ValidationRule =
   | { type: 'email'; message?: string }
   | { type: 'url'; message?: string }
   | { type: 'number'; message?: string }
-  | { type: 'custom'; validator: (value: any) => boolean | string; message?: string };
+  | { type: 'custom'; validator: (value: FormValue) => boolean | string; message?: string };
 
 export interface FieldConfig {
   name: string;
@@ -20,7 +21,7 @@ export interface FieldConfig {
   required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
-  defaultValue?: any;
+  defaultValue?: FormValue;
   options?: Array<{ value: string | number; label: string; disabled?: boolean; group?: string }>;
   validation?: ValidationRule[];
   description?: string;
@@ -53,10 +54,10 @@ export interface FieldConfig {
 
 export interface FormConfig {
   fields: FieldConfig[];
-  onSubmit?: (data: Record<string, any>) => void | Promise<void>;
+  onSubmit?: (data: Record<string, FormValue>) => void | Promise<void>;
   onReset?: () => void;
-  onFieldChange?: (name: string, value: any, allData: Record<string, any>) => void;
-  formatValue?: (name: string, value: any) => any;
+  onFieldChange?: (name: string, value: FormValue, allData: Record<string, FormValue>) => void;
+  formatValue?: (name: string, value: FormValue) => FormValue;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
   validateOnSubmit?: boolean;
@@ -70,7 +71,7 @@ export interface FormConfig {
 }
 
 export interface FormState {
-  data: Record<string, any>;
+  data: Record<string, FormValue>;
   errors: Record<string, string>;
   touched: Record<string, boolean>;
   isValid: boolean;
@@ -80,8 +81,8 @@ export interface FormState {
 }
 
 export interface FormActions {
-  setValue: (name: string, value: any) => void;
-  setValues: (values: Record<string, any>) => void;
+  setValue: (name: string, value: FormValue) => void;
+  setValues: (values: Record<string, FormValue>) => void;
   setError: (name: string, error: string) => void;
   setErrors: (errors: Record<string, string>) => void;
   clearError: (name: string) => void;
@@ -101,11 +102,11 @@ export interface FormContextValue {
 }
 
 export interface UseFormOptions {
-  initialValues?: Record<string, any>;
+  initialValues?: Record<string, FormValue>;
   validationRules?: Record<string, ValidationRule[]>;
-  onSubmit?: (data: Record<string, any>) => void | Promise<void>;
+  onSubmit?: (data: Record<string, FormValue>) => void | Promise<void>;
   onReset?: () => void;
-  onFieldChange?: (name: string, value: any, allData: Record<string, any>) => void;
+  onFieldChange?: (name: string, value: FormValue, allData: Record<string, FormValue>) => void;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
   validateOnSubmit?: boolean;
@@ -116,8 +117,8 @@ export interface UseFormReturn {
   state: FormState;
   actions: FormActions;
   fieldProps: (name: string) => {
-    value: any;
-    onChange: (value: any) => void;
+    value: FormValue;
+    onChange: (value: FormValue) => void;
     onBlur: () => void;
     error: string;
     touched: boolean;
@@ -150,7 +151,7 @@ export interface FormEvent {
 
 export interface FieldChangeEvent {
   name: string;
-  value: any;
-  previousValue: any;
-  allData: Record<string, any>;
+  value: FormValue;
+  previousValue: FormValue;
+  allData: Record<string, FormValue>;
 }

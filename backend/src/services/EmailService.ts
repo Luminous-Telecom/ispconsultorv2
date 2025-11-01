@@ -178,7 +178,7 @@ export class EmailService {
       const mailOptions: any = {
         from: `"${servidor.nome_remetente}" <${servidor.email_remetente}>`,
         to: emailDestino,
-        subject: 'Boleto de Pagamento - CTM Telecom',
+        subject: 'Boleto de Pagamento - BackNet',
         html: mensagem
       };
 

@@ -115,7 +115,7 @@ export class TituloController {
     const templateVars = {
       // Dados da empresa (Beneficiário)
       LOGOMARCA: logoEmpresa,
-      CEDENTE: dadosEmpresa.razao_social || 'CTM Telecom',
+      CEDENTE: dadosEmpresa.razao_social || 'BackNet',
       EMPRESACPF: dadosEmpresa.cnpj || '',
       EMPRESAENDERECO: `${dadosEmpresa.endereco || ''} ${dadosEmpresa.numero || ''}`.trim(),
       EMPRESABAIRRO: dadosEmpresa.bairro || '',
@@ -994,7 +994,7 @@ export class TituloController {
       const templateVars = {
         // Dados da empresa (Beneficiário)
         LOGOMARCA: dadosEmpresa.logo || '',
-        CEDENTE: dadosEmpresa.razao_social || 'CTM Telecom',
+        CEDENTE: dadosEmpresa.razao_social || 'BackNet',
         EMPRESACPF: dadosEmpresa.cnpj || '',
         EMPRESAENDERECO: `${dadosEmpresa.endereco || ''} ${dadosEmpresa.numero || ''}`.trim(),
         EMPRESABAIRRO: dadosEmpresa.bairro || '',

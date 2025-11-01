@@ -22,7 +22,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
+  const [status] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -194,7 +194,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     try {
       await deletePlanoMutation.mutateAsync(planoId);
       refetch();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao excluir plano:', error);
     }
   };

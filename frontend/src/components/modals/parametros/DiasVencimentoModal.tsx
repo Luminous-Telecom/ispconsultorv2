@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from '../../common/DraggableModal';
-import { DiasVencimentoService } from '../../../services/diasVencimentoService';
+import { DiasVencimentoService, DiasVencimento } from '../../../services/diasVencimentoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { AxiosError } from 'axios';
 
 interface DiasVencimentoModalProps {
   show: boolean;
@@ -21,7 +22,10 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
   const loadDiasAtivos = async () => {
     const response = await DiasVencimentoService.get();
     if (response.success && Array.isArray(response.data)) {
-      const dias = response.data.filter((item: any) => item.ativo).map((item: any) => item.dia);
+      const dias = response.data
+        .filter((item: DiasVencimento) => item.ativo)
+        .map((item: DiasVencimento) => item.dia || item.dia_padrao)
+        .filter((dia): dia is number => dia !== undefined);
       if (dias.length > 0) setDiasAtivos(dias);
     }
   };
@@ -34,8 +38,13 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
     try {
       await DiasVencimentoService.update({ dias: diasAtivos });
       success('Dias de vencimento salvos com sucesso!');
-    } catch (err: any) {
-      error(err?.response?.data?.message || 'Erro ao salvar dias de vencimento');
+    } catch (err: unknown) {
+      if (err instanceof Error && 'response' in err) {
+        const axiosError = err as AxiosError<{ message?: string }>;
+        error(axiosError.response?.data?.message || 'Erro ao salvar dias de vencimento');
+      } else {
+        error('Erro ao salvar dias de vencimento');
+      }
     }
   };
 

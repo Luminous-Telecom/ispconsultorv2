@@ -120,7 +120,7 @@ export default class VariablePlugin extends Plugin {
         // Usar dados do backend diretamente
         const categories = variaveisData;
 
-        Object.entries(categories).forEach(([categoryKey, categoryData]: [string, CategoriaVariaveis]) => {
+        Object.entries(categories).forEach(([_categoryKey, categoryData]: [string, CategoriaVariaveis]) => {
           if (categoryData.variaveis && categoryData.variaveis.length > 0) {
             // Adicionar categoria
             const categoryDiv = document.createElement('div');

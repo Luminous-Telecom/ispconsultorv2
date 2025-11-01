@@ -22,31 +22,31 @@ export class ParametroService {
   // Listar todos os parâmetros
   static async getParametros(categoria?: string): Promise<{ success: boolean; data: Parametro[] }> {
     const url = categoria ? `/parametros/categoria/${categoria}` : '/parametros';
-    const response = await apiService.get<any>(url);
+    const response = await apiService.get<{ success: boolean; data: Parametro[] }>(url);
     return response;
   }
 
   // Obter parâmetro por chave
   static async getParametro(chave: string): Promise<{ success: boolean; data: Parametro }> {
-    const response = await apiService.get<any>(`/parametros/${chave}`);
+    const response = await apiService.get<{ success: boolean; data: Parametro }>(`/parametros/${chave}`);
     return response;
   }
 
   // Atualizar parâmetro
   static async updateParametro(chave: string, data: { valor: string; ativo?: boolean }): Promise<{ success: boolean; message: string; data: Parametro }> {
-    const response = await apiService.put<any>(`/parametros/${chave}`, data);
+    const response = await apiService.put<{ success: boolean; message: string; data: Parametro }>(`/parametros/${chave}`, data);
     return response;
   }
 
   // Atualizar múltiplos parâmetros
-  static async updateParametros(parametros: ParametroUpdate[]): Promise<{ success: boolean; message: string; data: any[] }> {
-    const response = await apiService.put<any>('/parametros', { parametros });
+  static async updateParametros(parametros: ParametroUpdate[]): Promise<{ success: boolean; message: string; data: Parametro[] }> {
+    const response = await apiService.put<{ success: boolean; message: string; data: Parametro[] }>('/parametros', { parametros });
     return response;
   }
 
   // Resetar parâmetros para valores padrão
   static async resetDefaults(): Promise<{ success: boolean; message: string; data: Parametro[] }> {
-    const response = await apiService.post<any>('/parametros/reset-defaults');
+    const response = await apiService.post<{ success: boolean; message: string; data: Parametro[] }>('/parametros/reset-defaults');
     return response;
   }
 
@@ -72,7 +72,7 @@ export class ParametroService {
   }
 
   // Obter valor de parâmetro como tipo específico
-  static async getValorParametro<T = any>(chave: string, tipo: 'string' | 'number' | 'boolean' | 'json' = 'string'): Promise<T | null> {
+  static async getValorParametro<T = unknown>(chave: string, tipo: 'string' | 'number' | 'boolean' | 'json' = 'string'): Promise<T | null> {
     try {
       const response = await this.getParametro(chave);
       
@@ -104,7 +104,7 @@ export class ParametroService {
   }
 
   // Atualizar valor de parâmetro
-  static async setValorParametro(chave: string, valor: any): Promise<boolean> {
+  static async setValorParametro(chave: string, valor: string | number | boolean): Promise<boolean> {
     try {
       const response = await this.updateParametro(chave, { valor: valor.toString() });
       return response.success;

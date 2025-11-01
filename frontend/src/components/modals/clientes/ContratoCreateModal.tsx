@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useCreateContrato, CreateContratoData } from '../../../hooks/useContratos';
@@ -7,9 +6,10 @@ import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
 import { useQuery } from '@tanstack/react-query';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
-import { DiasVencimentoService } from '../../../services/diasVencimentoService';
+import { DiasVencimentoService, DiasVencimento } from '../../../services/diasVencimentoService';
 import { Plano, Banco } from '../../../types';
 import { DocumentoSistema } from '../../../services/documentoSistemaService';
+import { FormValue } from '../../../types/common';
 import PlanoListModal from '../planos/PlanoListModal';
 import BancoListModal from '../bancos/BancoListModal';
 import ModeloContratoSelectModal from '../parametros/ModeloContratoSelectModal';
@@ -59,7 +59,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     modelo_contrato_id: 0
   });
 
-  const [errors, setErrors] = useState<Partial<ContratoForm>>({});
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const { success, error } = useNotificationContext();
   
   // Hooks para buscar dados
@@ -90,9 +90,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
   const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
   
   // Objetos selecionados
-  const [planoSelecionado, setPlanoSelecionado] = useState<any>(null);
-  const [bancoSelecionado, setBancoSelecionado] = useState<any>(null);
-  const [modeloContratoSelecionado, setModeloContratoSelecionado] = useState<any>(null);
+  const [planoSelecionado, setPlanoSelecionado] = useState<Plano | null>(null);
 
   // Limpar formulário quando modal fechar
   React.useEffect(() => {
@@ -115,7 +113,9 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     }
   }, [show]);
 
-  const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean) => {
+  const handleInputChange = (field: keyof ContratoForm, value?: FormValue) => {
+    if (value === undefined || value === null) return;
+    
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -130,14 +130,16 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: any = {};
+    const newErrors: Record<string, string | undefined> = {};
 
     if (!formData.plano_id) newErrors.plano_id = 'Plano é obrigatório';
     if (!formData.data_inicio) newErrors.data_inicio = 'Data de início é obrigatória';
     if (!formData.modelo_contrato_id || formData.modelo_contrato_id === 0) {
       newErrors.modelo_contrato_id = 'Modelo de contrato é obrigatório';
     }
-    if (!formData.dia_vencimento_id || formData.dia_vencimento_id === 0) newErrors.dia_vencimento_id = 'Dia de vencimento é obrigatório';
+    if (!formData.dia_vencimento_id || formData.dia_vencimento_id === 0) {
+      newErrors.dia_vencimento_id = 'Dia de vencimento é obrigatório';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -185,20 +187,18 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
     onClose();
   };
 
-  const handlePlanoSelect = (plano: any) => {
+  const handlePlanoSelect = (plano: Plano) => {
     setPlanoSelecionado(plano);
     setFormData(prev => ({ ...prev, plano_id: plano.id }));
     setShowPlanoModal(false);
   };
 
-  const handleBancoSelect = (banco: any) => {
-    setBancoSelecionado(banco);
+  const handleBancoSelect = (banco: Banco) => {
     setFormData(prev => ({ ...prev, conta_boleto: banco.id }));
     setShowBancoModal(false);
   };
 
-  const handleModeloContratoSelect = (modelo: any) => {
-    setModeloContratoSelecionado(modelo);
+  const handleModeloContratoSelect = (modelo: DocumentoSistema) => {
     setFormData(prev => ({ ...prev, modelo_contrato_id: modelo.id }));
     setShowModeloContratoModal(false);
   };
@@ -237,7 +237,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               value={formData.plano_id || 0}
               onChange={(value) => setFormData(prev => ({ ...prev, plano_id: value }))}
               onShowModal={() => setShowPlanoModal(true)}
-              entities={planos.map((p: any) => ({
+              entities={planos.map((p: Plano) => ({
                 id: p.id,
                 nome: p.nome_plano
               }))}
@@ -276,7 +276,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 required={true}
                 size="md"
                 value={formData.data_inicio}
-                onChange={(value, name) => handleInputChange('data_inicio', value)}
+                onChange={(value, _name) => handleInputChange('data_inicio', value)}
                 error={errors.data_inicio}
                 isInvalid={!!errors.data_inicio}
                 disabled={createContratoMutation.isPending}
@@ -292,7 +292,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 label="Data de Fim"
                 size="md"
                 value={formData.data_fim}
-                onChange={(value, name) => handleInputChange('data_fim', value)}
+                onChange={(value, _name) => handleInputChange('data_fim', value)}
                 disabled={createContratoMutation.isPending}
               />
             </div>
@@ -309,7 +309,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 placeholder="0.00"
                 size="md"
                 value={formData.desconto_percentual || ''}
-                onChange={(value, name) => {
+                onChange={(value, _name) => {
                   const percentual = typeof value === 'string' ? parseFloat(value) || 0 : (value as number);
                   setFormData(prev => ({ ...prev, desconto_percentual: percentual }));
                   if (planoSelecionado?.valor_mensal) {
@@ -335,7 +335,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 placeholder="0.00"
                 size="md"
                 value={formData.desconto_valor || ''}
-                onChange={(value, name) => {
+                onChange={(value, _name) => {
                   const valor = typeof value === 'string' ? parseFloat(value) || 0 : (value as number);
                   setFormData(prev => ({ ...prev, desconto_valor: valor }));
                   if (planoSelecionado?.valor_mensal) {
@@ -365,8 +365,8 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               >
                 <option value={0}>Selecione</option>
                 {diasVencimento
-                  .filter((item: any) => item.ativo)
-                  .map((item: any) => (
+                  .filter((item: DiasVencimento) => item.ativo)
+                  .map((item: DiasVencimento) => (
                     <option key={item.id} value={item.id}>
                       Dia {String(item.dia).padStart(2, '0')}
                     </option>
@@ -381,7 +381,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               value={formData.conta_boleto || 0}
               onChange={(value) => setFormData(prev => ({ ...prev, conta_boleto: value }))}
               onShowModal={() => setShowBancoModal(true)}
-              entities={bancos.map((b: any) => ({
+              entities={bancos.map((b: Banco) => ({
                 id: b.id,
                 nome: b.nome
               }))}
@@ -398,7 +398,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
               value={formData.modelo_contrato_id || 0}
               onChange={(value) => setFormData(prev => ({ ...prev, modelo_contrato_id: value }))}
               onShowModal={() => setShowModeloContratoModal(true)}
-              entities={modelosContrato.map((m: any) => ({
+              entities={modelosContrato.map((m: DocumentoSistema) => ({
                 id: m.id,
                 nome: m.nome
               }))}
@@ -420,7 +420,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
                 label="Validade do Desconto"
                 size="md"
                 value={formData.data_validade_desconto}
-                onChange={(value, name) => handleInputChange('data_validade_desconto', value)}
+                onChange={(value, _name) => handleInputChange('data_validade_desconto', value)}
                 disabled={createContratoMutation.isPending}
               />
             </div>
@@ -454,7 +454,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
             placeholder="Observações adicionais sobre o contrato"
             size="sm"
             value={formData.observacoes}
-            onChange={(e: any) => handleInputChange('observacoes', e.value)}
+            onChange={(value) => handleInputChange('observacoes', typeof value === 'string' ? value : '')}
             disabled={createContratoMutation.isPending}
             rows={3}
           />
@@ -480,7 +480,7 @@ const ContratoCreateModal: React.FC<ContratoCreateModalProps> = ({
       <ModeloContratoSelectModal
         show={showModeloContratoModal}
         onClose={() => setShowModeloContratoModal(false)}
-        onSelectModelo={handleModeloContratoSelect}
+        onSelect={handleModeloContratoSelect}
         title="Selecionar Modelo de Contrato"
       />
     </DraggableModal>

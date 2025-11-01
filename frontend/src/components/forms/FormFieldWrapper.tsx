@@ -19,7 +19,6 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
     isValid,
     isInvalid,
     onChange,
-    onBlur,
   } = useFormField(field.name);
 
   return (

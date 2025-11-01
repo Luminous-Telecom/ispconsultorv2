@@ -133,11 +133,14 @@ export interface UseNotificationReturn {
   loading: (message: string, options?: Partial<NotificationConfig>) => string;
 }
 
+// Tipos para dados de eventos
+export type NotificationEventData = Record<string, string | number | boolean | null | undefined>;
+
 // Tipos para eventos
 export interface NotificationEvent {
   type: 'add' | 'remove' | 'update' | 'pause' | 'resume' | 'clear' | 'click' | 'action';
   notificationId: string;
-  data?: any;
+  data?: NotificationEventData;
   action?: NotificationAction;
 }
 

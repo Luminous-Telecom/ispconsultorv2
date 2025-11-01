@@ -3,6 +3,7 @@ import { ClienteService } from '../services/clienteService';
 import { UpdateCliente, ClienteFilters } from '../types';
 import { useNotificationContext } from '../contexts/NotificationContext';
 import { CACHE_CONFIG } from '../config/api';
+import { AxiosError } from 'axios';
 
 // Para React Query v5, use gcTime ao invés de cacheTime
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
@@ -52,8 +53,9 @@ export const useCreateCliente = () => {
       queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
       success('Cliente criado com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar cliente');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao criar cliente');
     },
   });
 };
@@ -72,8 +74,9 @@ export const useUpdateCliente = () => {
       queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
       success('Cliente atualizado com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao atualizar cliente');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao atualizar cliente');
     },
   });
 };
@@ -90,8 +93,9 @@ export const useDeleteCliente = () => {
       queryClient.invalidateQueries({ queryKey: ['clientes-ativos'] });
       success('Cliente excluído com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao excluir cliente');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao excluir cliente');
     },
   });
 };

@@ -1,21 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Cliente } from '../../../types';
+import { FormValue } from '../../../types/common';
 
 interface ClienteDadosBasicosProps {
-  cliente: any;
-  onDataChange: (field: string, value: any) => void;
+  cliente: Cliente;
+  onDataChange: (field: string, value: FormValue) => void;
 }
 
 const ClienteDadosBasicos: React.FC<ClienteDadosBasicosProps> = ({ 
   cliente, 
   onDataChange 
 }) => {
-  const [isEditing, setIsEditing] = useState(true);
+  const isEditing = true;
 
-  const handleEdit = () => {
-    setIsEditing(!isEditing);
-  };
-
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: FormValue) => {
     onDataChange(field, value);
   };
 

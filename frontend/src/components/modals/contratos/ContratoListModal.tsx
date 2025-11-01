@@ -8,6 +8,7 @@ import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import ContratoCreateModal from '../clientes/ContratoCreateModal';
 import ContratoEditModal from '../clientes/ContratoEditModal';
+import { AxiosError } from 'axios';
 
 interface ContratoListModalProps {
   show: boolean;
@@ -23,14 +24,14 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   title = "Contratos"
 }) => {
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
+  const [page] = useState(1);
+  const [limit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
-  const [selectedItems, setSelectedItems] = useState<Contrato[]>([]);
+  const [, setSelectedItems] = useState<Contrato[]>([]);
   
   const { success, error } = useNotificationContext();
   
@@ -49,27 +50,16 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       await deleteContratoMutation.mutateAsync(id);
       success('Contrato excluído com sucesso!');
       refetch();
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || 
-                          err?.response?.data?.error ||
-                          'Erro ao excluir contrato';
-      error(errorMessage);
-    }
-  };
-
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
-  const handleRowClick = (contrato: Contrato) => {
-    if (onSelectContrato) {
-      onSelectContrato(contrato);
-      onClose();
+    } catch (err: unknown) {
+      if (err instanceof Error && 'response' in err) {
+        const axiosError = err as AxiosError<{ message?: string; error?: string }>;
+        const errorMessage = axiosError.response?.data?.message || 
+                            axiosError.response?.data?.error ||
+                            'Erro ao excluir contrato';
+        error(errorMessage);
+      } else {
+        error('Erro ao excluir contrato');
+      }
     }
   };
 
@@ -91,8 +81,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     
     // Aplicar ordenação
     filtered.sort((a, b) => {
-      let aVal: any = a[sortColumn as keyof Contrato];
-      let bVal: any = b[sortColumn as keyof Contrato];
+      let aVal: string | number | null | undefined = a[sortColumn as keyof Contrato] as string | number | null | undefined;
+      let bVal: string | number | null | undefined = b[sortColumn as keyof Contrato] as string | number | null | undefined;
       
       // Tratamento especial para campos aninhados
       if (sortColumn === 'cliente') {
@@ -205,14 +195,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     }
   ];
 
-  // Criar paginação manual para client-side
-  const pagination = {
-    from: (page - 1) * limit + 1,
-    to: Math.min(page * limit, filteredData.length),
-    total: filteredData.length,
-    current_page: page,
-    last_page: Math.ceil(filteredData.length / limit)
-  };
 
   // Removido headerActions - botões agora ficam apenas na div interna do Table
 
@@ -251,6 +233,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           }}
           onSelectionChange={setSelectedItems}
           onSearch={setSearch}
+          onRefresh={refetch}
         />
       </div>
 

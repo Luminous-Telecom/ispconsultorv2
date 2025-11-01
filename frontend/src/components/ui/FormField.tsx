@@ -1,5 +1,6 @@
 import React from 'react';
 import { BaseComponentProps, ValidationProps, TooltipProps } from './types';
+import { FormValue, ChangeHandler } from '../../types/common';
 import Input from './Input';
 import Select from './Select';
 import Checkbox from './Checkbox';
@@ -10,8 +11,8 @@ interface FormFieldProps extends BaseComponentProps, ValidationProps, TooltipPro
   type?: FieldType;
   label?: string;
   name: string;
-  value?: any;
-  onChange?: (value: any, name: string) => void;
+  value?: FormValue;
+  onChange?: ChangeHandler<FormValue>;
   placeholder?: string;
   required?: boolean;
   description?: string;
@@ -140,18 +141,33 @@ const FormField: React.FC<FormFieldProps> = ({
   };
 
   // Handler para onChange
-  const handleChange = (changeValue: any, changeName?: string) => {
+  const handleChange = (changeValue: FormValue | { value: FormValue }, changeName?: string) => {
     // O Input passa um objeto {value, name, event}, precisamos extrair apenas o value
-    let actualValue = changeValue;
+    let actualValue: FormValue = typeof changeValue === 'object' && changeValue !== null && 'value' in changeValue 
+      ? changeValue.value 
+      : changeValue;
     
-    // Se é um objeto com propriedade 'value', extrair o valor
-    if (changeValue && typeof changeValue === 'object' && 'value' in changeValue) {
-      actualValue = changeValue.value;
-    }
-    
-    if (onChange) {
+    if (onChange && actualValue !== undefined) {
       onChange(actualValue, changeName || name);
     }
+  };
+
+  // Converter FormValue para string | number (para Input/Select)
+  const convertToInputValue = (val: FormValue): string | number | undefined => {
+    if (val === null || val === undefined) return undefined;
+    return val as string | number;
+  };
+
+  // Converter FormValue para boolean (para Checkbox)
+  const convertToBoolean = (val: FormValue): boolean | undefined => {
+    if (val === null || val === undefined) return undefined;
+    return val as boolean;
+  };
+
+  // Converter FormValue para string | number | readonly string[] (para textarea)
+  const convertToTextareaValue = (val: FormValue): string | number | readonly string[] | undefined => {
+    if (val === null || val === undefined) return undefined;
+    return val as string | number | readonly string[];
   };
 
   // Renderizar label
@@ -193,8 +209,6 @@ const FormField: React.FC<FormFieldProps> = ({
     const commonProps = {
       id: fieldId,
       name,
-      value,
-      onChange: handleChange,
       placeholder,
       required,
       disabled,
@@ -214,6 +228,8 @@ const FormField: React.FC<FormFieldProps> = ({
         return (
           <Select
             {...commonProps}
+            value={convertToInputValue(value)}
+            onChange={handleChange}
             options={options}
             multiple={multiple}
             searchable={searchable}
@@ -228,7 +244,7 @@ const FormField: React.FC<FormFieldProps> = ({
         return (
           <Checkbox
             {...commonProps}
-            checked={value}
+            checked={convertToBoolean(value)}
             label={label}
             description={description}
             inline={inline}
@@ -243,7 +259,7 @@ const FormField: React.FC<FormFieldProps> = ({
           <textarea
             id={fieldId}
             name={name}
-            value={value}
+            value={convertToTextareaValue(value)}
             onChange={(e) => handleChange(e.target.value, name)}
             placeholder={placeholder}
             required={required}
@@ -269,7 +285,12 @@ const FormField: React.FC<FormFieldProps> = ({
             id={fieldId}
             name={name}
             type="file"
-            onChange={(e) => handleChange(e.target.files?.[0] || null, name)}
+            onChange={(e) => {
+              const file = e.target.files?.[0] || null;
+              if (onChange && file) {
+                onChange(file, name);
+              }
+            }}
             required={required}
             disabled={disabled}
             accept={accept}
@@ -284,6 +305,8 @@ const FormField: React.FC<FormFieldProps> = ({
           <Input
             {...commonProps}
             type={type}
+            value={convertToInputValue(value)}
+            onChange={handleChange}
             min={min}
             max={max}
             step={step}

@@ -22,11 +22,11 @@ export interface TermoFormData {
   termoCadastradoId: number;
 }
 
-export interface BulkAction {
+export interface BulkAction<T = Record<string, unknown>> {
   label: string;
-  action?: (selectedItems: any[]) => void;
+  action?: (selectedItems: T[]) => void;
   variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
-  disabled?: (selectedItems: any[]) => boolean;
+  disabled?: (selectedItems: T[]) => boolean;
   dropdown?: {
     label: string;
     action: () => void;
@@ -56,7 +56,7 @@ export interface ContratoEditModalState {
   limitTermosModal: number;
   sortColumnTermosModal: string;
   sortDirectionTermosModal: 'asc' | 'desc';
-  termoSelecionado: any;
+  termoSelecionado: TermoContrato | null;
   
   // Financial
   showCancelados: boolean;
@@ -65,19 +65,19 @@ export interface ContratoEditModalState {
   limit: number;
   sortColumn: string;
   sortDirection: 'asc' | 'desc';
-  selectedItems: any[];
+  selectedItems: unknown[];
   
   // Terms table
   showInativos: boolean;
   searchTermos: string;
-  selectedTermosItems: any[];
+  selectedTermosItems: TermoContrato[];
   
   // Modals
   showTituloCreateModal: boolean;
   showTituloEditModal: boolean;
   showReceberModal: boolean;
   selectedTituloId: number | null;
-  selectedParcela: any;
+  selectedParcela: unknown | null;
   
   // Print
   showPreview: boolean;
@@ -94,5 +94,5 @@ export interface ContratoEditModalState {
   
   // Double click
   lastClickTime: number;
-  lastClickedItem: any;
+  lastClickedItem: unknown | null;
 }

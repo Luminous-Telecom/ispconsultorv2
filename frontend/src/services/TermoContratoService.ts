@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { Contrato } from '../types';
 
 export interface TermoContrato {
   id: number;
@@ -13,7 +14,7 @@ export interface TermoContrato {
   ativo: boolean;
   created_at: Date;
   updated_at: Date;
-  contrato?: any;
+  contrato?: Contrato;
   modeloTermo?: {
     id: number;
     nome: string;
@@ -33,7 +34,7 @@ export interface UpdateTermoContratoData extends Partial<CreateTermoContratoData
 export class TermoContratoService {
   static async getByContrato(contratoId: number): Promise<TermoContrato[]> {
     const response = await apiService.get<{ success: boolean; data: TermoContrato[] }>(`/termos-contrato/contrato/${contratoId}`);
-    return (response as any).data || [];
+    return response.data || [];
   }
 
   static async getById(id: number): Promise<TermoContrato> {
@@ -43,7 +44,7 @@ export class TermoContratoService {
 
   static async create(contratoId: number, data: CreateTermoContratoData): Promise<TermoContrato> {
     const response = await apiService.post<{ success: boolean; message: string; data: TermoContrato }>(`/termos-contrato/contrato/${contratoId}`, data);
-    return (response as any).data || response;
+    return response.data;
   }
 
   static async update(id: number, data: UpdateTermoContratoData): Promise<TermoContrato> {
@@ -66,6 +67,6 @@ export class TermoContratoService {
 
   static async getAtivos(): Promise<TermoContrato[]> {
     const response = await apiService.get<{ success: boolean; data: TermoContrato[] }>('/termos-contrato/ativos');
-    return (response as any).data || [];
+    return response.data || [];
   }
 }

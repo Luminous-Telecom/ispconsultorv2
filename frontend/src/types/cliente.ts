@@ -36,15 +36,15 @@ export interface TituloItem {
   data_vencimento: string;
   data_pagamento: string | null;
   charge_id: string | null;
-  cliente?: any;
-  carne?: any;
+  cliente?: unknown;
+  carne?: unknown;
 }
 
-export interface BulkActionItem {
+export interface BulkActionItem<T = unknown> {
   label: string;
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
-  disabled?: boolean | ((selectedItems: any[]) => boolean);
-  onClick?: (selectedItems: any[]) => void;
+  disabled?: boolean | ((selectedItems: T[]) => boolean);
+  onClick?: (selectedItems: T[]) => void;
   dropdown?: {
     label: string;
     action: () => void;

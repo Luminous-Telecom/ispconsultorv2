@@ -1,18 +1,20 @@
 import React from 'react';
 import Table from '../../../../tables/Table';
 import { BulkAction } from '../types';
+import { Titulo } from '../../../../../types/entities';
+import { TableColumn } from '../../../../tables/types';
 
 interface FinanceiroTabProps {
   isLoading: boolean;
-  bulkActions: BulkAction[];
+  bulkActions: BulkAction<Titulo>[];
   limit: number;
   setLimit: (value: number) => void;
   page: number;
   setPage: (value: number) => void;
-  sortedData: any[];
-  selectedItems: any[];
-  setSelectedItems: (items: any[]) => void;
-  columns: any[]; 
+  sortedData: Titulo[];
+  selectedItems: Titulo[];
+  setSelectedItems: (items: Titulo[]) => void;
+  columns: TableColumn<Titulo>[]; 
   isGeneratingPdf: boolean;
   onRefresh?: () => void;
 }
@@ -25,7 +27,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   page,
   setPage,
   sortedData,
-  selectedItems,
+  selectedItems: _selectedItems,
   setSelectedItems,
   columns,
   isGeneratingPdf,
@@ -75,13 +77,13 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             <div className="d-flex gap-4">
               <div className="text-end">
                 <div className="small text-muted">Valor:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                  return sum + Number(item.valor || item.valor_parcela || 0);
+                <strong>R$ {sortedData.reduce((sum: number, item: Titulo) => {
+                  return sum + Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0);
                 }, 0).toFixed(2)}</strong>
               </div>
               <div className="text-end">
                 <div className="small text-muted">Valor baixado:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                <strong>R$ {sortedData.reduce((sum: number, item: Titulo) => {
                   if (item.pago && item.status === 'pago') {
                     return sum + Number(item.valor_pago || 0);
                   }
@@ -90,14 +92,14 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               </div>
               <div className="text-end">
                 <div className="small text-muted">Valor aberto:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                  return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || item.valor_parcela || 0));
+                <strong>R$ {sortedData.reduce((sum: number, item: Titulo) => {
+                  return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0));
                 }, 0).toFixed(2)}</strong>
               </div>
               <div className="text-end">
                 <div className="small text-muted">Valor cancelado:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: any) => {
-                  return sum + (item.status === 'cancelado' ? Number(item.valor || item.valor_parcela || 0) : 0);
+                <strong>R$ {sortedData.reduce((sum: number, item: Titulo) => {
+                  return sum + (item.status === 'cancelado' ? Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0) : 0);
                 }, 0).toFixed(2)}</strong>
               </div>
             </div>

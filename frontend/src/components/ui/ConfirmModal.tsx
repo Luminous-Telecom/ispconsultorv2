@@ -30,7 +30,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelVariant = 'secondary',
   onConfirm,
   onCancel,
-  onClose,
+  onClose: _onClose,
   loading = false,
   icon,
   size = 'md',

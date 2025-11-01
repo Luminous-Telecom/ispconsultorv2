@@ -34,7 +34,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   disabled = false,
   loading = false,
   icon,
-  iconPosition = 'right',
+  iconPosition: _iconPosition = 'right',
   placement = 'bottom-start',
   trigger = 'click',
   closeOnItemClick = true,

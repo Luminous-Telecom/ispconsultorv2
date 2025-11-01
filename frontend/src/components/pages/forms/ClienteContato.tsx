@@ -1,21 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Cliente } from '../../../types';
+import { FormValue } from '../../../types/common';
 
 interface ClienteContatoProps {
-  cliente: any;
-  onDataChange: (field: string, value: any) => void;
+  cliente: Cliente;
+  onDataChange: (field: string, value: FormValue) => void;
 }
 
 const ClienteContato: React.FC<ClienteContatoProps> = ({ 
   cliente, 
   onDataChange 
 }) => {
-  const [isEditing, setIsEditing] = useState(true);
-
-  const handleEdit = () => {
-    setIsEditing(!isEditing);
-  };
-
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: FormValue) => {
     onDataChange(field, value);
   };
 
@@ -34,10 +30,6 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
       </div>
 
       <div className="row g-1">
-
-
-
-
           <div className="col-md-6">
             <label htmlFor="cliente-telefone" className="form-label small text-muted">Telefone</label>
             <div className="input-group">
@@ -49,7 +41,6 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
                 className="form-control form-control-sm"
                 value={cliente.telefone || ''}
                 onChange={(e) => handleInputChange('telefone', e.target.value)}
-                disabled={!isEditing}
               />
               <button className="btn btn-outline-secondary" type="button">
                 <i className="bi bi-send"></i>
@@ -68,7 +59,6 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
                 className="form-control form-control-sm"
                 value={cliente.whatsapp || ''}
                 onChange={(e) => handleInputChange('whatsapp', e.target.value)}
-                disabled={!isEditing}
               />
               <button className="btn btn-outline-success" type="button">
                 <i className="bi bi-whatsapp"></i>
@@ -90,45 +80,8 @@ const ClienteContato: React.FC<ClienteContatoProps> = ({
                 className="form-control form-control-sm"
                 value={cliente.email || ''}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={!isEditing}
               />
             </div>
-          </div>
-
-          <div className="col-12">
-            <h6 className="mb-3">Central do Assinante</h6>
-          </div>
-
-          <div className="col-md-6">
-            <label htmlFor="cliente-login" className="form-label small text-muted">Login</label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="bi bi-envelope"></i>
-              </span>
-              <input
-                type="text"
-                id="cliente-login"
-                name="login"
-                className="form-control form-control-sm"
-                value={cliente.login || ''}
-                onChange={(e) => handleInputChange('login', e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
-
-          <div className="col-md-6">
-            <label htmlFor="cliente-senha" className="form-label small text-muted">Senha</label>
-            <input
-              type="password"
-              id="cliente-senha"
-              name="senha"
-              autoComplete="new-password"
-              className="form-control form-control-sm"
-              value={cliente.senha || ''}
-              onChange={(e) => handleInputChange('senha', e.target.value)}
-              disabled={!isEditing}
-            />
           </div>
 
         </div>

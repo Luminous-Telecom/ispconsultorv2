@@ -1,7 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { apiService } from '../../../services/api';
 
 interface Atualizacao {
@@ -17,7 +16,6 @@ interface AtualizacoesModalProps {
 }
 
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) => {
-  const { addNotification } = useNotificationContext();
 
   // Query para buscar atualizações
   const { data: atualizacoes, isLoading, error } = useQuery({
@@ -100,9 +98,8 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {[...atualizacoes].reverse().map((atualizacao: Atualizacao, index: number, reversedArray) => {
+              {[...atualizacoes].reverse().map((atualizacao: Atualizacao) => {
                 const badge = getTipoBadge(atualizacao.tipo);
-                const isLatestVersion = index === reversedArray.length - 1; // Última versão no array invertido é a mais recente
                 return (
                   <div key={atualizacao.versao} className="border" style={{ 
                     borderRadius: '0.5rem',

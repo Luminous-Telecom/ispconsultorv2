@@ -11,6 +11,8 @@ import FormField from '../../ui/FormField';
 import EntitySelectField from '../../ui/EntitySelectField';
 import ClienteListModal from '../clientes/ClienteListModal';
 import PlanoListModal from '../planos/PlanoListModal';
+import { CarneParcela, Cliente, Plano } from '../../../types';
+import { FormValue } from '../../../types/common';
 
 interface TituloForm {
   cliente_id: number;
@@ -85,7 +87,8 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
         : '';
 
       setFormData({
-        cliente_id: (tituloData as any).cliente_id || 0,
+        cliente_id: (tituloData as CarneParcela & { cliente_id?: number }).cliente_id || 
+                     (tituloData.carne?.cliente_id) || 0,
         plano_id: tituloData.plano_id || 0,
         data_vencimento: dataVencimento,
         observacoes: tituloData.observacoes || '',
@@ -95,7 +98,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
 
   // Mutation para atualizar parcela
   const updateParcelaMutation = useMutation({
-    mutationFn: (data: TituloForm) => TituloService.update(parcelaId, data as any),
+    mutationFn: (data: TituloForm) => TituloService.update(parcelaId, data as Partial<CarneParcela>),
     onSuccess: () => {
       success('Parcela atualizada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
@@ -107,7 +110,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
       onSuccess?.();
       // Não fechar o modal automaticamente
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       console.error('Erro ao atualizar parcela:', err);
       error('Erro ao atualizar parcela. Tente novamente.');
     }
@@ -208,9 +211,9 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
               value={formData.cliente_id}
               onChange={(value) => handleInputChange('cliente_id', value)}
               onShowModal={clienteSelect.openModal}
-              entities={clientes?.data?.map((cliente: any) => ({
+              entities={clientes?.data?.map((cliente: Cliente) => ({
                 id: cliente.id,
-                nome: `${cliente.nome || cliente.razao_social} - ${cliente.cpf_cnpj || cliente.cnpj}`
+                nome: `${cliente.nome_fantasia || cliente.razao_social} - ${cliente.cnpj}`
               })) || []}
               label="Cliente"
               error={errors.cliente_id}
@@ -222,7 +225,7 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
               value={formData.plano_id}
               onChange={(value) => handleInputChange('plano_id', value)}
               onShowModal={planoSelect.openModal}
-              entities={planos?.data?.map((plano: any) => ({
+              entities={planos?.data?.map((plano: Plano) => ({
                 id: plano.id,
                 nome: plano.nome_plano
               })) || []}
@@ -243,7 +246,12 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
                 required={true}
                 size="sm"
                 value={formData.data_vencimento}
-                onChange={(e: any) => handleInputChange('data_vencimento', e.value)}
+                onChange={(value: FormValue) => {
+                  const stringValue = typeof value === 'object' && value !== null && 'value' in value
+                    ? String((value as { value: FormValue }).value)
+                    : String(value);
+                  handleInputChange('data_vencimento', stringValue);
+                }}
                 error={errors.data_vencimento}
                 isInvalid={!!errors.data_vencimento}
                 disabled={updateParcelaMutation.isPending}
@@ -262,7 +270,12 @@ const TituloEditModal: React.FC<TituloEditModalProps> = ({
             placeholder="Observações sobre a parcela"
             size="sm"
             value={formData.observacoes}
-            onChange={(e: any) => handleInputChange('observacoes', e.value)}
+            onChange={(value: FormValue) => {
+              const stringValue = typeof value === 'object' && value !== null && 'value' in value
+                ? String((value as { value: FormValue }).value)
+                : String(value || '');
+              handleInputChange('observacoes', stringValue);
+            }}
             error={errors.observacoes}
             isInvalid={!!errors.observacoes}
             disabled={updateParcelaMutation.isPending}

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ParametrosService } from '../../../services/parametrosService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormReset } from '../../../hooks/useFormReset';
+import { AxiosError } from 'axios';
 
 interface RecursosSistemaModalProps {
   show: boolean;
@@ -51,13 +52,7 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
       auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
       total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
     };
-  }, [
-    parametros?.data?.validar_cpf_cnpj,
-    parametros?.data?.gerar_titulos_automatico,
-    parametros?.data?.titulos_vence_sabado,
-    parametros?.data?.auto_lancamento_titulos,
-    parametros?.data?.total_titulos_financeiro
-  ]);
+  }, [parametros?.data]);
 
   // Usar hook personalizado para reset do formulário
   useFormReset({
@@ -73,8 +68,9 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
       success('Parâmetros atualizados com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['parametros'] });
     },
-    onError: (error: any) => {
-      showError(error?.response?.data?.message || 'Erro ao atualizar parâmetros');
+    onError: (error: unknown) => {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      showError(axiosError?.response?.data?.message || 'Erro ao atualizar parâmetros');
     }
   });
 

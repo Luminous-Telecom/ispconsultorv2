@@ -67,7 +67,7 @@ const Layout: React.FC = () => {
           <div className="sidebar-logo">
             <i className="bi bi-broadcast"></i>
           </div>
-          <h1 className="sidebar-title">CTM Telecom</h1>
+          <h1 className="sidebar-title">BackNet</h1>
         </div>
         
         <nav className="sidebar-nav">

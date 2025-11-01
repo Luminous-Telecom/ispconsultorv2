@@ -117,7 +117,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
     } else {
       setFormData(initialFormData);
     }
-  }, [servidorAtivo]);
+  }, [servidorAtivo, initialFormData]);
 
   useEffect(() => {
     if (mensagemData) {
@@ -268,7 +268,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                       required={true}
                       size="sm"
                       value={formData.host}
-                      onChange={(value) => setFormData(prev => ({ ...prev, host: value }))}
+                      onChange={(value) => setFormData(prev => ({ ...prev, host: String(value ?? '') }))}
                     />
                   </div>
                   <div className="col-md-6">
@@ -295,7 +295,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                       required={true}
                       size="sm"
                       value={formData.usuario}
-                      onChange={(value) => setFormData(prev => ({ ...prev, usuario: value }))}
+                      onChange={(value) => setFormData(prev => ({ ...prev, usuario: String(value ?? '') }))}
                       autoComplete="username"
                     />
                   </div>
@@ -308,7 +308,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                       required={!servidorAtivo?.data}
                       size="sm"
                       value={formData.senha}
-                      onChange={(value) => setFormData(prev => ({ ...prev, senha: value }))}
+                      onChange={(value) => setFormData(prev => ({ ...prev, senha: String(value ?? '') }))}
                       autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
                     />
                     {servidorAtivo?.data && (
@@ -325,11 +325,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                       name="nome_remetente"
                       type="text"
                       label="Nome do Remetente"
-                      placeholder="CTM Telecom"
+                      placeholder="BackNet"
                       required={true}
                       size="sm"
                       value={formData.nome_remetente}
-                      onChange={(value) => setFormData(prev => ({ ...prev, nome_remetente: value }))}
+                      onChange={(value) => setFormData(prev => ({ ...prev, nome_remetente: String(value ?? '') }))}
                     />
                   </div>
                   <div className="col-md-6">
@@ -337,11 +337,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                       name="email_remetente"
                       type="email"
                       label="E-mail do Remetente"
-                      placeholder="contato@ctmtelecom.com"
+                      placeholder="contato@BackNettelecom.com"
                       required={true}
                       size="sm"
                       value={formData.email_remetente}
-                      onChange={(value) => setFormData(prev => ({ ...prev, email_remetente: value }))}
+                      onChange={(value) => setFormData(prev => ({ ...prev, email_remetente: String(value ?? '') }))}
                     />
                   </div>
                 </div>
@@ -434,7 +434,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
                     required={true}
                     size="sm"
                     value={mensagemType}
-                    onChange={(value) => setMensagemType(value)}
+                    onChange={(value) => setMensagemType(String(value ?? ''))}
                     options={[
                       { value: '10_dias_antes_vencimento', label: '10 dias antes do vencimento' },
                       { value: '05_dias_antes_vencimento', label: '05 dias antes do vencimento' },

@@ -91,10 +91,10 @@ export class BancoService {
   }
 
   // Buscar dados da API do banco
-  static async buscarDadosApi(id: number): Promise<any> {
+  static async buscarDadosApi(id: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiService.post<any>(`/bancos/${id}/buscar-dados-api`);
-      return response.data!;
+      const response = await apiService.post<{ success: boolean; message: string }>(`/bancos/${id}/buscar-dados-api`);
+      return response;
     } catch (error) {
       console.error('Erro ao buscar dados da API do banco:', error);
       throw error;

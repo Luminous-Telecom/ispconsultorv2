@@ -3,19 +3,19 @@ import DraggableModal from './DraggableModal';
 import { Table } from '../tables';
 import { ListModalProps } from '../../types/modal';
 
-function ListModal<T extends { id: any }>({
+function ListModal<T extends { id: number | string }>({
   show,
   onClose,
   config,
   data,
   loading = false,
-  selectedItems = [],
+  selectedItems: _selectedItems = [],
   onSelectionChange,
-  search = '',
+  search: _search = '',
   onSearchChange,
   pagination,
   onPageChange,
-  limit = 15,
+  limit: _limit = 15,
   onLimitChange,
   onRefresh,
   bulkActions = []

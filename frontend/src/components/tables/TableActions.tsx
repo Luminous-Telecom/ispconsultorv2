@@ -2,7 +2,7 @@ import React from 'react';
 import { TableAction, BulkAction } from './types';
 import Button from '../ui/Button';
 
-interface TableActionsProps<T = any> {
+interface TableActionsProps<T = Record<string, unknown>> {
   item?: T;
   index?: number;
   actions?: TableAction<T>[];

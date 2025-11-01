@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
 import FormField from '../../ui/FormField';
 import { useFormPrefix } from '../../../hooks/useFormId';
+import { FormValue } from '../../../types/common';
 
 interface BancoForm {
   nome: string;
@@ -188,8 +190,9 @@ const BancoModal: React.FC<BancoModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onSuccess?.();
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar banco');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao criar banco');
     }
   });
 
@@ -203,18 +206,39 @@ const BancoModal: React.FC<BancoModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       onSuccess?.();
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao atualizar banco');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao atualizar banco');
     }
   });
 
   const isPending = createBancoMutation.isPending || updateBancoMutation.isPending;
 
-  const handleInputChange = (field: keyof BancoForm, value: string | boolean | number) => {
+  const handleInputChange = (field: keyof BancoForm, value: FormValue) => {
+    // Normalizar o valor baseado no tipo esperado do campo
+    let normalizedValue: string | boolean | number;
+    
+    if (value === null || value === undefined) {
+      // Para campos string, usar string vazia; para boolean, manter o valor atual; para number, usar 0
+      const fieldType = typeof formData[field];
+      if (fieldType === 'boolean') {
+        normalizedValue = false;
+      } else if (fieldType === 'number') {
+        normalizedValue = 0;
+      } else {
+        normalizedValue = '';
+      }
+    } else if (Array.isArray(value)) {
+      // Arrays não são esperados, usar primeiro valor ou string vazia
+      normalizedValue = value.length > 0 ? String(value[0]) : '';
+    } else {
+      normalizedValue = value as string | boolean | number;
+    }
+
     setFormData(prev => {
       const newData = {
         ...prev,
-        [field]: value
+        [field]: normalizedValue
       };
       
       // Atualizar código e url_retorno quando tipo_banco mudar
@@ -225,8 +249,8 @@ const BancoModal: React.FC<BancoModalProps> = ({
           'bancario': '',
           'outros': ''
         };
-        newData.codigo = codigos[value as string] || '';
-        newData.url_retorno = `${window.location.origin}/webhook/${value}`;
+        newData.codigo = codigos[String(normalizedValue)] || '';
+        newData.url_retorno = `${window.location.origin}/webhook/${normalizedValue}`;
       }
       
       return newData;
@@ -299,8 +323,9 @@ const BancoModal: React.FC<BancoModalProps> = ({
       } else {
         setTestResult('❌ ' + (resultado.message || 'Falha no teste de conexão'));
       }
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Erro ao testar conexão';
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      const errorMessage = axiosError?.response?.data?.message || axiosError?.message || 'Erro ao testar conexão';
       setTestResult(errorMessage);
       error(errorMessage);
     }
@@ -342,7 +367,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                     placeholder="2.00"
                     size="sm"
                     value={formData.percentual_multa}
-                    onChange={(value) => handleInputChange('percentual_multa', parseFloat(value) || 0)}
+                    onChange={(value) => handleInputChange('percentual_multa', parseFloat(String(value ?? '')) || 0)}
                     disabled={isPending}
                     step={0.01}
                   />
@@ -358,7 +383,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                     placeholder="0.03"
                     size="sm"
                     value={formData.percentual_juros}
-                    onChange={(value) => handleInputChange('percentual_juros', parseFloat(value) || 0)}
+                    onChange={(value) => handleInputChange('percentual_juros', parseFloat(String(value ?? '')) || 0)}
                     disabled={isPending}
                     step={0.01}
                   />
@@ -418,7 +443,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                     placeholder="0.00"
                     size="sm"
                     value={formData.taxa_cobranca}
-                    onChange={(value) => handleInputChange('taxa_cobranca', parseFloat(value) || 0)}
+                    onChange={(value) => handleInputChange('taxa_cobranca', parseFloat(String(value ?? '')) || 0)}
                     disabled={isPending}
                     step={0.01}
                   />
@@ -548,7 +573,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                   type="checkbox"
                   label={formData.ativo ? 'Ativo' : 'Inativo'}
                   value={formData.ativo}
-                  onChange={(value: any) => handleInputChange('ativo', value)}
+                  onChange={(value) => handleInputChange('ativo', value as boolean)}
                   disabled={isPending}
                   formPrefix={formPrefix}
                   switch={true}
@@ -645,7 +670,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                       type="checkbox"
                       label="Modo Sandbox (Testes)"
                       value={formData.sandbox}
-                      onChange={(value: any) => handleInputChange('sandbox', value)}
+                      onChange={(value) => handleInputChange('sandbox', value as boolean)}
                       disabled={isPending}
                       formPrefix={formPrefix}
                       switch={true}

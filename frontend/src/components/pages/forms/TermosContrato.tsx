@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTermosContrato, useCreateTermoContrato, useUpdateTermoContrato, useMarcarTermoComoAceito, useDeactivateTermoContrato } from '../../../hooks/useTermosContrato';
+import { useTermosContrato, useCreateTermoContrato, useMarcarTermoComoAceito, useDeactivateTermoContrato } from '../../../hooks/useTermosContrato';
 import { TermoContrato, CreateTermoContratoData } from '../../../services/TermoContratoService';
 
 interface TermosContratoProps {
@@ -8,7 +8,6 @@ interface TermosContratoProps {
 
 const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [selectedTermo, setSelectedTermo] = useState<TermoContrato | null>(null);
   const [aceitoPor, setAceitoPor] = useState('');
@@ -17,9 +16,8 @@ const TermosContrato: React.FC<TermosContratoProps> = ({ contratoId }) => {
     assinado: 'NAO'
   });
 
-  const { data: termos, isLoading, refetch } = useTermosContrato(contratoId);
+  const { data: termos, isLoading } = useTermosContrato(contratoId);
   const createMutation = useCreateTermoContrato();
-  const updateMutation = useUpdateTermoContrato();
   const acceptMutation = useMarcarTermoComoAceito();
   const deactivateMutation = useDeactivateTermoContrato();
 

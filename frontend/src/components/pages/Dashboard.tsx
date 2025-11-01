@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDashboard } from '../../hooks/useDashboard';
 
+interface ChartDataItem {
+  valor?: number;
+  value?: number;
+  label?: string;
+  color?: string;
+  mes?: string;
+  [key: string]: string | number | undefined;
+}
+
 // Componente para gráfico de linha temporal com Canvas
-const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'number' }> = ({ data, title, format = 'number' }) => {
+const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'currency' | 'number' }> = ({ data, title, format = 'number' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useEffect(() => {
@@ -24,7 +33,7 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
     // Escalar contexto para device pixel ratio
     ctx.scale(dpr, dpr);
     
-    const maxValue = Math.max(...data.map(item => item.valor));
+    const maxValue = Math.max(...data.map(item => item.valor || 0));
     const chartWidth = rect.width;
     const chartHeight = 120;
     const padding = 20;
@@ -36,7 +45,8 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
     // Desenhar linha e pontos
     data.forEach((item, index) => {
       const x = (index / (data.length - 1 || 1)) * (chartWidth - padding * 2) + padding;
-      const percentage = maxValue > 0 ? item.valor / maxValue : 0;
+      const val = item.valor || 0;
+      const percentage = maxValue > 0 ? val / maxValue : 0;
       const y = chartHeight - (percentage * chartHeight) + 10;
       
         // Desenhar linha
@@ -68,12 +78,12 @@ const LineChart: React.FC<{ data: any[], title: string, format?: 'currency' | 'n
       ctx.fillStyle = 'white';
       ctx.font = 'bold 0.65rem sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(item.valor.toString(), x, adjustedTextY);
+      ctx.fillText(val.toString(), x, adjustedTextY);
       
       // Desenhar mês
       ctx.fillStyle = 'var(--text-secondary)';
       ctx.font = '0.55rem sans-serif';
-      ctx.fillText(item.mes, x, chartHeight + 28);
+      ctx.fillText(item.mes || '', x, chartHeight + 28);
     });
   }, [data, format]);
   
@@ -163,7 +173,7 @@ const Dashboard: React.FC = () => {
   const planosInativos = totalPlanos - planosAtivos;
 
   // Estatísticas de contratos
-  const totalContratos = contratos.length;
+  const _totalContratos = contratos.length;
   const contratosAtivos = contratos.filter(c => c.status === 'ativo').length;
   const contratosInativos = contratos.filter(c => c.status === 'inativo').length;
   const contratosSuspensos = contratos.filter(c => c.status === 'suspenso').length;
@@ -171,13 +181,13 @@ const Dashboard: React.FC = () => {
   // Receitas reais do backend
   const receitaTotal = (stats?.valorTotalRecebido || 0) + (stats?.valorTotalReceber || 0);
   const receitaPaga = stats?.valorTotalRecebido || 0;
-  const receitaPendente = stats?.valorTotalReceber || 0;
+  const _receitaPendente = stats?.valorTotalReceber || 0;
 
   // Métricas adicionais (usando dados reais quando disponíveis)
   // Ticket médio = valor total recebido / clientes ativos
   const ticketMedio = clientesAtivos > 0 ? receitaPaga / clientesAtivos : 0;
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
-  const receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
+  const _receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
 
   // Faturamento mensal (últimos 12 meses)
@@ -209,6 +219,7 @@ const Dashboard: React.FC = () => {
       const mesAno = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
       
       const clientesMes = clientes.filter(cliente => {
+        if (!cliente.created_at) return false;
         const dataCliente = new Date(cliente.created_at);
         return dataCliente.getMonth() === data.getMonth() && dataCliente.getFullYear() === data.getFullYear();
       }).length;
@@ -304,19 +315,19 @@ const Dashboard: React.FC = () => {
   ];
 
   // Função para renderizar gráfico de pizza simples
-  const renderPieChart = (data: any[], title: string, hiddenItems: Set<number>, onToggleItem: (index: number) => void) => {
+  const renderPieChart = (data: ChartDataItem[], title: string, hiddenItems: Set<number>, onToggleItem: (index: number) => void) => {
     const visibleData = data.filter((_, index) => !hiddenItems.has(index));
-    const total = visibleData.reduce((sum, item) => sum + item.value, 0);
+    const total = visibleData.reduce((sum, item) => sum + (item.value || 0), 0);
     
     // Construir o conic-gradient com todas as fatias
     let currentAngle = 0;
     const gradientStops = visibleData.map(item => {
-      const percentage = total > 0 ? (item.value / total) * 100 : 0;
+      const percentage = total > 0 ? ((item.value || 0) / total) * 100 : 0;
       const startAngle = currentAngle;
       const endAngle = currentAngle + (percentage * 3.6);
       currentAngle = endAngle;
       
-      return `${item.color} ${startAngle}deg ${endAngle}deg`;
+      return `${item.color || '#6c757d'} ${startAngle}deg ${endAngle}deg`;
     }).join(', ');
     
     return (
@@ -346,9 +357,9 @@ const Dashboard: React.FC = () => {
                 }}
                 onClick={() => onToggleItem(index)}
               >
-                <div className="legend-color" style={{ backgroundColor: item.color }}></div>
+                <div className="legend-color" style={{ backgroundColor: item.color || '#6c757d' }}></div>
                 <span className="legend-label">
-                  {item.label}: {title === 'Taxa de Pagamento' ? `${item.value.toFixed(1)}%` : item.value}
+                  {item.label}: {title === 'Taxa de Pagamento' ? `${(item.value || 0).toFixed(1)}%` : (item.value || 0)}
                 </span>
               </div>
             ))}
@@ -359,8 +370,8 @@ const Dashboard: React.FC = () => {
   };
 
   // Função para renderizar gráfico de barras horizontais
-  const renderBarChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
-    const maxValue = Math.max(...data.map(item => item.value));
+  const renderBarChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' = 'number') => {
+    const maxValue = Math.max(...data.map(item => item.value || 0));
     
     const formatValue = (val: number) => {
       if (format === 'currency') {
@@ -374,16 +385,16 @@ const Dashboard: React.FC = () => {
         <h6 className="chart-title">{title}</h6>
         <div className="bar-chart-horizontal">
           {data.map((item, index) => {
-            const width = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+            const width = maxValue > 0 ? ((item.value || 0) / maxValue) * 100 : 0;
             return (
               <div key={index} className="bar-item-horizontal">
                 <div className="bar-label-horizontal" title={item.label}>{item.label}</div>
                 <div className="bar-container-horizontal">
                   <div className="bar-horizontal" style={{
                     width: `${width}%`,
-                    backgroundColor: item.color
+                    backgroundColor: item.color || '#6c757d'
                   }}>
-                    <span className="bar-value-horizontal">{formatValue(item.value)}</span>
+                    <span className="bar-value-horizontal">{formatValue(item.value || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -395,7 +406,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Função para renderizar gráfico de valor único
-  const renderValueChart = (data: any[], title: string, format: 'currency' | 'number' | 'percentage' = 'number') => {
+  const renderValueChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' | 'percentage' = 'number') => {
     const value = data[0]?.value || 0;
     
     const formatValue = (val: number) => {
@@ -422,7 +433,7 @@ const Dashboard: React.FC = () => {
   };
   
   // Função para renderizar gráfico de linha temporal com Canvas
-  const renderLineChart = (data: any[], title: string, format: 'currency' | 'number' = 'number') => {
+  const renderLineChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' = 'number') => {
     return <LineChart data={data} title={title} format={format} />;
   };
 

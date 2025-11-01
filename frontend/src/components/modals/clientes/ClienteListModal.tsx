@@ -4,7 +4,6 @@ import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import ListModal from '../../common/ListModal';
 import { ClienteModal } from './index';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface Cliente {
   id: number;
@@ -29,9 +28,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   onSelectClient,
   title = "Selecionar Cliente"
 }) => {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -121,7 +118,6 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   // Hooks para gerenciar clientes
   const { data: clientesData, isLoading, refetch } = useClientes({
     search: search || undefined,
-    ativo: status ? status === 'ativo' : undefined,
     page,
     limit
   });

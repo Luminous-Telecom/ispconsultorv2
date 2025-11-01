@@ -9,6 +9,7 @@ import DocumentoModal from './DocumentoModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
+import { AxiosError } from 'axios';
 
 interface DocumentosSistemaModalProps {
   show: boolean;
@@ -21,16 +22,13 @@ type DocumentoUnion = DocumentoSistema | ModeloRecibo | ModeloCarta | ModeloTerm
 
 const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose }) => {
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
-  const [selectedDocumento, setSelectedDocumento] = useState<DocumentoUnion | null>(null);
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
   const [documentoModalMode, setDocumentoModalMode] = useState<'create' | 'edit'>('create');
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<number | null>(null);
-  const [selectedItems, setSelectedItems] = useState<DocumentoUnion[]>([]);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('created_at');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
+  const [, setSearch] = useState('');
+  const [, setSortColumn] = useState<string>('created_at');
+  const [, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const queryClient = useQueryClient();
   const { addNotification } = useNotificationContext();
@@ -75,19 +73,11 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
       addNotification('success', 'Documento excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', activeTab] });
     },
-    onError: (error: any) => {
-      addNotification('error', error.message || 'Erro ao excluir documento');
+    onError: (error: unknown) => {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      addNotification('error', axiosError?.message || axiosError?.response?.data?.message || 'Erro ao excluir documento');
     }
   });
-
-  const handleDelete = async (documentoId: number) => {
-    try {
-      await deleteDocumentoMutation.mutateAsync(documentoId);
-      refetch();
-    } catch (error) {
-      // Erro já é tratado pelo onError da mutation
-    }
-  };
 
   const handleTabChange = (newTab: TipoDocumento) => {
     setActiveTab(newTab);

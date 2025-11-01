@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Table from '../../../../tables/Table';
 import { BulkAction } from '../types';
 
@@ -9,9 +9,13 @@ interface TermosTabProps {
   setLimit: (value: number) => void;
   page: number;
   setPage: (value: number) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sortedData: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selectedTermosItems: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setSelectedTermosItems: (items: any[]) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: any[];
   isGeneratingPdf: boolean;
   onRefresh?: () => void;

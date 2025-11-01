@@ -12,7 +12,7 @@ export { useForm } from './useForm';
 export { useFormContext, useFormField } from './FormProvider';
 
 // Exportar validações
-export { ValidationRules, Patterns, CTMValidationRules, validateField, validateRule } from './ValidationRules';
+export { ValidationRules, Patterns, BackNetValidationRules, validateField, validateRule } from './ValidationRules';
 
 // Exportar tipos
 export * from './types';

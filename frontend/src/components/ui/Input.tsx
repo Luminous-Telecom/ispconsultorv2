@@ -42,7 +42,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   tooltip,
   tooltipPosition = 'top',
   value,
-  defaultValue,
+  defaultValue: _defaultValue,
   placeholder,
   name,
   onChange,

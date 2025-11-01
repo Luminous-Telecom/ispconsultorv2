@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
@@ -7,10 +7,6 @@ interface Variavel {
   descricao: string;
 }
 
-interface GrupoVariaveis {
-  titulo: string;
-  variaveis: Variavel[];
-}
 
 interface VariaveisDocumentoProps {
   onInserirVariavel?: (variavel: string) => void;
@@ -78,8 +74,9 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
       </div>
 
       <div className="accordion accordion-flush" id="accordionVariaveis">
-        {variaveisData && Object.entries(variaveisData).map(([chave, grupo]: [string, any]) => {
-          const variaveisFiltradas = filtrarVariaveis(grupo.variaveis);
+        {variaveisData && Object.entries(variaveisData).map(([chave, grupo]) => {
+          const grupoTyped = grupo as { titulo: string; variaveis: Variavel[] };
+          const variaveisFiltradas = filtrarVariaveis(grupoTyped.variaveis);
           
           if (variaveisFiltradas.length === 0 && searchTerm) return null;
 
@@ -92,7 +89,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
                   onClick={() => toggleGrupo(chave)}
                   style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                 >
-                  {grupo.titulo}
+                  {grupoTyped.titulo}
                   <span className="badge bg-secondary ms-2">{variaveisFiltradas.length}</span>
                 </button>
               </h2>

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TermoContratoService, TermoContrato, CreateTermoContratoData, UpdateTermoContratoData } from '../services/TermoContratoService';
+import { TermoContratoService, CreateTermoContratoData, UpdateTermoContratoData } from '../services/TermoContratoService';
 import { useNotificationContext } from '../contexts/NotificationContext';
+import { AxiosError } from 'axios';
 
 export const useTermosContrato = (contratoId?: number) => {
   return useQuery({
@@ -22,8 +23,9 @@ export const useCreateTermoContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       addNotification('success', 'Termo criado com sucesso');
     },
-    onError: (error: any) => {
-      addNotification('error', error.response?.data?.message || 'Erro ao criar termo');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      addNotification('error', axiosError.response?.data?.message || 'Erro ao criar termo');
     }
   });
 };
@@ -40,8 +42,9 @@ export const useUpdateTermoContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       addNotification('success', 'Termo atualizado com sucesso');
     },
-    onError: (error: any) => {
-      addNotification('error', error.response?.data?.message || 'Erro ao atualizar termo');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      addNotification('error', axiosError.response?.data?.message || 'Erro ao atualizar termo');
     }
   });
 };
@@ -58,8 +61,9 @@ export const useMarcarTermoComoAceito = () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       addNotification('success', 'Termo marcado como aceito');
     },
-    onError: (error: any) => {
-      addNotification('error', error.response?.data?.message || 'Erro ao marcar termo como aceito');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      addNotification('error', axiosError.response?.data?.message || 'Erro ao marcar termo como aceito');
     }
   });
 };
@@ -74,8 +78,9 @@ export const useDeactivateTermoContrato = () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
       addNotification('success', 'Termo desativado com sucesso');
     },
-    onError: (error: any) => {
-      addNotification('error', error.response?.data?.message || 'Erro ao desativar termo');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      addNotification('error', axiosError.response?.data?.message || 'Erro ao desativar termo');
     }
   });
 };
@@ -88,8 +93,9 @@ export const useDeleteTermoContrato = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
     },
-    onError: (error: any) => {
-      console.error('Erro ao deletar termo:', error);
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      console.error('Erro ao deletar termo:', axiosError);
     }
   });
 };

@@ -24,6 +24,7 @@ const Notification: React.FC<NotificationProps> = ({
   const notificationRef = useRef<HTMLDivElement>(null);
 
   const { config } = notification;
+  const { onShown } = config;
 
   // Animar entrada
   useEffect(() => {
@@ -32,11 +33,11 @@ const Notification: React.FC<NotificationProps> = ({
       setIsAnimating(true);
       
       // Chamar callback onShown
-      config.onShown?.();
+      onShown?.();
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [config.onShown]);
+  }, [onShown]);
 
   // Handlers de mouse
   const handleMouseEnter = () => {

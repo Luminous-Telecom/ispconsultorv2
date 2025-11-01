@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { TableFilter } from './types';
+import { FilterValue } from '../../types/common';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';
 
 interface TableFiltersProps {
   filters: TableFilter[];
-  values: Record<string, any>;
-  onFilterChange: (key: string, value: any) => void;
-  onFiltersChange: (filters: Record<string, any>) => void;
+  values: Record<string, FilterValue>;
+  onFilterChange: (key: string, value: FilterValue) => void;
+  onFiltersChange: (filters: Record<string, FilterValue>) => void;
   onClearFilters: () => void;
   className?: string;
   collapsible?: boolean;
@@ -27,7 +28,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
   showApplyButton = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(!collapsible);
-  const [pendingFilters, setPendingFilters] = useState<Record<string, any>>(values);
+  const [pendingFilters, setPendingFilters] = useState<Record<string, FilterValue>>(values);
 
   // Se não há filtros, não renderizar nada
   if (filters.length === 0) return null;

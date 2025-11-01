@@ -1,5 +1,5 @@
-import React, { createContext, useContext, ReactNode, useState, useCallback, useMemo } from 'react';
-import { NotificationProviderProps, NotificationContextValue, NotificationState, NotificationConfig, NotificationType } from './types';
+import React, { createContext, useContext } from 'react';
+import { NotificationProviderProps, NotificationContextValue } from './types';
 import { useNotification } from './useNotification';
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);

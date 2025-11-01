@@ -146,11 +146,12 @@ export const clienteValidators = {
  * @param formData - Dados do formulário
  * @returns Objeto com erros encontrados
  */
-export const validateClienteForm = (formData: Record<string, any>): Record<string, string> => {
+export const validateClienteForm = (formData: Record<string, unknown>): Record<string, string> => {
   const errors: Record<string, string> = {};
   
   Object.entries(clienteValidators).forEach(([field, validator]) => {
-    const error = validator(formData[field] || '');
+    const value = formData[field];
+    const error = validator(typeof value === 'string' ? value : '');
     if (error) {
       errors[field] = error;
     }

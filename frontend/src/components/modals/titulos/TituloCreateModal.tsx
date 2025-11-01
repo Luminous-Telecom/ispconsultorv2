@@ -5,7 +5,8 @@ import { PlanoService } from '../../../services/planoService';
 import { ClienteService } from '../../../services/clienteService';
 import { ContratoService } from '../../../services/ContratoService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { CreateCarneParcela } from '../../../types';
+import { CreateCarneParcela, Contrato, Plano } from '../../../types';
+import { FormValue } from '../../../types/common';
 import { useEntitySelectField } from '../../../hooks/useEntitySelectField';
 import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
@@ -132,7 +133,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
         hasInitializedRef.current = true;
       }
     } else if (!contratoId && clienteData?.contratos && clienteData.contratos.length > 0) {
-      const contratoAtivo = clienteData.contratos.find((contrato: any) => contrato.status === 'ativo');
+      const contratoAtivo = clienteData.contratos.find((contrato: Contrato) => contrato.status === 'ativo');
       
       if (contratoAtivo && contratoAtivo.plano_id) {
         let dataVencimento = '';
@@ -186,9 +187,11 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       
       // Não fechar o modal automaticamente
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       console.error('Erro ao criar título:', err);
-      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao criar título. Tente novamente.';
+      const errorMessage = (err as { response?: { data?: { message?: string; error?: string } } })?.response?.data?.message || 
+                           (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 
+                           'Erro ao criar título. Tente novamente.';
       error(errorMessage);
     }
   });
@@ -231,15 +234,15 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       return;
     }
 
-    const payload: any = {
+    const payload: Partial<CreateCarneParcela> & { cliente_id: number; contrato_id?: number } = {
       plano_id: formData.plano_id,
       data_vencimento: formData.data_vencimento,
-      observacoes: formData.observacoes || '',
-      desconto_percentual: (formData.desconto_percentual || 0) > 0 ? formData.desconto_percentual : null,
-      desconto_valor: (formData.desconto_valor || 0) > 0 ? formData.desconto_valor : null,
-      acrescimo_percentual: (formData.acrescimo_percentual || 0) > 0 ? formData.acrescimo_percentual : null,
-      acrescimo_valor: (formData.acrescimo_valor || 0) > 0 ? formData.acrescimo_valor : null,
-      descricao: formData.descricao || '',
+      observacoes: formData.observacoes || undefined,
+      desconto_percentual: (formData.desconto_percentual || 0) > 0 ? formData.desconto_percentual : undefined,
+      desconto_valor: (formData.desconto_valor || 0) > 0 ? formData.desconto_valor : undefined,
+      acrescimo_percentual: (formData.acrescimo_percentual || 0) > 0 ? formData.acrescimo_percentual : undefined,
+      acrescimo_valor: (formData.acrescimo_valor || 0) > 0 ? formData.acrescimo_valor : undefined,
+      descricao: formData.descricao || undefined,
       cliente_id: clienteId
     };
     
@@ -248,7 +251,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
       payload.contrato_id = contratoId;
     }
 
-    createParcelaMutation.mutate(payload as any);
+    createParcelaMutation.mutate(payload as CreateCarneParcela);
   };
 
   const handleCancel = () => {
@@ -288,7 +291,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
               value={formData.plano_id}
               onChange={(value) => handleInputChange('plano_id', value)}
               onShowModal={planoSelect.openModal}
-              entities={planos?.data?.map((plano: any) => ({
+              entities={planos?.data?.map((plano: Plano) => ({
                 id: plano.id,
                 nome: plano.nome_plano
               })) || []}
@@ -309,7 +312,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 required={true}
                 size="sm"
                 value={formData.data_vencimento}
-                onChange={(value: any) => handleInputChange('data_vencimento', value)}
+                onChange={(value: FormValue) => handleInputChange('data_vencimento', value as string)}
                 error={errors.data_vencimento}
                 isInvalid={!!errors.data_vencimento}
                 disabled={createParcelaMutation.isPending}
@@ -325,7 +328,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="Descrição do título..."
                 size="sm"
                 value={formData.descricao}
-                onChange={(value: any) => handleInputChange('descricao', value)}
+                onChange={(value: FormValue) => handleInputChange('descricao', value as string)}
                 disabled={createParcelaMutation.isPending}
               />
             </div>
@@ -343,7 +346,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="0.00"
                 size="sm"
                 value={formData.desconto_percentual}
-                onChange={(value: any) => handleInputChange('desconto_percentual', parseFloat(value) || 0)}
+                onChange={(value: FormValue) => handleInputChange('desconto_percentual', parseFloat(String(value)) || 0)}
                 disabled={createParcelaMutation.isPending}
                 min={0}
                 max={100}
@@ -360,7 +363,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="0.00"
                 size="sm"
                 value={formData.desconto_valor}
-                onChange={(value: any) => handleInputChange('desconto_valor', parseFloat(value) || 0)}
+                onChange={(value: FormValue) => handleInputChange('desconto_valor', parseFloat(String(value)) || 0)}
                 disabled={createParcelaMutation.isPending}
                 min={0}
                 step={0.01}
@@ -380,7 +383,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="0.00"
                 size="sm"
                 value={formData.acrescimo_percentual}
-                onChange={(value: any) => handleInputChange('acrescimo_percentual', parseFloat(value) || 0)}
+                onChange={(value: FormValue) => handleInputChange('acrescimo_percentual', parseFloat(String(value)) || 0)}
                 disabled={createParcelaMutation.isPending}
                 min={0}
                 max={100}
@@ -397,7 +400,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="0.00"
                 size="sm"
                 value={formData.acrescimo_valor}
-                onChange={(value: any) => handleInputChange('acrescimo_valor', parseFloat(value) || 0)}
+                onChange={(value: FormValue) => handleInputChange('acrescimo_valor', parseFloat(String(value)) || 0)}
                 disabled={createParcelaMutation.isPending}
                 min={0}
                 step={0.01}
@@ -416,7 +419,7 @@ const TituloCreateModal: React.FC<TituloCreateModalProps> = ({
                 placeholder="Observações sobre a parcela..."
                 size="sm"
                 value={formData.observacoes}
-                onChange={(value: any) => handleInputChange('observacoes', value)}
+                onChange={(value: FormValue) => handleInputChange('observacoes', value as string)}
                 disabled={createParcelaMutation.isPending}
                 rows={3}
               />

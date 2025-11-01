@@ -11,7 +11,7 @@ interface UseModalSelectReturn<T> {
   clearSelection: () => void;
 }
 
-export const useModalSelect = <T extends { id: any }>(
+export const useModalSelect = <T extends { id: number | string }>(
   onSelect?: (item: T) => void
 ): UseModalSelectReturn<T> => {
   const [selectedItem, setSelectedItem] = useState<T | null>(null);

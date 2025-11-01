@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
 
@@ -47,8 +47,8 @@ const LogsModal: React.FC<LogsModalProps> = ({
     if (!sortColumn) return logsData;
     
     return [...logsData].sort((a, b) => {
-      let aValue: any = a[sortColumn as keyof LogEntry];
-      let bValue: any = b[sortColumn as keyof LogEntry];
+      let aValue: string | number | undefined = a[sortColumn as keyof LogEntry] as string | number | undefined;
+      let bValue: string | number | undefined = b[sortColumn as keyof LogEntry] as string | number | undefined;
       
       // Tratamento especial para data_inicio
       if (sortColumn === 'data_inicio') {
@@ -86,7 +86,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
   };
 
   // Buscar logs
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     if (!routineId) return;
     
     setLoading(true);
@@ -102,7 +102,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [routineId]);
 
   // Buscar logs quando o modal abrir
   useEffect(() => {
@@ -113,7 +113,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
       setPageSize(10);
       setSearchTerm('');
     }
-  }, [show, routineId]);
+  }, [show, routineId, fetchLogs]);
 
   // Função para filtrar logs por busca
   const filterLogsBySearch = (logsData: LogEntry[], search: string) => {
@@ -137,30 +137,9 @@ const LogsModal: React.FC<LogsModalProps> = ({
   const sortedLogs = getSortedLogs(filteredLogs);
   
   // Calcular paginação
-  const totalItems = sortedLogs.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedLogs = sortedLogs.slice(startIndex, endIndex);
-  
-  // Configurar objeto de paginação
-  const pagination = {
-    from: startIndex + 1,
-    to: Math.min(endIndex, totalItems),
-    total: totalItems,
-    current_page: currentPage,
-    last_page: totalPages
-  };
-
-  // Funções para mudança de página e limite
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handleLimitChange = (limit: number) => {
-    setPageSize(limit);
-    setCurrentPage(1); // Reset para primeira página quando mudar o limite
-  };
 
   const handleSearchChange = (search: string) => {
     setSearchTerm(search);

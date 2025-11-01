@@ -4,7 +4,7 @@ import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ServidorWhatsAppService } from '../../../services/servidorWhatsAppService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormField } from '../../ui';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 interface ServidorWhatsappModalProps {
   show: boolean;
@@ -15,6 +15,16 @@ interface ServidorWhatsAppForm {
   evolution_api_url: string;
   evolution_api_key: string;
   instance_name: string;
+}
+
+interface VariavelDocumento {
+  variavel: string;
+  descricao: string;
+}
+
+interface GrupoVariaveis {
+  titulo: string;
+  variaveis: VariavelDocumento[];
 }
 
 const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onClose }) => {
@@ -47,23 +57,19 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       if (!mensagemType) return null;
       try {
         return await ServidorWhatsAppService.getByTipo(mensagemType);
-      } catch (error: unknown) {
-        if (
-          typeof error === 'object' &&
-          error !== null &&
-          'response' in error &&
-          (error as any).response?.status === 404
-        ) {
+      } catch (err: unknown) {
+        const error = err as AxiosError<{ message?: string }>;
+        if (error?.response?.status === 404) {
           return null;
         }
-        throw error;
+        throw err;
       }
     },
     enabled: !!mensagemType
   });
 
   // Buscar variáveis disponíveis da API
-  const { data: variaveisData } = useQuery({
+  const { data: variaveisData } = useQuery<Record<string, GrupoVariaveis>>({
     queryKey: ['variaveis-documento'],
     queryFn: async () => {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/modelos-contrato/variaveis`);
@@ -96,11 +102,12 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     queryFn: async () => {
       try {
         return await ServidorWhatsAppService.getActive();
-      } catch (error: any) {
+      } catch (err: unknown) {
+        const error = err as AxiosError<{ message?: string }>;
         if (error?.response?.status === 404) {
           return null;
         }
-        throw error;
+        throw err;
       }
     },
     enabled: show,
@@ -116,7 +123,8 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       success('Configurações do servidor de WhatsApp salvas com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
     },
-    onError: (error: any) => {
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
       showError(error?.response?.data?.message || 'Erro ao salvar configurações');
     }
   });
@@ -126,23 +134,25 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     mutationFn: async (data: { id: number; phone: string; message: string }) => {
       return ServidorWhatsAppService.sendTestMessage(data.id, data.phone, data.message);
     },
-    onSuccess: (response: any) => {
+    onSuccess: (response: { message: string }) => {
       success(response.message);
     },
-    onError: (error: any) => {
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
       showError(error?.response?.data?.message || 'Erro ao enviar mensagem de teste');
     }
   });
 
   // Mutation para salvar mensagem
   const saveMensagemMutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: { tipo: string; tipo_envio: 'desativado' | 'pdf'; mensagem_padrao: string; interacao1?: string; interacao2?: string; interacao3?: string; ativo: boolean }) => {
       return ServidorWhatsAppService.saveMensagem(data);
     },
     onSuccess: () => {
       success('Mensagem salva com sucesso!');
     },
-    onError: (error: any) => {
+    onError: (err: unknown) => {
+      const error = err as AxiosError<{ message: string }>;
       showError(error?.response?.data?.message || 'Erro ao salvar mensagem');
     }
   });
@@ -158,7 +168,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     } else {
       setFormData(initialFormData);
     }
-  }, [servidorAtivo]);
+  }, [servidorAtivo, initialFormData]);
 
   // Forçar carregamento quando modal abrir
   useEffect(() => {
@@ -194,7 +204,8 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         await ServidorWhatsAppService.delete(servidorAtivo.data.id);
         success('Servidor removido com sucesso!');
         queryClient.invalidateQueries({ queryKey: ['servidor-whatsapp-ativo'] });
-      } catch (error: any) {
+      } catch (err: unknown) {
+        const error = err as AxiosError<{ message: string }>;
         showError(error?.response?.data?.message || 'Erro ao remover servidor');
       }
     }
@@ -335,7 +346,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     required={true}
                     size="sm"
                     value={formData.evolution_api_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_url: e }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_url: String(e ?? '') }))}
                   />
                 </div>
               </div>
@@ -350,7 +361,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     required={true}
                     size="sm"
                     value={formData.instance_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, instance_name: e }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instance_name: String(e ?? '') }))}
                     autoComplete="username"
                   />
                 </div>
@@ -366,7 +377,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     required={!servidorAtivo?.data}
                     size="sm"
                     value={formData.evolution_api_key}
-                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_key: e }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, evolution_api_key: String(e ?? '') }))}
                     autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
                   />
                   {servidorAtivo?.data && (
@@ -396,7 +407,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     placeholder="5511999999999"
                     size="sm"
                     value={testPhone}
-                    onChange={(e) => setTestPhone(e)}
+                    onChange={(e) => setTestPhone(String(e ?? ''))}
                   />
                   <small className="form-text text-secondary">
                     Digite o número com código do país (ex: 5511999999999)
@@ -407,10 +418,10 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                     name="testMessage"
                     type="text"
                     label="Mensagem"
-                    placeholder="Mensagem de teste do sistema CTM Telecom"
+                    placeholder="Mensagem de teste do sistema BackNet"
                     size="sm"
                     value={testMessage}
-                    onChange={(e) => setTestMessage(e)}
+                    onChange={(e) => setTestMessage(String(e ?? ''))}
                   />
                 </div>
               </div>
@@ -459,7 +470,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                       required={true}
                       size="sm"
                       value={mensagemType}
-                      onChange={(value) => setMensagemType(value)}
+                      onChange={(value) => setMensagemType(String(value ?? ''))}
                       options={[
                         { value: '10_dias_antes_vencimento', label: '10 dias antes do vencimento' },
                         { value: '05_dias_antes_vencimento', label: '05 dias antes do vencimento' },
@@ -487,7 +498,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                             id="envio-desativado"
                             value="desativado"
                             checked={tipoEnvio === 'desativado'}
-                            onChange={(e) => setTipoEnvio(e.target.value as any)}
+                            onChange={(e) => setTipoEnvio(e.target.value as 'desativado' | 'pdf')}
                           />
                           <label className="btn btn-outline-secondary" htmlFor="envio-desativado">
                             Desativar
@@ -500,7 +511,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                             id="envio-pdf"
                             value="pdf"
                             checked={tipoEnvio === 'pdf'}
-                            onChange={(e) => setTipoEnvio(e.target.value as any)}
+                            onChange={(e) => setTipoEnvio(e.target.value as 'desativado' | 'pdf')}
                           />
                           <label className="btn btn-outline-secondary" htmlFor="envio-pdf">
                             Anexa PDF
@@ -520,7 +531,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                           rows={10}
                           size="sm"
                           value={mensagemPadrao}
-                            onChange={(value) => setMensagemPadrao(value)}
+                          onChange={(value) => setMensagemPadrao(String(value ?? ''))}
                         />
                       </div>
                     </div>
@@ -535,12 +546,12 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                           <div className="card-body p-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                             {variaveisData ? (
                               <div className="row g-2">
-                                {Object.entries(variaveisData).map(([chave, grupo]: [string, any]) => (
+                                {Object.entries(variaveisData).map(([chave, grupo]: [string, GrupoVariaveis]) => (
                                   <div className="col-md-6" key={chave}>
                                     <div className="mb-2">
                                       <small className="fw-bold d-block mb-1">{grupo.titulo}</small>
                                       <div className="d-flex flex-wrap gap-1 align-items-center">
-                                        {grupo.variaveis.map((variavel: any) => (
+                                        {grupo.variaveis.map((variavel: VariavelDocumento) => (
                                           <div key={variavel.variavel} className="d-flex align-items-center gap-1">
                                             <span
                                               className="badge bg-secondary"
@@ -591,7 +602,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                           rows={3}
                           size="sm"
                           value={interacao1}
-                          onChange={(value) => setInteracao1(value)}
+                          onChange={(value) => setInteracao1(String(value ?? ''))}
                         />
                       </div>
                     </div>
@@ -606,7 +617,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                           rows={3}
                           size="sm"
                           value={interacao2}
-                          onChange={(value) => setInteracao2(value)}
+                          onChange={(value) => setInteracao2(String(value ?? ''))}
                         />
                       </div>
                     </div>
@@ -621,7 +632,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                           rows={3}
                           size="sm"
                           value={interacao3}
-                          onChange={(value) => setInteracao3(value)}
+                          onChange={(value) => setInteracao3(String(value ?? ''))}
                         />
                       </div>
                     </div>

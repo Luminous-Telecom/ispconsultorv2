@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { UseNotificationOptions, UseNotificationReturn, NotificationState, NotificationConfig, NotificationType } from './types';
+import { UseNotificationOptions, UseNotificationReturn, NotificationState, NotificationConfig } from './types';
 
 export const useNotification = (options: UseNotificationOptions = {}): UseNotificationReturn => {
   const {
@@ -23,6 +23,32 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
   // Gerar ID único para notificação
   const generateId = useCallback(() => {
     return `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }, []);
+
+  // Remover notificação
+  const removeNotification = useCallback((id: string) => {
+    setNotifications(prev => {
+      const notification = prev.find(n => n.id === id);
+      if (!notification) return prev;
+
+      // Chamar callback onHide
+      notification.config.onHide?.();
+
+      // Limpar timers
+      const timer = timersRef.current.get(id);
+      if (timer) {
+        clearTimeout(timer);
+        timersRef.current.delete(id);
+      }
+
+      const progressTimer = progressTimersRef.current.get(id);
+      if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimersRef.current.delete(id);
+      }
+
+      return prev.filter(n => n.id !== id);
+    });
   }, []);
 
   // Adicionar notificação
@@ -121,33 +147,7 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
     }
 
     return id;
-  }, [defaultConfig, maxNotifications, defaultPosition, defaultDuration, defaultAnimation, defaultSize, pauseOnHover, pauseOnFocus, closeOnClick, showProgress, zIndex, generateId]);
-
-  // Remover notificação
-  const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => {
-      const notification = prev.find(n => n.id === id);
-      if (!notification) return prev;
-
-      // Chamar callback onHide
-      notification.config.onHide?.();
-
-      // Limpar timers
-      const timer = timersRef.current.get(id);
-      if (timer) {
-        clearTimeout(timer);
-        timersRef.current.delete(id);
-      }
-
-      const progressTimer = progressTimersRef.current.get(id);
-      if (progressTimer) {
-        clearInterval(progressTimer);
-        progressTimersRef.current.delete(id);
-      }
-
-      return prev.filter(n => n.id !== id);
-    });
-  }, []);
+  }, [defaultConfig, maxNotifications, defaultPosition, defaultDuration, defaultAnimation, defaultSize, pauseOnHover, pauseOnFocus, closeOnClick, showProgress, zIndex, generateId, removeNotification]);
 
   // Atualizar notificação
   const updateNotification = useCallback((id: string, updates: Partial<NotificationConfig>) => {
@@ -297,9 +297,12 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
 
   // Limpar timers ao desmontar
   useEffect(() => {
+    const timers = timersRef.current;
+    const progressTimers = progressTimersRef.current;
+    
     return () => {
-      timersRef.current.forEach(timer => clearTimeout(timer));
-      progressTimersRef.current.forEach(timer => clearInterval(timer));
+      timers.forEach(timer => clearTimeout(timer));
+      progressTimers.forEach(timer => clearInterval(timer));
     };
   }, []);
 

@@ -1,5 +1,7 @@
 import { apiService } from './api';
-import { RotinaAgendada, RoutineExecutionLog } from '../types/entities';
+import type { RotinaAgendada, RoutineExecutionLog } from '../types/entities';
+
+export type { RotinaAgendada, RoutineExecutionLog };
 
 export interface CreateRotinaData {
   nome: string;

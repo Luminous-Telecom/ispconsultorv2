@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import DraggableModal from '../../common/DraggableModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { ParametrosService } from '../../../services/parametrosService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFormReset } from '../../../hooks/useFormReset';
+import { AxiosError } from 'axios';
 
 interface ParametrosModalProps {
   show: boolean;
@@ -51,13 +52,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
       total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
     };
-  }, [
-    parametros?.data?.validar_cpf_cnpj,
-    parametros?.data?.gerar_titulos_automatico,
-    parametros?.data?.titulos_vence_sabado,
-    parametros?.data?.auto_lancamento_titulos,
-    parametros?.data?.total_titulos_financeiro
-  ]);
+  }, [parametros?.data]);
 
   // Usar hook personalizado para reset do formulário
   useFormReset({
@@ -74,8 +69,9 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
       queryClient.invalidateQueries({ queryKey: ['parametros'] });
       // Não fecha o modal para permitir múltiplas edições
     },
-    onError: (err: any) => {
-      const message = err?.response?.data?.message || 'Erro ao atualizar parâmetros';
+    onError: (error: unknown) => {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const message = axiosError?.response?.data?.message || 'Erro ao atualizar parâmetros';
       showError(message);
     }
   });
@@ -143,7 +139,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={onClose}
+            onClick={handleCancel}
             disabled={updateParametrosMutation.isPending}
           >
             Cancelar

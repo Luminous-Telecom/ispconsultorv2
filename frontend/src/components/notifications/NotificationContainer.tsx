@@ -1,5 +1,5 @@
 import React from 'react';
-import { NotificationContainerProps, NotificationState } from './types';
+import { NotificationContainerProps, NotificationState, NotificationAction } from './types';
 import Notification from './Notification';
 
 interface NotificationContainerComponentProps extends NotificationContainerProps {
@@ -7,7 +7,7 @@ interface NotificationContainerComponentProps extends NotificationContainerProps
   onRemove: (id: string) => void;
   onPause: (id: string) => void;
   onResume: (id: string) => void;
-  onActionClick: (action: any) => void;
+  onActionClick: (action: NotificationAction) => void;
 }
 
 const NotificationContainer: React.FC<NotificationContainerComponentProps> = ({

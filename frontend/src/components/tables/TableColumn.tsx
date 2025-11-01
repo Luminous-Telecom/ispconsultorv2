@@ -1,7 +1,7 @@
 import React from 'react';
 import { TableColumn as TableColumnType, SortDirection } from './types';
 
-interface TableColumnProps<T = any> {
+interface TableColumnProps<T = Record<string, unknown>> {
   column: TableColumnType<T>;
   sortColumn?: string;
   sortDirection?: SortDirection;

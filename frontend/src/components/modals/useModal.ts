@@ -74,7 +74,7 @@ export const useModal = (options: UseModalOptions = {}): UseModalReturn => {
 
   // Referências
   const modalRef = useRef<HTMLDivElement>(null);
-  const backdropRef = useRef<HTMLDivElement>(null);
+  const _backdropRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -211,7 +211,7 @@ export const useModal = (options: UseModalOptions = {}): UseModalReturn => {
         modalRef.current.focus();
       }
     }, 100);
-  }, [state.isOpen, restoreFocus, preventScroll, lockScroll, centered, getModalSize, getCenteredPosition, onShow, onShown, autoFocus, animation]);
+  }, [state.isOpen, restoreFocus, preventScroll, lockScroll, centered, getModalSize, getCenteredPosition, onShow, onShown, autoFocus]);
 
   // Esconder modal
   const hide = useCallback(() => {

@@ -6,6 +6,7 @@ import { useListModal } from '../../../hooks/useListModal';
 import { SchedulerService, RotinaAgendada } from '../../../services/schedulerService';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { AxiosError } from 'axios';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -125,8 +126,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     try {
       await SchedulerService.toggleRotina(rotina.id, !rotina.ativo);
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
-    } catch (error: any) {
-      alert(`Erro ao atualizar status: ${error?.response?.data?.message || 'Erro desconhecido'}`);
+    } catch (error: unknown) {
+      if (error instanceof Error && 'response' in error) {
+        const axiosError = error as AxiosError<{ message?: string }>;
+        alert(`Erro ao atualizar status: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
+      } else {
+        alert('Erro ao atualizar status: Erro desconhecido');
+      }
     }
   };
 
@@ -136,8 +142,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       await SchedulerService.executeRotina(rotina.id);
       success('Rotina iniciada em background');
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
-    } catch (error: any) {
-      showError(`Erro ao executar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
+    } catch (error: unknown) {
+      if (error instanceof Error && 'response' in error) {
+        const axiosError = error as AxiosError<{ message?: string }>;
+        showError(`Erro ao executar rotina: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
+      } else {
+        showError('Erro ao executar rotina: Erro desconhecido');
+      }
     }
   };
 
@@ -146,8 +157,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     try {
       await SchedulerService.deleteRotina(rotina.id);
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
-    } catch (error: any) {
-      alert(`Erro ao deletar rotina: ${error?.response?.data?.message || 'Erro desconhecido'}`);
+    } catch (error: unknown) {
+      if (error instanceof Error && 'response' in error) {
+        const axiosError = error as AxiosError<{ message?: string }>;
+        alert(`Erro ao deletar rotina: ${axiosError.response?.data?.message || 'Erro desconhecido'}`);
+      } else {
+        alert('Erro ao deletar rotina: Erro desconhecido');
+      }
     }
   };
 

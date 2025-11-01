@@ -1,6 +1,6 @@
 # Componentes UI Base
 
-Este diretório contém os componentes fundamentais e reutilizáveis que formam a base da interface do usuário do sistema CTM Telecom.
+Este diretório contém os componentes fundamentais e reutilizáveis que formam a base da interface do usuário do sistema BackNet.
 
 ## 📦 Componentes Disponíveis
 

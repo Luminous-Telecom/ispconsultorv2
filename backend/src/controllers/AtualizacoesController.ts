@@ -12,7 +12,7 @@ interface GitHubRelease {
 export class AtualizacoesController {
   static async get(req: Request, res: Response): Promise<void> {
     // Buscar releases do GitHub
-    const githubRepo = process.env.GITHUB_REPO || 'Luminous-Telecom/ctm-telecom';
+    const githubRepo = process.env.GITHUB_REPO || 'Luminous-Telecom/BackNet-telecom';
     
     try {
       const githubToken = process.env.GITHUB_TOKEN;
@@ -21,7 +21,7 @@ export class AtualizacoesController {
       // Montar headers com token se disponível
       const headers: any = {
         'Accept': 'application/vnd.github+json',
-        'User-Agent': 'CTM-Telecom-ERP'
+        'User-Agent': 'BackNet-Telecom-ERP'
       };
       
       if (githubToken) {

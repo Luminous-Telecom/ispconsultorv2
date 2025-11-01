@@ -7,7 +7,7 @@ interface UseImprimirProps {
   filterLabel?: string;
 }
 
-export const useImprimir = ({ itemType, filterCondition, filterLabel = 'Todos' }: UseImprimirProps) => {
+export const useImprimir = ({ itemType, filterCondition: _filterCondition, filterLabel = 'Todos' }: UseImprimirProps) => {
   const { addNotification } = useNotificationContext();
 
   const getApiUrl = useCallback(() => {

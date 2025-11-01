@@ -2,11 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlanoService } from '../services/planoService';
 import { useNotificationContext } from '../contexts/NotificationContext';
 import { CACHE_CONFIG } from '../config/api';
+import { PlanoFilters, UpdatePlano } from '../types';
+import { AxiosError } from 'axios';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar planos
-export const usePlanos = (filters: any = {}) => {
+export const usePlanos = (filters: PlanoFilters = {}) => {
   return useQuery({
     queryKey: ['planos', filters],
     queryFn: () => PlanoService.list(filters),
@@ -50,8 +52,9 @@ export const useCreatePlano = () => {
       queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
       success('Plano criado com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar plano');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao criar plano');
     },
   });
 };
@@ -62,7 +65,7 @@ export const useUpdatePlano = () => {
   const { success, error } = useNotificationContext();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: number; data: UpdatePlano }) =>
       PlanoService.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['planos'] });
@@ -70,8 +73,9 @@ export const useUpdatePlano = () => {
       queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
       success('Plano atualizado com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao atualizar plano');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao atualizar plano');
     },
   });
 };
@@ -88,8 +92,9 @@ export const useDeletePlano = () => {
       queryClient.invalidateQueries({ queryKey: ['planos-ativos'] });
       success('Plano excluído com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao excluir plano');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao excluir plano');
     },
   });
 };
@@ -109,8 +114,9 @@ export const useTogglePlanoStatus = () => {
                         data.status === 'inativo' ? 'desativado' : 'cancelado';
       success(`Plano ${statusText} com sucesso!`);
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao alterar status do plano');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao alterar status do plano');
     },
   });
 };

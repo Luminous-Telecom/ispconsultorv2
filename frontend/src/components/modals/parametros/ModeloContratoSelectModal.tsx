@@ -8,14 +8,14 @@ import DocumentoSistemaService, { DocumentoSistema } from '../../../services/doc
 interface ModeloContratoSelectModalProps {
   show: boolean;
   onClose: () => void;
-  onSelectModelo?: (modelo: DocumentoSistema) => void;
+  onSelect?: (modelo: DocumentoSistema) => void;
   title?: string;
 }
 
 const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({ 
   show, 
   onClose, 
-  onSelectModelo,
+  onSelect,
   title = "Selecionar Modelo de Contrato"
 }) => {
   const [search, setSearch] = useState('');
@@ -28,8 +28,8 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     handleSelectionChange,
     clearSelection
   } = useModalSelect<DocumentoSistema>(
-    onSelectModelo ? (modelo) => {
-      onSelectModelo(modelo);
+    onSelect ? (modelo) => {
+      onSelect(modelo);
       onClose();
     } : undefined
   );
@@ -117,14 +117,14 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
   const handleSelect = () => {
     if (selectedItem) {
       clearSelection();
-      if (onSelectModelo) {
-        onSelectModelo(selectedItem);
+      if (onSelect) {
+        onSelect(selectedItem);
         onClose();
       }
     }
   };
 
-  const bulkActions = onSelectModelo ? [
+  const bulkActions = onSelect ? [
     {
       label: 'Cancelar',
       variant: 'secondary' as const,

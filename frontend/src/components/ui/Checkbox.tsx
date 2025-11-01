@@ -36,7 +36,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
   label,
   description,
   required = false,
-  indeterminate = false,
+  indeterminate: _indeterminate = false,
   inline = false,
   switch: isSwitch = false,
   id,

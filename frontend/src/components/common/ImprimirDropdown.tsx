@@ -1,6 +1,10 @@
+interface ItemWithId {
+  id: number | string;
+}
+
 interface ImprimirDropdownConfig {
-  selectedItems: any[];
-  totalItems: any[];
+  selectedItems: ItemWithId[];
+  totalItems: ItemWithId[];
   onImprimirSelecionados: (ids: string) => void;
   onImprimirTodos: (ids: string) => void;
   filterLabel?: string;

@@ -14,7 +14,7 @@ import { useMemo } from 'react';
  * const sortedPlanos = useSorting(planos, 'nome_plano', 'asc');
  * ```
  */
-export const useSorting = <T extends Record<string, any>>(
+export const useSorting = <T extends Record<string, unknown>>(
   data: T[] | undefined,
   sortColumn: string,
   sortDirection: 'asc' | 'desc'
@@ -25,8 +25,8 @@ export const useSorting = <T extends Record<string, any>>(
     }
 
     return [...data].sort((a, b) => {
-      let aValue: any = a[sortColumn as keyof T];
-      let bValue: any = b[sortColumn as keyof T];
+      let aValue: unknown = a[sortColumn as keyof T];
+      let bValue: unknown = b[sortColumn as keyof T];
 
       // Converter para string se necessário para comparação
       if (typeof aValue === 'string') {
@@ -38,24 +38,31 @@ export const useSorting = <T extends Record<string, any>>(
 
       // Converter datas se necessário
       if (sortColumn.includes('data') || sortColumn.includes('created_at')) {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
+        const aDate = aValue as string | number | Date | undefined;
+        const bDate = bValue as string | number | Date | undefined;
+        aValue = new Date(aDate as string | number | Date).getTime();
+        bValue = new Date(bDate as string | number | Date).getTime();
       }
 
       // Converter números se necessário
       if (sortColumn.includes('valor') || sortColumn.includes('total') || sortColumn.includes('quantidade')) {
-        aValue = parseFloat(aValue) || 0;
-        bValue = parseFloat(bValue) || 0;
+        const aStr = aValue as string | undefined;
+        const bStr = bValue as string | undefined;
+        aValue = parseFloat(aStr as string) || 0;
+        bValue = parseFloat(bStr as string) || 0;
       }
 
       // Tratar valores nulos/undefined
       if (aValue == null) aValue = '';
       if (bValue == null) bValue = '';
 
-      if (aValue < bValue) {
+      const aVal = aValue as string | number;
+      const bVal = bValue as string | number;
+
+      if (aVal < bVal) {
         return sortDirection === 'asc' ? -1 : 1;
       }
-      if (aValue > bValue) {
+      if (aVal > bVal) {
         return sortDirection === 'asc' ? 1 : -1;
       }
       return 0;

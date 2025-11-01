@@ -1,14 +1,23 @@
 {
   "extends": ["react-app"],
   "rules": {
-    "no-unused-vars": "warn",
+    // 1. Desabilitar no-unused-vars padrão porque @typescript-eslint/no-unused-vars já cobre
+    "no-unused-vars": "off",
     "no-console": "off",
-    "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/no-unused-vars": ["warn", { 
-      "argsIgnorePattern": "^_",
-      "varsIgnorePattern": "^_"
-    }],
-    "react-hooks/exhaustive-deps": "warn"
+    
+    // 2. Uso explícito de 'any' (muito perigoso, o principal alvo)
+    "@typescript-eslint/no-explicit-any": "error",
+    
+    // 3. Variáveis TS não usadas (ajustado para ignorar _variáveis)
+    "@typescript-eslint/no-unused-vars": [
+      "error", 
+      { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    
+    // 4. Hook Deps incompletas (erro clássico do React, deve ser 'error' para ser seguro)
+    "react-hooks/exhaustive-deps": "error"
   }
 }
-

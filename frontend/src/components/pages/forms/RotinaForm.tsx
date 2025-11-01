@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { SchedulerService, CreateRotinaData } from '../../../services/schedulerService';
+import { AxiosError } from 'axios';
+import { SchedulerService, CreateRotinaData, RotinaAgendada } from '../../../services/schedulerService';
 import DraggableModal from '../../common/DraggableModal';
 
 interface RotinaFormProps {
   show: boolean;
   onSuccess: () => void;
   onCancel: () => void;
-  editData?: any; // Rotina para editar
+  editData?: RotinaAgendada; // Rotina para editar
 }
 
 const RotinaForm: React.FC<RotinaFormProps> = ({ show, onSuccess, onCancel, editData }) => {
@@ -111,9 +112,11 @@ const RotinaForm: React.FC<RotinaFormProps> = ({ show, onSuccess, onCancel, edit
         await SchedulerService.createRotina(formData);
       }
       onSuccess();
-    } catch (error: any) {
-      console.error(`Erro ao ${editData ? 'atualizar' : 'criar'} rotina:`, error);
-      setErrors({ submit: error.response?.data?.message || error.message || `Erro ao ${editData ? 'atualizar' : 'criar'} rotina` });
+    } catch (err) {
+      console.error(`Erro ao ${editData ? 'atualizar' : 'criar'} rotina:`, err);
+      const axiosError = err as AxiosError<{ message?: string }>;
+      const errorMessage = axiosError?.response?.data?.message || `Erro ao ${editData ? 'atualizar' : 'criar'} rotina`;
+      setErrors({ submit: errorMessage });
     } finally {
       setIsSubmitting(false);
     }

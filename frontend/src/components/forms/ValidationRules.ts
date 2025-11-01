@@ -1,4 +1,5 @@
 import { ValidationRule, FieldValidationResult } from './types';
+import { FormValue } from '../../types/common';
 
 // Regras de validação predefinidas
 export const ValidationRules = {
@@ -52,7 +53,7 @@ export const ValidationRules = {
     message,
   }),
 
-  custom: (validator: (value: any) => boolean | string, message?: string): ValidationRule => ({
+  custom: (validator: (value: FormValue) => boolean | string, message?: string): ValidationRule => ({
     type: 'custom',
     validator,
     message,
@@ -72,12 +73,12 @@ export const Patterns = {
   alphanumeric: /^[a-zA-Z0-9]+$/,
 };
 
-// Validações específicas para o sistema CTM Telecom
-export const CTMValidationRules = {
+// Validações específicas para o sistema BackNet
+export const BackNetValidationRules = {
   cpf: (message = 'CPF inválido'): ValidationRule => ({
     type: 'custom',
-    validator: (value: string) => {
-      if (!value) return true; // Se não obrigatório, retorna válido
+    validator: (value: FormValue) => {
+      if (!value || typeof value !== 'string') return true; // Se não obrigatório, retorna válido
       return isValidCPF(value);
     },
     message,
@@ -85,8 +86,8 @@ export const CTMValidationRules = {
 
   cnpj: (message = 'CNPJ inválido'): ValidationRule => ({
     type: 'custom',
-    validator: (value: string) => {
-      if (!value) return true; // Se não obrigatório, retorna válido
+    validator: (value: FormValue) => {
+      if (!value || typeof value !== 'string') return true; // Se não obrigatório, retorna válido
       return isValidCNPJ(value);
     },
     message,
@@ -94,8 +95,8 @@ export const CTMValidationRules = {
 
   cpfOrCnpj: (message = 'CPF ou CNPJ inválido'): ValidationRule => ({
     type: 'custom',
-    validator: (value: string) => {
-      if (!value) return true; // Se não obrigatório, retorna válido
+    validator: (value: FormValue) => {
+      if (!value || typeof value !== 'string') return true; // Se não obrigatório, retorna válido
       return isValidCPF(value) || isValidCNPJ(value);
     },
     message,
@@ -115,8 +116,8 @@ export const CTMValidationRules = {
 
   password: (minLength = 8, message?: string): ValidationRule => ({
     type: 'custom',
-    validator: (value: string) => {
-      if (!value) return true;
+    validator: (value: FormValue) => {
+      if (!value || typeof value !== 'string') return true;
       return value.length >= minLength && /[A-Z]/.test(value) && /[0-9]/.test(value);
     },
     message: message || `Senha deve ter pelo menos ${minLength} caracteres, uma letra maiúscula e um número`,
@@ -124,7 +125,7 @@ export const CTMValidationRules = {
 };
 
 // Função para validar um campo com suas regras
-export const validateField = (value: any, rules: ValidationRule[]): FieldValidationResult => {
+export const validateField = (value: FormValue, rules: ValidationRule[]): FieldValidationResult => {
   for (const rule of rules) {
     const result = validateRule(value, rule);
     if (!result.isValid) {
@@ -135,7 +136,7 @@ export const validateField = (value: any, rules: ValidationRule[]): FieldValidat
 };
 
 // Função para validar uma regra específica
-export const validateRule = (value: any, rule: ValidationRule): FieldValidationResult => {
+export const validateRule = (value: FormValue, rule: ValidationRule): FieldValidationResult => {
   switch (rule.type) {
     case 'required':
       if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {

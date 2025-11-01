@@ -153,7 +153,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                 required={true}
                 size="md"
                 value={formData.data_pagamento || ''}
-                onChange={(value: any) => handleInputChange('data_pagamento', value || '')}
+                onChange={(value) => handleInputChange('data_pagamento', String(value ?? ''))}
                 error={errors.data_pagamento}
                 isInvalid={!!errors.data_pagamento}
                 disabled={marcarPagoMutation.isPending}
@@ -197,7 +197,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             placeholder="Observações sobre o pagamento (opcional)"
             size="md"
             value={formData.observacoes || ''}
-            onChange={(value: any) => handleInputChange('observacoes', value || '')}
+            onChange={(value) => handleInputChange('observacoes', String(value ?? ''))}
             error={errors.observacoes}
             isInvalid={!!errors.observacoes}
             disabled={marcarPagoMutation.isPending}

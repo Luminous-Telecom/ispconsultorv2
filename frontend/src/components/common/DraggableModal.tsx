@@ -18,7 +18,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   onClose,
   title,
   children,
-  size = 'lg',
+  size: _size = 'lg',
   className = '',
   headerActions,
   modalId: propModalId
@@ -132,6 +132,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging]);
 
   // Limpar estado de dragging quando modal fechar

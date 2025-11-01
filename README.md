@@ -19,13 +19,13 @@ docker-compose up --build
 
 ---
 
-# CTM Telecom ERP - Plano de Refatoração
+# BackNet - Plano de Refatoração
 
 ## 📋 Visão Geral do Projeto Atual
 
 ### Estrutura de Pastas Existente
 ```
-ctm-telecom/
+BackNet-telecom/
 ├── backend/                    # API Node.js/TypeScript
 │   ├── src/
 │   │   ├── controllers/        # Controllers das entidades

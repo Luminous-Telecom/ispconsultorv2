@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import { usePlanos } from '../../../hooks/usePlanos';
 import { useBancos } from '../../../hooks/useBancos';
@@ -26,6 +26,7 @@ import { DocumentoSistema } from '../../../services/documentoSistemaService';
 import { ContratoTab, TermosTab, FinanceiroTab, ContratoForm } from './contrato';
 import { TermoEditModal, SelecionarTermoModal } from './contrato/modals';
 import { ensureString } from '../../../utils/stringUtils';
+import { BulkAction } from './contrato/types';
 
 interface ContratoEditModalProps {
   show: boolean;
@@ -57,17 +58,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
   const [activeTab, setActiveTab] = useState('contrato');
-  const [showCancelados, setShowCancelados] = useState(false);
-  const [showInativos, setShowInativos] = useState(false);
+  const [showCancelados] = useState(false);
+  const [showInativos] = useState(false);
   const [showTermoModal, setShowTermoModal] = useState(false);
   const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
-  const [termoSelecionado, setTermoSelecionado] = useState<any>(null);
   const [editingTermo, setEditingTermo] = useState<TermoContrato | null>(null);
-  const [searchTermosModal, setSearchTermosModal] = useState('');
-  const [pageTermosModal, setPageTermosModal] = useState(1);
-  const [limitTermosModal, setLimitTermosModal] = useState(10);
-  const [lastClickTime, setLastClickTime] = useState<number>(0);
-  const [lastClickedItem, setLastClickedItem] = useState<any>(null);
   const [termoFormData, setTermoFormData] = useState({
     assinado: 'NAO' as 'SIM' | 'NAO',
     termoCadastradoId: 0
@@ -76,9 +71,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
-  const [selectedParcela, setSelectedParcela] = useState<any>(null);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
-  const [selectedTermosItems, setSelectedTermosItems] = useState<any[]>([]);
+  const [selectedParcela, setSelectedParcela] = useState<Titulo | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
+  const [selectedTermosItems, setSelectedTermosItems] = useState<TermoContrato[]>([]);
   
   // Estados para modal de impressão
   const [showPreview, setShowPreview] = useState(false);
@@ -95,13 +90,12 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   const [bancoSelecionado, setBancoSelecionado] = useState<Banco | null>(null);
   const [modeloContratoSelecionado, setModeloContratoSelecionado] = useState<DocumentoSistema | null>(null);
   
-  const [search, setSearch] = useState('');
-  const [searchTermos, setSearchTermos] = useState('');
+  const [search] = useState('');
+  const [searchTermos] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [sortColumn] = useState<string>('id');
+  const [sortDirection] = useState<'asc' | 'desc'>('desc');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -118,10 +112,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     enabled: show,
   });
   
-  const planos = Array.isArray(planosData) ? planosData : (planosData?.data || []);
-  const bancos = Array.isArray(bancosData) ? bancosData : (bancosData?.data || []);
-  const modelosContrato = modelosContratoData?.data || [];
-  const diasVencimento = (diasVencimentoData?.data && Array.isArray(diasVencimentoData.data)) ? diasVencimentoData.data : [];
+  const planos = useMemo(() => Array.isArray(planosData) ? planosData : (planosData?.data || []), [planosData]);
+  const bancos = useMemo(() => Array.isArray(bancosData) ? bancosData : (bancosData?.data || []), [bancosData]);
+  const modelosContrato = useMemo(() => modelosContratoData?.data || [], [modelosContratoData]);
+  const diasVencimento = useMemo(() => (diasVencimentoData?.data && Array.isArray(diasVencimentoData.data)) ? diasVencimentoData.data : [], [diasVencimentoData]);
   
   // Hooks para termos
   const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(contratoId || 0);
@@ -208,11 +202,11 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       if (plano) setPlanoSelecionado(plano);
 
       // Encontrar banco selecionado
-      const banco = bancos.find((b: any) => b.id === contratoData.conta_boleto);
+      const banco = bancos.find((b: Banco) => b.id === contratoData.conta_boleto);
       if (banco) setBancoSelecionado(banco);
 
       // Encontrar modelo de contrato selecionado
-      const modelo = modelosContrato.find((m: any) => m.id === contratoData.modelo_contrato_id);
+      const modelo = modelosContrato.find((m: DocumentoSistema) => m.id === contratoData.modelo_contrato_id);
       if (modelo) setModeloContratoSelecionado(modelo);
     }
   }, [contratoData, planos, bancos, modelosContrato]);
@@ -319,7 +313,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       setShowPreview(true);
       
       success('Boletos selecionados gerados com sucesso!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao gerar PDF dos boletos:', err);
       error('Erro ao gerar boletos selecionados');
     } finally {
@@ -349,7 +343,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       setShowPreview(true);
       
       success('Boletos em aberto gerados com sucesso!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao gerar PDF dos boletos:', err);
       error('Erro ao gerar boletos em aberto');
     } finally {
@@ -358,16 +352,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   };
 
   // Bulk actions para títulos
-  const bulkActions: Array<{
-    label: string;
-    action?: (selectedItems: Titulo[]) => void;
-    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
-    disabled?: (selectedItems: Titulo[]) => boolean;
-    dropdown?: {
-      label: string;
-      action: () => void;
-    }[];
-  }> = [
+  const bulkActions: BulkAction<Titulo>[] = [
     {
       label: 'Novo',
       action: () => {
@@ -418,7 +403,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 try {
                   await TituloService.update(item.id, { status: 'cancelado' });
                   successCount++;
-                } catch (err: any) {
+                } catch (err) {
                   console.error(`Erro ao cancelar título ${item.id}:`, err);
                   errorCount++;
                 }
@@ -439,7 +424,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               }
               
               queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
-            } catch (err: any) {
+            } catch (err) {
               error('Erro ao cancelar títulos');
             }
           }
@@ -468,8 +453,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
                 await TituloService.estornar(item.id);
                 success('Título estornado com sucesso!');
                 queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', contratoId] });
-              } catch (err: any) {
-                error(err.message || 'Erro ao estornar título.');
+              } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
+                error(errorMessage);
               }
             }
           } else {
@@ -500,16 +486,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
   ];
 
   // Bulk actions para termos
-  const termosBulkActions: Array<{
-    label: string;
-    action?: (selectedItems: any[]) => void;
-    variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
-    disabled?: (selectedItems: any[]) => boolean;
-    dropdown?: {
-      label: string;
-      action: () => void;
-    }[];
-  }> = [
+  const termosBulkActions: BulkAction<TermoContrato>[] = [
     {
       label: 'Novo',
       action: () => {
@@ -523,7 +500,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     },
     {
       label: 'Editar',
-      action: (selectedItems: any[]) => {
+      action: (selectedItems: TermoContrato[]) => {
         if (selectedItems.length > 0) {
           const termo = selectedItems[0];
           setEditingTermo(termo);
@@ -538,7 +515,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     {
       label: 'Deletar',
       variant: 'danger',
-      action: async (selectedItems: any[]) => {
+      action: async (selectedItems: TermoContrato[]) => {
         if (selectedItems.length > 0) {
           const confirmMessage = selectedItems.length === 1 
             ? 'Tem certeza que deseja deletar este termo?'
@@ -551,7 +528,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               }
               success('Termo(s) deletado(s) com sucesso!');
               queryClient.invalidateQueries({ queryKey: ['termos-contrato', contratoId] });
-            } catch (err: any) {
+            } catch (err) {
               error('Erro ao deletar termo(s)');
             }
           }
@@ -572,8 +549,8 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
               const url = window.URL.createObjectURL(blob);
               setPdfUrl(url);
               setShowPreview(true);
-            } catch (error: any) {
-              console.error('Erro ao gerar PDF:', error);
+            } catch (err) {
+              console.error('Erro ao gerar PDF:', err);
               error('Erro ao gerar documento para impressão');
             } finally {
               setIsGeneratingPdf(false);
@@ -672,7 +649,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       key: 'nome_termo',
       label: 'Nome do Termo',
       sortable: true,
-      render: (item: any) => {
+      render: (item: TermoContrato) => {
         return item.modeloTermo?.nome || '-';
       }
     },
@@ -680,7 +657,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       key: 'assinado',
       label: 'Assinado',
       sortable: true,
-      render: (item: any) => {
+      render: (item: TermoContrato) => {
         return (
           <span className={`badge ${item.assinado === 'SIM' ? 'bg-success' : 'bg-secondary'}`}>
             {item.assinado}
@@ -692,7 +669,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       key: 'data_aceite',
       label: 'Data Aceite',
       sortable: true,
-      render: (item: any) => {
+      render: (item: TermoContrato) => {
         return item.data_aceite ? new Date(item.data_aceite).toLocaleDateString('pt-BR') : '-';
       }
     },
@@ -700,7 +677,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       key: 'aceito_por',
       label: 'Aceito Por',
       sortable: true,
-      render: (item: any) => {
+      render: (item: TermoContrato) => {
         return item.aceito_por || '-';
       }
     },
@@ -708,7 +685,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       key: 'ativo',
       label: 'Status',
       sortable: true,
-      render: (item: any) => {
+      render: (item: TermoContrato) => {
         return (
           <span className={`badge ${item.ativo ? 'bg-success' : 'bg-secondary'}`}>
             {item.ativo ? 'Ativo' : 'Inativo'}
@@ -720,7 +697,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       key: 'created_at',
       label: 'Criado em',
       sortable: true,
-      render: (item: any) => {
+      render: (item: TermoContrato) => {
         return new Date(item.created_at).toLocaleDateString('pt-BR');
       }
     }
@@ -768,13 +745,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
     // Filtro para mostrar/ocultar inativos
     if (!showInativos) {
-      allData = allData.filter((termo: any) => termo.ativo);
+      allData = allData.filter((termo: TermoContrato) => termo.ativo);
     }
 
     // Aplicar filtro de busca
     if (searchTermos.trim()) {
       const searchTerm = searchTermos.toLowerCase().trim();
-      return allData.filter((termo: any) => {
+      return allData.filter((termo: TermoContrato) => {
         const id = termo.id?.toString() || '';
         const tipoTermo = termo.tipo_termo || '';
         const aceitoPor = termo.aceito_por || '';
@@ -805,10 +782,10 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
     }
   });
 
-  const sortedTermosData = [...filteredTermosData].sort((a: any, b: any) => {
+  const sortedTermosData = [...filteredTermosData].sort((a: TermoContrato, b: TermoContrato) => {
     if (!sortColumn) return 0;
-    const aVal = a[sortColumn] ?? '';
-    const bVal = b[sortColumn] ?? '';
+    const aVal = a[sortColumn as keyof TermoContrato] ?? '';
+    const bVal = b[sortColumn as keyof TermoContrato] ?? '';
     
     if (sortDirection === 'asc') {
       return aVal > bVal ? 1 : -1;
@@ -838,8 +815,9 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       if (onSuccess) {
         onSuccess();
       }
-    } catch (err: any) {
-      error(err.response?.data?.message || 'Erro ao atualizar contrato');
+    } catch (err) {
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao atualizar contrato';
+      error(errorMessage);
     }
   };
 
@@ -959,7 +937,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
         {activeTab === 'termos' && (
           <TermosTab
             isLoading={isLoadingTermosContrato}
-            bulkActions={termosBulkActions}
+            bulkActions={termosBulkActions as unknown as BulkAction[]}
             limit={limit}
             setLimit={setLimit}
             page={page}
@@ -1037,7 +1015,13 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
 
       <ReceberModal
         isOpen={showReceberModal}
-        parcela={selectedParcela}
+        parcela={selectedParcela ? {
+          id: selectedParcela.id,
+          numero_titulo: selectedParcela.numero_titulo,
+          valor_parcela: selectedParcela.valor,
+          data_vencimento: selectedParcela.data_vencimento,
+          cliente: selectedParcela.cliente
+        } : null}
         onClose={() => {
           setShowReceberModal(false);
           setSelectedParcela(null);
@@ -1111,7 +1095,7 @@ const ContratoEditModal: React.FC<ContratoEditModalProps> = ({
       <ModeloContratoSelectModal
         show={showModeloContratoModal}
         onClose={() => setShowModeloContratoModal(false)}
-        onSelectModelo={handleModeloContratoSelect}
+        onSelect={handleModeloContratoSelect}
         title="Selecionar Modelo de Contrato"
       />
     </>

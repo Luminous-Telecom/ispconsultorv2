@@ -1,12 +1,13 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { UseTableOptions, UseTableReturn, TableState, TableActions, SortDirection } from './types';
+import { FilterValue } from '../../types/common';
 
 export const useTable = <T extends { id: number | string }>(options: UseTableOptions<T>): UseTableReturn<T> => {
   const {
     data,
     columns,
     pagination,
-    filters = [],
+    filters: _filters = [],
     searchable = true,
     sortable = true,
     selectable = true,
@@ -176,7 +177,7 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
       onSort?.(column, direction);
     }, [onSort]),
 
-    setFilter: useCallback((key: string, value: any) => {
+    setFilter: useCallback((key: string, value: FilterValue) => {
       setState(prev => ({
         ...prev,
         filters: { ...prev.filters, [key]: value },
@@ -185,7 +186,7 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
       onFilter?.({ ...state.filters, [key]: value });
     }, [onFilter, state.filters]),
 
-    setFilters: useCallback((newFilters: Record<string, any>) => {
+    setFilters: useCallback((newFilters: Record<string, FilterValue>) => {
       setState(prev => ({
         ...prev,
         filters: newFilters,

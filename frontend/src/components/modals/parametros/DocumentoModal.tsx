@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import DraggableModal from '../../common/DraggableModal';
 import ImprimirModal from '../../common/ImprimirModal';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 import ModeloReciboService, { ModeloRecibo } from '../../../services/modeloReciboService';
 import ModeloCartaService, { ModeloCarta } from '../../../services/modeloCartaService';
 import ModeloTermoService, { ModeloTermo } from '../../../services/modeloTermoService';
-import RichTextEditor from '../../common/RichTextEditor';
+import RichTextEditor, { type RichTextEditorRef } from '../../common/RichTextEditor';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import FormField from '../../ui/FormField';
 import { ClienteService } from '../../../services/clienteService';
@@ -125,10 +126,20 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   };
 
   const createDocumentoMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: { nome: string; descricao?: string; conteudo: string }) => {
       // Se for contrato, precisa adicionar o campo 'tipo'
-      const dataToSend = tipo === 'contrato' ? { ...data, tipo } : data;
-      return getService().create(dataToSend);
+      if (tipo === 'contrato') {
+        return DocumentoSistemaService.create({ ...data, tipo });
+      } else if (tipo === 'recibo') {
+        return ModeloReciboService.create(data);
+      } else if (tipo === 'carta_cobranca') {
+        return ModeloCartaService.create(data);
+      } else if (tipo === 'termo') {
+        // Para termo, precisa do campo tipo_termo (usando 'adesao' como padrão)
+        return ModeloTermoService.create({ ...data, tipo_termo: 'adesao' });
+      } else {
+        return DocumentoSistemaService.create({ ...data, tipo: 'contrato' });
+      }
     },
     onSuccess: () => {
       addNotification('success', 'Documento criado com sucesso');
@@ -136,13 +147,20 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      addNotification('error', error.message || 'Erro ao criar documento');
+    onError: (err: unknown) => {
+      if (err instanceof Error && 'response' in err) {
+        const axiosError = err as AxiosError<{ message: string }>;
+        addNotification('error', axiosError.response?.data?.message || 'Erro ao criar documento');
+      } else if (err instanceof Error) {
+        addNotification('error', err.message || 'Erro ao criar documento');
+      } else {
+        addNotification('error', 'Erro ao criar documento');
+      }
     }
   });
 
   const updateDocumentoMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: { nome: string; descricao?: string; conteudo?: string; conteudo_contrato?: string; conteudo_adesao?: string; conteudo_permanencia?: string }) => {
       const service = getService();
       
       if (tipo === 'contrato') {
@@ -163,7 +181,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         return { success: true };
       }
       
-      return service.update(documento!.id, data);
+      return service.update(documento!.id, data as Record<string, unknown>);
     },
     onSuccess: () => {
       addNotification('success', 'Documento salvo com sucesso');
@@ -171,8 +189,15 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      addNotification('error', error.message || 'Erro ao salvar documento');
+    onError: (err: unknown) => {
+      if (err instanceof Error && 'response' in err) {
+        const axiosError = err as AxiosError<{ message: string }>;
+        addNotification('error', axiosError.response?.data?.message || 'Erro ao salvar documento');
+      } else if (err instanceof Error) {
+        addNotification('error', err.message || 'Erro ao salvar documento');
+      } else {
+        addNotification('error', 'Erro ao salvar documento');
+      }
     }
   });
 
@@ -199,8 +224,15 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         const data = { nome: formData.nome, descricao: formData.descricao, conteudo: conteudoToSend };
         await createDocumentoMutation.mutateAsync(data);
       }
-    } catch (error: any) {
-      addNotification('error', error.message || 'Erro ao salvar documento');
+    } catch (err: unknown) {
+      if (err instanceof Error && 'response' in err) {
+        const axiosError = err as AxiosError<{ message: string }>;
+        addNotification('error', axiosError.response?.data?.message || 'Erro ao salvar documento');
+      } else if (err instanceof Error) {
+        addNotification('error', err.message || 'Erro ao salvar documento');
+      } else {
+        addNotification('error', 'Erro ao salvar documento');
+      }
     }
   };
 
@@ -209,7 +241,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     onClose();
   };
 
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<RichTextEditorRef | null>(null);
   const handleInsertVariable = (variable: string) => {
     editorRef.current?.insertVariable?.(variable);
   };
@@ -288,7 +320,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           onChange={(e) => setClienteTesteId(Number(e.target.value))}
         >
           <option value={0}>Selecionar cliente...</option>
-          {clientesData?.data?.map((cliente: any) => (
+          {clientesData?.data?.map((cliente: { id: number; razao_social: string }) => (
             <option key={cliente.id} value={cliente.id}>{cliente.razao_social}</option>
           ))}
         </select>
@@ -340,10 +372,10 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
           <form onSubmit={handleSubmit}>
             <div className="row g-2 mb-3">
               <div className="col-md-6">
-                <FormField name="nome" type="text" label="Nome" value={formData.nome} onChange={(value) => setFormData(prev => ({ ...prev, nome: value }))} placeholder={isEditing ? undefined : `Ex: ${getTipoLabel(tipo)} Padrão`} required size="sm" />
+                <FormField name="nome" type="text" label="Nome" value={formData.nome} onChange={(value) => setFormData(prev => ({ ...prev, nome: String(value ?? '') }))} placeholder={isEditing ? undefined : `Ex: ${getTipoLabel(tipo)} Padrão`} required size="sm" />
               </div>
               <div className="col-md-6">
-                <FormField name="descricao" type="text" label="Descrição" value={formData.descricao} onChange={(value) => setFormData(prev => ({ ...prev, descricao: value }))} placeholder="Breve descrição" size="sm" />
+                <FormField name="descricao" type="text" label="Descrição" value={formData.descricao} onChange={(value) => setFormData(prev => ({ ...prev, descricao: String(value ?? '') }))} placeholder="Breve descrição" size="sm" />
               </div>
             </div>
 

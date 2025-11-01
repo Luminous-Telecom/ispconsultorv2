@@ -2,11 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BancoService } from '../services/bancoService';
 import { useNotificationContext } from '../contexts/NotificationContext';
 import { CACHE_CONFIG } from '../config/api';
+import { BancoFilters, UpdateBanco } from '../types';
+import { AxiosError } from 'axios';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para listar bancos
-export const useBancos = (filters: any = {}) => {
+export const useBancos = (filters: BancoFilters = {}) => {
   return useQuery({
     queryKey: ['bancos', filters],
     queryFn: () => BancoService.list(filters),
@@ -50,8 +52,9 @@ export const useCreateBanco = () => {
       queryClient.invalidateQueries({ queryKey: ['bancos-ativos'] });
       success('Banco criado com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar banco');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao criar banco');
     },
   });
 };
@@ -62,7 +65,7 @@ export const useUpdateBanco = () => {
   const { success, error } = useNotificationContext();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: number; data: UpdateBanco }) =>
       BancoService.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
@@ -70,8 +73,9 @@ export const useUpdateBanco = () => {
       queryClient.invalidateQueries({ queryKey: ['bancos-ativos'] });
       success('Banco atualizado com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao atualizar banco');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao atualizar banco');
     },
   });
 };
@@ -88,8 +92,9 @@ export const useDeleteBanco = () => {
       queryClient.invalidateQueries({ queryKey: ['bancos-ativos'] });
       success('Banco excluído com sucesso!');
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao excluir banco');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao excluir banco');
     },
   });
 };

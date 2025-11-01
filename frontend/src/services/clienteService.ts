@@ -15,10 +15,10 @@ export class ClienteService {
     if (filters.limit) params.append('limit', filters.limit.toString());
 
     try {
-      const response = await apiService.get<{success: boolean, data: Cliente[], pagination: any}>(`/clientes?${params.toString()}`);
+      const response = await apiService.get<{success: boolean, data: Cliente[], pagination: unknown}>(`/clientes?${params.toString()}`);
       return {
         success: true,
-        data: response.success ? response.data : response as any,
+        data: response.success ? response.data : response as unknown as Cliente[],
         pagination: response.pagination
       } as PaginatedResponse<Cliente>;
     } catch (error) {
@@ -31,7 +31,7 @@ export class ClienteService {
   static async getById(id: number): Promise<Cliente> {
     try {
       const response = await apiService.get<{success: boolean, data: Cliente}>(`/clientes/${id}`);
-      return response.success ? response.data : response as any;
+      return response.success ? response.data : response as unknown as Cliente;
     } catch (error) {
       console.error('Erro ao buscar cliente:', error);
       throw error;

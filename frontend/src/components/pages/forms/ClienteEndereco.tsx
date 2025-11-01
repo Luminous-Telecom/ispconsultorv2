@@ -1,21 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Cliente } from '../../../types';
+import { FormValue } from '../../../types/common';
 
 interface ClienteEnderecoProps {
-  cliente: any;
-  onDataChange: (field: string, value: any) => void;
+  cliente: Cliente;
+  onDataChange: (field: string, value: FormValue) => void;
 }
 
 const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({ 
   cliente, 
   onDataChange 
 }) => {
-  const [isEditing, setIsEditing] = useState(true);
-
-  const handleEdit = () => {
-    setIsEditing(!isEditing);
-  };
-
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: FormValue) => {
     onDataChange(field, value);
   };
 
@@ -48,7 +44,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 className="form-control form-control-sm"
                 value={cliente.cep || ''}
                 onChange={(e) => handleInputChange('cep', e.target.value)}
-                disabled={!isEditing}
               />
               <button className="btn btn-outline-secondary" type="button">
                 <i className="bi bi-search"></i>
@@ -71,7 +66,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 className="form-control form-control-sm"
                 value={cliente.endereco || ''}
                 onChange={(e) => handleInputChange('endereco', e.target.value)}
-                disabled={!isEditing}
               />
             </div>
           </div>
@@ -85,7 +79,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
               className="form-control form-control-sm"
               value={cliente.numero || ''}
               onChange={(e) => handleInputChange('numero', e.target.value)}
-              disabled={!isEditing}
             />
           </div>
 
@@ -98,7 +91,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
               className="form-control form-control-sm"
               value={cliente.complemento || ''}
               onChange={(e) => handleInputChange('complemento', e.target.value)}
-              disabled={!isEditing}
             />
           </div>
 
@@ -112,7 +104,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
               className="form-control form-control-sm"
               value={cliente.bairro || ''}
               onChange={(e) => handleInputChange('bairro', e.target.value)}
-              disabled={!isEditing}
             />
           </div>
 
@@ -127,7 +118,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
                 className="form-control form-control-sm"
                 value={cliente.cidade || ''}
                 onChange={(e) => handleInputChange('cidade', e.target.value)}
-                disabled={!isEditing}
               />
             </div>
           </div>
@@ -142,7 +132,6 @@ const ClienteEndereco: React.FC<ClienteEnderecoProps> = ({
               className="form-control form-control-sm"
               value={cliente.estado || ''}
               onChange={(e) => handleInputChange('estado', e.target.value)}
-              disabled={!isEditing}
             />
           </div>
 

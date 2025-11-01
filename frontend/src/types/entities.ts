@@ -1,6 +1,6 @@
 /**
  * Tipos e Interfaces das Entidades do Sistema
- * CTM Telecom ERP
+ * BackNet
  */
 
 // ============================================
@@ -238,7 +238,7 @@ export interface UpdateContratoDTO extends Partial<CreateContratoDTO> {
 // Table/DataTable Types
 // ============================================
 
-export interface Column<T = any> {
+export interface Column<T = unknown> {
   key: string;
   label: string;
   sortable?: boolean;
@@ -247,7 +247,7 @@ export interface Column<T = any> {
   width?: string;
 }
 
-export interface BulkAction<T = any> {
+export interface BulkAction<T = unknown> {
   label: string;
   action?: (selectedItems: T[], event?: React.MouseEvent) => void;
   variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
@@ -329,6 +329,7 @@ export interface RotinaAgendada {
   nome: string;
   tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'outros';
   descricao?: string;
+  configuracao?: Record<string, unknown>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
   hora_execucao: string;
   ativo: boolean;

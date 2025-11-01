@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { ModalConfig, ModalState, ModalAction } from './types';
+import { ModalConfig, ModalAction } from './types';
 import { useModal } from './useModal';
 import ModalHeader from './ModalHeader';
 import ModalBody from './ModalBody';
@@ -33,19 +33,19 @@ const Modal: React.FC<ModalProps> = ({
     actions: modalActions,
     isOpen,
     isVisible,
-    isAnimating,
+    isAnimating: _isAnimating,
     show,
     hide,
     close,
-    confirm,
-    cancel,
+    confirm: _confirm,
+    cancel: _cancel,
   } = useModal(config);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 });
+  const [_initialPosition, setInitialPosition] = useState({ x: 0, y: 0 });
 
   // Mostrar modal quando config.show mudar
   useEffect(() => {
@@ -57,7 +57,7 @@ const Modal: React.FC<ModalProps> = ({
   }, [config.show, isOpen, show, hide]);
 
   // Calcular tamanho do modal baseado no tipo
-  const getModalSize = () => {
+  const getModalSize = useCallback(() => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
     
@@ -77,10 +77,10 @@ const Modal: React.FC<ModalProps> = ({
       default:
         return { width: Math.min(800, screenWidth * 0.9), height: 'auto' };
     }
-  };
+  }, [config.size]);
 
   // Calcular posição centralizada
-  const getCenteredPosition = () => {
+  const getCenteredPosition = useCallback(() => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
     const modalSize = getModalSize();
@@ -92,7 +92,7 @@ const Modal: React.FC<ModalProps> = ({
       x: (screenWidth - modalWidth) / 2,
       y: (screenHeight - modalHeight) / 2,
     };
-  };
+  }, [getModalSize]);
 
   // Inicializar posição e tamanho
   useEffect(() => {
@@ -110,7 +110,7 @@ const Modal: React.FC<ModalProps> = ({
       modalActions.setPosition(position);
       setInitialPosition(position);
     }
-  }, [isOpen, isDragging, config.centered, config.size, modalActions]);
+  }, [isOpen, isDragging, config.centered, getModalSize, getCenteredPosition, modalActions]);
 
   // Handlers de drag
   const handleDragStart = (e: React.MouseEvent) => {
@@ -299,7 +299,7 @@ const Modal: React.FC<ModalProps> = ({
             scrollable={config.scrollable}
             className={config.bodyClassName}
           >
-            {/* Conteúdo padrão se não houver children */}
+            {null}
           </ModalBody>
         )}
         

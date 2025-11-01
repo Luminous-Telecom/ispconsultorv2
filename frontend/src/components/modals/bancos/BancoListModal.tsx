@@ -5,8 +5,6 @@ import { useListModal } from '../../../hooks/useListModal';
 import ListModal from '../../common/ListModal';
 import BancoModal from './BancoModal';
 import { Banco } from '../../../types';
-import { useQueryClient } from '@tanstack/react-query';
-
 interface BancoListModalProps {
   show: boolean;
   onClose: () => void;
@@ -20,7 +18,6 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   onSelectBanco,
   title = "Selecionar Banco"
 }) => {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);

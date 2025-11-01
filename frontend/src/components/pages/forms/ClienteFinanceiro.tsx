@@ -1,35 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { AxiosError } from 'axios';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import { useTitulos } from '../../../hooks/useTitulos';
 import { useMarcarTituloPago } from '../../../hooks/useTitulos';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { getApiUrl } from '../../../config/api';
 import { TituloEditModal, TituloCreateModal } from '../../modals/titulos';
 import { TituloService } from '../../../services/tituloService';
 import { Cliente, CarneParcela } from '../../../types';
 import { useImprimir } from '../../../hooks/useImprimir';
-import { createImprimirDropdown } from '../../common/ImprimirDropdown';
 
 interface ClienteFinanceiroProps {
   cliente: Cliente;
-  onDataChange: (field: string, value: unknown) => void;
 }
 
 const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({ 
-  cliente, 
-  onDataChange 
+  cliente
 }) => {
-  const [activeTab, setActiveTab] = useState(0);
   const [sortColumnParcelas, setSortColumnParcelas] = useState<string>('id');
   const [sortDirectionParcelas, setSortDirectionParcelas] = useState<'asc' | 'desc'>('desc');
   const [showParcelaEditModal, setShowParcelaEditModal] = useState(false);
   const [selectedParcelaId, setSelectedParcelaId] = useState<number | null>(null);
   const [showParcelaCreateModal, setShowParcelaCreateModal] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [selectedItems, setSelectedItems] = useState<CarneParcela[]>([]);
   const { addNotification } = useNotificationContext();
-  const navigate = useNavigate();
 
   const showNotification = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     addNotification(type, message);
@@ -38,13 +32,12 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
   // Hook para impressão
   const { handleImprimirSelecionados, handleImprimirTodos } = useImprimir({
     itemType: 'titulo',
-    filterCondition: (p: CarneParcela) => p.status === 'pendente' || p.status === 'vencido',
+    filterCondition: (p) => {
+      const parcela = p as CarneParcela;
+      return parcela.status === 'pendente' || parcela.status === 'vencido';
+    },
     filterLabel: 'Todos em Aberto'
   });
-
-  const handleTabChange = (tabIndex: number) => {
-    setActiveTab(tabIndex);
-  };
 
   // Funções de ordenação
   const handleSortParcelas = (column: string, direction: 'asc' | 'desc') => {
@@ -58,8 +51,8 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
     }
 
     return [...parcelas].sort((a, b) => {
-      let aValue: any = a[sortColumnParcelas as keyof CarneParcela];
-      let bValue: any = b[sortColumnParcelas as keyof CarneParcela];
+      let aValue: string | number | null | undefined = a[sortColumnParcelas as keyof CarneParcela] as string | number | null | undefined;
+      let bValue: string | number | null | undefined = b[sortColumnParcelas as keyof CarneParcela] as string | number | null | undefined;
 
       // Converter para string se necessário para comparação
       if (typeof aValue === 'string') {
@@ -231,8 +224,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                           const resultado = await TituloService.consultarRecebimento(item.id);
                           showNotification(resultado.message, 'success');
                           refetchParcelas();
-                        } catch (err: any) {
-                          showNotification(err.message || 'Erro ao consultar recebimento.', 'error');
+                        } catch (err) {
+                          const axiosError = err as AxiosError<{ message?: string }>;
+                          showNotification(axiosError?.response?.data?.message || 'Erro ao consultar recebimento.', 'error');
                         }
                       }
                     },
@@ -256,8 +250,9 @@ const ClienteFinanceiro: React.FC<ClienteFinanceiroProps> = ({
                               await TituloService.estornar(item.id);
                               showNotification('Título estornado com sucesso!', 'success');
                               refetchParcelas();
-                            } catch (err: any) {
-                              showNotification(err.message || 'Erro ao estornar título.', 'error');
+                            } catch (err) {
+                              const axiosError = err as AxiosError<{ message?: string }>;
+                              showNotification(axiosError?.response?.data?.message || 'Erro ao estornar título.', 'error');
                             }
                           }
                         } else {

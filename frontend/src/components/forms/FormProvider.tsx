@@ -1,14 +1,15 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { FormContextValue, FormConfig } from './types';
+import { FormContextValue, FormConfig, ValidationRule } from './types';
+import { FormValue } from '../../types/common';
 import { useForm } from './useForm';
 
 interface FormProviderProps {
   children: ReactNode;
   config: FormConfig;
-  initialValues?: Record<string, any>;
-  onSubmit?: (data: Record<string, any>) => void | Promise<void>;
+  initialValues?: Record<string, FormValue>;
+  onSubmit?: (data: Record<string, FormValue>) => void | Promise<void>;
   onReset?: () => void;
-  onFieldChange?: (name: string, value: any, allData: Record<string, any>) => void;
+  onFieldChange?: (name: string, value: FormValue, allData: Record<string, FormValue>) => void;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
   validateOnSubmit?: boolean;
@@ -35,7 +36,7 @@ export const FormProvider: React.FC<FormProviderProps> = ({
       rules[field.name] = field.validation;
     }
     return rules;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, ValidationRule[]>);
 
   // Usar o hook useForm
   const formHook = useForm({
@@ -82,7 +83,7 @@ export const useFormField = (name: string) => {
     touched: state.touched[name] || false,
     isValid: !state.errors[name],
     isInvalid: !!state.errors[name],
-    onChange: (value: any) => actions.setValue(name, value),
+    onChange: (value: FormValue) => actions.setValue(name, value),
     onBlur: () => {
       actions.setTouched(name, true);
       actions.validateField(name);

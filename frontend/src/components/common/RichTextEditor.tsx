@@ -307,19 +307,23 @@ interface RichTextEditorProps {
   disableVariables?: boolean;
 }
 
-const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorProps> = ({
+interface RichTextEditorRef {
+  insertVariable: (variable: string) => void;
+}
+
+const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, RichTextEditorProps> = ({
   value,
   onChange,
   placeholder = 'Digite aqui...',
   height = '250px',
   id,
-  name,
+  name: _name,
   ariaLabelledBy,
   onInsertVariable,
   disableColors = false,
   disableVariables = false
 }, ref) => {
-  const editorInstanceRef = useRef<any>(null);
+  const editorInstanceRef = useRef<ClassicEditor | null>(null);
 
   // Adiciona as fontes e estilos no head do documento
   React.useEffect(() => {
@@ -584,7 +588,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<any, RichTextEditorPro
 
 const RichTextEditor = forwardRef(RichTextEditorInner);
 
-export { RichTextEditor, type RichTextEditorProps };
+export { RichTextEditor, type RichTextEditorProps, type RichTextEditorRef };
 RichTextEditor.displayName = 'RichTextEditor';
 
 export default RichTextEditor;

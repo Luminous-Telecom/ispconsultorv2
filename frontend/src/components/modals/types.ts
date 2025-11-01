@@ -194,7 +194,7 @@ export interface ModalContextValue {
 export interface ModalEvent {
   type: 'show' | 'hide' | 'shown' | 'hidden' | 'close' | 'confirm' | 'cancel' | 'drag' | 'resize';
   modalId: string;
-  data?: any;
+  data?: unknown;
   position?: { x: number; y: number };
   size?: { width: number; height: number };
 }

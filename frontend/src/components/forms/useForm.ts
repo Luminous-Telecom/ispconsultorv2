@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { UseFormOptions, UseFormReturn, FormState, FormActions, ValidationRule, FieldValidationResult } from './types';
+import { UseFormOptions, UseFormReturn, FormState, FormActions } from './types';
+import { FormValue } from '../../types/common';
 import { validateField } from './ValidationRules';
 
 export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
@@ -16,7 +17,7 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
   } = options;
 
   // Estado do formulário
-  const [data, setData] = useState<Record<string, any>>(initialValues);
+  const [data, setData] = useState<Record<string, FormValue>>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,7 +51,7 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
   };
 
   // Função para validar um campo específico
-  const validateFieldValue = useCallback((name: string, value: any): boolean => {
+  const validateFieldValue = useCallback((name: string, value: FormValue): boolean => {
     const rules = validationRules[name] || [];
     const result = validateField(value, rules);
     
@@ -82,8 +83,8 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
   }, [data, validationRules]);
 
   // Ações do formulário
-  const actions: FormActions = {
-    setValue: useCallback((name: string, value: any) => {
+  const actions: FormActions = useMemo(() => ({
+    setValue: (name: string, value: FormValue) => {
       setData(prev => ({ ...prev, [name]: value }));
       
       if (validateOnChange) {
@@ -93,9 +94,9 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
       if (onFieldChange) {
         onFieldChange(name, value, { ...data, [name]: value });
       }
-    }, [validateOnChange, validateFieldValue, onFieldChange, data]),
+    },
 
-    setValues: useCallback((values: Record<string, any>) => {
+    setValues: (values: Record<string, FormValue>) => {
       setData(prev => ({ ...prev, ...values }));
       
       if (validateOnChange) {
@@ -103,41 +104,41 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
           validateFieldValue(name, values[name]);
         });
       }
-    }, [validateOnChange, validateFieldValue]),
+    },
 
-    setError: useCallback((name: string, error: string) => {
+    setError: (name: string, error: string) => {
       setErrors(prev => ({ ...prev, [name]: error }));
-    }, []),
+    },
 
-    setErrors: useCallback((newErrors: Record<string, string>) => {
+    setErrors: (newErrors: Record<string, string>) => {
       setErrors(newErrors);
-    }, []),
+    },
 
-    clearError: useCallback((name: string) => {
+    clearError: (name: string) => {
       setErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
       });
-    }, []),
+    },
 
-    clearErrors: useCallback(() => {
+    clearErrors: () => {
       setErrors({});
-    }, []),
+    },
 
-    setTouched: useCallback((name: string, touchedValue: boolean) => {
+    setTouched: (name: string, touchedValue: boolean) => {
       setTouched(prev => ({ ...prev, [name]: touchedValue }));
-    }, []),
+    },
 
-    setTouchedAll: useCallback((touchedValue: boolean) => {
+    setTouchedAll: (touchedValue: boolean) => {
       const newTouched: Record<string, boolean> = {};
       Object.keys(data).forEach(name => {
         newTouched[name] = touchedValue;
       });
       setTouched(newTouched);
-    }, [data]),
+    },
 
-    reset: useCallback(() => {
+    reset: () => {
       setData(initialValues);
       setErrors({});
       setTouched({});
@@ -146,9 +147,9 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
       if (onReset) {
         onReset();
       }
-    }, [initialValues, onReset]),
+    },
 
-    submit: useCallback(async () => {
+    submit: async () => {
       setIsSubmitting(true);
       
       try {
@@ -180,11 +181,11 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
       } finally {
         setIsSubmitting(false);
       }
-    }, [validateOnSubmit, validateAll, onSubmit, data, resetOnSubmit, initialValues, onReset]),
+    },
 
     validate: validateAll,
     validateField: (name: string) => validateFieldValue(name, data[name]),
-  };
+  }), [validateOnChange, validateFieldValue, onFieldChange, data, onReset, initialValues, validateOnSubmit, validateAll, onSubmit, resetOnSubmit]);
 
   // Props para campos
   const fieldProps = useCallback((name: string) => {
@@ -196,7 +197,7 @@ export const useForm = (options: UseFormOptions = {}): UseFormReturn => {
 
     return {
       value,
-      onChange: (newValue: any) => actions.setValue(name, newValue),
+      onChange: (newValue: FormValue) => actions.setValue(name, newValue),
       onBlur: () => {
         actions.setTouched(name, true);
         if (validateOnBlur) {

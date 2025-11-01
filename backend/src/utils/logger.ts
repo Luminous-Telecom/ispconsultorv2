@@ -8,7 +8,7 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'ctm-telecom-backend' },
+  defaultMeta: { service: 'BackNet-telecom-backend' },
   transports: [
     // Console transport
     new winston.transports.Console({

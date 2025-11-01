@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import ModeloTermoService, { ModeloTermo, CreateModeloTermoData, UpdateModeloTermoData } from '../services/modeloTermoService';
+import ModeloTermoService, { CreateModeloTermoData, UpdateModeloTermoData } from '../services/modeloTermoService';
 import { useNotificationContext } from '../contexts/NotificationContext';
+import { AxiosError } from 'axios';
 
 export const useModelosTermo = () => {
   return useQuery({
@@ -36,7 +37,7 @@ export const useModeloTermo = (id: number) => {
 
 export const useCreateModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success, error: showError } = useNotificationContext();
 
   return useMutation({
     mutationFn: async (data: CreateModeloTermoData) => {
@@ -47,15 +48,16 @@ export const useCreateModeloTermo = () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
       success('Modelo de termo criado com sucesso!');
     },
-    onError: (error: any) => {
-      error(error.response?.data?.message || 'Erro ao criar modelo de termo');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      showError(axiosError.response?.data?.message || 'Erro ao criar modelo de termo');
     },
   });
 };
 
 export const useUpdateModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success, error: showError } = useNotificationContext();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateModeloTermoData }) => {
@@ -66,15 +68,16 @@ export const useUpdateModeloTermo = () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
       success('Modelo de termo atualizado com sucesso!');
     },
-    onError: (error: any) => {
-      error(error.response?.data?.message || 'Erro ao atualizar modelo de termo');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      showError(axiosError.response?.data?.message || 'Erro ao atualizar modelo de termo');
     },
   });
 };
 
 export const useDeleteModeloTermo = () => {
   const queryClient = useQueryClient();
-  const { success, error } = useNotificationContext();
+  const { success, error: showError } = useNotificationContext();
 
   return useMutation({
     mutationFn: (id: number) => ModeloTermoService.delete(id),
@@ -82,8 +85,9 @@ export const useDeleteModeloTermo = () => {
       queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
       success('Modelo de termo excluído com sucesso!');
     },
-    onError: (error: any) => {
-      error(error.response?.data?.message || 'Erro ao excluir modelo de termo');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      showError(axiosError.response?.data?.message || 'Erro ao excluir modelo de termo');
     },
   });
 };

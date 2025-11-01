@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { DashboardService, DashboardData, DashboardStats } from '../services/dashboardService';
+import { DashboardService } from '../services/dashboardService';
 import { CACHE_CONFIG } from '../config/api';
 
-const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;
+const { DEFAULT_CACHE_TIME } = CACHE_CONFIG;
 
 // Hook para buscar dados completos do dashboard
 export const useDashboard = () => {

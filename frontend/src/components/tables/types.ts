@@ -1,13 +1,15 @@
 // Tipos para sistema de tabelas unificado
+import React from 'react';
+import { RenderFunction, FilterValue } from '../../types/common';
 
 export type SortDirection = 'asc' | 'desc';
 export type TableSize = 'sm' | 'md' | 'lg';
 export type TableVariant = 'default' | 'striped' | 'bordered' | 'borderless' | 'hover';
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   key: string;
   label: string;
-  render?: (item: T, index: number) => React.ReactNode;
+  render?: RenderFunction<T>;
   className?: string;
   sortable?: boolean;
   width?: string | number;
@@ -20,11 +22,11 @@ export interface TableColumn<T = any> {
   hidden?: boolean;
   searchable?: boolean;
   filterable?: boolean;
-  filterOptions?: Array<{ value: any; label: string }>;
+  filterOptions?: Array<{ value: FilterValue; label: string }>;
   tooltip?: string;
 }
 
-export interface TableAction<T = any> {
+export interface TableAction<T = Record<string, unknown>> {
   key: string;
   label: string;
   icon?: string;
@@ -41,7 +43,7 @@ export interface TableAction<T = any> {
   };
 }
 
-export interface BulkAction<T = any> {
+export interface BulkAction<T = Record<string, unknown>> {
   key: string;
   label: string;
   icon?: string;
@@ -74,12 +76,12 @@ export interface TableFilter {
   key: string;
   label: string;
   type: 'text' | 'select' | 'date' | 'dateRange' | 'number' | 'boolean';
-  options?: Array<{ value: any; label: string }>;
+  options?: Array<{ value: string | number; label: string }>;
   placeholder?: string;
-  defaultValue?: any;
+  defaultValue?: FilterValue;
 }
 
-export interface TableConfig<T = any> {
+export interface TableConfig<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
   data: T[];
   loading?: boolean;
@@ -108,14 +110,14 @@ export interface TableConfig<T = any> {
   customFilters?: (data: T[]) => T[];
 }
 
-export interface TableState<T = any> {
+export interface TableState<T = Record<string, unknown>> {
   data: T[];
   filteredData: T[];
   selectedItems: T[];
   searchTerm: string;
   sortColumn: string;
   sortDirection: SortDirection;
-  filters: Record<string, any>;
+  filters: Record<string, FilterValue>;
   currentPage: number;
   pageSize: number;
   isLoading: boolean;
@@ -123,13 +125,13 @@ export interface TableState<T = any> {
   isSorted: boolean;
 }
 
-export interface TableActions<T = any> {
+export interface TableActions<T = Record<string, unknown>> {
   setData: (data: T[]) => void;
   setSelectedItems: (items: T[]) => void;
   setSearchTerm: (term: string) => void;
   setSort: (column: string, direction: SortDirection) => void;
-  setFilter: (key: string, value: any) => void;
-  setFilters: (filters: Record<string, any>) => void;
+  setFilter: (key: string, value: FilterValue) => void;
+  setFilters: (filters: Record<string, FilterValue>) => void;
   clearFilters: () => void;
   setPage: (page: number) => void;
   setPageSize: (size: number) => void;
@@ -139,7 +141,7 @@ export interface TableActions<T = any> {
   toggleSelection: (item: T) => void;
 }
 
-export interface UseTableOptions<T = any> {
+export interface UseTableOptions<T = Record<string, unknown>> {
   data: T[];
   columns: TableColumn<T>[];
   pagination?: TablePagination;
@@ -151,14 +153,14 @@ export interface UseTableOptions<T = any> {
   onDataChange?: (data: T[]) => void;
   onSelectionChange?: (selectedItems: T[]) => void;
   onSort?: (column: string, direction: SortDirection) => void;
-  onFilter?: (filters: Record<string, any>) => void;
+  onFilter?: (filters: Record<string, FilterValue>) => void;
   onSearch?: (term: string) => void;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onRefresh?: () => void;
 }
 
-export interface UseTableReturn<T = any> {
+export interface UseTableReturn<T = Record<string, unknown>> {
   state: TableState<T>;
   actions: TableActions<T>;
   filteredData: T[];
@@ -171,12 +173,12 @@ export interface UseTableReturn<T = any> {
 }
 
 // Tipos para eventos
-export interface TableEvent<T = any> {
+export interface TableEvent<T = Record<string, unknown>> {
   type: 'select' | 'sort' | 'filter' | 'search' | 'page' | 'action';
   data?: T | T[];
   column?: string;
   direction?: SortDirection;
-  filters?: Record<string, any>;
+  filters?: Record<string, FilterValue>;
   searchTerm?: string;
   page?: number;
   pageSize?: number;

@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import React from 'react';
 import DraggableModal from '../../../../common/DraggableModal';
 import { useNotificationContext } from '../../../../../contexts/NotificationContext';
 import { TermoContrato } from '../../../../../services/TermoContratoService';

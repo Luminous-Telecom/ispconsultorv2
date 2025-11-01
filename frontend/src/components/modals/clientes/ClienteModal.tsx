@@ -1,32 +1,33 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { ClienteService } from '../../../services/clienteService';
 import { PlanoService } from '../../../services/planoService';
 import { BancoService } from '../../../services/bancoService';
 import { TituloService } from '../../../services/tituloService';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
-import { Cliente, CarneParcela, Contrato, Titulo } from '../../../types';
+import { Cliente, CarneParcela, CreateCliente } from '../../../types';
 import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
 import { useFormPrefix } from '../../../hooks/useFormId';
-import Table from '../../tables/Table';
-import { TableConfig } from '../../tables/types';
 import ImprimirModal from '../../common/ImprimirModal';
 import TituloEditModal from '../titulos/TituloEditModal';
 import ReceberModal from '../pagamentos/ReceberModal';
-import { useContratos, useDeleteContrato } from '../../../hooks/useContratos';
+import { useContratos, useDeleteContrato, Contrato } from '../../../hooks/useContratos';
 import ContratoCreateModal from './ContratoCreateModal';
 import ContratoEditModal from './ContratoEditModal';
 import { useFormReset } from '../../../hooks/useFormReset';
-import { Form, FormConfig, AddressFields, ContactFields } from '../../forms';
-import Button from '../../ui/Button';
-import Dropdown from '../../ui/Dropdown';
+import AddressFields from '../../forms/AddressFields';
+import ContactFields from '../../forms/ContactFields';
 import ConfirmModal from '../../ui/ConfirmModal';
+import Table from '../../tables/Table';
 // Utilitários centralizados
 import { formatCurrency, formatDate, formatCNPJ, formatPhone, formatCEP } from '../../../utils/formatters';
 import { ensureString } from '../../../utils/stringUtils';
-import { ContratoItem, TituloItem, ClienteFormData, ClienteFormErrors, BulkActionItem } from '../../../types/cliente';
+import { TituloItem, ClienteFormData, ClienteFormErrors } from '../../../types/cliente';
+import { FormConfig } from '../../forms/types';
+import { FormValue } from '../../../types/common';
 
 interface ClienteModalProps {
   show: boolean;
@@ -99,16 +100,16 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<TituloItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<TituloItem[]>([]);
-  const [selectedContratosItems, setSelectedContratosItems] = useState<ContratoItem[]>([]);
+  const [selectedContratosItems, setSelectedContratosItems] = useState<Contrato[]>([]);
   const [showInativosContratos, setShowInativosContratos] = useState(false);
-  const [searchContratos, setSearchContratos] = useState('');
-  const [searchFinanceiro, setSearchFinanceiro] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [_searchContratos, _setSearchContratos] = useState('');
+  const [_searchFinanceiro, _setSearchFinanceiro] = useState('');
+  const [_page, _setPage] = useState(1);
+  const [_limit, _setLimit] = useState(10);
+  const [_sortColumn, _setSortColumn] = useState<string>('id');
+  const [_sortDirection, _setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [_showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
   const [confirmMessage, setConfirmMessage] = useState('');
   const [createdClienteId, setCreatedClienteId] = useState<number | null>(null);
@@ -119,7 +120,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   }, [isEditing, createdClienteId]);
 
   // Função helper para mostrar confirmação
-  const showConfirmation = (message: string, action: () => void) => {
+  const _showConfirmation = (message: string, action: () => void) => {
     setConfirmMessage(message);
     setConfirmAction(() => action);
     setShowConfirmModal(true);
@@ -212,20 +213,20 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   }, [cliente]);
 
   // Buscar planos
-  const { data: planosData } = useQuery({
+  const { data: _planosData } = useQuery({
     queryKey: ['planos'],
     queryFn: () => PlanoService.list({ page: 1, limit: 100 }),
   });
 
   // Buscar bancos
-  const { data: bancosData } = useQuery({
+  const { data: _bancosData } = useQuery({
     queryKey: ['bancos'],
     queryFn: () => BancoService.list({ page: 1, limit: 100 }),
   });
 
   // Buscar contratos do cliente (usar clienteId quando editando, ou createdClienteId quando criou)
   const effectiveClienteIdForContratos = clienteId || createdClienteId || undefined;
-  const { data: contratosData, isLoading: isLoadingContratos, error: contratosError, refetch: refetchContratos } = useContratos(effectiveClienteIdForContratos);
+  const { data: contratosData, isLoading: isLoadingContratos, error: _contratosError, refetch: refetchContratos } = useContratos(effectiveClienteIdForContratos);
   
   // Hook para deletar contrato
   const deleteContratoMutation = useDeleteContrato();
@@ -238,8 +239,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   });
 
   // Configuração do formulário unificado para dados básicos
-  const dadosBasicosFormConfig: FormConfig = {
-    formatValue: (name: string, value: any) => {
+  const _dadosBasicosFormConfig: FormConfig = {
+    formatValue: (name: string, value: FormValue) => {
       // Aplicar formatação durante a digitação
       if (typeof value === 'string') {
         if (name === 'cnpj') {
@@ -312,8 +313,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     });
 
     // Aplicar filtro de busca
-    if (searchFinanceiro.trim()) {
-      const searchTerm = searchFinanceiro.toLowerCase().trim();
+    if (_searchFinanceiro && typeof _searchFinanceiro === 'string' && _searchFinanceiro.trim()) {
+      const searchTerm = _searchFinanceiro.toLowerCase().trim();
       filteredData = filteredData.filter((titulo: CarneParcela) => {
         const id = titulo.id?.toString() || '';
         const numeroTitulo = titulo.numero_titulo || '';
@@ -336,13 +337,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
   // Função para ordenar os dados
   const getSortedData = () => {
-    if (!sortColumn) return filteredData;
+    if (!_sortColumn) return filteredData;
     
     return [...filteredData].sort((a, b) => {
       let valueA: string | number | Date;
       let valueB: string | number | Date;
       
-      switch (sortColumn) {
+      switch (_sortColumn) {
         case 'id':
           valueA = a.id;
           valueB = b.id;
@@ -376,13 +377,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           valueB = (b.pago || b.status === 'cancelado') ? 0 : Number(b.valor_parcela || 0);
           break;
         default:
-          valueA = a[sortColumn as keyof CarneParcela] as string | number || '';
-          valueB = b[sortColumn as keyof CarneParcela] as string | number || '';
+          valueA = a[_sortColumn as keyof CarneParcela] as string | number || '';
+          valueB = b[_sortColumn as keyof CarneParcela] as string | number || '';
       }
       
       // Comparação
-      if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
-      if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+      if (valueA < valueB) return _sortDirection === 'asc' ? -1 : 1;
+      if (valueA > valueB) return _sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
   };
@@ -391,12 +392,12 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
   // Aplicar paginação aos dados ordenados
   const getPaginatedData = () => {
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
+    const startIndex = (_page - 1) * _limit;
+    const endIndex = startIndex + _limit;
     return sortedData.slice(startIndex, endIndex);
   };
 
-  const paginatedData = getPaginatedData();
+  const _paginatedData = getPaginatedData();
 
   // Funções de impressão
   const handleImprimirSelecionados = async () => {
@@ -411,7 +412,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         setShowImprimirModal(true);
         
         showNotification('Boletos selecionados gerados com sucesso!', 'success');
-      } catch (error: any) {
+      } catch (error) {
         console.error('Erro ao gerar PDF dos boletos:', error);
         showNotification('Erro ao gerar boletos selecionados', 'error');
       } finally {
@@ -439,7 +440,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         setShowImprimirModal(true);
         
         showNotification('Boletos em aberto gerados com sucesso!', 'success');
-      } catch (error: any) {
+      } catch (error) {
         console.error('Erro ao gerar PDF dos boletos:', error);
         showNotification('Erro ao gerar boletos em aberto', 'error');
       } finally {
@@ -455,8 +456,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     key: string;
     label: string;
     variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
-    disabled?: boolean | ((selectedItems: any[]) => boolean);
-    onClick?: (selectedItems: any[]) => void;
+    disabled?: boolean | ((selectedItems: Contrato[]) => boolean);
+    onClick?: (selectedItems: Contrato[]) => void;
     confirm?: {
       title: string;
       message: string;
@@ -495,10 +496,11 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         for (const item of selectedItems) {
           try {
             deleteContratoMutation.mutateAsync(item.id);
-          } catch (error: any) {
+          } catch (error) {
+            const axiosError = error as AxiosError<{ message: string; error?: string }>;
             console.error(`Erro ao deletar contrato ${item.id}:`, error);
-            const errorMessage = error?.response?.data?.message || 
-                               error?.response?.data?.error || 
+            const errorMessage = axiosError?.response?.data?.message || 
+                               axiosError?.response?.data?.error || 
                                `Erro ao deletar contrato ${item.id}`;
             showNotification(errorMessage, 'error');
           }
@@ -549,9 +551,10 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 } else {
                   showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
                 }
-              } catch (error: any) {
+              } catch (error) {
+                const axiosError = error as AxiosError<{ message: string }>;
                 console.error('Erro ao gerar PDF:', error);
-                if (error.response?.status === 404) {
+                if (axiosError.response?.status === 404) {
                   showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
                 } else {
                   showNotification('Erro ao gerar contrato', 'error');
@@ -597,9 +600,10 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 } else {
                   showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
                 }
-              } catch (error: any) {
+              } catch (error) {
+                const axiosError = error as AxiosError<{ message: string }>;
                 console.error('Erro ao gerar PDF:', error);
-                if (error.response?.status === 404) {
+                if (axiosError.response?.status === 404) {
                   showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
                 } else {
                   showNotification('Erro ao gerar termo de adesão', 'error');
@@ -645,9 +649,10 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 } else {
                   showNotification('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.', 'error');
                 }
-              } catch (error: any) {
+              } catch (error) {
+                const axiosError = error as AxiosError<{ message: string }>;
                 console.error('Erro ao gerar PDF:', error);
-                if (error.response?.status === 404) {
+                if (axiosError.response?.status === 404) {
                   showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
                 } else {
                   showNotification('Erro ao gerar contrato de permanência', 'error');
@@ -733,9 +738,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               
               for (const item of selectedItems) {
                 try {
-                  const response = await TituloService.update(item.id, { status: 'cancelado' });
+                  const _response = await TituloService.update(item.id, { status: 'cancelado' });
                   successCount++;
-                } catch (err: any) {
+                } catch (err) {
                   console.error(`Erro ao cancelar título ${item.id}:`, err);
                   errorCount++;
                 }
@@ -759,7 +764,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               queryClient.invalidateQueries({ queryKey: ['cliente', clienteId] });
               queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
               refetchParcelas();
-            } catch (err: any) {
+            } catch (err) {
               showNotification('Erro ao cancelar títulos', 'error');
             }
           }
@@ -790,8 +795,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 showNotification('Título estornado com sucesso!', 'success');
                 queryClient.invalidateQueries({ queryKey: ['parcelas', 'cliente', clienteId] });
                 refetchParcelas();
-              } catch (err: any) {
-                showNotification(err.message || 'Erro ao estornar título.', 'error');
+              } catch (err) {
+                const error = err as Error;
+                showNotification(error.message || 'Erro ao estornar título.', 'error');
               }
             }
           } else {
@@ -804,7 +810,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'imprimir',
       label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
       variant: 'primary',
-      disabled: (selectedItems) => isGeneratingPdf,
+      disabled: (_selectedItems) => isGeneratingPdf,
       dropdown: [
         {
           label: 'Selecionados',
@@ -842,10 +848,10 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const sortedContratosData = React.useMemo(() => {
     if (!contratosData) return [];
     
-    let filtered = contratosData.filter((contrato: any) => {
+    let filtered = contratosData.filter((contrato: Contrato) => {
       // Filtro por busca
-      if (searchContratos) {
-        const searchLower = searchContratos.toLowerCase();
+      if (_searchContratos) {
+        const searchLower = _searchContratos.toLowerCase();
         const matchesSearch = 
           contrato.plano?.nome_plano?.toLowerCase().includes(searchLower) ||
           contrato.status?.toLowerCase().includes(searchLower) ||
@@ -858,39 +864,55 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     });
 
     // Ordenação
-    if (sortColumn) {
-      filtered = [...filtered].sort((a: any, b: any) => {
-        let aValue: any = a[sortColumn];
-        let bValue: any = b[sortColumn];
+    if (_sortColumn) {
+      filtered = [...filtered].sort((a: Contrato, b: Contrato) => {
+        let aValue: string | number = '';
+        let bValue: string | number = '';
         
         // Tratar campos especiais
-        if (sortColumn === 'plano') {
+        if (_sortColumn === 'plano') {
           aValue = a.plano?.nome_plano || '';
           bValue = b.plano?.nome_plano || '';
-        } else if (sortColumn === 'valor_plano') {
-          aValue = parseFloat(a.plano?.valor_mensal) || 0;
-          bValue = parseFloat(b.plano?.valor_mensal) || 0;
-        } else if (sortColumn === 'valor_final') {
-          aValue = parseFloat(aValue) || 0;
-          bValue = parseFloat(bValue) || 0;
+        } else if (_sortColumn === 'valor_plano') {
+          aValue = Number(a.plano?.valor_mensal || 0);
+          bValue = Number(b.plano?.valor_mensal || 0);
+        } else if (_sortColumn === 'valor_final') {
+          aValue = Number(a.valor_final || 0);
+          bValue = Number(b.valor_final || 0);
+        } else if (_sortColumn === 'id') {
+          aValue = a.id;
+          bValue = b.id;
+        } else if (_sortColumn === 'status') {
+          aValue = a.status || '';
+          bValue = b.status || '';
+        } else if (_sortColumn === 'data_inicio') {
+          aValue = a.data_inicio || '';
+          bValue = b.data_inicio || '';
+        } else {
+          // Para campos genéricos
+          const valueA = a[_sortColumn as keyof Contrato];
+          const valueB = b[_sortColumn as keyof Contrato];
+          aValue = valueA !== null && valueA !== undefined ? String(valueA) : '';
+          bValue = valueB !== null && valueB !== undefined ? String(valueB) : '';
         }
         
         if (typeof aValue === 'string') aValue = aValue.toLowerCase();
         if (typeof bValue === 'string') bValue = bValue.toLowerCase();
         
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        if (aValue < bValue) return _sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return _sortDirection === 'asc' ? 1 : -1;
         return 0;
       });
     }
     
     return filtered;
-  }, [contratosData, searchContratos, showInativosContratos, sortColumn, sortDirection]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contratosData, _searchContratos, _sortColumn, _sortDirection]);
 
-  const paginatedContratosData = React.useMemo(() => {
-    const startIndex = (page - 1) * limit;
-    return sortedContratosData.slice(startIndex, startIndex + limit);
-  }, [sortedContratosData, page, limit]);
+  const _paginatedContratosData = React.useMemo(() => {
+    const startIndex = (_page - 1) * _limit;
+    return sortedContratosData.slice(startIndex, startIndex + _limit);
+  }, [sortedContratosData, _page, _limit]);
 
   // Colunas para contratos
   const contratosColumns = [
@@ -898,25 +920,25 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'id',
       label: 'ID',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.id
+      render: (contrato: Contrato) => contrato.id
     },
     {
       key: 'nome_plano',
       label: 'Plano',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.plano?.nome_plano || '-'
+      render: (contrato: Contrato) => contrato.plano?.nome_plano || '-'
     },
     {
       key: 'valor_plano',
       label: 'Valor Plano',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.plano?.valor_mensal ? formatCurrency(contrato.plano.valor_mensal) : '-'
+      render: (contrato: Contrato) => contrato.plano?.valor_mensal ? formatCurrency(contrato.plano.valor_mensal) : '-'
     },
     {
       key: 'status',
       label: 'Status',
       sortable: true,
-      render: (contrato: ContratoItem) => (
+      render: (contrato: Contrato) => (
         <span className={`badge ${
           contrato.status === 'ativo' ? 'bg-success' :
           contrato.status === 'inativo' ? 'bg-danger' :
@@ -930,37 +952,37 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'desconto_percentual',
       label: 'Desconto %',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
+      render: (contrato: Contrato) => contrato.desconto_percentual ? `${contrato.desconto_percentual}%` : '-'
     },
     {
       key: 'desconto_valor',
       label: 'Desconto R$',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.desconto_valor ? formatCurrency(contrato.desconto_valor) : '-'
+      render: (contrato: Contrato) => contrato.desconto_valor ? formatCurrency(contrato.desconto_valor) : '-'
     },
     {
       key: 'valor_final',
       label: 'Valor Final',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.valor_final ? formatCurrency(contrato.valor_final) : '-'
+      render: (contrato: Contrato) => contrato.valor_final ? formatCurrency(contrato.valor_final) : '-'
     },
     {
       key: 'data_inicio',
       label: 'Data Início',
       sortable: true,
-      render: (contrato: ContratoItem) => formatDate(contrato.data_inicio)
+      render: (contrato: Contrato) => contrato.data_inicio ? formatDate(contrato.data_inicio) : '-'
     },
     {
       key: 'data_fim',
       label: 'Data Fim',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.data_fim ? formatDate(contrato.data_fim) : '-'
+      render: (contrato: Contrato) => contrato.data_fim ? formatDate(contrato.data_fim) : '-'
     },
     {
       key: 'isento_mensalidade',
       label: 'Isento',
       sortable: true,
-      render: (contrato: ContratoItem) => (
+      render: (contrato: Contrato) => (
         <span className={`badge ${contrato.isento_mensalidade ? 'bg-success' : 'bg-secondary'}`}>
           {contrato.isento_mensalidade ? 'Sim' : 'Não'}
         </span>
@@ -970,13 +992,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       key: 'dia_vencimento',
       label: 'Dia Venc.',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.dia_vencimento_id ? contrato.dia_vencimento_id : '-'
+      render: (contrato: Contrato) => contrato.dia_vencimento_id ? contrato.dia_vencimento_id : '-'
     },
     {
       key: 'banco_nome',
       label: 'Banco',
       sortable: true,
-      render: (contrato: ContratoItem) => contrato.bancoBoleto?.nome || '-'
+      render: (contrato: Contrato) => contrato.bancoBoleto?.nome || '-'
     }
   ];
 
@@ -1068,14 +1090,15 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       onSuccess?.();
       // Não fechar o modal automaticamente
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao atualizar cliente');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao atualizar cliente');
     },
   });
 
   // Mutation para criar cliente
   const createClienteMutation = useMutation({
-    mutationFn: (data: Partial<Cliente>) => ClienteService.create(data as any),
+    mutationFn: (data: Partial<Cliente>) => ClienteService.create(data as CreateCliente),
     onSuccess: (createdCliente: Cliente) => {
       success('Cliente criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
@@ -1084,8 +1107,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       onSuccess?.();
       // Não fechar o modal automaticamente
     },
-    onError: (err: any) => {
-      error(err.response?.data?.message || 'Erro ao criar cliente');
+    onError: (err) => {
+      const axiosError = err as AxiosError<{ message: string }>;
+      error(axiosError.response?.data?.message || 'Erro ao criar cliente');
     },
   });
 
@@ -1142,6 +1166,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       recebe_whatsapp: cliente.recebe_whatsapp ?? true,
       observacoes: cliente.observacoes || ''
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     cliente?.id,
     cliente?.cnpj,
@@ -1175,7 +1200,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     customData: customFormData
   });
 
-  const handleInputChange = (field: keyof ClienteFormData, value: any) => {
+  const handleInputChange = (field: keyof ClienteFormData, value: FormValue) => {
     // Aplicar formatação baseada no campo
     let formattedValue = value;
     if (field === 'cnpj' && typeof value === 'string') {
@@ -1198,7 +1223,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: any = {};
+    const newErrors: Partial<Record<keyof ClienteFormErrors, string>> = {};
 
     if (!formData.cnpj.trim()) newErrors.cnpj = 'CNPJ é obrigatório';
     if (!formData.razao_social.trim()) newErrors.razao_social = 'Razão social é obrigatória';
@@ -1220,6 +1245,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     if (!validateForm()) return;
 
     // Preparar dados para envio com conversão de tipos correta
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dataToSend: any = {
       cnpj: formData.cnpj,
       razao_social: formData.razao_social,
@@ -1457,9 +1483,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                     size="md"
                     includeEmail={true}
                     includeWhatsApp={true}
-                    formData={formData}
-                    onChange={(name: string, value: any) => handleInputChange(name as keyof ClienteFormData, value)}
-                    errors={errors}
+                    formData={formData as unknown as Record<string, FormValue>}
+                    onChange={(name: string, value: FormValue) => handleInputChange(name as keyof ClienteFormData, value)}
+                    errors={errors as unknown as Record<string, string>}
                   />
                 </div>
                 
@@ -1472,7 +1498,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                       type="checkbox"
                       label="Recebe Email"
                       value={formData.recebe_email}
-                      onChange={(value: any) => handleInputChange('recebe_email', value)}
+                      onChange={(value) => handleInputChange('recebe_email', value)}
                       formPrefix={formPrefix}
                     />
                   </div>
@@ -1483,7 +1509,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                       type="checkbox"
                       label="Recebe SMS"
                       value={formData.recebe_sms}
-                      onChange={(value: any) => handleInputChange('recebe_sms', value)}
+                      onChange={(value) => handleInputChange('recebe_sms', value)}
                       formPrefix={formPrefix}
                     />
                   </div>
@@ -1494,7 +1520,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                       type="checkbox"
                       label="Recebe WhatsApp"
                       value={formData.recebe_whatsapp}
-                      onChange={(value: any) => handleInputChange('recebe_whatsapp', value)}
+                      onChange={(value) => handleInputChange('recebe_whatsapp', value)}
                       formPrefix={formPrefix}
                     />
                   </div>
@@ -1507,9 +1533,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               <AddressFields 
                 required={false}
                 size="md"
-                formData={formData}
-                onChange={(name: string, value: any) => handleInputChange(name as keyof ClienteFormData, value)}
-                errors={errors}
+                formData={formData as unknown as Record<string, FormValue>}
+                onChange={(name: string, value: FormValue) => handleInputChange(name as keyof ClienteFormData, value)}
+                errors={errors as unknown as Record<string, string>}
               />
             )}
 
@@ -1521,7 +1547,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                   <Table
                     config={{
                       columns: contratosColumns,
-                      data: contratosData as ContratoItem[] || [],
+                      data: contratosData || [],
                       loading: isLoadingContratos,
                       selectable: true,
                       multiSelect: true,
@@ -1534,8 +1560,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                       bulkActions: contratosBulkActions,
                       emptyMessage: 'Este cliente ainda não possui contratos cadastrados.',
                       className: 'no-padding',
-                      customFilters: (data: any[]) => {
-                        return data.filter((contrato: any) => {
+                      customFilters: (data: Contrato[]) => {
+                        return data.filter((contrato: Contrato) => {
                           if (contrato.status === 'inativo' && !showInativosContratos) {
                             return false;
                           }
@@ -1575,11 +1601,11 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Contratos ativos:</div>
-                          <strong>{sortedContratosData.filter((c: any) => c.status === 'ativo').length}</strong>
+                          <strong>{sortedContratosData.filter((c: Contrato) => c.status === 'ativo').length}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor total mensal:</div>
-                          <strong>R$ {sortedContratosData.reduce((sum: number, contrato: any) => {
+                          <strong>R$ {sortedContratosData.reduce((sum: number, contrato: Contrato) => {
                             return sum + Number(contrato.valor_final || 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
@@ -1625,7 +1651,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                         </div>
                       )
                     }}
-                      onSelectionChange={(items: any[]) => setSelectedItems(items as TituloItem[])}
+                      onSelectionChange={(items: CarneParcela[]) => setSelectedItems(items as TituloItem[])}
                     onRefresh={() => refetchParcelas()}
                   />
 
@@ -1639,13 +1665,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                       <div className="d-flex gap-4">
                         <div className="text-end">
                           <div className="small text-muted">Valor:</div>
-                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                          <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
                             return sum + Number(item.valor || item.valor_parcela || 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor baixado:</div>
-                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                          <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
                             // Só considerar como baixado se estiver pago E não cancelado
                             if (item.pago && item.status === 'pago') {
                               return sum + Number(item.valor_pago || 0);
@@ -1655,13 +1681,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor aberto:</div>
-                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                          <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
                             return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || item.valor_parcela || 0));
                           }, 0).toFixed(2)}</strong>
                         </div>
                         <div className="text-end">
                           <div className="small text-muted">Valor cancelado:</div>
-                          <strong>R$ {sortedData.reduce((sum: number, item: any) => {
+                          <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
                             return sum + (item.status === 'cancelado' ? Number(item.valor || item.valor_parcela || 0) : 0);
                           }, 0).toFixed(2)}</strong>
                         </div>
@@ -1728,7 +1754,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
             numero_titulo: (selectedParcela.numero_titulo || selectedParcela.numero_parcela || `Título ${selectedParcela.id}`).toString(),
             valor_parcela: selectedParcela.valor || selectedParcela.valor_parcela,
             data_vencimento: selectedParcela.data_vencimento,
-            cliente: selectedParcela.cliente || selectedParcela.carne?.cliente
+            cliente: (() => {
+              const cliente = selectedParcela.cliente || (selectedParcela.carne as { cliente?: { razao_social: string } })?.cliente;
+              if (cliente && typeof cliente === 'object' && 'razao_social' in cliente) {
+                return cliente as { razao_social: string };
+              }
+              return undefined;
+            })()
           } : null}
           onSuccess={() => {
             setShowReceberModal(false);
@@ -1778,7 +1810,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
         {/* Modal de Confirmação */}
         <ConfirmModal
-          show={showConfirmModal}
+          show={_showConfirmModal}
           message={confirmMessage}
           onConfirm={handleConfirm}
           onCancel={handleCancelConfirm}

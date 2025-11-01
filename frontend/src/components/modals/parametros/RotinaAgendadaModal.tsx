@@ -4,6 +4,7 @@ import DraggableModal from '../../common/DraggableModal';
 import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '../../../services/schedulerService';
 import { useNotificationContext } from '../../../contexts/NotificationContext';
 import FormField from '../../ui/FormField';
+import { AxiosError } from 'axios';
 
 interface RotinaAgendadaModalProps {
   show: boolean;
@@ -62,8 +63,9 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
       resetForm();
       onSuccess?.();
     },
-    onError: (error: any) => {
-      addNotification('error', error?.response?.data?.message || 'Erro ao criar rotina');
+    onError: (error: unknown) => {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      addNotification('error', axiosError?.response?.data?.message || 'Erro ao criar rotina');
     },
   });
 
@@ -76,8 +78,9 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
       resetForm();
       onSuccess?.();
     },
-    onError: (error: any) => {
-      addNotification('error', error?.response?.data?.message || 'Erro ao atualizar rotina');
+    onError: (error: unknown) => {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      addNotification('error', axiosError?.response?.data?.message || 'Erro ao atualizar rotina');
     },
   });
 
@@ -140,7 +143,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
               type="select"
               value={formData.tipo}
               onChange={(value) => {
-                const tipoValue = value as any;
+                const tipoValue = String(value ?? 'geracao_titulos') as CreateRotinaData['tipo'];
                 // Gerar nome automaticamente baseado no tipo
                 const nomesPorTipo: Record<string, string> = {
                   'geracao_titulos': 'Geração de Títulos',
@@ -181,7 +184,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
               label="Frequência"
               type="select"
               value={formData.frequencia}
-              onChange={(value) => setFormData({ ...formData, frequencia: value as any })}
+              onChange={(value) => setFormData({ ...formData, frequencia: String(value ?? 'diaria') as CreateRotinaData['frequencia'] })}
               required
               options={[
                 { value: 'diaria', label: 'Diária' },
@@ -197,7 +200,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
               label="Horário de Execução"
               type="time"
               value={formData.hora_execucao}
-              onChange={(value) => setFormData({ ...formData, hora_execucao: value })}
+              onChange={(value) => setFormData({ ...formData, hora_execucao: String(value ?? '00:00') })}
               required
             />
           </div>

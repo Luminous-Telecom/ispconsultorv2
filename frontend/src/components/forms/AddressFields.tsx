@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
+import { FormValue } from '../../types/common';
 import FormField from '../ui/FormField';
 
 interface AddressFieldsProps {
   prefix?: string;
   required?: boolean;
   size?: 'sm' | 'md' | 'lg';
-  formData?: Record<string, any>;
-  onChange?: (name: string, value: any) => void;
-  errors?: Record<string, any>;
+  formData?: Record<string, FormValue>;
+  onChange?: (name: string, value: FormValue) => void;
+  errors?: Record<string, string>;
 }
 
 interface ViaCEPResponse {
@@ -32,15 +33,16 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
   const getFieldValue = (field: string) => formData[getFieldName(field)] || '';
   const getFieldError = (field: string) => errors[getFieldName(field)] || '';
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: FormValue) => {
     if (onChange) {
       onChange(getFieldName(field), value);
     }
   };
 
   // Buscar CEP automaticamente quando o CEP tiver 8 dígitos
+  const cepValue = getFieldValue('cep');
   useEffect(() => {
-    const cep = getFieldValue('cep');
+    const cep = typeof cepValue === 'string' ? cepValue : String(cepValue || '');
     const cepNumbers = cep.replace(/\D/g, '');
     
     if (cepNumbers.length === 8) {
@@ -62,7 +64,8 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
           console.error('Erro ao buscar CEP:', error);
         });
     }
-  }, [getFieldValue('cep'), onChange, prefix]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cepValue, onChange]);
 
   const addressFields = [
     {

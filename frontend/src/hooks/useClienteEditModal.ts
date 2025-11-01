@@ -5,6 +5,7 @@ import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../contexts/NotificationContext';
 import { ClienteFormData, ClienteFormErrors, ContratoItem, TituloItem, ApiError } from '../types/cliente';
 import { validateClienteForm } from '../utils/validators';
+import { FormValue } from '../types/common';
 
 export const useClienteEditModal = (clienteId: number | null) => {
   const { success, error } = useNotificationContext();
@@ -52,7 +53,7 @@ export const useClienteEditModal = (clienteId: number | null) => {
     else success(message); // Para info, usar success
   }, [success, error]);
   
-  const handleInputChange = useCallback((field: keyof ClienteFormData, value: any) => {
+  const handleInputChange = useCallback((field: keyof ClienteFormData, value: FormValue) => {
     setFormData((prev: ClienteFormData) => ({
       ...prev,
       [field]: value
@@ -68,7 +69,7 @@ export const useClienteEditModal = (clienteId: number | null) => {
   }, [errors]);
   
   const validateForm = useCallback((): boolean => {
-    const newErrors = validateClienteForm(formData);
+    const newErrors = validateClienteForm(formData as unknown as Record<string, unknown>);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);

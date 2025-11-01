@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'ctm-backend-dev',
+      name: 'BackNet-backend-dev',
       cwd: './backend',
       script: process.platform === 'win32' ? 'cmd' : 'npm',
       args: process.platform === 'win32' ? '/c npm run dev' : 'run dev',
@@ -22,7 +22,7 @@ module.exports = {
       min_uptime: '10s'
     },
     {
-      name: 'ctm-frontend-dev',
+      name: 'BackNet-frontend-dev',
       cwd: './frontend',
       script: process.platform === 'win32' ? 'cmd' : 'npm',
       args: process.platform === 'win32' ? '/c npm start' : 'start',

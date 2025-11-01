@@ -1,8 +1,10 @@
 import React from 'react';
 import FormField from '../../../../ui/FormField';
 import EntitySelectField from '../../../../../components/ui/EntitySelectField';
-import { Plano, Banco } from '../../../../../types';
+import { Plano, Banco, PaginatedResponse } from '../../../../../types';
 import { DocumentoSistema } from '../../../../../services/documentoSistemaService';
+import { DiasVencimento } from '../../../../../services/diasVencimentoService';
+import { FormValue } from '../../../../../types/common';
 
 interface ContratoForm {
   plano_id: number;
@@ -29,10 +31,10 @@ interface ContratoTabProps {
   onPlanoSelect: (plano: Plano) => void;
   onBancoSelect: (banco: Banco) => void;
   onModeloContratoSelect: (modelo: DocumentoSistema) => void;
-  planosData: any;
-  bancosData: any;
-  modelosContratoData: any;
-  diasVencimento: any[];
+  planosData: PaginatedResponse<Plano> | Plano[] | undefined;
+  bancosData: PaginatedResponse<Banco> | Banco[] | undefined;
+  modelosContratoData: { success: boolean; data: DocumentoSistema[]; message: string } | undefined;
+  diasVencimento: DiasVencimento[];
   onShowPlanoModal: () => void;
   onShowBancoModal: () => void;
   onShowModeloContratoModal: () => void;
@@ -57,8 +59,8 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   onShowModeloContratoModal
 }) => {
   // Handlers simplificados para desconto
-  const handleDescontoPercentualChange = (value: string | number) => {
-    const percentual = typeof value === 'string' ? parseFloat(value) || 0 : value;
+  const handleDescontoPercentualChange = (value: FormValue) => {
+    const percentual = typeof value === 'string' ? parseFloat(value) || 0 : (typeof value === 'number' ? value : 0);
     handleInputChange('desconto_percentual', percentual);
     
     // Calcular valor do desconto baseado no valor do plano selecionado
@@ -69,8 +71,8 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
     }
   };
 
-  const handleDescontoValorChange = (value: string | number) => {
-    const valor = typeof value === 'string' ? parseFloat(value) || 0 : value;
+  const handleDescontoValorChange = (value: FormValue) => {
+    const valor = typeof value === 'string' ? parseFloat(value) || 0 : (typeof value === 'number' ? value : 0);
     handleInputChange('desconto_valor', valor);
     
     // Calcular percentual do desconto baseado no valor do plano selecionado
@@ -132,7 +134,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           required={true}
           size="md"
           value={formData.data_inicio}
-          onChange={(value, name) => handleInputChange('data_inicio', value)}
+          onChange={(value) => handleInputChange('data_inicio', value as string)}
           error={errors.data_inicio}
           isInvalid={!!errors.data_inicio}
         />
@@ -146,7 +148,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           label="Data de Fim"
           size="md"
           value={formData.data_fim}
-          onChange={(value, name) => handleInputChange('data_fim', value)}
+          onChange={(value) => handleInputChange('data_fim', value as string)}
         />
       </div>
 
@@ -164,8 +166,8 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
         >
           <option value={0}>Selecione</option>
           {diasVencimento
-            .filter((item: any) => item.ativo)
-            .map((item: any) => (
+            .filter((item) => item.ativo)
+            .map((item) => (
               <option key={item.id} value={item.id}>
                 Dia {String(item.dia).padStart(2, '0')}
               </option>
@@ -179,13 +181,13 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
         <EntitySelectField
           value={bancoSelecionado?.id || 0}
           onChange={(value) => {
-            const banco = (Array.isArray(bancosData) ? bancosData : bancosData?.data || []).find((b: any) => b.id === value);
+            const banco = (Array.isArray(bancosData) ? bancosData : bancosData?.data || []).find((b) => b.id === value);
             if (banco) {
               onBancoSelect(banco);
             }
           }}
           onShowModal={onShowBancoModal}
-          entities={(Array.isArray(bancosData) ? bancosData : bancosData?.data || []).map((b: any) => ({
+          entities={(Array.isArray(bancosData) ? bancosData : bancosData?.data || []).map((b) => ({
             id: b.id,
             nome: b.nome
           }))}
@@ -239,7 +241,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           label="Data Validade Desconto"
           size="md"
           value={formData.data_validade_desconto}
-          onChange={(value, name) => handleInputChange('data_validade_desconto', value)}
+          onChange={(value) => handleInputChange('data_validade_desconto', value as string)}
         />
       </div>
 
@@ -265,13 +267,13 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
         <EntitySelectField
           value={modeloContratoSelecionado?.id || 0}
           onChange={(value) => {
-            const modelo = (Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).find((m: any) => m.id === value);
+            const modelo = (Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).find((m) => m.id === value);
             if (modelo) {
               onModeloContratoSelect(modelo);
             }
           }}
           onShowModal={onShowModeloContratoModal}
-          entities={(Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).map((m: any) => ({
+          entities={(Array.isArray(modelosContratoData) ? modelosContratoData : modelosContratoData?.data || []).map((m) => ({
             id: m.id,
             nome: m.nome
           }))}
@@ -291,7 +293,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           label="Observações"
           size="md"
           value={formData.observacoes}
-          onChange={(e: any) => handleInputChange('observacoes', e.value)}
+          onChange={(value) => handleInputChange('observacoes', value as string)}
           rows={3}
         />
       </div>

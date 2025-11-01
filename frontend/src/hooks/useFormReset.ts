@@ -95,7 +95,7 @@ export function useFormReset<T>({
         previousCustomDataStr.current = currentCustomDataStr;
       }
     }
-  }, [show, customData]);
+  }, [show, customData, processData, setFormData]);
 }
 
 export default useFormReset;

@@ -1,15 +1,16 @@
 import React, { ReactNode } from 'react';
 import { FormConfig } from './types';
+import { FormValue } from '../../types/common';
 import { FormProvider, useFormContext } from './FormProvider';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';
 
 interface FormProps {
   config: FormConfig;
-  initialValues?: Record<string, any>;
-  onSubmit?: (data: Record<string, any>) => void | Promise<void>;
+  initialValues?: Record<string, FormValue>;
+  onSubmit?: (data: Record<string, FormValue>) => void | Promise<void>;
   onReset?: () => void;
-  onFieldChange?: (name: string, value: any, allData: Record<string, any>) => void;
+  onFieldChange?: (name: string, value: FormValue, allData: Record<string, FormValue>) => void;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
   validateOnSubmit?: boolean;
