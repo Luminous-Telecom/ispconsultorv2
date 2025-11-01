@@ -16,6 +16,10 @@ interface DadosVariaveis {
   dataReferencia?: Date;
 }
 
+interface ContratoWithPlano extends Contrato {
+  plano?: Plano;
+}
+
 export class VariaveisDocumentoService {
   // Cache para logo da empresa (evita conversões repetidas)
   private static logoCache: { url: string; base64: string } | null = null;
@@ -259,48 +263,53 @@ export class VariaveisDocumentoService {
   /**
    * Processar variáveis do contrato
    */
-  private static async processarVariaveisContrato(conteudo: string, contrato: any): Promise<string> {
+  private static async processarVariaveisContrato(conteudo: string, contrato: Contrato | Partial<Contrato> & { id: number }): Promise<string> {
     let resultado = conteudo;
 
     // Buscar plano se não estiver carregado
-    if (!contrato.plano) {
-      const contratoCompleto: any = await Contrato.findByPk(contrato.id, {
+    let contratoCompleto: ContratoWithPlano;
+    if (!('plano' in contrato) || !contrato.plano) {
+      const contratoCompletoQuery = await Contrato.findByPk(contrato.id, {
         include: [{ model: Plano, as: 'plano' }]
       });
-      if (contratoCompleto) {
-        contrato = contratoCompleto;
+      if (contratoCompletoQuery) {
+        contratoCompleto = contratoCompletoQuery as ContratoWithPlano;
+      } else {
+        contratoCompleto = contrato as ContratoWithPlano;
       }
+    } else {
+      contratoCompleto = contrato as ContratoWithPlano;
     }
 
     // Resolver dia de vencimento (migrado para FK dia_vencimento_id)
     let diaVencimentoStr = '';
     try {
-      const diaId = (contrato as any).dia_vencimento_id;
+      const diaId = contratoCompleto.dia_vencimento_id;
       if (diaId) {
         const cfg = await DiasVencimento.findByPk(diaId);
-        if (cfg && (cfg as any).dia != null) {
-          diaVencimentoStr = String((cfg as any).dia);
+        if (cfg && cfg.dia != null) {
+          diaVencimentoStr = String(cfg.dia);
         }
       }
     } catch {}
 
     // Calcular valor do contrato (valor_final ou valor_mensal do plano)
-    const valorContrato = contrato.valor_final || contrato.plano?.valor_mensal || 0;
+    const valorContrato = contratoCompleto.valor_final || contratoCompleto.plano?.valor_mensal || 0;
     
     const substituicoes: Record<string, string> = {
-      '#contrato.id#': String(contrato.id),
-      '#contrato.plano#': contrato.plano?.nome_plano || (contrato.plano?.nome || ''),
+      '#contrato.id#': String(contratoCompleto.id),
+      '#contrato.plano#': contratoCompleto.plano?.nome_plano || '',
       '#contrato.valor_contrato#': this.formatarMoeda(valorContrato),
-      '#contrato.valor_mensal#': this.formatarMoeda(contrato.plano?.valor_mensal || 0),
-      '#contrato.valor_final#': this.formatarMoeda(contrato.valor_final || 0),
-      '#contrato.desconto_percentual#': String(contrato.desconto_percentual || 0) + '%',
-      '#contrato.desconto_valor#': this.formatarMoeda(contrato.desconto_valor || 0),
-      '#contrato.data_inicio#': contrato.data_inicio ? this.formatarData(new Date(contrato.data_inicio)) : '',
-      '#contrato.data_fim#': contrato.data_fim ? this.formatarData(new Date(contrato.data_fim)) : '',
-      '#contrato.data_validade_desconto#': contrato.data_validade_desconto ? this.formatarData(new Date(contrato.data_validade_desconto)) : '',
-      '#contrato.status#': contrato.status || '',
+      '#contrato.valor_mensal#': this.formatarMoeda(contratoCompleto.plano?.valor_mensal || 0),
+      '#contrato.valor_final#': this.formatarMoeda(contratoCompleto.valor_final || 0),
+      '#contrato.desconto_percentual#': String(contratoCompleto.desconto_percentual || 0) + '%',
+      '#contrato.desconto_valor#': this.formatarMoeda(contratoCompleto.desconto_valor || 0),
+      '#contrato.data_inicio#': contratoCompleto.data_inicio ? this.formatarData(new Date(contratoCompleto.data_inicio)) : '',
+      '#contrato.data_fim#': contratoCompleto.data_fim ? this.formatarData(new Date(contratoCompleto.data_fim)) : '',
+      '#contrato.data_validade_desconto#': contratoCompleto.data_validade_desconto ? this.formatarData(new Date(contratoCompleto.data_validade_desconto)) : '',
+      '#contrato.status#': contratoCompleto.status || '',
       '#contrato.dia_vencimento#': diaVencimentoStr,
-      '#contrato.isento_mensalidade#': contrato.isento_mensalidade ? 'Sim' : 'Não',
+      '#contrato.isento_mensalidade#': contratoCompleto.isento_mensalidade ? 'Sim' : 'Não',
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {

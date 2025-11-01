@@ -3,7 +3,6 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    project: './tsconfig.json',
   },
   plugins: ['@typescript-eslint'],
   extends: [
@@ -15,8 +14,9 @@ module.exports = {
     es6: true,
   },
   rules: {
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['warn', { 
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/no-unused-vars': ['error', { 
       argsIgnorePattern: '^_',
       varsIgnorePattern: '^_'
     }],

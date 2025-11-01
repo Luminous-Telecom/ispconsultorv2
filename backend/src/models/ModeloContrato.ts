@@ -19,7 +19,7 @@ interface ModeloContratoAttributes {
   updated_at?: Date;
 }
 
-interface ModeloContratoCreationAttributes extends Optional<ModeloContratoAttributes, 'id' | 'created_at' | 'updated_at'> {}
+type ModeloContratoCreationAttributes = Optional<ModeloContratoAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 export class ModeloContrato extends Model<ModeloContratoAttributes, ModeloContratoCreationAttributes> implements ModeloContratoAttributes {
   public id!: number;

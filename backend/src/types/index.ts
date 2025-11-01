@@ -1,10 +1,13 @@
 // Tipos base para o sistema ERP Assessoria
 
+// Tipo para valores JSON válidos
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 // Helper type para lidar com erros
 export interface ApiError extends Error {
   status?: number;
   code?: string;
-  details?: unknown;
+  details?: JsonValue;
 }
 
 export interface BaseEntity {
@@ -105,7 +108,7 @@ export interface Banco extends BaseEntity {
   instrucao_linha_3?: string;
   instrucao_linha_4?: string;
   instrucao_linha_5?: string;
-  configuracoes_json?: Record<string, any>;
+  configuracoes_json?: Record<string, JsonValue>;
   logo?: string;
   
   // Relacionamentos
@@ -117,7 +120,7 @@ export interface Banco extends BaseEntity {
 export interface BancoConfiguracao extends BaseEntity {
   banco_id: number;
   tipo_banco: string;
-  configuracao: Record<string, any>;
+  configuracao: Record<string, JsonValue>;
   ativo: boolean;
   observacoes?: string;
   
@@ -163,7 +166,7 @@ export interface DadosEmpresa extends BaseEntity {
 }
 
 // Tipos para requisições e respostas da API
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   message?: string;

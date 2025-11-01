@@ -3,6 +3,8 @@ import { ServidorEmail } from '../models/ServidorEmail';
 import { MensagemEmail } from '../models/MensagemEmail';
 import { logger } from '../utils/logger';
 import nodemailer from 'nodemailer';
+import { Op } from 'sequelize';
+import { ValidationError } from 'sequelize';
 
 export class ServidorEmailController {
   /**
@@ -99,15 +101,13 @@ export class ServidorEmailController {
         message: 'Servidor de email criado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar servidor de email:', error);
       
-      if (error instanceof Error && error.name === 'SequelizeValidationError') {
-        const validationError = error as any;
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
+          errors: error.errors ? error.errors.map((err) => err.message) : []
         });
         return;
       }
@@ -141,7 +141,7 @@ export class ServidorEmailController {
       if (servidorData.ativo === true) {
         await ServidorEmail.update(
           { ativo: false },
-          { where: { ativo: true, id: { [require('sequelize').Op.ne]: id } } }
+          { where: { ativo: true, id: { [Op.ne]: id } } }
         );
       }
 
@@ -153,15 +153,13 @@ export class ServidorEmailController {
         message: 'Servidor de email atualizado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao atualizar servidor de email:', error);
       
-      if (error instanceof Error && error.name === 'SequelizeValidationError') {
-        const validationError = error as any;
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
+          errors: error.errors ? error.errors.map((err) => err.message) : []
         });
         return;
       }
@@ -435,15 +433,13 @@ export class ServidorEmailController {
         });
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar/atualizar servidor de email:', error);
       
-      if (error instanceof Error && error.name === 'SequelizeValidationError') {
-        const validationError = error as any;
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
+          errors: error.errors ? error.errors.map((err) => err.message) : []
         });
         return;
       }

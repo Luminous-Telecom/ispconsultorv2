@@ -8,14 +8,19 @@ export class ParametroController {
     try {
       const { categoria, ativo } = req.query;
       
-      const whereClause: any = {};
+      const whereClause: { categoria?: string; ativo?: boolean } = {};
       
-      if (categoria) {
+      if (categoria && typeof categoria === 'string') {
         whereClause.categoria = categoria;
       }
       
       if (ativo !== undefined) {
-        whereClause.ativo = ativo === 'true';
+        const ativoValue = Array.isArray(ativo) ? ativo[0] : ativo;
+        if (typeof ativoValue === 'string') {
+          whereClause.ativo = ativoValue === 'true';
+        } else if (typeof ativoValue === 'boolean') {
+          whereClause.ativo = ativoValue;
+        }
       }
 
       const parametros = await Parametro.findAll({

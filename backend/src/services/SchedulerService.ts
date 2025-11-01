@@ -2,13 +2,105 @@ import * as cron from 'node-cron';
 import { ScheduledRoutine, RoutineExecutionLog } from '../models';
 import { DiasVencimento } from '../models/DiasVencimento';
 import { logger } from '../utils/logger';
+import type { JsonValue } from '../types';
+
+interface RoutineResult {
+  success?: boolean;
+  message?: string;
+  [key: string]: JsonValue | undefined;
+}
+
+interface GeracaoTitulosResult extends RoutineResult {
+  success: boolean;
+  titulos_gerados: number;
+  contratos_processados: number;
+  contratos_com_erro: number;
+  message: string;
+}
+
+interface EnvioBoletosResult extends RoutineResult {
+  success: boolean;
+  mensagens_enviadas: number;
+  erros: number;
+  message: string;
+}
+
+interface RemessaBancariaDetalhe {
+  titulo_id: number;
+  banco?: string;
+  status: 'sucesso' | 'erro';
+  message: string;
+  charge_id?: string;
+}
+
+interface RemessaBancariaResult {
+  titulos_registrados: number;
+  titulos_erro: number;
+  total_processados: number;
+  detalhes: RemessaBancariaDetalhe[];
+  message?: string;
+}
+
+interface TituloWithRelations {
+  banco?: {
+    nome?: string;
+  };
+}
+
+interface ContratoWithPlano {
+  plano?: {
+    valor_mensal: number;
+  };
+}
+
+interface SchedulerStatus {
+  isRunning: boolean;
+  activeJobs: number;
+  scheduledRoutines: number[];
+}
+
+interface WorkersStatus {
+  totalWorkers: number;
+  activeWorkers: number;
+  workers: Array<{
+    id: number;
+    status: string;
+    lastActivity: Date;
+  }>;
+}
+
+interface HealthStatus {
+  status: 'healthy' | 'stopped';
+  isRunning: boolean;
+  activeJobs: number;
+  uptime: number;
+}
+
+interface DetailedStats {
+  scheduler: {
+    isRunning: boolean;
+    activeJobs: number;
+    uptime: number;
+  };
+  system: {
+    memoryUsage: NodeJS.MemoryUsage;
+    cpuUsage: NodeJS.CpuUsage;
+    uptime: number;
+  };
+}
+
+interface RoutineExecutionLogWithRoutine extends RoutineExecutionLog {
+  routine?: Pick<ScheduledRoutine, 'nome' | 'tipo'>;
+}
 
 export class SchedulerService {
   private static instance: SchedulerService;
   private cronJobs: Map<number, cron.ScheduledTask> = new Map();
   private isRunning = false;
 
-  private constructor() {}
+  private constructor() {
+    // Singleton pattern - construtor privado
+  }
 
   public static getInstance(): SchedulerService {
     if (!SchedulerService.instance) {
@@ -140,14 +232,14 @@ export class SchedulerService {
 
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
-      const statusFinal = resultado?.success === false ? 'erro' : 'sucesso';
+      const statusFinal = 'success' in resultado && resultado.success === false ? 'erro' : 'sucesso';
 
       // Atualizar log com status correto
       await executionLog.update({
         status: statusFinal as 'sucesso' | 'erro',
         data_fim: endTime,
         duracao_ms: duration,
-        resultado: resultado
+        resultado: resultado as Record<string, JsonValue>
       });
 
       // Atualizar contadores da rotina
@@ -159,7 +251,7 @@ export class SchedulerService {
       }
       await routine.update({ ultima_execucao: endTime });
 
-    } catch (error: unknown) {
+    } catch (error) {
       console.error(`Erro ao executar rotina ${routine.nome}:`, error);
 
       const endTime = new Date();
@@ -181,7 +273,7 @@ export class SchedulerService {
     }
   }
 
-  private async executeRoutineByType(routine: ScheduledRoutine): Promise<any> {
+  private async executeRoutineByType(routine: ScheduledRoutine): Promise<RoutineResult | GeracaoTitulosResult | EnvioBoletosResult | RemessaBancariaResult> {
     switch (routine.tipo) {
       case 'geracao_titulos':
         return await this.executeGeracaoTitulos(routine);
@@ -197,12 +289,11 @@ export class SchedulerService {
     }
   }
 
-  private async executeGeracaoTitulos(routine: ScheduledRoutine): Promise<any> {
-    const { Contrato } = await import('../models/Contrato');
+  private async executeGeracaoTitulos(_routine: ScheduledRoutine): Promise<GeracaoTitulosResult> {
+    const { Contrato: ContratoModel } = await import('../models/Contrato');
     const { Titulo } = await import('../models/Titulo');
     const { Plano } = await import('../models/Plano');
     const { default: Parametros } = await import('../models/Parametros');
-    const { Op } = await import('sequelize');
     
     try {
       console.log('Iniciando geração de títulos...');
@@ -213,7 +304,7 @@ export class SchedulerService {
       console.log(`Total de títulos configurado: ${quantidadeMinimaTitulos}`);
       
       // Buscar todos os contratos ativos
-      const contratos = await Contrato.findAll({
+      const contratos = await ContratoModel.findAll({
         where: {
           status: 'ativo'
         },
@@ -261,7 +352,7 @@ export class SchedulerService {
 
           if (titulosGerar > 0) {
             // Buscar data inicial do contrato ou usar data atual
-            const dataInicio = contrato.data_inicio || new Date();
+            const _dataInicio = contrato.data_inicio || new Date();
             const diaVencimentoConfig = await DiasVencimento.findByPk(contrato.dia_vencimento_id);
             const diaVencimento = diaVencimentoConfig?.dia || 15;
 
@@ -293,7 +384,8 @@ export class SchedulerService {
               if (!tituloExistente && dataVencimento > hoje) {
                 console.log(`Título não existe e data é futura, criando...`);
                 // Calcular valor do título (aplicar descontos se houver)
-                const plano = (contrato as any).plano;
+                const contratoComPlano = contrato as InstanceType<typeof ContratoModel> & ContratoWithPlano;
+                const plano = contratoComPlano.plano;
                 let valorTitulo = contrato.valor_final || (plano?.valor_mensal || 0);
 
                 // Aplicar descontos
@@ -312,7 +404,7 @@ export class SchedulerService {
 
                 // Criar título
                 // dataVencimento já é um Date local, mas garantimos que está correto
-                const novoTitulo = await Titulo.create({
+                await Titulo.create({
                   contrato_id: contrato.id,
                   cliente_id: contrato.cliente_id,
                   plano_id: contrato.plano_id,
@@ -360,12 +452,15 @@ export class SchedulerService {
       console.error('Erro na execução da rotina de geração de títulos:', error);
       return {
         success: false,
-        message: `Erro ao gerar títulos: ${error}`
+        titulos_gerados: 0,
+        contratos_processados: 0,
+        contratos_com_erro: 0,
+        message: `Erro ao gerar títulos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
       };
     }
   }
 
-  private async executeEnvioBoletos(routine: ScheduledRoutine): Promise<any> {
+  private async executeEnvioBoletos(routine: ScheduledRoutine): Promise<EnvioBoletosResult> {
     try {
       const { EnvioBoletosRoutine } = await import('./routines/EnvioBoletosRoutine');
       const envioBoletosRoutine = new EnvioBoletosRoutine();
@@ -381,7 +476,7 @@ export class SchedulerService {
         erros: resultado.data.erros,
         message: resultado.message
       };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao executar envio de boletos:', error);
       return {
@@ -393,8 +488,8 @@ export class SchedulerService {
     }
   }
 
-  private async executeRemessaBancaria(routine: ScheduledRoutine): Promise<any> {
-    const { Titulo } = await import('../models/Titulo');
+  private async executeRemessaBancaria(_routine: ScheduledRoutine): Promise<RemessaBancariaResult> {
+    const { Titulo: TituloModel } = await import('../models/Titulo');
     const { Banco } = await import('../models/Banco');
     const { Cliente } = await import('../models/Cliente');
     const { Plano } = await import('../models/Plano');
@@ -405,7 +500,7 @@ export class SchedulerService {
       console.log('Iniciando remessa bancária...');
       
       // Buscar títulos pendentes que ainda não foram registrados no banco (sem charge_id)
-      const titulosParaRegistrar = await Titulo.findAll({
+      const titulosParaRegistrar = await TituloModel.findAll({
         where: {
           status: 'pendente',
           charge_id: null // Apenas títulos que ainda não foram registrados
@@ -437,11 +532,11 @@ export class SchedulerService {
 
       let registrados = 0;
       let erros = 0;
-      const detalhes: any[] = [];
+      const detalhes: RemessaBancariaDetalhe[] = [];
 
       for (const titulo of titulosParaRegistrar) {
         try {
-          const tituloCompleto = titulo as any;
+          const tituloCompleto = titulo as Parameters<typeof BancoApiService.gerarTitulo>[0];
           console.log(`Registrando título ${titulo.id} no banco ${tituloCompleto.banco?.nome}...`);
           
           // Registrar título no banco
@@ -475,9 +570,10 @@ export class SchedulerService {
           const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
           console.error(`Erro ao processar título ${titulo.id}:`, errorMsg);
           
+          const tituloComBanco = titulo as InstanceType<typeof TituloModel> & TituloWithRelations;
           detalhes.push({
             titulo_id: titulo.id,
-            banco: (titulo as any).banco?.nome,
+            banco: tituloComBanco.banco?.nome,
             status: 'erro',
             message: errorMsg
           });
@@ -500,6 +596,7 @@ export class SchedulerService {
         titulos_registrados: 0,
         titulos_erro: 0,
         total_processados: 0,
+        detalhes: [],
         message: `Erro ao executar remessa bancária: ${errorMsg}`
       };
     }
@@ -509,7 +606,7 @@ export class SchedulerService {
     nome: string;
     tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'outros';
     descricao?: string;
-    configuracao: any;
+    configuracao: Record<string, JsonValue>;
     frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
     dia_execucao?: number;
     hora_execucao: string;
@@ -575,7 +672,7 @@ export class SchedulerService {
     return routine;
   }
 
-  public async executeRoutineManually(id: number): Promise<any> {
+  public async executeRoutineManually(id: number): Promise<{ message: string }> {
     const routine = await ScheduledRoutine.findByPk(id);
     if (!routine) {
       throw new Error('Rotina não encontrada');
@@ -590,7 +687,7 @@ export class SchedulerService {
   }
 
 
-  private calculateNextExecution(routine: any): Date {
+  private calculateNextExecution(routine: Pick<ScheduledRoutine, 'hora_execucao' | 'frequencia'>): Date {
     const now = new Date();
     const [hours, minutes] = routine.hora_execucao.split(':');
     
@@ -624,7 +721,7 @@ export class SchedulerService {
     return nextExecution;
   }
 
-  public getStatus(): any {
+  public getStatus(): SchedulerStatus {
     return {
       isRunning: this.isRunning,
       activeJobs: this.cronJobs.size,
@@ -654,7 +751,7 @@ export class SchedulerService {
     });
   }
 
-  public getWorkersStatus(): any {
+  public getWorkersStatus(): WorkersStatus {
     return {
       totalWorkers: this.cronJobs.size,
       activeWorkers: this.cronJobs.size,
@@ -666,7 +763,7 @@ export class SchedulerService {
     };
   }
 
-  public getHealthStatus(): any {
+  public getHealthStatus(): HealthStatus {
     return {
       status: this.isRunning ? 'healthy' : 'stopped',
       isRunning: this.isRunning,
@@ -675,7 +772,7 @@ export class SchedulerService {
     };
   }
 
-  public getDetailedStats(): any {
+  public getDetailedStats(): DetailedStats {
     return {
       scheduler: {
         isRunning: this.isRunning,
@@ -690,8 +787,8 @@ export class SchedulerService {
     };
   }
 
-  public async getExecutionLogs(routineId?: number): Promise<any[]> {
-    const where: any = {};
+  public async getExecutionLogs(routineId?: number): Promise<RoutineExecutionLogWithRoutine[]> {
+    const where: { routine_id?: number } = {};
     if (routineId) {
       where.routine_id = routineId;
     }
@@ -715,7 +812,7 @@ export class SchedulerService {
     }
   }
 
-  public async getRecentExecutionLogs(limit: number = 10): Promise<any[]> {
+  public async getRecentExecutionLogs(limit = 10): Promise<RoutineExecutionLogWithRoutine[]> {
     return await RoutineExecutionLog.findAll({
       include: [{
         model: ScheduledRoutine,

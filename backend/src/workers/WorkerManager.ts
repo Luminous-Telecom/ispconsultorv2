@@ -10,12 +10,24 @@ export interface WorkerManagerConfig {
   retryDelay?: number; // em milissegundos
 }
 
+interface WorkerInfo {
+  executionId: number;
+  threadId: number | undefined;
+  isRunning: boolean;
+}
+
+export interface WorkersStatus {
+  active: number;
+  max: number;
+  workers: WorkerInfo[];
+}
+
 export class WorkerManager extends EventEmitter {
   private static instance: WorkerManager;
   private config: Required<WorkerManagerConfig>;
   private isRunning = false;
   private checkInterval?: NodeJS.Timeout;
-  private activeExecutions: Map<number, Promise<any>> = new Map();
+  private activeExecutions: Map<number, Promise<void>> = new Map();
 
   private constructor(config: WorkerManagerConfig = {}) {
     super();
@@ -260,7 +272,7 @@ export class WorkerManager extends EventEmitter {
   getStatus(): {
     isRunning: boolean;
     activeExecutions: number;
-    workersStatus: any;
+    workersStatus: WorkersStatus;
     config: Required<WorkerManagerConfig>;
   } {
     return {

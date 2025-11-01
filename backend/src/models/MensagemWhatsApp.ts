@@ -14,7 +14,7 @@ interface MensagemWhatsAppAttributes {
   updated_at?: Date;
 }
 
-interface MensagemWhatsAppCreationAttributes extends Optional<MensagemWhatsAppAttributes, 'id' | 'created_at' | 'updated_at'> {}
+type MensagemWhatsAppCreationAttributes = Optional<MensagemWhatsAppAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 export class MensagemWhatsApp extends Model<MensagemWhatsAppAttributes, MensagemWhatsAppCreationAttributes> implements MensagemWhatsAppAttributes {
   public id!: number;

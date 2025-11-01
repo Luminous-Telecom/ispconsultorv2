@@ -8,6 +8,7 @@ import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService
 
 // @ts-ignore
 import * as htmlPdf from 'html-pdf-node';
+import type { PdfOptions } from 'html-pdf-node';
 
 export class ModeloCartaController {
   /**
@@ -312,7 +313,7 @@ export class ModeloCartaController {
       `;
 
       // Configurações do PDF
-      const options = {
+      const options: PdfOptions = {
         format: 'A4',
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true
@@ -514,7 +515,7 @@ export class ModeloCartaController {
       `;
 
       // Configurações do PDF
-      const options = {
+      const options: PdfOptions = {
         format: 'A4',
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true

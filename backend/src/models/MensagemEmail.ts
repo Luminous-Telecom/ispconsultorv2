@@ -11,7 +11,7 @@ interface MensagemEmailAttributes {
   updated_at?: Date;
 }
 
-interface MensagemEmailCreationAttributes extends Optional<MensagemEmailAttributes, 'id' | 'created_at' | 'updated_at'> {}
+type MensagemEmailCreationAttributes = Optional<MensagemEmailAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 export class MensagemEmail extends Model<MensagemEmailAttributes, MensagemEmailCreationAttributes> implements MensagemEmailAttributes {
   public id!: number;

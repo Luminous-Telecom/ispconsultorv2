@@ -11,6 +11,8 @@ import {
 import { sequelize } from '../config/database';
 import { Banco } from './Banco';
 
+type ConfiguracaoValor = string | number | boolean | null;
+
 export class BancoConfiguracao extends Model<
   InferAttributes<BancoConfiguracao>,
   InferCreationAttributes<BancoConfiguracao>
@@ -18,7 +20,7 @@ export class BancoConfiguracao extends Model<
   declare id: CreationOptional<number>;
   declare banco_id: number;
   declare tipo_banco: string;
-  declare configuracao: Record<string, any>;
+  declare configuracao: Record<string, ConfiguracaoValor>;
   declare ativo: boolean;
   declare observacoes: string | null;
   declare created_at: CreationOptional<Date>;
@@ -49,11 +51,11 @@ export class BancoConfiguracao extends Model<
     });
   }
 
-  async getConfiguracaoPorChave(chave: string): Promise<any> {
+  async getConfiguracaoPorChave(chave: string): Promise<ConfiguracaoValor> {
     return this.configuracao[chave];
   }
 
-  async setConfiguracaoPorChave(chave: string, valor: any): Promise<void> {
+  async setConfiguracaoPorChave(chave: string, valor: ConfiguracaoValor): Promise<void> {
     const config = { ...this.configuracao };
     config[chave] = valor;
     await this.update({ configuracao: config });

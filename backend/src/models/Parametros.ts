@@ -12,7 +12,7 @@ interface ParametrosAttributes {
   updated_at?: Date;
 }
 
-interface ParametrosCreationAttributes extends Optional<ParametrosAttributes, 'id' | 'created_at' | 'updated_at'> {}
+type ParametrosCreationAttributes = Optional<ParametrosAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 class Parametros extends Model<ParametrosAttributes, ParametrosCreationAttributes> implements ParametrosAttributes {
   public id!: number;

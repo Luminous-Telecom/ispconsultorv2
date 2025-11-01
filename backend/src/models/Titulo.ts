@@ -183,7 +183,10 @@ export class Titulo extends Model<
           return;
         }
 
-        const tituloComBanco = { ...this.toJSON(), banco };
+        // Criar objeto compatível com TituloWithRelations
+        // Adicionar propriedade banco ao objeto atual
+        (this as Titulo & { banco?: Banco }).banco = banco;
+        const tituloComBanco = this as Titulo & { banco?: Banco };
         
         // Liquidar título no banco externo
         const resultado = await BancoApiService.liquidarTitulo(tituloComBanco);
@@ -274,7 +277,7 @@ export class Titulo extends Model<
     return dias;
   }
 
-  async calcularValorComMultaJuros(banco?: any): Promise<number> {
+  async calcularValorComMultaJuros(banco?: Banco | null): Promise<number> {
     let valor = parseFloat(this.valor.toString());
     
     if (this.status === 'pago') {

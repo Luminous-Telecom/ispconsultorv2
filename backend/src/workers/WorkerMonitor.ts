@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { WorkerManager } from './WorkerManager';
 import RoutineExecutionLog from '../models/RoutineExecutionLog';
+import ScheduledRoutine from '../models/ScheduledRoutine';
 import { Op } from 'sequelize';
 
 export interface MonitorConfig {
@@ -28,6 +29,31 @@ export interface HealthStatus {
     successRate: number; // porcentagem
   };
   alerts: string[];
+}
+
+interface DailyStats {
+  date: string;
+  total: number;
+  successful: number;
+  failed: number;
+  avgDuration: number;
+}
+
+interface DetailedStats {
+  period: {
+    days: number;
+    startDate: Date;
+    endDate: Date;
+  };
+  totalExecutions: number;
+  successRate: number;
+  dailyStats: DailyStats[];
+  workersStatus: ReturnType<WorkerManager['getStatus']>;
+}
+
+interface RoutineFailedData {
+  routine: ScheduledRoutine;
+  error: Error;
 }
 
 export class WorkerMonitor extends EventEmitter {
@@ -148,8 +174,8 @@ export class WorkerMonitor extends EventEmitter {
     });
 
     const totalExecutions = executions.length;
-    const successfulExecutions = executions.filter((e: any) => e.status === 'sucesso').length;
-    const failedExecutions = executions.filter((e: any) => e.status === 'erro').length;
+    const successfulExecutions = executions.filter((e) => e.status === 'sucesso').length;
+    const failedExecutions = executions.filter((e) => e.status === 'erro').length;
     const successRate = totalExecutions > 0 ? (successfulExecutions / totalExecutions) * 100 : 100;
 
     // Verificar alertas
@@ -164,7 +190,7 @@ export class WorkerMonitor extends EventEmitter {
     }
 
     // Verificar execuções muito longas
-    const longExecutions = executions.filter((e: any) => 
+    const longExecutions = executions.filter((e) => 
       e.duracao_ms && e.duracao_ms > (this.config.alertThresholds.maxExecutionTime || 300000)
     );
     if (longExecutions.length > 0) {
@@ -199,7 +225,7 @@ export class WorkerMonitor extends EventEmitter {
   /**
    * Verifica alertas específicos
    */
-  private async checkForAlerts(data: { routine: any; error: any }): Promise<void> {
+  private async checkForAlerts(data: RoutineFailedData): Promise<void> {
     const { routine } = data;
 
     // Verificar falhas consecutivas
@@ -273,7 +299,7 @@ export class WorkerMonitor extends EventEmitter {
   /**
    * Obtém estatísticas detalhadas
    */
-  async getDetailedStats(days: number = 7): Promise<any> {
+  async getDetailedStats(days = 7): Promise<DetailedStats> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -287,7 +313,7 @@ export class WorkerMonitor extends EventEmitter {
     });
 
     // Estatísticas por dia
-    const dailyStats = new Map<string, any>();
+    const dailyStats = new Map<string, DailyStats>();
     
     for (let i = 0; i < days; i++) {
       const date = new Date(startDate);
@@ -304,7 +330,7 @@ export class WorkerMonitor extends EventEmitter {
     }
 
     // Processar execuções
-    executions.forEach((execution: any) => {
+    executions.forEach((execution) => {
       const dateKey = execution.created_at.toISOString().split('T')[0];
       const dayStats = dailyStats.get(dateKey);
       
@@ -326,7 +352,7 @@ export class WorkerMonitor extends EventEmitter {
       period: { days, startDate, endDate: new Date() },
       totalExecutions: executions.length,
       successRate: executions.length > 0 ? 
-        (executions.filter((e: any) => e.status === 'sucesso').length / executions.length) * 100 : 0,
+        (executions.filter((e) => e.status === 'sucesso').length / executions.length) * 100 : 0,
       dailyStats: Array.from(dailyStats.values()),
       workersStatus: this.workerManager.getStatus()
     };

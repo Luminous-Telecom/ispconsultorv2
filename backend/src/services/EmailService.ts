@@ -7,7 +7,7 @@ import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
-import nodemailer from 'nodemailer';
+import nodemailer, { SendMailOptions } from 'nodemailer';
 import { TituloController } from '../controllers/TituloController';
 
 interface ConfiguracoesEnvios {
@@ -49,7 +49,7 @@ export class EmailService {
       }
 
       return { sucesso: emailsEnviados > 0, emailsEnviados, erros };
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Erro ao enviar boletos via Email:', error);
       return { sucesso: false, emailsEnviados: 0, erros: 1 };
     }
@@ -98,7 +98,8 @@ export class EmailService {
 
     for (const titulo of titulos) {
       try {
-        const cliente = (titulo.get({ plain: true }) as any).cliente as Cliente;
+        const tituloPlain = titulo.get({ plain: true }) as Titulo & { cliente: Cliente };
+        const cliente = tituloPlain.cliente;
         
         if (!cliente?.email) {
           erros++;
@@ -107,9 +108,10 @@ export class EmailService {
 
         let corpoHtml = '';
         if (mensagem?.mensagem_padrao) {
-          const contratoRef = (titulo as any).contrato_id ? { id: (titulo as any).contrato_id } : undefined;
+          const contratoRef = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
           corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
             cliente,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             contrato: contratoRef as any,
             titulo,
             dataReferencia: new Date()
@@ -146,7 +148,7 @@ export class EmailService {
         } else {
           erros++;
         }
-      } catch (error: unknown) {
+      } catch (error) {
         logger.error(`Erro ao enviar boleto ${titulo.id}:`, error);
         erros++;
       }
@@ -175,7 +177,7 @@ export class EmailService {
         } : undefined
       });
 
-      const mailOptions: any = {
+      const mailOptions: SendMailOptions = {
         from: `"${servidor.nome_remetente}" <${servidor.email_remetente}>`,
         to: emailDestino,
         subject: 'Boleto de Pagamento - BackNet',
@@ -193,7 +195,7 @@ export class EmailService {
 
       await transporter.sendMail(mailOptions);
       return true;
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Erro ao enviar email:', error);
       return false;
     }

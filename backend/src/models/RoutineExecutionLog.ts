@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
+import type { JsonValue } from '../types';
 
 export interface RoutineExecutionLogAttributes {
   id: number;
@@ -8,13 +9,13 @@ export interface RoutineExecutionLogAttributes {
   data_inicio: Date;
   data_fim?: Date;
   duracao_ms?: number;
-  resultado?: any;
+  resultado?: Record<string, JsonValue>;
   erro?: string;
   stack_trace?: string;
   created_at: Date;
 }
 
-export interface RoutineExecutionLogCreationAttributes extends Optional<RoutineExecutionLogAttributes, 'id' | 'created_at' | 'data_fim' | 'duracao_ms' | 'resultado' | 'erro' | 'stack_trace'> {}
+export type RoutineExecutionLogCreationAttributes = Optional<RoutineExecutionLogAttributes, 'id' | 'created_at' | 'data_fim' | 'duracao_ms' | 'resultado' | 'erro' | 'stack_trace'>;
 
 export class RoutineExecutionLog extends Model<RoutineExecutionLogAttributes, RoutineExecutionLogCreationAttributes> implements RoutineExecutionLogAttributes {
   public id!: number;
@@ -23,17 +24,10 @@ export class RoutineExecutionLog extends Model<RoutineExecutionLogAttributes, Ro
   public data_inicio!: Date;
   public data_fim?: Date;
   public duracao_ms?: number;
-  public resultado?: any;
+  public resultado?: Record<string, JsonValue>;
   public erro?: string;
   public stack_trace?: string;
   public readonly created_at!: Date;
-
-  public static associate() {
-    RoutineExecutionLog.belongsTo(require('./ScheduledRoutine').ScheduledRoutine, {
-      foreignKey: 'routine_id',
-      as: 'routine'
-    });
-  }
 }
 
 RoutineExecutionLog.init({

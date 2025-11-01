@@ -4,7 +4,7 @@ import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { ModeloContrato } from '../models/ModeloContrato';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import * as Joi from 'joi';
 
 export class ContratoController {
@@ -49,10 +49,10 @@ export class ContratoController {
       const limitNum = Number(limit);
       const offset = (pageNum - 1) * limitNum;
 
-      const whereClause: any = {};
+      const whereClause: WhereOptions = {};
       
       if (search) {
-        whereClause[Op.or] = [
+        (whereClause as Record<symbol, unknown>)[Op.or] = [
           { observacoes: { [Op.like]: `%${search}%` } }
         ];
       }
@@ -271,7 +271,11 @@ export class ContratoController {
       
       // Tratar erro de constraint de chave estrangeira
       if (error instanceof Error && error.name === 'SequelizeForeignKeyConstraintError') {
-        const fkError = error as any;
+        interface ForeignKeyError extends Error {
+          table?: string;
+          fields?: string[];
+        }
+        const fkError = error as ForeignKeyError;
         if (fkError.table === 'modelo_contrato' || fkError.fields?.includes('modelo_contrato_id')) {
           res.status(404).json({
             success: false,

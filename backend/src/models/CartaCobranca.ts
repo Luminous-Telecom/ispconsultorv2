@@ -16,7 +16,7 @@ interface ModeloCartaAttributes {
   updated_at?: Date;
 }
 
-interface ModeloCartaCreationAttributes extends Optional<ModeloCartaAttributes, 'id' | 'created_at' | 'updated_at'> {}
+type ModeloCartaCreationAttributes = Optional<ModeloCartaAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 export class ModeloCarta extends Model<ModeloCartaAttributes, ModeloCartaCreationAttributes> implements ModeloCartaAttributes {
   public id!: number;

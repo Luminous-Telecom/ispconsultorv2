@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Banco } from '../models/Banco';
 import { BancoApiService } from '../services/BancoApiService';
 import { logger } from '../utils/logger';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 
 export class BancoController {
   /**
@@ -37,7 +37,7 @@ export class BancoController {
     try {
       const { search, status, tipo_banco, page = 1, limit = 15 } = req.query;
       
-      const where: any = {};
+      const where: WhereOptions<Banco> = {};
       
       // Filtro por busca
       if (search) {
@@ -53,7 +53,7 @@ export class BancoController {
       
       // Filtro por tipo de banco
       if (tipo_banco) {
-        where.tipo_banco = tipo_banco;
+        where.tipo_banco = tipo_banco as 'efi' | 'asaas' | 'bancario' | 'outros';
       }
       
       const offset = (Number(page) - 1) * Number(limit);
@@ -365,7 +365,7 @@ export class BancoController {
       const configPath = `../config/bancos/${tipoBanco}`;
       
       try {
-        const config = require(configPath);
+        const config = await import(configPath);
         
         if (!config || !config.default) {
           res.status(404).json({

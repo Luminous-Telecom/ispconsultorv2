@@ -16,7 +16,7 @@ interface ModeloReciboAttributes {
   updated_at?: Date;
 }
 
-interface ModeloReciboCreationAttributes extends Optional<ModeloReciboAttributes, 'id' | 'created_at' | 'updated_at'> {}
+type ModeloReciboCreationAttributes = Optional<ModeloReciboAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 export class ModeloRecibo extends Model<ModeloReciboAttributes, ModeloReciboCreationAttributes> implements ModeloReciboAttributes {
   public id!: number;

@@ -6,8 +6,29 @@ import { Plano } from '../models/Plano';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import puppeteer from 'puppeteer';
 
-// Import html-pdf-node com any para contornar problemas de tipos
-const htmlPdf = require('html-pdf-node') as any;
+// Type definition for html-pdf-node
+interface HtmlPdfNodeOptions {
+  format?: string;
+  margin?: {
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+  };
+  printBackground?: boolean;
+}
+
+interface HtmlPdfNodeFile {
+  content: string;
+}
+
+interface HtmlPdfNode {
+  generatePdf: (file: HtmlPdfNodeFile, options: HtmlPdfNodeOptions) => Promise<Buffer>;
+}
+
+// Import html-pdf-node
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const htmlPdf = require('html-pdf-node') as HtmlPdfNode;
 
 export class ModeloTermoController {
   // Listar todos os modelos de termo
@@ -612,8 +633,15 @@ export class ModeloTermoController {
         return;
       }
 
+      // Type para Contrato com includes
+      type ContratoWithIncludes = Contrato & {
+        cliente?: Cliente;
+        plano?: Plano;
+      };
+
+      const contratoComIncludes = contrato as ContratoWithIncludes;
+
       // Processar variáveis do documento
-      const contratoComIncludes = contrato as any; // Type assertion para acessar includes
       const conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
         modelo.conteudo,
         {

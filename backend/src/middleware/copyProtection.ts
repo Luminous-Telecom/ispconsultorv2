@@ -1,10 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 
+interface ResponseWithSetHeader extends Response {
+  setHeader(name: string, value: number | string | ReadonlyArray<string>): this;
+}
+
 // Middleware de proteção contra cópia e screenshots
 export const copyProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
   // Wrap setHeader to normalize certain headers (ensure charset for text/* responses)
-  const originalSetHeader = (res as any).setHeader.bind(res);
-  (res as any).setHeader = (name: string, value: number | string | ReadonlyArray<string>) => {
+  const response = res as ResponseWithSetHeader;
+  const originalSetHeader = response.setHeader.bind(res);
+  response.setHeader = (name: string, value: number | string | ReadonlyArray<string>) => {
     try {
       if (String(name).toLowerCase() === 'content-type') {
         const v = String(value || '');
@@ -16,7 +21,7 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
     } catch (e) {
       // swallow and continue with original behavior
     }
-    return originalSetHeader(name, value as any);
+    return originalSetHeader(name, value);
   };
 
   // Headers específicos para proteção contra cópia

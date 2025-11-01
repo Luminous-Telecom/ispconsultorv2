@@ -23,12 +23,12 @@ export class TermoContratoController {
         success: true,
         data: termos
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar termos do contrato:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error?.message || 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }

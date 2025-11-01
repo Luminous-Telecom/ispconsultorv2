@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { Op, WhereOptions } from 'sequelize';
 import { SchedulerService } from '../services/SchedulerService';
 import { ScheduledRoutine } from '../models';
 
@@ -15,14 +16,14 @@ export class SchedulerController {
       const { page = 1, limit = 15, search, sort = 'created_at', direction = 'desc' } = req.query;
 
       const offset = (Number(page) - 1) * Number(limit);
-      const where: any = {};
+      const where: WhereOptions = {};
 
       // Filtro de busca
       if (search) {
-        where[require('sequelize').Op.or] = [
-          { nome: { [require('sequelize').Op.like]: `%${search}%` } },
-          { tipo: { [require('sequelize').Op.like]: `%${search}%` } },
-          { descricao: { [require('sequelize').Op.like]: `%${search}%` } }
+        (where as Record<symbol, unknown>)[Op.or] = [
+          { nome: { [Op.like]: `%${search}%` } },
+          { tipo: { [Op.like]: `%${search}%` } },
+          { descricao: { [Op.like]: `%${search}%` } }
         ];
       }
 

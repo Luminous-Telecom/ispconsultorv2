@@ -5,6 +5,35 @@ import { Banco } from '../models/Banco';
 import { Titulo } from '../models/Titulo';
 import { Contrato } from '../models/Contrato';
 import { Op } from 'sequelize';
+import { sequelize } from '../config/database';
+
+interface TituloWithCliente extends Titulo {
+  cliente?: Cliente | null;
+  plano?: Plano | null;
+  banco?: Banco | null;
+}
+
+interface TituloStatusData extends Record<string, string | number> {
+  status: string;
+  total: string | number;
+}
+
+interface ClienteCidadeData extends Record<string, string | number> {
+  cidade: string;
+  total: string | number;
+}
+
+function extractRawData(results: Array<Record<string, string | number>>): Array<Record<string, string | number>> {
+  return results.map(item => {
+    const data: Record<string, string | number> = {};
+    for (const key in item) {
+      if (Object.prototype.hasOwnProperty.call(item, key)) {
+        data[key] = item[key];
+      }
+    }
+    return data;
+  });
+}
 
 export class DashboardController {
   // Obter dados completos do dashboard
@@ -128,14 +157,17 @@ export class DashboardController {
       limit
     });
 
-    return titulos.map(titulo => ({
-      id: titulo.id,
-      numero_titulo: titulo.numero_titulo,
-      cliente: (titulo as any).cliente?.razao_social || 'N/A',
-      valor: titulo.valor,
-      status: titulo.status,
-      data: titulo.created_at.toLocaleDateString('pt-BR')
-    }));
+    return titulos.map(titulo => {
+      const tituloWithCliente = titulo as TituloWithCliente;
+      return {
+        id: titulo.id,
+        numero_titulo: titulo.numero_titulo,
+        cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
+        valor: titulo.valor,
+        status: titulo.status,
+        data: titulo.created_at.toLocaleDateString('pt-BR')
+      };
+    });
   }
 
   // Método auxiliar para obter títulos vencidos
@@ -155,14 +187,17 @@ export class DashboardController {
       limit
     });
 
-    return titulos.map(titulo => ({
-      id: titulo.id,
-      numero_titulo: titulo.numero_titulo,
-      valor: titulo.valor,
-      data_vencimento: titulo.data_vencimento,
-      cliente: (titulo as any).cliente?.razao_social || 'N/A',
-      status: titulo.status
-    }));
+    return titulos.map(titulo => {
+      const tituloWithCliente = titulo as TituloWithCliente;
+      return {
+        id: titulo.id,
+        numero_titulo: titulo.numero_titulo,
+        valor: titulo.valor,
+        data_vencimento: titulo.data_vencimento,
+        cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
+        status: titulo.status
+      };
+    });
   }
 
   // Obter estatísticas gerais do dashboard
@@ -345,19 +380,31 @@ export class DashboardController {
   // Obter gráfico de títulos por status
   static async getGraficoTitulosPorStatus(req: Request, res: Response): Promise<void> {
     try {
-      const titulosPorStatus = await Titulo.findAll({
+      if (!sequelize) {
+        throw new Error('Sequelize não está inicializado');
+      }
+
+      const titulosPorStatusRaw = await Titulo.findAll({
         attributes: [
           'status',
-          [Titulo.sequelize!.fn('COUNT', Titulo.sequelize!.col('id')), 'total']
+          [sequelize.fn('COUNT', sequelize.col('id')), 'total']
         ],
         group: ['status'],
         raw: true
       });
 
-      const dados = titulosPorStatus.map((item: any) => ({
-        status: item.status,
-        total: parseInt(item.total)
-      }));
+      // Converter para objetos planos (raw: true retorna objetos planos)
+      const titulosConvertidos = extractRawData(
+        JSON.parse(JSON.stringify(titulosPorStatusRaw)) as Array<Record<string, string | number>>
+      );
+
+      const dados = titulosConvertidos.map((item) => {
+        const data = item as TituloStatusData;
+        return {
+          status: String(data.status || ''),
+          total: parseInt(String(data.total || 0))
+        };
+      });
 
       res.json({
         success: true,
@@ -376,10 +423,14 @@ export class DashboardController {
   // Obter gráfico de clientes por cidade
   static async getGraficoClientesPorCidade(req: Request, res: Response): Promise<void> {
     try {
-      const clientesPorCidade = await Cliente.findAll({
+      if (!sequelize) {
+        throw new Error('Sequelize não está inicializado');
+      }
+
+      const clientesPorCidadeRaw = await Cliente.findAll({
         attributes: [
           'cidade',
-          [Cliente.sequelize!.fn('COUNT', Cliente.sequelize!.col('id')), 'total']
+          [sequelize.fn('COUNT', sequelize.col('id')), 'total']
         ],
         where: {
           cidade: {
@@ -387,15 +438,23 @@ export class DashboardController {
           }
         },
         group: ['cidade'],
-        order: [[Cliente.sequelize!.fn('COUNT', Cliente.sequelize!.col('id')), 'DESC']],
+        order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']],
         limit: 10,
         raw: true
       });
 
-      const dados = clientesPorCidade.map((item: any) => ({
-        cidade: item.cidade,
-        total: parseInt(item.total)
-      }));
+      // Converter para objetos planos (raw: true retorna objetos planos)
+      const clientesConvertidos = extractRawData(
+        JSON.parse(JSON.stringify(clientesPorCidadeRaw)) as Array<Record<string, string | number>>
+      );
+
+      const dados = clientesConvertidos.map((item) => {
+        const data = item as ClienteCidadeData;
+        return {
+          cidade: String(data.cidade || ''),
+          total: parseInt(String(data.total || 0))
+        };
+      });
 
       res.json({
         success: true,

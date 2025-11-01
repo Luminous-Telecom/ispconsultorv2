@@ -1,4 +1,5 @@
 import multer from 'multer';
+import { Request } from 'express';
 import path from 'path';
 import fs from 'fs';
 
@@ -20,7 +21,7 @@ const storage = multer.diskStorage({
 });
 
 // Filtro para aceitar apenas arquivos .docx
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const ext = path.extname(file.originalname).toLowerCase();
   if (ext === '.docx') {
     cb(null, true);

@@ -20,9 +20,7 @@ interface ServidorWhatsAppAttributes {
   updated_at?: Date;
 }
 
-interface ServidorWhatsAppCreationAttributes extends Optional<ServidorWhatsAppAttributes, 'id' | 'created_at' | 'updated_at'> {}
-
-export class ServidorWhatsApp extends Model<ServidorWhatsAppAttributes, ServidorWhatsAppCreationAttributes> implements ServidorWhatsAppAttributes {
+export class ServidorWhatsApp extends Model<ServidorWhatsAppAttributes, Optional<ServidorWhatsAppAttributes, 'id' | 'created_at' | 'updated_at'>> implements ServidorWhatsAppAttributes {
   public id!: number;
   public evolution_api_url!: string;
   public evolution_api_key!: string;

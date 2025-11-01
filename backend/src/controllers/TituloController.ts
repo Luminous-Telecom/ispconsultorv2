@@ -9,12 +9,24 @@ import { BancoApiService } from '../services/BancoApiService';
 import { BarcodeService } from '../services/BarcodeService';
 import { logger } from '../utils/logger';
 import puppeteer from 'puppeteer';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
+import * as fs from 'fs';
+import * as path from 'path';
+import type htmlPdf from 'html-pdf-node';
+import type { PdfOptions } from 'html-pdf-node';
+
+// Interface para Titulo com relações carregadas
+interface TituloComRelacoes extends Titulo {
+  cliente?: Cliente & { nome?: string; cpf?: string; cnpj?: string };
+  banco?: Banco & { logo?: string; agencia_codigo?: string };
+  contrato?: Contrato;
+  plano?: Plano;
+}
 
 export class TituloController {
   
   // Método estático para gerar PDF em base64
-  static async gerarPdfBase64(titulo: any): Promise<string | null> {
+  static async gerarPdfBase64(titulo: TituloComRelacoes): Promise<string | null> {
     try {
       const html = await this.processarBoletoHtml(titulo);
       
@@ -47,7 +59,7 @@ export class TituloController {
   }
 
   // Método auxiliar para processar um único boleto
-  private static async processarBoletoHtml(titulo: any): Promise<string> {
+  private static async processarBoletoHtml(titulo: TituloComRelacoes): Promise<string> {
     // Carregar dados da empresa
     const { DadosEmpresa } = await import('../models/DadosEmpresa');
     const dadosEmpresa = await DadosEmpresa.findOne();
@@ -73,25 +85,25 @@ export class TituloController {
 
     // Verificar logo do banco antes de criar templateVars
     let logoBanco = '';
-    if ((titulo.banco as any).logo) {
-      logoBanco = (titulo.banco as any).logo;
+    if (titulo.banco?.logo) {
+      logoBanco = titulo.banco.logo;
       logger.info('Logo do banco encontrada no cadastro', {
         titulo_id: titulo.id,
         banco_id: titulo.banco_id,
-        banco_nome: titulo.banco.nome,
+        banco_nome: titulo.banco?.nome || '',
         logo: logoBanco.substring(0, 50) + '...'
       });
     } else {
       // Tentar carregar logo padrão do banco
-      const logoPadrao = TituloController.getLogoBancoPadrao(titulo.banco.tipo_banco);
+      const logoPadrao = TituloController.getLogoBancoPadrao(titulo.banco?.tipo_banco || '');
       
       if (logoPadrao) {
         logoBanco = logoPadrao;
         logger.info('Usando logo padrão do banco', {
           titulo_id: titulo.id,
           banco_id: titulo.banco_id,
-          banco_nome: titulo.banco.nome,
-          tipo_banco: titulo.banco.tipo_banco
+          banco_nome: titulo.banco?.nome || '',
+          tipo_banco: titulo.banco?.tipo_banco || ''
         });
       } else {
         // Fallback para logo da empresa
@@ -99,8 +111,8 @@ export class TituloController {
         logger.warn('Logo do banco não encontrada, usando logo da empresa', {
           titulo_id: titulo.id,
           banco_id: titulo.banco_id,
-          banco_nome: titulo.banco.nome,
-          tipo_banco: titulo.banco.tipo_banco
+          banco_nome: titulo.banco?.nome || '',
+          tipo_banco: titulo.banco?.tipo_banco || ''
         });
       }
     }
@@ -125,9 +137,9 @@ export class TituloController {
       
       // Dados do banco - FEBRABAN
       LOGOBANCO: logoBanco,
-      CODIGO_BANCO_COM_DV: titulo.banco.codigo ? `${titulo.banco.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
+      CODIGO_BANCO_COM_DV: titulo.banco?.codigo ? `${titulo.banco.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
       LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
-      AGENCIA_CODIGO: titulo.banco.agencia_codigo || 'Não configurado',
+      AGENCIA_CODIGO: titulo.banco?.agencia_codigo || 'Não configurado',
       
       // Dados do boleto - FEBRABAN
       LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
@@ -143,33 +155,33 @@ export class TituloController {
       VALOR_BOLETO: valorBoleto,
       
       // Dados do cliente (Pagador) - FEBRABAN
-      SACADO_NOME: titulo.cliente.razao_social || titulo.cliente.nome || '',
-      TIPO_PSACADO: titulo.cliente.cnpj ? 'CNPJ' : 'CPF',
-      SACADO_CPF: titulo.cliente.cnpj || titulo.cliente.cpf || '',
-      SACADO_ENDERECO: `${titulo.cliente.endereco || ''} ${titulo.cliente.numero || ''}`.trim(),
-      SACADO_BAIRRO: titulo.cliente.bairro || '',
-      SACADO_COMPLEMENTO: titulo.cliente.complemento || '',
-      SACADO_CIDADE: titulo.cliente.cidade || '',
-      SACADO_ESTADO: titulo.cliente.estado || '',
-      SACADO_CEP: titulo.cliente.cep || '',
-      SACADO_IDNOME: titulo.cliente.razao_social || titulo.cliente.nome || '',
+      SACADO_NOME: titulo.cliente?.razao_social || titulo.cliente?.nome || '',
+      TIPO_PSACADO: titulo.cliente?.cnpj ? 'CNPJ' : 'CPF',
+      SACADO_CPF: titulo.cliente?.cnpj || titulo.cliente?.cpf || '',
+      SACADO_ENDERECO: `${titulo.cliente?.endereco || ''} ${titulo.cliente?.numero || ''}`.trim(),
+      SACADO_BAIRRO: titulo.cliente?.bairro || '',
+      SACADO_COMPLEMENTO: titulo.cliente?.complemento || '',
+      SACADO_CIDADE: titulo.cliente?.cidade || '',
+      SACADO_ESTADO: titulo.cliente?.estado || '',
+      SACADO_CEP: titulo.cliente?.cep || '',
+      SACADO_IDNOME: titulo.cliente?.razao_social || titulo.cliente?.nome || '',
       
       // Dados do plano
-      NOME_PLANO: titulo.plano.nome_plano || titulo.plano.nome || '',
-      DESCRICAO_PLANO: titulo.plano.descricao || '',
-      TIPO_SERVICO: titulo.plano.tipo_servico || 'Internet',
-      QUANTIDADE_USUARIOS: titulo.plano.quantidade_usuarios || '1',
+      NOME_PLANO: titulo.plano?.nome_plano || '',
+      DESCRICAO_PLANO: titulo.plano?.descricao || '',
+      TIPO_SERVICO: titulo.plano?.tipo_servico || 'Internet',
+      QUANTIDADE_USUARIOS: titulo.plano?.quantidade_usuarios || '1',
       VALOR_PLANO: valorBoleto,
       PERIODICIDADE: 'Mensal',
       
       // Instruções
-      TEXTO_MULTAMORA: titulo.banco.percentual_multa || titulo.banco.percentual_juros ? 
-        `Multa de ${titulo.banco.percentual_multa || 2}% + Juros de ${titulo.banco.percentual_juros || 0.033}% ao dia após o vencimento` : '',
-      INSTRUCOES1: TituloController.processarInstrucao(titulo.banco.instrucao_linha_1 || '', titulo),
-      INSTRUCOES2: TituloController.processarInstrucao(titulo.banco.instrucao_linha_2 || '', titulo),
-      INSTRUCOES3: TituloController.processarInstrucao(titulo.banco.instrucao_linha_3 || '', titulo),
-      INSTRUCOES4: TituloController.processarInstrucao(titulo.banco.instrucao_linha_4 || '', titulo),
-      INSTRUCOES5: TituloController.processarInstrucao(titulo.banco.instrucao_linha_5 || '', titulo),
+      TEXTO_MULTAMORA: titulo.banco?.percentual_multa || titulo.banco?.percentual_juros ? 
+        `Multa de ${titulo.banco?.percentual_multa || 2}% + Juros de ${titulo.banco?.percentual_juros || 0.033}% ao dia após o vencimento` : '',
+      INSTRUCOES1: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_1 || '', titulo),
+      INSTRUCOES2: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_2 || '', titulo),
+      INSTRUCOES3: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_3 || '', titulo),
+      INSTRUCOES4: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_4 || '', titulo),
+      INSTRUCOES5: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_5 || '', titulo),
       
       // QR Code PIX e Código de Barras
       QRCODE: titulo.qrcode_image || '',
@@ -205,8 +217,6 @@ export class TituloController {
     try {
       const url = new URL(logo);
       const fileName = url.pathname.split('/').pop() || '';
-      const fs = require('fs');
-      const path = require('path');
       
       // Verificar se é logo padrão de banco
       if (fileName.includes('efi.png')) return this.getLogoBancoPadrao('efi');
@@ -238,8 +248,6 @@ export class TituloController {
   // Obter logo padrão do banco (retorna base64 data URI)
   private static getLogoBancoPadrao(tipoBanco: string): string {
     try {
-      const fs = require('fs');
-      const path = require('path');
       
       const logosPadrao: Record<string, string> = {
         'efi': 'efi.png',
@@ -270,11 +278,11 @@ export class TituloController {
   }
 
   // Processar instruções com substituição de variáveis
-  private static processarInstrucao(instrucao: string, titulo: any): string {
+  private static processarInstrucao(instrucao: string, titulo: TituloComRelacoes): string {
     if (!instrucao) return '';
     
     return instrucao
-      .replace(/%quantidade_usuarios%/g, titulo.plano?.quantidade_usuarios || '1')
+      .replace(/%quantidade_usuarios%/g, String(titulo.plano?.quantidade_usuarios || '1'))
       .replace(/%tipo_servico%/g, titulo.plano?.tipo_servico || 'Internet')
       .replace(/%nome_plano%/g, titulo.plano?.nome_plano || 'Plano')
       .replace(/%valor_plano%/g, Number(titulo.plano?.valor_mensal || 0).toFixed(2).replace('.', ','))
@@ -300,7 +308,7 @@ export class TituloController {
       const offset = (Number(page) - 1) * Number(limit);
       
       // Construir filtros
-      const where: any = {};
+      const where: WhereOptions = {};
       
       if (status) {
         where.status = status;
@@ -324,7 +332,7 @@ export class TituloController {
 
       // Filtro de busca
       if (search) {
-        where[Op.or] = [
+        (where as Record<symbol, unknown>)[Op.or] = [
           { numero_titulo: { [Op.like]: `%${search}%` } },
           { observacoes: { [Op.like]: `%${search}%` } }
         ];
@@ -675,7 +683,7 @@ export class TituloController {
           { model: Cliente, as: 'cliente' },
           { model: Banco, as: 'banco' }
         ]
-      }) as any;
+      }) as TituloComRelacoes | null;
 
       if (!titulo) {
         res.status(404).json({
@@ -713,9 +721,9 @@ export class TituloController {
       // Verificar se está cancelando
       if (status === 'cancelado' && titulo.status !== 'cancelado') {
         // Cancelar na API do banco se tiver charge_id
-        if (titulo.charge_id && titulo.banco.tipo_banco === 'efi') {
+        if (titulo.charge_id && titulo.banco && titulo.banco?.tipo_banco === 'efi') {
           try {
-            await BancoApiService.cancelarTitulo(titulo as any);
+            await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
             logger.info('Título cancelado na EFI', { 
               titulo_id: titulo.id, 
               charge_id: titulo.charge_id 
@@ -746,7 +754,7 @@ export class TituloController {
           data_original: titulo.data_vencimento,
           data_nova: data_vencimento,
           mudou: true,
-          banco: titulo.banco.tipo_banco
+          banco: titulo.banco?.tipo_banco || ''
         });
       }
 
@@ -786,7 +794,7 @@ export class TituloController {
 
       const titulo = await Titulo.findByPk(id, {
         include: [{ model: Banco, as: 'banco' }]
-      }) as any;
+      }) as TituloComRelacoes | null;
 
       if (!titulo) {
         res.status(404).json({
@@ -797,9 +805,9 @@ export class TituloController {
       }
 
       // Cancelar na API do banco se tiver charge_id
-      if (titulo.charge_id && titulo.banco.tipo_banco === 'efi') {
+      if (titulo.charge_id && titulo.banco && titulo.banco.tipo_banco === 'efi') {
         try {
-          await BancoApiService.cancelarTitulo(titulo as any);
+          await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
           logger.info('Título cancelado na EFI antes da exclusão', { 
             titulo_id: titulo.id, 
             charge_id: titulo.charge_id 
@@ -849,7 +857,7 @@ export class TituloController {
             ] 
           }
         ]
-      }) as any;
+      }) as TituloComRelacoes | null;
 
       if (!titulo) {
         res.status(404).json({
@@ -871,14 +879,14 @@ export class TituloController {
           titulo_id: titulo.id,
           banco_id: titulo.banco_id,
           cliente_id: titulo.cliente_id,
-          banco_disponivel: !!titulo.banco,
-          banco_nome: titulo.banco?.nome,
+          banco_disponivel: !!titulo?.banco,
+          banco_nome: titulo?.banco?.nome || '',
           banco_tipo: titulo.banco?.tipo_banco
         });
 
         try {
           // Registrar no banco e AGUARDAR resposta
-          const resultado = await BancoApiService.gerarTitulo(titulo as any);
+          const resultado = await BancoApiService.gerarTitulo(titulo as TituloComRelacoes);
           
           logger.info('Resultado do envio ao banco:', {
             titulo_id: titulo.id,
@@ -904,24 +912,24 @@ export class TituloController {
           }
 
           // Sucesso - atualizar título com dados do banco
-          let codigoBarrasFinal = resultado.data.codigo_barras;
-          if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras)) {
+          let codigoBarrasFinal = resultado.data.codigo_barras as string;
+          if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras as string)) {
             logger.warn('Código de barras da API inválido, usando mesmo assim', {
               titulo_id: titulo.id,
               codigo_original: resultado.data.codigo_barras
             });
-            codigoBarrasFinal = resultado.data.codigo_barras;
+            codigoBarrasFinal = resultado.data.codigo_barras as string;
           }
 
           // Atualizar título com dados do banco
           await titulo.update({
             charge_id: resultado.data.charge_id,
-            url_boleto: resultado.data.url_boleto,
-            qrcode: resultado.data.qrcode,
-            qrcode_image: resultado.data.qrcode_image,
+            url_boleto: resultado.data.url_boleto as string | null,
+            qrcode: resultado.data.qrcode as string | null,
+            qrcode_image: resultado.data.qrcode_image as string | null,
             codigo_barras: codigoBarrasFinal,
-            linha_digitavel: resultado.data.linha_digitavel,
-            nosso_numero: resultado.data.nosso_numero
+            linha_digitavel: resultado.data.linha_digitavel as string | null,
+            nosso_numero: resultado.data.nosso_numero as string | null
           });
 
           logger.info('Título registrado no banco com sucesso, prosseguindo com impressão', {
@@ -1003,10 +1011,10 @@ export class TituloController {
         EMPRESAESTADO: dadosEmpresa.estado || '',
         
         // Dados do banco - FEBRABAN
-        LOGOBANCO: (titulo.banco as any).logo || TituloController.getLogoBancoPadrao(titulo.banco.tipo_banco) || dadosEmpresa.logo || '',
-        CODIGO_BANCO_COM_DV: titulo.banco.codigo ? `${titulo.banco.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
+        LOGOBANCO: titulo.banco?.logo || TituloController.getLogoBancoPadrao(titulo.banco?.tipo_banco || '') || dadosEmpresa.logo || '',
+        CODIGO_BANCO_COM_DV: titulo.banco?.codigo ? `${titulo.banco?.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
         LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
-        AGENCIA_CODIGO: titulo.banco.agencia_codigo || 'Não configurado',
+        AGENCIA_CODIGO: titulo.banco?.agencia_codigo || 'Não configurado',
         
         // Dados do boleto - FEBRABAN
         LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
@@ -1022,32 +1030,32 @@ export class TituloController {
         VALOR_BOLETO: valorBoleto,
         
         // Dados do cliente (Pagador) - FEBRABAN
-        SACADO_NOME: titulo.cliente.razao_social || titulo.cliente.nome || '',
-        TIPO_PSACADO: titulo.cliente.cnpj ? 'CNPJ' : 'CPF',
-        SACADO_CPF: titulo.cliente.cnpj || titulo.cliente.cpf || '',
-        SACADO_ENDERECO: `${titulo.cliente.endereco || ''} ${titulo.cliente.numero || ''}`.trim(),
-        SACADO_BAIRRO: titulo.cliente.bairro || '',
-        SACADO_COMPLEMENTO: titulo.cliente.complemento || '',
-        SACADO_CIDADE: titulo.cliente.cidade || '',
-        SACADO_ESTADO: titulo.cliente.estado || '',
-        SACADO_CEP: titulo.cliente.cep || '',
-        SACADO_IDNOME: titulo.cliente.razao_social || titulo.cliente.nome || '',
+        SACADO_NOME: titulo.cliente?.razao_social || titulo.cliente?.nome || '',
+        TIPO_PSACADO: titulo.cliente?.cnpj ? 'CNPJ' : 'CPF',
+        SACADO_CPF: titulo.cliente?.cnpj || titulo.cliente?.cpf || '',
+        SACADO_ENDERECO: `${titulo.cliente?.endereco || ''} ${titulo.cliente?.numero || ''}`.trim(),
+        SACADO_BAIRRO: titulo.cliente?.bairro || '',
+        SACADO_COMPLEMENTO: titulo.cliente?.complemento || '',
+        SACADO_CIDADE: titulo.cliente?.cidade || '',
+        SACADO_ESTADO: titulo.cliente?.estado || '',
+        SACADO_CEP: titulo.cliente?.cep || '',
+        SACADO_IDNOME: titulo.cliente?.razao_social || titulo.cliente?.nome || '',
         
         // Dados do plano
-        NOME_PLANO: titulo.plano.nome_plano || titulo.plano.nome || '',
-        DESCRICAO_PLANO: titulo.plano.descricao || '',
-        TIPO_SERVICO: titulo.plano.tipo_servico || 'Internet',
-        QUANTIDADE_USUARIOS: titulo.plano.quantidade_usuarios || '1',
+        NOME_PLANO: titulo.plano?.nome_plano || '',
+        DESCRICAO_PLANO: titulo.plano?.descricao || '',
+        TIPO_SERVICO: titulo.plano?.tipo_servico || 'Internet',
+        QUANTIDADE_USUARIOS: titulo.plano?.quantidade_usuarios || '1',
         VALOR_PLANO: valorBoleto,
         PERIODICIDADE: 'Mensal',
         
         // Instruções do banco - Padrão FEBRABAN
-        TEXTO_MULTAMORA: `Após o vencimento, cobrar multa de ${titulo.banco.percentual_multa || 2}% e juros de ${titulo.banco.percentual_juros || 1}% ao mês.`,
-        INSTRUCOES1: TituloController.processarInstrucao(titulo.banco.instrucao_linha_1 || 'Não receber após o vencimento.', titulo),
-        INSTRUCOES2: TituloController.processarInstrucao(titulo.banco.instrucao_linha_2 || 'Em caso de dúvidas, entre em contato conosco.', titulo),
-        INSTRUCOES3: TituloController.processarInstrucao(titulo.banco.instrucao_linha_3 || 'Pagável em qualquer banco até o vencimento.', titulo),
-        INSTRUCOES4: TituloController.processarInstrucao(titulo.banco.instrucao_linha_4 || 'Ficha de Compensação do Boleto Bancário.', titulo),
-        INSTRUCOES5: TituloController.processarInstrucao(titulo.banco.instrucao_linha_5 || '', titulo),
+        TEXTO_MULTAMORA: `Após o vencimento, cobrar multa de ${titulo.banco?.percentual_multa || 2}% e juros de ${titulo.banco?.percentual_juros || 1}% ao mês.`,
+        INSTRUCOES1: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_1 || 'Não receber após o vencimento.', titulo),
+        INSTRUCOES2: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_2 || 'Em caso de dúvidas, entre em contato conosco.', titulo),
+        INSTRUCOES3: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_3 || 'Pagável em qualquer banco até o vencimento.', titulo),
+        INSTRUCOES4: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_4 || 'Ficha de Compensação do Boleto Bancário.', titulo),
+        INSTRUCOES5: TituloController.processarInstrucao(titulo.banco?.instrucao_linha_5 || '', titulo),
         
         // QR Code e código de barras - FEBRABAN
         QRCODE: titulo.qrcode_image || '',
@@ -1160,22 +1168,22 @@ export class TituloController {
           });
 
           try {
-            const resultado = await BancoApiService.gerarTitulo(titulo as any);
+            const resultado = await BancoApiService.gerarTitulo(titulo as TituloComRelacoes);
             
             if (resultado.success && resultado.data) {
-              let codigoBarrasFinal = resultado.data.codigo_barras;
-              if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras)) {
-                codigoBarrasFinal = resultado.data.codigo_barras;
+              let codigoBarrasFinal = resultado.data.codigo_barras as string;
+              if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras as string)) {
+                codigoBarrasFinal = resultado.data.codigo_barras as string;
               }
 
               await titulo.update({
                 charge_id: resultado.data.charge_id,
-                url_boleto: resultado.data.url_boleto,
-                qrcode: resultado.data.qrcode,
-                qrcode_image: resultado.data.qrcode_image,
+                url_boleto: resultado.data.url_boleto as string | null,
+                qrcode: resultado.data.qrcode as string | null,
+                qrcode_image: resultado.data.qrcode_image as string | null,
                 codigo_barras: codigoBarrasFinal,
-                linha_digitavel: resultado.data.linha_digitavel,
-                nosso_numero: resultado.data.nosso_numero
+                linha_digitavel: resultado.data.linha_digitavel as string | null,
+                nosso_numero: resultado.data.nosso_numero as string | null
               });
 
               logger.info('Título registrado com sucesso', {
@@ -1310,11 +1318,11 @@ export class TituloController {
           try {
             logger.info('Registrando título no banco antes de gerar PDF', {
               titulo_id: titulo.id,
-              banco_id: titulo.banco_id,
-              banco_disponivel: !!(titulo as any).banco
+              banco_id: (titulo as TituloComRelacoes).banco_id,
+              banco_disponivel: !!(titulo as TituloComRelacoes).banco
             });
 
-            const resultado = await BancoApiService.gerarTitulo(titulo as any);
+            const resultado = await BancoApiService.gerarTitulo(titulo as TituloComRelacoes);
             
             if (resultado.success && resultado.data) {
               logger.info('Título registrado com sucesso no banco', {
@@ -1376,9 +1384,9 @@ export class TituloController {
         .replace(/\{\{[^}]+\}\}/g, ''); // Remove qualquer variável {{}} restante
 
       // Converter HTML para PDF usando html-pdf-node
-      const htmlPdf = require('html-pdf-node');
+      const htmlPdfModule = await import('html-pdf-node') as typeof htmlPdf;
       const file = { content: templateLimpo };
-      const options = {
+      const options: PdfOptions = {
         format: 'A4',
         margin: {
           top: '10mm',
@@ -1390,7 +1398,7 @@ export class TituloController {
         displayHeaderFooter: false
       };
       
-      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      const pdfBuffer = await htmlPdfModule.generatePdf(file, options);
       
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulos.length}-titulos.pdf"`);
@@ -1527,7 +1535,7 @@ export class TituloController {
         if (statusPago) {
           const valorPago = resultado.data.valor_pago || titulo.valor;
           const dataPagamento = resultado.data.data_pagamento 
-            ? new Date(resultado.data.data_pagamento) 
+            ? new Date(resultado.data.data_pagamento as string | number) 
             : new Date();
 
           // Marcar como pago (lógica automática de parcial/atraso)
@@ -1672,7 +1680,7 @@ export class TituloController {
     try {
       const { cliente_id } = req.query;
 
-      const where: any = {};
+      const where: WhereOptions = {};
       if (cliente_id) {
         where.cliente_id = cliente_id;
       }

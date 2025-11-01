@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Plano } from '../models/Plano';
-import { Op } from 'sequelize';
+import { Op, WhereOptions, Order } from 'sequelize';
 
 export class PlanoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -16,25 +16,31 @@ export class PlanoController {
       const offset = (page - 1) * limit;
 
       // Construir filtros
-      const where: any = {};
+      const whereConditions: Array<WhereOptions<Plano>> = [];
       
       if (search) {
-        where[Op.or] = [
-          { nome_plano: { [Op.like]: `%${search}%` } },
-          { descricao: { [Op.like]: `%${search}%` } }
-        ];
+        whereConditions.push({
+          [Op.or]: [
+            { nome_plano: { [Op.like]: `%${search}%` } },
+            { descricao: { [Op.like]: `%${search}%` } }
+          ]
+        } as WhereOptions<Plano>);
       }
 
       if (status) {
-        where.status = status;
+        whereConditions.push({ status: status as 'ativo' | 'suspenso' | 'cancelado' });
       }
 
       if (tipo_servico) {
-        where.tipo_servico = tipo_servico;
+        whereConditions.push({ tipo_servico: tipo_servico as 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros' });
       }
 
+      const where: WhereOptions<Plano> = whereConditions.length > 0
+        ? { [Op.and]: whereConditions } as WhereOptions<Plano>
+        : {};
+
       // Construir ordenação
-      let order: any[] = [['id', 'DESC']]; // Padrão: Maior ID para o menor
+      let order: Order = [['id', 'DESC']]; // Padrão: Maior ID para o menor
       if (sortColumn && sortDirection) {
         // Validar colunas permitidas para ordenação
         const allowedColumns = [
@@ -189,33 +195,57 @@ export class PlanoController {
       }
       
       // Filtrar apenas campos válidos para atualização
-      const allowedFields = [
+      type AllowedField = 'nome_plano' | 'descricao' | 'tipo_servico' | 'servicos_inclusos' |
+        'quantidade_usuarios' | 'valor_mensal' | 'desconto_percentual' | 'desconto_valor' |
+        'desconto_ativo' | 'periodicidade' | 'renovacao_automatica' | 'data_inicio' |
+        'data_fim' | 'status' | 'observacoes';
+      
+      const allowedFields: AllowedField[] = [
         'nome_plano', 'descricao', 'tipo_servico', 'servicos_inclusos',
         'quantidade_usuarios', 'valor_mensal', 'desconto_percentual', 'desconto_valor',
         'desconto_ativo', 'periodicidade', 'renovacao_automatica', 'data_inicio',
         'data_fim', 'status', 'observacoes'
       ];
       
-      const updateData: any = {};
+      interface PlanoUpdateData {
+        nome_plano?: string;
+        descricao?: string | null;
+        tipo_servico?: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
+        servicos_inclusos?: string[] | null;
+        quantidade_usuarios?: number | null;
+        valor_mensal?: number;
+        desconto_percentual?: number | null;
+        desconto_valor?: number | null;
+        desconto_ativo?: boolean;
+        periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal' | null;
+        renovacao_automatica?: boolean;
+        data_inicio?: Date | null;
+        data_fim?: Date | null;
+        status?: 'ativo' | 'suspenso' | 'cancelado';
+        observacoes?: string | null;
+      }
+      
+      const updateData: PlanoUpdateData = {};
       Object.keys(req.body).forEach(key => {
-        if (allowedFields.includes(key)) {
+        if (allowedFields.includes(key as AllowedField)) {
+          const fieldKey = key as AllowedField;
           // Validar datas
-          if (key === 'data_inicio' || key === 'data_fim') {
-            const dateValue = req.body[key];
+          if (fieldKey === 'data_inicio' || fieldKey === 'data_fim') {
+            const dateValue = req.body[fieldKey];
             if (dateValue && dateValue !== '' && dateValue !== 'Invalid date') {
-              // Verificar se é uma data válida
+              // Verificar se é uma data válida e converter para Date
               const date = new Date(dateValue);
               if (!isNaN(date.getTime())) {
-                updateData[key] = dateValue;
+                (updateData as Record<string, Date | null>)[fieldKey] = date;
               }
             }
           } else {
             // Normalizar undefined para null
-            const value = req.body[key];
+            const value = req.body[fieldKey];
             if (value === undefined) {
-              updateData[key] = null;
+              (updateData as Record<string, unknown>)[fieldKey] = null;
             } else {
-              updateData[key] = value;
+              (updateData as Record<string, unknown>)[fieldKey] = value;
             }
           }
         }

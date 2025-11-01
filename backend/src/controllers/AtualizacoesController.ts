@@ -19,7 +19,7 @@ export class AtualizacoesController {
       const githubUrl = `https://api.github.com/repos/${githubRepo}/releases`;
       
       // Montar headers com token se disponível
-      const headers: any = {
+      const headers: Record<string, string> = {
         'Accept': 'application/vnd.github+json',
         'User-Agent': 'BackNet-Telecom-ERP'
       };

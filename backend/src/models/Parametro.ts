@@ -13,7 +13,7 @@ export interface ParametroAttributes {
   updated_at: Date;
 }
 
-export interface ParametroCreationAttributes extends Omit<ParametroAttributes, 'id' | 'created_at' | 'updated_at'> {}
+export type ParametroCreationAttributes = Omit<ParametroAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 export class Parametro extends Model<ParametroAttributes, ParametroCreationAttributes> implements ParametroAttributes {
   public id!: number;

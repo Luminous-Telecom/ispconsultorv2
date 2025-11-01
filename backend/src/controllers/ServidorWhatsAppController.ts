@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { ValidationError } from 'sequelize';
 import { ServidorWhatsApp } from '../models/ServidorWhatsApp';
 import { MensagemWhatsApp } from '../models/MensagemWhatsApp';
 import { logger } from '../utils/logger';
@@ -89,15 +90,13 @@ export class ServidorWhatsAppController {
         message: 'Servidor de WhatsApp criado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar servidor de WhatsApp:', error);
       
-      if (error instanceof Error && error.name === 'SequelizeValidationError') {
-        const validationError = error as any;
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
+          errors: error.errors.map((err) => err.message)
         });
         return;
       }
@@ -135,15 +134,13 @@ export class ServidorWhatsAppController {
         message: 'Servidor de WhatsApp atualizado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao atualizar servidor de WhatsApp:', error);
       
-      if (error instanceof Error && error.name === 'SequelizeValidationError') {
-        const validationError = error as any;
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
+          errors: error.errors.map((err) => err.message)
         });
         return;
       }
@@ -345,15 +342,13 @@ export class ServidorWhatsAppController {
         });
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar/atualizar servidor de WhatsApp:', error);
       
-      if (error instanceof Error && error.name === 'SequelizeValidationError') {
-        const validationError = error as any;
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
+          errors: error.errors.map((err) => err.message)
         });
         return;
       }
@@ -464,7 +459,7 @@ export class ServidorWhatsAppController {
 
       clearTimeout(timeoutId);
 
-      const result = await response.json() as any;
+      const result = await response.json() as { message?: string };
 
       if (!response.ok) {
         throw new Error(result.message || 'Erro ao enviar mensagem via Evolution API');
@@ -486,7 +481,8 @@ export class ServidorWhatsAppController {
       let statusCode = 500;
       
       if (error instanceof Error) {
-        if (error.name === 'AbortError' || (error as any).cause === 'ConnectTimeoutError') {
+        const errorWithCause = error as Error & { cause?: string };
+        if (error.name === 'AbortError' || errorWithCause.cause === 'ConnectTimeoutError') {
           errorMessage = 'Timeout de conexão (30s): A Evolution API não está respondendo. Verifique se a URL está correta e se o servidor está online.';
           statusCode = 504; // Gateway Timeout
         } else if (errorMessageInitial.includes('fetch failed')) {

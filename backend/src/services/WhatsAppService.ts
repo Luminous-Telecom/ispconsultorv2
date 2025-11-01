@@ -5,9 +5,25 @@ import { Titulo } from '../models/Titulo';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
+import { Contrato } from '../models/Contrato';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import { TituloController } from '../controllers/TituloController';
+
+interface TituloPlainWithRelations {
+  cliente?: Cliente;
+  plano?: Plano;
+  banco?: Banco;
+}
+
+interface WhatsAppRequestBody {
+  number: string;
+  text?: string;
+  mediatype?: string;
+  media?: string;
+  fileName?: string;
+  caption?: string;
+}
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -49,7 +65,7 @@ export class WhatsAppService {
       }
 
       return { sucesso: mensagensEnviadas > 0, mensagensEnviadas, erros };
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Erro ao enviar boletos via WhatsApp:', error);
       return { sucesso: false, mensagensEnviadas: 0, erros: 1 };
     }
@@ -99,17 +115,20 @@ export class WhatsAppService {
 
     for (const titulo of titulos) {
       try {
-        const cliente = (titulo.get({ plain: true }) as any).cliente as Cliente;
+        const tituloPlain = titulo.get({ plain: true }) as Titulo & TituloPlainWithRelations;
+        const cliente = tituloPlain.cliente;
         
         if (!cliente?.telefone) {
           erros++;
           continue;
         }
 
-        const contratoRef = (titulo as any).contrato_id ? { id: (titulo as any).contrato_id } : undefined;
+        const contratoRef: Contrato | undefined = titulo.contrato_id 
+          ? ({ id: titulo.contrato_id } as Contrato)
+          : undefined;
         const msg = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
           cliente,
-          contrato: contratoRef as any,
+          contrato: contratoRef,
           titulo,
           dataReferencia: new Date()
         });
@@ -136,7 +155,7 @@ export class WhatsAppService {
             erros++;
           }
         }
-      } catch (error: unknown) {
+      } catch (error) {
         logger.error(`Erro ao enviar boleto ${titulo.id}:`, error);
         erros++;
       }
@@ -157,7 +176,7 @@ export class WhatsAppService {
   private static async fazerRequisicao(
     url: string,
     servidor: ServidorWhatsApp,
-    body: any
+    body: WhatsAppRequestBody
   ): Promise<boolean> {
     try {
       const controller = new AbortController();
@@ -180,7 +199,7 @@ export class WhatsAppService {
         logger.error('Erro na requisição WhatsApp:', { url, status: response.status, data: responseData });
         return false;
       }
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Erro ao fazer requisição WhatsApp:', error);
       return false;
     }
@@ -209,7 +228,7 @@ export class WhatsAppService {
         fileName: 'boleto.pdf',
         caption: descricao || undefined
       });
-    } catch (error: unknown) {
+    } catch (error) {
       logger.error('Erro ao enviar PDF via WhatsApp:', error);
       return false;
     }

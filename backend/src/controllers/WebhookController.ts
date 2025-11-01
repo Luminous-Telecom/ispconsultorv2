@@ -1,7 +1,93 @@
 import { Request, Response } from 'express';
 import { Banco } from '../models/Banco';
+import { Cliente } from '../models/Cliente';
+import { Plano } from '../models/Plano';
+import { Titulo } from '../models/Titulo';
 import { BancoApiService } from '../services/BancoApiService';
 import { logger } from '../utils/logger';
+import { JsonValue } from '../types';
+
+interface WebhookResponse {
+  success: boolean;
+  message: string;
+  status?: number;
+  data?: Record<string, JsonValue>;
+}
+
+interface NotificationData {
+  code?: string;
+  data?: NotificationItem[];
+  charge?: ChargeNotification;
+}
+
+interface NotificationItem {
+  id?: string;
+  type?: string;
+  identifiers?: NotificationIdentifiers;
+  status?: string | {
+    current?: string;
+  };
+  custom_id?: string | null;
+  created_at?: string;
+  expire_at?: string;
+  due_date?: string;
+}
+
+interface NotificationIdentifiers {
+  charge_id?: string | null;
+  [key: string]: JsonValue | undefined;
+}
+
+interface ChargeNotification {
+  id?: string;
+  charge_id?: string | null;
+  status?: string;
+  custom_id?: string;
+}
+
+interface TituloUpdateData {
+  status?: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  pago?: boolean;
+  codigo_barras?: string;
+  linha_digitavel?: string;
+  url_boleto?: string;
+  qrcode?: string;
+  qrcode_image?: string;
+  data_pagamento?: string | null;
+  valor_pago?: number | null;
+  data_vencimento?: string;
+}
+
+interface EfiPaymentData {
+  payment?: {
+    banking_billet?: {
+      barcode?: string;
+      url?: string;
+      pdf?: {
+        charge?: string;
+      };
+      pix?: {
+        qrcode?: string;
+        qrcode_image?: string;
+      };
+    };
+  };
+}
+
+interface EfiDadosAtualizados {
+  codigo_barras?: string;
+  linha_digitavel?: string;
+  url_boleto?: string;
+  qrcode?: string;
+  qrcode_image?: string;
+  pdf_url?: string;
+}
+
+interface TituloWithBanco {
+  id: number;
+  charge_id: string | null;
+  banco?: Banco | null;
+}
 
 export class WebhookController {
   /**
@@ -94,7 +180,7 @@ export class WebhookController {
           res.status(200).json({ message: 'Tipo de notificação não processado' });
       }
 
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
       logger.error('Erro ao processar webhook Efí unificado', {
@@ -111,7 +197,7 @@ export class WebhookController {
   /**
    * Processar token de notificação
    */
-  private static async processarTokenNotificacao(notificationToken: string): Promise<any> {
+  private static async processarTokenNotificacao(notificationToken: string): Promise<WebhookResponse> {
     try {
       logger.info(`Iniciando processamento de token de notificação: ${notificationToken}`);
       
@@ -134,13 +220,13 @@ export class WebhookController {
         
         const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
         
-        if (resultado.success) {
+        if (resultado.success && resultado.data) {
           logger.info('Token encontrado no banco correto!', {
             banco_id: banco.id,
-            data_count: resultado.data?.data?.length || 0
+            data_count: Array.isArray(resultado.data.data) ? resultado.data.data.length : 0
           });
           
-          return await WebhookController.processarDadosNotificacao(resultado.data, banco);
+          return await WebhookController.processarDadosNotificacao(resultado.data as NotificationData | NotificationItem[] | NotificationItem, banco);
         }
       }
       
@@ -164,14 +250,14 @@ export class WebhookController {
         
         const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
         
-        if (resultado.success) {
+        if (resultado.success && resultado.data) {
           logger.info('Notificação consultada com sucesso', {
             banco_id: banco.id,
             data: resultado.data
           });
           
           // Processar os dados da notificação
-          return await WebhookController.processarDadosNotificacao(resultado.data, banco);
+          return await WebhookController.processarDadosNotificacao(resultado.data as NotificationData | NotificationItem[] | NotificationItem, banco);
         } else {
           // Se o token não foi encontrado, expirou ou não existe, não tentar outros bancos
           if (resultado.message?.includes('não encontrado') || 
@@ -198,7 +284,7 @@ export class WebhookController {
         status: 400 // Retornar 400 como no PHP
       };
       
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar token de notificação', {
         token: notificationToken,
@@ -215,7 +301,7 @@ export class WebhookController {
   /**
    * Processar dados da notificação
    */
-  private static async processarDadosNotificacao(dados: any, banco: Banco): Promise<any> {
+  private static async processarDadosNotificacao(dados: NotificationData | NotificationItem[] | NotificationItem, banco: Banco): Promise<WebhookResponse> {
     try {
       logger.info('Processando dados da notificação', {
         banco_id: banco.id,
@@ -223,7 +309,7 @@ export class WebhookController {
       });
 
       // Nova estrutura da EFI: array de notificações
-      if (dados.code && dados.data && Array.isArray(dados.data)) {
+      if (!Array.isArray(dados) && 'code' in dados && dados.code && 'data' in dados && dados.data && Array.isArray(dados.data)) {
         logger.info('Processando notificações em lote', {
           count: dados.data.length
         });
@@ -243,7 +329,7 @@ export class WebhookController {
       }
 
       // Verificar se é uma notificação de charge (boleto individual) - estrutura antiga
-      if (dados.charge) {
+      if (!Array.isArray(dados) && 'charge' in dados && dados.charge) {
         const charge = dados.charge;
         const chargeId = charge.charge_id || null;
         const status = charge.status || 'unknown';
@@ -310,9 +396,9 @@ export class WebhookController {
           message: `${totalProcessadas} notificações processadas`,
           data: { total_processadas: totalProcessadas }
         };
-      } else {
+      } else if (!Array.isArray(dados) && 'type' in dados) {
         // Notificação individual
-        const processadas = await WebhookController.processarNotificacaoIndividual(dados, banco);
+        const processadas = await WebhookController.processarNotificacaoIndividual(dados as NotificationItem, banco);
         
         return {
           success: true,
@@ -320,7 +406,14 @@ export class WebhookController {
           data: { processadas }
         };
       }
-    } catch (error: unknown) {
+      
+      // Fallback: retornar erro se não foi possível processar
+      return {
+        success: false,
+        message: 'Formato de notificação não reconhecido',
+        status: 400
+      };
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar dados da notificação', {
         banco_id: banco.id,
@@ -337,11 +430,15 @@ export class WebhookController {
   /**
    * Processar notificação individual
    */
-  private static async processarNotificacaoIndividual(notificacao: any, _banco: Banco): Promise<number> {
+  private static async processarNotificacaoIndividual(notificacao: NotificationItem, _banco: Banco): Promise<number> {
     try {
       const type = notificacao.type || '';
       const identifiers = notificacao.identifiers || {};
-      const status = notificacao.status?.current || null;
+      const status = typeof notificacao.status === 'object' && notificacao.status !== null && 'current' in notificacao.status
+        ? notificacao.status.current || null
+        : typeof notificacao.status === 'string' 
+          ? notificacao.status 
+          : null;
       const customId = notificacao.custom_id || null;
       
       logger.info('Processando notificação individual', {
@@ -359,7 +456,7 @@ export class WebhookController {
           logger.warn('Tipo de notificação não suportado', { type });
           return 0;
       }
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação individual', {
         notificacao,
@@ -372,7 +469,7 @@ export class WebhookController {
   /**
    * Processar notificação de título (charge)
    */
-  private static async processarNotificacaoTitulo(identifiers: any, status: string, customId: string, dadosCompletos?: any): Promise<number> {
+  private static async processarNotificacaoTitulo(identifiers: NotificationIdentifiers, status: string | null, customId: string | null, dadosCompletos?: NotificationItem): Promise<number> {
     const chargeId = identifiers.charge_id || null;
     
     if (!chargeId) {
@@ -401,26 +498,27 @@ export class WebhookController {
       }
 
       // Atualizar status do título
-      const novoStatus = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+      const statusString = status || 'pendente';
+      const novoStatus = WebhookController.mapearStatusEfi(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       const isPago = ['pago', 'liquidado'].includes(novoStatus);
       
-      const updateData: any = { 
+      const updateData: TituloUpdateData = { 
         status: novoStatus,
         pago: isPago
       };
 
       // Tentar consultar dados atualizados da EFI (opcional - apenas se conseguir token válido)
       try {
-        const dadosAtualizados = await WebhookController.consultarDadosAtualizadosTitulo(titulo);
-        if (dadosAtualizados.success && dadosAtualizados.data) {
-          const dados = dadosAtualizados.data;
+        const resultadoConsulta = await WebhookController.consultarDadosAtualizadosTitulo(titulo as TituloWithBanco);
+        if (resultadoConsulta.success && resultadoConsulta.data) {
+          const dadosAtualizados = resultadoConsulta.data;
           
           // Atualizar dados específicos se disponíveis (usar dados reais da EFI)
-          if (dados.codigo_barras) updateData.codigo_barras = dados.codigo_barras;
-          if (dados.linha_digitavel) updateData.linha_digitavel = dados.linha_digitavel;
-          if (dados.url_boleto) updateData.url_boleto = dados.url_boleto;
-          if (dados.qrcode) updateData.qrcode = dados.qrcode;
-          if (dados.qrcode_image) updateData.qrcode_image = dados.qrcode_image;
+          if (dadosAtualizados.codigo_barras) updateData.codigo_barras = dadosAtualizados.codigo_barras;
+          if (dadosAtualizados.linha_digitavel) updateData.linha_digitavel = dadosAtualizados.linha_digitavel;
+          if (dadosAtualizados.url_boleto) updateData.url_boleto = dadosAtualizados.url_boleto;
+          if (dadosAtualizados.qrcode) updateData.qrcode = dadosAtualizados.qrcode;
+          if (dadosAtualizados.qrcode_image) updateData.qrcode_image = dadosAtualizados.qrcode_image;
         }
       } catch (error) {
         // Se falhar ao consultar dados, simplesmente continua sem atualizar esses campos
@@ -476,7 +574,7 @@ export class WebhookController {
         }
       }
       
-      await titulo.update(updateData);
+      await titulo.update(updateData as Partial<typeof titulo>);
 
       logger.info('Status do título atualizado via webhook', {
         titulo_id: titulo.id,
@@ -491,7 +589,7 @@ export class WebhookController {
       });
 
       return 1;
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de título', {
         charge_id: chargeId,
@@ -505,10 +603,10 @@ export class WebhookController {
   /**
    * Processar notificação de charge
    */
-  private static async processarNotificacaoCharge(notification: any): Promise<any> {
+  private static async processarNotificacaoCharge(notification: ChargeNotification | NotificationItem): Promise<WebhookResponse> {
     try {
-      const chargeId = notification.charge_id || notification.id;
-      const status = notification.status;
+      const chargeId = 'charge_id' in notification ? notification.charge_id : notification.id;
+      const status = typeof notification.status === 'string' ? notification.status : (typeof notification.status === 'object' && notification.status !== null && 'current' in notification.status ? notification.status.current : undefined);
       const customId = notification.custom_id;
 
       logger.info('Processando notificação de charge', {
@@ -541,7 +639,8 @@ export class WebhookController {
       }
 
       // Atualizar status do título
-      const novoStatus = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+      const statusString = status || '';
+      const novoStatus = WebhookController.mapearStatusEfi(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       await titulo.update({ status: novoStatus });
 
       logger.info('Status do título atualizado via charge', {
@@ -559,7 +658,7 @@ export class WebhookController {
           status: novoStatus
         }
       };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de charge', {
         notification,
@@ -577,14 +676,14 @@ export class WebhookController {
   /**
    * Processar notificação de PIX
    */
-  private static async processarNotificacaoPix(notification: any): Promise<any> {
+  private static async processarNotificacaoPix(notification: NotificationItem): Promise<WebhookResponse> {
     try {
       logger.info('Processando notificação de PIX', { notification });
 
       // Implementar lógica específica para PIX se necessário
       // Por enquanto, tratar como notificação genérica
       return await WebhookController.processarNotificacaoGenerica(notification);
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de PIX', {
         notification,
@@ -601,12 +700,12 @@ export class WebhookController {
   /**
    * Processar notificação genérica
    */
-  private static async processarNotificacaoGenerica(notification: any): Promise<any> {
+  private static async processarNotificacaoGenerica(notification: NotificationItem | ChargeNotification): Promise<WebhookResponse> {
     try {
       logger.info('Processando notificação genérica', { notification });
 
       // Tentar identificar o tipo de notificação pelos campos disponíveis
-      const chargeId = notification.charge_id || notification.id;
+      const chargeId = 'charge_id' in notification ? notification.charge_id : notification.id;
       const customId = notification.custom_id;
 
       if (chargeId) {
@@ -614,9 +713,10 @@ export class WebhookController {
       } else if (customId) {
         // Tentar buscar por custom_id
         const { Titulo } = await import('../models/Titulo');
-        const titulo = await Titulo.findByPk(customId);
+        const titulo = await Titulo.findByPk(String(customId));
         if (titulo) {
-          const novoStatus = WebhookController.mapearStatusEfi(notification.status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+          const statusString = typeof notification.status === 'string' ? notification.status : (typeof notification.status === 'object' && notification.status !== null && 'current' in notification.status ? (notification.status.current || 'pendente') : 'pendente');
+          const novoStatus = WebhookController.mapearStatusEfi(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
           await titulo.update({ status: novoStatus });
           
           return {
@@ -636,7 +736,7 @@ export class WebhookController {
         message: 'Não foi possível processar notificação genérica',
         status: 400
       };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação genérica', {
         notification,
@@ -653,7 +753,7 @@ export class WebhookController {
   /**
    * Consultar dados atualizados do título na EFI
    */
-  private static async consultarDadosAtualizadosTitulo(titulo: any): Promise<{ success: boolean; data?: any; message?: string }> {
+  private static async consultarDadosAtualizadosTitulo(titulo: TituloWithBanco): Promise<{ success: boolean; data?: EfiDadosAtualizados; message?: string }> {
     try {
       if (!titulo.charge_id) {
         return { success: false, message: 'Charge ID não disponível' };
@@ -667,59 +767,71 @@ export class WebhookController {
       }
 
       // Usar o BancoApiService para consultar dados atualizados
-      const resultado = await BancoApiService.consultarStatus(titulo);
+      // Tipo TituloWithRelations é interno ao BancoApiService, então usamos type assertion
+      // Criar objeto compatível com TituloWithRelations do BancoApiService
+      interface TituloWithRelationsForService extends Titulo {
+        banco?: Banco;
+        cliente?: Cliente;
+        plano?: Plano;
+      }
+      const tituloWithRelations = titulo as TituloWithRelationsForService;
+      const resultado = await BancoApiService.consultarStatus(tituloWithRelations);
       
       if (resultado.success && resultado.data) {
         const dados = resultado.data;
         
         
         // Extrair dados específicos baseado na estrutura real da EFI
-        const dadosAtualizados: any = {};
+        const dadosAtualizados: EfiDadosAtualizados = {};
+        
+        // Type assertion para payment
+        const paymentData = dados as EfiPaymentData;
+        const payment = paymentData.payment;
         
         // Código de barras (linha digitável) - está em payment.banking_billet.barcode
-        if (dados.payment?.banking_billet?.barcode) {
-          dadosAtualizados.linha_digitavel = dados.payment.banking_billet.barcode;
+        if (payment?.banking_billet?.barcode) {
+          dadosAtualizados.linha_digitavel = payment.banking_billet.barcode;
         }
         
         // URL do boleto - está em payment.banking_billet.url
-        if (dados.payment?.banking_billet?.url) {
-          dadosAtualizados.url_boleto = dados.payment.banking_billet.url;
+        if (payment?.banking_billet?.url) {
+          dadosAtualizados.url_boleto = payment.banking_billet.url;
         }
         
         // PDF do boleto - está em payment.banking_billet.pdf.charge
-        if (dados.payment?.banking_billet?.pdf?.charge) {
-          dadosAtualizados.pdf_url = dados.payment.banking_billet.pdf.charge;
+        if (payment?.banking_billet?.pdf?.charge) {
+          dadosAtualizados.pdf_url = payment.banking_billet.pdf.charge;
         }
         
         // Para títulos, usar dados da EFI (reais ou zeros)
-        if (dados.payment?.banking_billet?.barcode) {
+        if (payment?.banking_billet?.barcode) {
           // Usar linha digitável da EFI (pode ser real ou zeros)
-          dadosAtualizados.linha_digitavel = dados.payment.banking_billet.barcode;
+          dadosAtualizados.linha_digitavel = payment.banking_billet.barcode;
           // Converter linha digitável para código de barras (remover pontos e espaços)
-          dadosAtualizados.codigo_barras = dados.payment.banking_billet.barcode.replace(/[.\s]/g, '');
+          dadosAtualizados.codigo_barras = payment.banking_billet.barcode.replace(/[.\s]/g, '');
         }
         
         // Para títulos, verificar se há dados PIX disponíveis
         // Nota: No sandbox da EFI, dados PIX podem não estar disponíveis para títulos
-        if (dados.payment?.banking_billet?.pix) {
+        if (payment?.banking_billet?.pix) {
           logger.info('Dados PIX encontrados em payment.banking_billet.pix', {
             titulo_id: titulo.id,
             charge_id: titulo.charge_id,
-            pix_data: dados.payment.banking_billet.pix
+            pix_data: payment.banking_billet.pix
           });
           
-          if (dados.payment.banking_billet.pix.qrcode) {
-            dadosAtualizados.qrcode = dados.payment.banking_billet.pix.qrcode;
+          if (payment.banking_billet.pix.qrcode) {
+            dadosAtualizados.qrcode = payment.banking_billet.pix.qrcode;
           }
-          if (dados.payment.banking_billet.pix.qrcode_image) {
-            dadosAtualizados.qrcode_image = dados.payment.banking_billet.pix.qrcode_image;
+          if (payment.banking_billet.pix.qrcode_image) {
+            dadosAtualizados.qrcode_image = payment.banking_billet.pix.qrcode_image;
           }
         } else {
           logger.info('Dados PIX não disponíveis para título (normal no sandbox)', {
             titulo_id: titulo.id,
             charge_id: titulo.charge_id,
-            tem_payment_banking_billet: !!dados.payment?.banking_billet,
-            chaves_banking_billet: dados.payment?.banking_billet ? Object.keys(dados.payment.banking_billet) : []
+            tem_payment_banking_billet: !!payment?.banking_billet,
+            chaves_banking_billet: payment?.banking_billet ? Object.keys(payment.banking_billet) : []
           });
         }
         
@@ -735,7 +847,7 @@ export class WebhookController {
         message: resultado.message || 'Erro ao consultar dados' 
       };
       
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao consultar dados atualizados do título', {
         titulo_id: titulo.id,

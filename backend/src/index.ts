@@ -171,7 +171,12 @@ app.get('/health', (req, res) => {
 });
 
 // Middleware de tratamento de erros
-app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+interface ErrorWithDetails extends Error {
+  details?: string | string[];
+  errors?: Array<{ message: string }>;
+}
+
+app.use((err: ErrorWithDetails, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Erro:', err);
   
   if (err.name === 'ValidationError') {
@@ -184,7 +189,7 @@ app.use((err: any, req: express.Request, res: express.Response, _next: express.N
   if (err.name === 'SequelizeValidationError') {
     return res.status(400).json({
       error: 'Dados inválidos',
-      details: err.errors.map((e: any) => e.message)
+      details: err.errors?.map((e) => e.message) || [err.message]
     });
   }
   

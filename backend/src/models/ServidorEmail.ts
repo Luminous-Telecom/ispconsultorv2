@@ -19,7 +19,7 @@ interface ServidorEmailAttributes {
   updated_at?: Date;
 }
 
-interface ServidorEmailCreationAttributes extends Optional<ServidorEmailAttributes, 'id' | 'created_at' | 'updated_at'> {}
+type ServidorEmailCreationAttributes = Optional<ServidorEmailAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 export class ServidorEmail extends Model<ServidorEmailAttributes, ServidorEmailCreationAttributes> implements ServidorEmailAttributes {
   public id!: number;

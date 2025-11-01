@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Cliente } from '../models/Cliente';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import Joi from 'joi';
 
 export class ClienteController {
@@ -103,10 +103,10 @@ export class ClienteController {
       const offset = (page - 1) * limit;
 
       // Construir filtros
-      const where: any = {};
+      const where: WhereOptions = {};
       
       if (search) {
-        where[Op.or] = [
+        (where as Record<symbol, unknown>)[Op.or] = [
           { razao_social: { [Op.like]: `%${search}%` } },
           { nome_fantasia: { [Op.like]: `%${search}%` } },
           { email: { [Op.like]: `%${search}%` } },

@@ -10,7 +10,7 @@ interface DiasVencimentoAttributes {
   updated_at?: Date;
 }
 
-interface DiasVencimentoCreationAttributes extends Optional<DiasVencimentoAttributes, 'id' | 'created_at' | 'updated_at'> {}
+type DiasVencimentoCreationAttributes = Optional<DiasVencimentoAttributes, 'id' | 'created_at' | 'updated_at'>;
 
 export class DiasVencimento extends Model<DiasVencimentoAttributes, DiasVencimentoCreationAttributes> implements DiasVencimentoAttributes {
   public id!: number;

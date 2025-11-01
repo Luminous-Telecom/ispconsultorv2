@@ -9,6 +9,11 @@ export interface EnvioBoletosConfig {
   canais?: ('whatsapp' | 'email')[];
 }
 
+interface DetalhesEnvio {
+  whatsapp?: { enviadas: number; erros: number };
+  email?: { enviadas: number; erros: number };
+}
+
 export class EnvioBoletosRoutine {
   async execute(config: EnvioBoletosConfig = {}): Promise<{
     success: boolean;
@@ -31,7 +36,7 @@ export class EnvioBoletosRoutine {
       };
 
       const canais = config?.canais || ['whatsapp', 'email'];
-      const detalhes: any = {};
+      const detalhes: DetalhesEnvio = {};
       let totalEnviados = 0;
       let totalErros = 0;
 
@@ -65,8 +70,8 @@ export class EnvioBoletosRoutine {
           detalhes
         }
       };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Erro ao executar envio de boletos:', error);
       
       return {

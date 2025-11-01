@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { ValidationError } from 'sequelize';
 import { ModeloContrato } from '../models/ModeloContrato';
 import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
@@ -10,6 +11,7 @@ import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService
 
 // @ts-ignore
 import * as htmlPdf from 'html-pdf-node';
+import type { PdfOptions } from 'html-pdf-node';
 
 export class ModeloContratoController {
   /**
@@ -19,9 +21,9 @@ export class ModeloContratoController {
     try {
       const { tipo } = req.query;
       
-      const whereClause: any = {};
+      const whereClause: { tipo?: string } = {};
       if (tipo) {
-        whereClause.tipo = tipo;
+        whereClause.tipo = tipo as string;
       }
 
       const documentos = await ModeloContrato.findAll({
@@ -98,15 +100,13 @@ export class ModeloContratoController {
         message: 'Documento criado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao criar documento:', error);
       
-      if (error instanceof Error && error.name === 'SequelizeValidationError') {
-        const validationError = error as any;
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
+          errors: error.errors ? error.errors.map((err) => err.message) : []
         });
         return;
       }
@@ -144,15 +144,13 @@ export class ModeloContratoController {
         message: 'Documento atualizado com sucesso'
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao atualizar documento:', error);
       
-      if (error instanceof Error && error.name === 'SequelizeValidationError') {
-        const validationError = error as any;
+      if (error instanceof ValidationError) {
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
-          errors: validationError.errors ? validationError.errors.map((err: any) => err.message) : []
+          errors: error.errors ? error.errors.map((err) => err.message) : []
         });
         return;
       }
@@ -268,7 +266,7 @@ export class ModeloContratoController {
         order: [['tipo', 'ASC']],
       });
 
-      const tiposList = tipos.map((doc: any) => doc.tipo);
+      const tiposList = tipos.map((doc) => doc.tipo as string);
 
       res.json({
         success: true,
@@ -480,7 +478,7 @@ export class ModeloContratoController {
       `;
 
       // Configurações do PDF
-      const options = {
+      const options: PdfOptions = {
         format: 'A4',
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true
@@ -683,7 +681,7 @@ export class ModeloContratoController {
       `;
 
       // Configurações do PDF
-      const options = {
+      const options: PdfOptions = {
         format: 'A4',
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true
@@ -876,7 +874,7 @@ export class ModeloContratoController {
       `;
 
       // Configurações do PDF
-      const options = {
+      const options: PdfOptions = {
         format: 'A4',
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true
@@ -1081,7 +1079,7 @@ export class ModeloContratoController {
       `;
 
       // Configurações do PDF
-      const options = {
+      const options: PdfOptions = {
         format: 'A4',
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true

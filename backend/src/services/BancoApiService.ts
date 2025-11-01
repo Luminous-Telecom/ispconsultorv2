@@ -1,8 +1,12 @@
-import axios from 'axios';
+import axios, { type AxiosResponse } from 'axios';
 import { Banco } from '../models/Banco';
+import { Titulo } from '../models/Titulo';
+import { Cliente } from '../models/Cliente';
+import { Plano } from '../models/Plano';
 import { logger } from '../utils/logger';
 import { efiConfig } from '../config/bancos/efi';
 import asaasConfig from '../config/bancos/asaas';
+import type { JsonValue } from '../types';
 
 export interface BancoConfig {
   nome: string;
@@ -45,24 +49,123 @@ export interface BancoConfig {
   notification: string;
 }
 
+interface ApiResponseData {
+  charge_id?: string;
+  [key: string]: JsonValue | undefined;
+}
+
 export interface ApiResponse {
   success: boolean;
   message?: string;
-  data?: any;
+  data?: ApiResponseData;
   status?: string;
 }
 
+interface TituloWithRelations extends Titulo {
+  banco?: Banco;
+  cliente?: Cliente;
+  plano?: Plano;
+}
+
+interface ClienteForBoleto {
+  razao_social: string;
+  cnpj: string;
+  telefone: string;
+  endereco: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cep: string;
+  cidade: string;
+  estado: string;
+}
+
+interface PlanoForBoleto {
+  nome_plano: string;
+}
+
+interface AuthData {
+  [key: string]: string | null | undefined;
+}
+
+interface AxiosErrorResponse {
+  code?: string;
+  response?: {
+    status?: number;
+    statusText?: string;
+    data?: JsonValue;
+  };
+}
+
+interface BoletoData {
+  items: Array<{
+    name: string;
+    value: number;
+    amount: number;
+  }>;
+  metadata?: {
+    custom_id?: string;
+    notification_url?: string;
+  };
+  payment?: {
+    banking_billet?: {
+      customer?: JsonValue;
+      expire_at?: string;
+      [key: string]: JsonValue | undefined;
+    };
+  };
+}
+
+interface CustomerData {
+  name: string;
+  phone_number: string;
+  juridical_person: {
+    corporate_name: string;
+    cnpj: string;
+  };
+  address: {
+    street: string;
+    number: string;
+    neighborhood: string;
+    zipcode: string;
+    city: string;
+    complement?: string;
+    state: string;
+  };
+}
+
+interface ArquivoRemessa {
+  nome_arquivo: string;
+  tamanho?: number;
+  conteudo?: string | Buffer;
+}
+
+interface RemessaResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    arquivo: string;
+    tamanho?: number;
+    timestamp: string;
+  };
+}
+
 export class BancoApiService {
-  private static readonly BANCO_CONFIGS: Record<string, BancoConfig> = {
+  private static readonly BANCO_CONFIGS: Record<string, BancoConfig | Partial<BancoConfig>> = {
     efi: efiConfig,
-    asaas: asaasConfig as any
+    asaas: asaasConfig as Partial<BancoConfig>
   };
 
   /**
    * Obter configuração do banco
    */
   private static getBancoConfig(tipoBanco: string): BancoConfig | null {
-    return this.BANCO_CONFIGS[tipoBanco] || null;
+    const config = this.BANCO_CONFIGS[tipoBanco];
+    if (!config) {
+      return null;
+    }
+    // Se é Partial, assumir que tem as propriedades mínimas necessárias
+    return config as BancoConfig;
   }
 
   /**
@@ -76,7 +179,7 @@ export class BancoApiService {
   /**
    * Verificar se as credenciais estão configuradas
    */
-  private static verificarCredenciais(banco: Banco, config: BancoConfig): boolean {
+  private static verificarCredenciais(banco: Banco, _config: BancoConfig): boolean {
     // Usar sempre as mesmas credenciais, independente de sandbox ou produção
     const clientId = banco.client_id_producao;
     const clientSecret = banco.client_secret_producao;
@@ -119,7 +222,7 @@ export class BancoApiService {
         success: true,
         message: 'Autenticação realizada com sucesso'
       };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Exceção ao testar autenticação', {
         banco: banco.tipo_banco,
@@ -147,14 +250,14 @@ export class BancoApiService {
           : config.cobranca_base_url;
         const endpoint = baseUrl + config.token;
         
-        let authData: any = {};
+        let authData: AuthData = {};
         
         if (config.auth_type === 'basic') {
           // Usar sempre as mesmas credenciais, independente de sandbox ou produção
           // A diferença entre sandbox e produção é apenas a URL
           authData = {
-            [config.client_id_field]: banco.client_id_producao,
-            [config.client_secret_field]: banco.client_secret_producao,
+            [config.client_id_field]: banco.client_id_producao || null,
+            [config.client_secret_field]: banco.client_secret_producao || null,
             grant_type: 'client_credentials'
           };
         }
@@ -181,13 +284,14 @@ export class BancoApiService {
           tentativa
         });
         return null;
-      } catch (error: unknown) {
-        const isTimeout = (error as any).code === 'ECONNABORTED' || 
-                         (error as any).response?.status === 504 || 
-                         (error as any).response?.status === 502 || 
-                         (error as any).response?.status === 503;
+      } catch (error) {
+        const axiosError = error as Error & AxiosErrorResponse;
+        const isTimeout = axiosError.code === 'ECONNABORTED' || 
+                         axiosError.response?.status === 504 || 
+                         axiosError.response?.status === 502 || 
+                         axiosError.response?.status === 503;
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        const errorResponse = (error as any).response;
+        const errorResponse = axiosError.response;
         
         if (tentativa < maxTentativas && isTimeout) {
           logger.warn(`Tentativa ${tentativa} falhou por timeout, tentando novamente em ${delay}ms`, {
@@ -246,17 +350,36 @@ export class BancoApiService {
   /**
    * Obter valor aninhado de um objeto usando notação de ponto
    */
-  private static getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  private static getNestedValue(obj: Record<string, JsonValue>, path: string): JsonValue | undefined {
+    return path.split('.').reduce<JsonValue | undefined>((current, key) => {
+      if (current && typeof current === 'object' && !Array.isArray(current)) {
+        return (current as Record<string, JsonValue>)[key];
+      }
+      return undefined;
+    }, obj as JsonValue);
   }
 
   /**
    * Gerar título/boleto via API do banco
    */
-  static async gerarTitulo(titulo: any): Promise<ApiResponse> {
+  static async gerarTitulo(titulo: TituloWithRelations): Promise<ApiResponse> {
     const banco = titulo.banco;
     const cliente = titulo.cliente;
     const plano = titulo.plano;
+    
+    if (!banco) {
+      return {
+        success: false,
+        message: 'Banco não encontrado para o título'
+      };
+    }
+    
+    if (!cliente) {
+      return {
+        success: false,
+        message: 'Cliente não encontrado para o título'
+      };
+    }
     
     try {
       // Carregar configurações do banco
@@ -302,7 +425,39 @@ export class BancoApiService {
       }
 
       // Preparar dados do boleto
-      const dadosBoleto = await this.prepararDadosBoleto(banco, titulo, cliente, plano, config);
+      if (!plano) {
+        return {
+          success: false,
+          message: 'Plano não encontrado para o título'
+        };
+      }
+      
+      // Converter Cliente para ClienteForBoleto com validações
+      if (!cliente.telefone || !cliente.endereco || !cliente.numero || !cliente.bairro || !cliente.cep || !cliente.cidade || !cliente.estado) {
+        return {
+          success: false,
+          message: 'Cliente está com dados incompletos para gerar boleto'
+        };
+      }
+      
+      const clienteForBoleto: ClienteForBoleto = {
+        razao_social: cliente.razao_social,
+        cnpj: cliente.cnpj,
+        telefone: cliente.telefone,
+        endereco: cliente.endereco,
+        numero: cliente.numero,
+        complemento: cliente.complemento || undefined,
+        bairro: cliente.bairro,
+        cep: cliente.cep,
+        cidade: cliente.cidade,
+        estado: cliente.estado
+      };
+      
+      const planoForBoleto: PlanoForBoleto = {
+        nome_plano: plano.nome_plano
+      };
+      
+      const dadosBoleto = await this.prepararDadosBoleto(banco, titulo, clienteForBoleto, planoForBoleto, config);
 
 
       // Criar boleto individual
@@ -318,7 +473,7 @@ export class BancoApiService {
       // Implementar retry para criação de boleto
       const maxTentativas = 3;
       let delay = 2000;
-      let response: any = null;
+      let response: AxiosResponse<Record<string, JsonValue>> | null = null;
       
       for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
         try {
@@ -327,12 +482,13 @@ export class BancoApiService {
             timeout: 30000
           });
           break; // Sucesso, sair do loop
-        } catch (error: unknown) {
-          const isTimeout = (error as any).code === 'ECONNABORTED' || 
-                           (error as any).response?.status === 504 || 
-                           (error as any).response?.status === 502 || 
-                           (error as any).response?.status === 503;
-          const errorResponse = (error as any).response;
+        } catch (error) {
+          const axiosError = error as Error & AxiosErrorResponse;
+          const isTimeout = axiosError.code === 'ECONNABORTED' || 
+                           axiosError.response?.status === 504 || 
+                           axiosError.response?.status === 502 || 
+                           axiosError.response?.status === 503;
+          const errorResponse = axiosError.response;
           
           if (tentativa < maxTentativas && isTimeout) {
             logger.warn(`Tentativa ${tentativa} falhou por timeout na criação do boleto, tentando novamente em ${delay}ms`, {
@@ -350,34 +506,47 @@ export class BancoApiService {
         }
       }
       
+      if (!response) {
+        return {
+          success: false,
+          message: 'Nenhuma resposta recebida do servidor'
+        };
+      }
+      
       if (response.status >= 200 && response.status < 300) {
         const dados = response.data;
         const chargeId = this.getNestedValue(dados, config.api_response_mapping.boleto.id);
         const barcode = this.getNestedValue(dados, config.api_response_mapping.boleto.barcode);
         const url = this.getNestedValue(dados, config.api_response_mapping.boleto.url);
-        const linhaDigitavel = this.getNestedValue(dados, config.api_response_mapping.boleto.linha_digitavel || '') || null;
+        const linhaDigitavelPath = config.api_response_mapping.boleto.linha_digitavel || '';
+        const linhaDigitavelRaw = linhaDigitavelPath ? this.getNestedValue(dados, linhaDigitavelPath) : null;
+        const linhaDigitavel = typeof linhaDigitavelRaw === 'string' ? linhaDigitavelRaw : null;
         const pdfUrl = this.getNestedValue(dados, config.api_response_mapping.boleto.pdf);
         const pixQrcode = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode);
         const pixQrcodeImage = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode_image);
 
         // Se barcode for linha digitável (47 dígitos), converter para código de barras (44 dígitos)
-        let codigoBarrasFinal = barcode;
-        if (barcode) {
+        let codigoBarrasFinal: string | null = null;
+        if (barcode && typeof barcode === 'string') {
           const barcodeLimpo = barcode.replace(/\D/g, '');
           if (barcodeLimpo.length === 47) {
             // É linha digitável, pegar os primeiros 44 dígitos
             codigoBarrasFinal = barcodeLimpo.substring(0, 44);
+          } else {
+            codigoBarrasFinal = barcode;
           }
+        } else if (typeof barcode === 'string') {
+          codigoBarrasFinal = barcode;
         }
 
         // Atualizar título
         await titulo.update({
-          charge_id: chargeId,
-          codigo_barras: codigoBarrasFinal,
-          url_boleto: url,
-          linha_digitavel: linhaDigitavel,
-          qrcode: pixQrcode,
-          qrcode_image: pixQrcodeImage,
+          charge_id: typeof chargeId === 'string' ? chargeId : null,
+          codigo_barras: typeof codigoBarrasFinal === 'string' ? codigoBarrasFinal : null,
+          url_boleto: typeof url === 'string' ? url : null,
+          linha_digitavel: typeof linhaDigitavel === 'string' ? linhaDigitavel : null,
+          qrcode: typeof pixQrcode === 'string' ? pixQrcode : null,
+          qrcode_image: typeof pixQrcodeImage === 'string' ? pixQrcodeImage : null,
           status: 'pendente'
         });
 
@@ -386,7 +555,8 @@ export class BancoApiService {
           const baseUrl = banco.url_retorno;
           
           if (baseUrl) {
-          const metadataEndpoint = `${baseUrlCobranca}/v1/charge/${chargeId}/metadata`;
+          const chargeIdStr = typeof chargeId === 'string' ? chargeId : String(chargeId);
+          const metadataEndpoint = `${baseUrlCobranca}/v1/charge/${chargeIdStr}/metadata`;
           const metadataPayload = {
             notification_url: baseUrl,
             custom_id: `titulo_${titulo.id}`
@@ -405,26 +575,27 @@ export class BancoApiService {
               titulo_id: titulo.id
             });
           }
-        } catch (metadataError: any) {
+        } catch (metadataError) {
+          const errorMessage = metadataError instanceof Error ? metadataError.message : 'Erro desconhecido';
           logger.warn('Falha ao atualizar metadados, mas título foi criado', {
             titulo_id: titulo.id,
             charge_id: chargeId,
-            error: metadataError.message
+            error: errorMessage
           });
         }
 
         logger.info('Título gerado com sucesso', {
           titulo_id: titulo.id,
-          charge_id: chargeId
+          charge_id: typeof chargeId === 'string' ? chargeId : String(chargeId || '')
         });
 
         return {
           success: true,
           message: 'Título gerado com sucesso',
           data: {
-            charge_id: chargeId,
-            codigo_barras: barcode,
-            url_boleto: url,
+            charge_id: typeof chargeId === 'string' ? chargeId : undefined,
+            codigo_barras: typeof barcode === 'string' ? barcode : null,
+            url_boleto: typeof url === 'string' ? url : null,
             linha_digitavel: linhaDigitavel,
             pdf_url: pdfUrl,
             qrcode: pixQrcode,
@@ -437,9 +608,10 @@ export class BancoApiService {
         success: false,
         message: 'Erro ao gerar título'
       };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorResponse = (error as any).response;
+      const axiosError = error as Error & AxiosErrorResponse;
+      const errorResponse = axiosError.response;
       const errorDetails = {
         titulo_id: titulo.id,
         error: errorMessage,
@@ -475,12 +647,12 @@ export class BancoApiService {
    */
   private static async prepararDadosBoleto(
     banco: Banco, 
-    titulo: any, 
-    cliente: any, 
-    plano: any, 
-    config: BancoConfig
-  ): Promise<any> {
-    const baseUrl = banco.url_retorno;
+    titulo: TituloWithRelations, 
+    cliente: ClienteForBoleto, 
+    plano: PlanoForBoleto, 
+    _config: BancoConfig
+  ): Promise<BoletoData> {
+    const _baseUrl = banco.url_retorno;
     
     // Buscar dados da empresa (recebedor)
     const { DadosEmpresa } = await import('../models/DadosEmpresa');
@@ -601,7 +773,7 @@ export class BancoApiService {
       return numero;
     };
     
-    const customerData: any = {
+    const customerData: CustomerData = {
       name: nomeFormatado,
       phone_number: formatarTelefoneEFI(cliente.telefone),
       juridical_person: {
@@ -631,7 +803,7 @@ export class BancoApiService {
       }],
       payment: {
         banking_billet: {
-          customer: customerData,
+          customer: JSON.parse(JSON.stringify(customerData)) as JsonValue,
           expire_at: new Date(titulo.data_vencimento).toISOString().split('T')[0],
           configurations: {
             fine: fineBp,
@@ -655,7 +827,7 @@ export class BancoApiService {
     const maxLinhas = 4;
     
     // Remover quebras de linha existentes e espaços extras
-    let texto = mensagem.replace(/\s+/g, ' ').trim();
+    const texto = mensagem.replace(/\s+/g, ' ').trim();
     
     // Se a mensagem cabe em uma linha, retornar como está
     if (texto.length <= maxCharsPorLinha) {
@@ -707,8 +879,15 @@ export class BancoApiService {
   /**
    * Consultar status de um título
    */
-  static async consultarStatus(titulo: any): Promise<ApiResponse> {
+  static async consultarStatus(titulo: TituloWithRelations): Promise<ApiResponse> {
     const banco = titulo.banco;
+    
+    if (!banco) {
+      return {
+        success: false,
+        message: 'Banco não encontrado para o título'
+      };
+    }
     
     try {
       const config = this.getBancoConfig(banco.tipo_banco);
@@ -751,7 +930,7 @@ export class BancoApiService {
       // Implementar retry para consulta de status
       const maxTentativas = 3;
       let delay = 2000;
-      let response: any = null;
+      let response: AxiosResponse<Record<string, JsonValue>> | null = null;
       
       for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
         try {
@@ -762,9 +941,10 @@ export class BancoApiService {
             timeout: 30000
           });
           break; // Sucesso, sair do loop
-        } catch (error: unknown) {
-          const errorResponse = (error as any).response;
-          const isTimeout = (error as any).code === 'ECONNABORTED' || 
+        } catch (error) {
+          const axiosError = error as Error & AxiosErrorResponse;
+          const errorResponse = axiosError.response;
+          const isTimeout = axiosError.code === 'ECONNABORTED' || 
                            errorResponse?.status === 504 || 
                            errorResponse?.status === 502 || 
                            errorResponse?.status === 503;
@@ -785,15 +965,20 @@ export class BancoApiService {
         }
       }
       
-      if (response.status >= 200 && response.status < 300) {
+      if (response?.status && response.status >= 200 && response.status < 300) {
         const dados = response.data;
         const status = this.getNestedValue(dados, config.api_response_mapping.status.status);
         const statusNorm = typeof status === 'string' ? status.toLowerCase() : null;
         
+        const responseData: ApiResponseData = {};
+        if (dados && typeof dados === 'object' && !Array.isArray(dados)) {
+          Object.assign(responseData, dados);
+        }
+        
         return {
           success: true,
           status: statusNorm || undefined,
-          data: dados.data || dados
+          data: responseData
         };
       }
       
@@ -801,7 +986,7 @@ export class BancoApiService {
         success: false,
         message: 'Erro ao consultar status'
       };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao consultar status', { 
         titulo_id: titulo.id,
@@ -850,7 +1035,7 @@ export class BancoApiService {
       // Implementar retry para lidar com erros temporários (como no PHP)
       const maxTentativas = 3;
       let delay = 1000; // 1 segundo
-      let response: any = null;
+      let response: AxiosResponse<Record<string, JsonValue>> | null = null;
       
       for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
         try {
@@ -861,11 +1046,12 @@ export class BancoApiService {
             timeout: 30000
           });
           
-          if (response.status >= 200 && response.status < 300) {
+          if (response?.status && response.status >= 200 && response.status < 300) {
             break; // Sucesso, sair do loop
           }
-        } catch (error: unknown) {
-          const errorResponse = (error as any).response;
+        } catch (error) {
+          const axiosError = error as Error & AxiosErrorResponse;
+          const errorResponse = axiosError.response;
           // Se não é a última tentativa e é erro temporário (502, 503, 504), tentar novamente
           if (tentativa < maxTentativas && 
               errorResponse?.status && 
@@ -885,10 +1071,17 @@ export class BancoApiService {
         }
       }
       
+      if (!response) {
+        return {
+          success: false,
+          message: 'Nenhuma resposta recebida do servidor'
+        };
+      }
+      
       if (response.status >= 200 && response.status < 300) {
         return {
           success: true,
-          data: response.data
+          data: response.data as ApiResponseData
         };
       }
       
@@ -896,12 +1089,17 @@ export class BancoApiService {
         success: false,
         message: 'Erro ao consultar notificação'
       };
-    } catch (error: unknown) {
+    } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        const errorResponse = (error as any).response;
+        const axiosError = error as Error & AxiosErrorResponse;
+        const errorResponse = axiosError.response;
         
         // Se é erro de token inválido/expirado, logar como warning em vez de error
-        if (errorResponse?.data?.code === 3500010 || errorResponse?.status === 500) {
+        const errorData = errorResponse?.data;
+        const errorCode = errorData && typeof errorData === 'object' && !Array.isArray(errorData) && 'code' in errorData 
+          ? (errorData as { code?: number }).code 
+          : undefined;
+        if (errorCode === 3500010 || errorResponse?.status === 500) {
           logger.warn('Token de notificação inválido ou expirado', {
             banco_id: banco.id,
             token: notificationToken,
@@ -919,7 +1117,7 @@ export class BancoApiService {
         }
       
       // Se o erro for 3500010 (propriedade não existe), o token pode ter expirado
-      if (errorResponse?.data?.code === 3500010) {
+      if (errorCode === 3500010) {
         return {
           success: false,
           message: 'Token de notificação não encontrado ou expirado'
@@ -940,8 +1138,15 @@ export class BancoApiService {
   /**
    * Cancelar título individual
    */
-  static async cancelarTitulo(titulo: any): Promise<ApiResponse> {
+  static async cancelarTitulo(titulo: TituloWithRelations): Promise<ApiResponse> {
     const banco = titulo.banco;
+    
+    if (!banco) {
+      return {
+        success: false,
+        message: 'Banco não encontrado para o título'
+      };
+    }
     
     try {
       const config = this.getBancoConfig(banco.tipo_banco);
@@ -982,7 +1187,7 @@ export class BancoApiService {
       // Implementar retry para cancelamento de título
       const maxTentativas = 3;
       let delay = 2000;
-      let response: any = null;
+      let response: AxiosResponse<Record<string, JsonValue>> | null = null;
       
       for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
         try {
@@ -993,9 +1198,10 @@ export class BancoApiService {
             timeout: 30000
           });
           break; // Sucesso, sair do loop
-        } catch (error: unknown) {
-          const errorResponse = (error as any).response;
-          const isTimeout = (error as any).code === 'ECONNABORTED' || 
+        } catch (error) {
+          const axiosError = error as Error & AxiosErrorResponse;
+          const errorResponse = axiosError.response;
+          const isTimeout = axiosError.code === 'ECONNABORTED' || 
                            errorResponse?.status === 504 || 
                            errorResponse?.status === 502 || 
                            errorResponse?.status === 503;
@@ -1016,6 +1222,13 @@ export class BancoApiService {
         }
       }
 
+      if (!response) {
+        return {
+          success: false,
+          message: 'Nenhuma resposta recebida do servidor'
+        };
+      }
+
       logger.info('Resposta do cancelamento de título individual', {
         endpoint,
         status: response.status,
@@ -1033,7 +1246,7 @@ export class BancoApiService {
         success: false,
         message: 'Erro ao cancelar título: ' + response.status
       };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao cancelar título individual', {
         titulo_id: titulo.id,
@@ -1055,7 +1268,7 @@ export class BancoApiService {
   /**
    * Liquidar título individual no banco externo
    */
-  static async liquidarTitulo(titulo: any): Promise<ApiResponse> {
+  static async liquidarTitulo(titulo: TituloWithRelations): Promise<ApiResponse> {
     try {
       const banco = titulo.banco;
       if (!banco) {
@@ -1096,8 +1309,9 @@ export class BancoApiService {
       const baseUrlCobranca = banco.sandbox 
         ? config.sandbox_url
         : config.cobranca_base_url;
+      const chargeIdStr = titulo.charge_id || '';
       const endpoint = baseUrlCobranca + config.api_endpoints.liquidar
-        .replace(':id', titulo.charge_id);
+        .replace(':id', chargeIdStr);
 
       const response = await axios.put(endpoint, dadosLiquidacao, {
         headers: {
@@ -1124,7 +1338,7 @@ export class BancoApiService {
         };
       }
 
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao liquidar título', {
         titulo_id: titulo.id,
@@ -1141,7 +1355,7 @@ export class BancoApiService {
   /**
    * Envia remessa para o banco
    */
-  static async enviarRemessa(banco: Banco, arquivoRemessa: any): Promise<any> {
+  static async enviarRemessa(banco: Banco, arquivoRemessa: ArquivoRemessa): Promise<RemessaResponse> {
     try {
       logger.info('Enviando remessa para banco', { 
         banco_id: banco.id,
@@ -1162,7 +1376,7 @@ export class BancoApiService {
           timestamp: new Date().toISOString()
         }
       };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao enviar remessa', { 
         banco_id: banco.id,

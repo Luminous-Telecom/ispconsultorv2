@@ -1,20 +1,11 @@
+import { Op } from 'sequelize';
 import { Titulo } from '../../models/Titulo';
 import { logger } from '../../utils/logger';
+import { IRoutine, RoutineResult } from '../../interfaces/IRoutine';
+import { JsonValue } from '../../types';
 
-export interface VerificarVencimentosConfig {
-  // Configurações futuras se necessário
-}
-
-export class VerificarVencimentosRoutine {
-  async execute(_config: VerificarVencimentosConfig): Promise<{
-    success: boolean;
-    message: string;
-    data: {
-      titulosVerificados: number;
-      titulosMarcadosVencidos: number;
-      titulosAtualizados: number;
-    };
-  }> {
+export class VerificarVencimentosRoutine implements IRoutine {
+  async execute(_config: Record<string, JsonValue> = {}): Promise<RoutineResult> {
     try {
       logger.info('Iniciando rotina de verificação de vencimentos');
 
@@ -25,7 +16,7 @@ export class VerificarVencimentosRoutine {
       const titulosVencidos = await Titulo.findAll({
         where: {
           data_vencimento: {
-            [require('sequelize').Op.lt]: hoje
+            [Op.lt]: hoje
           },
           status: 'pendente'
         },
@@ -55,7 +46,7 @@ export class VerificarVencimentosRoutine {
             plano: titulo.getPlano ? (await titulo.getPlano())?.nome_plano : 'N/A'
           });
 
-        } catch (error: unknown) {
+        } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           logger.error('Erro ao marcar título como vencido', {
             titulo_id: titulo.id,
@@ -105,10 +96,14 @@ export class VerificarVencimentosRoutine {
       return {
         success: true,
         message: `Rotina executada com sucesso. ${titulosMarcadosVencidos} títulos marcados como vencidos, ${titulosAtualizados} títulos atualizados.`,
-        data: resultado
+        data: {
+          titulosVerificados: resultado.titulosVerificados,
+          titulosMarcadosVencidos: resultado.titulosMarcadosVencidos,
+          titulosAtualizados: resultado.titulosAtualizados
+        }
       };
 
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
       

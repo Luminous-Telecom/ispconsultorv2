@@ -23,6 +23,13 @@ import { Cliente } from './Cliente';
 import { BancoConfiguracao } from './BancoConfiguracao';
 import { Titulo } from './Titulo';
 
+interface DadosTesteConexao {
+  sandbox: boolean;
+  url: string;
+}
+
+type ConfiguracaoValor = string | number | boolean | null;
+
 export class Banco extends Model<
   InferAttributes<Banco>,
   InferCreationAttributes<Banco>
@@ -65,7 +72,7 @@ export class Banco extends Model<
   declare instrucao_linha_3: string | null;
   declare instrucao_linha_4: string | null;
   declare instrucao_linha_5: string | null;
-  declare configuracoes: Record<string, any> | null;
+  declare configuracoes: Record<string, ConfiguracaoValor> | null;
   declare logo: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -138,7 +145,7 @@ export class Banco extends Model<
     return this.api_url || urlsPadrao[this.tipo_banco] || '';
   }
 
-  async testarConexao(): Promise<{ sucesso: boolean; mensagem: string; dados?: any }> {
+  async testarConexao(): Promise<{ sucesso: boolean; mensagem: string; dados?: DadosTesteConexao }> {
     try {
       // Implementar teste de conexão baseado no tipo de banco
       switch (this.tipo_banco) {
@@ -160,7 +167,7 @@ export class Banco extends Model<
     }
   }
 
-  private async testarConexaoEfi(): Promise<{ sucesso: boolean; mensagem: string; dados?: any }> {
+  private async testarConexaoEfi(): Promise<{ sucesso: boolean; mensagem: string; dados?: DadosTesteConexao }> {
     // Implementar teste específico para Efi
     // Por enquanto, retorna sucesso se tem client_id e client_secret
     if (!this.client_id_producao || !this.client_secret_producao) {
@@ -180,7 +187,7 @@ export class Banco extends Model<
     };
   }
 
-  private async testarConexaoAsaas(): Promise<{ sucesso: boolean; mensagem: string; dados?: any }> {
+  private async testarConexaoAsaas(): Promise<{ sucesso: boolean; mensagem: string; dados?: DadosTesteConexao }> {
     // Implementar teste específico para Asaas
     // Por enquanto, retorna sucesso se tem access_token
     if (!this.api_key) {

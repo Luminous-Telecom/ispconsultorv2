@@ -4,10 +4,35 @@ import RoutineExecutionLog from '../models/RoutineExecutionLog';
 import { EnvioBoletosRoutine } from '../services/routines/EnvioBoletosRoutine';
 import { RemessaBancariaRoutine } from '../services/routines/RemessaBancariaRoutine';
 import { IRoutine } from '../interfaces/IRoutine';
+import type { WorkersStatus } from './WorkerManager';
+
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
+interface StatusMessageData {
+  message: string;
+  last_update?: string;
+  duration?: number;
+}
+
+interface CompleteMessageData {
+  message: string;
+  result?: Record<string, JsonValue>;
+  duration: number;
+  completed_at?: string;
+}
+
+interface ErrorMessageData {
+  duration?: number;
+  error?: string;
+  error_data?: Record<string, JsonValue>;
+  failed_at?: string;
+}
+
+type WorkerMessageData = StatusMessageData | CompleteMessageData | ErrorMessageData;
 
 export interface WorkerMessage {
   type: 'execute' | 'status' | 'error' | 'complete';
-  data?: any;
+  data?: WorkerMessageData;
   error?: string;
   routineId?: number;
   executionId?: number;
@@ -15,7 +40,7 @@ export interface WorkerMessage {
 
 export interface WorkerData {
   routineId: number;
-  routineData: any;
+  routineData: Record<string, JsonValue>;
   executionId: number;
 }
 
@@ -27,7 +52,7 @@ class SchedulerWorker {
   /**
    * Executa uma rotina em um worker separado
    */
-  static async executeRoutine(routineId: number, routineData: any): Promise<number> {
+  static async executeRoutine(routineId: number, routineData: Record<string, JsonValue>): Promise<number> {
     if (this.activeWorkers >= this.maxWorkers) {
       throw new Error('Número máximo de workers ativos atingido');
     }
@@ -132,20 +157,22 @@ class SchedulerWorker {
         });
         break;
 
-      case 'error':
+      case 'error': {
+        const errorData = message.data as ErrorMessageData;
         await executionLog.update({
           status: 'erro',
           data_fim: new Date(),
-          duracao_ms: message.data?.duration || 0,
+          duracao_ms: errorData?.duration || 0,
           erro: message.error || 'Erro na execução',
           resultado: {
             ...executionLog.resultado,
-            error: message.error,
-            error_data: message.data,
+            error: message.error || null,
+            error_data: errorData?.error_data || null,
             failed_at: new Date().toISOString()
           }
         });
         break;
+      }
     }
   }
 
@@ -187,7 +214,7 @@ class SchedulerWorker {
   /**
    * Obtém status dos workers ativos
    */
-  static getWorkersStatus(): { active: number; max: number; workers: any[] } {
+  static getWorkersStatus(): WorkersStatus {
     return {
       active: this.activeWorkers,
       max: this.maxWorkers,
@@ -292,7 +319,7 @@ if (!isMainThread && workerData) {
         }
       } as WorkerMessage);
 
-    } catch (error: unknown) {
+    } catch (error) {
       const duration = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       

@@ -3,7 +3,7 @@ import { useNotificationContext } from '../contexts/NotificationContext';
 
 interface UseImprimirProps {
   itemType: 'contrato' | 'titulo' | 'recibo' | 'carta';
-  filterCondition?: (item: any) => boolean;
+  filterCondition?: (item: unknown) => boolean;
   filterLabel?: string;
 }
 

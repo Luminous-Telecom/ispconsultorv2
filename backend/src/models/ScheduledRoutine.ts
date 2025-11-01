@@ -1,12 +1,13 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
+import type { JsonValue } from '../types';
 
 export interface ScheduledRoutineAttributes {
   id: number;
   nome: string;
   tipo: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'outros';
   descricao?: string;
-  configuracao: any;
+  configuracao: Record<string, JsonValue>;
   frequencia: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
   dia_execucao?: number;
   hora_execucao: string;
@@ -22,14 +23,14 @@ export interface ScheduledRoutineAttributes {
   updated_at: Date;
 }
 
-export interface ScheduledRoutineCreationAttributes extends Optional<ScheduledRoutineAttributes, 'id' | 'created_at' | 'updated_at' | 'ultima_execucao' | 'total_execucoes' | 'execucoes_com_sucesso' | 'execucoes_com_erro'> {}
+export type ScheduledRoutineCreationAttributes = Optional<ScheduledRoutineAttributes, 'id' | 'created_at' | 'updated_at' | 'ultima_execucao' | 'total_execucoes' | 'execucoes_com_sucesso' | 'execucoes_com_erro'>;
 
 export class ScheduledRoutine extends Model<ScheduledRoutineAttributes, ScheduledRoutineCreationAttributes> implements ScheduledRoutineAttributes {
   public id!: number;
   public nome!: string;
   public tipo!: 'geracao_titulos' | 'envio_boletos' | 'remessa_bancaria' | 'verificar_vencimentos' | 'outros';
   public descricao?: string;
-  public configuracao!: any;
+  public configuracao!: Record<string, JsonValue>;
   public frequencia!: 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
   public dia_execucao?: number;
   public hora_execucao!: string;
@@ -43,13 +44,6 @@ export class ScheduledRoutine extends Model<ScheduledRoutineAttributes, Schedule
   public execucoes_com_erro!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
-
-  public static associate() {
-    ScheduledRoutine.hasMany(require('./RoutineExecutionLog').RoutineExecutionLog, {
-      foreignKey: 'routine_id',
-      as: 'executionLogs'
-    });
-  }
 }
 
 ScheduledRoutine.init({
