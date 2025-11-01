@@ -7,6 +7,7 @@ import path from 'path';
 
 // Importar configurações
 import { sequelize } from './config/database';
+import { logger } from './utils/logger';
 
 // Importar middlewares de proteção
 import { 
