@@ -296,12 +296,9 @@ export class SchedulerService {
     const { default: Parametros } = await import('../models/Parametros');
     
     try {
-      console.log('Iniciando geração de títulos...');
-      
       // Buscar configuração de total de títulos
       const parametros = await Parametros.findOne();
       const quantidadeMinimaTitulos = parametros?.total_titulos_financeiro || 12;
-      console.log(`Total de títulos configurado: ${quantidadeMinimaTitulos}`);
       
       // Buscar todos os contratos ativos
       const contratos = await ContratoModel.findAll({
@@ -316,8 +313,6 @@ export class SchedulerService {
         ]
       });
 
-      console.log(`Encontrados ${contratos.length} contratos ativos`);
-
       let titulosGerados = 0;
       let contratosProcessados = 0;
       let erros = 0;
@@ -326,13 +321,11 @@ export class SchedulerService {
         try {
           // Verificar se o contrato tem banco configurado
           if (!contrato.conta_boleto) {
-            console.warn(`Contrato ${contrato.id} não tem banco configurado`);
             continue;
           }
 
           // Verificar se o contrato tem dia de vencimento
           if (!contrato.dia_vencimento_id) {
-            console.warn(`Contrato ${contrato.id} não tem dia de vencimento configurado`);
             continue;
           }
 
@@ -347,8 +340,6 @@ export class SchedulerService {
 
           // Verificar se precisa gerar mais títulos
           const titulosGerar = quantidadeMinimaTitulos - titulosExistentes.length;
-
-          console.log(`Contrato ${contrato.id}: ${titulosExistentes.length} títulos existentes, precisa gerar ${titulosGerar}`);
 
           if (titulosGerar > 0) {
             // Buscar data inicial do contrato ou usar data atual
@@ -382,7 +373,6 @@ export class SchedulerService {
               });
 
               if (!tituloExistente && dataVencimento > hoje) {
-                console.log(`Título não existe e data é futura, criando...`);
                 // Calcular valor do título (aplicar descontos se houver)
                 const contratoComPlano = contrato as InstanceType<typeof ContratoModel> & ContratoWithPlano;
                 const plano = contratoComPlano.plano;
@@ -419,7 +409,6 @@ export class SchedulerService {
 
                 titulosGerados++;
                 títulosCriadosNoContrato++;
-                console.log(`Título criado para contrato ${contrato.id}, valor: R$ ${valorTitulo.toFixed(2)}, vencimento: ${dataVencimento.toLocaleDateString('pt-BR')}`);
               }
 
               // Avançar para o próximo mês
@@ -431,7 +420,6 @@ export class SchedulerService {
             }
 
             contratosProcessados++;
-            console.log(`Contrato ${contrato.id} processado com sucesso`);
           }
         } catch (error) {
           console.error(`Erro ao processar contrato ${contrato.id}:`, error);
@@ -439,7 +427,6 @@ export class SchedulerService {
         }
       }
 
-      console.log(`Geração de títulos concluída: ${titulosGerados} títulos gerados em ${contratosProcessados} contratos, ${erros} erros`);
 
       return {
         success: true,
@@ -497,8 +484,6 @@ export class SchedulerService {
     const { logger } = await import('../utils/logger');
     
     try {
-      console.log('Iniciando remessa bancária...');
-      
       // Buscar títulos pendentes que ainda não foram registrados no banco (sem charge_id)
       const titulosParaRegistrar = await TituloModel.findAll({
         where: {
@@ -528,8 +513,6 @@ export class SchedulerService {
         limit: 100 // Processar até 100 títulos por execução para não sobrecarregar
       });
 
-      console.log(`Encontrados ${titulosParaRegistrar.length} títulos para registrar no banco`);
-
       let registrados = 0;
       let erros = 0;
       const detalhes: RemessaBancariaDetalhe[] = [];
@@ -537,7 +520,6 @@ export class SchedulerService {
       for (const titulo of titulosParaRegistrar) {
         try {
           const tituloCompleto = titulo as Parameters<typeof BancoApiService.gerarTitulo>[0];
-          console.log(`Registrando título ${titulo.id} no banco ${tituloCompleto.banco?.nome}...`);
           
           // Registrar título no banco
           const resultado = await BancoApiService.gerarTitulo(tituloCompleto);
@@ -545,7 +527,6 @@ export class SchedulerService {
           if (resultado.success) {
             registrados++;
             const chargeId = resultado.data?.charge_id;
-            console.log(`Título ${titulo.id} registrado com sucesso. Charge ID: ${chargeId}`);
             
             detalhes.push({
               titulo_id: titulo.id,
@@ -556,7 +537,6 @@ export class SchedulerService {
             });
           } else {
             erros++;
-            console.error(`Erro ao registrar título ${titulo.id}: ${resultado.message}`);
             
             detalhes.push({
               titulo_id: titulo.id,
@@ -580,7 +560,6 @@ export class SchedulerService {
         }
       }
 
-      console.log(`Remessa bancária concluída: ${registrados} títulos registrados, ${erros} erros`);
 
       return {
         titulos_registrados: registrados,

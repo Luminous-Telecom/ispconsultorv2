@@ -224,10 +224,6 @@ const startServer = async () => {
     
     // Iniciar servidor com configurações para evitar erro 431
     const server = app.listen(PORT, async () => {
-      console.log(`🚀 Servidor online na porta ${PORT}`);
-      console.log(`📡 Ambiente: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`⏰ Iniciado em: ${new Date().toLocaleString('pt-BR')}`);
-      
       // Configurar limites do servidor HTTP
       server.maxHeadersCount = 2000; // Aumentar limite de cabeçalhos
       
@@ -236,9 +232,8 @@ const startServer = async () => {
         const { SchedulerService } = await import('./services/SchedulerService');
         const schedulerService = SchedulerService.getInstance();
         await schedulerService.start();
-        console.log('✅ Agendador de rotinas iniciado');
       } catch (error) {
-        console.error('❌ Erro ao iniciar agendador:', error);
+        logger.error('Erro ao iniciar agendador:', error);
       }
     });
   } catch (error) {

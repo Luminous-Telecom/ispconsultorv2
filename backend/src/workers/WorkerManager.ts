@@ -200,7 +200,6 @@ export class WorkerManager extends EventEmitter {
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
         lastError = error instanceof Error ? error : new Error(errorMessage);
-        console.error(`❌ Tentativa ${attempt} falhou para rotina ${routine.id}:`, errorMessage);
 
         if (attempt < this.config.retryAttempts) {
           await this.delay(this.config.retryDelay);
@@ -209,7 +208,6 @@ export class WorkerManager extends EventEmitter {
     }
 
     // Todas as tentativas falharam
-    console.error(`💥 Rotina ${routine.id} falhou após ${this.config.retryAttempts} tentativas`);
     throw lastError || new Error('Execução falhou sem erro específico');
   }
 

@@ -170,29 +170,22 @@ class DocumentoSistemaService {
 
   static async generateTestPdfWithContent(id: number, clienteId: number, conteudo: string): Promise<Blob> {
     try {
-      console.log('DEBUG: generateTestPdfWithContent - id:', id, 'clienteId:', clienteId);
       const url = `/modelos-contrato/${id}/pdf-teste-conteudo`;
-      console.log('DEBUG: URL:', url);
       const data = { cliente_id: clienteId, conteudo };
-      console.log('DEBUG: Payload:', { cliente_id: clienteId, conteudo_length: conteudo.length });
       
       const response = await apiService.post<Blob>(url, data, {
         responseType: 'blob'
       });
 
-      console.log('DEBUG: Response received:', response);
       const blob = response instanceof Blob ? response : response;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
       }
 
-      console.log('DEBUG: Blob valid, size:', blob.size);
       return blob;
     } catch (error) {
-      console.error('DEBUG: Error in generateTestPdfWithContent:', error);
       const axiosError = error as AxiosError<{ message?: string }>;
-      console.error('DEBUG: AxiosError:', axiosError.response?.status, axiosError.response?.data);
       throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF de teste com conteúdo');
     }
   }

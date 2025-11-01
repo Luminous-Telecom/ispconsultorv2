@@ -23,13 +23,6 @@ class ApiService {
                 config.headers.Authorization = `Bearer ${token}`;
               }
               
-              // Log para debugging
-              if (config.url?.includes('pdf-teste-conteudo')) {
-                console.log('DEBUG [apiService]: Request URL:', config.url);
-                console.log('DEBUG [apiService]: Request method:', config.method);
-                console.log('DEBUG [apiService]: Request data:', config.data);
-              }
-              
               return config;
             },
             (error) => {
@@ -40,13 +33,6 @@ class ApiService {
           // Interceptor para responses
           this.api.interceptors.response.use(
             (response: AxiosResponse) => {
-              // Log para debugging
-              if (response.config.url?.includes('pdf-teste-conteudo')) {
-                console.log('DEBUG [apiService Response]: Status:', response.status);
-                console.log('DEBUG [apiService Response]: responseType:', response.config.responseType);
-                console.log('DEBUG [apiService Response]: data type:', typeof response.data);
-              }
-              
               // Para responseType 'blob', retornar diretamente o data (que já é o Blob)
               if (response.config.responseType === 'blob') {
                 return response.data;
@@ -60,11 +46,6 @@ class ApiService {
               return data;
             },
             (error) => {
-              // Log para debugging
-              if (error.config?.url?.includes('pdf-teste-conteudo')) {
-                console.error('DEBUG [apiService Error]:', error.response?.status, error.response?.data);
-              }
-              
               // Tratar erros globais
               if (error.response?.status === 401) {
                 // Token expirado ou inválido
