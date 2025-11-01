@@ -3,7 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 // Middleware de proteção contra cópia e screenshots
 export const copyProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
   // Headers específicos para proteção contra cópia
-  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Use header name in lowercase to satisfy tools that expect lowercase keys
+  res.setHeader('x-content-type-options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'no-referrer');
