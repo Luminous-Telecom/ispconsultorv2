@@ -65,6 +65,11 @@ export class WhatsAppFlowController {
    */
   private static decryptFlowData(encryptedData: string, key: Buffer, iv: Buffer): string {
     const encryptedBuffer = Buffer.from(encryptedData, 'base64');
+    logger.info('Decrypting flow data', { 
+      encryptedLength: encryptedBuffer.length,
+      isMultipleOf16: encryptedBuffer.length % 16 === 0
+    });
+    
     const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
     let decrypted = decipher.update(encryptedBuffer);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
