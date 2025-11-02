@@ -8,16 +8,25 @@ interface FlowPayload {
   version: string;
   screen: string;
   data?: Record<string, string | number | boolean | null>;
-  token?: string;
+  action?: string;
+  flow_token?: string;
 }
 
 interface WhatsAppFlowRequest {
-  encrypted_aes_key: string;  // AES key encrypted with RSA (base64)
-  encrypted_flow_data: string; // Flow data encrypted with AES (base64)
-  initial_vector: string;      // IV for AES decryption (base64)
+  encrypted_aes_key: string;
+  encrypted_flow_data: string;
+  initial_vector: string;
+}
+
+interface FlowResponse {
+  screen: string;
+  data: Record<string, unknown>;
 }
 
 export class WhatsAppFlowController {
+  private static readonly NONCE_SIZE = 16; // 128 bits
+  private static readonly TAG_LENGTH = 16; // 128 bits
+
   /**
    * Load RSA private key from environment or file
    */
@@ -25,7 +34,6 @@ export class WhatsAppFlowController {
     let key = process.env.WHATSAPP_FLOW_RSA_PRIVATE_KEY;
     
     if (key) {
-      // Replace \\n with actual newlines if in env var
       if (key.includes('\\n')) {
         key = key.replace(/\\n/g, '\n');
       }
@@ -33,20 +41,19 @@ export class WhatsAppFlowController {
       return key;
     }
     
-    // Try reading from file
     const keyPath = path.join(process.cwd(), '.rsa_private_key.pem');
     try {
       key = fs.readFileSync(keyPath, 'utf8');
       logger.info('RSA private key loaded from file');
       return key;
     } catch (error) {
-      logger.error('RSA private key not found in env or file:', error);
+      logger.error('RSA private key not found:', error);
       throw new Error('RSA private key configuration missing');
     }
   }
 
   /**
-   * Decrypt AES key with RSA private key
+   * Decrypt AES key using RSA-OAEP with SHA-256
    */
   private static decryptAESKey(encryptedKey: string, privateKey: string): Buffer {
     const encryptedBuffer = Buffer.from(encryptedKey, 'base64');
@@ -61,29 +68,52 @@ export class WhatsAppFlowController {
   }
 
   /**
-   * Decrypt flow data with AES-128-CBC
+   * Decrypt flow data using AES-128-GCM (WhatsApp uses GCM, not CBC!)
    */
-  private static decryptFlowData(encryptedData: string, key: Buffer, iv: Buffer): string {
+  private static decryptFlowData(encryptedData: string, aesKey: Buffer, iv: Buffer): string {
     const encryptedBuffer = Buffer.from(encryptedData, 'base64');
-    logger.info('Decrypting flow data', { 
-      encryptedLength: encryptedBuffer.length,
-      isMultipleOf16: encryptedBuffer.length % 16 === 0
-    });
     
-    const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
-    let decrypted = decipher.update(encryptedBuffer);
+    logger.info('Decrypting with AES-GCM', {
+      encryptedLength: encryptedBuffer.length,
+      aesKeyLength: aesKey.length,
+      ivLength: iv.length
+    });
+
+    // Split encrypted data and auth tag
+    const authTag = encryptedBuffer.slice(encryptedBuffer.length - WhatsAppFlowController.TAG_LENGTH);
+    const ciphertext = encryptedBuffer.slice(0, encryptedBuffer.length - WhatsAppFlowController.TAG_LENGTH);
+
+    const decipher = crypto.createDecipheriv('aes-128-gcm', aesKey, iv);
+    decipher.setAuthTag(authTag);
+    
+    let decrypted = decipher.update(ciphertext);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
+    
     return decrypted.toString('utf8');
   }
 
   /**
-   * Encrypt flow response with AES-128-CBC
+   * Encrypt response using AES-128-GCM with flipped IV
    */
-  private static encryptFlowResponse(data: string, key: Buffer, iv: Buffer): string {
-    const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
-    let encrypted = cipher.update(data, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
-    return encrypted;
+  private static encryptFlowResponse(data: string, aesKey: Buffer, iv: Buffer): string {
+    // Flip the IV for response (WhatsApp requirement)
+    const flippedIV = Buffer.from(iv.map(byte => ~byte));
+    
+    logger.info('Encrypting response with AES-GCM', {
+      dataLength: data.length,
+      flippedIVLength: flippedIV.length
+    });
+
+    const cipher = crypto.createCipheriv('aes-128-gcm', aesKey, flippedIV);
+    
+    let encrypted = cipher.update(data, 'utf8');
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    
+    // Get auth tag and append it
+    const authTag = cipher.getAuthTag();
+    const result = Buffer.concat([encrypted, authTag]);
+    
+    return result.toString('base64');
   }
 
   /**
@@ -91,13 +121,20 @@ export class WhatsAppFlowController {
    */
   static async handleFlow(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('WhatsApp Flow request received');
+      logger.info('WhatsApp Flow request received', {
+        hasBody: !!req.body,
+        bodyKeys: Object.keys(req.body || {})
+      });
       
       const body = req.body as WhatsAppFlowRequest;
       
       // Validate required fields
       if (!body.encrypted_aes_key || !body.encrypted_flow_data || !body.initial_vector) {
-        logger.error('Missing required fields in WhatsApp Flow request');
+        logger.error('Missing required fields', {
+          hasAESKey: !!body.encrypted_aes_key,
+          hasFlowData: !!body.encrypted_flow_data,
+          hasIV: !!body.initial_vector
+        });
         res.status(400).send('Missing required fields');
         return;
       }
@@ -107,36 +144,56 @@ export class WhatsAppFlowController {
       
       // Decrypt AES key
       const aesKey = WhatsAppFlowController.decryptAESKey(body.encrypted_aes_key, rsaPrivateKey);
-      logger.info('AES key decrypted', { keyLength: aesKey.length });
+      logger.info('AES key decrypted successfully', { keyLength: aesKey.length });
       
       // Decode IV
       const iv = Buffer.from(body.initial_vector, 'base64');
-      logger.info('IV decoded', { ivLength: iv.length });
+      logger.info('IV decoded successfully', { ivLength: iv.length });
       
       // Decrypt flow data
       const decryptedJson = WhatsAppFlowController.decryptFlowData(body.encrypted_flow_data, aesKey, iv);
       const payload: FlowPayload = JSON.parse(decryptedJson);
-      logger.info('Flow data decrypted', { screen: payload.screen });
       
-      // Process flow
-      const response = {
-        screen: 'END',
+      logger.info('Flow payload decrypted', {
+        version: payload.version,
+        screen: payload.screen,
+        action: payload.action,
+        hasData: !!payload.data
+      });
+      
+      // Build response based on flow action
+      const response: FlowResponse = {
+        screen: 'SUCCESS',
         data: {
-          message: 'Flow processed successfully'
-        },
-        error: null
+          extension_message_response: {
+            params: {
+              flow_token: payload.flow_token || '',
+            }
+          }
+        }
       };
       
       // Encrypt response
       const jsonResponse = JSON.stringify(response);
       const encryptedResponse = WhatsAppFlowController.encryptFlowResponse(jsonResponse, aesKey, iv);
       
-      // Send encrypted response
+      logger.info('Response encrypted successfully', {
+        responseLength: encryptedResponse.length
+      });
+      
+      // Send encrypted response as plain text
+      res.setHeader('Content-Type', 'text/plain');
       res.status(200).send(encryptedResponse);
       
     } catch (error) {
       logger.error('Error processing WhatsApp Flow:', error);
-      res.status(500).send('Error processing flow');
+      
+      // Return 421 for decryption errors (as per WhatsApp docs)
+      if (error instanceof Error && error.message.includes('decrypt')) {
+        res.status(421).send('Decryption failed');
+      } else {
+        res.status(500).send('Error processing flow');
+      }
     }
   }
 
@@ -144,6 +201,33 @@ export class WhatsAppFlowController {
    * Test endpoint
    */
   static async test(_req: Request, res: Response): Promise<void> {
-    res.json({ message: 'WhatsApp Flow test endpoint working' });
+    try {
+      const testKey = crypto.randomBytes(16);
+      const testIV = crypto.randomBytes(16);
+      
+      const testResponse = {
+        screen: 'TEST_SUCCESS',
+        data: {
+          message: 'Endpoint working correctly',
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      const encrypted = WhatsAppFlowController.encryptFlowResponse(
+        JSON.stringify(testResponse),
+        testKey,
+        testIV
+      );
+      
+      res.json({
+        success: true,
+        message: 'WhatsApp Flow endpoint is working',
+        encrypted_sample: encrypted,
+        note: 'Encrypted with AES-128-GCM as per WhatsApp specification'
+      });
+    } catch (error) {
+      logger.error('Test endpoint error:', error);
+      res.status(500).json({ success: false, error: 'Test failed' });
+    }
   }
 }
