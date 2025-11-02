@@ -19,7 +19,7 @@ interface WhatsAppFlowRequest {
 }
 
 interface FlowResponseData {
-  screen: string;
+  screen?: string;
   data: Record<string, unknown>;
 }
 
@@ -205,13 +205,17 @@ export class WhatsAppFlowController {
         hasData: !!payload.data
       });
       
-      // Build response based on flow action (following WhatsApp official example)
+      // Build response based on flow action
+      // WhatsApp expects: { "data": { ... } }
       const screenData = {
-        screen: 'SUCCESS',
         data: {
-          some_key: 'some_value'
+          status: 'active'
         }
       };
+      
+      logger.info('Sending response', {
+        responseData: screenData
+      });
       
       // Encrypt response
       const encryptedResponse = WhatsAppFlowController.encryptFlowResponse(screenData, aesKey, iv);
