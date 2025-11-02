@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 
 interface UseImprimirProps {
   itemType: 'contrato' | 'titulo' | 'recibo' | 'carta';
@@ -8,7 +8,7 @@ interface UseImprimirProps {
 }
 
 export const useImprimir = ({ itemType, filterCondition: _filterCondition, filterLabel = 'Todos' }: UseImprimirProps) => {
-  const { addNotification } = useNotificationContext();
+  const { error } = useNotificationContext();
 
   const getApiUrl = useCallback(() => {
     switch (itemType) {
@@ -27,23 +27,23 @@ export const useImprimir = ({ itemType, filterCondition: _filterCondition, filte
 
   const handleImprimirSelecionados = useCallback((ids: string) => {
     if (!ids) {
-      addNotification('error', `Nenhum ${itemType} selecionado`);
+      error( `Nenhum ${itemType} selecionado`);
       return;
     }
 
     const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}${getApiUrl()}?ids=${ids}&print=true`;
     window.open(url, '_blank');
-  }, [itemType, getApiUrl, addNotification]);
+  }, [itemType, getApiUrl, error]);
 
   const handleImprimirTodos = useCallback((ids: string) => {
     if (!ids) {
-      addNotification('error', `Não há ${itemType}s ${filterLabel.toLowerCase()} para imprimir`);
+      error( `Não há ${itemType}s ${filterLabel.toLowerCase()} para imprimir`);
       return;
     }
 
     const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}${getApiUrl()}?ids=${ids}&print=true`;
     window.open(url, '_blank');
-  }, [itemType, filterLabel, getApiUrl, addNotification]);
+  }, [itemType, filterLabel, getApiUrl, error]);
 
   return {
     handleImprimirSelecionados,

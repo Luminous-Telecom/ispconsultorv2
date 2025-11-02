@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { usePlanos } from '../../../../hooks/usePlanos';
 import { useBancos } from '../../../../hooks/useBancos';
 import { useCreateContrato, useUpdateContrato, CreateContratoData } from '../../../../hooks/useContratos';

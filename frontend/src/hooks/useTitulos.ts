@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TituloService } from '../services/tituloService';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { AxiosError } from 'axios';
 import { CarneParcelaFilters, CarneParcela } from '../types';

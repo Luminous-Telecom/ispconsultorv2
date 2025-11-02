@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DraggableModal from '../../../common/DraggableModal';
-import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { ServidorWhatsAppService } from '../../../../services/servidorWhatsAppService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { BancoService } from '../../../services/bancoService';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
 import FormField from '../../ui/FormField';

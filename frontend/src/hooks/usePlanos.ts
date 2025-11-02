@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlanoService } from '../services/planoService';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { PlanoFilters, UpdatePlano } from '../types';
 import { AxiosError } from 'axios';

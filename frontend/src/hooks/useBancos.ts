@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BancoService } from '../services/bancoService';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { BancoFilters, UpdateBanco } from '../types';
 import { AxiosError } from 'axios';

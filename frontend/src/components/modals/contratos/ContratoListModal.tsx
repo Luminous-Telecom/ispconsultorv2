@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDeleteContrato, Contrato } from '../../../hooks/useContratos';
 import { ContratoService } from '../../../services/ContratoService';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import DraggableModal from '../../common/DraggableModal';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';

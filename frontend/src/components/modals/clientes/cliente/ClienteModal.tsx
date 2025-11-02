@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import { ClienteService } from '../../../../services/clienteService';
 import { TituloService } from '../../../../services/tituloService';
 import DocumentoSistemaService from '../../../../services/documentoSistemaService';
-import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { Cliente, CarneParcela, CreateCliente } from '../../../../types';
 import DraggableModal from '../../../common/DraggableModal';
 import { useFormPrefix } from '../../../../hooks/useFormId';
@@ -14,7 +14,7 @@ import ReceberModal from '../../pagamentos/ReceberModal';
 import { useContratos, useDeleteContrato, Contrato } from '../../../../hooks/useContratos';
 import ContratoModal from '../contrato/ContratoModal';
 import { useFormReset } from '../../../../hooks/useFormReset';
-import ConfirmModal from '../../../ui/ConfirmModal';
+import ConfirmModal from '../../../common/ConfirmModal';
 // Utilitários centralizados
 import { formatCurrency, formatDate, formatCNPJ, formatPhone, formatCEP } from '../../../../utils/formatters';
 import { ensureString } from '../../../../utils/stringUtils';
@@ -1235,10 +1235,11 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         {/* Modal de Confirmação */}
         <ConfirmModal
           show={_showConfirmModal}
+          title="Confirmar Ação"
           message={confirmMessage}
           onConfirm={handleConfirm}
           onCancel={handleCancelConfirm}
-          confirmVariant="danger"
+          type="danger"
           confirmText="Confirmar"
           cancelText="Cancelar"
         />

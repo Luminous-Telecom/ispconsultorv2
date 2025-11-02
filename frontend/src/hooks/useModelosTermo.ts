@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ModeloTermoService, { CreateModeloTermoData, UpdateModeloTermoData } from '../services/modeloTermoService';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
 
 export const useModelosTermo = () => {

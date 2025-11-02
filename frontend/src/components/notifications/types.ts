@@ -94,10 +94,10 @@ export interface NotificationContextValue {
   pauseAllNotifications: () => void;
   resumeAllNotifications: () => void;
   // Métodos de conveniência
-  success: (message: string, options?: Partial<NotificationConfig>) => string;
-  error: (message: string, options?: Partial<NotificationConfig>) => string;
-  warning: (message: string, options?: Partial<NotificationConfig>) => string;
-  info: (message: string, options?: Partial<NotificationConfig>) => string;
+  success: (message: string, options?: Partial<NotificationConfig> | number) => string;
+  error: (message: string, options?: Partial<NotificationConfig> | number) => string;
+  warning: (message: string, options?: Partial<NotificationConfig> | number) => string;
+  info: (message: string, options?: Partial<NotificationConfig> | number) => string;
   loading: (message: string, options?: Partial<NotificationConfig>) => string;
 }
 
@@ -126,10 +126,10 @@ export interface UseNotificationReturn {
   pauseAllNotifications: () => void;
   resumeAllNotifications: () => void;
   // Métodos de conveniência
-  success: (message: string, options?: Partial<NotificationConfig>) => string;
-  error: (message: string, options?: Partial<NotificationConfig>) => string;
-  warning: (message: string, options?: Partial<NotificationConfig>) => string;
-  info: (message: string, options?: Partial<NotificationConfig>) => string;
+  success: (message: string, options?: Partial<NotificationConfig> | number) => string;
+  error: (message: string, options?: Partial<NotificationConfig> | number) => string;
+  warning: (message: string, options?: Partial<NotificationConfig> | number) => string;
+  info: (message: string, options?: Partial<NotificationConfig> | number) => string;
   loading: (message: string, options?: Partial<NotificationConfig>) => string;
 }
 

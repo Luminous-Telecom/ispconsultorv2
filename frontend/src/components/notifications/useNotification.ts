@@ -254,35 +254,39 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
   }, [notifications, removeNotification]);
 
   // Métodos de conveniência
-  const success = useCallback((message: string, options: Partial<NotificationConfig> = {}) => {
+  const success = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
+    const opts = typeof options === 'number' ? { duration: options } : options;
     return addNotification({
       type: 'success',
       message,
-      ...options,
+      ...opts,
     });
   }, [addNotification]);
 
-  const error = useCallback((message: string, options: Partial<NotificationConfig> = {}) => {
+  const error = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
+    const opts = typeof options === 'number' ? { duration: options } : options;
     return addNotification({
       type: 'error',
       message,
-      ...options,
+      ...opts,
     });
   }, [addNotification]);
 
-  const warning = useCallback((message: string, options: Partial<NotificationConfig> = {}) => {
+  const warning = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
+    const opts = typeof options === 'number' ? { duration: options } : options;
     return addNotification({
       type: 'warning',
       message,
-      ...options,
+      ...opts,
     });
   }, [addNotification]);
 
-  const info = useCallback((message: string, options: Partial<NotificationConfig> = {}) => {
+  const info = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
+    const opts = typeof options === 'number' ? { duration: options } : options;
     return addNotification({
       type: 'info',
       message,
-      ...options,
+      ...opts,
     });
   }, [addNotification]);
 

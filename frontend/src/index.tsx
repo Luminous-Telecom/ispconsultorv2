@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './styles/custom-select.css';
+import './components/ui/ui.css';
+import './components/notifications/notifications.css';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -13,5 +14,3 @@ const root = ReactDOM.createRoot(
 root.render(
   <App />
 );
-
-reportWebVitals();

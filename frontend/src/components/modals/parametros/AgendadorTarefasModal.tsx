@@ -5,7 +5,7 @@ import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import { SchedulerService, RotinaAgendada } from '../../../services/schedulerService';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
 
 interface AgendadorTarefasModalProps {

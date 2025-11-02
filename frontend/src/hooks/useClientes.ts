@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
 import { UpdateCliente, ClienteFilters } from '../types';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { CACHE_CONFIG } from '../config/api';
 import { AxiosError } from 'axios';
 

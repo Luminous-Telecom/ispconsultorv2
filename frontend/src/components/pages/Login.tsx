@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotificationContext } from '../../contexts/NotificationContext';
+import { useNotificationContext } from '../../components/notifications/NotificationProvider';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');

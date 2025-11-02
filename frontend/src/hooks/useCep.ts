@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { CepService, CepData } from '../services/cepService';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 
 export const useCep = () => {
   const [isLoading, setIsLoading] = useState(false);

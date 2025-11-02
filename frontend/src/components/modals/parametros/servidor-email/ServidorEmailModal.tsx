@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DraggableModal from '../../../common/DraggableModal';
-import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { ServidorEmailService } from '../../../../services/servidorEmailService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';

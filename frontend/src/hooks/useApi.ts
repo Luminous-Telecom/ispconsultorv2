@@ -3,7 +3,7 @@ import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from '@tan
 import { useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { CACHE_CONFIG } from '../config/api';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { useQueryClient } from '@tanstack/react-query';
 
 const { DEFAULT_STALE_TIME, DEFAULT_CACHE_TIME } = CACHE_CONFIG;

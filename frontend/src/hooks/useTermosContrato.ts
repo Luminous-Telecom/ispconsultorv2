@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TermoContratoService, CreateTermoContratoData, UpdateTermoContratoData } from '../services/TermoContratoService';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
 
 export const useTermosContrato = (contratoId?: number) => {
@@ -13,7 +13,7 @@ export const useTermosContrato = (contratoId?: number) => {
 
 export const useCreateTermoContrato = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: ({ contratoId, data }: { contratoId: number; data: CreateTermoContratoData }) =>
@@ -21,18 +21,18 @@ export const useCreateTermoContrato = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato', variables.contratoId] });
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
-      addNotification('success', 'Termo criado com sucesso');
+      success( 'Termo criado com sucesso');
     },
     onError: (err) => {
       const axiosError = err as AxiosError<{ message: string }>;
-      addNotification('error', axiosError.response?.data?.message || 'Erro ao criar termo');
+      error( axiosError.response?.data?.message || 'Erro ao criar termo');
     }
   });
 };
 
 export const useUpdateTermoContrato = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateTermoContratoData }) =>
@@ -40,18 +40,18 @@ export const useUpdateTermoContrato = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato', data.contrato_id] });
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
-      addNotification('success', 'Termo atualizado com sucesso');
+      success( 'Termo atualizado com sucesso');
     },
     onError: (err) => {
       const axiosError = err as AxiosError<{ message: string }>;
-      addNotification('error', axiosError.response?.data?.message || 'Erro ao atualizar termo');
+      error( axiosError.response?.data?.message || 'Erro ao atualizar termo');
     }
   });
 };
 
 export const useMarcarTermoComoAceito = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: ({ id, aceitoPor }: { id: number; aceitoPor: string }) =>
@@ -59,28 +59,28 @@ export const useMarcarTermoComoAceito = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato', data.contrato_id] });
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
-      addNotification('success', 'Termo marcado como aceito');
+      success( 'Termo marcado como aceito');
     },
     onError: (err) => {
       const axiosError = err as AxiosError<{ message: string }>;
-      addNotification('error', axiosError.response?.data?.message || 'Erro ao marcar termo como aceito');
+      error( axiosError.response?.data?.message || 'Erro ao marcar termo como aceito');
     }
   });
 };
 
 export const useDeactivateTermoContrato = () => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   return useMutation({
     mutationFn: (id: number) => TermoContratoService.deactivate(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
-      addNotification('success', 'Termo desativado com sucesso');
+      success( 'Termo desativado com sucesso');
     },
     onError: (err) => {
       const axiosError = err as AxiosError<{ message: string }>;
-      addNotification('error', axiosError.response?.data?.message || 'Erro ao desativar termo');
+      error( axiosError.response?.data?.message || 'Erro ao desativar termo');
     }
   });
 };

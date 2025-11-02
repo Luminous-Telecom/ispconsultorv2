@@ -7,7 +7,7 @@ import DocumentoSistemaService from '../../../../services/documentoSistemaServic
 import ModeloReciboService from '../../../../services/modeloReciboService';
 import ModeloCartaService from '../../../../services/modeloCartaService';
 import ModeloTermoService from '../../../../services/modeloTermoService';
-import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import FormField from '../../../ui/FormField';
 import { ClienteService } from '../../../../services/clienteService';
 import { DocumentoForm, DocumentoModalProps } from './types';
@@ -36,7 +36,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   const [showImprimirDropdown, setShowImprimirDropdown] = useState(false);
 
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error } = useNotificationContext();
 
   const getTipoLabel = (tipo: string) => {
     const labels = {
@@ -136,7 +136,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       }
     },
     onSuccess: () => {
-      addNotification('success', 'Documento criado com sucesso');
+      success('Documento criado com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       onSuccess?.();
@@ -144,11 +144,11 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     onError: (err: unknown) => {
       if (err instanceof Error && 'response' in err) {
         const axiosError = err as AxiosError<{ message: string }>;
-        addNotification('error', axiosError.response?.data?.message || 'Erro ao criar documento');
+        error( axiosError.response?.data?.message || 'Erro ao criar documento');
       } else if (err instanceof Error) {
-        addNotification('error', err.message || 'Erro ao criar documento');
+        error( err.message || 'Erro ao criar documento');
       } else {
-        addNotification('error', 'Erro ao criar documento');
+        error( 'Erro ao criar documento');
       }
     }
   });
@@ -178,7 +178,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       return service.update(documento!.id, data as Record<string, unknown>);
     },
     onSuccess: () => {
-      addNotification('success', 'Documento salvo com sucesso');
+      success('Documento salvo com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema'] });
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
       onSuccess?.();
@@ -186,11 +186,11 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     onError: (err: unknown) => {
       if (err instanceof Error && 'response' in err) {
         const axiosError = err as AxiosError<{ message: string }>;
-        addNotification('error', axiosError.response?.data?.message || 'Erro ao salvar documento');
+        error( axiosError.response?.data?.message || 'Erro ao salvar documento');
       } else if (err instanceof Error) {
-        addNotification('error', err.message || 'Erro ao salvar documento');
+        error( err.message || 'Erro ao salvar documento');
       } else {
-        addNotification('error', 'Erro ao salvar documento');
+        error( 'Erro ao salvar documento');
       }
     }
   });
@@ -199,12 +199,12 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     e.preventDefault();
     
     if (!formData.nome) {
-      addNotification('error', 'Nome é obrigatório');
+      error( 'Nome é obrigatório');
       return;
     }
 
     if (tipo !== 'contrato' && !formData.conteudo) {
-      addNotification('error', 'Conteúdo é obrigatório');
+      error( 'Conteúdo é obrigatório');
       return;
     }
 
@@ -221,11 +221,11 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     } catch (err: unknown) {
       if (err instanceof Error && 'response' in err) {
         const axiosError = err as AxiosError<{ message: string }>;
-        addNotification('error', axiosError.response?.data?.message || 'Erro ao salvar documento');
+        error( axiosError.response?.data?.message || 'Erro ao salvar documento');
       } else if (err instanceof Error) {
-        addNotification('error', err.message || 'Erro ao salvar documento');
+        error( err.message || 'Erro ao salvar documento');
       } else {
-        addNotification('error', 'Erro ao salvar documento');
+        error( 'Erro ao salvar documento');
       }
     }
   };
@@ -277,8 +277,8 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
       if (pdfUrl) window.URL.revokeObjectURL(pdfUrl);
       setPdfUrl(url);
       setShowPreview(true);
-    } catch (error) {
-      addNotification('error', error instanceof Error ? error.message : 'Erro ao gerar PDF');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Erro ao gerar PDF');
     } finally {
       setIsGeneratingPdf(false);
     }

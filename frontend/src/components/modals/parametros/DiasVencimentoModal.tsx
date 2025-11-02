@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from '../../common/DraggableModal';
 import { DiasVencimentoService, DiasVencimento } from '../../../services/diasVencimentoService';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
 
 interface DiasVencimentoModalProps {

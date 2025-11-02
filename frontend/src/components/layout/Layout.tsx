@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
-import NotificationContainer from '../common/NotificationContainer';
-import { useNotificationContext } from '../../contexts/NotificationContext';
+import { useNotificationContext } from '../notifications/NotificationProvider';
+import NotificationContainer from '../notifications/NotificationContainer';
 import { useTheme } from '../../contexts/ThemeContext';
 import DropdownMenu from '../common/DropdownMenu';
 import { Button } from '../ui';
@@ -20,7 +20,7 @@ import AgendadorTarefasModal from '../modals/parametros/AgendadorTarefasModal';
 
 const Layout: React.FC = () => {
   const location = useLocation();
-  const { notifications, removeNotification } = useNotificationContext();
+  const { notifications, removeNotification, pauseNotification, resumeNotification } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
@@ -145,8 +145,12 @@ const Layout: React.FC = () => {
 
           {/* Notifications */}
           <NotificationContainer
+            position="bottom-right"
             notifications={notifications}
             onRemove={removeNotification}
+            onPause={pauseNotification}
+            onResume={resumeNotification}
+            onActionClick={() => {}}
           />
 
       {/* Modais sempre renderizados, apenas mudando show */}

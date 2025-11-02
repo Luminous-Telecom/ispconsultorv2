@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import Table from '../../../../tables/Table';
 import { TableConfig } from '../../../../tables/types';
 import { DocumentoUnion } from '../types';
-import { useNotificationContext } from '../../../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../../../components/notifications/NotificationProvider';
 import DocumentoSistemaService from '../../../../../services/documentoSistemaService';
 import ModeloReciboService from '../../../../../services/modeloReciboService';
 import ModeloCartaService from '../../../../../services/modeloCartaService';
@@ -19,7 +19,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   onDocumentoSelected
 }) => {
   const queryClient = useQueryClient();
-  const { addNotification } = useNotificationContext();
+  const { success, error: showError } = useNotificationContext();
   const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
 
   // Query para buscar documentos por tipo
@@ -74,12 +74,12 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
       }
     },
     onSuccess: () => {
-      addNotification('success', 'Documento excluído com sucesso');
+      success( 'Documento excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: ['documentos-sistema', tipo] });
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
-      addNotification('error', axiosError?.response?.data?.message || 'Erro ao excluir documento');
+      showError( axiosError?.response?.data?.message || 'Erro ao excluir documento');
     }
   });
 

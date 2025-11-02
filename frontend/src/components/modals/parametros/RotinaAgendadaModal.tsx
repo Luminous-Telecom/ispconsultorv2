@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
 import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '../../../services/schedulerService';
-import { useNotificationContext } from '../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import FormField from '../../ui/FormField';
 import { AxiosError } from 'axios';
 
@@ -19,7 +19,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   rotinaId = null,
   onSuccess
 }) => {
-  const { addNotification } = useNotificationContext();
+  const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
   const isEditMode = !!rotinaId;
 
@@ -58,21 +58,21 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   const createMutation = useMutation({
     mutationFn: (data: CreateRotinaData) => SchedulerService.createRotina(data),
     onSuccess: () => {
-      addNotification('success', 'Rotina criada com sucesso!');
+      success( 'Rotina criada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
       resetForm();
       onSuccess?.();
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
-      addNotification('error', axiosError?.response?.data?.message || 'Erro ao criar rotina');
+      showError( axiosError?.response?.data?.message || 'Erro ao criar rotina');
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: (data: UpdateRotinaData) => SchedulerService.updateRotina(rotinaId!, data),
     onSuccess: () => {
-      addNotification('success', 'Rotina atualizada com sucesso!');
+      success( 'Rotina atualizada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
       queryClient.invalidateQueries({ queryKey: ['rotina', rotinaId] });
       resetForm();
@@ -80,7 +80,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string }>;
-      addNotification('error', axiosError?.response?.data?.message || 'Erro ao atualizar rotina');
+      showError( axiosError?.response?.data?.message || 'Erro ao atualizar rotina');
     },
   });
 

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
 import { TituloService } from '../services/tituloService';
-import { useNotificationContext } from '../contexts/NotificationContext';
+import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { ClienteFormData, ClienteFormErrors, ContratoItem, TituloItem, ApiError } from '../types';
 import { validateClienteForm } from '../utils/validators';
 import { FormValue } from '../types/common';

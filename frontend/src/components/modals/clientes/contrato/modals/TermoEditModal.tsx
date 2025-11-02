@@ -1,6 +1,6 @@
 import React from 'react';
 import DraggableModal from '../../../../common/DraggableModal';
-import { useNotificationContext } from '../../../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../../../components/notifications/NotificationProvider';
 import { TermoContrato } from '../../../../../services/TermoContratoService';
 import { useCreateTermoContrato, useUpdateTermoContrato } from '../../../../../hooks/useTermosContrato';
 import { useModelosTermo } from '../../../../../hooks/useModelosTermo';

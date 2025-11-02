@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { NotificationProvider } from './contexts/NotificationContext';
+import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/themes.css';
 import './styles/protection.css';

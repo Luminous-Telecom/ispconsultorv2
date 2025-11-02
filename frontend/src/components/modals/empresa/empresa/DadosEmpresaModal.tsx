@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '../../../../services/dadosEmpresaService';
-import { useNotificationContext } from '../../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import DraggableModal from '../../../common/DraggableModal';
 import { useFormReset } from '../../../../hooks/useFormReset';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
