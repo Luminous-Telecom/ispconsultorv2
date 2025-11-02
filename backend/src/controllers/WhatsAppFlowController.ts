@@ -98,10 +98,10 @@ export class WhatsAppFlowController {
       }
 
       // Get RSA private key
-      const rsaPrivateKey = this.getRSAPrivateKey();
+      const rsaPrivateKey = WhatsAppFlowController.getRSAPrivateKey();
       
       // Decrypt AES key
-      const aesKey = this.decryptAESKey(body.encrypted_aes_key, rsaPrivateKey);
+      const aesKey = WhatsAppFlowController.decryptAESKey(body.encrypted_aes_key, rsaPrivateKey);
       logger.info('AES key decrypted', { keyLength: aesKey.length });
       
       // Decode IV
@@ -109,7 +109,7 @@ export class WhatsAppFlowController {
       logger.info('IV decoded', { ivLength: iv.length });
       
       // Decrypt flow data
-      const decryptedJson = this.decryptFlowData(body.encrypted_flow_data, aesKey, iv);
+      const decryptedJson = WhatsAppFlowController.decryptFlowData(body.encrypted_flow_data, aesKey, iv);
       const payload: FlowPayload = JSON.parse(decryptedJson);
       logger.info('Flow data decrypted', { screen: payload.screen });
       
@@ -124,7 +124,7 @@ export class WhatsAppFlowController {
       
       // Encrypt response
       const jsonResponse = JSON.stringify(response);
-      const encryptedResponse = this.encryptFlowResponse(jsonResponse, aesKey, iv);
+      const encryptedResponse = WhatsAppFlowController.encryptFlowResponse(jsonResponse, aesKey, iv);
       
       // Send encrypted response
       res.status(200).send(encryptedResponse);
