@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import { logger } from '../utils/logger';
 
 interface FlowPayload {
@@ -150,12 +152,23 @@ export class WhatsAppFlowController {
       if (whatsappPayload?.encrypted_aes_key && whatsappPayload?.encrypted_flow_data && whatsappPayload?.initial_vector) {
         logger.info('Detectado formato WhatsApp Flow com RSA + AES');
         
-        // Buscar chave privada RSA das variáveis de ambiente
-        const rsaPrivateKey = process.env.WHATSAPP_FLOW_RSA_PRIVATE_KEY;
+        // Buscar chave privada RSA das variáveis de ambiente ou arquivo
+        let rsaPrivateKey = process.env.WHATSAPP_FLOW_RSA_PRIVATE_KEY;
         if (!rsaPrivateKey) {
-          logger.error('WHATSAPP_FLOW_RSA_PRIVATE_KEY não configurada nas variáveis de ambiente');
-          res.status(500).send('Configuração de criptografia ausente');
-          return;
+          // Tentar ler de arquivo
+          const keyPath = path.join(process.cwd(), '.rsa_private_key.pem');
+          try {
+            rsaPrivateKey = fs.readFileSync(keyPath, 'utf8');
+            logger.info('Chave RSA carregada de arquivo');
+          } catch (error) {
+            logger.error('WHATSAPP_FLOW_RSA_PRIVATE_KEY não configurada nem encontrada em arquivo:', error);
+            logger.error('Tentativa de ler arquivo de:', keyPath);
+            res.status(500).send('Configuração de criptografia ausente');
+            return;
+          }
+        } else if (rsaPrivateKey.includes('\\n')) {
+          // Converter \n para quebras de linha reais
+          rsaPrivateKey = rsaPrivateKey.replace(/\\n/g, '\n');
         }
 
         // Descriptografar chave AES com RSA
