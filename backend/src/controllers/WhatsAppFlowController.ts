@@ -194,6 +194,13 @@ export class WhatsAppFlowController {
         });
         
         // Descriptografar dados do flow
+        const encryptedDataBuffer = Buffer.from(whatsappPayload.encrypted_flow_data, 'base64');
+        logger.info('Dados criptografados do flow:', {
+          length: encryptedDataBuffer.length,
+          isMultipleOf16: (encryptedDataBuffer.length % 16) === 0,
+          firstBytes: encryptedDataBuffer.subarray(0, 8).toString('hex')
+        });
+        
         const decryptedData = WhatsAppFlowController.decryptWithAES(
           whatsappPayload.encrypted_flow_data,
           aesKey,

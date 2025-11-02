@@ -28,6 +28,6 @@ efiRouter.get('/efi', (req, res) => {
 efiRouter.post('/efi', WebhookController.efiWebhook);
 
 // Usar o roteador EFI para rotas específicas
-router.use('/', efiRouter);
+router.use('/efi', efiRouter);
 
 export default router;
