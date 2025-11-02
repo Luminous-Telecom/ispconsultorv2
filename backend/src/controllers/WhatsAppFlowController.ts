@@ -159,7 +159,7 @@ export class WhatsAppFlowController {
           const keyPath = path.join(process.cwd(), '.rsa_private_key.pem');
           try {
             rsaPrivateKey = fs.readFileSync(keyPath, 'utf8');
-            logger.info('Chave RSA carregada de arquivo');
+            logger.info('Chave RSA carregada de arquivo:', keyPath);
           } catch (error) {
             logger.error('WHATSAPP_FLOW_RSA_PRIVATE_KEY não configurada nem encontrada em arquivo:', error);
             logger.error('Tentativa de ler arquivo de:', keyPath);
@@ -169,6 +169,9 @@ export class WhatsAppFlowController {
         } else if (rsaPrivateKey.includes('\\n')) {
           // Converter \n para quebras de linha reais
           rsaPrivateKey = rsaPrivateKey.replace(/\\n/g, '\n');
+          logger.info('Chave RSA carregada de variável de ambiente (com conversão de \\n)');
+        } else {
+          logger.info('Chave RSA carregada de variável de ambiente');
         }
 
         // Descriptografar chave AES com RSA
