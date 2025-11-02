@@ -57,14 +57,28 @@ export class WhatsAppFlowController {
    */
   private static decryptAESKey(encryptedKey: string, privateKey: string): Buffer {
     const encryptedBuffer = Buffer.from(encryptedKey, 'base64');
-    return crypto.privateDecrypt(
-      {
-        key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-        oaepHash: 'sha256'
-      },
-      encryptedBuffer
-    );
+    
+    logger.info('Attempting RSA decryption', {
+      encryptedKeyLength: encryptedBuffer.length,
+      expectedKeySize: 256 // 2048 bits = 256 bytes
+    });
+    
+    try {
+      return crypto.privateDecrypt(
+        {
+          key: privateKey,
+          padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+          oaepHash: 'sha256'
+        },
+        encryptedBuffer
+      );
+    } catch (error) {
+      logger.error('RSA decryption failed - likely using wrong public key on WhatsApp', {
+        error: error instanceof Error ? error.message : error,
+        encryptedKeyLength: encryptedBuffer.length
+      });
+      throw new Error('decrypt: RSA decryption failed - please update public key on WhatsApp Business Platform');
+    }
   }
 
   /**
