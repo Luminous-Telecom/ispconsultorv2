@@ -9,7 +9,65 @@ interface FlowPayload {
   token?: string;
 }
 
+interface WhatsAppFlowRequest {
+  encrypted_aes_key: string;  // Chave AES criptografada com RSA (base64)
+  encrypted_flow_data: string; // Dados do flow criptografados (base64)
+  initial_vector: string;      // IV para descriptografia AES (base64)
+}
+
 export class WhatsAppFlowController {
+  /**
+   * Descriptografar chave AES usando chave privada RSA
+   */
+  private static decryptAESKeyWithRSA(encryptedAESKey: string, privateKey: string): Buffer {
+    try {
+      const encryptedBuffer = Buffer.from(encryptedAESKey, 'base64');
+      const decrypted = crypto.privateDecrypt(
+        {
+          key: privateKey,
+          padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+          oaepHash: 'sha256'
+        },
+        encryptedBuffer
+      );
+      return decrypted;
+    } catch (error) {
+      logger.error('Erro ao descriptografar chave AES com RSA:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Criptografar resposta com AES usando chave e IV fornecidos
+   */
+  private static encryptWithAES(data: string, aesKey: Buffer, iv: Buffer): string {
+    try {
+      const cipher = crypto.createCipheriv('aes-256-cbc', aesKey, iv);
+      let encrypted = cipher.update(data, 'utf8', 'base64');
+      encrypted += cipher.final('base64');
+      return encrypted;
+    } catch (error) {
+      logger.error('Erro ao criptografar com AES:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Descriptografar dados com AES usando chave e IV fornecidos
+   */
+  private static decryptWithAES(encryptedData: string, aesKey: Buffer, iv: Buffer): string {
+    try {
+      const encryptedBuffer = Buffer.from(encryptedData, 'base64');
+      const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, iv);
+      let decrypted = decipher.update(encryptedBuffer);
+      decrypted = Buffer.concat([decrypted, decipher.final()]);
+      return decrypted.toString('utf8');
+    } catch (error) {
+      logger.error('Erro ao descriptografar com AES:', error);
+      throw error;
+    }
+  }
+
   /**
    * Descriptografar payload recebido do WhatsApp Flow
    */
@@ -80,6 +138,82 @@ export class WhatsAppFlowController {
     try {
       // Log todos os headers recebidos para debug
       logger.info('WhatsApp Flow headers recebidos:', req.headers);
+      
+      // Log do body completo para debug
+      logger.info('WhatsApp Flow body recebido:', { 
+        type: typeof req.body,
+        body: req.body
+      });
+      
+      // Verificar se é formato WhatsApp Flow (RSA + AES)
+      const whatsappPayload = req.body as WhatsAppFlowRequest;
+      if (whatsappPayload?.encrypted_aes_key && whatsappPayload?.encrypted_flow_data && whatsappPayload?.initial_vector) {
+        logger.info('Detectado formato WhatsApp Flow com RSA + AES');
+        
+        // Buscar chave privada RSA das variáveis de ambiente
+        const rsaPrivateKey = process.env.WHATSAPP_FLOW_RSA_PRIVATE_KEY;
+        if (!rsaPrivateKey) {
+          logger.error('WHATSAPP_FLOW_RSA_PRIVATE_KEY não configurada nas variáveis de ambiente');
+          res.status(500).send('Configuração de criptografia ausente');
+          return;
+        }
+
+        // Descriptografar chave AES com RSA
+        const aesKey = WhatsAppFlowController.decryptAESKeyWithRSA(
+          whatsappPayload.encrypted_aes_key,
+          rsaPrivateKey
+        );
+        
+        // Decodificar IV
+        const iv = Buffer.from(whatsappPayload.initial_vector, 'base64');
+        
+        // Descriptografar dados do flow
+        const decryptedData = WhatsAppFlowController.decryptWithAES(
+          whatsappPayload.encrypted_flow_data,
+          aesKey,
+          iv
+        );
+        
+        const payload: FlowPayload = JSON.parse(decryptedData);
+        
+        logger.info('WhatsApp Flow payload descriptografado:', { 
+          version: payload.version,
+          screen: payload.screen,
+          hasData: !!payload.data
+        });
+
+        // Processar o flow
+        const flowResponse = {
+          screen: 'SCREEN_NAME',
+          data: {},
+          error: null
+        };
+
+        if (payload.screen === 'SCREEN_NAME') {
+          flowResponse.screen = 'END_SCREEN';
+          flowResponse.data = {
+            message: 'Flow processado com sucesso'
+          };
+        }
+
+        // Converter para JSON
+        const jsonResponse = JSON.stringify(flowResponse);
+        
+        // Criptografar resposta usando a mesma chave AES
+        const encryptedResponse = WhatsAppFlowController.encryptWithAES(jsonResponse, aesKey, iv);
+
+        logger.info('WhatsApp Flow response criptografado gerado:', {
+          screen: flowResponse.screen,
+          responseLength: encryptedResponse.length
+        });
+
+        // Retornar resposta criptografada
+        res.status(200).send(encryptedResponse);
+        return;
+      }
+      
+      // Fallback: formato antigo (sem RSA)
+      logger.info('Usando formato legado (sem RSA)');
       
       // Buscar chave AES do header (tentar múltiplas variações)
       const cryptoKey = (req.headers['crypto-key'] || 
