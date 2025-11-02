@@ -78,38 +78,65 @@ export class WhatsAppFlowController {
    */
   static async handleFlow(req: Request, res: Response): Promise<void> {
     try {
-      // Buscar chave AES do header
-      const cryptoKey = req.headers['crypto-key'] as string;
+      // Log todos os headers recebidos para debug
+      logger.info('WhatsApp Flow headers recebidos:', req.headers);
       
-      if (!cryptoKey) {
-        logger.warn('WhatsApp Flow request sem crypto-key header');
-        res.status(400).send('crypto-key header ausente');
-        return;
-      }
+      // Buscar chave AES do header (tentar múltiplas variações)
+      const cryptoKey = (req.headers['crypto-key'] || 
+                        req.headers['cryptokey'] || 
+                        req.headers['Crypto-Key'] ||
+                        req.headers['CryptoKey']) as string;
       
-      // Receber payload criptografado (string base64)
-      const encryptedPayload: string = req.body;
+      // Receber payload (pode ser string base64 ou objeto JSON)
+      let encryptedPayload = '';
+      let payload: FlowPayload | undefined = undefined;
       
-      if (!encryptedPayload) {
-        logger.warn('WhatsApp Flow request sem payload');
-        res.status(400).send('Payload ausente');
+      if (typeof req.body === 'string') {
+        encryptedPayload = req.body;
+      } else if (typeof req.body === 'object' && req.body !== null) {
+        // Se recebeu objeto JSON direto, não precisa descriptografar
+        payload = req.body as FlowPayload;
+      } else {
+        logger.warn('WhatsApp Flow request com payload inválido');
+        res.status(400).send('Payload inválido');
         return;
       }
 
-      logger.info('WhatsApp Flow request recebido:', { 
+      logger.info('WhatsApp Flow request processado:', { 
         hasCryptoKey: !!cryptoKey,
-        payloadLength: encryptedPayload.length
+        payloadType: typeof req.body,
+        payloadLength: encryptedPayload?.length || 0
       });
 
-      // Descriptografar payload
-      const decryptedJson = WhatsAppFlowController.decryptPayload(encryptedPayload, cryptoKey);
-      const payload: FlowPayload = JSON.parse(decryptedJson);
-      
-      logger.info('WhatsApp Flow payload descriptografado:', { 
-        version: payload.version,
-        screen: payload.screen,
-        hasData: !!payload.data
-      });
+      // Se temos chave criptográfica e payload criptografado, descriptografar
+      if (cryptoKey && encryptedPayload) {
+        try {
+          const decryptedJson = WhatsAppFlowController.decryptPayload(encryptedPayload, cryptoKey);
+          const decryptedPayload: FlowPayload = JSON.parse(decryptedJson);
+          payload = decryptedPayload;
+          
+          logger.info('WhatsApp Flow payload descriptografado:', { 
+            version: decryptedPayload.version,
+            screen: decryptedPayload.screen,
+            hasData: !!decryptedPayload.data
+          });
+        } catch (decryptError) {
+          logger.error('Erro ao descriptografar payload:', decryptError);
+          res.status(400).send('Falha ao descriptografar payload');
+          return;
+        }
+      } else if (!payload) {
+        logger.warn('WhatsApp Flow request sem criptografia e sem payload JSON válido');
+        res.status(400).send('Payload ausente ou inválido');
+        return;
+      }
+
+      // Validar que temos o payload
+      if (!payload) {
+        logger.warn('WhatsApp Flow payload não foi processado corretamente');
+        res.status(400).send('Payload não processado');
+        return;
+      }
 
       // Criar a resposta do Flow
       const flowResponse = {
@@ -130,24 +157,35 @@ export class WhatsAppFlowController {
       // Converter para JSON
       const jsonResponse = JSON.stringify(flowResponse);
       
-      // Criptografar resposta
-      const encryptedResponse = WhatsAppFlowController.encryptResponse(jsonResponse, cryptoKey);
+      // Se temos chave criptográfica, criptografar resposta
+      let finalResponse: string;
+      if (cryptoKey) {
+        finalResponse = WhatsAppFlowController.encryptResponse(jsonResponse, cryptoKey);
+        logger.info('WhatsApp Flow response criptografado gerado:', {
+          screen: flowResponse.screen,
+          responseLength: finalResponse.length
+        });
+      } else {
+        // Sem criptografia, retornar apenas base64
+        finalResponse = Buffer.from(jsonResponse).toString('base64');
+        logger.info('WhatsApp Flow response base64 gerado:', {
+          screen: flowResponse.screen,
+          responseLength: finalResponse.length
+        });
+      }
 
-      // Log para debug
-      logger.info('WhatsApp Flow response gerado:', {
-        screen: flowResponse.screen,
-        responseLength: encryptedResponse.length
-      });
-
-      // Retornar criptografado em base64
-      res.status(200).send(encryptedResponse);
+      // Retornar resposta
+      res.status(200).send(finalResponse);
 
     } catch (error) {
       logger.error('Erro ao processar WhatsApp Flow:', error);
       
       // Tentar retornar erro criptografado se temos a chave
       try {
-        const cryptoKey = req.headers['crypto-key'] as string;
+        const cryptoKey = (req.headers['crypto-key'] || 
+                          req.headers['cryptokey'] || 
+                          req.headers['Crypto-Key'] ||
+                          req.headers['CryptoKey']) as string;
         if (cryptoKey) {
           const errorResponse = {
             screen: 'ERROR_SCREEN',
