@@ -44,7 +44,7 @@ export class WhatsAppFlowController {
    */
   private static encryptWithAES(data: string, aesKey: Buffer, iv: Buffer): string {
     try {
-      const cipher = crypto.createCipheriv('aes-256-cbc', aesKey, iv);
+      const cipher = crypto.createCipheriv('aes-128-cbc', aesKey, iv);
       let encrypted = cipher.update(data, 'utf8', 'base64');
       encrypted += cipher.final('base64');
       return encrypted;
@@ -60,7 +60,7 @@ export class WhatsAppFlowController {
   private static decryptWithAES(encryptedData: string, aesKey: Buffer, iv: Buffer): string {
     try {
       const encryptedBuffer = Buffer.from(encryptedData, 'base64');
-      const decipher = crypto.createDecipheriv('aes-256-cbc', aesKey, iv);
+      const decipher = crypto.createDecipheriv('aes-128-cbc', aesKey, iv);
       let decrypted = decipher.update(encryptedBuffer);
       decrypted = Buffer.concat([decrypted, decipher.final()]);
       return decrypted.toString('utf8');
@@ -180,8 +180,18 @@ export class WhatsAppFlowController {
           rsaPrivateKey
         );
         
+        logger.info('Chave AES descriptografada:', {
+          length: aesKey.length,
+          firstBytes: aesKey.subarray(0, 8).toString('hex')
+        });
+        
         // Decodificar IV
         const iv = Buffer.from(whatsappPayload.initial_vector, 'base64');
+        
+        logger.info('IV decodificado:', {
+          length: iv.length,
+          firstBytes: iv.subarray(0, 8).toString('hex')
+        });
         
         // Descriptografar dados do flow
         const decryptedData = WhatsAppFlowController.decryptWithAES(
