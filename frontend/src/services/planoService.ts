@@ -1,104 +1,131 @@
-import { apiService } from './api';
-import { Plano, CreatePlano, UpdatePlano, PlanoFilters, PaginatedResponse } from '../types';
+/**
+ * PlanoService - Serviço refatorado usando BaseService
+ * Mantém compatibilidade com código existente através de métodos estáticos
+ */
+import { BaseService, defaultApiClient } from './core';
+import { Plano, CreatePlano, UpdatePlano, PlanoFilters, PaginatedResponse, ApiResponse } from '../types';
 
-export class PlanoService {
-  // Listar planos com filtros e paginação
-  static async list(filters: PlanoFilters = {}): Promise<PaginatedResponse<Plano>> {
-    const params = new URLSearchParams();
-    
-    if (filters.search) params.append('search', filters.search);
-    if (filters.status) params.append('status', filters.status);
-    if (filters.tipo_servico) params.append('tipo_servico', filters.tipo_servico);
-    if (filters.cliente_id) params.append('cliente_id', filters.cliente_id.toString());
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
-    if (filters.sortColumn) params.append('sortColumn', filters.sortColumn);
-    if (filters.sortDirection) params.append('sortDirection', filters.sortDirection);
-
-    try {
-      const response = await apiService.get<PaginatedResponse<Plano>>(`/planos?${params.toString()}`);
-      return response;
-    } catch (error) {
-      console.error('Erro ao listar planos:', error);
-      throw error;
-    }
+/**
+ * Classe de serviço para operações relacionadas a Planos
+ * Usa BaseService para operações CRUD padrão
+ */
+class PlanoServiceClass extends BaseService<Plano, CreatePlano, UpdatePlano, PlanoFilters> {
+  constructor() {
+    super(defaultApiClient, '/planos');
   }
 
-  // Buscar plano por ID
-  static async getById(id: number): Promise<Plano> {
-    try {
-      const response = await apiService.get<Plano>(`/planos/${id}`);
-      return response;
-    } catch (error) {
-      console.error('Erro ao buscar plano:', error);
-      throw error;
-    }
+  /**
+   * Buscar planos ativos
+   */
+  async findAtivos(): Promise<ApiResponse<Plano[]>> {
+    return this.customGet<Plano[]>(`/ativos`);
   }
 
-  // Criar novo plano
-  static async create(data: CreatePlano): Promise<Plano> {
-    try {
-      const response = await apiService.post<Plano>('/planos', data);
-      return response;
-    } catch (error) {
-      console.error('Erro ao criar plano:', error);
-      throw error;
-    }
+  /**
+   * Buscar planos por cliente
+   */
+  async findByCliente(clienteId: number): Promise<ApiResponse<Plano[]>> {
+    return this.customGet<Plano[]>(`/cliente/${clienteId}`);
   }
 
-  // Atualizar plano
-  static async update(id: number, data: UpdatePlano): Promise<Plano> {
-    try {
-      const response = await apiService.put<Plano>(`/planos/${id}`, data);
-      return response;
-    } catch (error) {
-      console.error('Erro ao atualizar plano:', error);
-      throw error;
-    }
-  }
-
-  // Excluir plano
-  static async delete(id: number): Promise<void> {
-    try {
-      await apiService.delete(`/planos/${id}`);
-    } catch (error) {
-      console.error('Erro ao excluir plano:', error);
-      throw error;
-    }
-  }
-
-  // Buscar planos ativos
-  static async findAtivos(): Promise<Plano[]> {
-    try {
-      const response = await apiService.get<Plano[]>('/planos/ativos');
-      return response;
-    } catch (error) {
-      console.error('Erro ao buscar planos ativos:', error);
-      throw error;
-    }
-  }
-
-  // Buscar planos por cliente
-  static async findByCliente(clienteId: number): Promise<Plano[]> {
-    try {
-      const response = await apiService.get<Plano[]>(`/planos/cliente/${clienteId}`);
-      return response;
-    } catch (error) {
-      console.error('Erro ao buscar planos por cliente:', error);
-      throw error;
-    }
-  }
-
-  // Alterar status do plano (desativar/ativar)
-  static async toggleStatus(id: number, status: 'ativo' | 'inativo' | 'cancelado'): Promise<Plano> {
-    try {
-      const response = await apiService.patch<Plano>(`/planos/${id}/status`, { status });
-      return response;
-    } catch (error) {
-      console.error('Erro ao alterar status do plano:', error);
-      throw error;
-    }
+  /**
+   * Alterar status do plano (desativar/ativar)
+   */
+  async toggleStatus(id: number, status: 'ativo' | 'inativo' | 'cancelado'): Promise<ApiResponse<Plano>> {
+    return this.customPost<Plano>(`/${id}/status`, { status });
   }
 }
 
-export const planoService = new PlanoService();
+// Instância única do serviço
+const planoServiceInstance = new PlanoServiceClass();
+
+/**
+ * PlanoService - API estática para compatibilidade com código existente
+ * Todos os métodos delegam para a instância do serviço
+ */
+export class PlanoService {
+  /**
+   * Listar planos com filtros e paginação
+   */
+  static async list(filters: PlanoFilters = {}): Promise<PaginatedResponse<Plano>> {
+    return planoServiceInstance.list(filters);
+  }
+
+  /**
+   * Buscar plano por ID
+   */
+  static async getById(id: number): Promise<Plano> {
+    const response = await planoServiceInstance.getById(id);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as Plano;
+  }
+
+  /**
+   * Criar novo plano
+   */
+  static async create(data: CreatePlano): Promise<Plano> {
+    const response = await planoServiceInstance.create(data);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as Plano;
+  }
+
+  /**
+   * Atualizar plano
+   */
+  static async update(id: number, data: UpdatePlano): Promise<Plano> {
+    const response = await planoServiceInstance.update(id, data);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as Plano;
+  }
+
+  /**
+   * Excluir plano
+   */
+  static async delete(id: number): Promise<void> {
+    await planoServiceInstance.delete(id);
+  }
+
+  /**
+   * Buscar planos ativos
+   */
+  static async findAtivos(): Promise<Plano[]> {
+    const response = await planoServiceInstance.findAtivos();
+    if (response.data && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  }
+
+  /**
+   * Buscar planos por cliente
+   */
+  static async findByCliente(clienteId: number): Promise<Plano[]> {
+    const response = await planoServiceInstance.findByCliente(clienteId);
+    if (response.data && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  }
+
+  /**
+   * Alterar status do plano (desativar/ativar)
+   */
+  static async toggleStatus(id: number, status: 'ativo' | 'inativo' | 'cancelado'): Promise<Plano> {
+    const response = await planoServiceInstance.toggleStatus(id, status);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as Plano;
+  }
+}
+
+/**
+ * Exportar também a instância do serviço para uso direto (opcional)
+ */
+export const planoService = planoServiceInstance;

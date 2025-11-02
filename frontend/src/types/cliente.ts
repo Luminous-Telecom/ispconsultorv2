@@ -49,50 +49,7 @@ export interface BulkActionItem<T = unknown> {
   }[];
 }
 
-export interface ClienteFormData {
-  cnpj: string;
-  razao_social: string;
-  nome_fantasia: string;
-  email: string;
-  telefone: string;
-  whatsapp: string;
-  cep: string;
-  endereco: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-  ativo: boolean;
-  tipo_cobranca: 'titulo' | 'carne';
-  valor_primeiro_titulo: 'total' | 'proporcional';
-  recebe_email: boolean;
-  recebe_sms: boolean;
-  recebe_whatsapp: boolean;
-  observacoes: string;
-}
-
-export interface ClienteFormErrors {
-  cnpj?: string;
-  razao_social?: string;
-  nome_fantasia?: string;
-  email?: string;
-  telefone?: string;
-  whatsapp?: string;
-  cep?: string;
-  endereco?: string;
-  cidade?: string;
-  estado?: string;
-}
-
-export interface ApiError {
-  message: string;
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-}
+// ClienteFormData e ClienteFormErrors estão em forms.ts
 
 export interface NotificationMessage {
   message: string;

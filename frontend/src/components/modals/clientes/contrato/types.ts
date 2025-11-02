@@ -1,7 +1,3 @@
-import { Plano, Banco } from '../../../../types';
-import { DocumentoSistema } from '../../../../services/documentoSistemaService';
-import { TermoContrato } from '../../../../services/TermoContratoService';
-
 export interface ContratoForm {
   plano_id: number;
   desconto_percentual: number;

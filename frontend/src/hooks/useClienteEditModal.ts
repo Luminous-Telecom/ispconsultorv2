@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClienteService } from '../services/clienteService';
 import { TituloService } from '../services/tituloService';
 import { useNotificationContext } from '../contexts/NotificationContext';
-import { ClienteFormData, ClienteFormErrors, ContratoItem, TituloItem, ApiError } from '../types/cliente';
+import { ClienteFormData, ClienteFormErrors, ContratoItem, TituloItem, ApiError } from '../types';
 import { validateClienteForm } from '../utils/validators';
 import { FormValue } from '../types/common';
 

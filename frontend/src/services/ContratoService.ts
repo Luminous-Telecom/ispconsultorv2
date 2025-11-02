@@ -1,60 +1,118 @@
-import { apiService } from './api';
+/**
+ * ContratoService - Serviço refatorado usando BaseService
+ * Mantém compatibilidade com código existente através de métodos estáticos
+ */
+import { BaseService, defaultApiClient, BaseFilters } from './core';
+import { PaginatedResponse, ApiResponse } from '../types';
 import { Contrato, CreateContratoData, UpdateContratoData } from '../hooks/useContratos';
 
-interface ListParams {
-  page?: number;
-  limit?: number;
-  search?: string;
+/**
+ * Filtros para listagem de contratos
+ */
+interface ContratoFilters extends BaseFilters {
   status?: string;
+  cliente_id?: number;
 }
 
-interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+/**
+ * Classe de serviço para operações relacionadas a Contratos
+ * Usa BaseService para operações CRUD padrão
+ * Nota: Usa o tipo Contrato de useContratos.ts para compatibilidade
+ */
+class ContratoServiceClass extends BaseService<Contrato, CreateContratoData, UpdateContratoData, ContratoFilters> {
+  constructor() {
+    super(defaultApiClient, '/contratos');
+  }
+
+  /**
+   * Buscar contratos por cliente
+   */
+  async getByCliente(clienteId: number): Promise<ApiResponse<Contrato[]>> {
+    return this.customGet<Contrato[]>(`/cliente/${clienteId}`);
+  }
+
+  /**
+   * Buscar contratos ativos
+   */
+  async getAtivos(): Promise<ApiResponse<Contrato[]>> {
+    return this.customGet<Contrato[]>(`/ativos`);
+  }
 }
 
+// Instância única do serviço
+const contratoServiceInstance = new ContratoServiceClass();
+
+/**
+ * ContratoService - API estática para compatibilidade com código existente
+ * Todos os métodos delegam para a instância do serviço
+ */
 export class ContratoService {
-  static async list(params: ListParams = {}): Promise<PaginatedResponse<Contrato>> {
-    const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('page', params.page.toString());
-    if (params.limit) queryParams.append('limit', params.limit.toString());
-    if (params.search) queryParams.append('search', params.search);
-    if (params.status) queryParams.append('status', params.status);
-
-    const url = queryParams.toString() ? `/contratos?${queryParams}` : '/contratos';
-    const response = await apiService.get<PaginatedResponse<Contrato>>(url);
-    return response || { data: [], total: 0, page: 1, limit: 10, totalPages: 0 };
+  /**
+   * Listar contratos com filtros e paginação
+   */
+  static async list(params: ContratoFilters = {}): Promise<PaginatedResponse<Contrato>> {
+    return contratoServiceInstance.list(params);
   }
 
-  static async getByCliente(clienteId: number): Promise<Contrato[]> {
-    const response = await apiService.get<Contrato[]>(`/contratos/cliente/${clienteId}`);
-    return response || [];
-  }
-
+  /**
+   * Buscar contrato por ID
+   */
   static async getById(id: number): Promise<Contrato> {
-    const response = await apiService.get<Contrato>(`/contratos/${id}`);
-    return response!;
+    const response = await contratoServiceInstance.getById(id);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as Contrato;
   }
 
-  static async create(data: CreateContratoData): Promise<Contrato> {
-    const response = await apiService.post<{ success: boolean; message: string; data: Contrato }>('/contratos', data);
-    return response.data;
+  /**
+   * Buscar contratos por cliente
+   */
+  static async getByCliente(clienteId: number): Promise<Contrato[]> {
+    const response = await contratoServiceInstance.getByCliente(clienteId);
+    if (response.data && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
   }
 
-  static async update(id: number, data: UpdateContratoData): Promise<Contrato> {
-    const response = await apiService.put<Contrato>(`/contratos/${id}`, data);
-    return response!;
-  }
-
-  static async delete(id: number): Promise<void> {
-    await apiService.delete(`/contratos/${id}`);
-  }
-
+  /**
+   * Buscar contratos ativos
+   */
   static async getAtivos(): Promise<Contrato[]> {
-    const response = await apiService.get<Contrato[]>('/contratos/ativos');
-    return response || [];
+    const response = await contratoServiceInstance.getAtivos();
+    if (response.data && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  }
+
+  /**
+   * Criar novo contrato
+   */
+  static async create(data: CreateContratoData): Promise<Contrato> {
+    const response = await contratoServiceInstance.create(data);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as Contrato;
+  }
+
+  /**
+   * Atualizar contrato
+   */
+  static async update(id: number, data: UpdateContratoData): Promise<Contrato> {
+    const response = await contratoServiceInstance.update(id, data);
+    if (response.data) {
+      return response.data;
+    }
+    return response as unknown as Contrato;
+  }
+
+  /**
+   * Excluir contrato
+   */
+  static async delete(id: number): Promise<void> {
+    await contratoServiceInstance.delete(id);
   }
 }

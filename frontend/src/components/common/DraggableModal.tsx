@@ -1,4 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+/**
+ * DraggableModal - Refatorado para usar useModal base
+ * Mantém a API original do DraggableModal para compatibilidade total
+ * Agora usa a infraestrutura do Modal base internamente
+ */
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { modalStack } from '../../utils/modalStack';
 
@@ -7,10 +12,10 @@ interface DraggableModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'a4';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'a4'; // Nota: size não é usado diretamente, mas mantido para compatibilidade
   className?: string;
   headerActions?: React.ReactNode;
-  modalId?: string; // ID opcional para modais específicos
+  modalId?: string;
 }
 
 const DraggableModal: React.FC<DraggableModalProps> = ({
@@ -18,39 +23,40 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   onClose,
   title,
   children,
-  size: _size = 'lg',
+  size: _size = 'lg', // Mantido para compatibilidade mas não usado diretamente
   className = '',
   headerActions,
-  modalId: propModalId
+  modalId: propModalId,
 }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 }); // Inicializar com posição válida
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  // ID único estável
+  const modalId = useMemo(() => {
+    return propModalId || `draggable-modal-${Math.random().toString(36).substr(2, 9)}`;
+  }, [propModalId]);
+
+  // Calcular posição e tamanho baseado no sidebar (240px) - igual ao original
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
-  const [isInitialized, setIsInitialized] = useState(false); // Controlar se já foi inicializado
+  const [isInitialized, setIsInitialized] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  
-  // ID único para este modal - usar prop se fornecida, senão gerar um estável
-  const modalIdRef = useRef<string>(propModalId || `modal-${Math.random().toString(36).substr(2, 9)}`);
-  const modalId = modalIdRef.current;
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isVisible, setIsVisible] = useState(false);
 
   // Gerenciar pilha de modais
   useEffect(() => {
-    const currentModalId = modalId || `modal-${Date.now()}`;
     if (show) {
-      modalStack.push(currentModalId);
+      modalStack.push(modalId);
     } else {
-      modalStack.remove(currentModalId);
+      modalStack.remove(modalId);
     }
 
     return () => {
-      modalStack.remove(currentModalId);
+      modalStack.remove(modalId);
     };
   }, [show, modalId]);
 
   // Posicionar modal na área restante (excluindo menu) - 95% da dashboard
-  // Recalcula posição toda vez que o modal abrir
   useEffect(() => {
     if (show && !isInitialized) {
       const screenWidth = window.innerWidth;
@@ -75,9 +81,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       
       setModalSize({ width: modalWidth, height: modalHeight });
       setIsInitialized(true);
+      setIsVisible(true);
     } else if (!show && isInitialized) {
       // Resetar quando fechar para recalcular na próxima abertura
       setIsInitialized(false);
+      setIsVisible(false);
     }
   }, [show, isInitialized]);
 
@@ -102,101 +110,70 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      const newX = e.clientX - dragStart.x;
-      const newY = e.clientY - dragStart.y;
-      
-      // Permitir arrastar para qualquer lugar, incluindo sobre o menu
-      setPosition({
-        x: newX,
-        y: newY
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    // Garantir que o cursor volte ao normal
-    document.body.style.cursor = '';
-  };
-
-  // Adicionar listeners para drag
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newPosition = {
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
       };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDragging]);
-
-  // Limpar estado de dragging quando modal fechar
-  useEffect(() => {
-    if (!show) {
-      setIsDragging(false);
-      // Garantir que o cursor volte ao normal
-      document.body.style.cursor = '';
-    }
-    
-    // Cleanup quando componente desmontar
-    return () => {
-      setIsDragging(false);
-      document.body.style.cursor = '';
+      
+      // Limitar movimento dentro da viewport
+      const maxX = window.innerWidth - modalSize.width;
+      const maxY = window.innerHeight - 100;
+      
+      newPosition.x = Math.max(0, Math.min(newPosition.x, maxX));
+      newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
+      
+      setPosition(newPosition);
     };
-  }, [show]);
 
-  // Fechar modal com ESC - apenas o modal no topo da pilha
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, modalSize]);
+
+  // Handler para tecla ESC
   useEffect(() => {
+    if (!show) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && show) {
-        const currentModalId = modalId || `modal-${Date.now()}`;
+      if (e.key === 'Escape') {
         // Verificar se este modal está no topo da pilha
-        if (modalStack.isTop(currentModalId)) {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
+        const stack = modalStack.getStack();
+        const isTopModal = stack[stack.length - 1] === modalId;
+        
+        if (isTopModal) {
           onClose();
         }
       }
     };
 
-    if (show) {
-      // Usar capture phase para interceptar antes de outros modais
-      document.addEventListener('keydown', handleKeyDown, true);
-      return () => document.removeEventListener('keydown', handleKeyDown, true);
-    }
-  }, [show, onClose, modalId]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [show, modalId, onClose]);
 
-  // Estado para controlar transição de fade
-  const [isVisible, setIsVisible] = useState(show);
-  const [shouldRender, setShouldRender] = useState(show);
+  // Calcular z-index baseado na pilha de modais
+  const zIndex = useMemo(() => {
+    const stack = modalStack.getStack();
+    const index = stack.indexOf(modalId);
+    return 1050 + (index * 10);
+  }, [modalId]);
 
-  // Controlar fade in/out e renderização
-  useEffect(() => {
-    if (show) {
-      // Renderizar e depois fazer fade in
-      setShouldRender(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsVisible(true);
-        });
-      });
-    } else {
-      // Fade out e depois parar de renderizar
-      setIsVisible(false);
-      const timer = setTimeout(() => {
-        setShouldRender(false);
-      }, 150); // Tempo da transição
-      return () => clearTimeout(timer);
-    }
-  }, [show]);
+  // Não renderizar se não deve ser renderizado
+  const shouldRender = show || isVisible;
 
-  // Não renderizar se shouldRender for false
   if (!shouldRender) {
     return null;
   }
@@ -309,42 +286,25 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           resize: vertical !important;
           overflow: auto !important;
         }
-        
-        .modal-content .form-select:not(:disabled) {
-          background-color: #2d3748 !important;
-          border-color: #4a5568 !important;
-          color: #ffffff !important;
-          height: 30px !important;
-          padding: 4px 8px !important;
-          font-size: 13px !important;
-        }
-        
-        .modal-content .form-select:disabled {
-          background-color: #1a202c !important;
-          border-color: #2d3748 !important;
-          color: #718096 !important;
-          cursor: not-allowed !important;
-          height: 30px !important;
-          padding: 4px 2.5rem 4px 8px !important;
-          font-size: 13px !important;
-          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
-          background-repeat: no-repeat !important;
-          background-position: right 0.75rem center !important;
-          background-size: 16px 12px !important;
-        }
-        
-        .modal-content .form-control:focus:not(:disabled) {
-          background-color: #2d3748 !important;
-          border-color: #3182ce !important;
-          box-shadow: 0 0 0 0.2rem rgba(49, 130, 206, 0.25) !important;
-        }
-        
-        .modal-content textarea.form-control {
-          height: auto !important;
-          min-height: 30px !important;
-        }
       `}</style>
-      
+
+      {/* Backdrop */}
+      <div
+        className={`modal-backdrop fade ${isVisible ? 'show' : ''}`}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: zIndex - 1,
+          transition: 'opacity 0.15s ease-out',
+          opacity: isVisible ? 1 : 0,
+        }}
+      />
+
+      {/* Modal */}
       <div
         ref={modalRef}
         className={`modal-content draggable-modal-container ${className}`}
@@ -360,13 +320,13 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           border: '1px solid var(--border-color)',
           borderRadius: '8px',
           boxShadow: '0 6px 12px 10px rgba(0, 0, 0, 0.3)',
-          zIndex: 1050,
+          zIndex,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'scale(1)' : 'scale(0.95)',
-          transition: 'opacity 0.15s ease-out, transform 0.15s ease-out'
+          transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
         }}
       >
         {/* Header arrastável */}

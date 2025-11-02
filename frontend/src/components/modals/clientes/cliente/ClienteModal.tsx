@@ -18,7 +18,8 @@ import ConfirmModal from '../../../ui/ConfirmModal';
 // Utilitários centralizados
 import { formatCurrency, formatDate, formatCNPJ, formatPhone, formatCEP } from '../../../../utils/formatters';
 import { ensureString } from '../../../../utils/stringUtils';
-import { TituloItem, ClienteFormData, ClienteFormErrors } from '../../../../types/cliente';
+import { TituloItem } from '../../../../types/cliente';
+import { ClienteFormData, ClienteFormErrors } from '../../../../types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import ContatoTab from './abas/ContatoTab';
 import EnderecoTab from './abas/EnderecoTab';
@@ -219,7 +220,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         
         showNotification('Boletos selecionados gerados com sucesso!', 'success');
       } catch (error) {
-        console.error('Erro ao gerar PDF dos boletos:', error);
         showNotification('Erro ao gerar boletos selecionados', 'error');
       } finally {
         setIsGeneratingPdf(false);
@@ -247,7 +247,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         
         showNotification('Boletos em aberto gerados com sucesso!', 'success');
       } catch (error) {
-        console.error('Erro ao gerar PDF dos boletos:', error);
         showNotification('Erro ao gerar boletos em aberto', 'error');
       } finally {
         setIsGeneratingPdf(false);
@@ -304,7 +303,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
             deleteContratoMutation.mutateAsync(item.id);
           } catch (error) {
             const axiosError = error as AxiosError<{ message: string; error?: string }>;
-            console.error(`Erro ao deletar contrato ${item.id}:`, error);
             const errorMessage = axiosError?.response?.data?.message || 
                                axiosError?.response?.data?.error || 
                                `Erro ao deletar contrato ${item.id}`;
@@ -359,7 +357,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 }
               } catch (error) {
                 const axiosError = error as AxiosError<{ message: string }>;
-                console.error('Erro ao gerar PDF:', error);
                 if (axiosError.response?.status === 404) {
                   showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
                 } else {
@@ -408,7 +405,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 }
               } catch (error) {
                 const axiosError = error as AxiosError<{ message: string }>;
-                console.error('Erro ao gerar PDF:', error);
                 if (axiosError.response?.status === 404) {
                   showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
                 } else {
@@ -457,7 +453,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 }
               } catch (error) {
                 const axiosError = error as AxiosError<{ message: string }>;
-                console.error('Erro ao gerar PDF:', error);
                 if (axiosError.response?.status === 404) {
                   showNotification('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.', 'error');
                 } else {
@@ -547,7 +542,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                   const _response = await TituloService.update(item.id, { status: 'cancelado' });
                   successCount++;
                 } catch (err) {
-                  console.error(`Erro ao cancelar título ${item.id}:`, err);
                   errorCount++;
                 }
               }

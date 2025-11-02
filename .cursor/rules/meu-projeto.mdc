@@ -7,7 +7,7 @@ alwaysApply: true
 
 ### TypeScript
 - Use TypeScript com tipagem forte em todos os arquivos
-- Evite usar `any`, prefira tipos específicos ou `unknown`
+- Evite usar `any` e `unknown`, prefira tipos específicos
 - Defina interfaces para props de componentes
 - Use enums para valores constantes
 - Exporte tipos e interfaces quando necessário

@@ -66,7 +66,6 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
       // Não fechar o modal automaticamente
       if (onSuccess) onSuccess();
     } catch (err) {
-      console.error('Erro ao salvar termo:', err);
     }
   };
 

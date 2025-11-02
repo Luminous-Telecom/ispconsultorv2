@@ -595,4 +595,5 @@ function Table<T extends { id: number | string }>({
   );
 };
 
+// Componente já usa useMemo e useCallback internamente para otimização
 export default Table;

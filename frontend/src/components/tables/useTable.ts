@@ -61,8 +61,11 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
   useEffect(() => {
     setState(prev => {
       const newData = data || [];
-      // Só atualiza se os dados realmente mudaram
-      if (prev.data !== newData) {
+      // Verificar se os dados realmente mudaram (comparar tamanho e IDs para evitar comparação de referência)
+      const dataChanged = prev.data.length !== newData.length || 
+        newData.some((item, index) => !prev.data[index] || prev.data[index].id !== item.id);
+      
+      if (dataChanged || prev.data !== newData) {
         return {
           ...prev,
           data: newData,

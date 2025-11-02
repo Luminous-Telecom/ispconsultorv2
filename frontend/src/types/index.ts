@@ -1,293 +1,129 @@
-// Tipos para o sistema ERP Assessoria - Frontend
+/**
+ * Tipos para o sistema BackNet ERP - Frontend
+ * 
+ * Este arquivo serve como ponto central de exportação de todos os tipos.
+ * 
+ * 📁 Estrutura de Organização:
+ * 
+ * - entities.ts
+ *   - Entidades do domínio (Cliente, Plano, Banco, Contrato, Titulo, Carne, CarneParcela)
+ *   - DTOs (CreateTituloDTO, UpdateTituloDTO, CreateContratoDTO, UpdateContratoDTO)
+ *   - Tipos auxiliares (StatusTitulo, StatusContrato, etc.)
+ *   - Tipos de tabela (Column, BulkAction)
+ *   - Outros tipos relacionados a entidades (RotinaAgendada, ValidationError)
+ * 
+ * - common.ts
+ *   - Tipos comuns e utilitários (FormValue, FilterValue, TableValue, etc.)
+ *   - Tipos genéricos para callbacks e handlers
+ * 
+ * - api.ts
+ *   - Tipos de API (ApiResponse, PaginatedResponse, ApiError)
+ *   - Tipos de paginação (Pagination)
+ *   - Filtros base e específicos (BaseFilters, ClienteFilters, PlanoFilters, etc.)
+ * 
+ * - forms.ts
+ *   - Tipos genéricos de formulário (FormData<T>, FormErrors<T>)
+ *   - Tipos específicos de formulário (ClienteFormData, TituloFormData, ContratoFormData)
+ *   - Erros de formulário (ClienteFormErrors, TituloFormErrors, ContratoFormErrors)
+ * 
+ * - modal.ts
+ *   - Tipos de modais (ListModalProps, ListModalConfig, ListModalColumn)
+ * 
+ * - cliente.ts
+ *   - Tipos específicos de cliente (mantido por compatibilidade)
+ *   - (PlanoInfo, BancoInfo, ContratoItem, TituloItem, etc.)
+ * 
+ * 📝 Padrões de Uso:
+ * 
+ * - Importe sempre de 'types' (não diretamente dos arquivos específicos):
+ *   ```typescript
+ *   import { Cliente, ApiResponse, ClienteFormData } from '../types';
+ *   ```
+ * 
+ * - Para tipos Create/Update, use os tipos derivados:
+ *   ```typescript
+ *   import { CreateCliente, UpdateCliente } from '../types';
+ *   ```
+ * 
+ * - Para DTOs específicos do backend, use os DTOs de entities.ts:
+ *   ```typescript
+ *   import { CreateTituloDTO, UpdateTituloDTO } from '../types';
+ *   ```
+ * 
+ * - Para filtros de API, use os tipos de api.ts:
+ *   ```typescript
+ *   import { ClienteFilters, PlanoFilters } from '../types';
+ *   ```
+ * 
+ * - Para tipos de tabela, use os tipos de entities.ts ou components/tables/types.ts:
+ *   ```typescript
+ *   import { Column, BulkAction } from '../types'; // entities.ts
+ *   import { TableColumn, TableConfig } from '../components/tables/types'; // componentes
+ *   ```
+ * 
+ * 🔍 Resolução de Conflitos:
+ * 
+ * Se encontrar erros de tipo duplicado, verifique:
+ * 1. Está importando do lugar correto? (sempre de 'types', não diretamente)
+ * 2. O tipo está definido em múltiplos lugares? (consulte a estrutura acima)
+ * 3. Use exportações seletivas quando necessário: `export type { Tipo } from './arquivo'`
+ * 
+ * 📚 Exemplos Completos:
+ * 
+ * ```typescript
+ * // Exemplo 1: Componente de formulário
+ * import { Cliente, ClienteFormData, ClienteFormErrors } from '../types';
+ * 
+ * const ClienteForm: React.FC = () => {
+ *   const [formData, setFormData] = useState<ClienteFormData>({...});
+ *   const [errors, setErrors] = useState<ClienteFormErrors>({});
+ *   // ...
+ * };
+ * 
+ * // Exemplo 2: Hook de API
+ * import { ApiResponse, PaginatedResponse, ClienteFilters } from '../types';
+ * 
+ * const useClientes = (filters?: ClienteFilters) => {
+ *   return useQuery<PaginatedResponse<Cliente>>({...});
+ * };
+ * 
+ * // Exemplo 3: Serviço
+ * import { Cliente, CreateCliente, UpdateCliente } from '../types';
+ * 
+ * const createCliente = async (data: CreateCliente): Promise<Cliente> => {
+ *   // ...
+ * };
+ * ```
+ */
 
 // Re-exportar tipos consolidados
 export * from './entities';
 export * from './common';
+// Exportar api.ts primeiro para evitar duplicação com entities.ts
+export * from './api';
+// Exportar forms.ts (pode ter conflitos com entities.ts, então exportamos seletivamente)
+export type { FormData, FormErrors, ClienteFormData, ClienteFormErrors, TituloFormData, TituloFormErrors, ContratoFormData, ContratoFormErrors } from './forms';
+export * from './modal';
+// Exportar cliente.ts seletivamente para evitar duplicações
+export type { PlanoInfo, BancoInfo, ContratoItem, TituloItem, BulkActionItem, NotificationMessage } from './cliente';
 
-export interface BaseEntity {
-  id: number;
-  created_at: string;
-  updated_at: string;
-}
+// ============================================
+// TIPOS DE FILTROS (mantidos aqui para compatibilidade)
+// ============================================
 
-export interface Cliente extends BaseEntity {
-  cnpj: string;
-  razao_social: string;
-  nome_fantasia?: string;
-  email: string;
-  telefone?: string;
-  whatsapp?: string;
-  cep?: string;
-  endereco?: string;
-  numero?: string;
-  complemento?: string;
-  bairro?: string;
-  cidade?: string;
-  estado?: string;
-  observacoes?: string;
-  ativo: boolean;
-  tipo_cobranca?: 'titulo' | 'carne';
-  valor_primeiro_titulo?: 'total' | 'proporcional';
-  isento_mensalidade: boolean;
-  recebe_email: boolean;
-  recebe_sms: boolean;
-  recebe_whatsapp: boolean;
-  dia_vencimento_id?: number;
-  conta_boleto?: number;
-  data_validade_desconto?: string;
-  
-  // Relacionamentos
-  planos?: Plano[];
-  contratos?: Contrato[];
-  carnes?: Carne[];
-  banco_boleto?: Banco;
-}
+// ClienteFilters está em api.ts
 
-export interface Plano extends BaseEntity {
-  nome_plano: string;
-  descricao?: string;
-  tipo_servico: 'internet' | 'telefonia' | 'tv' | 'suporte' | 'infraestrutura' | 'consultoria' | 'outros';
-  servicos_inclusos?: string[];
-  quantidade_usuarios?: number;
-  valor_mensal: number;
-  desconto_percentual?: number;
-  desconto_valor?: number;
-  desconto_ativo: boolean;
-  periodicidade?: 'mensal' | 'trimestral' | 'semestral' | 'anual' | 'bimestral' | 'quinzenal' | 'semanal';
-  renovacao_automatica: boolean;
-  data_inicio?: string;
-  data_fim?: string;
-  status: 'ativo' | 'inativo' | 'cancelado';
-  observacoes?: string;
-  
-  // Relacionamentos
-  clientes?: Cliente[];
-  contratos?: Contrato[];
-  carnes?: Carne[];
-}
+// Todos os filtros estão em api.ts agora
+// Mantendo apenas para compatibilidade com código existente
+export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarneParcelaFilters } from './api';
 
-export interface Banco extends BaseEntity {
-  nome: string;
-  codigo?: string;
-  descricao?: string;
-  ativo: boolean;
-  tipo_banco: 'efi' | 'asaas' | 'bancario' | 'outros';
-  tipo?: 'tradicional' | 'efi' | 'asaas'; // Alias para tipo_banco (compatibilidade)
-  api_url?: string;
-  url?: string; // Alias para api_url (compatibilidade)
-  data_criacao?: string; // Alias para created_at (compatibilidade)
-  api_key?: string;
-  api_secret?: string;
-  sandbox: boolean;
-  identificador_conta?: string;
-  client_id_producao?: string;
-  client_secret_producao?: string;
-  url_retorno?: string;
-  repassar_email_cliente: boolean;
-  percentual_multa?: number;
-  percentual_juros?: number;
-  desconto_tipo?: string;
-  desconto_valor?: number;
-  contra_apresentacao: boolean;
-  recalcular_segunda_via: boolean;
-  maximo_dias_recalcular?: number;
-  layout_web?: string;
-  layout_pdf?: string;
-  layout_carne?: string;
-  local_pagamento?: string;
-  dados_avalista?: string;
-  exibir_mes_referente: boolean;
-  taxa_cobranca?: number;
-  incluir_taxa: boolean;
-  observacao_linha_1?: string;
-  observacao_linha_2?: string;
-  observacao_linha_3?: string;
-  observacao_linha_4?: string;
-  instrucao_linha_1?: string;
-  instrucao_linha_2?: string;
-  instrucao_linha_3?: string;
-  instrucao_linha_4?: string;
-  instrucao_linha_5?: string;
-  configuracoes_json?: Record<string, unknown>;
-  
-  // Relacionamentos
-  clientes?: Cliente[];
-  carnes?: Carne[];
-  configuracoes?: BancoConfiguracao[];
-  configuracao_principal?: BancoConfiguracao;
-}
+// ============================================
+// TIPOS DE CRIAÇÃO E ATUALIZAÇÃO
+// ============================================
 
-export interface BancoConfiguracao extends BaseEntity {
-  banco_id: number;
-  tipo_banco: string;
-  configuracao: Record<string, unknown>;
-  ativo: boolean;
-  observacoes?: string;
-  
-  // Relacionamentos
-  banco?: Banco;
-}
+import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela } from './entities';
 
-export interface Carne extends BaseEntity {
-  cliente_id: number;
-  plano_id: number;
-  banco_id: number;
-  numero_carne: string;
-  carnet_id?: string;
-  valor_total: number;
-  quantidade_parcelas: number;
-  data_vencimento_primeira: string;
-  status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
-  observacoes?: string;
-  codigo_barras?: string;
-  linha_digitavel?: string;
-  
-  // Campos calculados
-  valor_parcela?: number;
-  parcelas_pagas_count?: number;
-  valor_total_carne?: number;
-  
-  // Relacionamentos
-  cliente?: Cliente;
-  plano?: Plano;
-  banco?: Banco;
-  parcelas?: CarneParcela[];
-}
-
-export interface CarneParcela extends BaseEntity {
-  carne_id: number;
-  plano_id: number;
-  numero_parcela: number;
-  numero_titulo?: string;
-  valor_parcela: number;
-  valor?: number;
-  valor_aberto?: number;
-  tipo?: string;
-  data_vencimento: string;
-  pago: boolean;
-  data_pagamento?: string;
-  valor_pago?: number;
-  status: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'pago_atraso' | 'parcial';
-  codigo_barras?: string;
-  linha_digitavel?: string;
-  qrcode?: string;
-  qrcode_image?: string;
-  observacoes?: string;
-  desconto_percentual?: number;
-  desconto_valor?: number;
-  acrescimo_percentual?: number;
-  acrescimo_valor?: number;
-  valor_final?: number;
-  descricao?: string;
-  charge_id?: string;
-  url_boleto?: string;
-  nosso_numero?: string;
-  
-  // Relacionamentos
-  carne?: Carne;
-  plano?: Plano;
-}
-
-export interface Contrato extends BaseEntity {
-  cliente_id: number;
-  plano_id: number;
-  desconto_percentual?: number;
-  desconto_valor?: number;
-  valor_final?: number;
-  data_inicio?: string;
-  data_fim?: string;
-  status: 'ativo' | 'inativo' | 'cancelado';
-  observacoes?: string;
-  isento_mensalidade?: boolean;
-  dia_vencimento_id?: number;
-  conta_boleto?: number;
-  data_validade_desconto?: string;
-  modelo_contrato_id?: number;
-  
-  // Relacionamentos
-  cliente?: Cliente;
-  plano?: Plano;
-}
-
-// Tipos para requisições e respostas da API
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-  errors?: Record<string, string[]>;
-}
-
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    last_page: number;
-    from: number;
-    to: number;
-  };
-}
-
-// Tipos para filtros e busca
-export interface ClienteFilters {
-  search?: string;
-  ativo?: boolean;
-  tipo_cobranca?: string;
-  cidade?: string;
-  estado?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface PlanoFilters {
-  search?: string;
-  status?: string;
-  tipo_servico?: string;
-  cliente_id?: number;
-  valor_min?: number;
-  valor_max?: number;
-  page?: number;
-  limit?: number;
-  sortColumn?: string;
-  sortDirection?: 'asc' | 'desc';
-}
-
-export interface BancoFilters {
-  search?: string;
-  ativo?: boolean;
-  tipo?: string;
-  tipo_banco?: string;
-  sandbox?: boolean;
-  page?: number;
-  limit?: number;
-}
-
-export interface CarneFilters {
-  search?: string;
-  status?: string;
-  cliente_id?: number;
-  plano_id?: number;
-  banco_id?: number;
-  data_vencimento_inicio?: string;
-  data_vencimento_fim?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface CarneParcelaFilters {
-  search?: string;
-  status?: string;
-  carne_id?: number;
-  cliente_id?: number;
-  data_vencimento_inicio?: string;
-  data_vencimento_fim?: string;
-  page?: number;
-  limit?: number;
-}
-
-// Tipos para criação e atualização
-export type CreateCliente = Omit<Cliente, 'id' | 'created_at' | 'updated_at'>;
+export type CreateCliente = Omit<Cliente, 'id' | 'created_at' | 'updated_at' | 'data_cadastro'>;
 export type UpdateCliente = Partial<CreateCliente>;
 
 export type CreatePlano = Omit<Plano, 'id' | 'created_at' | 'updated_at'>;
@@ -302,7 +138,13 @@ export type UpdateCarne = Partial<CreateCarne>;
 export type CreateCarneParcela = Omit<CarneParcela, 'id' | 'created_at' | 'updated_at'>;
 export type UpdateCarneParcela = Partial<CreateCarneParcela>;
 
-// Tipos para dashboard
+export type CreateContrato = Omit<Contrato, 'id' | 'created_at' | 'updated_at'>;
+export type UpdateContrato = Partial<CreateContrato>;
+
+// ============================================
+// TIPOS PARA DASHBOARD E GRÁFICOS
+// ============================================
+
 export interface DashboardStats {
   total_clientes: number;
   clientes_ativos: number;
@@ -319,7 +161,6 @@ export interface DashboardStats {
   valor_total_pendente: number;
 }
 
-// Tipos para dados de CEP
 export interface CepData {
   cep: string;
   logradouro: string;
@@ -333,7 +174,6 @@ export interface CepData {
   siafi: string;
 }
 
-// Tipos para gráficos
 export interface GraficoData {
   label: string;
   value: number;
@@ -349,7 +189,6 @@ export interface GraficoClientesPorCidade {
   total: number;
 }
 
-// Tipos para resumo mensal
 export interface ResumoMensal {
   mes: number;
   ano: number;

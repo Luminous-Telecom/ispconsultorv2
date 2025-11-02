@@ -325,7 +325,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       
       success('Boletos selecionados gerados com sucesso!');
     } catch (err) {
-      console.error('Erro ao gerar PDF dos boletos:', err);
       error('Erro ao gerar boletos selecionados');
     } finally {
       setIsGeneratingPdf(false);
@@ -355,7 +354,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       
       success('Boletos em aberto gerados com sucesso!');
     } catch (err) {
-      console.error('Erro ao gerar PDF dos boletos:', err);
       error('Erro ao gerar boletos em aberto');
     } finally {
       setIsGeneratingPdf(false);
@@ -415,7 +413,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   await TituloService.update(item.id, { status: 'cancelado' });
                   successCount++;
                 } catch (err) {
-                  console.error(`Erro ao cancelar título ${item.id}:`, err);
                   errorCount++;
                 }
               }
@@ -561,7 +558,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               setPdfUrl(url);
               setShowPreview(true);
             } catch (err) {
-              console.error('Erro ao gerar PDF:', err);
               error('Erro ao gerar documento para impressão');
             } finally {
               setIsGeneratingPdf(false);

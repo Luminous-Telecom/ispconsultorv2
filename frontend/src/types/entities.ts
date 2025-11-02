@@ -24,14 +24,24 @@ export interface Cliente {
   estado?: string;
   data_cadastro: string;
   ativo: boolean;
-  tipo_cobranca?: 'titulo' | 'boleto';
+  tipo_cobranca?: 'titulo' | 'boleto' | 'carne';
   valor_primeiro_titulo?: 'total' | 'proporcional';
   recebe_email: boolean;
   recebe_sms: boolean;
   recebe_whatsapp: boolean;
   observacoes?: string;
+  isento_mensalidade?: boolean;
+  dia_vencimento_id?: number;
+  conta_boleto?: number;
+  data_validade_desconto?: string;
   created_at?: string;
   updated_at?: string;
+  
+  // Relacionamentos
+  planos?: Plano[];
+  contratos?: Contrato[];
+  carnes?: Carne[];
+  banco_boleto?: Banco;
 }
 
 // ============================================
@@ -132,29 +142,139 @@ export interface Contrato {
 export interface Banco {
   id: number;
   nome: string;
-  tipo_banco: 'asaas' | 'bradesco' | 'sicoob' | 'bb' | 'itau' | 'santander' | 'caixa' | 'outro';
+  codigo?: string;
+  descricao?: string;
   ativo: boolean;
+  tipo_banco: 'efi' | 'asaas' | 'bancario' | 'outros';
+  api_url?: string;
+  api_key?: string;
+  api_secret?: string;
+  sandbox: boolean;
+  identificador_conta?: string;
+  client_id_producao?: string;
+  client_secret_producao?: string;
+  url_retorno?: string;
+  repassar_email_cliente: boolean;
+  percentual_multa?: number;
+  percentual_juros?: number;
+  desconto_tipo?: string;
+  desconto_valor?: number;
+  contra_apresentacao: boolean;
+  recalcular_segunda_via: boolean;
+  maximo_dias_recalcular?: number;
+  layout_web?: string;
+  layout_pdf?: string;
+  layout_carne?: string;
+  local_pagamento?: string;
+  dados_avalista?: string;
+  exibir_mes_referente: boolean;
+  taxa_cobranca?: number;
+  incluir_taxa: boolean;
+  observacao_linha_1?: string;
+  observacao_linha_2?: string;
+  observacao_linha_3?: string;
+  observacao_linha_4?: string;
+  instrucao_linha_1?: string;
+  instrucao_linha_2?: string;
+  instrucao_linha_3?: string;
+  instrucao_linha_4?: string;
+  instrucao_linha_5?: string;
+  configuracoes_json?: Record<string, unknown>;
+  logo?: string;
+  created_at?: string;
+  updated_at?: string;
   
-  // Configurações específicas por tipo
-  codigo_banco?: string;
-  agencia?: string;
-  conta?: string;
-  digito_verificador?: string;
-  carteira?: string;
-  convenio?: string;
+  // Relacionamentos
+  clientes?: Cliente[];
+  banco_configuracoes?: BancoConfiguracao[];
+  configuracao_principal?: BancoConfiguracao;
+}
+
+// ============================================
+// Carne (Carnê de Pagamento)
+// ============================================
+export interface Carne {
+  id: number;
+  cliente_id: number;
+  plano_id: number;
+  banco_id: number;
+  numero_carne: string;
+  carnet_id?: string;
+  valor_total: number;
+  quantidade_parcelas: number;
+  data_vencimento_primeira: string;
+  status: 'ativo' | 'pago' | 'cancelado' | 'parcial' | 'pendente' | 'registrado';
+  observacoes?: string;
+  codigo_barras?: string;
+  linha_digitavel?: string;
+  valor_parcela?: number;
+  parcelas_pagas_count?: number;
+  valor_total_carne?: number;
+  created_at?: string;
+  updated_at?: string;
   
-  // Asaas
-  asaas_api_key?: string;
-  asaas_wallet_id?: string;
-  asaas_ambiente?: 'producao' | 'homologacao';
+  // Relacionamentos
+  cliente?: Cliente;
+  plano?: Plano;
+  banco?: Banco;
+  parcelas?: CarneParcela[];
+}
+
+// ============================================
+// Carne Parcela (Parcela do Carnê)
+// ============================================
+export interface CarneParcela {
+  id: number;
+  carne_id: number;
+  plano_id: number;
+  numero_parcela: number;
+  numero_titulo?: string;
+  valor_parcela: number;
+  valor?: number;
+  valor_aberto?: number;
+  tipo?: string;
+  data_vencimento: string;
+  pago: boolean;
+  data_pagamento?: string;
+  valor_pago?: number;
+  status: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'pago_atraso' | 'parcial';
+  codigo_barras?: string;
+  linha_digitavel?: string;
+  qrcode?: string;
+  qrcode_image?: string;
+  observacoes?: string;
+  desconto_percentual?: number;
+  desconto_valor?: number;
+  acrescimo_percentual?: number;
+  acrescimo_valor?: number;
+  valor_final?: number;
+  descricao?: string;
+  charge_id?: string;
+  url_boleto?: string;
+  nosso_numero?: string;
+  created_at?: string;
+  updated_at?: string;
   
-  // URLs
-  url_base?: string;
-  url_homologacao?: string;
-  
+  // Relacionamentos
+  carne?: Carne;
+  plano?: Plano;
+}
+
+// ============================================
+// Banco Configuração
+// ============================================
+export interface BancoConfiguracao {
+  id: number;
+  banco_id: number;
+  tipo_banco: string;
+  configuracao: Record<string, unknown>;
+  ativo: boolean;
   observacoes?: string;
   created_at?: string;
   updated_at?: string;
+  
+  // Relacionamentos
+  banco?: Banco;
 }
 
 // ============================================
@@ -258,69 +378,6 @@ export interface BulkAction<T = unknown> {
   }[];
 }
 
-export interface Pagination {
-  from: number;
-  to: number;
-  total: number;
-  current_page: number;
-  last_page: number;
-  per_page?: number;
-}
-
-// ============================================
-// Form Types
-// ============================================
-
-export interface TituloFormData {
-  plano_id: number;
-  contrato_id?: number;
-  data_vencimento: string;
-  observacoes: string;
-  desconto_percentual: number;
-  desconto_valor: number;
-  acrescimo_percentual: number;
-  acrescimo_valor: number;
-  descricao: string;
-}
-
-export interface ContratoFormData {
-  cliente_id: number;
-  plano_id: number;
-  desconto_percentual: number;
-  desconto_valor: number;
-  data_inicio: string;
-  data_fim: string;
-  status: StatusContrato;
-  observacoes: string;
-  isento_mensalidade: boolean;
-  dia_vencimento: number;
-  conta_boleto: number;
-}
-
-export interface ClienteFormData {
-  cnpj: string;
-  razao_social: string;
-  nome_fantasia: string;
-  email: string;
-  telefone: string;
-  whatsapp: string;
-  celular: string;
-  cep: string;
-  endereco: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-  ativo: boolean;
-  tipo_cobranca: 'titulo' | 'boleto';
-  valor_primeiro_titulo: 'total' | 'proporcional';
-  recebe_email: boolean;
-  recebe_sms: boolean;
-  recebe_whatsapp: boolean;
-  observacoes: string;
-}
-
 // ============================================
 // Rotina Agendada
 // ============================================
@@ -355,15 +412,8 @@ export interface RoutineExecutionLog {
 }
 
 // ============================================
-// Error Types
+// Validation Error
 // ============================================
-
-export interface ApiError {
-  message: string;
-  error?: string;
-  details?: Record<string, unknown>;
-  statusCode?: number;
-}
 
 export interface ValidationError {
   field: string;
