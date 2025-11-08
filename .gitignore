@@ -9,6 +9,7 @@ logs/
 .env
 .env.local
 
+migrations
 # Build
 dist/
 build/
