@@ -53,12 +53,12 @@ dotenv.config();
 
 // Validar variáveis de ambiente obrigatórias
 if (!process.env.PORT) {
-  console.error('❌ PORT não definida nas variáveis de ambiente');
+  logger.error('PORT não definida nas variáveis de ambiente');
   process.exit(1);
 }
 
 if (!process.env.FRONTEND_URL) {
-  console.error('❌ FRONTEND_URL não definida nas variáveis de ambiente');
+  logger.error('FRONTEND_URL não definida nas variáveis de ambiente');
   process.exit(1);
 }
 
@@ -218,27 +218,25 @@ app.use('*', (req, res) => {
 // Inicializar servidor
 const startServer = async () => {
   try {
-    // Conectar ao banco de dados
     await sequelize.authenticate();
-    
-    // Sincronizar modelos (apenas em desenvolvimento)
-    
-    // Iniciar servidor com configurações para evitar erro 431
+    logger.info('Conexão com o banco estabelecida com sucesso');
+
     const server = app.listen(PORT, async () => {
-      // Configurar limites do servidor HTTP
       server.maxHeadersCount = 2000; // Aumentar limite de cabeçalhos
       
-      // Iniciar o agendador de rotinas
       try {
         const { SchedulerService } = await import('./services/SchedulerService');
         const schedulerService = SchedulerService.getInstance();
         await schedulerService.start();
+        logger.info('Agendador de rotinas iniciado');
       } catch (error) {
         logger.error('Erro ao iniciar agendador:', error);
       }
+
+      logger.info(`Servidor iniciado e escutando requisições na porta ${PORT} (${process.env.NODE_ENV})`);
     });
   } catch (error) {
-    console.error('❌ Erro ao inicializar servidor:', error);
+    logger.error('Erro ao inicializar servidor', error);
     process.exit(1);
   }
 };
@@ -250,7 +248,7 @@ process.on('SIGTERM', async () => {
     const schedulerService = SchedulerService.getInstance();
     schedulerService.stop();
   } catch (error) {
-    console.error('Erro ao parar agendador:', error);
+    logger.error('Erro ao parar agendador durante SIGINT', error);
   }
   await sequelize.close();
   process.exit(0);

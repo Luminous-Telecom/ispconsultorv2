@@ -1,39 +1,55 @@
 import winston from 'winston';
 
-// Configurar logger
+const {
+  combine,
+  timestamp,
+  errors,
+  json,
+  printf,
+  colorize,
+  simple
+} = winston.format;
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const consoleFormat = isProduction
+  ? combine(
+      timestamp(),
+      printf(({ level, message, timestamp: ts }) => `${ts} ${level}: ${message}`)
+    )
+  : combine(
+      colorize(),
+      printf(({ level, message }) => `${level}: ${message}`)
+    );
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
+  format: combine(
+    timestamp(),
+    errors({ stack: true }),
+    json()
   ),
-  defaultMeta: { service: 'BackNet-telecom-backend' },
   transports: [
-    // Console transport
     new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
+      format: consoleFormat
     }),
-    // File transport para erros
     new winston.transports.File({
       filename: 'logs/error.log',
-      level: 'error'
+      level: 'error',
+      format: combine(
+        timestamp(),
+        errors({ stack: true }),
+        json()
+      )
     }),
-    // File transport para todos os logs
     new winston.transports.File({
-      filename: 'logs/combined.log'
+      filename: 'logs/combined.log',
+      format: combine(
+        timestamp(),
+        json()
+      )
     })
   ]
 });
-
-// Se não estiver em produção, também logar para o console
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.simple()
-  }));
-}
 
 export { logger };
