@@ -48,12 +48,14 @@ export class SchedulerService {
     direction?: 'asc' | 'desc';
   }): Promise<SchedulerResponse> {
     const response = await apiService.get<SchedulerResponse>('/scheduler', { params });
-    if (response.data) {
-      return response.data;
+    
+    // apiService.get já retorna response.data do axios, que contém { success, data, pagination }
+    if (response.success && response.data) {
+      return response as unknown as SchedulerResponse;
     }
 
     return {
-      success: response.success,
+      success: false,
       data: [],
       pagination: {
         total: 0,

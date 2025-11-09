@@ -182,12 +182,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     }
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
     setShowCreateModal(false);
     setShowEditModal(false);
     setSelectedRotinaId(null);
     clearSelection();
-    queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
+    await queryClient.invalidateQueries({ queryKey: ['agendador-tarefas'] });
+    await refetch();
   };
 
   const bulkActions = [
