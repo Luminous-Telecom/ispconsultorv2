@@ -298,6 +298,20 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         }}
       />
 
+      {/* Overlay para manter eventos de arraste mesmo sobre iframes/PDFs */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          pointerEvents: isDragging ? 'auto' : 'none',
+          cursor: isDragging ? 'grabbing' : 'default',
+          zIndex: isDragging ? zIndex + 100 : -1
+        }}
+      />
+
       {/* Modal */}
       <div
         ref={modalRef}
