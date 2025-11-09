@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
+import { API_CONFIG } from '../../config/api';
 
 interface LogsModalProps {
   show: boolean;
@@ -91,7 +92,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
     
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/scheduler/logs/${routineId}`);
+      const response = await fetch(`${API_CONFIG.BASE_URL}/scheduler/logs/${routineId}`);
       const data = await response.json();
       
       if (data.success) {

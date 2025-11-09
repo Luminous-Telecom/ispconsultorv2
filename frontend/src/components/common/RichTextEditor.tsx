@@ -348,7 +348,6 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
       document.head.appendChild(style);
     }
 
-    // Carrega as fontes do Google
     const linkId = 'google-fonts-roboto';
     if (!document.getElementById(linkId)) {
       const link = document.createElement('link');

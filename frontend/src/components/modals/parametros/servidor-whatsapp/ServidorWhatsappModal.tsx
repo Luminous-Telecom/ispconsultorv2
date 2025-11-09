@@ -7,6 +7,7 @@ import axios, { AxiosError } from 'axios';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
+import { API_CONFIG } from '../../../../config/api';
 
 interface GrupoVariaveis {
   titulo: string;
@@ -58,7 +59,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const { data: variaveisData } = useQuery<Record<string, GrupoVariaveis>>({
     queryKey: ['variaveis-documento'],
     queryFn: async () => {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/modelos-contrato/variaveis`);
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/modelos-contrato/variaveis`);
       return response.data.data;
     },
     staleTime: 5 * 60 * 1000

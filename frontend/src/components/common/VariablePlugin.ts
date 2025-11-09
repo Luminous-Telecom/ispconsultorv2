@@ -27,7 +27,10 @@ export default class VariablePlugin extends Plugin {
     // Função para buscar variáveis do backend
     const buscarVariaveis = async (): Promise<VariaveisData> => {
       // Usar a URL base do backend configurada no projeto
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+      const baseUrl = process.env.REACT_APP_API_URL;
+      if (!baseUrl) {
+        throw new Error('REACT_APP_API_URL não configurada.');
+      }
       const url = `${baseUrl}/modelos-contrato/variaveis`;
       
       const response = await fetch(url);

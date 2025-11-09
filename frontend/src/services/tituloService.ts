@@ -4,7 +4,7 @@
  */
 import { BaseService, defaultApiClient } from './core';
 import { CarneParcela, CarneParcelaFilters, PaginatedResponse, CreateCarneParcela, ApiResponse } from '../types';
-import { API_ENDPOINTS } from '../config/api';
+import { API_CONFIG, API_ENDPOINTS } from '../config/api';
 import { ResponseTransformer } from './core/ResponseTransformer';
 import { ErrorHandler } from './core/ErrorHandler';
 import { AxiosError } from 'axios';
@@ -141,7 +141,7 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
       
       // Usar axios diretamente para evitar problemas com o interceptor
       const axios = (await import('axios')).default;
-      const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+      const baseURL = API_CONFIG.BASE_URL;
       const token = localStorage.getItem('auth_token');
       
       const response = await axios.get(`${baseURL}${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
@@ -350,7 +350,7 @@ export class TituloService {
    * Visualizar boleto na web
    */
   static getBoletoUrl(id: number): string {
-    return `${process.env.REACT_APP_API_URL?.replace('/api', '')}/boleto/web/${id}`;
+    return `${API_CONFIG.BASE_URL_WITHOUT_API}/boleto/web/${id}`;
   }
 
   /**

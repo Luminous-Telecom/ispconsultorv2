@@ -25,7 +25,6 @@ export class CepService {
         throw new Error('CEP deve ter 8 dígitos');
       }
 
-      // Fazer requisição para ViaCEP
       const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
       
       if (!response.ok) {
