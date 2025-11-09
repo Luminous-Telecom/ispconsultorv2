@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import type { ApiResponse } from '../types';
 
 export interface ModeloCarta {
   id: number;
@@ -29,37 +30,45 @@ export interface CreateModeloCarta {
 
 export interface UpdateModeloCarta extends Partial<CreateModeloCarta> {}
 
+const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): { success: boolean; data: T; message: string } => ({
+  success: response.success,
+  data: response.data ?? fallback,
+  message: response.message ?? '',
+});
+
 class ModeloCartaService {
   static async list(): Promise<{ success: boolean; data: ModeloCarta[]; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ModeloCarta[]; message: string }>('/modelos-carta');
-    return response;
+    const response = await apiService.get<ModeloCarta[]>('/modelos-carta');
+    return normalizeResponse(response, []);
   }
 
   static async getById(id: number): Promise<{ success: boolean; data: ModeloCarta; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ModeloCarta; message: string }>(`/modelos-carta/${id}`);
-    return response;
+    const response = await apiService.get<ModeloCarta>(`/modelos-carta/${id}`);
+    return normalizeResponse(response, {} as ModeloCarta);
   }
 
   static async create(data: CreateModeloCarta): Promise<{ success: boolean; data: ModeloCarta; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ModeloCarta; message: string }>('/modelos-carta', data);
-    return response;
+    const response = await apiService.post<ModeloCarta>('/modelos-carta', data);
+    return normalizeResponse(response, {} as ModeloCarta);
   }
 
   static async update(id: number, data: UpdateModeloCarta): Promise<{ success: boolean; data: ModeloCarta; message: string }> {
-    const response = await apiService.put<{ success: boolean; data: ModeloCarta; message: string }>(`/modelos-carta/${id}`, data);
-    return response;
+    const response = await apiService.put<ModeloCarta>(`/modelos-carta/${id}`, data);
+    return normalizeResponse(response, {} as ModeloCarta);
   }
 
   static async delete(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.delete<{ success: boolean; message: string }>(`/modelos-carta/${id}`);
-    return response;
+    const response = await apiService.delete<void>(`/modelos-carta/${id}`);
+    return {
+      success: response.success,
+      message: response.message ?? '',
+    };
   }
 
   static async generatePdf(id: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-carta/${id}/pdf`, undefined, { responseType: 'blob' });
-
-      const blob = response instanceof Blob ? response : (response as unknown as { data: Blob }).data;
+      const response = await apiService.get<Blob>(`/modelos-carta/${id}/pdf`, { responseType: 'blob' });
+      const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
@@ -74,9 +83,8 @@ class ModeloCartaService {
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-carta/${id}/pdf-teste?cliente_id=${clienteId}`, undefined, { responseType: 'blob' });
-
-      const blob = response instanceof Blob ? response : (response as unknown as { data: Blob }).data;
+      const response = await apiService.get<Blob>(`/modelos-carta/${id}/pdf-teste?cliente_id=${clienteId}`, { responseType: 'blob' });
+      const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');

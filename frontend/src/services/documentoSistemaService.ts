@@ -1,6 +1,7 @@
 import { apiService } from './api';
 import { API_CONFIG } from '../config/api';
 import { AxiosError } from 'axios';
+import type { ApiResponse } from '../types';
 
 export interface DocumentoSistema {
   id: number;
@@ -49,46 +50,55 @@ export interface ModelosByContratoData {
   modelo_contrato_permanencia?: string;
 }
 
+const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): { success: boolean; data: T; message: string } => ({
+  success: response.success,
+  data: response.data ?? fallback,
+  message: response.message ?? '',
+});
+
 class DocumentoSistemaService {
   static async list(tipo?: string): Promise<{ success: boolean; data: DocumentoSistema[]; message: string }> {
     const params = tipo ? `?tipo=${tipo}` : '';
-    const response = await apiService.get<{ success: boolean; data: DocumentoSistema[]; message: string }>(`/modelos-contrato${params}`);
-    return response;
+    const response = await apiService.get<DocumentoSistema[]>(`/modelos-contrato${params}`);
+    return normalizeResponse(response, []);
   }
 
   static async getById(id: number): Promise<{ success: boolean; data: DocumentoSistema; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: DocumentoSistema; message: string }>(`/modelos-contrato/${id}`);
-    return response;
+    const response = await apiService.get<DocumentoSistema>(`/modelos-contrato/${id}`);
+    return normalizeResponse(response, {} as DocumentoSistema);
   }
 
   static async getByType(tipo: string): Promise<{ success: boolean; data: DocumentoSistema[]; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: DocumentoSistema[]; message: string }>(`/modelos-contrato/tipo/${tipo}`);
-    return response;
+    const response = await apiService.get<DocumentoSistema[]>(`/modelos-contrato/tipo/${tipo}`);
+    return normalizeResponse(response, []);
   }
 
   static async getDefaultByType(tipo: string): Promise<{ success: boolean; data: DocumentoSistema; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: DocumentoSistema; message: string }>(`/modelos-contrato/tipo/${tipo}/padrao`);
-    return response;
+    const response = await apiService.get<DocumentoSistema>(`/modelos-contrato/tipo/${tipo}/padrao`);
+    return normalizeResponse(response, {} as DocumentoSistema);
   }
 
   static async getTypes(): Promise<{ success: boolean; data: string[]; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: string[]; message: string }>('/modelos-contrato/tipos');
-    return response;
+    const response = await apiService.get<string[]>('/modelos-contrato/tipos');
+    return normalizeResponse(response, []);
   }
 
   static async create(data: CreateDocumentoSistema): Promise<{ success: boolean; data: DocumentoSistema; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: DocumentoSistema; message: string }>('/modelos-contrato', data);
-    return response;
+    const response = await apiService.post<DocumentoSistema>('/modelos-contrato', data);
+    return normalizeResponse(response, {} as DocumentoSistema);
   }
 
   static async update(id: number, data: UpdateDocumentoSistema): Promise<{ success: boolean; data: DocumentoSistema; message: string }> {
-    const response = await apiService.put<{ success: boolean; data: DocumentoSistema; message: string }>(`/modelos-contrato/${id}`, data);
-    return response;
+    const response = await apiService.put<DocumentoSistema>(`/modelos-contrato/${id}`, data);
+    return normalizeResponse(response, {} as DocumentoSistema);
   }
 
   static async delete(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.delete<{ success: boolean; message: string }>(`/modelos-contrato/${id}`);
-    return response;
+    const response = await apiService.delete<void>(`/modelos-contrato/${id}`);
+    return {
+      success: response.success,
+      message: response.message ?? '',
+    };
   }
 
   static async convertWordToHtml(file: File): Promise<{ success: boolean; data: { html: string }; message: string }> {
@@ -111,12 +121,11 @@ class DocumentoSistemaService {
 
   static async generatePdf(id: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-contrato/${id}/pdf`, undefined, {
+      const response = await apiService.get<Blob>(`/modelos-contrato/${id}/pdf`, {
         responseType: 'blob'
       });
 
-      // Axios com responseType: 'blob' retorna o blob em response.data
-      const blob = response instanceof Blob ? response : response;
+      const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
@@ -131,12 +140,11 @@ class DocumentoSistemaService {
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-contrato/${id}/pdf-teste?cliente_id=${clienteId}`, undefined, {
+      const response = await apiService.get<Blob>(`/modelos-contrato/${id}/pdf-teste?cliente_id=${clienteId}`, {
         responseType: 'blob'
       });
 
-      // Axios com responseType: 'blob' retorna o blob em response.data
-      const blob = response instanceof Blob ? response : response;
+      const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
@@ -155,7 +163,7 @@ class DocumentoSistemaService {
         responseType: 'blob'
       });
 
-      const blob = response instanceof Blob ? response : response;
+      const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
@@ -177,7 +185,7 @@ class DocumentoSistemaService {
         responseType: 'blob'
       });
 
-      const blob = response instanceof Blob ? response : response;
+      const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
@@ -192,32 +200,32 @@ class DocumentoSistemaService {
 
   // Métodos para modelos específicos
   static async saveModeloContratoConteudo(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ModeloContratoResponse; message: string }>('/modelos-contrato/modelo-contrato-conteudo', {
+    const response = await apiService.post<ModeloContratoResponse>('/modelos-contrato/modelo-contrato-conteudo', {
       modelo_contrato_id: modeloContratoId,
       modelo
     });
-    return response;
+    return normalizeResponse(response, {} as ModeloContratoResponse);
   }
 
   static async saveModeloTermoAdesao(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ModeloContratoResponse; message: string }>('/modelos-contrato/modelo-termo-adesao', {
+    const response = await apiService.post<ModeloContratoResponse>('/modelos-contrato/modelo-termo-adesao', {
       modelo_contrato_id: modeloContratoId,
       modelo
     });
-    return response;
+    return normalizeResponse(response, {} as ModeloContratoResponse);
   }
 
   static async saveModeloContratoPermanencia(modeloContratoId: number, modelo: string): Promise<{ success: boolean; data: ModeloContratoResponse; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ModeloContratoResponse; message: string }>('/modelos-contrato/modelo-contrato-permanencia', {
+    const response = await apiService.post<ModeloContratoResponse>('/modelos-contrato/modelo-contrato-permanencia', {
       modelo_contrato_id: modeloContratoId,
       modelo
     });
-    return response;
+    return normalizeResponse(response, {} as ModeloContratoResponse);
   }
 
   static async getModelosByModeloContrato(id: number): Promise<{ success: boolean; data: ModelosByContratoData; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ModelosByContratoData; message: string }>(`/modelos-contrato/${id}/modelos`);
-    return response;
+    const response = await apiService.get<ModelosByContratoData>(`/modelos-contrato/${id}/modelos`);
+    return normalizeResponse(response, {} as ModelosByContratoData);
   }
 }
 

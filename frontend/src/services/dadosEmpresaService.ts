@@ -52,9 +52,10 @@ export class DadosEmpresaService {
   static async get(): Promise<DadosEmpresa> {
     try {
       const response = await apiService.get<DadosEmpresa>('/dados-empresa');
-      
+      const data = response.data;
+
       // Garantir que sempre retornamos um objeto válido
-      if (!response || typeof response !== 'object' || response === null || Array.isArray(response)) {
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
         return {
           id: 1,
           razao_social: '',
@@ -80,7 +81,7 @@ export class DadosEmpresaService {
         };
       }
       
-      return response;
+      return data;
     } catch (error) {
       // Retornar dados padrão em caso de erro
       return {
@@ -110,7 +111,12 @@ export class DadosEmpresaService {
   }
 
   static async update(data: UpdateDadosEmpresa): Promise<DadosEmpresa> {
-    return apiService.put<DadosEmpresa>('/dados-empresa', data);
+    const response = await apiService.put<DadosEmpresa>('/dados-empresa', data);
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new Error(response.message || 'Erro ao atualizar dados da empresa');
   }
 
   static async uploadLogo(file: File): Promise<{ success: boolean; logo: string }> {

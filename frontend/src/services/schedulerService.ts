@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import type { RotinaAgendada, RoutineExecutionLog } from '../types/entities';
+import type { ApiResponse } from '../types';
 
 export type { RotinaAgendada, RoutineExecutionLog };
 
@@ -46,47 +47,100 @@ export class SchedulerService {
     sort?: string;
     direction?: 'asc' | 'desc';
   }): Promise<SchedulerResponse> {
-    const response = await apiService.get<SchedulerResponse>('/scheduler', params);
-    return response;
+    const response = await apiService.get<SchedulerResponse>('/scheduler', { params });
+    if (response.data) {
+      return response.data;
+    }
+
+    return {
+      success: response.success,
+      data: [],
+      pagination: {
+        total: 0,
+        page: params?.page ?? 1,
+        limit: params?.limit ?? 15,
+        pages: 0,
+      },
+    };
   }
 
-  static async getRotinaById(id: number): Promise<{ success: boolean; data: RotinaAgendada }> {
-    const response = await apiService.get<{ success: boolean; data: RotinaAgendada }>(`/scheduler/${id}`);
-    return response;
+  static async getRotinaById(id: number): Promise<ApiResponse<RotinaAgendada>> {
+    const response = await apiService.get<RotinaAgendada>(`/scheduler/${id}`);
+    return {
+      success: response.success,
+      data: response.data,
+      message: response.message,
+      errors: response.errors,
+    };
   }
 
-  static async createRotina(data: CreateRotinaData): Promise<{ success: boolean; message: string; data: RotinaAgendada }> {
-    const response = await apiService.post<{ success: boolean; message: string; data: RotinaAgendada }>('/scheduler', data);
-    return response;
+  static async createRotina(data: CreateRotinaData): Promise<ApiResponse<RotinaAgendada>> {
+    const response = await apiService.post<RotinaAgendada>('/scheduler', data);
+    return {
+      success: response.success,
+      data: response.data,
+      message: response.message,
+      errors: response.errors,
+    };
   }
 
-  static async updateRotina(id: number, data: UpdateRotinaData): Promise<{ success: boolean; message: string; data: RotinaAgendada }> {
-    const response = await apiService.put<{ success: boolean; message: string; data: RotinaAgendada }>(`/scheduler/${id}`, data);
-    return response;
+  static async updateRotina(id: number, data: UpdateRotinaData): Promise<ApiResponse<RotinaAgendada>> {
+    const response = await apiService.put<RotinaAgendada>(`/scheduler/${id}`, data);
+    return {
+      success: response.success,
+      data: response.data,
+      message: response.message,
+      errors: response.errors,
+    };
   }
 
-  static async deleteRotina(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.delete<{ success: boolean; message: string }>(`/scheduler/${id}`);
-    return response;
+  static async deleteRotina(id: number): Promise<ApiResponse<void>> {
+    const response = await apiService.delete<void>(`/scheduler/${id}`);
+    return {
+      success: response.success,
+      message: response.message,
+      data: response.data,
+      errors: response.errors,
+    };
   }
 
-  static async toggleRotina(id: number, ativo: boolean): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.patch<{ success: boolean; message: string }>(`/scheduler/${id}/toggle`, { ativo });
-    return response;
+  static async toggleRotina(id: number, ativo: boolean): Promise<ApiResponse<void>> {
+    const response = await apiService.patch<void>(`/scheduler/${id}/toggle`, { ativo });
+    return {
+      success: response.success,
+      message: response.message,
+      data: response.data,
+      errors: response.errors,
+    };
   }
 
-  static async executeRotina(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.post<{ success: boolean; message: string }>(`/scheduler/${id}/execute`);
-    return response;
+  static async executeRotina(id: number): Promise<ApiResponse<void>> {
+    const response = await apiService.post<void>(`/scheduler/${id}/execute`);
+    return {
+      success: response.success,
+      message: response.message,
+      data: response.data,
+      errors: response.errors,
+    };
   }
 
-  static async getLogs(routineId: number): Promise<{ success: boolean; data: RoutineExecutionLog[] }> {
-    const response = await apiService.get<{ success: boolean; data: RoutineExecutionLog[] }>(`/scheduler/logs/${routineId}`);
-    return response;
+  static async getLogs(routineId: number): Promise<ApiResponse<RoutineExecutionLog[]>> {
+    const response = await apiService.get<RoutineExecutionLog[]>(`/scheduler/logs/${routineId}`);
+    return {
+      success: response.success,
+      data: response.data ?? [],
+      message: response.message,
+      errors: response.errors,
+    };
   }
 
-  static async getAllLogs(): Promise<{ success: boolean; data: RoutineExecutionLog[] }> {
-    const response = await apiService.get<{ success: boolean; data: RoutineExecutionLog[] }>('/scheduler/logs');
-    return response;
+  static async getAllLogs(): Promise<ApiResponse<RoutineExecutionLog[]>> {
+    const response = await apiService.get<RoutineExecutionLog[]>('/scheduler/logs');
+    return {
+      success: response.success,
+      data: response.data ?? [],
+      message: response.message,
+      errors: response.errors,
+    };
   }
 }

@@ -47,6 +47,10 @@ import diasVencimentoRoutes from './routes/diasVencimentoRoutes';
 import termosContratoRoutes from './routes/termosContrato';
 import modelosTermoRoutes from './routes/modelosTermo';
 import atualizacoesRoutes from './routes/atualizacoesRoutes';
+import authRoutes from './routes/authRoutes';
+
+// Importar middlewares de autenticação
+import { authMiddleware } from './middleware/authMiddleware';
 
 // Carregar variáveis de ambiente
 dotenv.config();
@@ -59,6 +63,11 @@ if (!process.env.PORT) {
 
 if (!process.env.FRONTEND_URL) {
   logger.error('FRONTEND_URL não definida nas variáveis de ambiente');
+  process.exit(1);
+}
+
+if (!process.env.JWT_SECRET) {
+  logger.error('JWT_SECRET não definida nas variáveis de ambiente');
   process.exit(1);
 }
 
@@ -121,11 +130,13 @@ app.use(fileProtectionMiddleware);
 app.use(apiProtectionMiddleware);
 app.use(imageProtectionMiddleware);
 app.use(configProtectionMiddleware);
+app.use(authMiddleware);
 
 // Servir arquivos estáticos (imagens, etc.)
 app.use('/images', express.static(path.join(__dirname, '../images')));
 
 // Rotas da API
+app.use('/api/auth', authRoutes);
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/planos', planoRoutes);
 app.use('/api/bancos', bancoRoutes);

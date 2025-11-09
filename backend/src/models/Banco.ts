@@ -116,6 +116,17 @@ export class Banco extends Model<
   declare setConfiguracaoPrincipal: HasOneSetAssociationMixin<BancoConfiguracao, number>;
   declare createConfiguracaoPrincipal: HasOneCreateAssociationMixin<BancoConfiguracao>;
 
+  toJSON(): Record<string, unknown> {
+    const {
+      api_key: _apiKey,
+      api_secret: _apiSecret,
+      client_secret_producao: _clientSecretProducao,
+      ...safeValues
+    } = { ...this.get() };
+
+    return safeValues;
+  }
+
   // Métodos de instância
   static async findAtivos(): Promise<Banco[]> {
     return this.findAll({

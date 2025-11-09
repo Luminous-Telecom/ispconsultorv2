@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import { AxiosError } from 'axios';
+import type { ApiResponse } from '../types';
 
 export interface ServidorWhatsApp {
   id: number;
@@ -47,11 +48,18 @@ export interface MensagemWhatsApp {
   ativo: boolean;
 }
 
+const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): ApiResponse<T> => ({
+  success: response.success,
+  data: response.data ?? fallback,
+  message: response.message ?? '',
+  errors: response.errors,
+});
+
 export class ServidorWhatsAppService {
   static async getByTipo(mensagemType: string): Promise<MensagemWhatsApp | null> {
     try {
-      const response = await apiService.get<{ success: boolean; data: MensagemWhatsApp }>(`/mensagens-whatsapp/tipo/${mensagemType}`);
-      return response.data;
+      const response = await apiService.get<MensagemWhatsApp>(`/mensagens-whatsapp/tipo/${mensagemType}`);
+      return response.data ?? null;
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       if (axiosError.response?.status === 404) {
@@ -61,25 +69,25 @@ export class ServidorWhatsAppService {
     }
   }
 
-  static async saveMensagem(data: MensagemWhatsApp): Promise<{ success: boolean; message: string; data: MensagemWhatsApp }> {
-    const response = await apiService.post<{ success: boolean; message: string; data: MensagemWhatsApp }>('/mensagens-whatsapp', data);
-    return response;
+  static async saveMensagem(data: MensagemWhatsApp): Promise<ApiResponse<MensagemWhatsApp>> {
+    const response = await apiService.post<MensagemWhatsApp>('/mensagens-whatsapp', data);
+    return normalizeResponse(response, {} as MensagemWhatsApp);
   }
 
-  static async list(): Promise<{ success: boolean; data: ServidorWhatsApp[]; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ServidorWhatsApp[]; message: string }>('/servidores-whatsapp');
-    return response;
+  static async list(): Promise<ApiResponse<ServidorWhatsApp[]>> {
+    const response = await apiService.get<ServidorWhatsApp[]>('/servidores-whatsapp');
+    return normalizeResponse(response, []);
   }
 
-  static async getById(id: number): Promise<{ success: boolean; data: ServidorWhatsApp; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ServidorWhatsApp; message: string }>(`/servidores-whatsapp/${id}`);
-    return response;
+  static async getById(id: number): Promise<ApiResponse<ServidorWhatsApp>> {
+    const response = await apiService.get<ServidorWhatsApp>(`/servidores-whatsapp/${id}`);
+    return normalizeResponse(response, {} as ServidorWhatsApp);
   }
 
-  static async getActive(): Promise<{ success: boolean; data: ServidorWhatsApp; message: string } | null> {
+  static async getActive(): Promise<ApiResponse<ServidorWhatsApp> | null> {
     try {
-      const response = await apiService.get<{ success: boolean; data: ServidorWhatsApp; message: string }>('/servidores-whatsapp/ativo');
-      return response;
+      const response = await apiService.get<ServidorWhatsApp>('/servidores-whatsapp/ativo');
+      return normalizeResponse(response, {} as ServidorWhatsApp);
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       if (axiosError.response?.status === 404) {
@@ -89,36 +97,50 @@ export class ServidorWhatsAppService {
     }
   }
 
-  static async create(data: CreateServidorWhatsApp): Promise<{ success: boolean; data: ServidorWhatsApp; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ServidorWhatsApp; message: string }>('/servidores-whatsapp', data);
-    return response;
+  static async create(data: CreateServidorWhatsApp): Promise<ApiResponse<ServidorWhatsApp>> {
+    const response = await apiService.post<ServidorWhatsApp>('/servidores-whatsapp', data);
+    return normalizeResponse(response, {} as ServidorWhatsApp);
   }
 
-  static async update(id: number, data: UpdateServidorWhatsApp): Promise<{ success: boolean; data: ServidorWhatsApp; message: string }> {
-    const response = await apiService.put<{ success: boolean; data: ServidorWhatsApp; message: string }>(`/servidores-whatsapp/${id}`, data);
-    return response;
+  static async update(id: number, data: UpdateServidorWhatsApp): Promise<ApiResponse<ServidorWhatsApp>> {
+    const response = await apiService.put<ServidorWhatsApp>(`/servidores-whatsapp/${id}`, data);
+    return normalizeResponse(response, {} as ServidorWhatsApp);
   }
 
-  static async delete(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.delete<{ success: boolean; message: string }>(`/servidores-whatsapp/${id}`);
-    return response;
+  static async delete(id: number): Promise<ApiResponse<void>> {
+    const response = await apiService.delete<void>(`/servidores-whatsapp/${id}`);
+    return {
+      success: response.success,
+      message: response.message ?? '',
+      data: response.data,
+      errors: response.errors,
+    };
   }
 
-  static async createOrUpdate(data: CreateServidorWhatsApp): Promise<{ success: boolean; data: ServidorWhatsApp; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ServidorWhatsApp; message: string }>('/servidores-whatsapp/configurar', data);
-    return response;
+  static async createOrUpdate(data: CreateServidorWhatsApp): Promise<ApiResponse<ServidorWhatsApp>> {
+    const response = await apiService.post<ServidorWhatsApp>('/servidores-whatsapp/configurar', data);
+    return normalizeResponse(response, {} as ServidorWhatsApp);
   }
 
-  static async connectInstance(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.post<{ success: boolean; message: string }>(`/servidores-whatsapp/${id}/conectar`);
-    return response;
+  static async connectInstance(id: number): Promise<ApiResponse<void>> {
+    const response = await apiService.post<void>(`/servidores-whatsapp/${id}/conectar`);
+    return {
+      success: response.success,
+      message: response.message ?? '',
+      data: response.data,
+      errors: response.errors,
+    };
   }
 
   static async sendTestMessage(id: number, phone: string, message: string): Promise<{ success: boolean; message: string; data?: Record<string, unknown> }> {
-    const response = await apiService.post<{ success: boolean; message: string; data?: Record<string, unknown> }>(`/servidores-whatsapp/${id}/enviar-mensagem-teste`, {
+    const response = await apiService.post<Record<string, unknown>>(`/servidores-whatsapp/${id}/enviar-mensagem-teste`, {
       phone,
       message
     });
-    return response;
+    return {
+      success: response.success,
+      message: response.message ?? 'Mensagem enviada com sucesso.',
+      data: response.data,
+    };
   }
 }

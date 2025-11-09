@@ -34,10 +34,11 @@ function App() {
           <NotificationProvider>
             <Router>
               <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Dashboard />} />
-            </Route>
+                <Route path="/login" element={<Login />} />
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="dashboard" element={<Dashboard />} />
+                </Route>
               </Routes>
             </Router>
           </NotificationProvider>

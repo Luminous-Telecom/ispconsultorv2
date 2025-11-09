@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import type { ApiResponse } from '../types';
 
 export interface Parametro {
   id: number;
@@ -18,36 +19,43 @@ export interface ParametroUpdate {
   ativo?: boolean;
 }
 
+const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): ApiResponse<T> => ({
+  success: response.success,
+  data: response.data ?? fallback,
+  message: response.message ?? '',
+  errors: response.errors,
+});
+
 export class ParametroService {
   // Listar todos os parâmetros
-  static async getParametros(categoria?: string): Promise<{ success: boolean; data: Parametro[] }> {
+  static async getParametros(categoria?: string): Promise<ApiResponse<Parametro[]>> {
     const url = categoria ? `/parametros/categoria/${categoria}` : '/parametros';
-    const response = await apiService.get<{ success: boolean; data: Parametro[] }>(url);
-    return response;
+    const response = await apiService.get<Parametro[]>(url);
+    return normalizeResponse(response, []);
   }
 
   // Obter parâmetro por chave
-  static async getParametro(chave: string): Promise<{ success: boolean; data: Parametro }> {
-    const response = await apiService.get<{ success: boolean; data: Parametro }>(`/parametros/${chave}`);
-    return response;
+  static async getParametro(chave: string): Promise<ApiResponse<Parametro>> {
+    const response = await apiService.get<Parametro>(`/parametros/${chave}`);
+    return normalizeResponse(response, {} as Parametro);
   }
 
   // Atualizar parâmetro
-  static async updateParametro(chave: string, data: { valor: string; ativo?: boolean }): Promise<{ success: boolean; message: string; data: Parametro }> {
-    const response = await apiService.put<{ success: boolean; message: string; data: Parametro }>(`/parametros/${chave}`, data);
-    return response;
+  static async updateParametro(chave: string, data: { valor: string; ativo?: boolean }): Promise<ApiResponse<Parametro>> {
+    const response = await apiService.put<Parametro>(`/parametros/${chave}`, data);
+    return normalizeResponse(response, {} as Parametro);
   }
 
   // Atualizar múltiplos parâmetros
-  static async updateParametros(parametros: ParametroUpdate[]): Promise<{ success: boolean; message: string; data: Parametro[] }> {
-    const response = await apiService.put<{ success: boolean; message: string; data: Parametro[] }>('/parametros', { parametros });
-    return response;
+  static async updateParametros(parametros: ParametroUpdate[]): Promise<ApiResponse<Parametro[]>> {
+    const response = await apiService.put<Parametro[]>('/parametros', { parametros });
+    return normalizeResponse(response, []);
   }
 
   // Resetar parâmetros para valores padrão
-  static async resetDefaults(): Promise<{ success: boolean; message: string; data: Parametro[] }> {
-    const response = await apiService.post<{ success: boolean; message: string; data: Parametro[] }>('/parametros/reset-defaults');
-    return response;
+  static async resetDefaults(): Promise<ApiResponse<Parametro[]>> {
+    const response = await apiService.post<Parametro[]>('/parametros/reset-defaults');
+    return normalizeResponse(response, []);
   }
 
   // Obter parâmetros agrupados por categoria
@@ -58,7 +66,7 @@ export class ParametroService {
       return {};
     }
 
-    const parametros = response.data;
+    const parametros = response.data ?? [];
     const agrupados: Record<string, Parametro[]> = {};
 
     parametros.forEach(parametro => {
@@ -81,6 +89,9 @@ export class ParametroService {
       }
 
       const parametro = response.data;
+      if (!parametro) {
+        return null;
+      }
       const valor = parametro.valor;
 
       switch (tipo) {

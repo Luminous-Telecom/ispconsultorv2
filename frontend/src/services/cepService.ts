@@ -66,7 +66,11 @@ export class CepService {
       }
 
       const response = await apiService.get<CepData>(`/api/buscar-cep/${cepLimpo}`);
-      return response;
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      throw new Error(response.message || 'Erro ao buscar CEP');
     } catch (error) {
       console.error('Erro ao buscar CEP na API:', error);
       throw error;

@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import type { ApiResponse } from '../types';
 
 export interface ModeloRecibo {
   id: number;
@@ -29,37 +30,45 @@ export interface CreateModeloRecibo {
 
 export interface UpdateModeloRecibo extends Partial<CreateModeloRecibo> {}
 
+const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): { success: boolean; data: T; message: string } => ({
+  success: response.success,
+  data: response.data ?? fallback,
+  message: response.message ?? '',
+});
+
 class ModeloReciboService {
   static async list(): Promise<{ success: boolean; data: ModeloRecibo[]; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ModeloRecibo[]; message: string }>('/modelos-recibo');
-    return response;
+    const response = await apiService.get<ModeloRecibo[]>('/modelos-recibo');
+    return normalizeResponse(response, []);
   }
 
   static async getById(id: number): Promise<{ success: boolean; data: ModeloRecibo; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ModeloRecibo; message: string }>(`/modelos-recibo/${id}`);
-    return response;
+    const response = await apiService.get<ModeloRecibo>(`/modelos-recibo/${id}`);
+    return normalizeResponse(response, {} as ModeloRecibo);
   }
 
   static async create(data: CreateModeloRecibo): Promise<{ success: boolean; data: ModeloRecibo; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ModeloRecibo; message: string }>('/modelos-recibo', data);
-    return response;
+    const response = await apiService.post<ModeloRecibo>('/modelos-recibo', data);
+    return normalizeResponse(response, {} as ModeloRecibo);
   }
 
   static async update(id: number, data: UpdateModeloRecibo): Promise<{ success: boolean; data: ModeloRecibo; message: string }> {
-    const response = await apiService.put<{ success: boolean; data: ModeloRecibo; message: string }>(`/modelos-recibo/${id}`, data);
-    return response;
+    const response = await apiService.put<ModeloRecibo>(`/modelos-recibo/${id}`, data);
+    return normalizeResponse(response, {} as ModeloRecibo);
   }
 
   static async delete(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.delete<{ success: boolean; message: string }>(`/modelos-recibo/${id}`);
-    return response;
+    const response = await apiService.delete<void>(`/modelos-recibo/${id}`);
+    return {
+      success: response.success,
+      message: response.message ?? '',
+    };
   }
 
   static async generatePdf(id: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-recibo/${id}/pdf`, undefined, { responseType: 'blob' });
-
-      const blob = response instanceof Blob ? response : (response as unknown as { data: Blob }).data;
+      const response = await apiService.get<Blob>(`/modelos-recibo/${id}/pdf`, { responseType: 'blob' });
+      const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');
@@ -74,9 +83,8 @@ class ModeloReciboService {
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-recibo/${id}/pdf-teste?cliente_id=${clienteId}`, undefined, { responseType: 'blob' });
-
-      const blob = response instanceof Blob ? response : (response as unknown as { data: Blob }).data;
+      const response = await apiService.get<Blob>(`/modelos-recibo/${id}/pdf-teste?cliente_id=${clienteId}`, { responseType: 'blob' });
+      const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');

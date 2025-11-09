@@ -1,5 +1,6 @@
 import { apiService } from './api';
 import { AxiosError } from 'axios';
+import type { ApiResponse } from '../types';
 
 export interface ServidorEmail {
   id: number;
@@ -44,58 +45,75 @@ export interface MensagemEmail {
   ativo: boolean;
 }
 
+const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): ApiResponse<T> => ({
+  success: response.success,
+  data: response.data ?? fallback,
+  message: response.message ?? '',
+  errors: response.errors,
+});
+
 export class ServidorEmailService {
-  static async list(): Promise<{ success: boolean; data: ServidorEmail[]; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ServidorEmail[]; message: string }>('/servidores-email');
-    return response;
+  static async list(): Promise<ApiResponse<ServidorEmail[]>> {
+    const response = await apiService.get<ServidorEmail[]>('/servidores-email');
+    return normalizeResponse(response, []);
   }
 
-  static async getById(id: number): Promise<{ success: boolean; data: ServidorEmail; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ServidorEmail; message: string }>(`/servidores-email/${id}`);
-    return response;
+  static async getById(id: number): Promise<ApiResponse<ServidorEmail>> {
+    const response = await apiService.get<ServidorEmail>(`/servidores-email/${id}`);
+    return normalizeResponse(response, {} as ServidorEmail);
   }
 
-  static async getActive(): Promise<{ success: boolean; data: ServidorEmail; message: string }> {
-    const response = await apiService.get<{ success: boolean; data: ServidorEmail; message: string }>('/servidores-email/ativo');
-    return response;
+  static async getActive(): Promise<ApiResponse<ServidorEmail>> {
+    const response = await apiService.get<ServidorEmail>('/servidores-email/ativo');
+    return normalizeResponse(response, {} as ServidorEmail);
   }
 
-  static async create(data: CreateServidorEmail): Promise<{ success: boolean; data: ServidorEmail; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ServidorEmail; message: string }>('/servidores-email', data);
-    return response;
+  static async create(data: CreateServidorEmail): Promise<ApiResponse<ServidorEmail>> {
+    const response = await apiService.post<ServidorEmail>('/servidores-email', data);
+    return normalizeResponse(response, {} as ServidorEmail);
   }
 
-  static async update(id: number, data: UpdateServidorEmail): Promise<{ success: boolean; data: ServidorEmail; message: string }> {
-    const response = await apiService.put<{ success: boolean; data: ServidorEmail; message: string }>(`/servidores-email/${id}`, data);
-    return response;
+  static async update(id: number, data: UpdateServidorEmail): Promise<ApiResponse<ServidorEmail>> {
+    const response = await apiService.put<ServidorEmail>(`/servidores-email/${id}`, data);
+    return normalizeResponse(response, {} as ServidorEmail);
   }
 
-  static async delete(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.delete<{ success: boolean; message: string }>(`/servidores-email/${id}`);
-    return response;
+  static async delete(id: number): Promise<ApiResponse<void>> {
+    const response = await apiService.delete<void>(`/servidores-email/${id}`);
+    return {
+      success: response.success,
+      message: response.message ?? '',
+      data: response.data,
+      errors: response.errors,
+    };
   }
 
-  static async testConnection(id: number): Promise<{ success: boolean; message: string; details?: Record<string, unknown> }> {
-    const response = await apiService.post<{ success: boolean; message: string; details?: Record<string, unknown> }>(`/servidores-email/${id}/test`);
-    return response;
+  static async testConnection(id: number): Promise<ApiResponse<Record<string, unknown>>> {
+    const response = await apiService.post<Record<string, unknown>>(`/servidores-email/${id}/test`);
+    return normalizeResponse(response, {});
   }
 
-  static async sendTestEmail(id: number, emailTeste: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.post<{ success: boolean; message: string }>(`/servidores-email/${id}/teste-email`, {
+  static async sendTestEmail(id: number, emailTeste: string): Promise<ApiResponse<void>> {
+    const response = await apiService.post<void>(`/servidores-email/${id}/teste-email`, {
       email_teste: emailTeste
     });
-    return response;
+    return {
+      success: response.success,
+      message: response.message ?? '',
+      data: response.data,
+      errors: response.errors,
+    };
   }
 
-  static async createOrUpdate(data: CreateServidorEmail): Promise<{ success: boolean; data: ServidorEmail; message: string }> {
-    const response = await apiService.post<{ success: boolean; data: ServidorEmail; message: string }>('/servidores-email/configurar', data);
-    return response;
+  static async createOrUpdate(data: CreateServidorEmail): Promise<ApiResponse<ServidorEmail>> {
+    const response = await apiService.post<ServidorEmail>('/servidores-email/configurar', data);
+    return normalizeResponse(response, {} as ServidorEmail);
   }
 
   static async getMensagemByTipo(mensagemType: string): Promise<MensagemEmail | null> {
     try {
-      const response = await apiService.get<{ success: boolean; data: MensagemEmail }>(`/mensagens-email/tipo/${mensagemType}`);
-      return response.data;
+      const response = await apiService.get<MensagemEmail>(`/mensagens-email/tipo/${mensagemType}`);
+      return response.data ?? null;
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       if (axiosError.response?.status === 404) {
@@ -105,8 +123,8 @@ export class ServidorEmailService {
     }
   }
 
-  static async saveMensagem(data: MensagemEmail): Promise<{ success: boolean; message: string; data: MensagemEmail }> {
-    const response = await apiService.post<{ success: boolean; message: string; data: MensagemEmail }>('/mensagens-email', data);
-    return response;
+  static async saveMensagem(data: MensagemEmail): Promise<ApiResponse<MensagemEmail>> {
+    const response = await apiService.post<MensagemEmail>('/mensagens-email', data);
+    return normalizeResponse(response, {} as MensagemEmail);
   }
 }

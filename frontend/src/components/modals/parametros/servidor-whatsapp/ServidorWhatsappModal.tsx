@@ -3,11 +3,11 @@ import DraggableModal from '../../../common/DraggableModal';
 import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { ServidorWhatsAppService } from '../../../../services/servidorWhatsAppService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
-import { API_CONFIG } from '../../../../config/api';
+import { defaultApiClient } from '../../../../services/core';
 
 interface GrupoVariaveis {
   titulo: string;
@@ -59,8 +59,13 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const { data: variaveisData } = useQuery<Record<string, GrupoVariaveis>>({
     queryKey: ['variaveis-documento'],
     queryFn: async () => {
-      const response = await axios.get(`${API_CONFIG.BASE_URL}/modelos-contrato/variaveis`);
-      return response.data.data;
+      const response = await defaultApiClient.get<Record<string, GrupoVariaveis>>('/modelos-contrato/variaveis');
+
+      if (response.success && response.data) {
+        return response.data;
+      }
+
+      throw new Error(response.message || 'Não foi possível carregar variáveis');
     },
     staleTime: 5 * 60 * 1000
   });

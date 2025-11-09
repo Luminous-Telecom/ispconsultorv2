@@ -311,4 +311,4 @@ refetch();
 - Confirme funcionando
 - Depois commit
 - Verifique erros TypeScript
-- Nunca URLs em códigos
+- Nunca URLs em códigos (exeto de bancos APIs,blibliotecas, estilos)

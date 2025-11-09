@@ -1,42 +1,59 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '../../components/notifications/NotificationProvider';
+import { authService } from '../../services/authService';
+import { removeAuthToken } from '../../services/core';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { info } = useNotificationContext();
+  const { info, success, error } = useNotificationContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simular login - será substituído por chamada à API
-    setTimeout(() => {
+    try {
+      // Revalidar email e senha ao submeter
+      if (!email || !password) {
+        error('Informe email e senha para continuar.');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await authService.login({ email, password });
+
+      if (response.success && response.data?.token) {
+        success('Autenticação realizada com sucesso.');
+        navigate('/dashboard');
+      } else {
+        removeAuthToken();
+        error(response.message || 'Não foi possível autenticar. Verifique suas credenciais.');
+      }
+    } catch (err) {
+      removeAuthToken();
+      const message = err instanceof Error ? err.message : 'Falha ao autenticar. Tente novamente.';
+      error(message);
+    } finally {
       setIsLoading(false);
-      navigate('/dashboard');
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{ 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-    }}>
-      <div className="container">
+    <div className="min-vh-100 bg-light d-flex align-items-center">
+      <div className="container py-5">
         <div className="row justify-content-center">
           <div className="col-md-6 col-lg-4">
-            <div className="card shadow-lg border-0">
-              <div className="card-body p-5">
+            <div className="card shadow-sm border-0">
+              <div className="card-body p-4 p-md-5">
                 <div className="text-center mb-4">
-                  <h2 className="h4 text-gray-900 mb-2" style={{ color: '#5a5c69' }}>
-                    ERP Assessoria
-                  </h2>
-                  <p className="text-muted">Faça login para acessar o sistema</p>
+                  <h1 className="h4 text-primary fw-bold mb-1">BackNet</h1>
+                  <p className="text-muted mb-0">Acesse o painel administrativo</p>
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="mb-3">
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label">
                       Email
@@ -67,45 +84,24 @@ const Login: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      placeholder="••••••••"
+                      placeholder="Sua senha"
                     />
-                  </div>
-
-                  <div className="mb-3 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="remember"
-                      name="remember"
-                    />
-                    <label className="form-check-label" htmlFor="remember">
-                      Lembrar de mim
-                    </label>
                   </div>
 
                   <button
                     type="submit"
                     className="btn btn-primary w-100"
                     disabled={isLoading}
+                    aria-busy={isLoading}
                   >
-                    {isLoading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Entrando...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-box-arrow-in-right me-2"></i>
-                        Entrar
-                      </>
-                    )}
+                    Entrar
                   </button>
                 </form>
 
-                <div className="text-center mt-4">
-                  <button 
-                    type="button" 
-                    className="btn btn-link text-decoration-none p-0 border-0 bg-transparent"
+                <div className="text-center">
+                  <button
+                    type="button"
+                    className="btn btn-link px-0"
                     onClick={() => info('Funcionalidade em desenvolvimento')}
                   >
                     Esqueceu sua senha?
@@ -115,9 +111,7 @@ const Login: React.FC = () => {
             </div>
 
             <div className="text-center mt-4">
-              <p className="text-white">
-                © 2024 ERP Assessoria. Todos os direitos reservados.
-              </p>
+              <p className="text-muted mb-0">© {new Date().getFullYear()} BackNet. Todos os direitos reservados.</p>
             </div>
           </div>
         </div>

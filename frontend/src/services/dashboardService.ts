@@ -49,8 +49,11 @@ export class DashboardService {
   // Buscar dados do dashboard
   static async getDashboardData(): Promise<DashboardData> {
     try {
-      const response = await apiService.get<{ success: boolean; data: DashboardData }>('/dashboard');
-      return response.data;
+      const response = await apiService.get<DashboardData>('/dashboard');
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.message || 'Erro ao carregar dados do dashboard');
     } catch (error) {
       console.error('Erro ao buscar dados do dashboard:', error);
       throw error;
@@ -61,7 +64,10 @@ export class DashboardService {
   static async getStats(): Promise<DashboardStats> {
     try {
       const response = await apiService.get<DashboardStats>('/dashboard/stats');
-      return response;
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.message || 'Erro ao carregar estatísticas do dashboard');
     } catch (error) {
       console.error('Erro ao buscar estatísticas:', error);
       throw error;
@@ -72,7 +78,10 @@ export class DashboardService {
   static async getCarnesRecentes(limit: number = 5): Promise<Titulo[]> {
     try {
       const response = await apiService.get<Titulo[]>(`/dashboard/carnes-recentes?limit=${limit}`);
-      return response;
+      if (response.success && Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
     } catch (error) {
       console.error('Erro ao buscar carnês recentes:', error);
       throw error;
@@ -83,7 +92,10 @@ export class DashboardService {
   static async getParcelasVencidas(limit: number = 10): Promise<Titulo[]> {
     try {
       const response = await apiService.get<Titulo[]>(`/dashboard/parcelas-vencidas?limit=${limit}`);
-      return response;
+      if (response.success && Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
     } catch (error) {
       console.error('Erro ao buscar parcelas vencidas:', error);
       throw error;
@@ -94,7 +106,10 @@ export class DashboardService {
   static async getReceitaUltimosMeses(months: number = 6): Promise<DashboardChart> {
     try {
       const response = await apiService.get<DashboardChart>(`/dashboard/receita-ultimos-meses?months=${months}`);
-      return response;
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.message || 'Erro ao carregar receita dos últimos meses');
     } catch (error) {
       console.error('Erro ao buscar receita dos últimos meses:', error);
       throw error;
@@ -105,7 +120,10 @@ export class DashboardService {
   static async getClientesPorStatus(): Promise<DashboardChart> {
     try {
       const response = await apiService.get<DashboardChart>('/dashboard/clientes-por-status');
-      return response;
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.message || 'Erro ao carregar clientes por status');
     } catch (error) {
       console.error('Erro ao buscar clientes por status:', error);
       throw error;
@@ -116,7 +134,10 @@ export class DashboardService {
   static async getRelatorioVendas(periodo: 'dia' | 'semana' | 'mes' | 'ano'): Promise<RelatorioVendas> {
     try {
       const response = await apiService.get<RelatorioVendas>(`/dashboard/relatorio-vendas?periodo=${periodo}`);
-      return response;
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.message || 'Erro ao carregar relatório de vendas');
     } catch (error) {
       console.error('Erro ao buscar relatório de vendas:', error);
       throw error;

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet, useLocation, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -17,10 +17,19 @@ import { DocumentosSistemaModal } from '../modals/parametros/documentos-sistema'
 import DiasVencimentoModal from '../modals/parametros/DiasVencimentoModal';
 import AtualizacoesModal from '../modals/parametros/AtualizacoesModal';
 import AgendadorTarefasModal from '../modals/parametros/AgendadorTarefasModal';
+import { authService } from '../../services/authService';
+import { getAuthToken } from '../../services/core';
 
 const Layout: React.FC = () => {
   const location = useLocation();
-  const { notifications, removeNotification, pauseNotification, resumeNotification } = useNotificationContext();
+  const navigate = useNavigate();
+  const {
+    notifications,
+    removeNotification,
+    pauseNotification,
+    resumeNotification,
+    success,
+  } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
@@ -34,6 +43,18 @@ const Layout: React.FC = () => {
   
   const closeModal = () => {
     setActiveModal(null);
+  };
+
+  useEffect(() => {
+    if (!getAuthToken()) {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    authService.logout();
+    success('Sessão encerrada com sucesso.');
+    navigate('/login');
   };
 
 
@@ -133,6 +154,13 @@ const Layout: React.FC = () => {
               className="theme-toggle"
             >
               {''}
+            </Button>
+            <Button
+              variant="outline-danger"
+              size="sm"
+              onClick={handleLogout}
+            >
+              Sair
             </Button>
           </div>
         </header>

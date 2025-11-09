@@ -16,6 +16,7 @@ import { ModeloCarta } from './ModeloCarta';
 import { DiasVencimento } from './DiasVencimento';
 import { TermoContrato } from './TermoContrato';
 import { ModeloTermo } from './ModeloTermo';
+import { Usuario } from './Usuario';
 
 // Importar associações específicas
 import './associations';
@@ -167,5 +168,6 @@ export {
   ModeloCarta,
   DiasVencimento,
   TermoContrato,
-  ModeloTermo
+  ModeloTermo,
+  Usuario
 };

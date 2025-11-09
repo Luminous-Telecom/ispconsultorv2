@@ -18,13 +18,13 @@ interface AtualizacoesModalProps {
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) => {
 
   // Query para buscar atualizações
-  const { data: atualizacoes, isLoading, error } = useQuery({
+  const { data: atualizacoes, isLoading, error } = useQuery<Atualizacao[]>({
     queryKey: ['atualizacoes'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Atualizacao[]> => {
       // Buscar da API usando apiService
-      const response = await apiService.get<{ success: boolean; data: Atualizacao[] }>('/atualizacoes');
+      const response = await apiService.get<Atualizacao[]>('/atualizacoes');
       // Retornar data.data pois a API retorna { success: true, data: [...] }
-      return response.success ? response.data : [];
+      return response.success ? (response.data ?? []) : [];
     },
     enabled: show,
     refetchOnWindowFocus: false,
