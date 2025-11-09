@@ -8,6 +8,8 @@ import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import ContratoModal from '../clientes/contrato/ContratoModal';
 import { AxiosError } from 'axios';
+import DocumentoSistemaService from '../../../services/documentoSistemaService';
+import ImprimirModal from '../../common/ImprimirModal';
 
 interface ContratoListModalProps {
   show: boolean;
@@ -25,7 +27,10 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
-  const [, setSelectedItems] = useState<Contrato[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Contrato[]>([]);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [showImprimirModal, setShowImprimirModal] = useState(false);
   
   const { success, error } = useNotificationContext();
   
@@ -172,6 +177,144 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         }
       },
       disabled: (selectedItems: Contrato[]) => selectedItems.length === 0
+    },
+    {
+      label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
+      disabled: (selectedItems: Contrato[]) => selectedItems.length === 0 || isGeneratingPdf,
+      dropdown: [
+        {
+          label: 'Contrato',
+          action: async () => {
+            if (selectedItems.length > 0) {
+              const contrato = selectedItems[0];
+              if (!contrato.cliente_id) {
+                error('Contrato sem cliente associado');
+                return;
+              }
+              
+              setIsGeneratingPdf(true);
+              try {
+                const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
+                
+                if (modeloContrato.success && modeloContrato.data) {
+                  const modelosData = await DocumentoSistemaService.getModelosByModeloContrato(modeloContrato.data.id);
+                  const conteudoContrato = modelosData.data?.modelo_contrato_conteudo || modeloContrato.data.conteudo;
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
+                    modeloContrato.data.id,
+                    contrato.cliente_id,
+                    conteudoContrato
+                  );
+                  
+                  const url = window.URL.createObjectURL(pdfBlob);
+                  setPdfUrl(url);
+                  setShowImprimirModal(true);
+                  
+                  success('Contrato gerado com sucesso!');
+                } else {
+                  error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+                }
+              } catch (err) {
+                const axiosError = err as AxiosError<{ message: string }>;
+                if (axiosError.response?.status === 404) {
+                  error('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.');
+                } else {
+                  error('Erro ao gerar contrato');
+                }
+              } finally {
+                setIsGeneratingPdf(false);
+              }
+            }
+          }
+        },
+        {
+          label: 'Termo de Adesão',
+          action: async () => {
+            if (selectedItems.length > 0) {
+              const contrato = selectedItems[0];
+              if (!contrato.cliente_id) {
+                error('Contrato sem cliente associado');
+                return;
+              }
+              
+              setIsGeneratingPdf(true);
+              try {
+                const modeloAdesao = await DocumentoSistemaService.getDefaultByType('contrato');
+                
+                if (modeloAdesao.success && modeloAdesao.data) {
+                  const modelosData = await DocumentoSistemaService.getModelosByModeloContrato(modeloAdesao.data.id);
+                  const conteudoAdesao = modelosData.data?.modelo_termo_adesao || modeloAdesao.data.conteudo;
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
+                    modeloAdesao.data.id,
+                    contrato.cliente_id,
+                    conteudoAdesao
+                  );
+                  
+                  const url = window.URL.createObjectURL(pdfBlob);
+                  setPdfUrl(url);
+                  setShowImprimirModal(true);
+                  
+                  success('Termo de Adesão gerado com sucesso!');
+                } else {
+                  error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+                }
+              } catch (err) {
+                const axiosError = err as AxiosError<{ message: string }>;
+                if (axiosError.response?.status === 404) {
+                  error('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.');
+                } else {
+                  error('Erro ao gerar termo de adesão');
+                }
+              } finally {
+                setIsGeneratingPdf(false);
+              }
+            }
+          }
+        },
+        {
+          label: 'Contrato Permanência',
+          action: async () => {
+            if (selectedItems.length > 0) {
+              const contrato = selectedItems[0];
+              if (!contrato.cliente_id) {
+                error('Contrato sem cliente associado');
+                return;
+              }
+              
+              setIsGeneratingPdf(true);
+              try {
+                const modeloPermanencia = await DocumentoSistemaService.getDefaultByType('contrato');
+                
+                if (modeloPermanencia.success && modeloPermanencia.data) {
+                  const modelosData = await DocumentoSistemaService.getModelosByModeloContrato(modeloPermanencia.data.id);
+                  const conteudoPermanencia = modelosData.data?.modelo_contrato_permanencia || modeloPermanencia.data.conteudo;
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
+                    modeloPermanencia.data.id,
+                    contrato.cliente_id,
+                    conteudoPermanencia
+                  );
+                  
+                  const url = window.URL.createObjectURL(pdfBlob);
+                  setPdfUrl(url);
+                  setShowImprimirModal(true);
+                  
+                  success('Contrato de Permanência gerado com sucesso!');
+                } else {
+                  error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+                }
+              } catch (err) {
+                const axiosError = err as AxiosError<{ message: string }>;
+                if (axiosError.response?.status === 404) {
+                  error('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.');
+                } else {
+                  error('Erro ao gerar contrato de permanência');
+                }
+              } finally {
+                setIsGeneratingPdf(false);
+              }
+            }
+          }
+        }
+      ]
     }
   ];
 
@@ -204,7 +347,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               key: action.label.toLowerCase().replace(/\s+/g, '-'),
               label: action.label,
               onClick: action.action,
-              disabled: action.disabled
+              disabled: action.disabled,
+              dropdown: action.dropdown
             })),
             emptyMessage: 'Nenhum contrato encontrado'
           }}
@@ -245,6 +389,18 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           refetch();
         }}
       />
+
+      {/* Modal de Impressão */}
+      {pdfUrl && (
+        <ImprimirModal
+          show={showImprimirModal}
+          onClose={() => {
+            setShowImprimirModal(false);
+            setPdfUrl(null);
+          }}
+          pdfUrl={pdfUrl}
+        />
+      )}
     </DraggableModal>
   );
 };
