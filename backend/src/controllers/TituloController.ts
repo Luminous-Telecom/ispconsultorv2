@@ -77,8 +77,8 @@ export class TituloController {
     const fs = await import('fs');
     const path = await import('path');
     
-    const topoTemplatePath = path.join(__dirname, '../templates/boleto-topo-inner.html');
-    const corpoTemplatePath = path.join(__dirname, '../templates/boleto-corpo-inner.html');
+    const topoTemplatePath = path.join(process.cwd(), 'src/templates/boleto-topo-inner.html');
+    const corpoTemplatePath = path.join(process.cwd(), 'src/templates/boleto-corpo-inner.html');
     
     const topoTemplate = fs.readFileSync(topoTemplatePath, 'utf8');
     const corpoTemplate = fs.readFileSync(corpoTemplatePath, 'utf8');
@@ -204,42 +204,49 @@ export class TituloController {
     return `${topoProcessado}${corpoProcessado}`;
   }
 
-  // Converter logo para base64 se for URL HTTP
+  // Converter logo para base64 se for URL HTTP ou caminho local
   private static converterLogoParaBase64(logo: string): string {
     if (!logo || logo.startsWith('data:image/')) {
       return logo || '';
     }
     
-    if (!logo.startsWith('http://') && !logo.startsWith('https://')) {
-      return logo;
-    }
-    
     try {
-      const url = new URL(logo);
-      const fileName = url.pathname.split('/').pop() || '';
+      let cleanPath = logo;
+      
+      // Se for URL HTTP, extrair o pathname
+      if (logo.startsWith('http://') || logo.startsWith('https://')) {
+        const url = new URL(logo);
+        cleanPath = url.pathname;
+      }
+      
+      const fileName = cleanPath.split('/').pop() || '';
       
       // Verificar se é logo padrão de banco
       if (fileName.includes('efi.png')) return this.getLogoBancoPadrao('efi');
       if (fileName.includes('asaas.png')) return this.getLogoBancoPadrao('asaas');
       if (fileName.includes('boletoproprio.png')) return this.getLogoBancoPadrao('bancario');
       
-      // Converter caminho da URL para caminho local
-      let cleanPath = url.pathname;
-      if (cleanPath.startsWith('/images/') || cleanPath.startsWith('/uploads/')) {
+      // Remover barra inicial se houver
+      if (cleanPath.startsWith('/')) {
         cleanPath = cleanPath.substring(1);
       }
       
-      const imagePath = path.join(__dirname, '../..', cleanPath);
+      // Usar process.cwd() para caminho absoluto do projeto
+      const imagePath = path.join(process.cwd(), cleanPath);
       
       if (fs.existsSync(imagePath)) {
         const imageBuffer = fs.readFileSync(imagePath);
         const base64Image = imageBuffer.toString('base64');
-        const ext = fileName.substring(fileName.lastIndexOf('.') + 1);
-        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+        const mimeType = ext === 'png' ? 'image/png' : 
+                        ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 
+                        ext === 'gif' ? 'image/gif' : 'image/png';
         return `data:${mimeType};base64,${base64Image}`;
+      } else {
+        logger.warn('Arquivo de logo não encontrado', { imagePath, logo });
       }
     } catch (error) {
-      logger.warn('Erro ao converter URL para base64', { logo, error });
+      logger.warn('Erro ao converter logo para base64', { logo, error });
     }
     
     return logo;
@@ -257,14 +264,16 @@ export class TituloController {
       };
       
       const fileName = logosPadrao[tipoBanco] || logosPadrao['outros'];
-      const imagePath = path.join(__dirname, '../../images/bancos', fileName);
+      const imagePath = path.join(process.cwd(), 'images/bancos', fileName);
       
       // Ler arquivo e converter para base64
       if (fs.existsSync(imagePath)) {
         const imageBuffer = fs.readFileSync(imagePath);
         const base64Image = imageBuffer.toString('base64');
-        const ext = fileName.substring(fileName.lastIndexOf('.') + 1);
-        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+        const mimeType = ext === 'png' ? 'image/png' : 
+                        ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 
+                        'image/png';
         return `data:${mimeType};base64,${base64Image}`;
       }
       
@@ -979,8 +988,8 @@ export class TituloController {
       const fs = await import('fs');
       const path = await import('path');
       
-      const topoTemplatePath = path.join(__dirname, '../templates/boleto-topo-inner.html');
-      const corpoTemplatePath = path.join(__dirname, '../templates/boleto-corpo-inner.html');
+      const topoTemplatePath = path.join(process.cwd(), 'src/templates/boleto-topo-inner.html');
+      const corpoTemplatePath = path.join(process.cwd(), 'src/templates/boleto-corpo-inner.html');
       
       let topoTemplate = '';
       let corpoTemplate = '';

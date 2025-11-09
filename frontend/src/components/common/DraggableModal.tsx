@@ -119,13 +119,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         y: e.clientY - dragStart.y
       };
       
-      // Limitar movimento dentro da viewport
-      const maxX = window.innerWidth - modalSize.width;
-      const maxY = window.innerHeight - 100;
-      
-      newPosition.x = Math.max(0, Math.min(newPosition.x, maxX));
-      newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
-      
+      // Permitir arrastar livremente sem limites
       setPosition(newPosition);
     };
 
@@ -140,7 +134,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragStart, modalSize]);
+  }, [isDragging, dragStart]);
 
   // Handler para tecla ESC
   useEffect(() => {
@@ -288,14 +282,14 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         }
       `}</style>
 
-      {/* Backdrop */}
+      {/* Backdrop - não cobre a sidebar */}
       <div
         className={`modal-backdrop fade ${isVisible ? 'show' : ''}`}
         style={{
           position: 'fixed',
           top: 0,
-          left: 0,
-          width: '100%',
+          left: '240px', // Começa após a sidebar
+          width: 'calc(100% - 240px)',
           height: '100%',
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           zIndex: zIndex - 1,
