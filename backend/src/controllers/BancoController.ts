@@ -183,6 +183,14 @@ export class BancoController {
       const { id } = req.params;
       const dadosBanco = req.body;
       
+      logger.info('Atualizando banco - dados recebidos', {
+        banco_id: id,
+        has_client_id_producao: !!dadosBanco.client_id_producao,
+        has_client_secret_producao: !!dadosBanco.client_secret_producao,
+        client_id_length: dadosBanco.client_id_producao?.length || 0,
+        client_secret_length: dadosBanco.client_secret_producao?.length || 0
+      });
+      
       const banco = await Banco.findByPk(id);
       
       if (!banco) {
@@ -210,7 +218,9 @@ export class BancoController {
       logger.info('Banco atualizado com sucesso', {
         banco_id: banco.id,
         nome: banco.nome,
-        tipo_banco: banco.tipo_banco
+        tipo_banco: banco.tipo_banco,
+        has_client_id_after: !!banco.client_id_producao,
+        has_client_secret_after: !!banco.client_secret_producao
       });
       
       res.json({
