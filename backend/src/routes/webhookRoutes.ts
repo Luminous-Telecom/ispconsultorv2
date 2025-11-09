@@ -9,7 +9,7 @@ const efiRouter = Router();
 efiRouter.use(ValidateEfiWebhook.validate);
 
 // Rota GET para verificar se o webhook está funcionando
-efiRouter.get('/efi', (req, res) => {
+efiRouter.get('/', (req, res) => {
   res.json({
     success: true,
     message: 'Webhook EFI está funcionando',
@@ -20,7 +20,7 @@ efiRouter.get('/efi', (req, res) => {
 });
 
 // Webhook unificado para receber notificações da Efí
-efiRouter.post('/efi', WebhookController.efiWebhook);
+efiRouter.post('/', WebhookController.efiWebhook);
 
 // Usar o roteador EFI para rotas específicas
 router.use('/efi', efiRouter);

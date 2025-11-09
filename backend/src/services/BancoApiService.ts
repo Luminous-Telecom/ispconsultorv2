@@ -516,6 +516,7 @@ export class BancoApiService {
       if (response.status >= 200 && response.status < 300) {
         const dados = response.data;
         const chargeId = this.getNestedValue(dados, config.api_response_mapping.boleto.id);
+        const chargeIdString = chargeId != null ? String(chargeId) : null;
         const barcode = this.getNestedValue(dados, config.api_response_mapping.boleto.barcode);
         const url = this.getNestedValue(dados, config.api_response_mapping.boleto.url);
         const linhaDigitavelPath = config.api_response_mapping.boleto.linha_digitavel || '';
@@ -541,7 +542,7 @@ export class BancoApiService {
 
         // Atualizar título
         await titulo.update({
-          charge_id: typeof chargeId === 'string' ? chargeId : null,
+          charge_id: chargeIdString,
           codigo_barras: typeof codigoBarrasFinal === 'string' ? codigoBarrasFinal : null,
           url_boleto: typeof url === 'string' ? url : null,
           linha_digitavel: typeof linhaDigitavel === 'string' ? linhaDigitavel : null,
@@ -554,9 +555,8 @@ export class BancoApiService {
         try {
           const baseUrl = banco.url_retorno;
           
-          if (baseUrl) {
-          const chargeIdStr = typeof chargeId === 'string' ? chargeId : String(chargeId);
-          const metadataEndpoint = `${baseUrlCobranca}/v1/charge/${chargeIdStr}/metadata`;
+          if (baseUrl && chargeIdString) {
+          const metadataEndpoint = `${baseUrlCobranca}/v1/charge/${chargeIdString}/metadata`;
           const metadataPayload = {
             notification_url: baseUrl,
             custom_id: `titulo_${titulo.id}`
@@ -566,34 +566,40 @@ export class BancoApiService {
           
           logger.info('Metadados atualizados com sucesso', {
             titulo_id: titulo.id,
-            charge_id: chargeId,
+            charge_id: chargeIdString,
             notification_url: baseUrl
           });
-          } else {
+          } else if (!baseUrl) {
             logger.warn('URL de retorno não configurada, pulando atualização de metadados', {
               banco_id: banco.id,
               titulo_id: titulo.id
+            });
+          } else {
+            logger.warn('Charge ID ausente, pulando atualização de metadados', {
+              banco_id: banco.id,
+              titulo_id: titulo.id,
+              charge_id: chargeIdString
             });
           }
         } catch (metadataError) {
           const errorMessage = metadataError instanceof Error ? metadataError.message : 'Erro desconhecido';
           logger.warn('Falha ao atualizar metadados, mas título foi criado', {
             titulo_id: titulo.id,
-            charge_id: chargeId,
+            charge_id: chargeIdString,
             error: errorMessage
           });
         }
 
         logger.info('Título gerado com sucesso', {
           titulo_id: titulo.id,
-          charge_id: typeof chargeId === 'string' ? chargeId : String(chargeId || '')
+          charge_id: chargeIdString ?? ''
         });
 
         return {
           success: true,
           message: 'Título gerado com sucesso',
           data: {
-            charge_id: typeof chargeId === 'string' ? chargeId : undefined,
+            charge_id: chargeIdString ?? undefined,
             codigo_barras: typeof barcode === 'string' ? barcode : null,
             url_boleto: typeof url === 'string' ? url : null,
             linha_digitavel: linhaDigitavel,
