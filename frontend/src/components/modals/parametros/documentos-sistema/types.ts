@@ -18,5 +18,6 @@ export interface DocumentoTabProps {
   selectedDocumentoId?: number | null; // Opcional, não usado diretamente mas pode ser útil para futuras implementações
   onDocumentoSelected: (documento: DocumentoUnion | null) => void;
   getTipoLabel: (tipo: TipoDocumento) => string;
+  onDocumentosLoaded?: (documentos: DocumentoUnion[]) => void;
 }
 

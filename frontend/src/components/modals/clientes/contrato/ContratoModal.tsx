@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { usePlanos } from '../../../../hooks/usePlanos';
 import { useBancos } from '../../../../hooks/useBancos';
+import { useSelectedEntity } from '../../../../hooks/useSelectedEntity';
 import { useCreateContrato, useUpdateContrato, CreateContratoData } from '../../../../hooks/useContratos';
 import { useTermosContrato, useDeleteTermoContrato } from '../../../../hooks/useTermosContrato';
 import { TermoContrato } from '../../../../services/TermoContratoService';
@@ -105,10 +106,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
   
-  // Objetos selecionados
-  const [planoSelecionado, setPlanoSelecionado] = useState<Plano | null>(null);
-  const [bancoSelecionado, setBancoSelecionado] = useState<Banco | null>(null);
-  const [modeloContratoSelecionado, setModeloContratoSelecionado] = useState<DocumentoSistema | null>(null);
   
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -133,6 +130,11 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const modelosContrato = useMemo(() => modelosContratoData?.data || [], [modelosContratoData]);
   const diasVencimento = useMemo(() => (diasVencimentoData?.data && Array.isArray(diasVencimentoData.data)) ? diasVencimentoData.data : [], [diasVencimentoData]);
   
+  // Objetos selecionados sincronizados com os selects
+  const [planoSelecionado, setPlanoSelecionado] = useSelectedEntity<Plano>(formData.plano_id, planos);
+  const [bancoSelecionado, setBancoSelecionado] = useSelectedEntity<Banco>(formData.conta_boleto, bancos);
+  const [modeloContratoSelecionado, setModeloContratoSelecionado] = useSelectedEntity<DocumentoSistema>(formData.modelo_contrato_id, modelosContrato);
+
   // Hooks para termos (apenas no modo edição)
   const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(isEditMode ? (internalContratoId || 0) : 0);
   const deleteTermoMutation = useDeleteTermoContrato();
@@ -200,28 +202,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         modelo_contrato_id: 0
       });
       setErrors({});
-      setPlanoSelecionado(null);
-      setBancoSelecionado(null);
-      setModeloContratoSelecionado(null);
     }
   }, [isEditMode, contratoData, show]);
-
-  // Carregar objetos selecionados quando os dados do contrato forem carregados
-  useEffect(() => {
-    if (contratoData && planos.length > 0 && bancos.length > 0 && modelosContrato.length > 0) {
-      // Encontrar plano selecionado
-      const plano = planos.find((p: Plano) => p.id === contratoData.plano_id);
-      if (plano) setPlanoSelecionado(plano);
-
-      // Encontrar banco selecionado
-      const banco = bancos.find((b: Banco) => b.id === contratoData.conta_boleto);
-      if (banco) setBancoSelecionado(banco);
-
-      // Encontrar modelo de contrato selecionado
-      const modelo = modelosContrato.find((m: DocumentoSistema) => m.id === contratoData.modelo_contrato_id);
-      if (modelo) setModeloContratoSelecionado(modelo);
-    }
-  }, [contratoData, planos, bancos, modelosContrato]);
 
   const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean) => {
     setFormData(prev => ({

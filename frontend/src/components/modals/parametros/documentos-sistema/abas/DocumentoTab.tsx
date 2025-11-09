@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import Table from '../../../../tables/Table';
@@ -16,7 +16,8 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   onShowDocumentoModal,
   selectedDocumentoId: _selectedDocumentoId,
   getTipoLabel,
-  onDocumentoSelected
+  onDocumentoSelected,
+  onDocumentosLoaded
 }) => {
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
@@ -56,6 +57,12 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
     staleTime: 30 * 1000, // 30 segundos
     refetchOnMount: false,
   });
+
+  useEffect(() => {
+    if (onDocumentosLoaded) {
+      onDocumentosLoaded(documentos?.data ? (documentos.data as DocumentoUnion[]) : []);
+    }
+  }, [documentos, onDocumentosLoaded]);
 
   // Mutation para deletar documento
   const deleteDocumentoMutation = useMutation({

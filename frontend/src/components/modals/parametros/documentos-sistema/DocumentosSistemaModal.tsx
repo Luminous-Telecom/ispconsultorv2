@@ -3,18 +3,24 @@ import DraggableModal from '../../../common/DraggableModal';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';
+import { useSelectedEntity } from '../../../../hooks/useSelectedEntity';
 
 const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose }) => {
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
   const [documentoModalMode, setDocumentoModalMode] = useState<'create' | 'edit'>('create');
+  const [documentosDisponiveis, setDocumentosDisponiveis] = useState<DocumentoUnion[]>([]);
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<number | null>(null);
-  const [selectedDocumento, setSelectedDocumento] = useState<DocumentoUnion | null>(null);
+  const [selectedDocumento, setSelectedDocumento] = useSelectedEntity<DocumentoUnion>(
+    selectedDocumentoId,
+    documentosDisponiveis
+  );
 
   const handleTabChange = (newTab: TipoDocumento) => {
     setActiveTab(newTab);
     setSelectedDocumentoId(null);
     setSelectedDocumento(null);
+    setDocumentosDisponiveis([]);
     setShowDocumentoModal(false);
   };
 
@@ -41,6 +47,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
     setShowDocumentoModal(false);
     setSelectedDocumentoId(null);
     setSelectedDocumento(null);
+    setDocumentosDisponiveis([]);
   };
 
   const handleDocumentoSelected = (documento: DocumentoUnion | null) => {
@@ -120,6 +127,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
               onShowDocumentoModal={handleShowDocumentoModal}
               selectedDocumentoId={selectedDocumentoId}
               onDocumentoSelected={handleDocumentoSelected}
+              onDocumentosLoaded={(docs) => setDocumentosDisponiveis(docs)}
               getTipoLabel={getTipoLabel}
             />
           </div>
@@ -131,8 +139,17 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
           onClose={handleCloseDocumentoModal}
           documento={documentoModalMode === 'edit' ? selectedDocumento : null}
           tipo={activeTab}
-          onSuccess={() => {
-            // Refetch será feito automaticamente pelo DocumentoTab
+          onSuccess={(doc) => {
+            setDocumentoModalMode('edit');
+            setSelectedDocumentoId(doc.id);
+            setSelectedDocumento(doc);
+            setDocumentosDisponiveis((prev) => {
+              const exists = prev.some((item) => item.id === doc.id);
+              if (exists) {
+                return prev.map((item) => (item.id === doc.id ? doc : item));
+              }
+              return [doc, ...prev];
+            });
           }}
         />
       </DraggableModal>

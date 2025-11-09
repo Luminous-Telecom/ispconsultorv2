@@ -19,7 +19,7 @@ export interface DocumentoModalProps {
   onClose: () => void;
   documento?: DocumentoUnion | null;
   tipo: 'contrato' | 'recibo' | 'carta_cobranca' | 'termo';
-  onSuccess?: () => void;
+  onSuccess?: (documento: DocumentoUnion) => void;
 }
 
 export interface DocumentoTabProps {

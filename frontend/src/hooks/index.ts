@@ -24,6 +24,7 @@ export * from './useListModal';
 export * from './useSelectModal';
 export * from './useConfirm';
 export * from './useEntitySelectField';
+export * from './useSelectedEntity';
 export * from './useImprimir';
 export * from './useSorting';
 export * from './useCep';
