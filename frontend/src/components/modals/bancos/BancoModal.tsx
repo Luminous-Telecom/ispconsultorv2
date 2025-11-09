@@ -9,6 +9,7 @@ import FormField from '../../ui/FormField';
 import { useFormPrefix } from '../../../hooks/useFormId';
 import { FormValue } from '../../../types/common';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
+import { Banco } from '../../../types';
 
 interface BancoForm {
   nome: string;
@@ -55,8 +56,49 @@ interface BancoModalProps {
   show: boolean;
   onClose: () => void;
   bancoId?: number | null;
-  onSuccess?: () => void;
+  onSuccess?: (banco: Banco) => void;
 }
+
+const mapBancoToForm = (banco: Banco): BancoForm => ({
+  nome: banco.nome || '',
+  codigo: banco.codigo || '',
+  descricao: banco.descricao || '',
+  ativo: banco.ativo ?? true,
+  tipo_banco: banco.tipo_banco || 'efi',
+  api_url: banco.api_url || '',
+  api_key: banco.api_key || '',
+  api_secret: banco.api_secret || '',
+  sandbox: banco.sandbox ?? true,
+  identificador_conta: banco.identificador_conta || '',
+  client_id_producao: banco.client_id_producao || '',
+  client_secret_producao: banco.client_secret_producao || '',
+  url_retorno: banco.url_retorno || `${window.location.origin}/webhook/efi`,
+  repassar_email_cliente: banco.repassar_email_cliente ?? false,
+  percentual_multa: banco.percentual_multa || 2,
+  percentual_juros: banco.percentual_juros || 0.03,
+  desconto_tipo: banco.desconto_tipo || 'fixo',
+  desconto_valor: banco.desconto_valor || 0,
+  contra_apresentacao: banco.contra_apresentacao ?? false,
+  recalcular_segunda_via: banco.recalcular_segunda_via ?? false,
+  maximo_dias_recalcular: banco.maximo_dias_recalcular || 0,
+  layout_web: banco.layout_web || 'normal',
+  layout_pdf: banco.layout_pdf || 'normal',
+  layout_carne: banco.layout_carne || '',
+  local_pagamento: banco.local_pagamento || '',
+  dados_avalista: banco.dados_avalista || '',
+  exibir_mes_referente: banco.exibir_mes_referente ?? false,
+  taxa_cobranca: banco.taxa_cobranca || 0,
+  incluir_taxa: banco.incluir_taxa ?? false,
+  observacao_linha_1: banco.observacao_linha_1 || '',
+  observacao_linha_2: banco.observacao_linha_2 || '',
+  observacao_linha_3: banco.observacao_linha_3 || '',
+  observacao_linha_4: banco.observacao_linha_4 || '',
+  instrucao_linha_1: banco.instrucao_linha_1 || '',
+  instrucao_linha_2: banco.instrucao_linha_2 || '',
+  instrucao_linha_3: banco.instrucao_linha_3 || '',
+  instrucao_linha_4: banco.instrucao_linha_4 || '',
+  instrucao_linha_5: banco.instrucao_linha_5 || '',
+});
 
 const BancoModal: React.FC<BancoModalProps> = ({ 
   show, 
@@ -125,46 +167,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
   });
 
   // Converter banco para formato do formulário
-  const bankoFormData: BancoForm | undefined = banco ? {
-    nome: banco.nome || '',
-    codigo: banco.codigo || '',
-    descricao: banco.descricao || '',
-    ativo: banco.ativo ?? true,
-    tipo_banco: banco.tipo_banco || 'efi',
-    api_url: banco.api_url || '',
-    api_key: banco.api_key || '',
-    api_secret: banco.api_secret || '',
-    sandbox: banco.sandbox ?? true,
-    identificador_conta: banco.identificador_conta || '',
-    client_id_producao: banco.client_id_producao || '',
-    client_secret_producao: banco.client_secret_producao || '',
-    url_retorno: banco.url_retorno || `${window.location.origin}/webhook/efi`,
-    repassar_email_cliente: banco.repassar_email_cliente ?? false,
-    percentual_multa: banco.percentual_multa || 2,
-    percentual_juros: banco.percentual_juros || 0.03,
-    desconto_tipo: banco.desconto_tipo || 'fixo',
-    desconto_valor: banco.desconto_valor || 0,
-    contra_apresentacao: banco.contra_apresentacao ?? false,
-    recalcular_segunda_via: banco.recalcular_segunda_via ?? false,
-    maximo_dias_recalcular: banco.maximo_dias_recalcular || 0,
-    layout_web: banco.layout_web || 'normal',
-    layout_pdf: banco.layout_pdf || 'normal',
-    layout_carne: banco.layout_carne || '',
-    local_pagamento: banco.local_pagamento || '',
-    dados_avalista: banco.dados_avalista || '',
-    exibir_mes_referente: banco.exibir_mes_referente ?? false,
-    taxa_cobranca: banco.taxa_cobranca || 0,
-    incluir_taxa: banco.incluir_taxa ?? false,
-    observacao_linha_1: banco.observacao_linha_1 || '',
-    observacao_linha_2: banco.observacao_linha_2 || '',
-    observacao_linha_3: banco.observacao_linha_3 || '',
-    observacao_linha_4: banco.observacao_linha_4 || '',
-    instrucao_linha_1: banco.instrucao_linha_1 || '',
-    instrucao_linha_2: banco.instrucao_linha_2 || '',
-    instrucao_linha_3: banco.instrucao_linha_3 || '',
-    instrucao_linha_4: banco.instrucao_linha_4 || '',
-    instrucao_linha_5: banco.instrucao_linha_5 || '',
-  } : undefined;
+  const bankoFormData: BancoForm | undefined = banco ? mapBancoToForm(banco) : undefined;
 
   // Usar hook personalizado para reset do formulário
   useFormReset({
@@ -186,11 +189,12 @@ const BancoModal: React.FC<BancoModalProps> = ({
   // Mutation para criar banco
   const createBancoMutation = useMutation({
     mutationFn: (data: BancoForm) => BancoService.create(data),
-    onSuccess: () => {
+    onSuccess: (createdBanco) => {
       success('Banco criado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      onSuccess?.();
+      setFormData(mapBancoToForm(createdBanco));
+      onSuccess?.(createdBanco);
     },
     onError: (err) => {
       const axiosError = err as AxiosError<{ message: string }>;
@@ -201,12 +205,13 @@ const BancoModal: React.FC<BancoModalProps> = ({
   // Mutation para atualizar banco
   const updateBancoMutation = useMutation({
     mutationFn: (data: BancoForm) => BancoService.update(bancoId!, data),
-    onSuccess: () => {
+    onSuccess: (updatedBanco) => {
       success('Banco atualizado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
       queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      onSuccess?.();
+      setFormData(mapBancoToForm(updatedBanco));
+      onSuccess?.(updatedBanco);
     },
     onError: (err) => {
       const axiosError = err as AxiosError<{ message: string }>;

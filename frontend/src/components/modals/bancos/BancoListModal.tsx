@@ -232,10 +232,9 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
           setSelectedBancoId(null);
         }}
         bancoId={selectedBancoId}
-        onSuccess={() => {
+        onSuccess={(banco) => {
           refetch();
-          setShowBancoModal(false);
-          setSelectedBancoId(null);
+          setSelectedBancoId(banco.id);
         }}
       />
     </>
