@@ -128,3 +128,4 @@ config/local.json
 .yarn/install-state.gz
 .pnp.*
 uploads/*
+uploads/empresa/*
