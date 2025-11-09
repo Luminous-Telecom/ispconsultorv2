@@ -288,7 +288,20 @@ const BancoModal: React.FC<BancoModalProps> = ({
     }
 
     if (isEdit) {
-      updateBancoMutation.mutate(formData);
+      // Preparar dados para salvar (não enviar campos de senha vazios)
+      const dataToSave = { ...formData };
+      
+      // Se client_secret_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
+      if (!dataToSave.client_secret_producao || dataToSave.client_secret_producao.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).client_secret_producao;
+      }
+      
+      // Se api_secret estiver vazio, não enviar
+      if (!dataToSave.api_secret || dataToSave.api_secret.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).api_secret;
+      }
+      
+      updateBancoMutation.mutate(dataToSave);
     } else {
       createBancoMutation.mutate(formData);
     }
@@ -309,8 +322,21 @@ const BancoModal: React.FC<BancoModalProps> = ({
 
     setTestResult('Testando conexão...');
     try {
+      // Preparar dados para salvar (não enviar campos de senha vazios)
+      const dataToSave = { ...formData };
+      
+      // Se client_secret_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
+      if (!dataToSave.client_secret_producao || dataToSave.client_secret_producao.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).client_secret_producao;
+      }
+      
+      // Se api_secret estiver vazio, não enviar
+      if (!dataToSave.api_secret || dataToSave.api_secret.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).api_secret;
+      }
+      
       // Salvar dados primeiro (sem fechar o modal)
-      await BancoService.update(bancoId, formData);
+      await BancoService.update(bancoId, dataToSave);
       queryClient.invalidateQueries({ queryKey: ['bancos'] });
       queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
       
