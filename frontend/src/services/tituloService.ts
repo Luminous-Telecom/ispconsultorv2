@@ -26,6 +26,13 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
   }
 
   /**
+   * Buscar títulos por contrato
+   */
+  async findByContrato(contratoId: number): Promise<ApiResponse<CarneParcela[]>> {
+    return this.customGet<CarneParcela[]>(`/contrato/${contratoId}`);
+  }
+
+  /**
    * Buscar parcelas vencidas
    */
   async findVencidas(): Promise<ApiResponse<CarneParcela[]>> {
@@ -199,6 +206,17 @@ export class TituloService {
    */
   static async findByCarne(carneId: number): Promise<CarneParcela[]> {
     const response = await tituloServiceInstance.findByCarne(carneId);
+    if (response.data && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  }
+
+  /**
+   * Buscar títulos por contrato
+   */
+  static async findByContrato(contratoId: number): Promise<CarneParcela[]> {
+    const response = await tituloServiceInstance.findByContrato(contratoId);
     if (response.data && Array.isArray(response.data)) {
       return response.data;
     }

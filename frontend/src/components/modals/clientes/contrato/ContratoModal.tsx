@@ -154,10 +154,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const { data: titulosData, isLoading: isLoadingTitulos, refetch: refetchTitulos } = useQuery({
     queryKey: ['titulos', 'contrato', internalContratoId],
     queryFn: async () => {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/titulos/contrato/${internalContratoId}`);
-      if (!response.ok) throw new Error('Erro ao buscar títulos');
-      const json = await response.json();
-      return { data: Array.isArray(json) ? json : (json?.data || []) };
+      const titulos = await TituloService.findByContrato(internalContratoId!);
+      return { data: titulos };
     },
     enabled: isEditMode && !!internalContratoId,
     staleTime: 30 * 1000,
