@@ -3,12 +3,22 @@ if (!process.env.REACT_APP_API_URL) {
   throw new Error('REACT_APP_API_URL não definida nas variáveis de ambiente');
 }
 
+const normalizeBaseUrl = (url: string | undefined): string => {
+  if (!url) {
+    throw new Error('REACT_APP_API_URL não definida nas variáveis de ambiente');
+  }
+  return url.replace(/\/+$/, '');
+};
+
+const baseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL);
+const baseUrlWithoutApi = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
+
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL,
-  BASE_URL_WITHOUT_API: process.env.REACT_APP_API_URL.replace('/api', ''),
-  TIMEOUT: 10000,
-  RETRY_ATTEMPTS: 3,
-  RETRY_DELAY: 1000,
+  BASE_URL: baseUrl,
+  BASE_URL_WITHOUT_API: baseUrlWithoutApi,
+  TIMEOUT: Number(process.env.REACT_APP_API_TIMEOUT ?? 10000),
+  RETRY_ATTEMPTS: Number(process.env.REACT_APP_API_RETRY_ATTEMPTS ?? 3),
+  RETRY_DELAY: Number(process.env.REACT_APP_API_RETRY_DELAY ?? 1000),
 };
 
 // Função para gerar URLs dinâmicas
