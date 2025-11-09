@@ -282,19 +282,17 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         }
       `}</style>
 
-      {/* Backdrop - não cobre a sidebar */}
+      {/* Backdrop customizado - não cobre a sidebar */}
       <div
-        className={`modal-backdrop fade ${isVisible ? 'show' : ''}`}
         style={{
           position: 'fixed',
           top: 0,
-          left: '240px', // Começa após a sidebar
+          left: '240px',
           width: 'calc(100% - 240px)',
           height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: 'transparent',
           zIndex: zIndex - 1,
-          transition: 'opacity 0.15s ease-out',
-          opacity: isVisible ? 1 : 0,
+          pointerEvents: isVisible ? 'auto' : 'none'
         }}
       />
 
