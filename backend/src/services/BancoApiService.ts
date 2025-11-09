@@ -184,6 +184,15 @@ export class BancoApiService {
     const clientId = banco.client_id_producao;
     const clientSecret = banco.client_secret_producao;
     
+    logger.info('Verificando credenciais do banco', {
+      banco_id: banco.id,
+      tipo_banco: banco.tipo_banco,
+      has_client_id: !!clientId,
+      has_client_secret: !!clientSecret,
+      client_id_length: clientId?.length || 0,
+      client_secret_length: clientSecret?.length || 0
+    });
+    
     return !!(clientId && clientSecret);
   }
 
