@@ -282,17 +282,25 @@ export class BancoController {
     try {
       const { id } = req.params;
       
-      const banco = await Banco.findByPk(id);
+      let banco = await Banco.findByPk(id);
       
       if (!banco) {
-        res.status(404).json({ error: 'Banco não encontrado' });
+        res.status(404).json({ 
+          success: false,
+          message: 'Banco não encontrado' 
+        });
         return;
       }
+      
+      // Recarregar banco para garantir dados atualizados
+      await banco.reload();
       
       logger.info('Testando conexão com banco', {
         banco_id: banco.id,
         nome: banco.nome,
-        tipo_banco: banco.tipo_banco
+        tipo_banco: banco.tipo_banco,
+        has_client_id: !!banco.client_id_producao,
+        has_client_secret: !!banco.client_secret_producao
       });
       
       const resultado = await BancoApiService.testarAutenticacao(banco);
@@ -300,12 +308,12 @@ export class BancoController {
       if (resultado.success) {
         res.json({
           success: true,
-          message: 'Conexão com a API do banco realizada com sucesso!'
+          message: resultado.message || 'Conexão com a API do banco realizada com sucesso!'
         });
       } else {
         res.status(400).json({
           success: false,
-          message: 'Falha na conexão: ' + resultado.message
+          message: resultado.message || 'Falha na conexão'
         });
       }
     } catch (error: unknown) {
