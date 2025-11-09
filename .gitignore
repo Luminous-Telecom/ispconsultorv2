@@ -28,11 +28,6 @@ Thumbs.db
 .cache/
 *.cache
 
-# Uploads
-uploads/
-backend/uploads/
-frontend/uploads/
-
 # PM2
 .pm2/
 
