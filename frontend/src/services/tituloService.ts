@@ -3,7 +3,7 @@
  * Mantém compatibilidade com código existente através de métodos estáticos
  */
 import { BaseService, defaultApiClient } from './core';
-import { CarneParcela, CarneParcelaFilters, PaginatedResponse, CreateCarneParcela, ApiResponse } from '../types';
+import { CarneParcela, CarneParcelaFilters, PaginatedResponse, CreateCarneParcela, ApiResponse, Titulo } from '../types';
 import { API_CONFIG, API_ENDPOINTS } from '../config/api';
 import { ResponseTransformer } from './core/ResponseTransformer';
 import { ErrorHandler } from './core/ErrorHandler';
@@ -26,10 +26,10 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
   }
 
   /**
-   * Buscar títulos por contrato
+   * Buscar títulos por contrato (retorna Titulo, não CarneParcela)
    */
-  async findByContrato(contratoId: number): Promise<ApiResponse<CarneParcela[]>> {
-    return this.customGet<CarneParcela[]>(`/contrato/${contratoId}`);
+  async findByContrato(contratoId: number): Promise<ApiResponse<Titulo[]>> {
+    return this.customGet<Titulo[]>(`/contrato/${contratoId}`);
   }
 
   /**
@@ -213,9 +213,9 @@ export class TituloService {
   }
 
   /**
-   * Buscar títulos por contrato
+   * Buscar títulos por contrato (retorna Titulo[], não CarneParcela[])
    */
-  static async findByContrato(contratoId: number): Promise<CarneParcela[]> {
+  static async findByContrato(contratoId: number): Promise<Titulo[]> {
     const response = await tituloServiceInstance.findByContrato(contratoId);
     if (response.data && Array.isArray(response.data)) {
       return response.data;
