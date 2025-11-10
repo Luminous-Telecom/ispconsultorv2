@@ -397,6 +397,7 @@ function Table<T extends { id: number | string }>({
                 return (
                   <div key={index} className="dropdown" style={{ flexShrink: 0, position: 'relative' }}>
                     <button
+                      type="button"
                       className="btn btn-sm btn-primary"
                       onClick={(e) => {
                         e.preventDefault();
@@ -416,6 +417,7 @@ function Table<T extends { id: number | string }>({
                         {bulkAction.dropdown.map((item, itemIndex) => (
                           <li key={itemIndex}>
                             <button
+                              type="button"
                               className="dropdown-item"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -437,6 +439,7 @@ function Table<T extends { id: number | string }>({
               // Botão normal
               return (
                 <button
+                  type="button"
                   key={index}
                   className="btn btn-sm btn-primary"
                   onClick={(_event) => {
@@ -506,6 +509,7 @@ function Table<T extends { id: number | string }>({
               {/* Paginação compacta */}
               <div className="d-flex align-items-center gap-1">
                 <button 
+                  type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
                     if (pagination) {
@@ -519,6 +523,7 @@ function Table<T extends { id: number | string }>({
                   <i className="bi bi-chevron-double-left"></i>
                 </button>
                 <button 
+                  type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
                     if (pagination) {
@@ -541,6 +546,7 @@ function Table<T extends { id: number | string }>({
                 </span>
                 
                 <button 
+                  type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
                     if (pagination) {
@@ -554,6 +560,7 @@ function Table<T extends { id: number | string }>({
                   <i className="bi bi-chevron-right"></i>
                 </button>
                 <button 
+                  type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
                     if (pagination) {
@@ -573,6 +580,7 @@ function Table<T extends { id: number | string }>({
           {/* Botão de reload à direita */}
           <div className="d-flex align-items-center">
             <button 
+              type="button"
               className="btn btn-outline-secondary btn-sm"
               onClick={onRefresh}
               title="Recarregar dados"
