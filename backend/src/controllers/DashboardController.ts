@@ -130,6 +130,11 @@ export class DashboardController {
       }
     }
 
+    const contratos = await Contrato.findAll({ attributes: ['cliente_id', 'valor_final'] });
+    const totalValorContratos = contratos.reduce((acumulado, contrato) => {
+      return acumulado + parseFloat(String(contrato.valor_final || 0));
+    }, 0);
+
     return {
       totalClientes: totalClientes,
       clientesAtivos: clientesAtivos,
@@ -145,7 +150,9 @@ export class DashboardController {
       valorTotalRecebido: valorTotalPago,
       receitaMensal: valorTotalPago, // Simplificado
       crescimentoMensal: 0, // Placeholder
-      ticketMedio: clientesAtivos > 0 ? valorTotalPago / clientesAtivos : 0
+      ticketMedio: totalClientes > 0
+        ? totalValorContratos / totalClientes
+        : 0
     };
   }
 
@@ -265,7 +272,7 @@ export class DashboardController {
         valor_total_titulos: valorTotalTitulos,
         valor_total_pago: valorTotalPago,
         valor_total_pendente: valorTotalPendente,
-        ticket_medio: clientesAtivos > 0 ? valorTotalPago / clientesAtivos : 0
+        ticket_medio: totalClientes > 0 ? valorTotalPago / totalClientes : 0
       };
 
       res.json({
