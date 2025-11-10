@@ -625,7 +625,7 @@ const Dashboard: React.FC = () => {
 
         <div className="dashboard-section card border-0 shadow-sm mb-4">
           <div className="card-body">
-        <div className="row g-3 mb-4">
+            <div className="row g-3 mb-4">
           <div className="col-xl-2 col-lg-4 col-md-6">
             <div className="chart-card">
               {renderPieChart(clientesChartData, 'Status dos Clientes', hiddenClientes, toggleCliente)}
@@ -702,6 +702,8 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
       </div>
     </div>
   );
