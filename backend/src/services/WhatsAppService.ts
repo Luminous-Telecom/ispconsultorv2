@@ -263,16 +263,12 @@ export class WhatsAppService {
     const { mensagem, servidor, telefone, cliente, contrato, titulo } = params;
     const interacoes = [mensagem.interacao1, mensagem.interacao2, mensagem.interacao3];
 
-    let jaEnviouAlguma = false;
-
     for (const interacao of interacoes) {
       if (!interacao || !interacao.trim()) {
         continue;
       }
 
-      if (jaEnviouAlguma) {
-        await this.delay(INTERACTION_DELAY_MS);
-      }
+      await this.delay(INTERACTION_DELAY_MS);
 
       try {
         const texto = await VariaveisDocumentoService.processarVariaveis(interacao, {
@@ -287,8 +283,6 @@ export class WhatsAppService {
         }
 
         const enviou = await this.enviarMensagem(servidor, telefone, texto);
-        jaEnviouAlguma = true;
-
         if (!enviou) {
           logger.warn('Falha ao enviar mensagem de interação via WhatsApp', {
             telefone,
