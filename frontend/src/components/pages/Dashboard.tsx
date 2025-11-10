@@ -152,6 +152,14 @@ const Dashboard: React.FC = () => {
     setHiddenContratos(newHidden);
   };
 
+  const formatCurrency = (valor: number): string => valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+  });
+
+  const formatNumber = (valor: number): string => valor.toLocaleString('pt-BR');
+
   // Query única para buscar todos os dados do dashboard
   const { data: dashboardData, isLoading: loadingDashboard } = useDashboard();
 
@@ -188,6 +196,16 @@ const Dashboard: React.FC = () => {
   const ticketMedio = clientesAtivos > 0 ? receitaPaga / clientesAtivos : 0;
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const _receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
+
+  const agora = new Date();
+  const lastUpdatedDate = agora.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+  });
+  const lastUpdatedTime = agora.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
 
   // Faturamento mensal (últimos 12 meses)
@@ -289,6 +307,11 @@ const Dashboard: React.FC = () => {
 
 
   // Dados para gráficos
+  const statusPagamentoData = getStatusPagamento();
+  const titulosPendentesCount = statusPagamentoData.find(item => item.label === 'Pendentes')?.value || 0;
+  const titulosVencidosCount = statusPagamentoData.find(item => item.label === 'Vencidos')?.value || 0;
+  const totalTitulosEmAberto = titulosPendentesCount + titulosVencidosCount;
+
   const clientesChartData = [
     { label: 'Ativos', value: clientesAtivos, color: '#28a745' },
     { label: 'Inativos', value: clientesInativos, color: '#dc3545' }
@@ -451,75 +474,178 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Gráficos de Pizza */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-2 col-lg-4 col-md-6">
-          <div className="chart-card">
-            {renderPieChart(clientesChartData, 'Status dos Clientes', hiddenClientes, toggleCliente)}
+      <div className="container-fluid px-0">
+        <div className="dashboard-hero card border-0 text-white mb-4">
+          <div className="card-body p-4">
+            <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+              <div>
+                <span className="dashboard-badge text-uppercase">Visão geral</span>
+                <h2 className="dashboard-hero-title mb-2">Painel financeiro e operacional</h2>
+                <p className="dashboard-hero-subtitle mb-0">Atualizado em {lastUpdatedDate} às {lastUpdatedTime}</p>
+              </div>
+              <div className="d-flex flex-wrap gap-3">
+                <div className="dashboard-hero-stat">
+                  <span className="dashboard-hero-label">Faturamento total</span>
+                  <strong className="dashboard-hero-value">{formatCurrency(receitaTotal)}</strong>
+                </div>
+                <div className="dashboard-hero-stat">
+                  <span className="dashboard-hero-label">Receita recebida</span>
+                  <strong className="dashboard-hero-value">{formatCurrency(receitaPaga)}</strong>
+                </div>
+                <div className="dashboard-hero-stat">
+                  <span className="dashboard-hero-label">Receita pendente</span>
+                  <strong className="dashboard-hero-value">{formatCurrency(stats?.valorTotalReceber || 0)}</strong>
+                </div>
+                <div className="dashboard-hero-stat">
+                  <span className="dashboard-hero-label">Clientes ativos</span>
+                  <strong className="dashboard-hero-value">{formatNumber(clientesAtivos)}</strong>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="col-xl-2 col-lg-4 col-md-6">
-          <div className="chart-card">
-            {renderPieChart(planosChartData, 'Status dos Planos', hiddenPlanos, togglePlano)}
+        <div className="dashboard-section mb-4">
+          <div className="dashboard-section-header d-flex align-items-center justify-content-between">
+            <h5 className="dashboard-section-title mb-0">Indicadores rápidos</h5>
+            <span className="dashboard-section-subtitle">Monitoramento dinâmico dos principais números da operação</span>
+          </div>
+          <div className="row g-3">
+            <div className="col-xl-3 col-lg-6 col-md-6">
+              <div className="metric-card metric-card-primary shadow-sm">
+                <div className="metric-icon">
+                  <i className="bi bi-people-fill"></i>
+                </div>
+                <div className="metric-content">
+                  <span className="metric-label d-block text-muted text-uppercase">Clientes ativos</span>
+                  <strong className="metric-value">{formatNumber(clientesAtivos)}</strong>
+                  <small className="metric-caption text-muted">de {formatNumber(totalClientes)} clientes cadastrados</small>
+                </div>
+              </div>
+            </div>
+            <div className="col-xl-3 col-lg-6 col-md-6">
+              <div className="metric-card metric-card-warning shadow-sm">
+                <div className="metric-icon">
+                  <i className="bi bi-receipt-cutoff"></i>
+                </div>
+                <div className="metric-content">
+                  <span className="metric-label d-block text-muted text-uppercase">Títulos em aberto</span>
+                  <strong className="metric-value">{formatNumber(totalTitulosEmAberto)}</strong>
+                  <small className="metric-caption text-muted">{formatNumber(titulosPendentesCount)} pendentes e {formatNumber(titulosVencidosCount)} vencidos</small>
+                </div>
+              </div>
+            </div>
+            <div className="col-xl-3 col-lg-6 col-md-6">
+              <div className="metric-card metric-card-success shadow-sm">
+                <div className="metric-icon">
+                  <i className="bi bi-cash-stack"></i>
+                </div>
+                <div className="metric-content">
+                  <span className="metric-label d-block text-muted text-uppercase">Ticket médio</span>
+                  <strong className="metric-value">{formatCurrency(ticketMedio || 0)}</strong>
+                  <small className="metric-caption text-muted">Base calculada sobre clientes ativos</small>
+                </div>
+              </div>
+            </div>
+            <div className="col-xl-3 col-lg-6 col-md-6">
+              <div className="metric-card metric-card-info shadow-sm">
+                <div className="metric-icon">
+                  <i className="bi bi-graph-up"></i>
+                </div>
+                <div className="metric-content">
+                  <span className="metric-label d-block text-muted text-uppercase">Taxa de pagamento</span>
+                  <strong className="metric-value">{taxaPagamento.toFixed(1)}%</strong>
+                  <small className="metric-caption text-muted">Pagamentos confirmados no período</small>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="col-xl-2 col-lg-4 col-md-6">
-          <div className="chart-card">
-            {renderPieChart(getStatusPagamento(), 'Status dos Pagamentos', hiddenPagamentos, togglePagamento)}
+        <div className="dashboard-section mb-4">
+          <div className="dashboard-section-header d-flex align-items-center justify-content-between">
+            <h5 className="dashboard-section-title mb-0">Distribuição e status</h5>
+            <span className="dashboard-section-subtitle">Clique na legenda para exibir ou ocultar segmentos</span>
+          </div>
+          <div className="row g-3">
+            <div className="col-xl-2 col-lg-4 col-md-6">
+              <div className="chart-card">
+                {renderPieChart(clientesChartData, 'Status dos Clientes', hiddenClientes, toggleCliente)}
+              </div>
+            </div>
+
+            <div className="col-xl-2 col-lg-4 col-md-6">
+              <div className="chart-card">
+                {renderPieChart(planosChartData, 'Status dos Planos', hiddenPlanos, togglePlano)}
+              </div>
+            </div>
+
+            <div className="col-xl-2 col-lg-4 col-md-6">
+              <div className="chart-card">
+                {renderPieChart(statusPagamentoData, 'Status dos Pagamentos', hiddenPagamentos, togglePagamento)}
+              </div>
+            </div>
+
+            <div className="col-xl-2 col-lg-4 col-md-6">
+              <div className="chart-card">
+                {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano', hiddenDistribuicao, toggleDistribuicao)}
+              </div>
+            </div>
+
+            <div className="col-xl-2 col-lg-4 col-md-6">
+              <div className="chart-card">
+                {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento', hiddenTaxaPagamento, toggleTaxaPagamento)}
+              </div>
+            </div>
+
+            <div className="col-xl-2 col-lg-4 col-md-6">
+              <div className="chart-card">
+                {renderPieChart(contratosChartData, 'Status dos Contratos', hiddenContratos, toggleContratos)}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="col-xl-2 col-lg-4 col-md-6">
-          <div className="chart-card">
-            {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano', hiddenDistribuicao, toggleDistribuicao)}
+        <div className="dashboard-section mb-4">
+          <div className="dashboard-section-header d-flex align-items-center justify-content-between">
+            <h5 className="dashboard-section-title mb-0">Evolução temporal</h5>
+            <span className="dashboard-section-subtitle">Acompanhe tendências de receita e aquisição</span>
+          </div>
+          <div className="row g-3">
+            <div className="col-xl-6 col-lg-6">
+              <div className="chart-card">
+                {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal R$ (12 meses)', 'currency')}
+              </div>
+            </div>
+
+            <div className="col-xl-6 col-lg-6">
+              <div className="chart-card">
+                {renderLineChart(getCrescimentoClientes(), 'Novos Clientes (12 meses)', 'number')}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="col-xl-2 col-lg-4 col-md-6">
-          <div className="chart-card">
-            {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento', hiddenTaxaPagamento, toggleTaxaPagamento)}
+        <div className="dashboard-section">
+          <div className="dashboard-section-header d-flex align-items-center justify-content-between">
+            <h5 className="dashboard-section-title mb-0">Análises complementares</h5>
+            <span className="dashboard-section-subtitle">Insights para decisões estratégicas</span>
           </div>
-        </div>
+          <div className="row g-3">
+            <div className="col-xl-6 col-lg-6">
+              <div className="chart-card">
+                {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
+              </div>
+            </div>
 
-        <div className="col-xl-2 col-lg-4 col-md-6">
-          <div className="chart-card">
-            {renderPieChart(contratosChartData, 'Status dos Contratos', hiddenContratos, toggleContratos)}
+            <div className="col-xl-6 col-lg-6">
+              <div className="chart-card">
+                {renderBarChart(getClientesPorPlano(), 'Clientes por Plano', 'number')}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Gráficos Temporais */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal R$ (12 meses)', 'currency')}
-          </div>
-        </div>
-
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderLineChart(getCrescimentoClientes(), 'Novos Clientes (12 meses)', 'number')}
-          </div>
-        </div>
-      </div>
-
-      {/* Gráficos de Valor e Performance */}
-      <div className="row g-2 mb-2">
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
-          </div>
-        </div>
-
-        <div className="col-xl-6 col-lg-6">
-          <div className="chart-card">
-            {renderBarChart(getClientesPorPlano(), 'Clientes por Plano', 'number')}
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 };
