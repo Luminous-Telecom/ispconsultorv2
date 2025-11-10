@@ -380,7 +380,7 @@ const Dashboard: React.FC = () => {
   const statusPagamentoData = getStatusPagamento();
   const titulosPendentesCount = statusPagamentoData.find(item => item.label === 'Pendentes')?.value || 0;
   const titulosVencidosCount = statusPagamentoData.find(item => item.label === 'Vencidos')?.value || 0;
-  const totalTitulosEmAberto = titulosPendentesCount + titulosVencidosCount;
+  const _totalTitulosEmAberto = titulosPendentesCount + titulosVencidosCount;
 
   const clientesChartData = [
     { label: 'Ativos', value: clientesAtivos, color: '#28a745' },
