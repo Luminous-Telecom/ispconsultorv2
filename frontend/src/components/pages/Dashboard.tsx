@@ -13,42 +13,46 @@ interface ChartDataItem {
 // Componente para gráfico de linha temporal com Canvas
 const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'currency' | 'number' }> = ({ data, title, format = 'number' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
+  const hasData = data.length > 0;
+
   useEffect(() => {
+    if (!hasData) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     // Obter contexto 2D com configuração de alta resolução
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
-    
+
     // Obter device pixel ratio para retina displays
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    
+
     // Ajustar tamanho do canvas para resolução nativa
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    
+
     // Escalar contexto para device pixel ratio
     ctx.scale(dpr, dpr);
-    
+
     const maxValue = Math.max(...data.map(item => item.valor || 0));
     const chartWidth = rect.width;
     const chartHeight = 120;
     const padding = 20;
     const pointRadius = 3;
-    
+
     // Limpar canvas
     ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-    
+
     // Desenhar linha e pontos
     data.forEach((item, index) => {
       const x = (index / (data.length - 1 || 1)) * (chartWidth - padding * 2) + padding;
       const val = item.valor || 0;
       const percentage = maxValue > 0 ? val / maxValue : 0;
       const y = chartHeight - (percentage * chartHeight) + 10;
-      
+
         // Desenhar linha
         if (index === 0) {
           ctx.beginPath();
@@ -61,7 +65,7 @@ const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'curr
           ctx.lineJoin = 'round';
           ctx.stroke();
         }
-      
+
       // Desenhar ponto
       ctx.beginPath();
       ctx.arc(x, y, pointRadius, 0, Math.PI * 2);
@@ -70,31 +74,35 @@ const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'curr
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 1;
       ctx.stroke();
-      
+
       // Desenhar valor - ajustar posição para não sair do canvas
       const textY = y - 8;
       const adjustedTextY = textY < 15 ? y + 20 : textY; // Se texto está muito alto, mostrar abaixo
-      
+
       ctx.fillStyle = 'white';
       ctx.font = 'bold 0.65rem sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(val.toString(), x, adjustedTextY);
-      
+
       // Desenhar mês
       ctx.fillStyle = 'var(--text-secondary)';
       ctx.font = '0.55rem sans-serif';
       ctx.fillText(item.mes || '', x, chartHeight + 28);
     });
-  }, [data, format]);
-  
+  }, [data, format, hasData]);
+
   return (
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
       <div className="line-chart-wrapper">
-        <canvas 
-          ref={canvasRef}
-          style={{ display: 'block', width: '100%', height: '170px' }}
-        />
+        {hasData ? (
+          <canvas
+            ref={canvasRef}
+            style={{ display: 'block', width: '100%', height: '170px' }}
+          />
+        ) : (
+          <div className="chart-empty">Sem dados disponíveis</div>
+        )}
       </div>
     </div>
   );
@@ -207,48 +215,47 @@ const Dashboard: React.FC = () => {
     minute: '2-digit',
   });
 
+  const receitaMensalChartData: ChartDataItem[] = dashboardData?.receitaUltimosMeses
+    ? dashboardData.receitaUltimosMeses.labels.map((label, index) => ({
+        mes: label,
+        valor: dashboardData.receitaUltimosMeses.data[index] ?? 0,
+        color:
+          index === (dashboardData.receitaUltimosMeses.data.length - 1)
+            ? '#28a745'
+            : '#6c757d',
+      }))
+    : [];
 
-  // Faturamento mensal (últimos 12 meses)
-  const getFaturamentoMensal = () => {
-    const meses = [];
-    const hoje = new Date();
-    
-    for (let i = 11; i >= 0; i--) {
-      const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-      const mesAno = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
-      
-      const faturamentoMes = contratos
-        .filter(c => c.status === 'ativo' && (!c.data_inicio || new Date(c.data_inicio) <= data) && (!c.data_fim || new Date(c.data_fim) >= data))
-        .reduce((total, c) => total + (parseFloat(String(c.valor_final || 0))), 0);
-      
-      meses.push({ mes: mesAno, valor: faturamentoMes, color: i === 11 ? '#28a745' : '#6c757d' });
-    }
-    
-    return meses;
-  };
+  const receberMesAtualChartData: ChartDataItem[] = dashboardData?.aReceberMesAtual
+    ? dashboardData.aReceberMesAtual.labels.map((label, index) => ({
+        mes: label,
+        valor: dashboardData.aReceberMesAtual.data[index] ?? 0,
+        color: '#17a2b8',
+      }))
+    : [];
 
   // Crescimento de clientes (últimos 12 meses)
   const getCrescimentoClientes = () => {
     const meses = [];
     const hoje = new Date();
-    
+
     for (let i = 11; i >= 0; i--) {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const mesAno = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
-      
+
       const clientesMes = clientes.filter(cliente => {
         if (!cliente.created_at) return false;
         const dataCliente = new Date(cliente.created_at);
         return dataCliente.getMonth() === data.getMonth() && dataCliente.getFullYear() === data.getFullYear();
       }).length;
-      
+
       meses.push({
         mes: mesAno,
         valor: clientesMes,
         color: i === 11 ? '#007bff' : '#6c757d'
       });
     }
-    
+
     return meses;
   };
 
@@ -258,7 +265,7 @@ const Dashboard: React.FC = () => {
     const titulosPendentes = titulos.filter(t => t.status === 'pendente').length;
     const titulosVencidosCount = titulos.filter(t => t.status === 'vencido').length;
     const titulosCancelados = titulos.filter(t => t.status === 'cancelado').length;
-    
+
     return [
       { label: 'Pagos', value: titulosPagos, color: '#28a745' },
       { label: 'Pendentes', value: titulosPendentes, color: '#17a2b8' },
@@ -274,7 +281,7 @@ const Dashboard: React.FC = () => {
       acc[tipo] = (acc[tipo] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1'];
     return Object.entries(tipos).map(([tipo, quantidade], index) => ({
       label: tipo,
@@ -294,7 +301,7 @@ const Dashboard: React.FC = () => {
       }
       return acc;
     }, {} as Record<number, number>);
-    
+
     // Incluir todos os planos, mesmo os sem clientes
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8'];
     return planos.map((plano, index) => ({
@@ -341,7 +348,7 @@ const Dashboard: React.FC = () => {
   const renderPieChart = (data: ChartDataItem[], title: string, hiddenItems: Set<number>, onToggleItem: (index: number) => void) => {
     const visibleData = data.filter((_, index) => !hiddenItems.has(index));
     const total = visibleData.reduce((sum, item) => sum + (item.value || 0), 0);
-    
+
     // Construir o conic-gradient com todas as fatias
     let currentAngle = 0;
     const gradientStops = visibleData.map(item => {
@@ -349,10 +356,10 @@ const Dashboard: React.FC = () => {
       const startAngle = currentAngle;
       const endAngle = currentAngle + (percentage * 3.6);
       currentAngle = endAngle;
-      
+
       return `${item.color || '#6c757d'} ${startAngle}deg ${endAngle}deg`;
     }).join(', ');
-    
+
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
@@ -370,10 +377,10 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="chart-legend">
             {data.map((item, index) => (
-              <div 
-                key={index} 
-                className="legend-item" 
-                style={{ 
+              <div
+                key={index}
+                className="legend-item"
+                style={{
                   cursor: 'pointer',
                   opacity: hiddenItems.has(index) ? 0.5 : 1,
                   textDecoration: hiddenItems.has(index) ? 'line-through' : 'none'
@@ -395,14 +402,14 @@ const Dashboard: React.FC = () => {
   // Função para renderizar gráfico de barras horizontais
   const renderBarChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' = 'number') => {
     const maxValue = Math.max(...data.map(item => item.value || 0));
-    
+
     const formatValue = (val: number) => {
       if (format === 'currency') {
         return `R$ ${val.toFixed(2).replace('.', ',')}`;
       }
       return val.toString();
     };
-    
+
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
@@ -431,7 +438,7 @@ const Dashboard: React.FC = () => {
   // Função para renderizar gráfico de valor único
   const renderValueChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' | 'percentage' = 'number') => {
     const value = data[0]?.value || 0;
-    
+
     const formatValue = (val: number) => {
       switch (format) {
         case 'currency':
@@ -442,7 +449,7 @@ const Dashboard: React.FC = () => {
           return val.toFixed(1);
       }
     };
-    
+
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
@@ -454,7 +461,7 @@ const Dashboard: React.FC = () => {
       </div>
     );
   };
-  
+
   // Função para renderizar gráfico de linha temporal com Canvas
   const renderLineChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' = 'number') => {
     return <LineChart data={data} title={title} format={format} />;
@@ -614,13 +621,21 @@ const Dashboard: React.FC = () => {
           <div className="row g-3">
             <div className="col-xl-6 col-lg-6">
               <div className="chart-card">
-                {renderLineChart(getFaturamentoMensal(), 'Faturamento Mensal R$ (12 meses)', 'currency')}
+                {renderLineChart(receitaMensalChartData, 'Faturamento Mensal R$ (12 meses)', 'currency')}
               </div>
             </div>
 
             <div className="col-xl-6 col-lg-6">
               <div className="chart-card">
                 {renderLineChart(getCrescimentoClientes(), 'Novos Clientes (12 meses)', 'number')}
+              </div>
+            </div>
+          </div>
+
+          <div className="row g-3 mt-2">
+            <div className="col-12">
+              <div className="chart-card">
+                {renderLineChart(receberMesAtualChartData, 'A Receber no mês (R$ por dia)', 'currency')}
               </div>
             </div>
           </div>

@@ -30,6 +30,7 @@ export interface DashboardData {
   titulos: Titulo[];
   receitaUltimosMeses: DashboardChart;
   clientesPorStatus: DashboardChart;
+  aReceberMesAtual: DashboardChart;
 }
 
 export interface RelatorioVendas {

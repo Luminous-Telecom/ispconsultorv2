@@ -50,6 +50,8 @@ export class DashboardController {
         Titulo.findAll({ attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'] })
       ]);
 
+      const aReceberMesAtual = await DashboardController.getReceberMesAtualData();
+
       const dashboardData = {
         stats: statsData,
         titulosRecentes,
@@ -65,7 +67,8 @@ export class DashboardController {
         clientesPorStatus: {
           labels: ['Ativos', 'Inativos'],
           data: [statsData.planosAtivos, statsData.totalClientes - statsData.planosAtivos]
-        }
+        },
+        aReceberMesAtual
       };
 
       res.json({
@@ -543,5 +546,49 @@ export class DashboardController {
         message: error instanceof Error ? error.message : 'Erro desconhecido'
       });
     }
+  }
+
+  private static async getReceberMesAtualData() {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mesIndex = agora.getMonth();
+    const inicioMes = new Date(ano, mesIndex, 1, 0, 0, 0, 0);
+    const fimMes = new Date(ano, mesIndex + 1, 0, 23, 59, 59, 999);
+    const diasNoMes = fimMes.getDate();
+
+    const titulosMes = await Titulo.findAll({
+      attributes: ['valor', 'data_vencimento'],
+      where: {
+        data_vencimento: {
+          [Op.between]: [inicioMes, fimMes]
+        },
+        status: {
+          [Op.in]: ['pendente', 'vencido']
+        }
+      }
+    });
+
+    const valoresPorDia = new Array(diasNoMes).fill(0);
+
+    for (const titulo of titulosMes) {
+      if (!titulo.data_vencimento) {
+        continue;
+      }
+      const data = new Date(titulo.data_vencimento);
+      const dia = data.getDate();
+      const indice = dia - 1;
+      const valorTitulo = parseFloat(titulo.valor.toString());
+      valoresPorDia[indice] += valorTitulo;
+    }
+
+    const labels = Array.from({ length: diasNoMes }, (_, index) => {
+      const dia = index + 1;
+      return `${String(dia).padStart(2, '0')}/${String(mesIndex + 1).padStart(2, '0')}`;
+    });
+
+    return {
+      labels,
+      data: valoresPorDia
+    };
   }
 }
