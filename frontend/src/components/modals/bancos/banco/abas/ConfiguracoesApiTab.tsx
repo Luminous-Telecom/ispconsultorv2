@@ -41,7 +41,7 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   name="client_secret_producao"
                   type="password"
                   label={formData.tipo_banco === 'efi' ? 'Client Secret Produção' : 'Client Secret'}
-                  placeholder="Client Secret para produção"
+                  placeholder="Preencha o Client Secret"
                   required={formData.tipo_banco === 'efi'}
                   size="sm"
                   value={formData.client_secret_producao}
@@ -50,6 +50,11 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   autoComplete="off"
                   formPrefix={formPrefix}
                 />
+                {!formData.client_secret_producao && (
+                  <small className="text-warning d-block mt-1">
+                    ⚠️ Campo vazio. Preencha para testar a conexão.
+                  </small>
+                )}
               </div>
             </div>
           </div>

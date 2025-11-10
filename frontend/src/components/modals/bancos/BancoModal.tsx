@@ -322,7 +322,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
 
     setTestResult('Testando conexão...');
     try {
-      // Preparar dados para salvar (não enviar campos de senha vazios)
+      // Preparar dados para salvar
       const dataToSave = { ...formData };
       
       // Se client_secret_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
@@ -347,12 +347,25 @@ const BancoModal: React.FC<BancoModalProps> = ({
         setTestResult('✅ ' + (resultado.message || 'Conexão testada com sucesso!'));
         success(resultado.message || 'Conexão testada com sucesso!');
       } else {
-        setTestResult('❌ ' + (resultado.message || 'Falha no teste de conexão'));
-        error(resultado.message || 'Falha no teste de conexão');
+        let mensagemErro = resultado.message || 'Falha no teste de conexão';
+        
+        // Melhorar mensagem se for erro de credenciais
+        if (mensagemErro.includes('Credenciais do banco não configuradas')) {
+          mensagemErro = 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.';
+        }
+        
+        setTestResult('❌ ' + mensagemErro);
+        error(mensagemErro);
       }
     } catch (err) {
       const axiosError = err as AxiosError<{ message: string }>;
-      const errorMessage = axiosError?.response?.data?.message || axiosError?.message || 'Erro ao testar conexão';
+      let errorMessage = axiosError?.response?.data?.message || axiosError?.message || 'Erro ao testar conexão';
+      
+      // Melhorar mensagem se for erro de credenciais
+      if (errorMessage.includes('Credenciais do banco não configuradas')) {
+        errorMessage = 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.';
+      }
+      
       setTestResult('❌ ' + errorMessage);
       error(errorMessage);
     }
