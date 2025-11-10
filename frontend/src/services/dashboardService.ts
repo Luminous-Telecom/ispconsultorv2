@@ -36,6 +36,12 @@ export interface DashboardData {
     startDate: string;
     endDate: string;
   };
+  resumoPeriodo?: {
+    totalPrevisto: number;
+    totalRecebido: number;
+    totalPendente: number;
+    clientesComTitulos: number;
+  };
 }
 
 export interface DashboardFilters {

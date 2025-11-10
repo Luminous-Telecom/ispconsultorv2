@@ -55,7 +55,10 @@ export class DashboardController {
       const parsedStart = DashboardController.parseStartDate(startDate as string | undefined);
       const parsedEnd = DashboardController.parseEndDate(endDate as string | undefined, parsedStart);
 
-      const aReceberPeriodo = await DashboardController.getReceberPorPeriodoData(parsedStart, parsedEnd);
+      const [aReceberPeriodo, resumoPeriodo] = await Promise.all([
+        DashboardController.getReceberPorPeriodoData(parsedStart, parsedEnd),
+        DashboardController.getResumoFinanceiroPeriodo(parsedStart, parsedEnd)
+      ]);
 
       const dashboardData = {
         stats: statsData,
@@ -77,7 +80,8 @@ export class DashboardController {
         filtros: {
           startDate: parsedStart.toISOString(),
           endDate: parsedEnd.toISOString()
-        }
+        },
+        resumoPeriodo
       };
 
       res.json({
@@ -644,6 +648,63 @@ export class DashboardController {
     return {
       labels,
       data: valoresPorDia
+    };
+  }
+
+  private static async getResumoFinanceiroPeriodo(startDate: Date, endDate: Date) {
+    const inicio = new Date(startDate);
+    inicio.setHours(0, 0, 0, 0);
+    const fim = new Date(endDate);
+    fim.setHours(23, 59, 59, 999);
+
+    const titulosPeriodo = await Titulo.findAll({
+      attributes: ['valor', 'valor_pago', 'status', 'cliente_id', 'data_vencimento'],
+      where: {
+        data_vencimento: {
+          [Op.between]: [inicio, fim]
+        }
+      }
+    });
+
+    let totalPrevisto = 0;
+    let totalRecebido = 0;
+    let totalPendente = 0;
+    const clientesPeriodo = new Set<number>();
+
+    for (const titulo of titulosPeriodo) {
+      const valorTitulo = parseFloat(titulo.valor.toString());
+      const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+        ? parseFloat(titulo.valor_pago.toString())
+        : valorTitulo;
+
+      totalPrevisto += valorTitulo;
+      if (titulo.cliente_id) {
+        clientesPeriodo.add(titulo.cliente_id);
+      }
+
+      switch (titulo.status) {
+        case 'pago':
+        case 'pago_atraso':
+          totalRecebido += valorPago;
+          break;
+        case 'parcial':
+          totalRecebido += Math.min(valorPago, valorTitulo);
+          totalPendente += Math.max(valorTitulo - valorPago, 0);
+          break;
+        case 'pendente':
+        case 'vencido':
+          totalPendente += valorTitulo;
+          break;
+        default:
+          break;
+      }
+    }
+
+    return {
+      totalPrevisto,
+      totalRecebido,
+      totalPendente,
+      clientesComTitulos: clientesPeriodo.size
     };
   }
 }

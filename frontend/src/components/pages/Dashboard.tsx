@@ -249,15 +249,20 @@ const Dashboard: React.FC = () => {
   const contratosSuspensos = contratos.filter(c => c.status === 'suspenso').length;
 
   // Receitas reais do backend
-  const receitaTotal = (stats?.valorTotalRecebido || 0) + (stats?.valorTotalReceber || 0);
-  const receitaPaga = stats?.valorTotalRecebido || 0;
-  const _receitaPendente = stats?.valorTotalReceber || 0;
+  const receitaTotalGlobal = (stats?.valorTotalRecebido || 0) + (stats?.valorTotalReceber || 0);
+  const receitaPagaGlobal = stats?.valorTotalRecebido || 0;
+  const receitaPendenteGlobal = stats?.valorTotalReceber || 0;
+
+  const receitaPrevistaPeriodo = dashboardData?.resumoPeriodo?.totalPrevisto ?? receitaTotalGlobal;
+  const receitaPagaPeriodo = dashboardData?.resumoPeriodo?.totalRecebido ?? receitaPagaGlobal;
+  const receitaPendentePeriodo = dashboardData?.resumoPeriodo?.totalPendente ?? receitaPendenteGlobal;
+  const clientesPeriodo = dashboardData?.resumoPeriodo?.clientesComTitulos ?? clientesAtivos;
 
   // Métricas adicionais (usando dados reais quando disponíveis)
   // Ticket médio = valor total recebido / clientes ativos
-  const ticketMedio = stats?.ticketMedio ?? (clientesAtivos > 0 ? receitaPaga / clientesAtivos : 0);
-  const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
-  const _receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
+  const ticketMedio = stats?.ticketMedio ?? (clientesAtivos > 0 ? receitaPagaGlobal / clientesAtivos : 0);
+  const taxaPagamento = receitaPrevistaPeriodo > 0 ? (receitaPagaPeriodo / receitaPrevistaPeriodo) * 100 : 0;
+  const _receitaPorCliente = totalClientes > 0 ? receitaTotalGlobal / totalClientes : 0;
 
   const agora = new Date();
   const lastUpdatedDate = agora.toLocaleDateString('pt-BR', {
@@ -553,19 +558,20 @@ const Dashboard: React.FC = () => {
               <div className="d-flex flex-wrap gap-3">
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Faturamento total</span>
-                  <strong className="dashboard-hero-value">{formatCurrency(receitaTotal)}</strong>
+                  <strong className="dashboard-hero-value">{formatCurrency(receitaPrevistaPeriodo)}</strong>
                 </div>
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Receita recebida</span>
-                  <strong className="dashboard-hero-value">{formatCurrency(receitaPaga)}</strong>
+                  <strong className="dashboard-hero-value">{formatCurrency(receitaPagaPeriodo)}</strong>
                 </div>
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Receita pendente</span>
-                  <strong className="dashboard-hero-value">{formatCurrency(stats?.valorTotalReceber || 0)}</strong>
+                  <strong className="dashboard-hero-value">{formatCurrency(receitaPendentePeriodo)}</strong>
                 </div>
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Clientes ativos</span>
-                  <strong className="dashboard-hero-value">{formatNumber(clientesAtivos)}</strong>
+                  <strong className="dashboard-hero-value">{formatNumber(clientesPeriodo)}</strong>
+                  <small className="dashboard-hero-label d-block">Clientes no período</small>
                 </div>
               </div>
             </div>
