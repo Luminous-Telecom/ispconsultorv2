@@ -10,6 +10,8 @@ import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import { TituloController } from '../controllers/TituloController';
 
+const INTERACTION_DELAY_MS = 2000;
+
 interface TituloPlainWithRelations {
   cliente?: Cliente;
   plano?: Plano;
@@ -140,6 +142,14 @@ export class WhatsAppService {
             const enviouPdf = await this.enviarPdfBase64(servidor, telefone, base64, msg);
             if (enviouPdf) {
               enviadas++;
+              await this.enviarMensagensInteracao({
+                mensagem,
+                servidor,
+                telefone,
+                cliente,
+                contrato: contratoRef,
+                titulo,
+              });
             } else {
               erros++;
             }
@@ -151,6 +161,14 @@ export class WhatsAppService {
           const enviouTexto = await this.enviarMensagem(servidor, telefone, msg);
           if (enviouTexto) {
             enviadas++;
+            await this.enviarMensagensInteracao({
+              mensagem,
+              servidor,
+              telefone,
+              cliente,
+              contrato: contratoRef,
+              titulo,
+            });
           } else {
             erros++;
           }
@@ -232,6 +250,63 @@ export class WhatsAppService {
       logger.error('Erro ao enviar PDF via WhatsApp:', error);
       return false;
     }
+  }
+
+  private static async enviarMensagensInteracao(params: {
+    mensagem: MensagemWhatsApp;
+    servidor: ServidorWhatsApp;
+    telefone: string;
+    cliente?: Cliente;
+    contrato?: Contrato;
+    titulo: Titulo;
+  }): Promise<void> {
+    const { mensagem, servidor, telefone, cliente, contrato, titulo } = params;
+    const interacoes = [mensagem.interacao1, mensagem.interacao2, mensagem.interacao3];
+
+    let jaEnviouAlguma = false;
+
+    for (const interacao of interacoes) {
+      if (!interacao || !interacao.trim()) {
+        continue;
+      }
+
+      if (jaEnviouAlguma) {
+        await this.delay(INTERACTION_DELAY_MS);
+      }
+
+      try {
+        const texto = await VariaveisDocumentoService.processarVariaveis(interacao, {
+          cliente,
+          contrato,
+          titulo,
+          dataReferencia: new Date(),
+        });
+
+        if (!texto || !texto.trim()) {
+          continue;
+        }
+
+        const enviou = await this.enviarMensagem(servidor, telefone, texto);
+        jaEnviouAlguma = true;
+
+        if (!enviou) {
+          logger.warn('Falha ao enviar mensagem de interação via WhatsApp', {
+            telefone,
+            instancia: servidor.instance_name,
+          });
+        }
+      } catch (error) {
+        logger.error('Erro ao processar/enviar mensagem de interação via WhatsApp', {
+          error,
+          telefone,
+          instancia: servidor.instance_name,
+        });
+      }
+    }
+  }
+
+  private static async delay(ms: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
