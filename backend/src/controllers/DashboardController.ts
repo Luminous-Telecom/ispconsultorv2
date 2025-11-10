@@ -50,7 +50,12 @@ export class DashboardController {
         Titulo.findAll({ attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'] })
       ]);
 
-      const aReceberMesAtual = await DashboardController.getReceberMesAtualData();
+      const { startDate, endDate } = req.query;
+
+      const parsedStart = DashboardController.parseStartDate(startDate as string | undefined);
+      const parsedEnd = DashboardController.parseEndDate(endDate as string | undefined, parsedStart);
+
+      const aReceberPeriodo = await DashboardController.getReceberPorPeriodoData(parsedStart, parsedEnd);
 
       const dashboardData = {
         stats: statsData,
@@ -68,7 +73,11 @@ export class DashboardController {
           labels: ['Ativos', 'Inativos'],
           data: [statsData.planosAtivos, statsData.totalClientes - statsData.planosAtivos]
         },
-        aReceberMesAtual
+        aReceberPeriodo,
+        filtros: {
+          startDate: parsedStart.toISOString(),
+          endDate: parsedEnd.toISOString()
+        }
       };
 
       res.json({
@@ -557,19 +566,50 @@ export class DashboardController {
     }
   }
 
-  private static async getReceberMesAtualData() {
-    const agora = new Date();
-    const ano = agora.getFullYear();
-    const mesIndex = agora.getMonth();
-    const inicioMes = new Date(ano, mesIndex, 1, 0, 0, 0, 0);
-    const fimMes = new Date(ano, mesIndex + 1, 0, 23, 59, 59, 999);
-    const diasNoMes = fimMes.getDate();
+  private static parseStartDate(start?: string) {
+    if (start) {
+      const parsed = new Date(start);
+      if (!Number.isNaN(parsed.getTime())) {
+        parsed.setHours(0, 0, 0, 0);
+        return parsed;
+      }
+    }
+    const hoje = new Date();
+    const data = new Date(hoje.getFullYear(), hoje.getMonth(), 1, 0, 0, 0, 0);
+    return data;
+  }
 
-    const titulosMes = await Titulo.findAll({
+  private static parseEndDate(end: string | undefined, start: Date) {
+    if (end) {
+      const parsed = new Date(end);
+      if (!Number.isNaN(parsed.getTime())) {
+        parsed.setHours(23, 59, 59, 999);
+        if (parsed < start) {
+          const ajustado = new Date(start);
+          ajustado.setHours(23, 59, 59, 999);
+          return ajustado;
+        }
+        return parsed;
+      }
+    }
+    const data = new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59, 999);
+    return data;
+  }
+
+  private static async getReceberPorPeriodoData(startDate: Date, endDate: Date) {
+    const inicio = new Date(startDate);
+    inicio.setHours(0, 0, 0, 0);
+    const fim = new Date(endDate);
+    fim.setHours(23, 59, 59, 999);
+
+    const diffTime = fim.getTime() - inicio.getTime();
+    const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const titulosPeriodo = await Titulo.findAll({
       attributes: ['valor', 'data_vencimento'],
       where: {
         data_vencimento: {
-          [Op.between]: [inicioMes, fimMes]
+          [Op.between]: [inicio, fim]
         },
         status: {
           [Op.in]: ['pendente', 'vencido']
@@ -577,22 +617,28 @@ export class DashboardController {
       }
     });
 
-    const valoresPorDia = new Array(diasNoMes).fill(0);
+    const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
 
-    for (const titulo of titulosMes) {
+    const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+    for (const titulo of titulosPeriodo) {
       if (!titulo.data_vencimento) {
         continue;
       }
-      const data = new Date(titulo.data_vencimento);
-      const dia = data.getDate();
-      const indice = dia - 1;
-      const valorTitulo = parseFloat(titulo.valor.toString());
-      valoresPorDia[indice] += valorTitulo;
+      const dataTitulo = new Date(titulo.data_vencimento);
+      dataTitulo.setHours(0, 0, 0, 0);
+      const diff = dataTitulo.getTime() - inicio.getTime();
+      const indice = Math.floor(diff / MS_POR_DIA);
+      if (indice >= 0 && indice < valoresPorDia.length) {
+        const valorTitulo = parseFloat(titulo.valor.toString());
+        valoresPorDia[indice] += valorTitulo;
+      }
     }
 
-    const labels = Array.from({ length: diasNoMes }, (_, index) => {
-      const dia = index + 1;
-      return `${String(dia).padStart(2, '0')}/${String(mesIndex + 1).padStart(2, '0')}`;
+    const labels = valoresPorDia.map((_, index) => {
+      const data = new Date(inicio);
+      data.setDate(inicio.getDate() + index);
+      return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     });
 
     return {

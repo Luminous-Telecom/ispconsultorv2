@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDashboard } from '../../hooks/useDashboard';
+import FormField from '../ui/FormField';
 
 interface ChartDataItem {
   valor?: number;
@@ -9,6 +10,27 @@ interface ChartDataItem {
   mes?: string;
   [key: string]: string | number | undefined;
 }
+
+const formatDateToInput = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatDateLabel = (value?: string): string => {
+  if (!value) return '';
+  const [year, month, day] = value.split('-');
+  return `${day}/${month}/${year}`;
+};
+
+const getCurrentMonthRange = () => {
+  const today = new Date();
+  return {
+    start: new Date(today.getFullYear(), today.getMonth(), 1),
+    end: new Date(today.getFullYear(), today.getMonth() + 1, 0),
+  };
+};
 
 // Componente para gráfico de linha temporal com Canvas
 const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'currency' | 'number' }> = ({ data, title, format = 'number' }) => {
@@ -109,6 +131,35 @@ const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'curr
 };
 
 const Dashboard: React.FC = () => {
+  const { start: defaultStartDate, end: defaultEndDate } = getCurrentMonthRange();
+  const defaultStart = formatDateToInput(defaultStartDate);
+  const defaultEnd = formatDateToInput(defaultEndDate);
+
+  const [startDate, setStartDate] = useState<string>(defaultStart);
+  const [endDate, setEndDate] = useState<string>(defaultEnd);
+
+  const handleStartDateChange = (value: unknown) => {
+    if (typeof value !== 'string') return;
+    setStartDate(value);
+    if (endDate && new Date(`${value}T00:00:00`) > new Date(`${endDate}T00:00:00`)) {
+      setEndDate(value);
+    }
+  };
+
+  const handleEndDateChange = (value: unknown) => {
+    if (typeof value !== 'string') return;
+    if (startDate && new Date(`${value}T00:00:00`) < new Date(`${startDate}T00:00:00`)) {
+      setEndDate(startDate);
+      return;
+    }
+    setEndDate(value);
+  };
+
+  const handleResetPeriod = () => {
+    setStartDate(defaultStart);
+    setEndDate(defaultEnd);
+  };
+
   // Estados para controlar itens ocultos em cada gráfico
   const [hiddenClientes, setHiddenClientes] = useState<Set<number>>(new Set());
   const [hiddenPlanos, setHiddenPlanos] = useState<Set<number>>(new Set());
@@ -169,7 +220,10 @@ const Dashboard: React.FC = () => {
   const formatNumber = (valor: number): string => valor.toLocaleString('pt-BR');
 
   // Query única para buscar todos os dados do dashboard
-  const { data: dashboardData, isLoading: loadingDashboard } = useDashboard();
+  const { data: dashboardData, isLoading: loadingDashboard } = useDashboard({
+    startDate,
+    endDate,
+  });
 
   // Processar dados vindos do backend
   const clientes = dashboardData?.clientes || [];
@@ -226,15 +280,17 @@ const Dashboard: React.FC = () => {
       }))
     : [];
 
-  const receberMesAtualChartData: ChartDataItem[] = dashboardData?.aReceberMesAtual
-    ? dashboardData.aReceberMesAtual.labels.map((label, index) => ({
+  const receberPeriodoChartData: ChartDataItem[] = dashboardData?.aReceberPeriodo
+    ? dashboardData.aReceberPeriodo.labels.map((label, index) => ({
         mes: label,
-        valor: dashboardData.aReceberMesAtual.data[index] ?? 0,
+        valor: dashboardData.aReceberPeriodo.data[index] ?? 0,
         color: '#17a2b8',
       }))
     : [];
 
-  const totalReceberMesAtual = receberMesAtualChartData.reduce((acc, item) => acc + (item.valor || 0), 0);
+  const totalReceberPeriodo = receberPeriodoChartData.reduce((acc, item) => acc + (item.valor || 0), 0);
+  const periodoInicioLabel = formatDateLabel(startDate);
+  const periodoFimLabel = formatDateLabel(endDate);
 
   // Crescimento de clientes (últimos 12 meses)
   const getCrescimentoClientes = () => {
@@ -490,7 +546,9 @@ const Dashboard: React.FC = () => {
               <div>
                 <span className="dashboard-badge text-uppercase">Visão geral</span>
                 <h2 className="dashboard-hero-title mb-2">Painel financeiro e operacional</h2>
-                <p className="dashboard-hero-subtitle mb-0">Atualizado em {lastUpdatedDate} às {lastUpdatedTime}</p>
+                <p className="dashboard-hero-subtitle mb-0">
+                  Atualizado em {lastUpdatedDate} às {lastUpdatedTime} · Período {periodoInicioLabel} — {periodoFimLabel}
+                </p>
               </div>
               <div className="d-flex flex-wrap gap-3">
                 <div className="dashboard-hero-stat">
@@ -511,6 +569,34 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="dashboard-filters">
+          <FormField
+            formPrefix="DashboardFilters"
+            type="date"
+            label="Data inicial"
+            name="startDate"
+            value={startDate}
+            onChange={handleStartDateChange}
+            className="flex-grow-1"
+            size="sm"
+          />
+          <FormField
+            formPrefix="DashboardFilters"
+            type="date"
+            label="Data final"
+            name="endDate"
+            value={endDate}
+            onChange={handleEndDateChange}
+            className="flex-grow-1"
+            size="sm"
+          />
+          <div className="dashboard-filters-actions">
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleResetPeriod}>
+              Mês atual
+            </button>
           </div>
         </div>
 
@@ -638,8 +724,8 @@ const Dashboard: React.FC = () => {
             <div className="col-12">
               <div className="chart-card">
                 {renderLineChart(
-                  receberMesAtualChartData,
-                  `A Receber no mês · Total ${formatCurrency(totalReceberMesAtual)}`,
+                  receberPeriodoChartData,
+                  `A Receber no período (${periodoInicioLabel} - ${periodoFimLabel}) · Total ${formatCurrency(totalReceberPeriodo)}`,
                   'currency'
                 )}
               </div>

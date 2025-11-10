@@ -31,7 +31,16 @@ export interface DashboardData {
   titulos: Titulo[];
   receitaUltimosMeses: DashboardChart;
   clientesPorStatus: DashboardChart;
-  aReceberMesAtual: DashboardChart;
+  aReceberPeriodo: DashboardChart;
+  filtros?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+export interface DashboardFilters {
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface RelatorioVendas {
@@ -49,9 +58,11 @@ export interface RelatorioVendas {
 
 export class DashboardService {
   // Buscar dados do dashboard
-  static async getDashboardData(): Promise<DashboardData> {
+  static async getDashboardData(filters?: DashboardFilters): Promise<DashboardData> {
     try {
-      const response = await apiService.get<DashboardData>('/dashboard');
+      const response = await apiService.get<DashboardData>('/dashboard', {
+        params: filters,
+      });
       if (response.success && response.data) {
         return response.data;
       }
