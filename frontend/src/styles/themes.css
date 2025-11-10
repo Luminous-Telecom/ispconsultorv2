@@ -1960,7 +1960,7 @@ select:focus,
 
 /* --- Dashboard Professional Overrides --- */
 .dashboard-container {
-  padding: 1.5rem 0;
+  padding: 0;
 }
 
 .dashboard-hero {
