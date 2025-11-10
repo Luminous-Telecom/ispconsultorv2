@@ -51,7 +51,7 @@ const formatMonthNumeric = (label: string): string => {
     });
   }
 
-  const matchMonthYear = trimmed.match(/^([A-Za-zçÇ]{3,9})\/?(\d{2,4})?$/u);
+  const matchMonthYear = trimmed.match(/^([A-Za-zçÇ]{3,9})\/?(\d{2,4})?$/);
   if (matchMonthYear) {
     const monthKey = matchMonthYear[1].toLowerCase();
     const monthNumber = MONTH_NAME_MAP[monthKey];
