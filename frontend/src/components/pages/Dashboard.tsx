@@ -91,7 +91,22 @@ const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'curr
     // Obter contexto 2D com configuração de alta resolução
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
-    
+
+    const computedStyles = typeof window !== 'undefined'
+      ? getComputedStyle(document.documentElement)
+      : null;
+    const getColor = (variable: string, fallback: string) => {
+      const value = computedStyles?.getPropertyValue(variable)?.trim();
+      return value && value.length > 0 ? value : fallback;
+    };
+
+    const lineColor = '#007bff';
+    const pointFill = lineColor;
+    const pointBorder = getColor('--bg-primary', '#ffffff');
+    const valueColor = getColor('--text-primary', '#ffffff');
+    const labelColor = getColor('--text-secondary', '#adb5bd');
+    const axisColor = getColor('--border-light', '#2c3440');
+
     // Obter device pixel ratio para retina displays
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
@@ -112,46 +127,51 @@ const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'curr
     // Limpar canvas
     ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
     
-    // Desenhar linha e pontos
+    ctx.strokeStyle = axisColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, chartHeight + 10);
+    ctx.lineTo(chartWidth - padding, chartHeight + 10);
+    ctx.stroke();
+
     data.forEach((item, index) => {
       const x = (index / (data.length - 1 || 1)) * (chartWidth - padding * 2) + padding;
       const val = item.valor || 0;
       const percentage = maxValue > 0 ? val / maxValue : 0;
       const y = chartHeight - (percentage * chartHeight) + 10;
-      
-        // Desenhar linha
-        if (index === 0) {
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-          ctx.strokeStyle = '#007bff';
-          ctx.lineWidth = 2;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          ctx.stroke();
-        }
-      
+ 
+      if (index === 0) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+ 
       // Desenhar ponto
       ctx.beginPath();
       ctx.arc(x, y, pointRadius, 0, Math.PI * 2);
-      ctx.fillStyle = '#007bff';
+      ctx.fillStyle = pointFill;
       ctx.fill();
-      ctx.strokeStyle = 'white';
+      ctx.strokeStyle = pointBorder;
       ctx.lineWidth = 1;
       ctx.stroke();
-      
+ 
       // Desenhar valor - ajustar posição para não sair do canvas
       const textY = y - 8;
       const adjustedTextY = textY < 15 ? y + 20 : textY; // Se texto está muito alto, mostrar abaixo
-      
-      ctx.fillStyle = 'white';
+ 
+      ctx.fillStyle = valueColor;
       ctx.font = 'bold 0.65rem sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(val.toString(), x, adjustedTextY);
-      
+ 
       // Desenhar mês
-      ctx.fillStyle = 'var(--text-secondary)';
+      ctx.fillStyle = labelColor;
       ctx.font = '0.55rem sans-serif';
       ctx.fillText(item.mes || '', x, chartHeight + 28);
     });
