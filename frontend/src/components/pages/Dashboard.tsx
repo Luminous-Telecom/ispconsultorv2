@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { useDashboard } from '../../hooks/useDashboard';
 import FormField from '../ui/FormField';
-import { LineChart as RLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart as RLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 
 interface ChartDataItem {
   valor?: number;
@@ -72,6 +83,115 @@ const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, 
             <Line type="monotone" dataKey="value" stroke="#007bff" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
           </RLineChart>
         </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+interface ResponsivePieChartProps {
+  data: ChartDataItem[];
+  title: string;
+  hiddenItems: Set<number>;
+  onToggleItem: (index: number) => void;
+}
+
+const formatPieValue = (value: number, title: string): string | number => {
+  if (title === 'Taxa de Pagamento') {
+    return `${value.toFixed(1)}%`;
+  }
+  return value.toLocaleString('pt-BR');
+};
+
+const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hiddenItems, onToggleItem }) => {
+  const visibleData = data.filter((_, index) => !hiddenItems.has(index));
+  const total = visibleData.reduce((sum, item) => sum + (item.value || 0), 0);
+
+  const chartData = data.map((item) => ({
+    name: item.label,
+    value: item.value || 0,
+    color: item.color,
+  }));
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+    const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+
+    if (percent * 100 > 5) {
+      return (
+        <text
+          x={x}
+          y={y}
+          fill="#ffffff"
+          textAnchor={x > cx ? 'start' : 'end'}
+          dominantBaseline="central"
+          fontSize={10}
+        >
+          {`${(percent * 100).toFixed(0)}%`}
+        </text>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="chart-container">
+      <h6 className="chart-title">{title}</h6>
+      <div className="d-flex align-items-center">
+        <div style={{ width: '160px', height: '160px' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData.filter((_, index) => !hiddenItems.has(index))}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={30}
+                outerRadius={70}
+                fill="#8884d8"
+                paddingAngle={2}
+                labelLine={false}
+                label={renderCustomizedLabel}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color || '#6c757d'}
+                    opacity={hiddenItems.has(index) ? 0.3 : 1}
+                  />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="chart-legend ms-3">
+          <div className="pie-center-recharts mb-2 text-center">
+            <span className="pie-total-recharts text-primary fw-bold">
+              {formatPieValue(total, title)}
+            </span>
+            <small className="d-block text-muted">Total</small>
+          </div>
+
+          {data.map((item, index) => (
+            <div
+              key={index}
+              className="legend-item"
+              style={{
+                cursor: 'pointer',
+                opacity: hiddenItems.has(index) ? 0.5 : 1,
+                textDecoration: hiddenItems.has(index) ? 'line-through' : 'none'
+              }}
+              onClick={() => onToggleItem(index)}
+            >
+              <div className="legend-color" style={{ backgroundColor: item.color || '#6c757d' }}></div>
+              <span className="legend-label">
+                {item.label}: {formatPieValue(item.value || 0, title)}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -428,59 +548,9 @@ const Dashboard: React.FC = () => {
     { label: 'Suspensos', value: contratosSuspensos, color: '#ffc107' }
   ];
 
-  // Função para renderizar gráfico de pizza simples
+  // Função para renderizar gráfico de pizza simples (Novo com Recharts)
   const renderPieChart = (data: ChartDataItem[], title: string, hiddenItems: Set<number>, onToggleItem: (index: number) => void) => {
-    const visibleData = data.filter((_, index) => !hiddenItems.has(index));
-    const total = visibleData.reduce((sum, item) => sum + (item.value || 0), 0);
-    
-    // Construir o conic-gradient com todas as fatias
-    let currentAngle = 0;
-    const gradientStops = visibleData.map(item => {
-      const percentage = total > 0 ? ((item.value || 0) / total) * 100 : 0;
-      const startAngle = currentAngle;
-      const endAngle = currentAngle + (percentage * 3.6);
-      currentAngle = endAngle;
-      
-      return `${item.color || '#6c757d'} ${startAngle}deg ${endAngle}deg`;
-    }).join(', ');
-    
-    return (
-      <div className="chart-container">
-        <h6 className="chart-title">{title}</h6>
-        <div className="d-flex align-items-center">
-          <div className="pie-chart">
-            <div className="pie-slice" style={{
-              background: `conic-gradient(${gradientStops})`
-            }}>
-              <div className="pie-center">
-                <span className="pie-total">
-                  {title === 'Taxa de Pagamento' ? `${total.toFixed(1)}%` : total}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="chart-legend">
-            {data.map((item, index) => (
-              <div 
-                key={index} 
-                className="legend-item" 
-                style={{ 
-                  cursor: 'pointer',
-                  opacity: hiddenItems.has(index) ? 0.5 : 1,
-                  textDecoration: hiddenItems.has(index) ? 'line-through' : 'none'
-                }}
-                onClick={() => onToggleItem(index)}
-              >
-                <div className="legend-color" style={{ backgroundColor: item.color || '#6c757d' }}></div>
-                <span className="legend-label">
-                  {item.label}: {title === 'Taxa de Pagamento' ? `${(item.value || 0).toFixed(1)}%` : (item.value || 0)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <ResponsivePieChart data={data} title={title} hiddenItems={hiddenItems} onToggleItem={onToggleItem} />;
   };
 
   // Função para renderizar gráfico de barras horizontais
@@ -649,37 +719,67 @@ const Dashboard: React.FC = () => {
             <div className="row g-3 mb-4">
           <div className="col-xl-2 col-lg-4 col-md-6">
             <div className="chart-card">
-              {renderPieChart(clientesChartData, 'Status dos Clientes', hiddenClientes, toggleCliente)}
+              <ResponsivePieChart
+                data={clientesChartData}
+                title="Status dos Clientes"
+                hiddenItems={hiddenClientes}
+                onToggleItem={toggleCliente}
+              />
             </div>
           </div>
 
           <div className="col-xl-2 col-lg-4 col-md-6">
             <div className="chart-card">
-              {renderPieChart(planosChartData, 'Status dos Planos', hiddenPlanos, togglePlano)}
+              <ResponsivePieChart
+                data={planosChartData}
+                title="Status dos Planos"
+                hiddenItems={hiddenPlanos}
+                onToggleItem={togglePlano}
+              />
             </div>
           </div>
 
           <div className="col-xl-2 col-lg-4 col-md-6">
             <div className="chart-card">
-              {renderPieChart(statusPagamentoData, 'Status dos Pagamentos', hiddenPagamentos, togglePagamento)}
+              <ResponsivePieChart
+                data={statusPagamentoData}
+                title="Status dos Pagamentos"
+                hiddenItems={hiddenPagamentos}
+                onToggleItem={togglePagamento}
+              />
             </div>
           </div>
 
           <div className="col-xl-2 col-lg-4 col-md-6">
             <div className="chart-card">
-              {renderPieChart(getDistribuicaoPlanos(), 'Distribuição por Tipo de Plano', hiddenDistribuicao, toggleDistribuicao)}
+              <ResponsivePieChart
+                data={getDistribuicaoPlanos()}
+                title="Distribuição por Tipo de Plano"
+                hiddenItems={hiddenDistribuicao}
+                onToggleItem={toggleDistribuicao}
+              />
             </div>
           </div>
 
           <div className="col-xl-2 col-lg-4 col-md-6">
             <div className="chart-card">
-              {renderPieChart(taxaPagamentoChartData, 'Taxa de Pagamento', hiddenTaxaPagamento, toggleTaxaPagamento)}
+              <ResponsivePieChart
+                data={taxaPagamentoChartData}
+                title="Taxa de Pagamento"
+                hiddenItems={hiddenTaxaPagamento}
+                onToggleItem={toggleTaxaPagamento}
+              />
             </div>
           </div>
 
           <div className="col-xl-2 col-lg-4 col-md-6">
             <div className="chart-card">
-              {renderPieChart(contratosChartData, 'Status dos Contratos', hiddenContratos, toggleContratos)}
+              <ResponsivePieChart
+                data={contratosChartData}
+                title="Status dos Contratos"
+                hiddenItems={hiddenContratos}
+                onToggleItem={toggleContratos}
+              />
             </div>
           </div>
         </div>
