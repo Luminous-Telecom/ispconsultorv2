@@ -450,7 +450,7 @@ const Dashboard: React.FC = () => {
   const recebidosPeriodoChartData: ChartDataItem[] = dashboardData?.recebidosPeriodo
     ? dashboardData.recebidosPeriodo.labels.map((label: string, index: number) => ({
         mes: label,
-        valor: dashboardData.recebidosPeriodo.data[index] ?? 0,
+        valor: dashboardData.recebidosPeriodo?.data?.[index] ?? 0,
         color: '#28a745',
       }))
     : [];
