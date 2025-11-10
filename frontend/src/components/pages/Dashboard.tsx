@@ -153,7 +153,7 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
       <div className="d-flex align-items-center">
-        <div style={{ width: '160px', height: '160px' }}>
+        <div style={{ width: '140px', height: '140px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -162,8 +162,8 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                innerRadius={30}
-                outerRadius={70}
+                innerRadius={28}
+                outerRadius={58}
                 fill="#8884d8"
                 paddingAngle={2}
                 labelLine={false}
