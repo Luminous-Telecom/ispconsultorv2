@@ -24,50 +24,6 @@ const formatDateLabel = (value?: string): string => {
   return `${day}/${month}/${year}`;
 };
 
-const formatMonthLabel = (label: string): string => {
-  if (!label) return '';
-  const normalized = label.trim();
-
-  const tryParseDate = (dateString: string): string | null => {
-    const parsed = new Date(dateString);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toLocaleDateString('pt-BR', {
-        month: 'short',
-        year: '2-digit'
-      });
-    }
-    return null;
-  };
-
-  const direct = tryParseDate(normalized);
-  if (direct) return direct;
-
-  const matchMonthYear = normalized.match(/^( ?[0-9]{1,2})\/(?:(\d{2})|(\d{4}))$/u);
-  if (matchMonthYear) {
-    const monthString = matchMonthYear[1];
-    const yearString = matchMonthYear[2] ?? matchMonthYear[3];
-    const year = yearString.length === 2 ? `20${yearString}` : yearString;
-    const parsed = new Date(Number(year), Number(monthString) - 1, 1);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toLocaleDateString('pt-BR', {
-        month: 'short',
-        year: '2-digit'
-      });
-    }
-  }
-
-  const matchYearMonth = normalized.match(/^(\d{4})-(\d{2})$/);
-  if (matchYearMonth) {
-    const parsed = new Date(Number(matchYearMonth[1]), Number(matchYearMonth[2]) - 1, 1);
-    return parsed.toLocaleDateString('pt-BR', {
-      month: 'short',
-      year: '2-digit'
-    });
-  }
-
-  return normalized;
-};
-
 const MONTH_NAME_MAP: Record<string, string> = {
   jan: '01', janeiro: '01',
   fev: '02', fevereiro: '02',
