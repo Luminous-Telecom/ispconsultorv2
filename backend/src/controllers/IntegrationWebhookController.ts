@@ -439,8 +439,8 @@ export class IntegrationWebhookController {
         razaoSocial: raw.razao_social,
         nomeFantasia: raw.nome_fantasia,
         status: raw.ativo ? 'ativo' : 'inativo',
-        cadastradoEm: IntegrationWebhookController.formatDate(raw.created_at),
-        atualizadoEm: IntegrationWebhookController.formatDate(raw.updated_at),
+        cadastradoEm: IntegrationWebhookController.formatDate(raw.created_at) ?? undefined,
+        atualizadoEm: IntegrationWebhookController.formatDate(raw.updated_at) ?? undefined,
         contatos: {
           email: raw.email,
           telefone: raw.telefone,
