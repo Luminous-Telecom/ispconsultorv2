@@ -24,6 +24,50 @@ const formatDateLabel = (value?: string): string => {
   return `${day}/${month}/${year}`;
 };
 
+const formatMonthLabel = (label: string): string => {
+  if (!label) return '';
+  const normalized = label.trim();
+
+  const tryParseDate = (dateString: string): string | null => {
+    const parsed = new Date(dateString);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString('pt-BR', {
+        month: 'short',
+        year: '2-digit'
+      });
+    }
+    return null;
+  };
+
+  const direct = tryParseDate(normalized);
+  if (direct) return direct;
+
+  const matchMonthYear = normalized.match(/^( ?[0-9]{1,2})\/(?:(\d{2})|(\d{4}))$/u);
+  if (matchMonthYear) {
+    const monthString = matchMonthYear[1];
+    const yearString = matchMonthYear[2] ?? matchMonthYear[3];
+    const year = yearString.length === 2 ? `20${yearString}` : yearString;
+    const parsed = new Date(Number(year), Number(monthString) - 1, 1);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString('pt-BR', {
+        month: 'short',
+        year: '2-digit'
+      });
+    }
+  }
+
+  const matchYearMonth = normalized.match(/^(\d{4})-(\d{2})$/);
+  if (matchYearMonth) {
+    const parsed = new Date(Number(matchYearMonth[1]), Number(matchYearMonth[2]) - 1, 1);
+    return parsed.toLocaleDateString('pt-BR', {
+      month: 'short',
+      year: '2-digit'
+    });
+  }
+
+  return normalized;
+};
+
 const getCurrentMonthRange = () => {
   const today = new Date();
   return {
@@ -275,14 +319,17 @@ const Dashboard: React.FC = () => {
   });
 
   const receitaMensalChartData: ChartDataItem[] = dashboardData?.receitaUltimosMeses
-    ? dashboardData.receitaUltimosMeses.labels.map((label, index) => ({
-        mes: label,
-        valor: dashboardData.receitaUltimosMeses.data[index] ?? 0,
-        color:
-          index === (dashboardData.receitaUltimosMeses.data.length - 1)
-            ? '#28a745'
-            : '#6c757d',
-      }))
+    ? dashboardData.receitaUltimosMeses.labels.map((label, index) => {
+        const formattedLabel = formatMonthLabel(label);
+        return {
+          mes: formattedLabel,
+          valor: dashboardData.receitaUltimosMeses.data[index] ?? 0,
+          color:
+            index === (dashboardData.receitaUltimosMeses.data.length - 1)
+              ? '#28a745'
+              : '#6c757d'
+        };
+      })
     : [];
 
   const receberPeriodoChartData: ChartDataItem[] = dashboardData?.aReceberPeriodo
@@ -313,7 +360,7 @@ const Dashboard: React.FC = () => {
       }).length;
       
       meses.push({
-        mes: mesAno,
+        mes: formatMonthLabel(mesAno),
         valor: clientesMes,
         color: i === 11 ? '#007bff' : '#6c757d'
       });
@@ -665,13 +712,13 @@ const Dashboard: React.FC = () => {
 
         <div className="row g-3 mb-4">
           <div className="col-xl-6 col-lg-6">
-            <div className="chart-card">
+            <div className="chart-card chart-card-line">
               {renderLineChart(receitaMensalChartData, 'Faturamento Mensal R$ (12 meses)', 'currency')}
             </div>
           </div>
 
           <div className="col-xl-6 col-lg-6">
-            <div className="chart-card">
+            <div className="chart-card chart-card-line">
               {renderLineChart(getCrescimentoClientes(), 'Novos Clientes (12 meses)', 'number')}
             </div>
           </div>
@@ -679,7 +726,7 @@ const Dashboard: React.FC = () => {
 
         <div className="row g-3 mb-4">
           <div className="col-12">
-            <div className="chart-card">
+            <div className="chart-card chart-card-line">
               {renderLineChart(
                 receberPeriodoChartData,
                 `A Receber no período (${periodoInicioLabel} - ${periodoFimLabel}) · Total ${formatCurrency(totalReceberPeriodo)}`,

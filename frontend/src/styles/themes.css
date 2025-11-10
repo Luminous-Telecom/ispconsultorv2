@@ -2067,6 +2067,16 @@ select:focus,
   border-color: rgba(255, 255, 255, 0.05);
 }
 
+.chart-card-line {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .chart-card-line {
+  background: var(--bg-tertiary);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
 .chart-container {
   text-align: left;
 }
@@ -2089,10 +2099,15 @@ select:focus,
 }
 
 .line-chart-wrapper {
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   border-radius: 12px;
-  padding: 0.5rem;
-  border: 1px dashed var(--border-light);
+  padding: 0.75rem;
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .chart-card-line .line-chart-wrapper {
+  background: var(--bg-secondary);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .value-display {
