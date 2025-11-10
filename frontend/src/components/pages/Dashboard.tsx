@@ -545,48 +545,52 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0">
-        <div className="dashboard-filters position-relative">
-          <div className="row g-3 align-items-end w-100">
-            <div className="col-lg-3 col-md-6">
-              <FormField
-                formPrefix="DashboardFilters"
-                type="date"
-                label="Data inicial"
-                name="startDate"
-                value={startDate}
-                onChange={handleStartDateChange}
-                className="mb-0"
-                size="sm"
-              />
-            </div>
-            <div className="col-lg-3 col-md-6">
-              <FormField
-                formPrefix="DashboardFilters"
-                type="date"
-                label="Data final"
-                name="endDate"
-                value={endDate}
-                onChange={handleEndDateChange}
-                className="mb-0"
-                size="sm"
-              />
-            </div>
-            <div className="col-lg-3 col-md-6">
-              <div className="dashboard-filters-actions mb-2 mb-md-0">
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleResetPeriod}>
-                  Mês atual
-                </button>
-              </div>
-            </div>
-            <div className="col-lg-3 col-md-6">
-              <div className="dashboard-period-info text-md-end text-muted small">
-                Período selecionado: {periodoInicioLabel} — {periodoFimLabel}
+        <div className="card border-0 shadow-sm mb-3">
+          <div className="card-body">
+            <div className="dashboard-filters position-relative">
+              <div className="row g-3 align-items-end w-100">
+                <div className="col-lg-3 col-md-6">
+                  <FormField
+                    formPrefix="DashboardFilters"
+                    type="date"
+                    label="Data inicial"
+                    name="startDate"
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    className="mb-0"
+                    size="sm"
+                  />
+                </div>
+                <div className="col-lg-3 col-md-6">
+                  <FormField
+                    formPrefix="DashboardFilters"
+                    type="date"
+                    label="Data final"
+                    name="endDate"
+                    value={endDate}
+                    onChange={handleEndDateChange}
+                    className="mb-0"
+                    size="sm"
+                  />
+                </div>
+                <div className="col-lg-3 col-md-6">
+                  <div className="dashboard-filters-actions mb-2 mb-md-0">
+                    <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleResetPeriod}>
+                      Mês atual
+                    </button>
+                  </div>
+                </div>
+                <div className="col-lg-3 col-md-6">
+                  <div className="dashboard-period-info text-md-end text-muted small">
+                    Período selecionado: {periodoInicioLabel} — {periodoFimLabel}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="dashboard-hero mb-4">
+        <div className="dashboard-hero card border-0 shadow-sm mb-4">
           <div className="dashboard-hero-body">
             <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
               <div>
@@ -619,57 +623,8 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="row g-3 mb-4">
-          <div className="col-xl-3 col-lg-6 col-md-6">
-            <div className="metric-card metric-card-primary shadow-sm">
-                <div className="metric-icon">
-                  <i className="bi bi-people-fill"></i>
-                </div>
-                <div className="metric-content">
-                  <span className="metric-label d-block text-muted text-uppercase">Clientes ativos</span>
-                  <strong className="metric-value">{formatNumber(clientesAtivos)}</strong>
-                  <small className="metric-caption text-muted">de {formatNumber(totalClientes)} clientes cadastrados</small>
-                </div>
-              </div>
-            </div>
-          <div className="col-xl-3 col-lg-6 col-md-6">
-            <div className="metric-card metric-card-warning shadow-sm">
-              <div className="metric-icon">
-                <i className="bi bi-receipt-cutoff"></i>
-              </div>
-              <div className="metric-content">
-                <span className="metric-label d-block text-muted text-uppercase">Títulos em aberto</span>
-                <strong className="metric-value">{formatNumber(totalTitulosEmAberto)}</strong>
-                <small className="metric-caption text-muted">{formatNumber(titulosPendentesCount)} pendentes e {formatNumber(titulosVencidosCount)} vencidos</small>
-              </div>
-            </div>
-          </div>
-          <div className="col-xl-3 col-lg-6 col-md-6">
-            <div className="metric-card metric-card-success shadow-sm">
-              <div className="metric-icon">
-                <i className="bi bi-cash-stack"></i>
-              </div>
-              <div className="metric-content">
-                <span className="metric-label d-block text-muted text-uppercase">Ticket médio</span>
-                <strong className="metric-value">{formatCurrency(ticketMedio || 0)}</strong>
-                <small className="metric-caption text-muted">Base calculada sobre clientes ativos</small>
-              </div>
-            </div>
-          </div>
-          <div className="col-xl-3 col-lg-6 col-md-6">
-            <div className="metric-card metric-card-info shadow-sm">
-              <div className="metric-icon">
-                <i className="bi bi-graph-up"></i>
-              </div>
-              <div className="metric-content">
-                <span className="metric-label d-block text-muted text-uppercase">Taxa de pagamento</span>
-                <strong className="metric-value">{taxaPagamento.toFixed(1)}%</strong>
-                <small className="metric-caption text-muted">Pagamentos confirmados no período</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <div className="dashboard-section card border-0 shadow-sm mb-4">
+          <div className="card-body">
         <div className="row g-3 mb-4">
           <div className="col-xl-2 col-lg-4 col-md-6">
             <div className="chart-card">

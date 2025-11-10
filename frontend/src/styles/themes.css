@@ -1965,14 +1965,12 @@ select:focus,
 
 .dashboard-hero {
   background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
   border-radius: 16px;
   overflow: hidden;
 }
 
 [data-theme="dark"] .dashboard-hero {
   background: var(--bg-tertiary);
-  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .dashboard-hero-body {
@@ -2005,7 +2003,6 @@ select:focus,
   padding: 0.65rem 0.85rem;
   border-radius: 12px;
   background: var(--bg-tertiary);
-  border: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -2013,7 +2010,6 @@ select:focus,
 
 [data-theme="dark"] .dashboard-hero-stat {
   background: var(--bg-secondary);
-  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .dashboard-hero-label {
@@ -2127,4 +2123,17 @@ select:focus,
   .dashboard-filters {
     padding: 0.85rem;
   }
+}
+
+.dashboard-section .card-body,
+.dashboard-hero-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.dashboard-hero-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.dashboard-section {
+  border-radius: 16px;
 }
