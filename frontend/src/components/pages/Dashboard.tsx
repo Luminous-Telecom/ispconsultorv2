@@ -68,6 +68,56 @@ const formatMonthLabel = (label: string): string => {
   return normalized;
 };
 
+const MONTH_NAME_MAP: Record<string, string> = {
+  jan: '01', janeiro: '01',
+  fev: '02', fevereiro: '02',
+  mar: '03', março: '03', marco: '03',
+  abr: '04', abril: '04',
+  mai: '05', maio: '05',
+  jun: '06', junho: '06',
+  jul: '07', julho: '07',
+  ago: '08', agosto: '08',
+  set: '09', setembro: '09',
+  out: '10', outubro: '10',
+  nov: '11', novembro: '11',
+  dez: '12', dezembro: '12',
+};
+
+const formatMonthNumeric = (label: string): string => {
+  if (!label) return '';
+  const trimmed = label.trim();
+
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleDateString('pt-BR', {
+      month: '2-digit',
+      year: '2-digit'
+    });
+  }
+
+  const matchMonthYear = trimmed.match(/^([A-Za-zçÇ]{3,9})\/?(\d{2,4})?$/u);
+  if (matchMonthYear) {
+    const monthKey = matchMonthYear[1].toLowerCase();
+    const monthNumber = MONTH_NAME_MAP[monthKey];
+    const yearPart = matchMonthYear[2] ? matchMonthYear[2] : `${new Date().getFullYear()}`;
+    if (monthNumber) {
+      const yearNormalized = yearPart.length === 2 ? `20${yearPart}` : yearPart;
+      const date = new Date(Number(yearNormalized), Number(monthNumber) - 1, 1);
+      return date.toLocaleDateString('pt-BR', {
+        month: '2-digit',
+        year: '2-digit'
+      });
+    }
+  }
+
+  const matchNumeric = trimmed.match(/^(\d{1,2})\/?(\d{2})$/);
+  if (matchNumeric) {
+    return `${matchNumeric[1].padStart(2, '0')}/${matchNumeric[2]}`;
+  }
+
+  return trimmed;
+};
+
 const getCurrentMonthRange = () => {
   const today = new Date();
   return {
@@ -340,7 +390,7 @@ const Dashboard: React.FC = () => {
 
   const receitaMensalChartData: ChartDataItem[] = dashboardData?.receitaUltimosMeses
     ? dashboardData.receitaUltimosMeses.labels.map((label, index) => {
-        const formattedLabel = formatMonthLabel(label);
+        const formattedLabel = formatMonthNumeric(label);
         return {
           mes: formattedLabel,
           valor: dashboardData.receitaUltimosMeses.data[index] ?? 0,
@@ -380,7 +430,7 @@ const Dashboard: React.FC = () => {
       }).length;
       
       meses.push({
-        mes: formatMonthLabel(mesAno),
+        mes: formatMonthNumeric(mesAno),
         valor: clientesMes,
         color: i === 11 ? '#007bff' : '#6c757d'
       });
