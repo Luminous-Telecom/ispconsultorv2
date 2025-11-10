@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useDashboard } from '../../hooks/useDashboard';
 import FormField from '../ui/FormField';
+import { LineChart as RLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface ChartDataItem {
   valor?: number;
@@ -10,6 +11,71 @@ interface ChartDataItem {
   mes?: string;
   [key: string]: string | number | undefined;
 }
+
+interface ResponsiveLineChartProps {
+  data: ChartDataItem[];
+  title: string;
+  format?: 'currency' | 'number';
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string | number;
+  format: 'currency' | 'number';
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, format }) => {
+  if (active && payload && payload.length) {
+    const value = payload[0]?.value ?? 0;
+    const formattedValue = format === 'currency'
+      ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+      : value.toLocaleString('pt-BR');
+
+    return (
+      <div className="custom-tooltip bg-dark p-2 border border-secondary rounded shadow">
+        <p className="label text-light mb-0">{label}</p>
+        <p className="intro text-info mb-0">Valor: {formattedValue}</p>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, format = 'number' }) => {
+  const chartData = data.map((item) => ({
+    name: item.mes,
+    value: item.valor ?? item.value ?? 0,
+    color: item.color,
+  }));
+
+  const formatYAxis = (tickItem: number) => {
+    if (format === 'currency') {
+      if (tickItem >= 1_000_000) return `R$${(tickItem / 1_000_000).toFixed(1)}M`;
+      if (tickItem >= 1_000) return `R$${(tickItem / 1_000).toFixed(1)}K`;
+      return `R$${tickItem.toFixed(0)}`;
+    }
+    return tickItem.toLocaleString('pt-BR');
+  };
+
+  return (
+    <div className="chart-container">
+      <h6 className="chart-title">{title}</h6>
+      <div style={{ width: '100%', height: '220px' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <RLineChart data={chartData} margin={{ top: 15, right: 30, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2f3844" />
+            <XAxis dataKey="name" stroke="#6c757d" fontSize={10} padding={{ left: 10, right: 10 }} />
+            <YAxis stroke="#6c757d" fontSize={10} tickFormatter={formatYAxis} domain={[0, 'dataMax']} allowDecimals />
+            <Tooltip content={<CustomTooltip format={format} />} />
+            <Line type="monotone" dataKey="value" stroke="#007bff" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+          </RLineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
 
 const formatDateToInput = (date: Date): string => {
   const year = date.getFullYear();
@@ -80,124 +146,6 @@ const getCurrentMonthRange = () => {
     start: new Date(today.getFullYear(), today.getMonth(), 1),
     end: new Date(today.getFullYear(), today.getMonth() + 1, 0),
   };
-};
-
-// Componente para gráfico de linha temporal com Canvas
-const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'currency' | 'number' }> = ({ data, title, format = 'number' }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const hasData = data.length > 0;
-  
-  useEffect(() => {
-    if (!hasData) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    // Obter contexto 2D com configuração de alta resolução
-    const ctx = canvas.getContext('2d', { alpha: true });
-    if (!ctx) return;
-
-    const computedStyles = typeof window !== 'undefined'
-      ? getComputedStyle(document.documentElement)
-      : null;
-    const getColor = (variable: string, fallback: string) => {
-      const value = computedStyles?.getPropertyValue(variable)?.trim();
-      return value && value.length > 0 ? value : fallback;
-    };
-
-    const lineColor = '#007bff';
-    const pointFill = lineColor;
-    const pointBorder = getColor('--bg-primary', '#ffffff');
-    const valueColor = getColor('--text-primary', '#ffffff');
-    const labelColor = getColor('--text-secondary', '#adb5bd');
-    const axisColor = getColor('--border-light', '#2c3440');
-
-    // Obter device pixel ratio para retina displays
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    
-    // Ajustar tamanho do canvas para resolução nativa
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    
-    // Escalar contexto para device pixel ratio
-    ctx.scale(dpr, dpr);
-    
-    const maxValue = Math.max(...data.map(item => item.valor || 0));
-    const chartWidth = rect.width;
-    const chartHeight = 120;
-    const padding = 20;
-    const pointRadius = 3;
-    
-    // Limpar canvas
-    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-    
-    ctx.strokeStyle = axisColor;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, chartHeight + 10);
-    ctx.lineTo(chartWidth - padding, chartHeight + 10);
-    ctx.stroke();
-
-    data.forEach((item, index) => {
-      const x = (index / (data.length - 1 || 1)) * (chartWidth - padding * 2) + padding;
-      const val = item.valor || 0;
-      const percentage = maxValue > 0 ? val / maxValue : 0;
-      const y = chartHeight - (percentage * chartHeight) + 10;
- 
-      if (index === 0) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = lineColor;
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
-      }
- 
-      // Desenhar ponto
-      ctx.beginPath();
-      ctx.arc(x, y, pointRadius, 0, Math.PI * 2);
-      ctx.fillStyle = pointFill;
-      ctx.fill();
-      ctx.strokeStyle = pointBorder;
-      ctx.lineWidth = 1;
-      ctx.stroke();
- 
-      // Desenhar valor - ajustar posição para não sair do canvas
-      const textY = y - 8;
-      const adjustedTextY = textY < 15 ? y + 20 : textY; // Se texto está muito alto, mostrar abaixo
- 
-      ctx.fillStyle = valueColor;
-      ctx.font = 'bold 0.65rem sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(val.toString(), x, adjustedTextY);
- 
-      // Desenhar mês
-      ctx.fillStyle = labelColor;
-      ctx.font = '0.55rem sans-serif';
-      ctx.fillText(item.mes || '', x, chartHeight + 28);
-    });
-  }, [data, format, hasData]);
-  
-  return (
-    <div className="chart-container">
-      <h6 className="chart-title">{title}</h6>
-      <div className="line-chart-wrapper">
-        {hasData ? (
-        <canvas 
-          ref={canvasRef}
-            style={{ display: 'block', width: '100%', height: '140px' }}
-        />
-        ) : (
-          <div className="chart-empty">Sem dados disponíveis</div>
-        )}
-      </div>
-    </div>
-  );
 };
 
 const Dashboard: React.FC = () => {
@@ -598,9 +546,9 @@ const Dashboard: React.FC = () => {
     );
   };
   
-  // Função para renderizar gráfico de linha temporal com Canvas
+  // Função para renderizar gráfico de linha temporal com Recharts
   const renderLineChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' = 'number') => {
-    return <LineChart data={data} title={title} format={format} />;
+    return <ResponsiveLineChart data={data} title={title} format={format} />;
   };
 
   if (loadingDashboard) {
