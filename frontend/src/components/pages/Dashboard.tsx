@@ -448,7 +448,7 @@ const Dashboard: React.FC = () => {
     : [];
 
   const recebidosPeriodoChartData: ChartDataItem[] = dashboardData?.recebidosPeriodo
-    ? dashboardData.recebidosPeriodo.labels.map((label, index) => ({
+    ? dashboardData.recebidosPeriodo.labels.map((label: string, index: number) => ({
         mes: label,
         valor: dashboardData.recebidosPeriodo.data[index] ?? 0,
         color: '#28a745',
@@ -456,7 +456,7 @@ const Dashboard: React.FC = () => {
     : [];
 
   const receberPeriodoChartData: ChartDataItem[] = dashboardData?.aReceberPeriodo
-    ? dashboardData.aReceberPeriodo.labels.map((label, index) => ({
+    ? dashboardData.aReceberPeriodo.labels.map((label: string, index: number) => ({
         mes: label,
         valor: dashboardData.aReceberPeriodo.data[index] ?? 0,
         color: '#17a2b8',

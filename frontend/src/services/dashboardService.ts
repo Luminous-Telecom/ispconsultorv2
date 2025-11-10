@@ -32,6 +32,7 @@ export interface DashboardData {
   receitaUltimosMeses: DashboardChart;
   clientesPorStatus: DashboardChart;
   aReceberPeriodo: DashboardChart;
+  recebidosPeriodo?: DashboardChart;
   filtros?: {
     startDate: string;
     endDate: string;
