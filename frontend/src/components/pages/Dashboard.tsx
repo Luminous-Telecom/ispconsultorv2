@@ -128,19 +128,20 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
     const safeMidAngle = (midAngle ?? 0) as number;
     const safePercent = (percent ?? 0) as number;
 
-    const radius = safeInnerRadius + (safeOuterRadius - safeInnerRadius) * 0.5;
+    const radius = safeInnerRadius + (safeOuterRadius - safeInnerRadius) * 0.38;
     const x = safeCx + radius * Math.cos(-safeMidAngle * Math.PI / 180);
     const y = safeCy + radius * Math.sin(-safeMidAngle * Math.PI / 180);
 
-    if (safePercent * 100 > 5) {
+    if (safePercent * 100 > 3) {
       return (
         <text
           x={x}
           y={y}
           fill="#ffffff"
-          textAnchor={x > safeCx ? 'start' : 'end'}
+          textAnchor="middle"
           dominantBaseline="central"
           fontSize={10}
+          fontWeight={600}
         >
           {`${(safePercent * 100).toFixed(0)}%`}
         </text>
