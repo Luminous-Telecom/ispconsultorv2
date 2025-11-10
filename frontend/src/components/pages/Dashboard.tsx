@@ -113,6 +113,8 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
     color: item.color,
   }));
 
+  const filteredChartData = chartData.filter((_, index) => !hiddenItems.has(index));
+
   const renderCustomizedLabel = ({
     cx,
     cy,
@@ -158,7 +160,7 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={chartData.filter((_, index) => !hiddenItems.has(index))}
+                data={filteredChartData}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
@@ -170,8 +172,9 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
                 labelLine={false}
                 label={renderCustomizedLabel}
                 stroke="none"
+                isAnimationActive={false}
               >
-                {chartData.map((entry, index) => (
+                {filteredChartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.color || '#6c757d'}
