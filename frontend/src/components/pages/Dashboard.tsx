@@ -168,12 +168,14 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
                 paddingAngle={2}
                 labelLine={false}
                 label={renderCustomizedLabel}
+                stroke="none"
               >
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.color || '#6c757d'}
                     opacity={hiddenItems.has(index) ? 0.3 : 1}
+                    stroke="none"
                   />
                 ))}
               </Pie>
