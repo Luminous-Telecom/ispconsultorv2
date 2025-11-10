@@ -545,6 +545,47 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0">
+        <div className="dashboard-filters position-relative">
+          <div className="row g-3 align-items-end w-100">
+            <div className="col-lg-3 col-md-6">
+              <FormField
+                formPrefix="DashboardFilters"
+                type="date"
+                label="Data inicial"
+                name="startDate"
+                value={startDate}
+                onChange={handleStartDateChange}
+                className="mb-0"
+                size="sm"
+              />
+            </div>
+            <div className="col-lg-3 col-md-6">
+              <FormField
+                formPrefix="DashboardFilters"
+                type="date"
+                label="Data final"
+                name="endDate"
+                value={endDate}
+                onChange={handleEndDateChange}
+                className="mb-0"
+                size="sm"
+              />
+            </div>
+            <div className="col-lg-3 col-md-6">
+              <div className="dashboard-filters-actions mb-2 mb-md-0">
+                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleResetPeriod}>
+                  Mês atual
+                </button>
+              </div>
+            </div>
+            <div className="col-lg-3 col-md-6">
+              <div className="dashboard-period-info text-md-end text-muted small">
+                Período selecionado: {periodoInicioLabel} — {periodoFimLabel}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="dashboard-hero card border-0 text-white mb-4">
           <div className="card-body p-4">
             <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
@@ -552,7 +593,7 @@ const Dashboard: React.FC = () => {
                 <span className="dashboard-badge text-uppercase">Visão geral</span>
                 <h2 className="dashboard-hero-title mb-2">Painel financeiro e operacional</h2>
                 <p className="dashboard-hero-subtitle mb-0">
-                  Atualizado em {lastUpdatedDate} às {lastUpdatedTime} · Período {periodoInicioLabel} — {periodoFimLabel}
+                  Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
                 </p>
               </div>
               <div className="d-flex flex-wrap gap-3">
@@ -575,34 +616,6 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="dashboard-filters">
-          <FormField
-            formPrefix="DashboardFilters"
-            type="date"
-            label="Data inicial"
-            name="startDate"
-            value={startDate}
-            onChange={handleStartDateChange}
-            className="flex-grow-1"
-            size="sm"
-          />
-          <FormField
-            formPrefix="DashboardFilters"
-            type="date"
-            label="Data final"
-            name="endDate"
-            value={endDate}
-            onChange={handleEndDateChange}
-            className="flex-grow-1"
-            size="sm"
-          />
-          <div className="dashboard-filters-actions">
-            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleResetPeriod}>
-              Mês atual
-            </button>
           </div>
         </div>
 

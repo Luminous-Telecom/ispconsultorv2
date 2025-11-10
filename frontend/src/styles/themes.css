@@ -2041,27 +2041,28 @@ select:focus,
 }
 
 .dashboard-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: flex-end;
   background: var(--bg-secondary);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
   margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .dashboard-filters .form-field {
   margin-bottom: 0;
-  min-width: 160px;
-  flex: 1 1 160px;
 }
 
 .dashboard-filters-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+.dashboard-period-info {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
 }
 
 .dashboard-section-header {
@@ -2175,6 +2176,6 @@ select:focus,
   }
 
   .dashboard-filters {
-    padding: 0.75rem;
+    padding: 0.85rem;
   }
 }
