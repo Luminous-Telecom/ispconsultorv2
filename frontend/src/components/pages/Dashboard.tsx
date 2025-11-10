@@ -586,7 +586,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="dashboard-hero text-white mb-4">
+        <div className="dashboard-hero mb-4">
           <div className="dashboard-hero-body">
             <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
               <div>

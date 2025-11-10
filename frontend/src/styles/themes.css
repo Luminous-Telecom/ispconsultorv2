@@ -1964,13 +1964,19 @@ select:focus,
 }
 
 .dashboard-hero {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 40%, #007bff 80%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
   border-radius: 16px;
   overflow: hidden;
 }
 
 [data-theme="dark"] .dashboard-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0ea5e9 100%);
+  background: var(--bg-tertiary);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dashboard-hero-body {
+  padding: 1.25rem 1.5rem;
 }
 
 .dashboard-badge {
@@ -1980,51 +1986,47 @@ select:focus,
   font-size: 0.65rem;
   letter-spacing: 0.08em;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.dashboard-badge::before {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
 }
 
 .dashboard-hero-title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .dashboard-hero-subtitle {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-secondary);
 }
 
 .dashboard-hero-stat {
   min-width: 130px;
   padding: 0.65rem 0.85rem;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(6px);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
 }
 
+[data-theme="dark"] .dashboard-hero-stat {
+  background: var(--bg-secondary);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
 .dashboard-hero-label {
   font-size: 0.6rem;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   text-transform: uppercase;
 }
 
 .dashboard-hero-value {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .dashboard-section {
