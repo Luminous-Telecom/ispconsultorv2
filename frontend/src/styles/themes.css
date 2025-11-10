@@ -2109,24 +2109,24 @@ select:focus,
 }
 
 .pie-chart {
-  width: 105px;
-  height: 105px;
+  width: 90px;
+  height: 90px;
 }
 
 .pie-center {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
 }
 
 .line-chart-wrapper {
   background: var(--bg-secondary);
   border-radius: 12px;
-  padding: 0.6rem;
+  padding: 0.5rem;
   border: 1px dashed var(--border-light);
 }
 
 .value-display {
-  font-size: 1.55rem;
+  font-size: 1.35rem;
   font-weight: 700;
 }
 
@@ -2134,8 +2134,8 @@ select:focus,
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 140px;
-  font-size: 0.7rem;
+  min-height: 120px;
+  font-size: 0.65rem;
   color: var(--text-secondary);
   background: var(--bg-secondary);
   border-radius: 12px;

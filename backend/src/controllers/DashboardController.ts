@@ -144,7 +144,8 @@ export class DashboardController {
       valorTotalReceber: valorTotalPendente,
       valorTotalRecebido: valorTotalPago,
       receitaMensal: valorTotalPago, // Simplificado
-      crescimentoMensal: 0 // Placeholder
+      crescimentoMensal: 0, // Placeholder
+      ticketMedio: clientesAtivos > 0 ? valorTotalPago / clientesAtivos : 0
     };
   }
 
@@ -263,7 +264,8 @@ export class DashboardController {
         titulos_pendentes: titulosPendentes,
         valor_total_titulos: valorTotalTitulos,
         valor_total_pago: valorTotalPago,
-        valor_total_pendente: valorTotalPendente
+        valor_total_pendente: valorTotalPendente,
+        ticket_medio: clientesAtivos > 0 ? valorTotalPago / clientesAtivos : 0
       };
 
       res.json({

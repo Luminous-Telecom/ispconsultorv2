@@ -13,6 +13,7 @@ export interface DashboardStats {
   valorTotalRecebido: number;
   receitaMensal: number;
   crescimentoMensal: number;
+  ticketMedio?: number;
 }
 
 export interface DashboardChart {
@@ -66,7 +67,11 @@ export class DashboardService {
     try {
       const response = await apiService.get<DashboardStats>('/dashboard/stats');
       if (response.success && response.data) {
-        return response.data;
+        const data = response.data as DashboardStats & { ticket_medio?: number };
+        return {
+          ...data,
+          ticketMedio: data.ticketMedio ?? data.ticket_medio,
+        };
       }
       throw new Error(response.message || 'Erro ao carregar estatísticas do dashboard');
     } catch (error) {

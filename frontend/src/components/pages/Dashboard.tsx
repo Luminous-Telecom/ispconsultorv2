@@ -98,7 +98,7 @@ const LineChart: React.FC<{ data: ChartDataItem[], title: string, format?: 'curr
         {hasData ? (
           <canvas
             ref={canvasRef}
-            style={{ display: 'block', width: '100%', height: '170px' }}
+            style={{ display: 'block', width: '100%', height: '140px' }}
           />
         ) : (
           <div className="chart-empty">Sem dados disponíveis</div>
@@ -201,7 +201,7 @@ const Dashboard: React.FC = () => {
 
   // Métricas adicionais (usando dados reais quando disponíveis)
   // Ticket médio = valor total recebido / clientes ativos
-  const ticketMedio = clientesAtivos > 0 ? receitaPaga / clientesAtivos : 0;
+  const ticketMedio = stats?.ticketMedio ?? (clientesAtivos > 0 ? receitaPaga / clientesAtivos : 0);
   const taxaPagamento = receitaTotal > 0 ? (receitaPaga / receitaTotal) * 100 : 0;
   const _receitaPorCliente = totalClientes > 0 ? receitaTotal / totalClientes : 0;
 
@@ -233,6 +233,8 @@ const Dashboard: React.FC = () => {
         color: '#17a2b8',
       }))
     : [];
+
+  const totalReceberMesAtual = receberMesAtualChartData.reduce((acc, item) => acc + (item.valor || 0), 0);
 
   // Crescimento de clientes (últimos 12 meses)
   const getCrescimentoClientes = () => {
@@ -635,7 +637,11 @@ const Dashboard: React.FC = () => {
           <div className="row g-3 mt-2">
             <div className="col-12">
               <div className="chart-card">
-                {renderLineChart(receberMesAtualChartData, 'A Receber no mês (R$ por dia)', 'currency')}
+                {renderLineChart(
+                  receberMesAtualChartData,
+                  `A Receber no mês · Total ${formatCurrency(totalReceberMesAtual)}`,
+                  'currency'
+                )}
               </div>
             </div>
           </div>
