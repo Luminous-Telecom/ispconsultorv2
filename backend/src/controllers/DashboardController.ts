@@ -60,6 +60,8 @@ export class DashboardController {
         DashboardController.getResumoFinanceiroPeriodo(parsedStart, parsedEnd)
       ]);
 
+      const receitaUltimosMeses = await DashboardController.getReceitaUltimos12Meses();
+
       const dashboardData = {
         stats: statsData,
         titulosRecentes,
@@ -68,10 +70,7 @@ export class DashboardController {
         planos: planos.map(p => p.toJSON()),
         contratos: contratos.map(c => c.toJSON()),
         titulos: titulos.map(t => t.toJSON()),
-        receitaUltimosMeses: {
-          labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-          data: [0, 0, 0, 0, 0, 0] // Placeholder - pode ser implementado depois
-        },
+        receitaUltimosMeses,
         clientesPorStatus: {
           labels: ['Ativos', 'Inativos'],
           data: [statsData.planosAtivos, statsData.totalClientes - statsData.planosAtivos]
@@ -705,6 +704,63 @@ export class DashboardController {
       totalRecebido,
       totalPendente,
       clientesComTitulos: clientesPeriodo.size
+    };
+  }
+
+  private static async getReceitaUltimos12Meses() {
+    const hoje = new Date();
+    const fimPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
+    const inicioPeriodo = new Date(hoje.getFullYear(), hoje.getMonth() - 11, 1, 0, 0, 0, 0);
+
+    const titulos = await Titulo.findAll({
+      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento', 'data_vencimento'],
+      where: {
+        data_vencimento: {
+          [Op.between]: [inicioPeriodo, fimPeriodo]
+        },
+        status: {
+          [Op.in]: ['pago', 'pago_atraso', 'parcial']
+        }
+      }
+    });
+
+    const labels: string[] = [];
+    const data: number[] = [];
+
+    for (let i = 11; i >= 0; i--) {
+      const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1, 0, 0, 0, 0);
+      const proxMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 1, 0, 0, 0, 0);
+
+      const totalMes = titulos.reduce((acumulado, titulo) => {
+        const referencia = titulo.data_pagamento ?? titulo.data_vencimento;
+        if (!referencia) {
+          return acumulado;
+        }
+
+        if (referencia >= mes && referencia < proxMes) {
+          if (titulo.status === 'parcial') {
+            const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+              ? parseFloat(titulo.valor_pago.toString())
+              : 0;
+            return acumulado + valorPago;
+          }
+
+          const valorTitulo = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+            ? parseFloat(titulo.valor_pago.toString())
+            : parseFloat(titulo.valor.toString());
+          return acumulado + valorTitulo;
+        }
+
+        return acumulado;
+      }, 0);
+
+      labels.push(mes.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
+      data.push(totalMes);
+    }
+
+    return {
+      labels,
+      data
     };
   }
 }
