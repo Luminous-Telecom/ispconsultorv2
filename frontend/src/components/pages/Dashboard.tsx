@@ -11,7 +11,8 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  PieLabelRenderProps
 } from 'recharts';
 
 interface ChartDataItem {
@@ -112,22 +113,36 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
     color: item.color,
   }));
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
-    const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }: PieLabelRenderProps) => {
+    const safeInnerRadius = (innerRadius ?? 0) as number;
+    const safeOuterRadius = (outerRadius ?? safeInnerRadius) as number;
+    const safeCx = (cx ?? 0) as number;
+    const safeCy = (cy ?? 0) as number;
+    const safeMidAngle = (midAngle ?? 0) as number;
+    const safePercent = (percent ?? 0) as number;
 
-    if (percent * 100 > 5) {
+    const radius = safeInnerRadius + (safeOuterRadius - safeInnerRadius) * 0.5;
+    const x = safeCx + radius * Math.cos(-safeMidAngle * Math.PI / 180);
+    const y = safeCy + radius * Math.sin(-safeMidAngle * Math.PI / 180);
+
+    if (safePercent * 100 > 5) {
       return (
         <text
           x={x}
           y={y}
           fill="#ffffff"
-          textAnchor={x > cx ? 'start' : 'end'}
+          textAnchor={x > safeCx ? 'start' : 'end'}
           dominantBaseline="central"
           fontSize={10}
         >
-          {`${(percent * 100).toFixed(0)}%`}
+          {`${(safePercent * 100).toFixed(0)}%`}
         </text>
       );
     }
@@ -547,11 +562,6 @@ const Dashboard: React.FC = () => {
     { label: 'Inativos', value: contratosInativos, color: '#dc3545' },
     { label: 'Suspensos', value: contratosSuspensos, color: '#ffc107' }
   ];
-
-  // Função para renderizar gráfico de pizza simples (Novo com Recharts)
-  const renderPieChart = (data: ChartDataItem[], title: string, hiddenItems: Set<number>, onToggleItem: (index: number) => void) => {
-    return <ResponsivePieChart data={data} title={title} hiddenItems={hiddenItems} onToggleItem={onToggleItem} />;
-  };
 
   // Função para renderizar gráfico de barras horizontais
   const renderBarChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' = 'number') => {
