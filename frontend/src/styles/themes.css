@@ -1966,7 +1966,6 @@ select:focus,
 .dashboard-hero {
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 40%, #007bff 80%);
   border-radius: 16px;
-  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
