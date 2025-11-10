@@ -736,19 +736,19 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="row g-3">
-            <div className="col-xl-6 col-lg-6">
-              <div className="chart-card">
-                {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
-              </div>
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card">
+              {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
             </div>
+          </div>
 
-            <div className="col-xl-6 col-lg-6">
-              <div className="chart-card">
-                {renderBarChart(getClientesPorPlano(), 'Clientes por Plano', 'number')}
-              </div>
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card">
+              {renderBarChart(getClientesPorPlano(), 'Clientes por Plano', 'number')}
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 };
