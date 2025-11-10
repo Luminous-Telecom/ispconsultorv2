@@ -2029,58 +2029,6 @@ select:focus,
   color: var(--text-primary);
 }
 
-.dashboard-section {
-  padding: 1rem 1.25rem;
-  background: var(--bg-secondary);
-  border-radius: 16px;
-  border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
-}
-
-.dashboard-section:not(:last-child) {
-  margin-bottom: 1rem;
-}
-
-.dashboard-filters {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: 16px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.dashboard-filters .form-field {
-  margin-bottom: 0;
-}
-
-.dashboard-filters-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: flex-start;
-}
-
-.dashboard-period-info {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-}
-
-.dashboard-section-header {
-  margin-bottom: 0.75rem;
-}
-
-.dashboard-section-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.dashboard-section-subtitle {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-}
-
 .metric-card {
   border-radius: 14px;
   border: none;

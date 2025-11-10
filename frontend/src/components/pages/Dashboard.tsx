@@ -619,12 +619,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="dashboard-section mb-4">
-          <div className="dashboard-section-header d-flex align-items-center justify-content-between">
-            <h5 className="dashboard-section-title mb-0">Indicadores rápidos</h5>
-            <span className="dashboard-section-subtitle">Monitoramento dinâmico dos principais números da operação</span>
-          </div>
-          <div className="row g-3">
+        <div className="row g-3 mb-4">
             <div className="col-xl-3 col-lg-6 col-md-6">
               <div className="metric-card metric-card-primary shadow-sm">
                 <div className="metric-icon">
@@ -674,14 +669,8 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="dashboard-section mb-4">
-          <div className="dashboard-section-header d-flex align-items-center justify-content-between">
-            <h5 className="dashboard-section-title mb-0">Distribuição e status</h5>
-            <span className="dashboard-section-subtitle">Clique na legenda para exibir ou ocultar segmentos</span>
-          </div>
-          <div className="row g-3">
+        <div className="row g-3 mb-4">
             <div className="col-xl-2 col-lg-4 col-md-6">
               <div className="chart-card">
                 {renderPieChart(clientesChartData, 'Status dos Clientes', hiddenClientes, toggleCliente)}
@@ -718,14 +707,8 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="dashboard-section mb-4">
-          <div className="dashboard-section-header d-flex align-items-center justify-content-between">
-            <h5 className="dashboard-section-title mb-0">Evolução temporal</h5>
-            <span className="dashboard-section-subtitle">Acompanhe tendências de receita e aquisição</span>
-          </div>
-          <div className="row g-3">
+        <div className="row g-3 mb-4">
             <div className="col-xl-6 col-lg-6">
               <div className="chart-card">
                 {renderLineChart(receitaMensalChartData, 'Faturamento Mensal R$ (12 meses)', 'currency')}
@@ -752,12 +735,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="dashboard-section">
-          <div className="dashboard-section-header d-flex align-items-center justify-content-between">
-            <h5 className="dashboard-section-title mb-0">Análises complementares</h5>
-            <span className="dashboard-section-subtitle">Insights para decisões estratégicas</span>
-          </div>
-          <div className="row g-3">
+        <div className="row g-3">
             <div className="col-xl-6 col-lg-6">
               <div className="chart-card">
                 {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
@@ -771,7 +749,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };
