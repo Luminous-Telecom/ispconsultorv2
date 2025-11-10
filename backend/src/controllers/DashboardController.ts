@@ -55,8 +55,9 @@ export class DashboardController {
       const parsedStart = DashboardController.parseStartDate(startDate as string | undefined);
       const parsedEnd = DashboardController.parseEndDate(endDate as string | undefined, parsedStart);
 
-      const [aReceberPeriodo, resumoPeriodo] = await Promise.all([
+      const [aReceberPeriodo, recebidosPeriodo, resumoPeriodo] = await Promise.all([
         DashboardController.getReceberPorPeriodoData(parsedStart, parsedEnd),
+        DashboardController.getRecebidosPorPeriodoData(parsedStart, parsedEnd),
         DashboardController.getResumoFinanceiroPeriodo(parsedStart, parsedEnd)
       ]);
 
@@ -76,6 +77,7 @@ export class DashboardController {
           data: [statsData.planosAtivos, statsData.totalClientes - statsData.planosAtivos]
         },
         aReceberPeriodo,
+        recebidosPeriodo,
         filtros: {
           startDate: parsedStart.toISOString(),
           endDate: parsedEnd.toISOString()
@@ -635,6 +637,61 @@ export class DashboardController {
       if (indice >= 0 && indice < valoresPorDia.length) {
         const valorTitulo = parseFloat(titulo.valor.toString());
         valoresPorDia[indice] += valorTitulo;
+      }
+    }
+
+    const labels = valoresPorDia.map((_, index) => {
+      const data = new Date(inicio);
+      data.setDate(inicio.getDate() + index);
+      return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    });
+
+    return {
+      labels,
+      data: valoresPorDia
+    };
+  }
+
+  private static async getRecebidosPorPeriodoData(startDate: Date, endDate: Date) {
+    const inicio = new Date(startDate);
+    inicio.setHours(0, 0, 0, 0);
+    const fim = new Date(endDate);
+    fim.setHours(23, 59, 59, 999);
+
+    const diffTime = fim.getTime() - inicio.getTime();
+    const dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    const titulosPeriodo = await Titulo.findAll({
+      attributes: ['valor', 'valor_pago', 'status', 'data_pagamento'],
+      where: {
+        data_pagamento: {
+          [Op.between]: [inicio, fim]
+        },
+        status: {
+          [Op.in]: ['pago', 'pago_atraso', 'parcial']
+        }
+      }
+    });
+
+    const valoresPorDia = new Array(Math.max(dias, 0)).fill(0);
+    const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+    for (const titulo of titulosPeriodo) {
+      if (!titulo.data_pagamento) {
+        continue;
+      }
+
+      const dataPagamento = new Date(titulo.data_pagamento);
+      dataPagamento.setHours(0, 0, 0, 0);
+      const diff = dataPagamento.getTime() - inicio.getTime();
+      const indice = Math.floor(diff / MS_POR_DIA);
+
+      if (indice >= 0 && indice < valoresPorDia.length) {
+        const valorPago = titulo.valor_pago !== null && titulo.valor_pago !== undefined
+          ? parseFloat(titulo.valor_pago.toString())
+          : parseFloat(titulo.valor.toString());
+
+        valoresPorDia[indice] += valorPago;
       }
     }
 

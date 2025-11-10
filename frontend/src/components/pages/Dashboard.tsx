@@ -447,6 +447,14 @@ const Dashboard: React.FC = () => {
       })
     : [];
 
+  const recebidosPeriodoChartData: ChartDataItem[] = dashboardData?.recebidosPeriodo
+    ? dashboardData.recebidosPeriodo.labels.map((label, index) => ({
+        mes: label,
+        valor: dashboardData.recebidosPeriodo.data[index] ?? 0,
+        color: '#28a745',
+      }))
+    : [];
+
   const receberPeriodoChartData: ChartDataItem[] = dashboardData?.aReceberPeriodo
     ? dashboardData.aReceberPeriodo.labels.map((label, index) => ({
         mes: label,
@@ -455,6 +463,7 @@ const Dashboard: React.FC = () => {
       }))
     : [];
 
+  const totalRecebidosPeriodo = recebidosPeriodoChartData.reduce((acc, item) => acc + (item.valor || 0), 0);
   const totalReceberPeriodo = receberPeriodoChartData.reduce((acc, item) => acc + (item.valor || 0), 0);
   const periodoInicioLabel = formatDateLabel(startDate);
   const periodoFimLabel = formatDateLabel(endDate);
@@ -815,7 +824,16 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="row g-3 mb-4">
-          <div className="col-12">
+          <div className="col-xl-6 col-lg-6">
+            <div className="chart-card chart-card-line">
+              {renderLineChart(
+                recebidosPeriodoChartData,
+                `Recebidos no período (${periodoInicioLabel} - ${periodoFimLabel}) · Total ${formatCurrency(totalRecebidosPeriodo)}`,
+                'currency'
+              )}
+            </div>
+          </div>
+          <div className="col-xl-6 col-lg-6">
             <div className="chart-card chart-card-line">
               {renderLineChart(
                 receberPeriodoChartData,
