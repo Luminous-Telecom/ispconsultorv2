@@ -13,8 +13,8 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
 }) => {
   return (
     <>
-      {/* Campos comuns para EFI e ASAAS */}
-      {(formData.tipo_banco === 'efi' || formData.tipo_banco === 'asaas') && (
+      {/* Campos específicos EFI */}
+      {formData.tipo_banco === 'efi' && (
         <>
           <div className="row">
             <div className="col-md-6">
@@ -57,6 +57,56 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                 )}
               </div>
             </div>
+          </div>
+
+          <div className="row">
+            <div className="col-md-12">
+              <div className="mb-3">
+                <FormField
+                  name="url_retorno"
+                  type="url"
+                  label="URL de Retorno (Webhook)"
+                  placeholder="URL para retorno de webhooks"
+                  size="sm"
+                  value={formData.url_retorno}
+                  onChange={(value) => handleInputChange('url_retorno', value)}
+                  disabled={isPending}
+                  autoComplete="url"
+                  formPrefix={formPrefix}
+                />
+                <small className="text-secondary">URL para receber notificações de pagamento</small>
+              </div>
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="col-md-12">
+              <div className="mb-3">
+                <FormField
+                  name="sandbox"
+                  type="checkbox"
+                  label="Modo Sandbox (Testes)"
+                  value={formData.sandbox}
+                  onChange={(value) => handleInputChange('sandbox', value as boolean)}
+                  disabled={isPending}
+                  formPrefix={formPrefix}
+                  switch={true}
+                />
+                <small className="text-secondary">
+                  Ative para usar ambiente de testes. Desative para produção.
+                </small>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Campos específicos ASAAS */}
+      {formData.tipo_banco === 'asaas' && (
+        <>
+          <div className="alert alert-info py-2 px-3">
+            A Asaas utiliza apenas o campo <strong>API Key</strong> para autenticação. Os campos de Client ID
+            e Client Secret não são necessários neste gateway.
           </div>
 
           <div className="row">

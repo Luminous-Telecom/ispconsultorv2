@@ -258,7 +258,7 @@ export class TituloController {
       
       const logosPadrao: Record<string, string> = {
         'efi': 'efi.png',
-        'asaas': 'efi.png', // Usar efi.png por enquanto
+        'asaas': 'asaas.png',
         'bancario': 'boletoproprio.png',
         'outros': 'boletoproprio.png'
       };
@@ -480,6 +480,33 @@ export class TituloController {
         return;
       }
 
+      // Selecionar contrato para referência (se informado ou o mais recente ativo)
+      let contratoReferencia: Contrato | null = null;
+      if (contrato_id) {
+        contratoReferencia = await Contrato.findOne({
+          where: {
+            id: contrato_id,
+            cliente_id: cliente.id
+          }
+        });
+
+        if (!contratoReferencia) {
+          res.status(404).json({
+            success: false,
+            message: 'Contrato informado não encontrado para este cliente'
+          });
+          return;
+        }
+      } else {
+        contratoReferencia = await Contrato.findOne({
+          where: {
+            cliente_id: cliente.id,
+            status: 'ativo'
+          },
+          order: [['id', 'DESC']]
+        });
+      }
+
       // Buscar plano - se não foi informado, buscar o plano ativo do cliente
       let plano;
       if (plano_id) {
@@ -491,32 +518,21 @@ export class TituloController {
           });
           return;
         }
-      } else {
-        // Buscar plano ativo do cliente
-        const contratoAtivo = await Contrato.findOne({
-          where: { 
-            cliente_id: cliente.id, 
-            status: 'ativo' 
-          },
-          include: [{ model: Plano, as: 'plano' }]
-        });
-
-        if (!contratoAtivo) {
-          res.status(400).json({
-            success: false,
-            message: 'Cliente não possui plano ativo'
-          });
-          return;
-        }
-
-        plano = await Plano.findByPk(contratoAtivo.plano_id);
+      } else if (contratoReferencia) {
+        plano = await contratoReferencia.getPlano();
         if (!plano) {
           res.status(400).json({
             success: false,
-            message: 'Plano do contrato não encontrado'
+            message: 'Contrato selecionado não possui plano associado'
           });
           return;
         }
+      } else {
+        res.status(400).json({
+          success: false,
+          message: 'Informe o plano ou associe o cliente a um contrato com plano ativo'
+        });
+        return;
       }
 
       // Calcular data de vencimento se não foi informada
@@ -529,69 +545,22 @@ export class TituloController {
         }
       }
       
-      if (!dataVencimentoFinal) {
-        // Buscar contrato ativo para pegar o dia de vencimento
-        const contratoAtivo = await Contrato.findOne({
-          where: { 
-            cliente_id: cliente.id, 
-            status: 'ativo' 
-          }
-        });
-
-        let diaVencimento = 15; // Dia padrão
-        if (contratoAtivo && contratoAtivo.dia_vencimento_id) {
-          const diaVencimentoConfig = await DiasVencimento.findByPk(contratoAtivo.dia_vencimento_id);
-          if (diaVencimentoConfig && diaVencimentoConfig.dia) {
-            diaVencimento = diaVencimentoConfig.dia;
-          }
-        }
-
-        // Calcular próxima data de vencimento
-        const hoje = new Date();
-        
-        // Ajustar dia se não existir no mês
-        const ultimoDiaAtualMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-        const diaCorretoAtualMes = Math.min(diaVencimento, ultimoDiaAtualMes);
-        const vencimento = new Date(hoje.getFullYear(), hoje.getMonth(), diaCorretoAtualMes);
-        
-        // Se o dia já passou neste mês, usar o próximo mês
-        let dataFinal;
-        if (vencimento > hoje) {
-          dataFinal = vencimento;
-        } else {
-          // Calcular próximo mês com ajuste de dia
-          const ultimoDiaProxMes = new Date(hoje.getFullYear(), hoje.getMonth() + 2, 0).getDate();
-          const diaCorretoProxMes = Math.min(diaVencimento, ultimoDiaProxMes);
-          const proximoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, diaCorretoProxMes);
-          dataFinal = proximoMes;
-        }
-        
-        dataVencimentoFinal = dataFinal.toISOString().split('T')[0];
-      }
+      // Removida geração automática de data de vencimento para evitar títulos sem contrato definido
 
       // Selecionar banco
       let banco;
-      // Buscar banco do contrato ativo do cliente
-      const contratoAtivo = await Contrato.findOne({
-        where: { 
-          cliente_id: cliente.id, 
-          status: 'ativo' 
-        },
-        include: [{ model: Banco, as: 'bancoBoleto' }]
-      });
-      
-      if (contratoAtivo?.conta_boleto) {
-        banco = await Banco.findByPk(contratoAtivo.conta_boleto);
+      if (contratoReferencia?.conta_boleto) {
+        banco = await Banco.findByPk(contratoReferencia.conta_boleto);
         if (!banco || !banco.ativo) {
           res.status(400).json({
             success: false,
-            message: 'Banco configurado no cliente não está ativo'
+            message: 'Banco configurado no contrato não está ativo'
           });
           return;
         }
       } else {
         // Usar banco padrão ativo
-        banco = await Banco.findOne({ where: { ativo: true } });
+        banco = await Banco.findOne({ where: { ativo: true }, order: [['id', 'DESC']] });
         if (!banco) {
           res.status(400).json({
             success: false,
@@ -651,7 +620,7 @@ export class TituloController {
         cliente_id,
         plano_id: plano.id,
         banco_id: banco.id,
-        contrato_id: contrato_id || null,
+        contrato_id: contratoReferencia?.id || contrato_id || null,
         numero_titulo: gerarNumeroTitulo(),
         valor: valorFinal, // Usar valorFinal (com descontos) ao invés do plano.valor_mensal
         valor_final: valorFinal,
@@ -730,20 +699,27 @@ export class TituloController {
       // Verificar se está cancelando
       if (status === 'cancelado' && titulo.status !== 'cancelado') {
         // Cancelar na API do banco se tiver charge_id
-        if (titulo.charge_id && titulo.banco && titulo.banco?.tipo_banco === 'efi') {
-          try {
-            await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
-            logger.info('Título cancelado na EFI', { 
-              titulo_id: titulo.id, 
-              charge_id: titulo.charge_id 
+        if (titulo.charge_id && titulo.banco && ['efi', 'asaas'].includes(titulo.banco?.tipo_banco ?? '')) {
+          const resultadoCancelamento = await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
+
+          if (!resultadoCancelamento.success) {
+            logger.warn('Falha ao cancelar título no gateway bancário', {
+              titulo_id: titulo.id,
+              charge_id: titulo.charge_id,
+              message: resultadoCancelamento.message
             });
-          } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-            logger.warn('Erro ao cancelar título na EFI', { 
-              titulo_id: titulo.id, 
-              error: errorMessage 
+
+            res.status(400).json({
+              success: false,
+              message: resultadoCancelamento.message ?? 'Não foi possível cancelar o título no banco emissor'
             });
+            return;
           }
+
+          logger.info('Título cancelado no gateway bancário', { 
+            titulo_id: titulo.id, 
+            charge_id: titulo.charge_id 
+          });
         }
       }
 
@@ -814,16 +790,16 @@ export class TituloController {
       }
 
       // Cancelar na API do banco se tiver charge_id
-      if (titulo.charge_id && titulo.banco && titulo.banco.tipo_banco === 'efi') {
+      if (titulo.charge_id && titulo.banco && ['efi', 'asaas'].includes(titulo.banco.tipo_banco ?? '')) {
         try {
           await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
-          logger.info('Título cancelado na EFI antes da exclusão', { 
+          logger.info('Título cancelado no gateway bancário antes da exclusão', { 
             titulo_id: titulo.id, 
             charge_id: titulo.charge_id 
           });
         } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-          logger.warn('Erro ao cancelar título na EFI', { 
+          logger.warn('Erro ao cancelar título no gateway bancário', { 
             titulo_id: titulo.id, 
             error: errorMessage 
           });
@@ -861,6 +837,7 @@ export class TituloController {
             as: 'banco', 
             attributes: [
               'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
+              'api_key',
               'url_retorno', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
               'instrucao_linha_4', 'instrucao_linha_5', 'logo'
             ] 
@@ -879,7 +856,12 @@ export class TituloController {
       logger.info('Verificando status do título para impressão', {
         titulo_id: titulo.id,
         tem_charge_id: !!titulo.charge_id,
-        charge_id: titulo.charge_id
+        charge_id: titulo.charge_id,
+        banco_id: titulo.banco_id,
+        banco_tipo: titulo.banco?.tipo_banco,
+        banco_nome: titulo.banco?.nome,
+        tem_banco: !!titulo.banco,
+        contrato_id: titulo.contrato_id
       });
 
       // Verificar se já está registrado no banco
@@ -1146,15 +1128,7 @@ export class TituloController {
         include: [
           { model: Cliente, as: 'cliente' },
           { model: Plano, as: 'plano' },
-          { 
-            model: Banco, 
-            as: 'banco', 
-            attributes: [
-              'id', 'nome', 'codigo', 'tipo_banco', 'client_id_producao', 'client_secret_producao', 'sandbox',
-              'url_retorno', 'percentual_multa', 'percentual_juros', 'instrucao_linha_1', 'instrucao_linha_2', 'instrucao_linha_3', 
-              'instrucao_linha_4', 'instrucao_linha_5', 'logo'
-            ] 
-          }
+          { model: Banco, as: 'banco' }
         ]
       });
 

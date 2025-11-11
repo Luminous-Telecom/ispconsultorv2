@@ -291,6 +291,11 @@ const BancoModal: React.FC<BancoModalProps> = ({
       // Preparar dados para salvar (não enviar campos de senha vazios)
       const dataToSave = { ...formData };
       
+      // Se api_key estiver vazio, não enviar (para não sobrescrever o valor existente)
+      if (!dataToSave.api_key || dataToSave.api_key.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).api_key;
+      }
+      
       // Se client_secret_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
       if (!dataToSave.client_secret_producao || dataToSave.client_secret_producao.trim() === '') {
         delete (dataToSave as Partial<BancoForm>).client_secret_producao;
@@ -325,6 +330,11 @@ const BancoModal: React.FC<BancoModalProps> = ({
       // Preparar dados para salvar
       const dataToSave = { ...formData };
       
+      // Se api_key estiver vazio, não enviar (para não sobrescrever o valor existente)
+      if (!dataToSave.api_key || dataToSave.api_key.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).api_key;
+      }
+      
       // Se client_secret_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
       if (!dataToSave.client_secret_producao || dataToSave.client_secret_producao.trim() === '') {
         delete (dataToSave as Partial<BancoForm>).client_secret_producao;
@@ -351,7 +361,9 @@ const BancoModal: React.FC<BancoModalProps> = ({
         
         // Melhorar mensagem se for erro de credenciais
         if (mensagemErro.includes('Credenciais do banco não configuradas')) {
-          mensagemErro = 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.';
+          mensagemErro = formData.tipo_banco === 'asaas'
+            ? 'Credenciais não configuradas. Informe a API Key do Asaas antes de testar.'
+            : 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.';
         }
         
         setTestResult('❌ ' + mensagemErro);
@@ -363,7 +375,9 @@ const BancoModal: React.FC<BancoModalProps> = ({
       
       // Melhorar mensagem se for erro de credenciais
       if (errorMessage.includes('Credenciais do banco não configuradas')) {
-        errorMessage = 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.';
+        errorMessage = formData.tipo_banco === 'asaas'
+          ? 'Credenciais não configuradas. Informe a API Key do Asaas antes de testar.'
+          : 'Credenciais não configuradas. Preencha o Client ID e Client Secret antes de testar.';
       }
       
       setTestResult('❌ ' + errorMessage);

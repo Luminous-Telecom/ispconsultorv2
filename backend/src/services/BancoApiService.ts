@@ -7,6 +7,8 @@ import { logger } from '../utils/logger';
 import { efiConfig } from '../config/bancos/efi';
 import asaasConfig from '../config/bancos/asaas';
 import type { JsonValue } from '../types';
+import { AsaasService } from './bancos/AsaasService';
+import { EfiService } from './bancos/EfiService';
 
 export interface BancoConfig {
   nome: string;
@@ -67,23 +69,6 @@ interface TituloWithRelations extends Titulo {
   plano?: Plano;
 }
 
-interface ClienteForBoleto {
-  razao_social: string;
-  cnpj: string;
-  telefone: string;
-  endereco: string;
-  numero: string;
-  complemento?: string;
-  bairro: string;
-  cep: string;
-  cidade: string;
-  estado: string;
-}
-
-interface PlanoForBoleto {
-  nome_plano: string;
-}
-
 interface AuthData {
   [key: string]: string | null | undefined;
 }
@@ -97,64 +82,14 @@ interface AxiosErrorResponse {
   };
 }
 
-interface BoletoData {
-  items: Array<{
-    name: string;
-    value: number;
-    amount: number;
-  }>;
-  metadata?: {
-    custom_id?: string;
-    notification_url?: string;
-  };
-  payment?: {
-    banking_billet?: {
-      customer?: JsonValue;
-      expire_at?: string;
-      [key: string]: JsonValue | undefined;
-    };
-  };
-}
-
-interface CustomerData {
-  name: string;
-  phone_number: string;
-  juridical_person: {
-    corporate_name: string;
-    cnpj: string;
-  };
-  address: {
-    street: string;
-    number: string;
-    neighborhood: string;
-    zipcode: string;
-    city: string;
-    complement?: string;
-    state: string;
-  };
-}
-
-interface ArquivoRemessa {
-  nome_arquivo: string;
-  tamanho?: number;
-  conteudo?: string | Buffer;
-}
-
-interface RemessaResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    arquivo: string;
-    tamanho?: number;
-    timestamp: string;
-  };
-}
-
 export class BancoApiService {
   private static readonly BANCO_CONFIGS: Record<string, BancoConfig | Partial<BancoConfig>> = {
     efi: efiConfig,
     asaas: asaasConfig as Partial<BancoConfig>
   };
+
+  private static asaasService = new AsaasService();
+  private static efiService = new EfiService();
 
   /**
    * Obter configuração do banco
@@ -180,20 +115,11 @@ export class BancoApiService {
    * Verificar se as credenciais estão configuradas
    */
   private static verificarCredenciais(banco: Banco, _config: BancoConfig): boolean {
-    // Usar sempre as mesmas credenciais, independente de sandbox ou produção
-    const clientId = banco.client_id_producao;
-    const clientSecret = banco.client_secret_producao;
-    
-    logger.info('Verificando credenciais do banco', {
-      banco_id: banco.id,
-      tipo_banco: banco.tipo_banco,
-      has_client_id: !!clientId,
-      has_client_secret: !!clientSecret,
-      client_id_length: clientId?.length || 0,
-      client_secret_length: clientSecret?.length || 0
-    });
-    
-    return !!(clientId && clientSecret);
+    if (banco.tipo_banco === 'asaas') {
+      return !!banco.api_key;
+    }
+
+    return !!(banco.client_id_producao && banco.client_secret_producao);
   }
 
   /**
@@ -248,6 +174,29 @@ export class BancoApiService {
    * Obter token de acesso com retry para timeouts
    */
   private static async obterToken(banco: Banco, config: BancoConfig): Promise<string | null> {
+    if (banco.tipo_banco === 'asaas') {
+      // Tentar pegar api_key de várias formas
+      let apiKey = banco.api_key;
+      
+      if (!apiKey && (banco as any).dataValues) {
+        apiKey = (banco as any).dataValues.api_key;
+      }
+      
+      if (!apiKey && typeof (banco as any).getDataValue === 'function') {
+        apiKey = (banco as any).getDataValue('api_key');
+      }
+      
+      if (!apiKey) {
+        logger.error('API Key não configurada para Asaas', {
+          banco_id: banco.id,
+          banco_nome: banco.nome
+        });
+        return null;
+      }
+      
+      return apiKey;
+    }
+
     const maxTentativas = 3;
     let delay = 2000; // 2 segundos inicial
     
@@ -346,15 +295,19 @@ export class BancoApiService {
   /**
    * Preparar headers para requisições
    */
-  private static prepareHeaders(tipoBanco: string, token: string): Record<string, string> {
-    const headers: Record<string, string> = {};
-    
-    if (tipoBanco === 'efi') {
-      headers['Authorization'] = `Bearer ${token}`;
+  private static buildAuthHeaders(tipoBanco: string, token: string): Record<string, string> {
+    if (tipoBanco === 'asaas') {
+      return {
+        'access_token': token,
+        'Accept': 'application/json'
+      };
     }
     
-    return headers;
+    return {
+      'Authorization': `Bearer ${token}`
+    };
   }
+
 
   /**
    * Obter valor aninhado de um objeto usando notação de ponto
@@ -400,12 +353,17 @@ export class BancoApiService {
         };
       }
 
-      logger.info('Iniciando geração de título', {
+      logger.info('Registrando título via gateway bancário', {
         titulo_id: titulo.id,
         banco_id: banco.id,
+        banco_tipo: banco.tipo_banco,
+        banco_nome: banco.nome,
         cliente_id: cliente.id,
-        tipo_banco: banco.tipo_banco
+        contrato_id: titulo.contrato_id ?? null,
+        plano_id: plano?.id ?? null,
+        titulo_banco_id: titulo.banco_id
       });
+
 
       // Verificar se já foi gerado
       if (titulo.charge_id) {
@@ -416,16 +374,30 @@ export class BancoApiService {
         };
       }
 
-      // Verificar credenciais
-      if (!this.verificarCredenciais(banco, config)) {
+      // Recarregar banco com api_key (evitar toJSON que remove o campo)
+      const bancoComCredenciais = await Banco.findByPk(banco.id, {
+        attributes: ['id', 'nome', 'tipo_banco', 'api_key', 'client_id_producao', 'client_secret_producao', 'sandbox'],
+        raw: true
+      });
+      
+      if (!bancoComCredenciais) {
+        return {
+          success: false,
+          message: 'Banco não encontrado'
+        };
+      }
+      
+
+      // Verificar credenciais usando banco recarregado
+      if (!this.verificarCredenciais(bancoComCredenciais as any, config)) {
         return {
           success: false,
           message: 'Credenciais do banco não configuradas'
         };
       }
       
-      // Obter token
-      const token = await this.obterToken(banco, config);
+      // Obter token usando banco recarregado
+      const token = await this.obterToken(bancoComCredenciais as any, config);
       if (!token) {
         return {
           success: false,
@@ -441,455 +413,37 @@ export class BancoApiService {
         };
       }
       
-      // Converter Cliente para ClienteForBoleto com validações
-      if (!cliente.telefone || !cliente.endereco || !cliente.numero || !cliente.bairro || !cliente.cep || !cliente.cidade || !cliente.estado) {
-        return {
-          success: false,
-          message: 'Cliente está com dados incompletos para gerar boleto'
-        };
+      if (banco.tipo_banco === 'asaas') {
+        return this.asaasService.gerarTitulo(titulo, bancoComCredenciais as any, token);
       }
-      
-      const clienteForBoleto: ClienteForBoleto = {
-        razao_social: cliente.razao_social,
-        cnpj: cliente.cnpj,
-        telefone: cliente.telefone,
-        endereco: cliente.endereco,
-        numero: cliente.numero,
-        complemento: cliente.complemento || undefined,
-        bairro: cliente.bairro,
-        cep: cliente.cep,
-        cidade: cliente.cidade,
-        estado: cliente.estado
-      };
-      
-      const planoForBoleto: PlanoForBoleto = {
-        nome_plano: plano.nome_plano
-      };
-      
-      const dadosBoleto = await this.prepararDadosBoleto(banco, titulo, clienteForBoleto, planoForBoleto, config);
 
-
-      // Criar boleto individual
-      // Usar URL correta baseada no ambiente (sandbox vs produção)
-      const baseUrlCobranca = banco.sandbox 
-        ? config.sandbox_url
-        : config.cobranca_base_url;
-      const endpoint = baseUrlCobranca + config.api_endpoints.boleto;
-      
-      const headers = this.prepareHeaders(banco.tipo_banco, token);
-      headers['Content-Type'] = 'application/json';
-      
-      // Implementar retry para criação de boleto
-      const maxTentativas = 3;
-      let delay = 2000;
-      let response: AxiosResponse<Record<string, JsonValue>> | null = null;
-      
-      for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
-        try {
-          response = await axios.post(endpoint, dadosBoleto, { 
-            headers,
-            timeout: 30000
-          });
-          break; // Sucesso, sair do loop
-        } catch (error) {
-          const axiosError = error as Error & AxiosErrorResponse;
-          const isTimeout = axiosError.code === 'ECONNABORTED' || 
-                           axiosError.response?.status === 504 || 
-                           axiosError.response?.status === 502 || 
-                           axiosError.response?.status === 503;
-          const errorResponse = axiosError.response;
-          
-          if (tentativa < maxTentativas && isTimeout) {
-            logger.warn(`Tentativa ${tentativa} falhou por timeout na criação do boleto, tentando novamente em ${delay}ms`, {
-              titulo_id: titulo.id,
-              status: errorResponse?.status,
-              tentativa
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 2;
-            continue;
-          } else {
-            throw error; // Re-throw se não é erro temporário ou é última tentativa
-          }
-        }
+      if (banco.tipo_banco === 'efi') {
+        return this.efiService.gerarTitulo(titulo, bancoComCredenciais as any, token);
       }
-      
-      if (!response) {
-        return {
-          success: false,
-          message: 'Nenhuma resposta recebida do servidor'
-        };
-      }
-      
-      if (response.status >= 200 && response.status < 300) {
-        const dados = response.data;
-        const chargeId = this.getNestedValue(dados, config.api_response_mapping.boleto.id);
-        const chargeIdString = chargeId != null ? String(chargeId) : null;
-        const barcode = this.getNestedValue(dados, config.api_response_mapping.boleto.barcode);
-        const url = this.getNestedValue(dados, config.api_response_mapping.boleto.url);
-        const linhaDigitavelPath = config.api_response_mapping.boleto.linha_digitavel || '';
-        const linhaDigitavelRaw = linhaDigitavelPath ? this.getNestedValue(dados, linhaDigitavelPath) : null;
-        const linhaDigitavel = typeof linhaDigitavelRaw === 'string' ? linhaDigitavelRaw : null;
-        const pdfUrl = this.getNestedValue(dados, config.api_response_mapping.boleto.pdf);
-        const pixQrcode = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode);
-        const pixQrcodeImage = this.getNestedValue(dados, config.api_response_mapping.boleto.pix_qrcode_image);
 
-        // Se barcode for linha digitável (47 dígitos), converter para código de barras (44 dígitos)
-        let codigoBarrasFinal: string | null = null;
-        if (barcode && typeof barcode === 'string') {
-          const barcodeLimpo = barcode.replace(/\D/g, '');
-          if (barcodeLimpo.length === 47) {
-            // É linha digitável, pegar os primeiros 44 dígitos
-            codigoBarrasFinal = barcodeLimpo.substring(0, 44);
-          } else {
-            codigoBarrasFinal = barcode;
-          }
-        } else if (typeof barcode === 'string') {
-          codigoBarrasFinal = barcode;
-        }
-
-        // Atualizar título
-        await titulo.update({
-          charge_id: chargeIdString,
-          codigo_barras: typeof codigoBarrasFinal === 'string' ? codigoBarrasFinal : null,
-          url_boleto: typeof url === 'string' ? url : null,
-          linha_digitavel: typeof linhaDigitavel === 'string' ? linhaDigitavel : null,
-          qrcode: typeof pixQrcode === 'string' ? pixQrcode : null,
-          qrcode_image: typeof pixQrcodeImage === 'string' ? pixQrcodeImage : null,
-          status: 'pendente'
-        });
-
-        // Atualizar metadados com notification_url
-        try {
-          const baseUrl = banco.url_retorno;
-          
-          if (baseUrl && chargeIdString) {
-          const metadataEndpoint = `${baseUrlCobranca}/v1/charge/${chargeIdString}/metadata`;
-          const metadataPayload = {
-            notification_url: baseUrl,
-            custom_id: `titulo_${titulo.id}`
-          };
-
-          await axios.put(metadataEndpoint, metadataPayload, { headers });
-          
-          logger.info('Metadados atualizados com sucesso', {
-            titulo_id: titulo.id,
-            charge_id: chargeIdString,
-            notification_url: baseUrl
-          });
-          } else if (!baseUrl) {
-            logger.warn('URL de retorno não configurada, pulando atualização de metadados', {
-              banco_id: banco.id,
-              titulo_id: titulo.id
-            });
-          } else {
-            logger.warn('Charge ID ausente, pulando atualização de metadados', {
-              banco_id: banco.id,
-              titulo_id: titulo.id,
-              charge_id: chargeIdString
-            });
-          }
-        } catch (metadataError) {
-          const errorMessage = metadataError instanceof Error ? metadataError.message : 'Erro desconhecido';
-          logger.warn('Falha ao atualizar metadados, mas título foi criado', {
-            titulo_id: titulo.id,
-            charge_id: chargeIdString,
-            error: errorMessage
-          });
-        }
-
-        logger.info('Título gerado com sucesso', {
-          titulo_id: titulo.id,
-          charge_id: chargeIdString ?? ''
-        });
-
-        return {
-          success: true,
-          message: 'Título gerado com sucesso',
-          data: {
-            charge_id: chargeIdString ?? undefined,
-            codigo_barras: typeof barcode === 'string' ? barcode : null,
-            url_boleto: typeof url === 'string' ? url : null,
-            linha_digitavel: linhaDigitavel,
-            pdf_url: pdfUrl,
-            qrcode: pixQrcode,
-            qrcode_image: pixQrcodeImage
-          }
-        };
-      }
-      
+      // Fallback para outros bancos (não deveria chegar aqui)
       return {
         success: false,
-        message: 'Erro ao gerar título'
+        message: 'Tipo de banco não suportado'
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const axiosError = error as Error & AxiosErrorResponse;
       const errorResponse = axiosError.response;
-      const errorDetails = {
+
+      logger.error('Erro ao gerar título', {
         titulo_id: titulo.id,
         error: errorMessage,
-        status: errorResponse?.status,
-        statusText: errorResponse?.statusText,
-        data: errorResponse?.data,
-        banco_id: banco.id,
-        banco_nome: banco.nome,
-        sandbox: banco.sandbox,
-        tem_client_id: !!banco.client_id_producao,
-        tem_client_secret: !!banco.client_secret_producao
-      };
-
-      logger.error('Erro ao gerar título', errorDetails);
-
-      // Mensagem específica para erro 401
-      let finalErrorMessage = 'Erro ao gerar título: ' + errorMessage;
-      if (errorResponse?.status === 401) {
-        finalErrorMessage = 'Erro de autenticação (401): Verifique as credenciais (Client ID e Client Secret) do banco. ' +
-                      `Banco está em modo ${banco.sandbox ? 'SANDBOX' : 'PRODUÇÃO'}. ` +
-                      'Certifique-se de que as credenciais correspondem ao ambiente correto.';
-      }
+        status: errorResponse?.status
+      });
 
       return {
         success: false,
-        message: finalErrorMessage
+        message: 'Erro ao gerar título: ' + errorMessage
       };
     }
   }
 
-  /**
-   * Preparar dados do boleto para API
-   */
-  private static async prepararDadosBoleto(
-    banco: Banco, 
-    titulo: TituloWithRelations, 
-    cliente: ClienteForBoleto, 
-    plano: PlanoForBoleto, 
-    _config: BancoConfig
-  ): Promise<BoletoData> {
-    const _baseUrl = banco.url_retorno;
-    
-    // Buscar dados da empresa (recebedor)
-    const { DadosEmpresa } = await import('../models/DadosEmpresa');
-    const dadosEmpresa = await DadosEmpresa.findOne();
-    
-    if (!dadosEmpresa) {
-      throw new Error('Dados da empresa não configurados');
-    }
-    
-    // Validar dados obrigatórios do cliente
-    if (!cliente.razao_social) {
-      throw new Error('Cliente deve ter razão social preenchida');
-    }
-    // Email não é validado pois não é enviado ao banco (seguindo regras do projeto)
-    if (!cliente.telefone) {
-      throw new Error('Cliente deve ter telefone preenchido');
-    }
-    if (!cliente.cnpj) {
-      throw new Error('Cliente deve ter CNPJ preenchido');
-    }
-    if (!cliente.endereco) {
-      throw new Error('Cliente deve ter endereço preenchido');
-    }
-    if (!cliente.numero) {
-      throw new Error('Cliente deve ter número do endereço preenchido');
-    }
-    if (!cliente.bairro) {
-      throw new Error('Cliente deve ter bairro preenchido');
-    }
-    if (!cliente.cep) {
-      throw new Error('Cliente deve ter CEP preenchido');
-    }
-    if (!cliente.cidade) {
-      throw new Error('Cliente deve ter cidade preenchida');
-    }
-    if (!cliente.estado) {
-      throw new Error('Cliente deve ter estado preenchido');
-    }
-    
-    // Converter valor para centavos
-    const valorCentavos = Math.round(Number(titulo.valor) * 100);
-    
-    // Multa/Juros em basis points (ex.: 2.00% => 200)
-    const fineBp = Math.round(Number(banco.percentual_multa || 0) * 100);
-    const interestBp = Math.round(Number(banco.percentual_juros || 0) * 100);
-    
-    // Garantir que nome tenha espaço (exigência da API EFI)
-    const nomeCliente = cliente.razao_social || 'Cliente';
-    const nomeFormatado = nomeCliente.includes(' ') ? nomeCliente : `${nomeCliente}  `;
-    
-    // Formatar telefone para EFI: formato ^[1-9]{2}9?[0-9]{8}$
-    // Formato esperado: DDD (2 dígitos) + 9 (opcional para celular) + 8 dígitos
-    const formatarTelefoneEFI = (telefone: string): string => {
-      // Remover tudo que não é dígito
-      let numero = telefone.replace(/\D/g, '');
-      
-      // Extrair apenas os últimos 11 dígitos (caso tenha código do país)
-      if (numero.length > 11) {
-        numero = numero.substring(numero.length - 11);
-      }
-      
-      // Se tiver exatamente 11 dígitos
-      if (numero.length === 11) {
-        // Verificar se já está no formato correto: DDD + 9 + 8 dígitos
-        const regex11 = /^[1-9]{1}[1-9]{1}9[0-9]{8}$/;
-        if (regex11.test(numero)) {
-          return numero;
-        }
-        
-        // Se não está no formato correto, tentar corrigir
-        // Assumir que os primeiros 2 dígitos são DDD
-        const ddd = numero.substring(0, 2);
-        const resto = numero.substring(2); // 9 dígitos
-        
-        // Para ter formato válido de celular: DDD + 9 + 8 dígitos
-        // Se resto tem 9 dígitos, precisa ajustar para 9 + 8
-        if (resto.length === 9) {
-          const primeiroDigito = resto.substring(0, 1);
-          
-          if (primeiroDigito === '9') {
-            // Se começa com 9, já está no formato: pegar apenas os próximos 8
-            const numeroFormatado = resto.substring(1); // 8 dígitos
-            numero = ddd + '9' + numeroFormatado;
-          } else {
-            // Se não começa com 9, assumir que precisa adicionar 9 e pegar os 8 primeiros
-            numero = ddd + '9' + resto.substring(0, 8);
-          }
-        }
-      }
-      
-      // Se tiver 10 dígitos
-      if (numero.length === 10) {
-        // Verificar formato: DDD + 8 dígitos
-        const regex10 = /^[1-9]{1}[1-9]{1}[0-9]{8}$/;
-        if (regex10.test(numero)) {
-          // Formato fixo válido, retornar como está
-          return numero;
-        }
-      }
-      
-      // Se tem menos de 10 dígitos, não é um número válido
-      // Usar um formato genérico válido: 11999999999
-      if (numero.length < 10) {
-        logger.warn('Telefone muito curto, usando formato genérico', {
-          telefone_original: telefone,
-          telefone_limpo: numero,
-          titulo_id: titulo.id
-        });
-        return '11999999999';
-      }
-      
-      // Se chegou aqui e ainda tem problema, tentar corrigir
-      // Pegar primeiros 10 dígitos e validar
-      if (numero.length > 10) {
-        numero = numero.substring(0, 2) + numero.substring(numero.length - 8);
-      }
-      
-      return numero;
-    };
-    
-    const customerData: CustomerData = {
-      name: nomeFormatado,
-      phone_number: formatarTelefoneEFI(cliente.telefone),
-      juridical_person: {
-        corporate_name: nomeFormatado,
-        cnpj: cliente.cnpj.replace(/\D/g, ''),
-      },
-      address: {
-        street: cliente.endereco,
-        number: cliente.numero,
-        neighborhood: cliente.bairro,
-        zipcode: cliente.cep.replace(/\D/g, ''),
-        city: cliente.cidade,
-        complement: cliente.complemento,
-        state: cliente.estado
-      }
-    };
-
-    // Criar mensagem do boleto (máximo 4 linhas, 100 caracteres cada)
-    const mensagem = `Cobrança referente ao serviço ${plano.nome_plano || 'Internet'} - Título ${titulo.numero_titulo}`;
-    const mensagemFormatada = this.formatarMensagemEFI(mensagem);
-    
-    return {
-      items: [{
-        name: plano.nome_plano || 'Serviço de Internet',
-        value: valorCentavos,
-        amount: 1
-      }],
-      payment: {
-        banking_billet: {
-          customer: JSON.parse(JSON.stringify(customerData)) as JsonValue,
-          expire_at: new Date(titulo.data_vencimento).toISOString().split('T')[0],
-          configurations: {
-            fine: fineBp,
-            interest: interestBp
-          },
-          message: mensagemFormatada
-        }
-      },
-      metadata: {
-        custom_id: `titulo_${titulo.id}`
-      }
-    };
-  }
-
-  /**
-   * Formatar mensagem para EFI (máximo 4 linhas, 100 caracteres cada)
-   * Padrão: ^[^\n]{0,100}(\n[^\n]{0,100}){0,3}$
-   */
-  private static formatarMensagemEFI(mensagem: string): string {
-    const maxCharsPorLinha = 100;
-    const maxLinhas = 4;
-    
-    // Remover quebras de linha existentes e espaços extras
-    const texto = mensagem.replace(/\s+/g, ' ').trim();
-    
-    // Se a mensagem cabe em uma linha, retornar como está
-    if (texto.length <= maxCharsPorLinha) {
-      return texto;
-    }
-    
-    // Dividir em palavras
-    const palavras = texto.split(' ');
-    const linhas: string[] = [];
-    let linhaAtual = '';
-    
-    for (const palavra of palavras) {
-      // Verificar se adicionar a palavra excederia o limite da linha
-      const novaLinha = linhaAtual ? `${linhaAtual} ${palavra}` : palavra;
-      
-      if (novaLinha.length <= maxCharsPorLinha) {
-        linhaAtual = novaLinha;
-      } else {
-        // Se já temos uma linha, adicioná-la
-        if (linhaAtual) {
-          linhas.push(linhaAtual);
-          linhaAtual = palavra;
-        } else {
-          // Palavra muito grande, truncar
-          linhas.push(palavra.substring(0, maxCharsPorLinha));
-          linhaAtual = palavra.substring(maxCharsPorLinha);
-        }
-        
-        // Verificar se atingimos o limite de linhas
-        if (linhas.length >= maxLinhas - 1) {
-          // Última linha: truncar se necessário
-          const linhaRestante = linhaAtual.length > maxCharsPorLinha 
-            ? linhaAtual.substring(0, maxCharsPorLinha)
-            : linhaAtual;
-          linhas.push(linhaRestante);
-          return linhas.join('\n');
-        }
-      }
-    }
-    
-    // Adicionar última linha se ainda houver
-    if (linhaAtual && linhas.length < maxLinhas) {
-      linhas.push(linhaAtual);
-    }
-    
-    return linhas.join('\n');
-  }
 
   /**
    * Consultar status de um título
@@ -947,12 +501,12 @@ export class BancoApiService {
       let delay = 2000;
       let response: AxiosResponse<Record<string, JsonValue>> | null = null;
       
+      const headers = this.buildAuthHeaders(banco.tipo_banco, token);
+
       for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
         try {
           response = await axios.get(endpoint, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
+            headers,
             timeout: 30000
           });
           break; // Sucesso, sair do loop
@@ -1035,6 +589,13 @@ export class BancoApiService {
         };
       }
 
+      if (banco.tipo_banco === 'asaas') {
+        return {
+          success: false,
+          message: 'Consulta de notificação não suportada para Asaas'
+        };
+      }
+
       // Usar URL sandbox se estiver configurado
       const baseUrlCobranca = banco.sandbox 
         ? (config.sandbox_url || config.cobranca_base_url)
@@ -1052,12 +613,12 @@ export class BancoApiService {
       let delay = 1000; // 1 segundo
       let response: AxiosResponse<Record<string, JsonValue>> | null = null;
       
+      const headers = this.buildAuthHeaders(banco.tipo_banco, token);
+
       for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
         try {
           response = await axios.get(endpoint, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
+            headers,
             timeout: 30000
           });
           
@@ -1191,7 +752,10 @@ export class BancoApiService {
         ? (config.sandbox_url || config.cobranca_base_url)
         : config.cobranca_base_url;
       
-      const endpoint = `${baseUrlCobranca}/v1/charge/${titulo.charge_id}/cancel`;
+      let endpoint = baseUrlCobranca + config.api_endpoints.cancelar.replace(':id', titulo.charge_id);
+      if (banco.tipo_banco === 'efi') {
+        endpoint = `${endpoint}/cancel`;
+      }
 
       logger.info('Enviando requisição para cancelar título individual', {
         endpoint,
@@ -1199,7 +763,13 @@ export class BancoApiService {
         titulo_id: titulo.id
       });
 
-      // Implementar retry para cancelamento de título
+      if (banco.tipo_banco === 'asaas') {
+        return this.asaasService.cancelarTitulo(titulo, banco, token);
+      }
+
+      const headers = this.buildAuthHeaders(banco.tipo_banco, token);
+
+      // Implementar retry para cancelamento de título (EFI)
       const maxTentativas = 3;
       let delay = 2000;
       let response: AxiosResponse<Record<string, JsonValue>> | null = null;
@@ -1207,9 +777,7 @@ export class BancoApiService {
       for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
         try {
           response = await axios.put(endpoint, {}, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
+            headers,
             timeout: 30000
           });
           break; // Sucesso, sair do loop
@@ -1310,11 +878,6 @@ export class BancoApiService {
         };
       }
 
-      // Preparar dados para liquidação
-      const dadosLiquidacao = {
-        settle: true
-      };
-
       logger.info('Liquidando título no banco', {
         titulo_id: titulo.id,
         charge_id: titulo.charge_id
@@ -1328,11 +891,20 @@ export class BancoApiService {
       const endpoint = baseUrlCobranca + config.api_endpoints.liquidar
         .replace(':id', chargeIdStr);
 
+      if (banco.tipo_banco === 'asaas') {
+        return this.asaasService.liquidarTitulo(titulo, banco, token);
+      }
+
+      const headers = this.buildAuthHeaders(banco.tipo_banco, token);
+      headers['Content-Type'] = 'application/json';
+
+      const dadosLiquidacao = {
+        settle: true
+      };
+
       const response = await axios.put(endpoint, dadosLiquidacao, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers,
+        timeout: 30000
       });
 
       if (response.status === 200) {
@@ -1346,12 +918,12 @@ export class BancoApiService {
           message: 'Título liquidado com sucesso',
           data: response.data
         };
-      } else {
-        return {
-          success: false,
-          message: 'Falha ao liquidar título no banco'
-        };
       }
+
+      return {
+        success: false,
+        message: 'Falha ao liquidar título no banco'
+      };
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -1367,41 +939,4 @@ export class BancoApiService {
     }
   }
 
-  /**
-   * Envia remessa para o banco
-   */
-  static async enviarRemessa(banco: Banco, arquivoRemessa: ArquivoRemessa): Promise<RemessaResponse> {
-    try {
-      logger.info('Enviando remessa para banco', { 
-        banco_id: banco.id,
-        banco_nome: banco.nome,
-        arquivo: arquivoRemessa.nome_arquivo
-      });
-
-      // Simular envio de remessa
-      // Em produção, implementar integração real com API do banco
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      return {
-        success: true,
-        message: 'Remessa enviada com sucesso',
-        data: {
-          arquivo: arquivoRemessa.nome_arquivo,
-          tamanho: arquivoRemessa.tamanho,
-          timestamp: new Date().toISOString()
-        }
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao enviar remessa', { 
-        banco_id: banco.id,
-        banco_nome: banco.nome,
-        error: errorMessage
-      });
-      return {
-        success: false,
-        message: 'Erro ao enviar remessa: ' + errorMessage
-      };
-    }
-  }
 }
