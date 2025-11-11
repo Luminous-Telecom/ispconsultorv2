@@ -120,7 +120,61 @@ export class BarcodeService {
         }
     }
 
+    /**
+     * Formata a linha digitável no padrão FEBRABAN:
+     * 00000.00000 00000.000000 00000.000000 0 00000000000000
+     * Aceita entradas com ou sem máscara e devolve a versão formatada.
+     * @param linha A linha digitável (com 44 ou 47 dígitos).
+     */
+    public static formatarLinhaDigitavel(linha: string | null | undefined): string | null {
+        if (!linha) {
+            return null;
+        }
 
+        const digitos = linha.replace(/\D/g, '');
 
+        if (digitos.length === 47) {
+            return `${digitos.substring(0, 5)}.${digitos.substring(5, 10)} ` +
+                   `${digitos.substring(10, 15)}.${digitos.substring(15, 21)} ` +
+                   `${digitos.substring(21, 26)}.${digitos.substring(26, 32)} ` +
+                   `${digitos.substring(32, 33)} ` +
+                   `${digitos.substring(33)}`;
+        }
+
+        if (digitos.length === 44) {
+            const campo1 = `${digitos.substring(0, 4)}${digitos.substring(19, 24)}`;
+            const campo2 = digitos.substring(24, 34);
+            const campo3 = digitos.substring(34, 44);
+            const campo4 = digitos.substring(4, 5);
+            const campo5 = digitos.substring(5, 19);
+
+            const formatCampo = (campo: string) => {
+                const numero = campo.substring(0, campo.length - 1);
+                const dv = BarcodeService.calcularModulo10(numero);
+                return `${numero.substring(0, 5)}.${numero.substring(5)}${dv}`;
+            };
+
+            return `${formatCampo(campo1)} ${formatCampo(campo2)} ${formatCampo(campo3)} ${campo4} ${campo5}`;
+        }
+
+        return linha;
+    }
+
+    private static calcularModulo10(numero: string): number {
+        let soma = 0;
+        let multiplicador = 2;
+
+        for (let i = numero.length - 1; i >= 0; i--) {
+            let produto = parseInt(numero[i], 10) * multiplicador;
+            if (produto > 9) {
+                produto = Math.floor(produto / 10) + (produto % 10);
+            }
+            soma += produto;
+            multiplicador = multiplicador === 2 ? 1 : 2;
+        }
+
+        const resto = soma % 10;
+        return resto === 0 ? 0 : 10 - resto;
+    }
 }
 

@@ -145,7 +145,7 @@ export class TituloController {
       LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
       DATA_VENC: dataVencimento,
       DATA_DOCUMENTO: dataProcessamento,
-      NUMERO_DOCUMENTO: titulo.numero_titulo || titulo.id?.toString() || '',
+      NUMERO_DOCUMENTO: titulo.nosso_numero || titulo.numero_titulo || titulo.id?.toString() || '',
       ESPECIE_DOC: 'DM',
       DATA_PROC: dataProcessamento,
       NOSSO_NUMERO: titulo.nosso_numero || titulo.charge_id || '',
@@ -792,13 +792,22 @@ export class TituloController {
       // Cancelar na API do banco se tiver charge_id
       if (titulo.charge_id && titulo.banco && ['efi', 'asaas'].includes(titulo.banco.tipo_banco ?? '')) {
         try {
-          await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
-          logger.info('Título cancelado no gateway bancário antes da exclusão', { 
-            titulo_id: titulo.id, 
-            charge_id: titulo.charge_id 
-          });
+          const resultado = await BancoApiService.cancelarTitulo(titulo as TituloComRelacoes);
+
+          if (resultado.success) {
+            logger.info('Título cancelado no gateway bancário antes da exclusão', { 
+              titulo_id: titulo.id, 
+              charge_id: titulo.charge_id 
+            });
+          } else {
+            logger.warn('Falha ao cancelar título no gateway bancário antes da exclusão', {
+              titulo_id: titulo.id,
+              charge_id: titulo.charge_id,
+              message: resultado.message
+            });
+          }
         } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
           logger.warn('Erro ao cancelar título no gateway bancário', { 
             titulo_id: titulo.id, 
             error: errorMessage 
@@ -1012,7 +1021,7 @@ export class TituloController {
         LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
         DATA_VENC: dataVencimento,
         DATA_DOCUMENTO: dataProcessamento,
-        NUMERO_DOCUMENTO: titulo.numero_titulo || titulo.id?.toString() || '',
+      NUMERO_DOCUMENTO: titulo.nosso_numero || titulo.numero_titulo || titulo.id?.toString() || '',
         ESPECIE_DOC: 'DM', // Duplicata de Venda Mercantil
         DATA_PROC: dataProcessamento,
         CARTEIRA: 'SR', // Sem Registro
@@ -1308,10 +1317,31 @@ export class TituloController {
             const resultado = await BancoApiService.gerarTitulo(titulo as TituloComRelacoes);
             
             if (resultado.success && resultado.data) {
+              let codigoBarrasFinal = resultado.data.codigo_barras as string;
+              if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras as string)) {
+                logger.warn('Código de barras da API fora do padrão FEBRABAN (mantendo valor retornado)', {
+                  titulo_id: titulo.id,
+                  codigo_original: resultado.data.codigo_barras
+                });
+                codigoBarrasFinal = resultado.data.codigo_barras as string;
+              }
+
+              await titulo.update({
+                charge_id: resultado.data.charge_id,
+                url_boleto: resultado.data.url_boleto as string | null,
+                qrcode: resultado.data.qrcode as string | null,
+                qrcode_image: resultado.data.qrcode_image as string | null,
+                codigo_barras: codigoBarrasFinal,
+                linha_digitavel: resultado.data.linha_digitavel as string | null,
+                nosso_numero: resultado.data.nosso_numero as string | null
+              });
+
               logger.info('Título registrado com sucesso no banco', {
                 titulo_id: titulo.id,
                 charge_id: resultado.data.charge_id
               });
+
+              await titulo.reload();
             } else {
               logger.error('Falha ao registrar título no banco', {
                 titulo_id: titulo.id,

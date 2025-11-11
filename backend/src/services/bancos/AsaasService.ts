@@ -4,6 +4,7 @@ import { Titulo } from '../../models/Titulo';
 import { Cliente } from '../../models/Cliente';
 import { Plano } from '../../models/Plano';
 import { logger } from '../../utils/logger';
+import { BarcodeService } from '../BarcodeService';
 import asaasConfig from '../../config/bancos/asaas';
 import type { JsonValue } from '../../types';
 import type { ApiResponse, TituloWithRelations, AxiosErrorResponse, IBancoService } from './types';
@@ -104,10 +105,11 @@ export class AsaasService implements IBancoService {
 
         const urlBoleto = typeof dados.bankSlipUrl === 'string' ? dados.bankSlipUrl : null;
         const pdfUrl = typeof dados.invoiceUrl === 'string' ? dados.invoiceUrl : null;
-        const barcode = typeof dados.bankSlipBarcode === 'string' ? dados.bankSlipBarcode : null;
-        let linhaDigitavel = typeof dados.identificationField === 'string' ? dados.identificationField : null;
-        const pixQrCode = typeof dados.pixQrCode === 'string' ? dados.pixQrCode : null;
-        const pixQrCodeImage = typeof dados.pixQrCodeImage === 'string' ? dados.pixQrCodeImage : null;
+        let barcode = typeof dados.bankSlipBarcode === 'string' ? dados.bankSlipBarcode : null;
+        let linhaDigitavelRaw = typeof dados.identificationField === 'string' ? dados.identificationField : null;
+        let pixQrCode = typeof dados.pixQrCode === 'string' ? dados.pixQrCode : null;
+        let pixQrCodeStringValue = typeof dados.pixQrCodeText === 'string' ? dados.pixQrCodeText : null;
+        let pixQrCodeImage = typeof dados.pixQrCodeImage === 'string' ? dados.pixQrCodeImage : null;
         const nossoNumeroRaw = dados.nossoNumero;
         const nossoNumero = typeof nossoNumeroRaw === 'string'
           ? nossoNumeroRaw
@@ -115,37 +117,139 @@ export class AsaasService implements IBancoService {
             ? String(nossoNumeroRaw)
             : null;
 
-        // Se não tem linha digitável, gerar localmente (para sandbox)
-        if (!linhaDigitavel && banco.sandbox) {
+        // Buscar linha digitável / código de barras caso não retornem na criação
+        if ((!linhaDigitavelRaw || !barcode) && chargeId) {
           try {
-            linhaDigitavel = await titulo.gerarLinhaDigitavel();
+            const identificationEndpoint = `${baseUrl}/payments/${chargeId}/identificationField`;
+            const identificationResponse = await axios.get(identificationEndpoint, {
+              headers,
+              timeout: 30000
+            });
+            const identificationData = identificationResponse.data as Record<string, JsonValue>;
+            const identificationFieldRaw = identificationData?.identificationField;
+            const barCodeRaw = identificationData?.barCode;
+
+            if (!linhaDigitavelRaw && typeof identificationFieldRaw === 'string') {
+              linhaDigitavelRaw = identificationFieldRaw;
+            }
+
+            if (!barcode && typeof barCodeRaw === 'string') {
+              barcode = barCodeRaw;
+            }
+          } catch (identificationError) {
+            logger.warn('Não foi possível obter identificação do boleto Asaas', {
+              titulo_id: titulo.id,
+              charge_id: chargeId,
+              error: identificationError instanceof Error ? identificationError.message : String(identificationError)
+            });
+          }
+        }
+
+        // Buscar dados de PIX caso não venham na criação
+        if ((!pixQrCode || !pixQrCodeImage || !pixQrCodeStringValue) && chargeId) {
+          try {
+            const detailsEndpoint = `${baseUrl}/payments/${chargeId}`;
+            const detailsResponse = await axios.get(detailsEndpoint, {
+              headers,
+              timeout: 30000
+            });
+            const detailsData = detailsResponse.data as Record<string, JsonValue>;
+            const pixQrCodeRaw = detailsData?.pixQrCode;
+            const pixQrCodeStringRaw = detailsData?.pixQrCodeText ?? detailsData?.pixQrCodeString;
+            const pixQrCodeImageRaw = detailsData?.pixQrCodeImage;
+            if (!pixQrCode && typeof pixQrCodeRaw === 'string') {
+              pixQrCode = pixQrCodeRaw;
+            }
+            if (!pixQrCodeStringValue && typeof pixQrCodeStringRaw === 'string') {
+              pixQrCodeStringValue = pixQrCodeStringRaw;
+            }
+            if (!pixQrCodeImage && typeof pixQrCodeImageRaw === 'string') {
+              pixQrCodeImage = pixQrCodeImageRaw;
+            }
+          } catch (detailsError) {
+            logger.warn('Não foi possível obter dados de PIX no Asaas (detalhes)', {
+              titulo_id: titulo.id,
+              charge_id: chargeId,
+              error: detailsError instanceof Error ? detailsError.message : String(detailsError)
+            });
+          }
+
+          if (!pixQrCodeImage || !pixQrCodeStringValue) {
+            try {
+              const pixEndpoint = `${baseUrl}/payments/${chargeId}/pixQrCode`;
+              const pixResponse = await axios.get(pixEndpoint, {
+                headers,
+                timeout: 30000
+              });
+              const pixData = pixResponse.data as Record<string, JsonValue>;
+              const encodedImage = pixData?.encodedImage;
+              const payload = pixData?.payload ?? pixData?.text;
+
+              if (!pixQrCode && typeof payload === 'string') {
+                pixQrCode = payload;
+              }
+              if (!pixQrCodeStringValue && typeof payload === 'string') {
+                pixQrCodeStringValue = payload;
+              }
+
+              if (typeof encodedImage === 'string' && encodedImage.trim()) {
+                pixQrCodeImage = encodedImage.startsWith('data:image/')
+                  ? encodedImage
+                  : `data:image/png;base64,${encodedImage}`;
+              }
+            } catch (pixError) {
+              logger.warn('Não foi possível obter dados de PIX no Asaas (pixQrCode)', {
+                titulo_id: titulo.id,
+                charge_id: chargeId,
+                error: pixError instanceof Error ? pixError.message : String(pixError)
+              });
+            }
+          }
+        }
+
+        // Se não tem linha digitável, gerar localmente (para sandbox)
+        if (!linhaDigitavelRaw && banco.sandbox) {
+          try {
+            linhaDigitavelRaw = await titulo.gerarLinhaDigitavel();
           } catch (gerarError) {
             logger.warn('Erro ao gerar linha digitável localmente', { titulo_id: titulo.id, error: gerarError });
           }
         }
 
-        await titulo.update({
-          charge_id: chargeId,
-          codigo_barras: barcode,
-          url_boleto: urlBoleto,
-          linha_digitavel: linhaDigitavel,
-          qrcode: pixQrCode,
-          qrcode_image: pixQrCodeImage,
-          nosso_numero: nossoNumero,
-          status: 'pendente'
-        });
+        const linhaDigitavelFormatada = linhaDigitavelRaw
+          ? BarcodeService.formatarLinhaDigitavel(linhaDigitavelRaw)
+          : null;
+
+        const codigoBarrasFinal = (() => {
+          if (!barcode) return null;
+          const apenasDigitos = barcode.replace(/\D/g, '');
+          if (apenasDigitos.length === 44) {
+            return apenasDigitos;
+          }
+          if (apenasDigitos.length === 47) {
+            return apenasDigitos.substring(0, 4) +
+              apenasDigitos.substring(32, 33) +
+              apenasDigitos.substring(33) +
+              apenasDigitos.substring(4, 32);
+          }
+          return apenasDigitos || null;
+        })();
+
+        const pixQrCodeImageNormalized = pixQrCodeImage && !pixQrCodeImage.startsWith('data:image/')
+          ? `data:image/png;base64,${pixQrCodeImage}`
+          : pixQrCodeImage || null;
 
         return {
           success: true,
           message: 'Título gerado com sucesso',
           data: {
             charge_id: chargeId ?? undefined,
-            codigo_barras: barcode,
+            codigo_barras: codigoBarrasFinal,
             url_boleto: urlBoleto,
-            linha_digitavel: linhaDigitavel,
+            linha_digitavel: linhaDigitavelFormatada,
             pdf_url: pdfUrl,
-            qrcode: pixQrCode,
-            qrcode_image: pixQrCodeImage,
+            qrcode: pixQrCodeStringValue || pixQrCode,
+            qrcode_image: pixQrCodeImageNormalized,
             nosso_numero: nossoNumero ?? undefined
           }
         };
@@ -157,25 +261,20 @@ export class AsaasService implements IBancoService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const { mensagem, dados } = AsaasService.extrairMensagemErro(error, errorMessage);
       const axiosError = error as Error & AxiosErrorResponse;
-      const errorResponse = axiosError.response;
 
       logger.error('Erro ao gerar título no Asaas', {
         titulo_id: titulo.id,
         banco_id: banco.id,
-        status: errorResponse?.status,
-        data: errorResponse?.data,
+        status: axiosError.response?.status,
+        data: dados,
         error: errorMessage
       });
 
-      let finalMessage = 'Erro ao gerar título: ' + errorMessage;
-      if (errorResponse?.status === 401) {
-        finalMessage = 'Erro de autenticação (401): Verifique a API Key do Asaas.';
-      }
-
       return {
         success: false,
-        message: finalMessage
+        message: 'Erro ao gerar título: ' + mensagem
       };
     }
   }
@@ -210,8 +309,6 @@ export class AsaasService implements IBancoService {
       const response = await axios.delete(endpoint, { headers, timeout: 30000 });
 
       if (response.status >= 200 && response.status < 300) {
-        await titulo.update({ status: 'cancelado' });
-
         return {
           success: true,
           message: 'Título cancelado com sucesso'
@@ -224,40 +321,20 @@ export class AsaasService implements IBancoService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const { mensagem, dados } = AsaasService.extrairMensagemErro(error, errorMessage);
       const axiosError = error as Error & AxiosErrorResponse;
-      const errorResponse = axiosError.response;
-      const responseData = errorResponse?.data;
 
       logger.error('Erro ao cancelar título no Asaas', {
         titulo_id: titulo.id,
         endpoint,
         error: errorMessage,
-        status: errorResponse?.status,
-        data: responseData
+        status: axiosError.response?.status,
+        data: dados
       });
-
-      let detalhes = errorMessage;
-      if (responseData && typeof responseData === 'object') {
-        const dataObj = responseData as Record<string, JsonValue>;
-        const messageField = dataObj?.message;
-        if (typeof messageField === 'string' && messageField.trim()) {
-          detalhes = messageField;
-        } else if (Array.isArray(dataObj?.errors) && dataObj.errors.length > 0) {
-          const firstError = dataObj.errors[0] as Record<string, JsonValue>;
-          const description = firstError?.description;
-          if (typeof description === 'string' && description.trim()) {
-            detalhes = description;
-          }
-          const code = firstError?.code;
-          if (typeof code === 'string' && code.trim()) {
-            detalhes += ` (código: ${code})`;
-          }
-        }
-      }
 
       return {
         success: false,
-        message: 'Erro ao cancelar título: ' + detalhes
+        message: 'Erro ao cancelar título: ' + mensagem
       };
     }
   }
@@ -279,17 +356,15 @@ export class AsaasService implements IBancoService {
         : (asaasConfig.cobranca_base_url || asaasConfig.api_base_url);
 
       const headers = this.buildAuthHeaders(token);
-      const endpoint = `${baseUrl}${asaasConfig.api_endpoints.liquidar}/${titulo.charge_id}/receiveInCash`;
+      const endpoint = `${baseUrl}${asaasConfig.api_endpoints.liquidar.replace(':id', titulo.charge_id)}`;
 
       const payload = {
         paymentDate: new Date().toISOString().split('T')[0],
-        value: titulo.valor,
+        value: Number(titulo.valor),
         notifyCustomer: false
       };
 
       await axios.post(endpoint, payload, { headers, timeout: 30000 });
-
-      await titulo.update({ status: 'pago' });
 
       return {
         success: true,
@@ -297,14 +372,19 @@ export class AsaasService implements IBancoService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const { mensagem, dados } = AsaasService.extrairMensagemErro(error, errorMessage);
+      const axiosError = error as Error & AxiosErrorResponse;
+
       logger.error('Erro ao liquidar título no Asaas', {
         titulo_id: titulo.id,
-        error: errorMessage
+        error: errorMessage,
+        status: axiosError.response?.status,
+        data: dados
       });
 
       return {
         success: false,
-        message: 'Erro ao liquidar título: ' + errorMessage
+        message: 'Erro ao liquidar título: ' + mensagem
       };
     }
   }
@@ -554,6 +634,36 @@ export class AsaasService implements IBancoService {
       return 0;
     }
     return Math.round(Number(value) * 100) / 100;
+  }
+
+  private static extrairMensagemErro(error: unknown, padrao: string): { mensagem: string; dados?: JsonValue } {
+    const axiosError = error as Error & AxiosErrorResponse;
+    const dados = axiosError.response?.data;
+    let mensagem = padrao;
+
+    if (dados && typeof dados === 'object') {
+      const dataObj = dados as Record<string, JsonValue>;
+      const msg = dataObj?.message;
+      if (typeof msg === 'string' && msg.trim()) {
+        mensagem = msg;
+      } else if (Array.isArray(dataObj?.errors) && dataObj.errors.length > 0) {
+        const firstError = dataObj.errors[0] as Record<string, JsonValue>;
+        const description = firstError?.description;
+        const code = firstError?.code;
+        const partes: string[] = [];
+        if (typeof description === 'string' && description.trim()) {
+          partes.push(description.trim());
+        }
+        if (typeof code === 'string' && code.trim()) {
+          partes.push(`código: ${code.trim()}`);
+        }
+        if (partes.length > 0) {
+          mensagem = partes.join(' - ');
+        }
+      }
+    }
+
+    return { mensagem, dados };
   }
 }
 

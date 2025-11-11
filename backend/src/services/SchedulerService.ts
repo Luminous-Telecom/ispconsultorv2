@@ -2,6 +2,7 @@ import * as cron from 'node-cron';
 import { ScheduledRoutine, RoutineExecutionLog } from '../models';
 import { DiasVencimento } from '../models/DiasVencimento';
 import { logger } from '../utils/logger';
+import { BarcodeService } from './BarcodeService';
 import type { JsonValue } from '../types';
 
 interface RoutineResult {
@@ -524,10 +525,31 @@ export class SchedulerService {
           // Registrar título no banco
           const resultado = await BancoApiService.gerarTitulo(tituloCompleto);
           
-          if (resultado.success) {
+          if (resultado.success && resultado.data) {
             registrados++;
-            const chargeId = resultado.data?.charge_id;
-            
+
+            const dados = resultado.data;
+            const chargeId = typeof dados.charge_id === 'string' ? dados.charge_id : undefined;
+            let codigoBarrasFinal = typeof dados.codigo_barras === 'string' ? dados.codigo_barras : null;
+
+            if (codigoBarrasFinal && !BarcodeService.validarCodigoBarrasFebraban(codigoBarrasFinal)) {
+              logger.warn('Código de barras retornado pelo banco está fora do padrão FEBRABAN', {
+                titulo_id: titulo.id,
+                banco: tituloCompleto.banco?.nome,
+                codigo_barras: codigoBarrasFinal
+              });
+            }
+
+            await titulo.update({
+              charge_id: chargeId ?? titulo.charge_id,
+              url_boleto: typeof dados.url_boleto === 'string' ? dados.url_boleto : titulo.url_boleto,
+              qrcode: typeof dados.qrcode === 'string' ? dados.qrcode : titulo.qrcode,
+              qrcode_image: typeof dados.qrcode_image === 'string' ? dados.qrcode_image : titulo.qrcode_image,
+              codigo_barras: codigoBarrasFinal ?? titulo.codigo_barras,
+              linha_digitavel: typeof dados.linha_digitavel === 'string' ? dados.linha_digitavel : titulo.linha_digitavel,
+              nosso_numero: typeof dados.nosso_numero === 'string' ? dados.nosso_numero : titulo.nosso_numero
+            });
+
             detalhes.push({
               titulo_id: titulo.id,
               banco: tituloCompleto.banco?.nome,
@@ -542,7 +564,7 @@ export class SchedulerService {
               titulo_id: titulo.id,
               banco: tituloCompleto.banco?.nome,
               status: 'erro',
-              message: resultado.message || 'Erro desconhecido'
+              message: resultado.message || 'Erro desconhecido ao registrar título'
             });
           }
         } catch (error) {
