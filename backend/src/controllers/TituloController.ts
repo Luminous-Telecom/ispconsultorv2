@@ -148,7 +148,7 @@ export class TituloController {
       NUMERO_DOCUMENTO: titulo.numero_titulo || titulo.id?.toString() || '',
       ESPECIE_DOC: 'DM',
       DATA_PROC: dataProcessamento,
-      NOSSO_NUMERO: titulo.charge_id || titulo.nosso_numero || '',
+      NOSSO_NUMERO: titulo.nosso_numero || titulo.charge_id || '',
       CARTEIRA: 'SR',
       VAR_CARTEIRA: '',
       ESPECIE: 'R$',
@@ -1006,6 +1006,7 @@ export class TituloController {
         CODIGO_BANCO_COM_DV: titulo.banco?.codigo ? `${titulo.banco?.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
         LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
         AGENCIA_CODIGO: titulo.banco?.agencia_codigo || 'Não configurado',
+        NOSSO_NUMERO: titulo.nosso_numero || titulo.charge_id || '',
         
         // Dados do boleto - FEBRABAN
         LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
@@ -1014,7 +1015,6 @@ export class TituloController {
         NUMERO_DOCUMENTO: titulo.numero_titulo || titulo.id?.toString() || '',
         ESPECIE_DOC: 'DM', // Duplicata de Venda Mercantil
         DATA_PROC: dataProcessamento,
-        NOSSO_NUMERO: titulo.charge_id || titulo.nosso_numero || '',
         CARTEIRA: 'SR', // Sem Registro
         VAR_CARTEIRA: '',
         ESPECIE: 'R$',
