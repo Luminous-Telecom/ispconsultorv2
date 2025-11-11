@@ -108,6 +108,12 @@ export class AsaasService implements IBancoService {
         let linhaDigitavel = typeof dados.identificationField === 'string' ? dados.identificationField : null;
         const pixQrCode = typeof dados.pixQrCode === 'string' ? dados.pixQrCode : null;
         const pixQrCodeImage = typeof dados.pixQrCodeImage === 'string' ? dados.pixQrCodeImage : null;
+        const nossoNumeroRaw = dados.nossoNumero;
+        const nossoNumero = typeof nossoNumeroRaw === 'string'
+          ? nossoNumeroRaw
+          : nossoNumeroRaw != null
+            ? String(nossoNumeroRaw)
+            : null;
 
         // Se não tem linha digitável, gerar localmente (para sandbox)
         if (!linhaDigitavel && banco.sandbox) {
@@ -125,6 +131,7 @@ export class AsaasService implements IBancoService {
           linha_digitavel: linhaDigitavel,
           qrcode: pixQrCode,
           qrcode_image: pixQrCodeImage,
+          nosso_numero: nossoNumero,
           status: 'pendente'
         });
 
@@ -138,7 +145,8 @@ export class AsaasService implements IBancoService {
             linha_digitavel: linhaDigitavel,
             pdf_url: pdfUrl,
             qrcode: pixQrCode,
-            qrcode_image: pixQrCodeImage
+            qrcode_image: pixQrCodeImage,
+            nosso_numero: nossoNumero ?? undefined
           }
         };
       }

@@ -732,6 +732,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       render: (item: CarneParcela) => {
         return item.charge_id || '-';
       }
+    },
+    {
+      key: 'nosso_numero',
+      label: 'Nosso Número',
+      sortable: true,
+      searchable: true,
+      render: (item: CarneParcela) => item.nosso_numero || '-'
     }
   ];
 

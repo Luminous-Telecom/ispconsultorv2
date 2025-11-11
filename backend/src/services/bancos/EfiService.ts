@@ -239,6 +239,16 @@ export class EfiService implements IBancoService {
         const pdfUrl = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pdf);
         const pixQrcode = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pix_qrcode);
         const pixQrcodeImage = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pix_qrcode_image);
+        const nossoNumeroRaw =
+          this.getNestedValue(dados, 'data.banking_billet.nosso_numero') ??
+          this.getNestedValue(dados, 'data.banking_billet.our_number') ??
+          this.getNestedValue(dados, 'data.nosso_numero') ??
+          this.getNestedValue(dados, 'data.our_number');
+        const nossoNumero = typeof nossoNumeroRaw === 'string'
+          ? nossoNumeroRaw
+          : nossoNumeroRaw != null
+            ? String(nossoNumeroRaw)
+            : null;
 
         let codigoBarrasFinal: string | null = null;
         if (barcode && typeof barcode === 'string') {
@@ -259,6 +269,7 @@ export class EfiService implements IBancoService {
           linha_digitavel: typeof linhaDigitavel === 'string' ? linhaDigitavel : null,
           qrcode: typeof pixQrcode === 'string' ? pixQrcode : null,
           qrcode_image: typeof pixQrcodeImage === 'string' ? pixQrcodeImage : null,
+          nosso_numero: nossoNumero,
           status: 'pendente'
         });
 
@@ -289,7 +300,8 @@ export class EfiService implements IBancoService {
             linha_digitavel: linhaDigitavel,
             pdf_url: pdfUrl,
             qrcode: pixQrcode,
-            qrcode_image: pixQrcodeImage
+            qrcode_image: pixQrcodeImage,
+            nosso_numero: nossoNumero ?? undefined
           }
         };
       }

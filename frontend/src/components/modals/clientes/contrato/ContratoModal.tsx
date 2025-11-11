@@ -585,7 +585,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Data Pagamento',
       render: (item: Titulo) => item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'
     },
-    { key: 'charge_id', label: 'Charge ID', render: (item: Titulo) => item.charge_id || '-' }
+    { key: 'charge_id', label: 'Charge ID', render: (item: Titulo) => item.charge_id || '-' },
+    { key: 'nosso_numero', label: 'Nosso Número', render: (item: Titulo) => item.nosso_numero || '-' }
   ];
 
   // Colunas para a tabela de termos
