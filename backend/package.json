@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "build": "tsc && cp -r src/templates dist/ && cp -r images dist/",
+    "build": "tsc && cp -r src/templates dist/ && cp -r images dist/ && npx --yes javascript-obfuscator dist --output dist --exclude 'node_modules/**' --exclude 'templates/**' --exclude 'images/**' --compact true --control-flow-flattening true --control-flow-flattening-threshold 0.75 --dead-code-injection true --dead-code-injection-threshold 0.4 --debug-protection true --debug-protection-interval 2000 --disable-console-output true --identifier-names-generator hexadecimal --log false --numbers-to-expressions true --rename-globals false --self-defending true --simplify true --split-strings true --split-strings-chunk-length 5 --string-array true --string-array-encoding base64 --string-array-threshold 0.75 --transform-object-keys true --unicode-escape-sequence false",
     "start": "node dist/index.js",
     "test": "jest",
     "lint": "eslint src --ext .ts",
