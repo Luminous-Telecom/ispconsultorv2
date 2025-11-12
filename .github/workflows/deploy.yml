@@ -47,16 +47,20 @@ jobs:
           git config --global user.name "GitHub Actions Deploy"
           git config --global user.email "actions@github.com"
       
-      # Usa uma Action popular para fazer o push da pasta de deploy para o repositório de produção
+      # Faz o push da pasta de deploy para o repositório de produção usando Git diretamente
       - name: Enviar Build para Repositório de Produção
-        uses: ad-m/github-push-action@master
-        with:
-          # A URL de destino, usando o Secret para segurança:
-          github_token: ${{ secrets.PROD_PAT }}
-          repository: Luminous-Telecom/backnet.prod # Repositório de Produção
-          branch: main # Branch de destino no repositório de produção
-          force: true # Força o push para garantir que o repo de prod contenha apenas os arquivos de build mais recentes
-          directory: deployment # A pasta que será enviada
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
+        run: |
+          cd deployment
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git remote add origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
+          git add .
+          git commit -m "Deploy automático - $(date +'%Y-%m-%d %H:%M:%S')"
+          git branch -M main
+          git push -f origin main
           
       - name: Limpar pastas de build
         run: |
