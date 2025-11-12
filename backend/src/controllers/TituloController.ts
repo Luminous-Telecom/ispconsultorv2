@@ -77,8 +77,9 @@ export class TituloController {
     const fs = await import('fs');
     const path = await import('path');
     
-    const topoTemplatePath = path.join(process.cwd(), 'src/templates/boleto-topo-inner.html');
-    const corpoTemplatePath = path.join(process.cwd(), 'src/templates/boleto-corpo-inner.html');
+    const templatesPath = path.join(__dirname, '../templates');
+    const topoTemplatePath = path.join(templatesPath, 'boleto-topo-inner.html');
+    const corpoTemplatePath = path.join(templatesPath, 'boleto-corpo-inner.html');
     
     const topoTemplate = fs.readFileSync(topoTemplatePath, 'utf8');
     const corpoTemplate = fs.readFileSync(corpoTemplatePath, 'utf8');
@@ -264,7 +265,10 @@ export class TituloController {
       };
       
       const fileName = logosPadrao[tipoBanco] || logosPadrao['outros'];
-      const imagePath = path.join(process.cwd(), 'images/bancos', fileName);
+      const imagesPath = path.join(__dirname, '../images/bancos');
+      const imagePath = fs.existsSync(imagesPath) 
+        ? path.join(imagesPath, fileName)
+        : path.join(process.cwd(), 'images/bancos', fileName);
       
       // Ler arquivo e converter para base64
       if (fs.existsSync(imagePath)) {
@@ -979,8 +983,9 @@ export class TituloController {
       const fs = await import('fs');
       const path = await import('path');
       
-      const topoTemplatePath = path.join(process.cwd(), 'src/templates/boleto-topo-inner.html');
-      const corpoTemplatePath = path.join(process.cwd(), 'src/templates/boleto-corpo-inner.html');
+      const templatesPath = path.join(__dirname, '../templates');
+      const topoTemplatePath = path.join(templatesPath, 'boleto-topo-inner.html');
+      const corpoTemplatePath = path.join(templatesPath, 'boleto-corpo-inner.html');
       
       let topoTemplate = '';
       let corpoTemplate = '';

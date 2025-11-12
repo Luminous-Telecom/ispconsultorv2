@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "build": "tsc && node scripts/obfuscate.js && cp -r src/templates dist/",
+    "build": "tsc && cp -r src/templates dist/ && cp -r images dist/",
     "start": "node dist/index.js",
     "test": "jest",
     "lint": "eslint src --ext .ts",
@@ -54,7 +54,6 @@
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.57.0",
-    "javascript-obfuscator": "^4.1.1",
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
     "ts-jest": "^29.1.1",

@@ -133,7 +133,7 @@ app.use(configProtectionMiddleware);
 app.use(authMiddleware);
 
 // Servir arquivos estáticos (imagens, etc.)
-app.use('/images', express.static(path.join(__dirname, '../images')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Rotas da API
 app.use('/api/auth', authRoutes);

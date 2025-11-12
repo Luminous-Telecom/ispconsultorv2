@@ -1,41 +1,15 @@
 # Dependencies
 node_modules/
 
-# Logs
-logs/
-*.log
-
 # Environment
 .env
 .env.local
 
-migrations
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Cache
-.cache/
-*.cache
-
-# PM2
-.pm2/
-
-# OneDrive sync issues
-~$*
-
-# Temporary files
-*.tmp
-temp/
+# Logs
+logs/
+*.log
 
 # Build artifacts
+dist/
+build/
 *.tsbuildinfo
-
-package-lock.json
