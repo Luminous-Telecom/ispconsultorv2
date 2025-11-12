@@ -53,7 +53,7 @@ jobs:
         with:
           # A URL de destino, usando o Secret para segurança:
           github_token: ${{ secrets.PROD_PAT }}
-          repository: Luminous-Telecom/backnet.prod.git # Repositório de Produção
+          repository: Luminous-Telecom/backnet.prod # Repositório de Produção
           branch: main # Branch de destino no repositório de produção
           force: true # Força o push para garantir que o repo de prod contenha apenas os arquivos de build mais recentes
           directory: deployment # A pasta que será enviada
