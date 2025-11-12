@@ -1,9 +1,23 @@
 // Configurações da API
 // Lê configuração de window.__APP_CONFIG__ (definido em runtime pelo servidor)
 // ou usa process.env (para desenvolvimento)
-const getConfig = () => {
-  if (typeof window !== 'undefined' && (window as any).__APP_CONFIG__) {
-    return (window as any).__APP_CONFIG__;
+
+interface AppConfig {
+  REACT_APP_API_URL: string;
+  REACT_APP_API_TIMEOUT: string;
+  REACT_APP_API_RETRY_ATTEMPTS: string;
+  REACT_APP_API_RETRY_DELAY: string;
+}
+
+declare global {
+  interface Window {
+    __APP_CONFIG__?: AppConfig;
+  }
+}
+
+const getConfig = (): AppConfig => {
+  if (typeof window !== 'undefined' && window.__APP_CONFIG__) {
+    return window.__APP_CONFIG__;
   }
   return {
     REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
