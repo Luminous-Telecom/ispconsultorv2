@@ -5,52 +5,13 @@ import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import DraggableModal from '../../common/DraggableModal';
 import { useFormReset } from '../../../hooks/useFormReset';
-import FormField from '../../ui/FormField';
 import { useFormPrefix } from '../../../hooks/useFormId';
 import { FormValue } from '../../../types/common';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { Banco } from '../../../types';
-
-interface BancoForm {
-  nome: string;
-  codigo: string;
-  descricao: string;
-  ativo: boolean;
-  tipo_banco: 'efi' | 'asaas' | 'bancario' | 'outros';
-  api_url: string;
-  api_key: string;
-  api_secret: string;
-  sandbox: boolean;
-  identificador_conta: string;
-  client_id_producao: string;
-  client_secret_producao: string;
-  url_retorno: string;
-  repassar_email_cliente: boolean;
-  percentual_multa: number;
-  percentual_juros: number;
-  desconto_tipo: string;
-  desconto_valor: number;
-  contra_apresentacao: boolean;
-  recalcular_segunda_via: boolean;
-  maximo_dias_recalcular: number;
-  layout_web: string;
-  layout_pdf: string;
-  layout_carne: string;
-  local_pagamento: string;
-  dados_avalista: string;
-  exibir_mes_referente: boolean;
-  taxa_cobranca: number;
-  incluir_taxa: boolean;
-  observacao_linha_1: string;
-  observacao_linha_2: string;
-  observacao_linha_3: string;
-  observacao_linha_4: string;
-  instrucao_linha_1: string;
-  instrucao_linha_2: string;
-  instrucao_linha_3: string;
-  instrucao_linha_4: string;
-  instrucao_linha_5: string;
-}
+import { BancoForm } from './banco/types';
+import AsaasForm from './banco/especificos/AsaasForm';
+import EfiForm from './banco/especificos/EfiForm';
 
 interface BancoModalProps {
   show: boolean;
@@ -68,6 +29,8 @@ const mapBancoToForm = (banco: Banco): BancoForm => ({
   api_url: banco.api_url || '',
   api_key: banco.api_key || '',
   api_secret: banco.api_secret || '',
+  webhook_secret: banco.webhook_secret || '',
+  has_api_key: banco.has_api_key ?? false,
   sandbox: banco.sandbox ?? true,
   identificador_conta: banco.identificador_conta || '',
   client_id_producao: banco.client_id_producao || '',
@@ -118,6 +81,8 @@ const BancoModal: React.FC<BancoModalProps> = ({
     api_url: '',
     api_key: '',
     api_secret: '',
+    webhook_secret: '',
+    has_api_key: false,
     sandbox: true,
     identificador_conta: '',
     client_id_producao: '',
@@ -154,7 +119,8 @@ const BancoModal: React.FC<BancoModalProps> = ({
   const [errors, setErrors] = useState<Partial<BancoForm>>({});
   const [testResult, setTestResult] = useState<string>('');
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
-  const { success, error } = useNotificationContext();
+  const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
+  const { success, error, warning } = useNotificationContext();
   const queryClient = useQueryClient();
 
   // Query para buscar dados do banco (apenas em modo edição)
@@ -247,6 +213,10 @@ const BancoModal: React.FC<BancoModalProps> = ({
         ...prev,
         [field]: normalizedValue
       };
+
+      if (field === 'api_key') {
+        newData.has_api_key = !!normalizedValue;
+      }
       
       // Atualizar código e url_retorno quando tipo_banco mudar
       if (field === 'tipo_banco' && !isEdit) {
@@ -305,10 +275,22 @@ const BancoModal: React.FC<BancoModalProps> = ({
       if (!dataToSave.api_secret || dataToSave.api_secret.trim() === '') {
         delete (dataToSave as Partial<BancoForm>).api_secret;
       }
+      if (!dataToSave.webhook_secret || dataToSave.webhook_secret.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).webhook_secret;
+      }
+      delete (dataToSave as Partial<BancoForm>).has_api_key;
       
       updateBancoMutation.mutate(dataToSave);
     } else {
-      createBancoMutation.mutate(formData);
+      const dataToCreate = { ...formData };
+      if (!dataToCreate.webhook_secret || dataToCreate.webhook_secret.trim() === '') {
+        delete (dataToCreate as Partial<BancoForm>).webhook_secret;
+      }
+      if (!dataToCreate.api_secret || dataToCreate.api_secret.trim() === '') {
+        delete (dataToCreate as Partial<BancoForm>).api_secret;
+      }
+      delete (dataToCreate as Partial<BancoForm>).has_api_key;
+      createBancoMutation.mutate(dataToCreate);
     }
   };
 
@@ -316,6 +298,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
     setErrors({});
     setFormData(initialFormData);
     setTestResult('');
+    setIsGeneratingSecret(false);
     onClose();
   };
 
@@ -340,10 +323,10 @@ const BancoModal: React.FC<BancoModalProps> = ({
         delete (dataToSave as Partial<BancoForm>).client_secret_producao;
       }
       
-      // Se api_secret estiver vazio, não enviar
       if (!dataToSave.api_secret || dataToSave.api_secret.trim() === '') {
         delete (dataToSave as Partial<BancoForm>).api_secret;
       }
+      delete (dataToSave as Partial<BancoForm>).has_api_key;
       
       // Salvar dados primeiro (sem fechar o modal)
       await BancoService.update(bancoId, dataToSave);
@@ -385,143 +368,73 @@ const BancoModal: React.FC<BancoModalProps> = ({
     }
   };
 
+  const handleGenerateWebhookSecret = async () => {
+    if (!bancoId) {
+      error('Salve o banco antes de gerar o token do webhook');
+      return;
+    }
+
+    try {
+      setIsGeneratingSecret(true);
+      const novoSecret = await BancoService.gerarWebhookSecret(bancoId);
+
+      if (novoSecret) {
+        setFormData(prev => ({
+          ...prev,
+          webhook_secret: novoSecret
+        }));
+        queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
+        queryClient.invalidateQueries({ queryKey: ['bancos'] });
+        success('Token do webhook gerado com sucesso!');
+      } else {
+        warning('Token não retornado pelo servidor. Tente novamente.');
+      }
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar token do webhook');
+    } finally {
+      setIsGeneratingSecret(false);
+    }
+  };
+
+  const handleCopyWebhookSecret = async () => {
+    if (!formData.webhook_secret) {
+      warning('Nenhum token disponível para copiar.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(formData.webhook_secret);
+      success('Token do webhook copiado para a área de transferência!');
+    } catch {
+      warning('Não foi possível copiar automaticamente. Copie manualmente.');
+    }
+  };
+
   // Renderizar campos específicos de cada tipo de banco
   const renderBancoEspecificoCampos = () => {
     switch (formData.tipo_banco) {
       case 'efi':
         return (
-          <>
-            <div className="row">
-              <div className="col-md-12">
-                <div className="mb-3">
-                  <FormField
-                    name="identificador_conta"
-                    type="text"
-                    label="Identificador da Conta"
-                    placeholder="Disponibilizado no menu configurações da API"
-                    required={true}
-                    size="sm"
-                    value={formData.identificador_conta}
-                    onChange={(value) => handleInputChange('identificador_conta', value)}
-                    disabled={isPending}
-                    autoComplete="off"
-                  />
-                  <small className="text-secondary">Disponível nas configurações da API Efi</small>
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <FormField
-                    name="percentual_multa"
-                    type="number"
-                    label="Percentual de Multa (%)"
-                    placeholder="2.00"
-                    size="sm"
-                    value={formData.percentual_multa}
-                    onChange={(value) => handleInputChange('percentual_multa', parseFloat(String(value ?? '')) || 0)}
-                    disabled={isPending}
-                    step={0.01}
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <FormField
-                    name="percentual_juros"
-                    type="number"
-                    label="Percentual de Juros (% ao dia)"
-                    placeholder="0.03"
-                    size="sm"
-                    value={formData.percentual_juros}
-                    onChange={(value) => handleInputChange('percentual_juros', parseFloat(String(value ?? '')) || 0)}
-                    disabled={isPending}
-                    step={0.01}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-12">
-                <div className="mb-3">
-                  <FormField
-                    name="local_pagamento"
-                    type="text"
-                    label="Local de Pagamento"
-                    placeholder="Pagável em qualquer banco até o vencimento"
-                    size="sm"
-                    value={formData.local_pagamento}
-                    onChange={(value) => handleInputChange('local_pagamento', value)}
-                    disabled={isPending}
-                  />
-                </div>
-              </div>
-            </div>
-          </>
+          <EfiForm
+            formData={formData}
+            isPending={isPending}
+            handleInputChange={handleInputChange}
+          />
         );
-
       case 'asaas':
         return (
-          <>
-            <div className="row">
-              <div className="col-md-12">
-                <div className="mb-3">
-                  <FormField
-                    name="api_key"
-                    type="password"
-                    label="API Key"
-                    placeholder="Sua chave da API Asaas"
-                    required={true}
-                    size="sm"
-                    value={formData.api_key}
-                    onChange={(value) => handleInputChange('api_key', value)}
-                    disabled={isPending}
-                    autoComplete="off"
-                  />
-                  <small className="text-secondary">Disponível no painel administrativo da Asaas</small>
-                </div>
-              </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-6">
-                <div className="mb-3">
-                  <FormField
-                    name="taxa_cobranca"
-                    type="number"
-                    label="Taxa de Cobrança (R$)"
-                    placeholder="0.00"
-                    size="sm"
-                    value={formData.taxa_cobranca}
-                    onChange={(value) => handleInputChange('taxa_cobranca', parseFloat(String(value ?? '')) || 0)}
-                    disabled={isPending}
-                    step={0.01}
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="mt-4">
-                  <FormField
-                    name="incluir_taxa"
-                    type="checkbox"
-                    label="Incluir Taxa no Boleto"
-                    value={formData.incluir_taxa}
-                    onChange={(value) => handleInputChange('incluir_taxa', value)}
-                    disabled={isPending}
-                    formPrefix={formPrefix}
-                    switch={true}
-                  />
-                </div>
-              </div>
-            </div>
-          </>
+          <AsaasForm
+            formData={formData}
+            isPending={isPending}
+            formPrefix={formPrefix}
+            handleInputChange={handleInputChange}
+            onGenerateWebhookSecret={handleGenerateWebhookSecret}
+            onCopyWebhookSecret={handleCopyWebhookSecret}
+            isGeneratingSecret={isGeneratingSecret}
+            isBancoPersisted={!!bancoId}
+          />
         );
-
       default:
         return null;
     }

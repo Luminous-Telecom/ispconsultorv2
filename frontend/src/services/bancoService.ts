@@ -38,6 +38,10 @@ class BancoServiceClass extends BaseService<Banco, CreateBanco, UpdateBanco, Ban
     return this.customPost<{ success: boolean; message: string }>(`/${id}/buscar-dados-api`);
   }
 
+  async gerarWebhookSecret(id: number): Promise<ApiResponse<{ webhook_secret: string }>> {
+    return this.customPost<{ webhook_secret: string }>(`/${id}/gerar-webhook-secret`);
+  }
+
   /**
    * Obter URL padrão do banco
    * Nota: Este endpoint usa /api/bancos ao invés de /bancos, então fazemos uma chamada direta ao ApiClient
@@ -141,6 +145,14 @@ export class BancoService {
       return response.data;
     }
     return response as unknown as { success: boolean; message: string };
+  }
+
+  static async gerarWebhookSecret(id: number): Promise<string> {
+    const response = await bancoServiceInstance.gerarWebhookSecret(id);
+    if (response.data?.webhook_secret) {
+      return response.data.webhook_secret;
+    }
+    return '';
   }
 
   /**

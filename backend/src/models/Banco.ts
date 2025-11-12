@@ -48,6 +48,7 @@ export class Banco extends Model<
   declare client_id_producao: string | null;
   declare client_secret_producao: string | null;
   declare url_retorno: string | null;
+  declare webhook_secret: string | null;
   declare repassar_email_cliente: boolean;
   declare percentual_multa: number | null;
   declare percentual_juros: number | null;
@@ -124,7 +125,13 @@ export class Banco extends Model<
       ...safeValues
     } = { ...this.get() };
 
-    return safeValues;
+    return {
+      ...safeValues,
+      api_key: this.getDataValue('api_key'),
+      has_api_key: !!this.getDataValue('api_key'),
+      has_api_secret: !!this.getDataValue('api_secret'),
+      has_client_secret_producao: !!this.getDataValue('client_secret_producao')
+    };
   }
 
   // Métodos de instância
@@ -330,6 +337,10 @@ Banco.init(
     },
     url_retorno: {
       type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    webhook_secret: {
+      type: DataTypes.STRING(255),
       allowNull: true
     },
     repassar_email_cliente: {

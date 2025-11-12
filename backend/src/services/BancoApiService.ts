@@ -25,6 +25,7 @@ export interface BancoConfig {
     liquidar: string;
     listar_cobrancas: string;
     notification: string;
+    webhook?: string;
   };
   api_response_mapping: {
     boleto: {
@@ -152,7 +153,7 @@ export class BancoApiService {
           message: 'Falha ao obter token de acesso'
         };
       }
-          
+
       return {
         success: true,
         message: 'Autenticação realizada com sucesso'
@@ -374,17 +375,39 @@ export class BancoApiService {
         };
       }
 
-      // Recarregar banco com api_key (evitar toJSON que remove o campo)
-      const bancoComCredenciais = await Banco.findByPk(banco.id, {
-        attributes: ['id', 'nome', 'tipo_banco', 'api_key', 'client_id_producao', 'client_secret_producao', 'sandbox'],
-        raw: true
+      // Recarregar banco com credenciais completas
+      const bancoInstanceCredenciais = await Banco.findByPk(banco.id, {
+        attributes: [
+          'id',
+          'nome',
+          'tipo_banco',
+          'api_key',
+          'client_id_producao',
+          'client_secret_producao',
+          'sandbox',
+          'url_retorno',
+          'webhook_secret'
+        ]
       });
       
-      if (!bancoComCredenciais) {
+      if (!bancoInstanceCredenciais) {
         return {
           success: false,
           message: 'Banco não encontrado'
         };
+      }
+
+      const bancoComCredenciais = bancoInstanceCredenciais.get({ plain: true }) as Banco & {
+        webhook_secret?: string | null;
+      };
+
+      const isAsaas = banco.tipo_banco === 'asaas';
+      if (isAsaas && (!bancoComCredenciais.webhook_secret || bancoComCredenciais.webhook_secret === process.env.INTERNAL_WEBHOOK_SECRET)) {
+        logger.warn('Asaas :: webhook secret não configurado ou inválido', {
+          banco_id: banco.id,
+          titulo_id: titulo.id,
+          possui_secret: !!bancoComCredenciais.webhook_secret
+        });
       }
       
 
@@ -413,7 +436,7 @@ export class BancoApiService {
         };
       }
       
-      if (banco.tipo_banco === 'asaas') {
+      if (isAsaas) {
         return this.asaasService.gerarTitulo(titulo, bancoComCredenciais as any, token);
       }
 

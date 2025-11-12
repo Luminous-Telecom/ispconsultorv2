@@ -37,5 +37,6 @@ export interface IBancoService {
   liquidarTitulo(titulo: Titulo, banco: Banco, token: string): Promise<ApiResponse>;
   consultarStatus(titulo: Titulo, banco: Banco, token: string): Promise<ApiResponse>;
   obterToken(banco: Banco): Promise<string | null>;
+  configurarWebhook?(banco: Banco, token: string): Promise<ApiResponse>;
 }
 

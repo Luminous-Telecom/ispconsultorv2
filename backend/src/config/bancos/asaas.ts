@@ -47,7 +47,8 @@ export const asaasConfig = {
     cancelar: '/payments/:id',
     liquidar: '/payments/:id/receiveInCash',
     listar_cobrancas: '/payments',
-    notification: '/payments/:id'
+    notification: '/payments/:id',
+    webhook: '/webhook'
   },
 
   api_response_mapping: {

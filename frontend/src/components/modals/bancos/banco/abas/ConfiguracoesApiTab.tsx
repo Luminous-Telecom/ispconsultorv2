@@ -104,11 +104,6 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
       {/* Campos específicos ASAAS */}
       {formData.tipo_banco === 'asaas' && (
         <>
-          <div className="alert alert-info py-2 px-3">
-            A Asaas utiliza apenas o campo <strong>API Key</strong> para autenticação. Os campos de Client ID
-            e Client Secret não são necessários neste gateway.
-          </div>
-
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">

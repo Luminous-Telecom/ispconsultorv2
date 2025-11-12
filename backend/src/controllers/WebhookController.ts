@@ -6,6 +6,7 @@ import { Titulo } from '../models/Titulo';
 import { BancoApiService } from '../services/BancoApiService';
 import { logger } from '../utils/logger';
 import { JsonValue } from '../types';
+import { BarcodeService } from '../services/BarcodeService';
 
 interface WebhookResponse {
   success: boolean;
@@ -97,6 +98,13 @@ export class WebhookController {
   static async efiWebhook(req: Request, res: Response): Promise<void> {
     try {
       const payload = req.body;
+
+      const receivedSecret =
+        req.get('asaas-access-token') ||
+        req.get('efi-access-token') ||
+        req.get('x-internal-webhook-secret') ||
+        (typeof payload?.secret === 'string' ? payload.secret : undefined) ||
+        (typeof payload?.token === 'string' ? payload.token : undefined);
       
       // Verificar se é um token de notificação (form-urlencoded)
       if (req.get('Content-Type') === 'application/x-www-form-urlencoded' && 
@@ -108,7 +116,7 @@ export class WebhookController {
         logger.info(`Token de notificação recebido: ${notificationToken}`);
         
         // Processar token de notificação - consultar API do EFI
-        const result = await WebhookController.processarTokenNotificacao(notificationToken);
+        const result = await WebhookController.processarTokenNotificacao(notificationToken, receivedSecret);
         res.status(result.status || 200).json(result);
         return;
       }
@@ -148,7 +156,7 @@ export class WebhookController {
         case 'charge_expired':
         case 'charge_waiting':
         case 'charge_pending':
-          const chargeResult = await WebhookController.processarNotificacaoCharge(notification);
+          const chargeResult = await WebhookController.processarNotificacaoCharge(notification, receivedSecret);
           res.status(chargeResult.status || 200).json(chargeResult);
           break;
         
@@ -159,7 +167,7 @@ export class WebhookController {
         case 'pix_expired':
         case 'pix_waiting':
         case 'pix_pending':
-          const pixResult = await WebhookController.processarNotificacaoPix(notification);
+          const pixResult = await WebhookController.processarNotificacaoPix(notification, receivedSecret);
           res.status(pixResult.status || 200).json(pixResult);
           break;
         
@@ -170,7 +178,7 @@ export class WebhookController {
         case 'canceled':
         case 'expired':
           logger.info(`Processando notificação genérica: ${notificationType}`);
-          const genericResult = await WebhookController.processarNotificacaoGenerica(notification);
+          const genericResult = await WebhookController.processarNotificacaoGenerica(notification, receivedSecret);
           res.status(genericResult.status || 200).json(genericResult);
           break;
         
@@ -197,7 +205,7 @@ export class WebhookController {
   /**
    * Processar token de notificação
    */
-  private static async processarTokenNotificacao(notificationToken: string): Promise<WebhookResponse> {
+  private static async processarTokenNotificacao(notificationToken: string, receivedSecret?: string): Promise<WebhookResponse> {
     try {
       logger.info(`Iniciando processamento de token de notificação: ${notificationToken}`);
       
@@ -210,8 +218,20 @@ export class WebhookController {
         order: [['created_at', 'DESC']]
       });
 
+      let algumBancoAutorizado = false;
+
       // Tentar cada banco ativo para encontrar o token correto
       for (const banco of bancosAtivos) {
+        if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
+          logger.warn('Secret do webhook inválido para banco ativo', {
+            banco_id: banco.id,
+            possui_secret: !!banco.webhook_secret
+          });
+          continue;
+        }
+
+        algumBancoAutorizado = true;
+
         logger.info(`Tentando consultar token no banco ${banco.id}`, {
           banco_id: banco.id,
           banco_nome: banco.nome,
@@ -226,8 +246,21 @@ export class WebhookController {
             data_count: Array.isArray(resultado.data.data) ? resultado.data.data.length : 0
           });
           
-          return await WebhookController.processarDadosNotificacao(resultado.data as NotificationData | NotificationItem[] | NotificationItem, banco);
+          return await WebhookController.processarDadosNotificacao(
+            resultado.data as NotificationData | NotificationItem[] | NotificationItem,
+            banco,
+            receivedSecret
+          );
         }
+      }
+      
+      if (!algumBancoAutorizado && receivedSecret) {
+        logger.warn('Webhook EFI: nenhum banco autorizou o secret recebido', { receivedSecret });
+        return {
+          success: false,
+          message: 'Token do webhook inválido',
+          status: 401
+        };
       }
       
       // Fallback: Buscar todos os bancos EFI ativos
@@ -246,6 +279,14 @@ export class WebhookController {
       
       // Tentar consultar a notificação em cada banco EFI
       for (const banco of bancosEfi) {
+        if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
+          logger.warn('Secret do webhook inválido para banco (fallback)', {
+            banco_id: banco.id,
+            possui_secret: !!banco.webhook_secret
+          });
+          continue;
+        }
+
         logger.info(`Consultando notificação no banco EFI: ${banco.id}`);
         
         const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
@@ -257,7 +298,11 @@ export class WebhookController {
           });
           
           // Processar os dados da notificação
-          return await WebhookController.processarDadosNotificacao(resultado.data as NotificationData | NotificationItem[] | NotificationItem, banco);
+          return await WebhookController.processarDadosNotificacao(
+            resultado.data as NotificationData | NotificationItem[] | NotificationItem,
+            banco,
+            receivedSecret
+          );
         } else {
           // Se o token não foi encontrado, expirou ou não existe, não tentar outros bancos
           if (resultado.message?.includes('não encontrado') || 
@@ -301,12 +346,28 @@ export class WebhookController {
   /**
    * Processar dados da notificação
    */
-  private static async processarDadosNotificacao(dados: NotificationData | NotificationItem[] | NotificationItem, banco: Banco): Promise<WebhookResponse> {
+  private static async processarDadosNotificacao(
+    dados: NotificationData | NotificationItem[] | NotificationItem,
+    banco: Banco,
+    receivedSecret?: string
+  ): Promise<WebhookResponse> {
     try {
       logger.info('Processando dados da notificação', {
         banco_id: banco.id,
         dados
       });
+
+      if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
+        logger.warn('Webhook EFI: secret inválido ao processar dados', {
+          banco_id: banco.id,
+          possui_secret: !!banco.webhook_secret
+        });
+        return {
+          success: false,
+          message: 'Token do webhook inválido',
+          status: 401
+        };
+      }
 
       // Nova estrutura da EFI: array de notificações
       if (!Array.isArray(dados) && 'code' in dados && dados.code && 'data' in dados && dados.data && Array.isArray(dados.data)) {
@@ -317,7 +378,7 @@ export class WebhookController {
         let processadas = 0;
         for (const notificacao of dados.data) {
           if (notificacao.type && notificacao.identifiers) {
-            processadas += await WebhookController.processarNotificacaoIndividual(notificacao, banco);
+            processadas += await WebhookController.processarNotificacaoIndividual(notificacao, banco, receivedSecret);
           }
         }
         
@@ -387,7 +448,7 @@ export class WebhookController {
         // Notificação múltipla
         let totalProcessadas = 0;
         for (const notificacao of dados) {
-          const processadas = await WebhookController.processarNotificacaoIndividual(notificacao, banco);
+          const processadas = await WebhookController.processarNotificacaoIndividual(notificacao, banco, receivedSecret);
           totalProcessadas += processadas;
         }
         
@@ -398,7 +459,7 @@ export class WebhookController {
         };
       } else if (!Array.isArray(dados) && 'type' in dados) {
         // Notificação individual
-        const processadas = await WebhookController.processarNotificacaoIndividual(dados as NotificationItem, banco);
+        const processadas = await WebhookController.processarNotificacaoIndividual(dados as NotificationItem, banco, receivedSecret);
         
         return {
           success: true,
@@ -430,7 +491,11 @@ export class WebhookController {
   /**
    * Processar notificação individual
    */
-  private static async processarNotificacaoIndividual(notificacao: NotificationItem, _banco: Banco): Promise<number> {
+  private static async processarNotificacaoIndividual(
+    notificacao: NotificationItem,
+    banco: Banco,
+    receivedSecret?: string
+  ): Promise<number> {
     try {
       const type = notificacao.type || '';
       const identifiers = notificacao.identifiers || {};
@@ -447,10 +512,18 @@ export class WebhookController {
         status,
         identifiers
       });
+
+      if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
+        logger.warn('Webhook EFI: secret inválido em notificação individual', {
+          banco_id: banco.id,
+          possui_secret: !!banco.webhook_secret
+        });
+        return 0;
+      }
       
       switch (type) {
         case 'charge':
-          return await WebhookController.processarNotificacaoTitulo(identifiers, status, customId, notificacao);
+          return await WebhookController.processarNotificacaoTitulo(identifiers, status, customId, notificacao, banco, receivedSecret);
           
         default:
           logger.warn('Tipo de notificação não suportado', { type });
@@ -469,7 +542,14 @@ export class WebhookController {
   /**
    * Processar notificação de título (charge)
    */
-  private static async processarNotificacaoTitulo(identifiers: NotificationIdentifiers, status: string | null, customId: string | null, dadosCompletos?: NotificationItem): Promise<number> {
+  private static async processarNotificacaoTitulo(
+    identifiers: NotificationIdentifiers,
+    status: string | null,
+    customId: string | null,
+    dadosCompletos?: NotificationItem,
+    bancoContext?: Banco,
+    receivedSecret?: string
+  ): Promise<number> {
     const chargeId = identifiers.charge_id || null;
     
     if (!chargeId) {
@@ -487,13 +567,22 @@ export class WebhookController {
           {
             model: Banco,
             as: 'banco',
-            attributes: ['id', 'nome', 'tipo_banco', 'codigo']
+            attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret']
           }
         ]
       });
 
       if (!titulo) {
         logger.warn('Título não encontrado', { charge_id: chargeId });
+        return 0;
+      }
+
+      const bancoRelacionado = bancoContext ?? (titulo as Titulo & { banco?: Banco | null }).banco ?? null;
+      if (!WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret)) {
+        logger.warn('Webhook EFI: secret inválido ao processar título', {
+          charge_id: chargeId,
+          banco_id: bancoRelacionado?.id ?? null
+        });
         return 0;
       }
 
@@ -603,7 +692,11 @@ export class WebhookController {
   /**
    * Processar notificação de charge
    */
-  private static async processarNotificacaoCharge(notification: ChargeNotification | NotificationItem): Promise<WebhookResponse> {
+  private static async processarNotificacaoCharge(
+    notification: ChargeNotification | NotificationItem,
+    receivedSecret?: string,
+    bancoContext?: Banco
+  ): Promise<WebhookResponse> {
     try {
       const chargeId = 'charge_id' in notification ? notification.charge_id : notification.id;
       const status = typeof notification.status === 'string' ? notification.status : (typeof notification.status === 'object' && notification.status !== null && 'current' in notification.status ? notification.status.current : undefined);
@@ -626,12 +719,27 @@ export class WebhookController {
       // Buscar título pelo charge_id
       const { Titulo } = await import('../models/Titulo');
       const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId }
-      });
+        where: { charge_id: chargeId },
+        include: [{ model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret'] }]
+      }) as (Titulo & { banco?: Banco | null }) | null;
+
+      const bancoRelacionado = bancoContext ?? titulo?.banco ?? null;
+
+      if (!WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret)) {
+        logger.warn('Webhook EFI: secret inválido ao processar charge', {
+          charge_id: chargeId,
+          banco_id: bancoRelacionado?.id ?? null
+        });
+        return {
+          success: false,
+          message: 'Token do webhook inválido',
+          status: 401
+        };
+      }
 
       if (!titulo) {
         logger.warn('Título não encontrado para charge', { charge_id: chargeId });
-        return {
+            return {
           success: false,
           message: 'Título não encontrado',
           status: 404
@@ -676,13 +784,13 @@ export class WebhookController {
   /**
    * Processar notificação de PIX
    */
-  private static async processarNotificacaoPix(notification: NotificationItem): Promise<WebhookResponse> {
+  private static async processarNotificacaoPix(notification: NotificationItem, receivedSecret?: string): Promise<WebhookResponse> {
     try {
       logger.info('Processando notificação de PIX', { notification });
 
       // Implementar lógica específica para PIX se necessário
       // Por enquanto, tratar como notificação genérica
-      return await WebhookController.processarNotificacaoGenerica(notification);
+      return await WebhookController.processarNotificacaoGenerica(notification, receivedSecret);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de PIX', {
@@ -700,7 +808,7 @@ export class WebhookController {
   /**
    * Processar notificação genérica
    */
-  private static async processarNotificacaoGenerica(notification: NotificationItem | ChargeNotification): Promise<WebhookResponse> {
+  private static async processarNotificacaoGenerica(notification: NotificationItem | ChargeNotification, receivedSecret?: string): Promise<WebhookResponse> {
     try {
       logger.info('Processando notificação genérica', { notification });
 
@@ -709,12 +817,26 @@ export class WebhookController {
       const customId = notification.custom_id;
 
       if (chargeId) {
-        return await WebhookController.processarNotificacaoCharge(notification);
+        return await WebhookController.processarNotificacaoCharge(notification, receivedSecret);
       } else if (customId) {
         // Tentar buscar por custom_id
         const { Titulo } = await import('../models/Titulo');
-        const titulo = await Titulo.findByPk(String(customId));
+        const titulo = await Titulo.findByPk(String(customId), {
+          include: [{ model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret'] }]
+        }) as (Titulo & { banco?: Banco | null }) | null;
         if (titulo) {
+          if (!WebhookController.isWebhookSecretValid(titulo.banco ?? undefined, receivedSecret)) {
+            logger.warn('Webhook EFI: secret inválido ao processar custom_id', {
+              titulo_id: titulo.id,
+              banco_id: titulo.banco?.id ?? null
+            });
+            return {
+              success: false,
+              message: 'Token do webhook inválido',
+              status: 401
+            };
+          }
+
           const statusString = typeof notification.status === 'string' ? notification.status : (typeof notification.status === 'object' && notification.status !== null && 'current' in notification.status ? (notification.status.current || 'pendente') : 'pendente');
           const novoStatus = WebhookController.mapearStatusEfi(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
           await titulo.update({ status: novoStatus });
@@ -878,5 +1000,214 @@ export class WebhookController {
     };
 
     return statusMap[statusEfi?.toLowerCase()] || 'pendente';
+  }
+
+  private static isWebhookSecretValid(banco?: Banco | null, receivedSecret?: string): boolean {
+    const expectedSecret = banco?.webhook_secret ?? process.env.INTERNAL_WEBHOOK_SECRET;
+    if (!expectedSecret) {
+      return true;
+    }
+    return receivedSecret === expectedSecret;
+  }
+
+  /**
+   * Webhook para notificações do Asaas
+   */
+  static async asaasWebhook(req: Request, res: Response): Promise<void> {
+    try {
+      const payload = req.body as Record<string, JsonValue> | undefined;
+
+      if (!payload || typeof payload !== 'object') {
+        logger.warn('Webhook Asaas recebeu payload inválido', { payload });
+        res.status(400).json({
+          success: false,
+          message: 'Payload inválido'
+        });
+        return;
+      }
+
+      const receivedSecret =
+        req.get('asaas-access-token') ||
+        req.get('x-internal-webhook-secret') ||
+        (typeof payload?.secret === 'string' ? payload.secret : undefined) ||
+        (typeof payload?.token === 'string' ? payload.token : undefined);
+
+      const event = typeof payload.event === 'string' ? payload.event : '';
+      const payment = (payload.payment && typeof payload.payment === 'object' && !Array.isArray(payload.payment))
+        ? payload.payment as Record<string, JsonValue>
+        : undefined;
+
+      logger.info('Webhook Asaas recebido', {
+        event,
+        payment_id: payment?.id || null
+      });
+
+      if (!payment || !payment.id) {
+        logger.warn('Webhook Asaas sem payment.id', { payload });
+        res.status(200).json({
+          success: true,
+          message: 'Webhook recebido sem payment.id'
+        });
+        return;
+      }
+
+      const chargeId = String(payment.id);
+
+      const titulo = await Titulo.findOne({
+        where: { charge_id: chargeId },
+        include: [{ model: Banco, as: 'banco' }]
+      }) as (Titulo & { banco?: Banco | null }) | null;
+
+      const bancoSecret = typeof titulo?.banco?.webhook_secret === 'string' && titulo.banco.webhook_secret
+        ? titulo.banco.webhook_secret
+        : undefined;
+      const expectedSecret = bancoSecret || process.env.INTERNAL_WEBHOOK_SECRET;
+
+      if (expectedSecret) {
+        if (!receivedSecret || receivedSecret !== expectedSecret) {
+          logger.warn('Webhook Asaas com token inválido', {
+            fornecido: receivedSecret ? 'presente' : 'ausente',
+            banco_id: titulo?.banco_id ?? null,
+            possui_secret_banco: !!bancoSecret
+          });
+          res.status(401).json({
+            success: false,
+            message: 'Token do webhook inválido'
+          });
+          return;
+        }
+      } else {
+        logger.warn('Webhook Asaas recebido sem secret configurado', {
+          banco_id: titulo?.banco_id ?? null
+        });
+      }
+
+      if (!titulo) {
+        logger.warn('Webhook Asaas: título não encontrado para charge_id', {
+          charge_id: chargeId
+        });
+        res.status(200).json({
+          success: true,
+          message: 'Título não encontrado para este charge_id'
+        });
+        return;
+      }
+
+      const updates: Partial<Titulo> & Record<string, JsonValue> = {};
+      const pagamentoStatusRaw = payment.status;
+      const paymentStatus = typeof pagamentoStatusRaw === 'string'
+        ? pagamentoStatusRaw.toUpperCase()
+        : '';
+
+      const statusMap: Record<string, Titulo['status']> = {
+        PENDING: 'pendente',
+        AWAITING_APPROVAL: 'pendente',
+        RECEIVED: 'pago',
+        RECEIVED_IN_CASH: 'pago',
+        CONFIRMED: 'pago',
+        OVERDUE: 'vencido',
+        PAYMENT_DELETED: 'cancelado',
+        DELETED: 'cancelado',
+        CANCELED: 'cancelado',
+        REFUNDED: 'cancelado',
+        CHARGEBACK: 'cancelado'
+      };
+
+      const novoStatus = statusMap[paymentStatus];
+      if (novoStatus) {
+        updates.status = novoStatus;
+      }
+
+      const paymentDate = typeof payment.paymentDate === 'string'
+        ? payment.paymentDate
+        : typeof payment.effectiveDate === 'string'
+          ? payment.effectiveDate
+          : undefined;
+
+      if (novoStatus === 'pago') {
+        updates.data_pagamento = paymentDate ? new Date(paymentDate) : new Date();
+        if (typeof payment.value === 'number') {
+          updates.valor_pago = Number(payment.value);
+        } else if (typeof payment.netValue === 'number') {
+          updates.valor_pago = Number(payment.netValue);
+        }
+      }
+
+      if (typeof payment.nossoNumero === 'string') {
+        updates.nosso_numero = payment.nossoNumero;
+      }
+
+      if (typeof payment.bankSlipUrl === 'string') {
+        updates.url_boleto = payment.bankSlipUrl;
+      }
+
+      if (typeof payment.bankSlipDigitableLine === 'string') {
+        updates.linha_digitavel = BarcodeService.formatarLinhaDigitavel(payment.bankSlipDigitableLine);
+      }
+
+      if (typeof payment.bankSlipBarcode === 'string') {
+        const codigoLimpo = payment.bankSlipBarcode.replace(/\D/g, '');
+        updates.codigo_barras = codigoLimpo.length > 0 ? codigoLimpo : payment.bankSlipBarcode;
+      }
+
+      if (typeof payment.pixQrCode === 'string') {
+        updates.qrcode = payment.pixQrCode;
+      }
+
+      if (typeof payment.pixQrCodeImage === 'string') {
+        const imagem = payment.pixQrCodeImage;
+        updates.qrcode_image = imagem.startsWith('data:image/')
+          ? imagem
+          : `data:image/png;base64,${imagem}`;
+      } else if (typeof payment.pixQrCodeUrl === 'string') {
+        updates.qrcode_image = payment.pixQrCodeUrl;
+      }
+
+      if (typeof payment.dueDate === 'string') {
+        updates.data_vencimento = new Date(payment.dueDate);
+      }
+
+      if (Object.keys(updates).length === 0) {
+        logger.info('Webhook Asaas não possui campos para atualizar', {
+          titulo_id: titulo.id,
+          charge_id: chargeId,
+          event,
+          paymentStatus
+        });
+        res.status(200).json({
+          success: true,
+          message: 'Nenhum campo atualizado'
+        });
+        return;
+      }
+
+      logger.info('Webhook Asaas atualizando título', {
+        titulo_id: titulo.id,
+        charge_id: chargeId,
+        event,
+        paymentStatus,
+        campos: Object.keys(updates)
+      });
+
+      await titulo.update(updates);
+
+      res.status(200).json({
+        success: true,
+        message: 'Título atualizado via webhook Asaas'
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      logger.error('Erro ao processar webhook Asaas', {
+        error: errorMessage,
+        stack: errorStack
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno ao processar webhook Asaas'
+      });
+    }
   }
 }

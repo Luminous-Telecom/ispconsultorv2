@@ -26,6 +26,11 @@ efiRouter.post('/', WebhookController.efiWebhook);
 // Usar o roteador EFI para rotas específicas
 router.use('/efi', efiRouter);
 
+// Webhook do Asaas
+const asaasRouter = Router();
+asaasRouter.post('/', WebhookController.asaasWebhook);
+router.use('/asaas', asaasRouter);
+
 // Webhook interno para integrações personalizadas
 router.post('/integration', IntegrationWebhookController.handleIntegration);
 

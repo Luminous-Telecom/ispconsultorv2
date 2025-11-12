@@ -3,6 +3,7 @@ import { Banco } from '../models/Banco';
 import { BancoApiService } from '../services/BancoApiService';
 import { logger } from '../utils/logger';
 import { Op, WhereOptions } from 'sequelize';
+import { randomBytes } from 'crypto';
 
 export class BancoController {
   /**
@@ -368,6 +369,56 @@ export class BancoController {
       res.status(500).json({
         success: false,
         message: 'Erro interno: ' + errorMessage
+      });
+    }
+  }
+
+  static async gerarWebhookSecret(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const banco = await Banco.findByPk(id);
+
+      if (!banco) {
+        res.status(404).json({
+          success: false,
+          message: 'Banco não encontrado'
+        });
+        return;
+      }
+
+      if (banco.tipo_banco !== 'asaas') {
+        res.status(400).json({
+          success: false,
+          message: 'Webhook secret disponível apenas para bancos do tipo Asaas'
+        });
+        return;
+      }
+
+      const novoSecret = randomBytes(32).toString('hex');
+      await banco.update({ webhook_secret: novoSecret });
+
+      logger.info('Webhook secret Asaas gerado manualmente', {
+        banco_id: banco.id
+      });
+
+      res.json({
+        success: true,
+        message: 'Webhook secret gerado com sucesso',
+        data: {
+          webhook_secret: novoSecret
+        }
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao gerar webhook secret', {
+        banco_id: req.params.id,
+        error: errorMessage
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno ao gerar webhook secret'
       });
     }
   }

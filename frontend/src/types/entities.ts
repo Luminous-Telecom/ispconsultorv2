@@ -154,6 +154,10 @@ export interface Banco {
   client_id_producao?: string;
   client_secret_producao?: string;
   url_retorno?: string;
+  webhook_secret?: string;
+  has_api_key?: boolean;
+  has_api_secret?: boolean;
+  has_client_secret_producao?: boolean;
   repassar_email_cliente: boolean;
   percentual_multa?: number;
   percentual_juros?: number;

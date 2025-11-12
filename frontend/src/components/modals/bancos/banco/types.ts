@@ -9,6 +9,8 @@ export interface BancoForm {
   api_url: string;
   api_key: string;
   api_secret: string;
+  webhook_secret: string;
+  has_api_key: boolean;
   sandbox: boolean;
   identificador_conta: string;
   client_id_producao: string;
