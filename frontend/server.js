@@ -21,7 +21,12 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-const PORT = process.env.PORT || 3000;
+if (!process.env.PORT) {
+  console.error('Erro: PORT não configurada no arquivo .env');
+  process.exit(1);
+}
+
+const PORT = process.env.PORT;
 const buildDir = path.resolve(__dirname, 'build');
 
 // Função para servir arquivos estáticos
@@ -73,6 +78,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Frontend disponível em http://localhost:${PORT}`);
+  console.log(`Frontend disponível na porta ${PORT}`);
 });
 
