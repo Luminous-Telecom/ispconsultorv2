@@ -40,7 +40,12 @@ jobs:
           mkdir -p deployment/backend deployment/frontend
           
           # 2. Copia os artefatos gerados para a pasta temporária
+          # Backend: dist, package.json e env.example
           cp -r backend/dist deployment/backend/dist
+          cp backend/package.json deployment/backend/package.json
+          cp backend/env.example deployment/backend/env.example
+          
+          # Frontend: build completo
           cp -r frontend/build deployment/frontend/build
           
           # 3. Configura o usuário Git para o push
