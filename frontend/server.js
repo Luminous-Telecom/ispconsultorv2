@@ -3,6 +3,24 @@ const path = require('path');
 const fs = require('fs');
 const { createReadStream } = require('fs');
 
+// Carrega variáveis do arquivo .env
+const envPath = path.resolve(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const trimmedLine = line.trim();
+    if (trimmedLine && !trimmedLine.startsWith('#')) {
+      const [key, ...valueParts] = trimmedLine.split('=');
+      if (key && valueParts.length > 0) {
+        const value = valueParts.join('=').trim();
+        if (!process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    }
+  });
+}
+
 const PORT = process.env.PORT || 3000;
 const buildDir = path.resolve(__dirname, 'build');
 
