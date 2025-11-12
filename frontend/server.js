@@ -72,17 +72,17 @@ function generateConfig() {
 }
 
 const server = http.createServer((req, res) => {
-  // Serve arquivo de configuração dinâmico
-  if (req.url === '/config.js') {
+  // Remove query string da URL
+  const urlPath = req.url?.split('?')[0] || '/';
+
+  // Serve arquivo de configuração dinâmico (sempre sobrescreve arquivo estático se existir)
+  if (urlPath === '/config.js' || urlPath.endsWith('/config.js')) {
     res.writeHead(200, { 'Content-Type': 'application/javascript' });
     res.end(generateConfig());
     return;
   }
 
-  let filePath = path.join(buildDir, req.url === '/' ? 'index.html' : req.url);
-
-  // Remove query string
-  filePath = filePath.split('?')[0];
+  let filePath = path.join(buildDir, urlPath === '/' ? 'index.html' : urlPath);
 
   // Verifica se o arquivo existe
   fs.access(filePath, fs.constants.F_OK, (err) => {
