@@ -45,8 +45,9 @@ jobs:
           cp backend/package.json deployment/backend/package.json
           cp backend/env.example deployment/backend/env.example
           
-          # Frontend: build, package.json e env.example
+          # Frontend: build, public, package.json e env.example
           cp -r frontend/build deployment/frontend/build
+          cp -r frontend/public deployment/frontend/public
           cp frontend/package.json deployment/frontend/package.json
           cp frontend/env.example deployment/frontend/env.example
           
