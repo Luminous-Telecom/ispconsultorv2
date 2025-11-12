@@ -10,9 +10,6 @@ logs/
 .env.local
 
 migrations
-# Build
-dist/
-build/
 
 # IDE
 .vscode/
@@ -42,4 +39,3 @@ temp/
 *.tsbuildinfo
 
 package-lock.json
-release
