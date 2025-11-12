@@ -72,10 +72,24 @@ http.createServer((req, res) => {
   }
 
   const filePath = path.join(buildDir, urlPath === '/' ? 'index.html' : urlPath);
+  const ext = path.extname(filePath).toLowerCase();
+  const isStaticFile = ext && ext !== '.html';
   
   fs.access(filePath, fs.constants.F_OK, (err) => {
     if (err) {
-      res.writeHead(404).end('Arquivo não encontrado');
+      if (isStaticFile) {
+        res.writeHead(404).end('Arquivo não encontrado');
+      } else {
+        const indexPath = path.join(buildDir, 'index.html');
+        fs.readFile(indexPath, 'utf8', (readErr, data) => {
+          if (readErr) {
+            res.writeHead(500).end('Erro ao ler arquivo');
+          } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(data.replace('</head>', '<script src="/config.js"></script></head>'));
+          }
+        });
+      }
     } else if (filePath.endsWith('index.html')) {
       fs.readFile(filePath, 'utf8', (readErr, data) => {
         if (readErr) {

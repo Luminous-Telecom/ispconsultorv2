@@ -40,15 +40,17 @@ jobs:
           mkdir -p deployment/backend deployment/frontend
           
           # 2. Copia os artefatos gerados para a pasta temporária
-          # Backend: dist, package.json e env.example
+          # Backend: dist, package.json, package-lock.json e env.example
           cp -r backend/dist deployment/backend/dist
           cp backend/package.json deployment/backend/package.json
+          cp backend/package-lock.json deployment/backend/package-lock.json
           cp backend/env.example deployment/backend/env.example
           
-          # Frontend: build, public, package.json, env.example e server.js
+          # Frontend: build, public, package.json, package-lock.json, env.example e server.js
           cp -r frontend/build deployment/frontend/build
           cp -r frontend/public deployment/frontend/public
           cp frontend/package.json deployment/frontend/package.json
+          cp frontend/package-lock.json deployment/frontend/package-lock.json
           cp frontend/env.example deployment/frontend/env.example
           cp frontend/server.js deployment/frontend/server.js
           
