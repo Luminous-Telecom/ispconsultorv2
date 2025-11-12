@@ -47,7 +47,6 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:3001",
   "devDependencies": {
     "javascript-obfuscator": "^4.1.1"
   }
