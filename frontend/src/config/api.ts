@@ -1,4 +1,20 @@
 // Configurações da API
+// Lê configuração de window.__APP_CONFIG__ (definido em runtime pelo servidor)
+// ou usa process.env (para desenvolvimento)
+const getConfig = () => {
+  if (typeof window !== 'undefined' && (window as any).__APP_CONFIG__) {
+    return (window as any).__APP_CONFIG__;
+  }
+  return {
+    REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
+    REACT_APP_API_TIMEOUT: process.env.REACT_APP_API_TIMEOUT || '10000',
+    REACT_APP_API_RETRY_ATTEMPTS: process.env.REACT_APP_API_RETRY_ATTEMPTS || '3',
+    REACT_APP_API_RETRY_DELAY: process.env.REACT_APP_API_RETRY_DELAY || '1000',
+  };
+};
+
+const appConfig = getConfig();
+
 const normalizeBaseUrl = (url: string | undefined): string => {
   if (!url) {
     return '';
@@ -6,15 +22,15 @@ const normalizeBaseUrl = (url: string | undefined): string => {
   return url.replace(/\/+$/, '');
 };
 
-const baseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'http://localhost:3001/api');
+const baseUrl = normalizeBaseUrl(appConfig.REACT_APP_API_URL);
 const baseUrlWithoutApi = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
 
 export const API_CONFIG = {
   BASE_URL: baseUrl,
   BASE_URL_WITHOUT_API: baseUrlWithoutApi,
-  TIMEOUT: Number(process.env.REACT_APP_API_TIMEOUT ?? 10000),
-  RETRY_ATTEMPTS: Number(process.env.REACT_APP_API_RETRY_ATTEMPTS ?? 3),
-  RETRY_DELAY: Number(process.env.REACT_APP_API_RETRY_DELAY ?? 1000),
+  TIMEOUT: Number(appConfig.REACT_APP_API_TIMEOUT),
+  RETRY_ATTEMPTS: Number(appConfig.REACT_APP_API_RETRY_ATTEMPTS),
+  RETRY_DELAY: Number(appConfig.REACT_APP_API_RETRY_DELAY),
 };
 
 // Função para gerar URLs dinâmicas

@@ -60,7 +60,25 @@ function serveFile(filePath, res) {
   }
 }
 
+// Gera arquivo de configuração dinâmico baseado no .env
+function generateConfig() {
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+  return `window.__APP_CONFIG__ = {
+    REACT_APP_API_URL: '${apiUrl}',
+    REACT_APP_API_TIMEOUT: ${process.env.REACT_APP_API_TIMEOUT || 10000},
+    REACT_APP_API_RETRY_ATTEMPTS: ${process.env.REACT_APP_API_RETRY_ATTEMPTS || 3},
+    REACT_APP_API_RETRY_DELAY: ${process.env.REACT_APP_API_RETRY_DELAY || 1000}
+  };`;
+}
+
 const server = http.createServer((req, res) => {
+  // Serve arquivo de configuração dinâmico
+  if (req.url === '/config.js') {
+    res.writeHead(200, { 'Content-Type': 'application/javascript' });
+    res.end(generateConfig());
+    return;
+  }
+
   let filePath = path.join(buildDir, req.url === '/' ? 'index.html' : req.url);
 
   // Remove query string
@@ -72,7 +90,25 @@ const server = http.createServer((req, res) => {
       res.writeHead(404);
       res.end('Arquivo não encontrado');
     } else {
-      serveFile(filePath, res);
+      // Se for index.html, injeta o script de configuração
+      if (filePath.endsWith('index.html')) {
+        fs.readFile(filePath, 'utf8', (readErr, data) => {
+          if (readErr) {
+            res.writeHead(500);
+            res.end('Erro ao ler arquivo');
+            return;
+          }
+          // Injeta o script de configuração antes do fechamento do </head>
+          const modifiedHtml = data.replace(
+            '</head>',
+            '<script src="/config.js"></script></head>'
+          );
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(modifiedHtml);
+        });
+      } else {
+        serveFile(filePath, res);
+      }
     }
   });
 });
