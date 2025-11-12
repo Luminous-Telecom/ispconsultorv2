@@ -26,23 +26,22 @@ jobs:
       # Instala as dependências e executa o build
       - name: Instalar Dependências e Buildar Projeto
         run: |
-          npm install
-          # Ajuste o comando se for diferente (ex: 'npm run prod' ou 'npm run deploy')
-          npm run build 
+          npm ci
+          npm ci --prefix backend
+          npm ci --prefix frontend
+          npm run build --prefix backend
+          npm run build --prefix frontend
       
       # === 3. O Passo de Deployment ===
       
       - name: Criar Pasta de Deploy e Configurar Git
         run: |
           # 1. Cria a pasta temporária de deploy
-          mkdir deployment
+          mkdir -p deployment/backend deployment/frontend
           
-          # 2. Copia as pastas de build para a pasta temporária
-          # OBS: O conteúdo da pasta 'dist' e 'build' será a raiz do repo de prod.
-          # Se você precisa que as pastas 'dist' e 'build' existam no repo de prod, 
-          # você pode ajustar o comando de cópia: 'cp -r dist deployment/dist'
-          cp -r dist deployment/dist
-          cp -r build deployment/build
+          # 2. Copia os artefatos gerados para a pasta temporária
+          cp -r backend/dist deployment/backend/dist
+          cp -r frontend/build deployment/frontend/build
           
           # 3. Configura o usuário Git para o push
           git config --global user.name "GitHub Actions Deploy"
@@ -59,6 +58,8 @@ jobs:
           force: true # Força o push para garantir que o repo de prod contenha apenas os arquivos de build mais recentes
           directory: deployment # A pasta que será enviada
           
-      - name: Limpar pastas de build (opcional, para não comitar dist/build no repo de dev)
+      - name: Limpar pastas de build
         run: |
           rm -rf deployment
+          rm -rf backend/dist
+          rm -rf frontend/build

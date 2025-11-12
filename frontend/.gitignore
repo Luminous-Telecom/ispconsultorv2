@@ -88,6 +88,7 @@ ehthumbs.db
 Thumbs.db
 
 # Build artifacts
+build/
 *.map
 *.min.js
 *.min.css

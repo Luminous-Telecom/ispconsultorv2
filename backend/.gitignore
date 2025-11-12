@@ -95,6 +95,7 @@ test-results/
 coverage/
 
 # Build artifacts
+dist/
 *.map
 
 # Local configuration files
