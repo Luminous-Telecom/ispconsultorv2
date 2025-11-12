@@ -1,16 +1,12 @@
 // Configurações da API
-if (!process.env.REACT_APP_API_URL) {
-  throw new Error('REACT_APP_API_URL não definida nas variáveis de ambiente');
-}
-
 const normalizeBaseUrl = (url: string | undefined): string => {
   if (!url) {
-    throw new Error('REACT_APP_API_URL não definida nas variáveis de ambiente');
+    return '';
   }
   return url.replace(/\/+$/, '');
 };
 
-const baseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL);
+const baseUrl = normalizeBaseUrl(process.env.REACT_APP_API_URL || 'http://localhost:3001/api');
 const baseUrlWithoutApi = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
 
 export const API_CONFIG = {

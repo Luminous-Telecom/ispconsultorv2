@@ -25,6 +25,8 @@ jobs:
 
       # Instala as dependências e executa o build
       - name: Instalar Dependências e Buildar Projeto
+        env:
+          REACT_APP_API_URL: http://localhost:3001/api
         run: |
           npm install
           npm ci --prefix backend
