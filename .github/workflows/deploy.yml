@@ -26,7 +26,7 @@ jobs:
       # Instala as dependências e executa o build
       - name: Instalar Dependências e Buildar Projeto
         run: |
-          npm ci
+          npm install
           npm ci --prefix backend
           npm ci --prefix frontend
           npm run build --prefix backend
