@@ -76,7 +76,7 @@ const server = http.createServer((req, res) => {
   const urlPath = req.url?.split('?')[0] || '/';
 
   // Serve arquivo de configuração dinâmico (sempre sobrescreve arquivo estático se existir)
-  if (urlPath === '/config.js' || urlPath.endsWith('/config.js')) {
+  if (urlPath === '/config.js') {
     res.writeHead(200, { 'Content-Type': 'application/javascript' });
     res.end(generateConfig());
     return;
