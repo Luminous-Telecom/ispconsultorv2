@@ -42,3 +42,4 @@ temp/
 *.tsbuildinfo
 
 package-lock.json
+release
