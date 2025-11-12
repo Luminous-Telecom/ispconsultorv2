@@ -64,9 +64,8 @@ const server = http.createServer((req, res) => {
   // Verifica se o arquivo existe
   fs.access(filePath, fs.constants.F_OK, (err) => {
     if (err) {
-      // Se não existir, serve o index.html (para SPA routing)
-      const indexPath = path.join(buildDir, 'index.html');
-      serveFile(indexPath, res);
+      res.writeHead(404);
+      res.end('Arquivo não encontrado');
     } else {
       serveFile(filePath, res);
     }
