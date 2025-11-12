@@ -1,0 +1,64 @@
+name: Deploy para Produção
+
+# 1. Quando o fluxo de trabalho deve ser executado
+on:
+  push:
+    branches:
+      # Aciona o deploy sempre que houver um push na branch 'main'
+      - main
+
+# 2. Define o Job (Trabalho) de Deploy
+jobs:
+  deploy:
+    runs-on: ubuntu-latest # O ambiente onde o código será executado
+
+    steps:
+      # Faz o checkout do código
+      - name: Checkout Código Fonte
+        uses: actions/checkout@v4
+        
+      # Configura o ambiente Node.js
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Ajuste a versão do Node conforme necessário
+
+      # Instala as dependências e executa o build
+      - name: Instalar Dependências e Buildar Projeto
+        run: |
+          npm install
+          # Ajuste o comando se for diferente (ex: 'npm run prod' ou 'npm run deploy')
+          npm run build 
+      
+      # === 3. O Passo de Deployment ===
+      
+      - name: Criar Pasta de Deploy e Configurar Git
+        run: |
+          # 1. Cria a pasta temporária de deploy
+          mkdir deployment
+          
+          # 2. Copia as pastas de build para a pasta temporária
+          # OBS: O conteúdo da pasta 'dist' e 'build' será a raiz do repo de prod.
+          # Se você precisa que as pastas 'dist' e 'build' existam no repo de prod, 
+          # você pode ajustar o comando de cópia: 'cp -r dist deployment/dist'
+          cp -r dist deployment/dist
+          cp -r build deployment/build
+          
+          # 3. Configura o usuário Git para o push
+          git config --global user.name "GitHub Actions Deploy"
+          git config --global user.email "actions@github.com"
+      
+      # Usa uma Action popular para fazer o push da pasta de deploy para o repositório de produção
+      - name: Enviar Build para Repositório de Produção
+        uses: ad-m/github-push-action@master
+        with:
+          # A URL de destino, usando o Secret para segurança:
+          github_token: ${{ secrets.PROD_PAT }}
+          repository: Luminous-Telecom/backnet.prod.git # Repositório de Produção
+          branch: main # Branch de destino no repositório de produção
+          force: true # Força o push para garantir que o repo de prod contenha apenas os arquivos de build mais recentes
+          directory: deployment # A pasta que será enviada
+          
+      - name: Limpar pastas de build (opcional, para não comitar dist/build no repo de dev)
+        run: |
+          rm -rf deployment
