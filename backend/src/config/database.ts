@@ -31,5 +31,5 @@ const sequelize = new Sequelize({
     freezeTableName: true
   }
 });
-
+// Fuso horário de Brasília (GMT-3)
 export { sequelize };
