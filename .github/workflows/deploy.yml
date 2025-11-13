@@ -13,9 +13,11 @@ jobs:
     runs-on: ubuntu-latest # O ambiente onde o código será executado
 
     steps:
-      # Faz o checkout do código
+      # Faz o checkout do código com histórico para comparação
       - name: Checkout Código Fonte
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Buscar pelo menos 2 commits para poder comparar
         
       # Configura o ambiente Node.js
       - name: Configurar Node.js
@@ -23,14 +25,59 @@ jobs:
         with:
           node-version: '20' # Ajuste a versão do Node conforme necessário
 
-      # Instala as dependências e executa o build
+      # Verificar quais pastas foram alteradas
+      - name: Verificar Alterações
+        id: changes
+        run: |
+          # Obter o commit anterior (HEAD~1) ou usar o commit atual se for o primeiro
+          PREV_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          
+          # Verificar mudanças no backend
+          if git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} | grep -qE '^backend/'; then
+            BACKEND_CHANGED="true"
+          else
+            BACKEND_CHANGED="false"
+          fi
+          
+          # Verificar mudanças no frontend
+          if git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} | grep -qE '^frontend/'; then
+            FRONTEND_CHANGED="true"
+          else
+            FRONTEND_CHANGED="false"
+          fi
+          
+          # Se for o primeiro commit ou não conseguir determinar, build tudo
+          if [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ]; then
+            BACKEND_CHANGED="true"
+            FRONTEND_CHANGED="true"
+          fi
+          
+          echo "backend_changed=${BACKEND_CHANGED}" >> $GITHUB_OUTPUT
+          echo "frontend_changed=${FRONTEND_CHANGED}" >> $GITHUB_OUTPUT
+          echo "Backend alterado: ${BACKEND_CHANGED}"
+          echo "Frontend alterado: ${FRONTEND_CHANGED}"
+      
+      # Instala as dependências e executa o build apenas do que foi alterado
       - name: Instalar Dependências e Buildar Projeto
         run: |
           npm install
-          npm ci --prefix backend
-          npm ci --prefix frontend
-          npm run build --prefix backend
-          npm run build --prefix frontend
+          
+          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ]; then
+            echo "Building backend..."
+            npm ci --prefix backend
+            npm run build --prefix backend
+          else
+            echo "Backend não foi alterado, pulando build"
+          fi
+          
+          if [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+            echo "Building frontend..."
+            npm ci --prefix frontend
+            npm run build --prefix frontend
+          else
+            echo "Frontend não foi alterado, pulando build"
+          fi
       
       # === 3. O Passo de Deployment ===
       
@@ -53,26 +100,36 @@ jobs:
       
       - name: Copiar Artefatos para Deploy
         run: |
-          # Limpar conteúdo anterior (exceto .git)
           cd deployment
-          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
           
-          # Criar estrutura de pastas
+          # Criar estrutura de pastas se não existir
           mkdir -p backend frontend
           
-          # Copiar artefatos do backend
-          cp -r ../backend/dist backend/dist
-          cp ../backend/package.json backend/package.json
-          cp ../backend/package-lock.json backend/package-lock.json
-          cp ../backend/env.example backend/env.example
+          # Copiar artefatos do backend apenas se foi alterado
+          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ]; then
+            echo "Copiando artefatos do backend..."
+            rm -rf backend/dist backend/package.json backend/package-lock.json backend/env.example
+            cp -r ../backend/dist backend/dist
+            cp ../backend/package.json backend/package.json
+            cp ../backend/package-lock.json backend/package-lock.json
+            cp ../backend/env.example backend/env.example
+          else
+            echo "Backend não foi alterado, mantendo artefatos existentes"
+          fi
           
-          # Copiar artefatos do frontend
-          cp -r ../frontend/build frontend/build
-          cp -r ../frontend/public frontend/public
-          cp ../frontend/package.json frontend/package.json
-          cp ../frontend/package-lock.json frontend/package-lock.json
-          cp ../frontend/env.example frontend/env.example
-          cp ../frontend/server.js frontend/server.js
+          # Copiar artefatos do frontend apenas se foi alterado
+          if [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+            echo "Copiando artefatos do frontend..."
+            rm -rf frontend/build frontend/public frontend/package.json frontend/package-lock.json frontend/env.example frontend/server.js
+            cp -r ../frontend/build frontend/build
+            cp -r ../frontend/public frontend/public
+            cp ../frontend/package.json frontend/package.json
+            cp ../frontend/package-lock.json frontend/package-lock.json
+            cp ../frontend/env.example frontend/env.example
+            cp ../frontend/server.js frontend/server.js
+          else
+            echo "Frontend não foi alterado, mantendo artefatos existentes"
+          fi
       
       - name: Commit e Push para Produção
         env:
@@ -103,5 +160,11 @@ jobs:
       - name: Limpar pastas de build
         run: |
           rm -rf deployment
-          rm -rf backend/dist
-          rm -rf frontend/build
+          
+          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ]; then
+            rm -rf backend/dist
+          fi
+          
+          if [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+            rm -rf frontend/build
+          fi
