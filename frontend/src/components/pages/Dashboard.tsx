@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import { useDashboard } from '../../hooks/useDashboard';
 import FormField from '../ui/FormField';
 import {
@@ -56,6 +56,68 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, f
 };
 
 const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, format = 'number' }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isReady, setIsReady] = useState(false);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+
+  useLayoutEffect(() => {
+    // Verificar dimensões antes da renderização visual
+    const checkDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const { width, height } = rect;
+
+        if (width > 0 && height > 0) {
+          setDimensions({ width, height });
+          setIsReady(true);
+          return true;
+        }
+      }
+      setIsReady(false);
+      return false;
+    };
+
+    // Tentar imediatamente
+    checkDimensions();
+
+    // Usar ResizeObserver para detectar mudanças de tamanho
+    const resizeObserver = new ResizeObserver(() => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const { width, height } = rect;
+        if (width > 0 && height > 0) {
+          setDimensions({ width, height });
+        }
+      }
+      checkDimensions();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    // Fallback: tentar após um pequeno delay
+    const timer = setTimeout(() => {
+      checkDimensions();
+    }, 100);
+
+    return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timer);
+    };
+  }, [data, title]);
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="chart-container">
+        <h6 className="chart-title">{title}</h6>
+        <div style={{ width: '100%', height: '220px', minWidth: '200px', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p className="text-muted">Sem dados para exibir</p>
+        </div>
+      </div>
+    );
+  }
+
   const chartData = data.map((item) => ({
     name: item.mes,
     value: item.valor ?? item.value ?? 0,
@@ -74,16 +136,24 @@ const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, 
   return (
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
-      <div style={{ width: '100%', height: '220px' }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <RLineChart data={chartData} margin={{ top: 15, right: 30, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2f3844" />
-            <XAxis dataKey="name" stroke="#6c757d" fontSize={10} padding={{ left: 10, right: 10 }} />
-            <YAxis stroke="#6c757d" fontSize={10} tickFormatter={formatYAxis} domain={[0, 'dataMax']} allowDecimals />
-            <Tooltip content={<CustomTooltip format={format} />} />
-            <Line type="monotone" dataKey="value" stroke="#007bff" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
-          </RLineChart>
-        </ResponsiveContainer>
+      <div ref={containerRef} style={{ width: '100%', height: '220px', minWidth: '200px', minHeight: '220px', position: 'relative' }}>
+        {isReady && dimensions && dimensions.width > 0 && dimensions.height > 0 ? (
+          <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={220} minWidth={200}>
+            <RLineChart data={chartData} margin={{ top: 15, right: 30, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2f3844" />
+              <XAxis dataKey="name" stroke="#6c757d" fontSize={10} padding={{ left: 10, right: 10 }} />
+              <YAxis stroke="#6c757d" fontSize={10} tickFormatter={formatYAxis} domain={[0, 'dataMax']} allowDecimals />
+              <Tooltip content={<CustomTooltip format={format} />} />
+              <Line type="monotone" dataKey="value" stroke="#007bff" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+            </RLineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="spinner-border spinner-border-sm text-primary" role="status">
+              <span className="visually-hidden">Carregando...</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -104,6 +174,68 @@ const formatPieValue = (value: number, title: string): string | number => {
 };
 
 const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hiddenItems, onToggleItem }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isReady, setIsReady] = useState(false);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+
+  useLayoutEffect(() => {
+    // Verificar dimensões antes da renderização visual
+    const checkDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const { width, height } = rect;
+
+        if (width > 0 && height > 0) {
+          setDimensions({ width, height });
+          setIsReady(true);
+          return true;
+        }
+      }
+      setIsReady(false);
+      return false;
+    };
+
+    // Tentar imediatamente
+    checkDimensions();
+
+    // Usar ResizeObserver para detectar mudanças de tamanho
+    const resizeObserver = new ResizeObserver(() => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const { width, height } = rect;
+        if (width > 0 && height > 0) {
+          setDimensions({ width, height });
+        }
+      }
+      checkDimensions();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    // Fallback: tentar após um pequeno delay
+    const timer = setTimeout(() => {
+      checkDimensions();
+    }, 100);
+
+    return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timer);
+    };
+  }, [data, title]);
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="chart-container">
+        <h6 className="chart-title">{title}</h6>
+        <div style={{ width: '140px', height: '140px', minWidth: '140px', minHeight: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p className="text-muted small">Sem dados</p>
+        </div>
+      </div>
+    );
+  }
+
   const visibleData = data.filter((_, index) => !hiddenItems.has(index));
   const total = visibleData.reduce((sum, item) => sum + (item.value || 0), 0);
 
@@ -156,9 +288,10 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
       <div className="d-flex align-items-center">
-        <div style={{ width: '140px', height: '140px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+        <div ref={containerRef} style={{ width: '140px', height: '140px', minWidth: '140px', minHeight: '140px', position: 'relative' }}>
+          {isReady && dimensions && dimensions.width > 0 && dimensions.height > 0 ? (
+            <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={140} minWidth={140}>
+              <PieChart>
               <Pie
                 data={filteredChartData}
                 dataKey="value"
@@ -185,6 +318,13 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
               </Pie>
             </PieChart>
           </ResponsiveContainer>
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="spinner-border spinner-border-sm text-primary" role="status">
+                <span className="visually-hidden">Carregando...</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="chart-legend ms-3">
@@ -580,6 +720,16 @@ const Dashboard: React.FC = () => {
 
   // Função para renderizar gráfico de barras horizontais
   const renderBarChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' = 'number') => {
+    if (!data || data.length === 0) {
+      return (
+        <div className="chart-container">
+          <h6 className="chart-title">{title}</h6>
+          <div style={{ width: '100%', height: '220px', minWidth: '200px', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p className="text-muted">Sem dados para exibir</p>
+          </div>
+        </div>
+      );
+    }
     const maxValue = Math.max(...data.map(item => item.value || 0));
     
     const formatValue = (val: number) => {

@@ -1,16 +1,6 @@
-# Configuração do Nginx para servir frontend estático + proxy para backend
-# 
-# Como usar:
-# 1. Build do frontend: cd frontend && npm run build
-# 2. Copie este arquivo para /etc/nginx/sites-available/seu-dominio
-# 3. Crie symlink: ln -s /etc/nginx/sites-available/seu-dominio /etc/nginx/sites-enabled/
-# 4. Ajuste os caminhos e domínios abaixo
-# 5. Teste: nginx -t
-# 6. Recarregue: systemctl reload nginx
-
 server {
     listen 80;
-    server_name seu-dominio.com www.seu-dominio.com;
+    server_name localhost _;
     
     # Redirecionar HTTP para HTTPS (descomente após configurar SSL)
     # return 301 https://$server_name$request_uri;
@@ -21,7 +11,7 @@ server {
     # ssl_certificate_key /etc/letsencrypt/live/seu-dominio.com/privkey.pem;
     
     # Caminho para os arquivos buildados do frontend
-    root /caminho/para/frontend/build;
+    root /home/projetos/BackNet-ERP/testes/frontend/build;
     index index.html;
     
     # Logs
@@ -111,12 +101,23 @@ server {
     location / {
         try_files $uri $uri/ /index.html;
         
-        # Não cachear index.html
-        location = /index.html {
-            add_header Cache-Control "no-cache, no-store, must-revalidate";
-            add_header Pragma "no-cache";
-            add_header Expires "0";
-        }
+        # Headers para evitar cache do index.html (importante para SPA)
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+    }
+    
+    # Injetar config.js no index.html
+    location = /index.html {
+        sub_filter '</head>' '<script src="/config.js"></script></head>';
+        sub_filter_once on;
+        
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+        add_header Content-Type "text/html";
+        
+        try_files $uri =404;
     }
     
     # Segurança: negar acesso a arquivos ocultos
