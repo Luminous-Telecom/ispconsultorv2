@@ -32,17 +32,87 @@ interface ResponsiveLineChartProps {
 
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: Array<{ value: number }>;
+  payload?: Array<{ 
+    value?: number; 
+    dataKey?: string;
+    payload?: Record<string, unknown>;
+    [key: string]: unknown;
+  }>;
   label?: string | number;
   format: 'currency' | 'number';
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, format }) => {
-  if (active && payload && payload.length) {
-    const value = payload[0]?.value ?? 0;
+  if (active && payload && payload.length > 0) {
+    // Acessar value de forma mais robusta, considerando possíveis variações após obfuscação
+    // O Recharts passa o payload como um array, onde cada item contém informações sobre o ponto do gráfico
+    const firstPayload = payload[0];
+    let value: number | null = null;
+    
+    if (firstPayload && typeof firstPayload === 'object') {
+      // Após obfuscação com transform-object-keys, as chaves podem ser alteradas
+      // Estratégia: usar Object.entries() para encontrar valores numéricos sem depender do nome da propriedade
+      
+      // 1. Tentar acessar diretamente pelo nome da propriedade (caso não tenha sido ofuscado)
+      const directValue = firstPayload.value;
+      if (typeof directValue === 'number' && !isNaN(directValue) && isFinite(directValue)) {
+        value = directValue;
+      }
+      
+      // 2. Tentar acessar via payload aninhado (estrutura padrão do Recharts)
+      // O Recharts geralmente passa: payload[0].payload.value ou payload[0].value
+      if (value === null && firstPayload.payload && typeof firstPayload.payload === 'object') {
+        const nestedPayload = firstPayload.payload as Record<string, unknown>;
+        // Tentar acessar via dataKey primeiro (mais confiável)
+        if (firstPayload.dataKey && typeof firstPayload.dataKey === 'string') {
+          const dataKeyValue = nestedPayload[firstPayload.dataKey];
+          if (typeof dataKeyValue === 'number' && !isNaN(dataKeyValue) && isFinite(dataKeyValue)) {
+            value = dataKeyValue;
+          }
+        }
+        // Se não encontrou via dataKey, tentar 'value'
+        if (value === null && 'value' in nestedPayload) {
+          const nestedValue = nestedPayload.value;
+          if (typeof nestedValue === 'number' && !isNaN(nestedValue) && isFinite(nestedValue)) {
+            value = nestedValue;
+          }
+        }
+      }
+      
+      // 3. Iterar sobre todas as propriedades do payload aninhado para encontrar valores numéricos
+      // Isso funciona mesmo após obfuscação, pois não depende do nome da propriedade
+      if (value === null && firstPayload.payload && typeof firstPayload.payload === 'object') {
+        const nestedPayload = firstPayload.payload as Record<string, unknown>;
+        const nestedEntries = Object.entries(nestedPayload);
+        // Ignorar propriedades que não são números (objetos, arrays, strings, etc)
+        for (const [, val] of nestedEntries) {
+          if (typeof val === 'number' && !isNaN(val) && isFinite(val)) {
+            value = val;
+            break;
+          }
+        }
+      }
+      
+      // 4. Como último recurso, iterar sobre todas as propriedades do primeiro payload
+      if (value === null) {
+        const allEntries = Object.entries(firstPayload);
+        // Ignorar propriedades que não são números e propriedades conhecidas (payload, dataKey, name, color, etc)
+        const ignoredKeys = ['payload', 'dataKey', 'name', 'color', 'fill', 'stroke'];
+        for (const [key, val] of allEntries) {
+          if (!ignoredKeys.includes(key) && typeof val === 'number' && !isNaN(val) && isFinite(val)) {
+            value = val;
+            break;
+          }
+        }
+      }
+    }
+    
+    // Garantir que value é um número válido
+    const numericValue = value !== null && typeof value === 'number' && !isNaN(value) && isFinite(value) ? value : 0;
+    
     const formattedValue = format === 'currency'
-      ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
-      : value.toLocaleString('pt-BR');
+      ? numericValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+      : numericValue.toLocaleString('pt-BR');
 
     return (
       <div className="custom-tooltip bg-dark p-2 border border-secondary rounded shadow">
@@ -144,7 +214,15 @@ const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, 
               <XAxis dataKey="name" stroke="#6c757d" fontSize={10} padding={{ left: 10, right: 10 }} />
               <YAxis stroke="#6c757d" fontSize={10} tickFormatter={formatYAxis} domain={[0, 'dataMax']} allowDecimals />
               <Tooltip content={<CustomTooltip format={format} />} />
-              <Line type="monotone" dataKey="value" stroke="#007bff" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+              <Line 
+                type="monotone" 
+                dataKey="value" 
+                stroke="#007bff" 
+                strokeWidth={2} 
+                activeDot={{ r: 6 }} 
+                dot={{ r: 3 }}
+                name="Valor"
+              />
             </RLineChart>
           </ResponsiveContainer>
         ) : (
