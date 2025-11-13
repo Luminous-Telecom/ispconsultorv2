@@ -47,9 +47,14 @@ const Layout: React.FC = () => {
 
   useEffect(() => {
     // Verificar autenticação apenas se não estiver na página de login
-    if (location.pathname !== '/login' && !getAuthToken()) {
-      navigate('/login');
-    }
+    // Usar setTimeout para evitar race condition com navegação após login
+    const timer = setTimeout(() => {
+      if (location.pathname !== '/login' && !getAuthToken()) {
+        navigate('/login', { replace: true });
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [navigate, location.pathname]);
 
   const handleLogout = () => {
@@ -95,20 +100,29 @@ const Layout: React.FC = () => {
         <nav className="sidebar-nav">
           {menuItems.map((item) => (
             <div key={item.path} className="sidebar-nav-item">
-              <Link 
-                to={item.path}
-                className={`sidebar-nav-link ${isActive(item.path) ? 'active' : ''}`}
-                onClick={(e) => {
-                  if (item.isModal) {
-                    e.preventDefault();
+              {item.isModal ? (
+                <button
+                  type="button"
+                  className={`sidebar-nav-link ${isActive(item.path) ? 'active' : ''}`}
+                  onClick={() => {
                     item.modalHandler?.();
-                  }
-                  setSidebarOpen(false);
-                }}
-              >
-                <i className={`bi ${item.icon}`}></i>
-                <span>{item.label}</span>
-              </Link>
+                    setSidebarOpen(false);
+                  }}
+                  style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', padding: '0.5rem 1rem', color: 'inherit' }}
+                >
+                  <i className={`bi ${item.icon}`}></i>
+                  <span>{item.label}</span>
+                </button>
+              ) : (
+                <Link 
+                  to={item.path}
+                  className={`sidebar-nav-link ${isActive(item.path) ? 'active' : ''}`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <i className={`bi ${item.icon}`}></i>
+                  <span>{item.label}</span>
+                </Link>
+              )}
             </div>
           ))}
           

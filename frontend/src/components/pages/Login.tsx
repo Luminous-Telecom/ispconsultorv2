@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '../../components/notifications/NotificationProvider';
 import { authService } from '../../services/authService';
 import { removeAuthToken } from '../../services/core';
@@ -8,7 +7,6 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   const { info, success, error } = useNotificationContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,8 +28,8 @@ const Login: React.FC = () => {
         const token = localStorage.getItem('auth_token');
         if (token) {
           success('Autenticação realizada com sucesso.');
-          // Navegar imediatamente sem delay
-          navigate('/dashboard', { replace: true });
+          // Usar window.location para forçar reload completo e evitar problemas de cache/SPA
+          window.location.href = '/dashboard';
         } else {
           error('Erro ao salvar token de autenticação. Tente novamente.');
           removeAuthToken();
