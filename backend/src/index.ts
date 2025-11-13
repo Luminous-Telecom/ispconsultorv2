@@ -19,6 +19,9 @@ import {
   configProtectionMiddleware 
 } from './middleware/copyProtection';
 
+// Importar middleware do frontend
+import { frontendMiddleware } from './middleware/frontendMiddleware';
+
 // Importar modelos para configurar relacionamentos
 import './models';
 
@@ -61,9 +64,17 @@ if (!process.env.PORT) {
   process.exit(1);
 }
 
+// FRONTEND_URL é opcional quando o frontend está integrado
+// Se não definida, assume que o frontend está sendo servido pelo próprio backend
+if (!process.env.FRONTEND_URL && process.env.NODE_ENV !== 'production') {
+  logger.warn('FRONTEND_URL não definida. Frontend será servido pelo backend.');
+}
+
+// Validar REACT_APP_API_URL quando frontend está integrado
 if (!process.env.FRONTEND_URL) {
-  logger.error('FRONTEND_URL não definida nas variáveis de ambiente');
-  process.exit(1);
+  if (!process.env.REACT_APP_API_URL) {
+    logger.warn('REACT_APP_API_URL deve ser definida nas variáveis de ambiente para o frontend funcionar corretamente.');
+  }
 }
 
 if (!process.env.JWT_SECRET) {
@@ -90,13 +101,18 @@ app.use(helmet({
 }));
 
 // Middleware de CORS
+// Aceitar origens definidas nas variáveis de ambiente ou mesma origem quando frontend integrado
 const corsOrigins = [
   process.env.FRONTEND_URL,
-  process.env.PRODUCTION_URL
+  process.env.PRODUCTION_URL,
+  process.env.CORS_ORIGIN
 ].filter((url): url is string => Boolean(url));
 
 app.use(cors({
-  origin: corsOrigins,
+  origin: corsOrigins.length > 0 ? corsOrigins : (origin, callback) => {
+    // Se não houver origens definidas, aceitar requisições da mesma origem (frontend integrado)
+    callback(null, true);
+  },
   credentials: true,
   exposedHeaders: ['Content-Disposition']
 }));
@@ -123,6 +139,27 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Rota para config.js (deve vir ANTES dos middlewares de proteção)
+app.get('/config.js', (req, res) => {
+  const apiUrl = process.env.REACT_APP_API_URL || '';
+  const timeout = process.env.REACT_APP_API_TIMEOUT || '10000';
+  const retryAttempts = process.env.REACT_APP_API_RETRY_ATTEMPTS || '3';
+  const retryDelay = process.env.REACT_APP_API_RETRY_DELAY || '1000';
+
+  const configJs = `window.__APP_CONFIG__ = {
+    REACT_APP_API_URL: '${apiUrl}',
+    REACT_APP_API_TIMEOUT: '${timeout}',
+    REACT_APP_API_RETRY_ATTEMPTS: '${retryAttempts}',
+    REACT_APP_API_RETRY_DELAY: '${retryDelay}'
+  };`;
+
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.send(configJs);
+});
+
 // Aplicar middlewares de proteção
 app.use(copyProtectionMiddleware);
 app.use(devToolsDetectionMiddleware);
@@ -130,6 +167,7 @@ app.use(fileProtectionMiddleware);
 app.use(apiProtectionMiddleware);
 app.use(imageProtectionMiddleware);
 app.use(configProtectionMiddleware);
+
 app.use(authMiddleware);
 
 // Servir arquivos estáticos (imagens, etc.)
@@ -217,8 +255,12 @@ app.use((err: ErrorWithDetails, req: express.Request, res: express.Response, _ne
   });
 });
 
-// Middleware para rotas não encontradas
-app.use('*', (req, res) => {
+// Middleware do frontend (deve vir depois das rotas da API)
+// Serve arquivos estáticos e faz fallback para index.html (SPA routing)
+app.use(frontendMiddleware());
+
+// Middleware para rotas não encontradas (apenas para rotas da API)
+app.use('/api/*', (req, res) => {
   res.status(404).json({
     error: 'Rota não encontrada',
     path: req.originalUrl

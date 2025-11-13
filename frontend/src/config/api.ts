@@ -16,11 +16,14 @@ declare global {
 }
 
 const getConfig = (): AppConfig => {
+  // Sempre usar window.__APP_CONFIG__ se disponível (injetado pelo backend)
   if (typeof window !== 'undefined' && window.__APP_CONFIG__) {
     return window.__APP_CONFIG__;
   }
+  
+  // Fallback apenas para desenvolvimento usando variáveis de ambiente
   return {
-    REACT_APP_API_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
+    REACT_APP_API_URL: process.env.REACT_APP_API_URL || '',
     REACT_APP_API_TIMEOUT: process.env.REACT_APP_API_TIMEOUT || '10000',
     REACT_APP_API_RETRY_ATTEMPTS: process.env.REACT_APP_API_RETRY_ATTEMPTS || '3',
     REACT_APP_API_RETRY_DELAY: process.env.REACT_APP_API_RETRY_DELAY || '1000',
@@ -36,7 +39,11 @@ const normalizeBaseUrl = (url: string | undefined): string => {
   return url.replace(/\/+$/, '');
 };
 
-const baseUrl = normalizeBaseUrl(appConfig.REACT_APP_API_URL);
+let baseUrl = normalizeBaseUrl(appConfig.REACT_APP_API_URL);
+// Se baseUrl estiver vazio, usar /api como padrão (quando servido pelo nginx)
+if (!baseUrl) {
+  baseUrl = '/api';
+}
 const baseUrlWithoutApi = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
 
 export const API_CONFIG = {

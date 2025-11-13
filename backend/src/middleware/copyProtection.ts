@@ -155,6 +155,11 @@ export const imageProtectionMiddleware = (req: Request, res: Response, next: Nex
 
 // Middleware para prevenir acesso a arquivos de configuração
 export const configProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  // Permitir /config.js (gerado dinamicamente pelo backend)
+  if (req.path === '/config.js') {
+    return next();
+  }
+  
   const configPatterns = [
     /\.env/i,
     /\.config/i,

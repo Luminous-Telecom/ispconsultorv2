@@ -26,16 +26,29 @@ const Login: React.FC = () => {
       const response = await authService.login({ email, password });
 
       if (response.success && response.data?.token) {
-        success('Autenticação realizada com sucesso.');
-        navigate('/dashboard');
+        // Verificar se o token foi salvo antes de navegar
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          success('Autenticação realizada com sucesso.');
+          // Navegar imediatamente sem delay
+          navigate('/dashboard', { replace: true });
+        } else {
+          error('Erro ao salvar token de autenticação. Tente novamente.');
+          removeAuthToken();
+        }
       } else {
         removeAuthToken();
         error(response.message || 'Não foi possível autenticar. Verifique suas credenciais.');
       }
     } catch (err) {
       removeAuthToken();
-      const message = err instanceof Error ? err.message : 'Falha ao autenticar. Tente novamente.';
-      error(message);
+      // Verificar se é um erro de autenticação (credenciais inválidas)
+      const errorMessage = err instanceof Error ? err.message : 'Falha ao autenticar. Tente novamente.';
+      // Não mostrar erro se o token foi salvo (login bem-sucedido apesar do erro)
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

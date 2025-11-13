@@ -63,20 +63,26 @@ jobs:
         run: |
           npm install
           
+          # Frontend sempre precisa ser buildado se backend ou frontend mudaram
+          # (pois o backend precisa do frontend integrado)
+          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+            if [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+              echo "Building frontend..."
+              npm ci --prefix frontend
+              npm run build --prefix frontend
+            else
+              echo "Frontend não foi alterado, mas backend precisa do build do frontend..."
+              npm ci --prefix frontend
+              npm run build --prefix frontend
+            fi
+          fi
+          
           if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ]; then
             echo "Building backend..."
             npm ci --prefix backend
             npm run build --prefix backend
           else
             echo "Backend não foi alterado, pulando build"
-          fi
-          
-          if [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
-            echo "Building frontend..."
-            npm ci --prefix frontend
-            npm run build --prefix frontend
-          else
-            echo "Frontend não foi alterado, pulando build"
           fi
       
       # === 3. O Passo de Deployment ===
@@ -103,32 +109,18 @@ jobs:
           cd deployment
           
           # Criar estrutura de pastas se não existir
-          mkdir -p backend frontend
+          mkdir -p backend
           
-          # Copiar artefatos do backend apenas se foi alterado
-          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ]; then
-            echo "Copiando artefatos do backend..."
+          # Copiar artefatos do backend (frontend já está integrado no backend/dist/frontend)
+          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+            echo "Copiando artefatos do backend (com frontend integrado)..."
             rm -rf backend/dist backend/package.json backend/package-lock.json backend/env.example
             cp -r ../backend/dist backend/dist
             cp ../backend/package.json backend/package.json
             cp ../backend/package-lock.json backend/package-lock.json
             cp ../backend/env.example backend/env.example
           else
-            echo "Backend não foi alterado, mantendo artefatos existentes"
-          fi
-          
-          # Copiar artefatos do frontend apenas se foi alterado
-          if [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
-            echo "Copiando artefatos do frontend..."
-            rm -rf frontend/build frontend/public frontend/package.json frontend/package-lock.json frontend/env.example frontend/server.js
-            cp -r ../frontend/build frontend/build
-            cp -r ../frontend/public frontend/public
-            cp ../frontend/package.json frontend/package.json
-            cp ../frontend/package-lock.json frontend/package-lock.json
-            cp ../frontend/env.example frontend/env.example
-            cp ../frontend/server.js frontend/server.js
-          else
-            echo "Frontend não foi alterado, mantendo artefatos existentes"
+            echo "Nenhuma alteração, mantendo artefatos existentes"
           fi
       
       - name: Commit e Push para Produção

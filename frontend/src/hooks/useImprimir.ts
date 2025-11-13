@@ -25,15 +25,27 @@ export const useImprimir = ({ itemType, filterCondition: _filterCondition, filte
     }
   }, [itemType]);
 
+  const getBaseUrl = useCallback(() => {
+    // Usar configuração dinâmica injetada pelo backend
+    const appConfig = typeof window !== 'undefined' && window.__APP_CONFIG__ 
+      ? window.__APP_CONFIG__ 
+      : { REACT_APP_API_URL: process.env.REACT_APP_API_URL || '' };
+    
+    const apiUrl = appConfig.REACT_APP_API_URL || '';
+    // Remover /api do final se existir
+    return apiUrl.replace('/api', '');
+  }, []);
+
   const handleImprimirSelecionados = useCallback((ids: string) => {
     if (!ids) {
       error( `Nenhum ${itemType} selecionado`);
       return;
     }
 
-    const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}${getApiUrl()}?ids=${ids}&print=true`;
+    const baseUrl = getBaseUrl();
+    const url = `${baseUrl}${getApiUrl()}?ids=${ids}&print=true`;
     window.open(url, '_blank');
-  }, [itemType, getApiUrl, error]);
+  }, [itemType, getApiUrl, getBaseUrl, error]);
 
   const handleImprimirTodos = useCallback((ids: string) => {
     if (!ids) {
@@ -41,9 +53,10 @@ export const useImprimir = ({ itemType, filterCondition: _filterCondition, filte
       return;
     }
 
-    const url = `${process.env.REACT_APP_API_URL?.replace('/api', '')}${getApiUrl()}?ids=${ids}&print=true`;
+    const baseUrl = getBaseUrl();
+    const url = `${baseUrl}${getApiUrl()}?ids=${ids}&print=true`;
     window.open(url, '_blank');
-  }, [itemType, filterLabel, getApiUrl, error]);
+  }, [itemType, filterLabel, getApiUrl, getBaseUrl, error]);
 
   return {
     handleImprimirSelecionados,

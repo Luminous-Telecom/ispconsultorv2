@@ -69,9 +69,11 @@ export class ErrorHandler {
         case 401:
           errorType = ErrorType.AUTHENTICATION_ERROR;
           message = responseData?.message || responseData?.error || 'Não autenticado';
-          // Redirecionar para login
-          localStorage.removeItem('auth_token');
-          window.location.href = '/login';
+          // Redirecionar para login apenas se não estiver já na página de login
+          if (window.location.pathname !== '/login') {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+          }
           break;
         case 403:
           errorType = ErrorType.AUTHORIZATION_ERROR;

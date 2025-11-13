@@ -46,10 +46,11 @@ const Layout: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!getAuthToken()) {
+    // Verificar autenticação apenas se não estiver na página de login
+    if (location.pathname !== '/login' && !getAuthToken()) {
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const handleLogout = () => {
     authService.logout();

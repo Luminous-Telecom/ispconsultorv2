@@ -26,8 +26,12 @@ export default class VariablePlugin extends Plugin {
 
     // Função para buscar variáveis do backend
     const buscarVariaveis = async (): Promise<VariaveisData> => {
-      // Usar a URL base do backend configurada no projeto
-      const baseUrl = process.env.REACT_APP_API_URL;
+      // Usar a configuração dinâmica injetada pelo backend
+      const appConfig = typeof window !== 'undefined' && window.__APP_CONFIG__ 
+        ? window.__APP_CONFIG__ 
+        : { REACT_APP_API_URL: process.env.REACT_APP_API_URL || '' };
+      
+      const baseUrl = appConfig.REACT_APP_API_URL;
       if (!baseUrl) {
         throw new Error('REACT_APP_API_URL não configurada.');
       }
