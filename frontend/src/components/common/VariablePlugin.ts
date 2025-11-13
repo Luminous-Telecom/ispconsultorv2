@@ -24,17 +24,9 @@ export default class VariablePlugin extends Plugin {
     const editor = this.editor;
     let currentDropdown: HTMLElement | null = null;
 
-    // Função para buscar variáveis do backend
     const buscarVariaveis = async (): Promise<VariaveisData> => {
-      // Usar a configuração dinâmica injetada pelo backend
-      const appConfig = typeof window !== 'undefined' && window.__APP_CONFIG__ 
-        ? window.__APP_CONFIG__ 
-        : { REACT_APP_API_URL: process.env.REACT_APP_API_URL || '' };
-      
-      const baseUrl = appConfig.REACT_APP_API_URL;
-      if (!baseUrl) {
-        throw new Error('REACT_APP_API_URL não configurada.');
-      }
+      const { getApiBaseUrl } = await import('../../utils/urlUtils');
+      const baseUrl = getApiBaseUrl();
       const url = `${baseUrl}/modelos-contrato/variaveis`;
       
       const response = await fetch(url);

@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { getApiBaseUrl } from '../utils/urlUtils';
 
 interface UseImprimirProps {
   itemType: 'contrato' | 'titulo' | 'recibo' | 'carta';
@@ -26,14 +27,11 @@ export const useImprimir = ({ itemType, filterCondition: _filterCondition, filte
   }, [itemType]);
 
   const getBaseUrl = useCallback(() => {
-    // Usar configuração dinâmica injetada pelo backend
-    const appConfig = typeof window !== 'undefined' && window.__APP_CONFIG__ 
-      ? window.__APP_CONFIG__ 
-      : { REACT_APP_API_URL: process.env.REACT_APP_API_URL || '' };
-    
-    const apiUrl = appConfig.REACT_APP_API_URL || '';
-    // Remover /api do final se existir
-    return apiUrl.replace('/api', '');
+    let apiUrl = getApiBaseUrl();
+    if (apiUrl.endsWith('/api')) {
+      apiUrl = apiUrl.slice(0, -4);
+    }
+    return apiUrl;
   }, []);
 
   const handleImprimirSelecionados = useCallback((ids: string) => {

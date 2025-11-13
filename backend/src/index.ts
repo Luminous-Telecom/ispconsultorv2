@@ -139,18 +139,29 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rota para config.js (deve vir ANTES dos middlewares de proteção)
 app.get('/config.js', (req, res) => {
-  const apiUrl = process.env.REACT_APP_API_URL || '';
-  const timeout = process.env.REACT_APP_API_TIMEOUT || '10000';
-  const retryAttempts = process.env.REACT_APP_API_RETRY_ATTEMPTS || '3';
-  const retryDelay = process.env.REACT_APP_API_RETRY_DELAY || '1000';
+  let apiUrl = process.env.REACT_APP_API_URL;
+  
+  if (!apiUrl || apiUrl.trim() === '') {
+    apiUrl = '/api';
+  } else if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
+    try {
+      const urlObj = new URL(apiUrl);
+      apiUrl = urlObj.pathname || '/api';
+    } catch {
+      apiUrl = '/api';
+    }
+  }
+  
+  if (!apiUrl.startsWith('/')) {
+    apiUrl = '/' + apiUrl;
+  }
 
   const configJs = `window.__APP_CONFIG__ = {
     REACT_APP_API_URL: '${apiUrl}',
-    REACT_APP_API_TIMEOUT: '${timeout}',
-    REACT_APP_API_RETRY_ATTEMPTS: '${retryAttempts}',
-    REACT_APP_API_RETRY_DELAY: '${retryDelay}'
+    REACT_APP_API_TIMEOUT: '${process.env.REACT_APP_API_TIMEOUT || '10000'}',
+    REACT_APP_API_RETRY_ATTEMPTS: '${process.env.REACT_APP_API_RETRY_ATTEMPTS || '3'}',
+    REACT_APP_API_RETRY_DELAY: '${process.env.REACT_APP_API_RETRY_DELAY || '1000'}'
   };`;
 
   res.setHeader('Content-Type', 'application/javascript');
