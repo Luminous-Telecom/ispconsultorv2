@@ -34,44 +34,71 @@ jobs:
       
       # === 3. O Passo de Deployment ===
       
-      - name: Criar Pasta de Deploy e Configurar Git
+      # Obter informações do commit atual antes de fazer checkout do repo de produção
+      - name: Obter Informações do Commit
+        id: commit_info
         run: |
-          # 1. Cria a pasta temporária de deploy
-          mkdir -p deployment/backend deployment/frontend
-          
-          # 2. Copia os artefatos gerados para a pasta temporária
-          # Backend: dist, package.json, package-lock.json e env.example
-          cp -r backend/dist deployment/backend/dist
-          cp backend/package.json deployment/backend/package.json
-          cp backend/package-lock.json deployment/backend/package-lock.json
-          cp backend/env.example deployment/backend/env.example
-          
-          # Frontend: build, public, package.json, package-lock.json, env.example e server.js
-          cp -r frontend/build deployment/frontend/build
-          cp -r frontend/public deployment/frontend/public
-          cp frontend/package.json deployment/frontend/package.json
-          cp frontend/package-lock.json deployment/frontend/package-lock.json
-          cp frontend/env.example deployment/frontend/env.example
-          cp frontend/server.js deployment/frontend/server.js
-          
-          # 3. Configura o usuário Git para o push
+          echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "message=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
+          echo "author=$(git log -1 --pretty=%an)" >> $GITHUB_OUTPUT
+          echo "date=$(git log -1 --pretty=%ai)" >> $GITHUB_OUTPUT
+      
+      - name: Checkout Repositório de Produção
+        env:
+          GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
+        run: |
           git config --global user.name "GitHub Actions Deploy"
           git config --global user.email "actions@github.com"
+          git clone https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git deployment || git clone --depth 1 https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git deployment
       
-      # Faz o push da pasta de deploy para o repositório de produção usando Git diretamente
-      - name: Enviar Build para Repositório de Produção
+      - name: Copiar Artefatos para Deploy
+        run: |
+          # Limpar conteúdo anterior (exceto .git)
+          cd deployment
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          
+          # Criar estrutura de pastas
+          mkdir -p backend frontend
+          
+          # Copiar artefatos do backend
+          cp -r ../backend/dist backend/dist
+          cp ../backend/package.json backend/package.json
+          cp ../backend/package-lock.json backend/package-lock.json
+          cp ../backend/env.example backend/env.example
+          
+          # Copiar artefatos do frontend
+          cp -r ../frontend/build frontend/build
+          cp -r ../frontend/public frontend/public
+          cp ../frontend/package.json frontend/package.json
+          cp ../frontend/package-lock.json frontend/package-lock.json
+          cp ../frontend/env.example frontend/env.example
+          cp ../frontend/server.js frontend/server.js
+      
+      - name: Commit e Push para Produção
         env:
           GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
           cd deployment
-          git init
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git remote add origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
+          
           git add .
-          git commit -m "Deploy automático - $(date +'%Y-%m-%d %H:%M:%S')"
-          git branch -M main
-          git push -f origin main
+          
+          # Verificar se há mudanças para commitar
+          if git diff --staged --quiet; then
+            echo "Nenhuma mudança para commitar"
+          else
+            git commit -m "Deploy: ${{ steps.commit_info.outputs.hash }} - ${{ steps.commit_info.outputs.message }}
+
+            Commit original: ${{ steps.commit_info.outputs.hash }}
+            Autor: ${{ steps.commit_info.outputs.author }}
+            Data: ${{ steps.commit_info.outputs.date }}
+            Workflow: ${{ github.workflow }}
+            Run: ${{ github.run_id }}"
+            
+            git remote set-url origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
+            git push origin main
+          fi
           
       - name: Limpar pastas de build
         run: |
