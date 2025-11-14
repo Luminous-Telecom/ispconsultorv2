@@ -71,13 +71,50 @@
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
 }
 
-/* Validação */
-.is-valid {
+/* Validação - Remover ícones de check (V) do Bootstrap */
+/* O Bootstrap usa SVG inline via data URI no background-image */
+.was-validated .form-control:valid,
+.was-validated .form-select:valid,
+.was-validated .form-check-input:valid,
+.form-control.is-valid,
+.form-select.is-valid,
+.form-check-input.is-valid {
   border-color: #198754;
+  background-image: none !important;
+  padding-right: 0.75rem !important;
+  background-position: unset !important;
 }
 
-.is-invalid {
+.was-validated .form-control:valid::after,
+.was-validated .form-select:valid::after,
+.was-validated .form-check-input:valid::after,
+.form-control.is-valid::after,
+.form-select.is-valid::after,
+.form-check-input.is-valid::after {
+  display: none !important;
+  content: none !important;
+}
+
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid,
+.was-validated .form-check-input:invalid,
+.form-control.is-invalid,
+.form-select.is-invalid,
+.form-check-input.is-invalid {
   border-color: #dc3545;
+  background-image: none !important;
+  padding-right: 0.75rem !important;
+  background-position: unset !important;
+}
+
+.was-validated .form-control:invalid::after,
+.was-validated .form-select:invalid::after,
+.was-validated .form-check-input:invalid::after,
+.form-control.is-invalid::after,
+.form-select.is-invalid::after,
+.form-check-input.is-invalid::after {
+  display: none !important;
+  content: none !important;
 }
 
 .form-text.text-success {
@@ -151,4 +188,49 @@
 .form-select:disabled {
   background-color: #e9ecef;
   opacity: 1;
+}
+
+/* Campos de data (calendários) - cursor pointer e ícone branco */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"] {
+  cursor: pointer !important;
+  color-scheme: light;
+}
+
+input[type="date"]:hover,
+input[type="datetime-local"]:hover,
+input[type="time"]:hover,
+input[type="month"]:hover,
+input[type="week"]:hover {
+  cursor: pointer !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0) invert(1);
+  cursor: pointer !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover,
+input[type="week"]::-webkit-calendar-picker-indicator:hover {
+  cursor: pointer !important;
+}
+
+/* Para Firefox */
+input[type="date"]::-moz-calendar-picker-indicator,
+input[type="datetime-local"]::-moz-calendar-picker-indicator,
+input[type="time"]::-moz-calendar-picker-indicator,
+input[type="month"]::-moz-calendar-picker-indicator,
+input[type="week"]::-moz-calendar-picker-indicator {
+  filter: brightness(0) invert(1);
+  cursor: pointer !important;
 }

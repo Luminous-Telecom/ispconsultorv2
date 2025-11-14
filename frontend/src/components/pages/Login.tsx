@@ -27,6 +27,8 @@ const Login: React.FC = () => {
         // Verificar se o token foi salvo antes de navegar
         const token = localStorage.getItem('auth_token');
         if (token) {
+          // Salvar timestamp do login para evitar redirecionamento imediato em caso de erro 401
+          sessionStorage.setItem('last_login_time', Date.now().toString());
           success('Autenticação realizada com sucesso.');
           // Usar window.location para forçar reload completo e evitar problemas de cache/SPA
           window.location.href = '/dashboard';

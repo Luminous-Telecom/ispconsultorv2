@@ -65,7 +65,7 @@ export class CepService {
         throw new Error('CEP deve ter 8 dígitos');
       }
 
-      const response = await apiService.get<CepData>(`/api/buscar-cep/${cepLimpo}`);
+      const response = await apiService.get<CepData>(`/buscar-cep/${cepLimpo}`);
       if (response.success && response.data) {
         return response.data;
       }

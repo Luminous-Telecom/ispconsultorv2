@@ -20,8 +20,23 @@ import ProtectionLayer from './components/common/ProtectionLayer';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: (failureCount, error) => {
+        // Não tentar novamente se for erro 401 (autenticação)
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { status?: number } };
+          if (axiosError.response?.status === 401) {
+            return false;
+          }
+        }
+        return failureCount < 1;
+      },
       refetchOnWindowFocus: false,
+      // Não lançar erros não tratados que podem causar reload
+      throwOnError: false,
+    },
+    mutations: {
+      // Não lançar erros não tratados que podem causar reload
+      throwOnError: false,
     },
   },
 });

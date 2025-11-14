@@ -49,7 +49,7 @@ class BancoServiceClass extends BaseService<Banco, CreateBanco, UpdateBanco, Ban
   async urlPadrao(tipoBanco: string): Promise<ApiResponse<{ url: string }>> {
     try {
       // Este endpoint tem um prefixo diferente, então fazemos uma chamada direta
-      const response = await this.apiClient.get<{ url: string }>(`/api/bancos/${tipoBanco}/url-padrao`);
+      const response = await this.apiClient.get<{ url: string }>(`/bancos/${tipoBanco}/url-padrao`);
       // O ApiClient já retorna ApiResponse<T>, então só precisamos normalizar
       return ResponseTransformer.normalize<{ url: string }>(response);
     } catch (error) {
