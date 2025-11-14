@@ -15,21 +15,8 @@ export class ApiClient {
   private api: AxiosInstance;
 
   constructor(config?: ApiClientConfig) {
-    let baseURL = config?.baseURL || API_CONFIG.BASE_URL;
-    
-    if (baseURL && (baseURL.startsWith('http://') || baseURL.startsWith('https://'))) {
-      try {
-        const urlObj = new URL(baseURL);
-        baseURL = urlObj.pathname || '';
-      } catch {
-        baseURL = '';
-      }
-    }
-    
-    if (baseURL && !baseURL.startsWith('/')) {
-      baseURL = '/' + baseURL;
-    }
-    
+    const baseURL = config?.baseURL || API_CONFIG.BASE_URL || '/api';
+
     this.api = axios.create({
       baseURL,
       timeout: config?.timeout || API_CONFIG.TIMEOUT,
@@ -46,7 +33,7 @@ export class ApiClient {
   private setupInterceptors(): void {
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('auth_token');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -156,4 +143,5 @@ export const removeAuthToken = (): void => {
 export const getAuthToken = (): string | null => {
   return localStorage.getItem('auth_token');
 };
+
 

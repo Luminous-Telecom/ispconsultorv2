@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-const getConfig = (): AppConfig => {
+const getDynamicConfig = (): AppConfig => {
   if (typeof window !== 'undefined' && window.__APP_CONFIG__) {
     return window.__APP_CONFIG__;
   }
@@ -25,17 +25,31 @@ const getConfig = (): AppConfig => {
   };
 };
 
-const appConfig = getConfig();
-
-const baseUrl = ensureRelativeUrl(appConfig.REACT_APP_API_URL);
-const baseUrlWithoutApi = baseUrl.endsWith('/api') ? baseUrl.slice(0, -4) : baseUrl;
-
 export const API_CONFIG = {
-  BASE_URL: baseUrl,
-  BASE_URL_WITHOUT_API: baseUrlWithoutApi,
-  TIMEOUT: Number(appConfig.REACT_APP_API_TIMEOUT),
-  RETRY_ATTEMPTS: Number(appConfig.REACT_APP_API_RETRY_ATTEMPTS),
-  RETRY_DELAY: Number(appConfig.REACT_APP_API_RETRY_DELAY),
+  get BASE_URL() {
+    const config = getDynamicConfig();
+    if (process.env.NODE_ENV === 'development' && 
+        config.REACT_APP_API_URL && 
+        (config.REACT_APP_API_URL.startsWith('http://') || config.REACT_APP_API_URL.startsWith('https://'))) {
+      return config.REACT_APP_API_URL;
+    }
+    return ensureRelativeUrl(config.REACT_APP_API_URL) || '/api';
+  },
+  get BASE_URL_WITHOUT_API() {
+    const url = this.BASE_URL;
+    return url.endsWith('/api') 
+      ? (url === '/api' ? '/' : url.slice(0, -4))
+      : url;
+  },
+  get TIMEOUT() {
+    return Number(getDynamicConfig().REACT_APP_API_TIMEOUT || '10000');
+  },
+  get RETRY_ATTEMPTS() {
+    return Number(getDynamicConfig().REACT_APP_API_RETRY_ATTEMPTS || '3');
+  },
+  get RETRY_DELAY() {
+    return Number(getDynamicConfig().REACT_APP_API_RETRY_DELAY || '1000');
+  },
 };
 
 export const getApiUrl = (endpoint: string) => `${API_CONFIG.BASE_URL_WITHOUT_API}${endpoint}`;

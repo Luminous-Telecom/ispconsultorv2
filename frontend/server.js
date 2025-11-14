@@ -2,75 +2,86 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+require('dotenv').config();
 
-// Caminho para os arquivos buildados
+const PORT = process.env.PORT;
+const BACKEND_URL = process.env.BACKEND_URL;
+
+if (!PORT || !BACKEND_URL) {
+  console.error('Erro: Variáveis PORT e BACKEND_URL devem estar definidas no .env');
+  process.exit(1);
+}
+
 const buildPath = path.join(__dirname, 'build');
 
-// Verificar se o build existe
 if (!fs.existsSync(buildPath)) {
   console.error('Erro: Pasta build não encontrada. Execute "npm run build" primeiro.');
   process.exit(1);
 }
 
-// Proxy para /config.js (gerado dinamicamente pelo backend)
-app.get('/config.js', createProxyMiddleware({
+app.use('/config.js', createProxyMiddleware({
   target: BACKEND_URL,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/config.js': '/config.js'
-  }
+  changeOrigin: true
 }));
 
-// Proxy para rotas da API
 app.use('/api', createProxyMiddleware({
   target: BACKEND_URL,
   changeOrigin: true,
   pathRewrite: {
     '^/api': '/api'
+  },
+  onError: (err, req, res) => {
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Erro ao conectar com o backend' });
+    }
   }
 }));
 
-// Proxy para webhooks
 app.use('/webhook', createProxyMiddleware({
   target: BACKEND_URL,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/webhook': '/webhook'
-  }
+  changeOrigin: true
 }));
 
-// Proxy para boletos
 app.use('/boleto', createProxyMiddleware({
   target: BACKEND_URL,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/boleto': '/boleto'
-  }
+  changeOrigin: true
 }));
 
-// Proxy para uploads
 app.use('/uploads', createProxyMiddleware({
   target: BACKEND_URL,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/uploads': '/uploads'
+  changeOrigin: true
+}));
+
+// Arquivos estáticos devem vir DEPOIS dos proxies
+// Filtrar rotas de API para não tentar servir arquivos estáticos
+app.use((req, res, next) => {
+  // Pular arquivos estáticos para rotas de API/proxy
+  if (req.path.startsWith('/api') || 
+      req.path.startsWith('/webhook') || 
+      req.path.startsWith('/boleto') || 
+      req.path.startsWith('/uploads') ||
+      req.path === '/config.js') {
+    return next();
   }
-}));
+  express.static(buildPath, {
+    maxAge: '1y',
+    etag: true,
+    lastModified: true
+  })(req, res, next);
+});
 
-// Servir arquivos estáticos (JS, CSS, imagens, etc.)
-app.use(express.static(buildPath, {
-  maxAge: '1y',
-  etag: true,
-  lastModified: true
-}));
-
-// Servir index.html para todas as outras rotas (SPA routing)
-app.get('*', (req, res) => {
+// Fallback para SPA routing - apenas para rotas GET que não foram capturadas pelos proxies
+app.get('*', (req, res, next) => {
+  // Pular fallback para rotas de API/proxy
+  if (req.path.startsWith('/api') || 
+      req.path.startsWith('/webhook') || 
+      req.path.startsWith('/boleto') || 
+      req.path.startsWith('/uploads') ||
+      req.path === '/config.js') {
+    return next();
+  }
   const indexPath = path.join(buildPath, 'index.html');
   
   if (fs.existsSync(indexPath)) {
@@ -80,18 +91,13 @@ app.get('*', (req, res) => {
         return res.status(500).send('Erro ao carregar página');
       }
 
-      // Verificar se config.js já foi injetado
       if (!data.includes('/config.js')) {
-        // Injetar config.js ANTES de qualquer outro script (importante para carregar antes do bundle)
-        // Tentar injetar antes do primeiro script ou antes do </head>
         if (data.includes('<script')) {
-          // Injetar antes do primeiro script
           data = data.replace(
             /(<script[^>]*>)/i,
             '<script src="/config.js"></script>$1'
           );
         } else {
-          // Se não houver script, injetar antes do </head>
           data = data.replace(
             '</head>',
             '<script src="/config.js"></script></head>'
@@ -111,7 +117,6 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Frontend disponível em http://localhost:${PORT}`);
-  console.log(`Backend proxy: ${BACKEND_URL}`);
+  console.log(`Servidor iniciado na porta ${PORT}`);
 });
 

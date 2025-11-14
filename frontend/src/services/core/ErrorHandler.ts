@@ -69,10 +69,20 @@ export class ErrorHandler {
         case 401:
           errorType = ErrorType.AUTHENTICATION_ERROR;
           message = responseData?.message || responseData?.error || 'Não autenticado';
-          // Redirecionar para login apenas se não estiver já na página de login
-          if (window.location.pathname !== '/login') {
-            localStorage.removeItem('auth_token');
-            window.location.href = '/login';
+          const hasToken = localStorage.getItem('auth_token');
+          const currentPath = window.location.pathname;
+          const lastLoginTime = sessionStorage.getItem('last_login_time');
+          const timeSinceLogin = lastLoginTime ? Date.now() - parseInt(lastLoginTime, 10) : Infinity;
+          
+          if (currentPath !== '/login' && timeSinceLogin > 2000) {
+            if (hasToken) {
+              localStorage.removeItem('auth_token');
+            }
+            setTimeout(() => {
+              if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+              }
+            }, 100);
           }
           break;
         case 403:

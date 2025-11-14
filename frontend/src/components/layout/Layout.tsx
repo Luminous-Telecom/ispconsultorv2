@@ -46,13 +46,12 @@ const Layout: React.FC = () => {
   };
 
   useEffect(() => {
-    // Verificar autenticação apenas se não estiver na página de login
-    // Usar setTimeout para evitar race condition com navegação após login
     const timer = setTimeout(() => {
-      if (location.pathname !== '/login' && !getAuthToken()) {
+      const token = getAuthToken();
+      if (location.pathname !== '/login' && !token) {
         navigate('/login', { replace: true });
       }
-    }, 100);
+    }, 500);
     
     return () => clearTimeout(timer);
   }, [navigate, location.pathname]);
