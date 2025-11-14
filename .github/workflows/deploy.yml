@@ -66,23 +66,17 @@ jobs:
           # Frontend sempre precisa ser buildado se backend ou frontend mudaram
           # (pois o backend precisa do frontend integrado)
           if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
-            if [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
-              echo "Building frontend..."
-              npm ci --prefix frontend
-              npm run build --prefix frontend
-            else
-              echo "Frontend não foi alterado, mas backend precisa do build do frontend..."
-              npm ci --prefix frontend
-              npm run build --prefix frontend
-            fi
-          fi
-          
-          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ]; then
+            echo "Building frontend..."
+            npm ci --prefix frontend
+            npm run build --prefix frontend
+            
+            # Backend sempre precisa ser buildado se frontend ou backend mudaram
+            # (pois o backend integra o frontend no build)
             echo "Building backend..."
             npm ci --prefix backend
             npm run build --prefix backend
           else
-            echo "Backend não foi alterado, pulando build"
+            echo "Nenhuma alteração detectada, pulando build"
           fi
       
       # === 3. O Passo de Deployment ===
