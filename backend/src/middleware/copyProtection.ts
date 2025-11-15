@@ -6,6 +6,9 @@ interface ResponseWithSetHeader extends Response {
 
 // Middleware de proteção contra cópia e screenshots
 export const copyProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  // Não aplicar proteção de frames para rotas de PDF do webhook
+  const isPdfRoute = req.path.startsWith('/webhook/integration/pdf/');
+  
   // Wrap setHeader to normalize certain headers (ensure charset for text/* responses)
   const response = res as ResponseWithSetHeader;
   const originalSetHeader = response.setHeader.bind(res);
@@ -27,31 +30,38 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
   // Headers específicos para proteção contra cópia
   // Use header name in lowercase to satisfy tools that expect lowercase keys
   res.setHeader('x-content-type-options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
+  
+  // Não aplicar headers de frame para rotas de PDF
+  if (!isPdfRoute) {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  }
+  
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   res.setHeader('X-Download-Options', 'noopen');
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
   
-  // Headers para prevenir cache de dados sensíveis
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.setHeader('Surrogate-Control', 'no-store');
+  // Headers para prevenir cache de dados sensíveis (não aplicar para PDF)
+  if (!isPdfRoute) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+  }
   
   // Headers para prevenir indexação por motores de busca
   res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
   
   // Headers para prevenir clickjacking
   // Evitar enviar CSP desnecessariamente em respostas de API (webhint/performance)
-  // Aplica apenas quando for uma navegação HTML (não /api)
+  // Aplica apenas quando for uma navegação HTML (não /api) e não for rota de PDF
   const isApiRequest = req.path.startsWith('/api/');
   const acceptHeader = req.get('accept') || '';
   const expectsHtml = /text\/html/i.test(acceptHeader);
-  if (!isApiRequest && expectsHtml) {
+  if (!isApiRequest && !isPdfRoute && expectsHtml) {
     res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
   }
   

@@ -86,19 +86,43 @@ const app = express();
 const PORT = process.env.PORT;
 
 // Middleware de segurança
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false,
-  frameguard: { action: 'deny' },
-  noSniff: true,
-  xssFilter: false,
-  referrerPolicy: { policy: 'no-referrer' },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
+// Aplicar helmet com exceção para rotas de PDF
+app.use((req, res, next) => {
+  // Não aplicar frameguard para rotas de PDF do webhook
+  const isPdfRoute = req.path.startsWith('/webhook/integration/pdf/');
+  
+  if (isPdfRoute) {
+    // Para rotas de PDF, usar helmet sem frameguard
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: false,
+      frameguard: false, // Desabilitar completamente para PDF
+      noSniff: true,
+      xssFilter: false,
+      referrerPolicy: { policy: 'no-referrer' },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+      }
+    })(req, res, next);
+  } else {
+    // Para outras rotas, usar configuração padrão
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: false,
+      frameguard: { action: 'deny' },
+      noSniff: true,
+      xssFilter: false,
+      referrerPolicy: { policy: 'no-referrer' },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+      }
+    })(req, res, next);
   }
-}));
+});
 
 // Middleware de CORS
 // Aceitar origens definidas nas variáveis de ambiente ou mesma origem quando frontend integrado

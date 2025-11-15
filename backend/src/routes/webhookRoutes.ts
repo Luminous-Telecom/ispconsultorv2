@@ -23,4 +23,7 @@ router.use('/asaas', asaasRouter);
 // Webhook interno para integrações personalizadas
 router.post('/integration', IntegrationWebhookController.handleIntegration);
 
+// Rota para servir PDF temporário gerado pelo webhook
+router.get('/integration/pdf/:token', IntegrationWebhookController.servePdf);
+
 export default router;
