@@ -22,12 +22,15 @@ services:
       - "3001:3001"
     volumes:
       - ./backend:/app
+      - /app/node_modules
     env_file:
       - ./backend/.env
     environment:
       - DB_HOST=db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
 
   db:
     image: mysql:8.0
@@ -42,6 +45,11 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   mysql_data:
