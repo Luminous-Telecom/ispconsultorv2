@@ -1,6 +1,6 @@
 # BackNet ERP
 
-Sistema ERP completo para gestão de clientes, contratos e cobrança com integração direta aos gateways **Asaas** e **Efí (Gerencianet)**. O projeto inclui backend em Node.js/Express, frontend em React e um pacote de distribuição (`release/`) com artefatos compilados e prontos para produção.
+Sistema ERP completo para gestão de clientes, contratos e cobrança com integração direta aos gateways **Asaas** e **Efí (Gerencianet)**. O projeto inclui backend em Node.js/Express, frontend em React e suporte para deploy com Nginx.
 
 ---
 
@@ -8,14 +8,15 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 
 1. [Arquitetura Geral](#arquitetura-geral)
 2. [Principais Funcionalidades](#principais-funcionalidades)
-3. [Estrutura do Repositório](#estrutura-do-repositório)
-4. [Requisitos](#requisitos)
-5. [Ambiente de Desenvolvimento](#ambiente-de-desenvolvimento)
-6. [Variáveis de Ambiente](#variáveis-de-ambiente)
-7. [Build e Release](#build-e-release)
-8. [Automação com PM2](#automação-com-pm2)
-9. [Integrações e Webhooks](#integrações-e-webhooks)
-10. [Padrões Importantes](#padrões-importantes)
+3. [Requisitos](#requisitos)
+4. [Instalação](#instalação)
+5. [Configuração do Backend](#configuração-do-backend)
+6. [Configuração do Frontend](#configuração-do-frontend)
+7. [Configuração do Nginx](#configuração-do-nginx)
+8. [Build e Deploy](#build-e-deploy)
+9. [Automação com PM2](#automação-com-pm2)
+10. [Integrações e Webhooks](#integrações-e-webhooks)
+11. [Variáveis de Ambiente](#variáveis-de-ambiente)
 
 ---
 
@@ -23,7 +24,7 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 
 - **Backend**: Node.js + Express + Sequelize (MySQL) com serviços específicos por banco emissor (Asaas/Efí). Gera boletos, cancela/liquida cobranças, controla webhooks e agenda rotinas.
 - **Frontend**: React + TypeScript (CRA), Bootstrap e React Query. Interface administrativa com cadastros, financeiro e impressão de boletos.
-- **Release**: artefatos compilados prontos para deploy (backend `dist/` ofuscado, frontend `build/` estático e scripts de execução).
+- **Nginx**: Servidor web reverso para servir arquivos estáticos do frontend e fazer proxy das requisições de API para o backend.
 
 ---
 
@@ -39,185 +40,577 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 
 ---
 
-## Estrutura do Repositório
+## Requisitos
 
-```text
-backend/              # Código-fonte do backend (TypeScript)
-frontend/             # Código-fonte do frontend (React + TS)
-release/              # Build compilado pronto para deploy (submódulo Git)
-  ├─ backend/dist     # JS ofuscado + templates de boleto
-  ├─ frontend/build   # Bundle estático do React
-  ├─ ecosystem.config # Configuração PM2 para backend/frontend release
-  └─ docs/            # Documentação e envs de exemplo
-logs/                 # Saída padrão dos processos (PM2)
-ecosystem.config.js   # Config PM2 ambiente de desenvolvimento
-package.json          # Dependências raiz (scripts utilitários)
+- **Node.js** >= 18
+- **NPM** >= 9
+- **MySQL** 5.7+ (ou compatível com Sequelize)
+- **Nginx** (para produção)
+- **PM2** (opcional, para gerenciamento de processos)
+
+---
+
+## Instalação
+
+### 1. Clonar o Repositório
+
+```bash
+git clone https://github.com/Luminous-Telecom/BackNet-ERP.git
+cd BackNet-ERP
+```
+
+### 2. Instalar Dependências
+
+```bash
+# Instalar dependências do backend
+cd backend
+npm install
+
+# Instalar dependências do frontend
+cd ../frontend
+npm install
+
+# Voltar para a raiz
+cd ..
+```
+
+### 3. Configurar Banco de Dados
+
+Crie um banco de dados MySQL:
+
+```sql
+CREATE DATABASE backnet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'backnet'@'localhost' IDENTIFIED BY 'sua-senha-aqui';
+GRANT ALL PRIVILEGES ON backnet.* TO 'backnet'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 4. Executar Migrations
+
+```bash
+cd backend
+npm run build
+npm run migrate  # Se houver script de migration configurado
+# Ou execute as migrations manualmente via Sequelize CLI
 ```
 
 ---
 
-## Requisitos
+## Configuração do Backend
 
-- Node.js **>= 18**
-- NPM **>= 9**
-- MySQL 5.7+ (ou compatível com Sequelize)  
-- Redis (opcional, apenas se ativar features que o utilizem)
+### 1. Criar Arquivo de Ambiente
 
----
+```bash
+cd backend
+cp env.example .env
+```
 
-## Ambiente de Desenvolvimento
+### 2. Editar `.env` do Backend
 
-1. **Instalar dependências**
+```env
+# Configurações do Servidor
+PORT=3001
+NODE_ENV=production
+BASE_URL=http://localhost:3001
 
-   ```bash
-   npm install              # raiz (instala somente dependências utilitárias)
-   cd backend  && npm install
-   cd ../frontend && npm install
-   ```
+# Configurações do Banco de Dados
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=backnet
+DB_USER=backnet
+DB_PASSWORD=sua-senha-aqui
+DB_DIALECT=mysql
 
-2. **Configurar `.env`**
+# Configurações de Autenticação
+JWT_SECRET=seu-jwt-secret-aqui
+JWT_EXPIRES_IN=24h
 
-   - `backend/env.example` → copiar para `backend/.env`
-   - `frontend/env.example` → copiar para `frontend/.env`
+# Configurações de Upload
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=5242880
 
-3. **Executar**
+# Configurações de Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
 
-   ```bash
-   # Backend (porta padrão 3001)
-   cd backend
-   npm run dev
+# Webhook Secret Interno
+INTERNAL_WEBHOOK_SECRET=seu-webhook-secret-aqui
+```
 
-   # Frontend (porta padrão 3000)
-   cd ../frontend
-   npm start
-   ```
+### 3. Build do Backend
 
-- Também é possível usar PM2 em modo desenvolvimento:
+```bash
+cd backend
+npm run build
+```
 
-  ```bash
-  pm2 start ecosystem.config.js
-  pm2 logs
-  ```
+Isso irá:
+- Transpilar TypeScript para JavaScript em `dist/`
+- Copiar templates e imagens necessárias
+- Copiar o build do frontend para `dist/frontend` (se necessário)
 
----
+### 4. Executar Backend
 
-## Variáveis de Ambiente
+**Desenvolvimento:**
+```bash
+npm run dev
+```
 
-### Backend (desenvolvimento)
+**Produção:**
+```bash
+npm start
+```
 
-| Variável            | Descrição                                 | Exemplo                      |
-|---------------------|-------------------------------------------|------------------------------|
-| `PORT`              | Porta da API                              | `3001`                       |
-| `FRONTEND_URL`      | Origem permitida no CORS                  | `http://localhost:3000`      |
-| `PRODUCTION_URL`    | Origem adicional opcional                 | `https://sistema.dominio`    |
-| `BASE_URL`          | URL base da aplicação                     | `http://localhost:3001`      |
-| `DB_*`              | Configurações do banco de dados           | `DB_HOST`, `DB_USER`, etc.   |
-| `JWT_SECRET`        | Segredo para tokens JWT                   | `string`                     |
-| `INTERNAL_WEBHOOK_SECRET` | Token fallback para webhooks internos | `string`                     |
-
-### Frontend (desenvolvimento)
-
-| Variável              | Descrição                        | Exemplo                          |
-|-----------------------|----------------------------------|----------------------------------|
-| `REACT_APP_API_URL`   | URL base da API                  | `http://localhost:3001/api`      |
-| `PORT` (opcional)     | Porta para `npm start`           | `3000`                           |
-
-### Release
-
-- `release/backend/env.example`
-- `release/frontend/env.example`
-
-Esses arquivos já estão prontos para copiar e ajustar conforme o ambiente (produção, homologação etc.).
+O backend estará disponível em `http://localhost:3001`
 
 ---
 
-## Build e Release
+## Configuração do Frontend
 
-1. **Backend**
+### 1. Criar Arquivo de Ambiente
 
-   ```bash
-   cd backend
-   npm run build          # Transpila TS e ofusca dist/
-   ```
+```bash
+cd frontend
+cp env.example .env
+```
 
-2. **Frontend**
+### 2. Editar `.env` do Frontend
 
-   ```bash
-   cd frontend
-   npm run build          # Gera build/ e ofusca main.js
-   ```
+**Para Desenvolvimento (modo separado):**
+```env
+PORT=3000
+BACKEND_URL=http://localhost:3001
+REACT_APP_API_URL=http://localhost:3001/api
+```
 
-3. **Copiar para o release** (se necessário manualmente):
+**Para Produção (com Nginx):**
+```env
+PORT=3000
+BACKEND_URL=http://localhost:3001
+REACT_APP_API_URL=/api
+```
 
-   ```bash
-   rm -rf release/backend/dist release/frontend/build
-   cp -r backend/dist  release/backend/
-   cp -r frontend/build release/frontend/
-   ```
+### 3. Build do Frontend
 
-> O submódulo `release/` já acompanha esses artefatos no repositório `backnet.prod` (GitHub).
+```bash
+cd frontend
+npm run build
+```
+
+Isso gerará os arquivos estáticos em `frontend/build/`
+
+### 4. Executar Frontend
+
+**Desenvolvimento:**
+```bash
+npm run dev
+```
+
+**Produção (com servidor Express):**
+```bash
+npm start
+```
+
+O frontend estará disponível em `http://localhost:3000`
+
+---
+
+## Configuração do Nginx
+
+### 1. Instalar Nginx
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install nginx -y
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum install nginx -y
+```
+
+### 2. Criar Configuração do Site
+
+Crie o arquivo de configuração do Nginx:
+
+```bash
+sudo nano /etc/nginx/sites-available/backnet
+```
+
+**Configuração Completa do Nginx:**
+
+```nginx
+# Upstream para o backend
+upstream backend {
+    server localhost:3001;
+    keepalive 64;
+}
+
+# Upstream para o frontend (se usar servidor Express separado)
+upstream frontend {
+    server localhost:3000;
+    keepalive 64;
+}
+
+# Redirecionamento HTTP para HTTPS (opcional)
+server {
+    listen 80;
+    server_name seu-dominio.com.br www.seu-dominio.com.br;
+    
+    # Redirecionar para HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+# Servidor HTTPS
+server {
+    listen 443 ssl http2;
+    server_name seu-dominio.com.br www.seu-dominio.com.br;
+
+    # Certificados SSL (ajuste os caminhos)
+    ssl_certificate /etc/letsencrypt/live/seu-dominio.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/seu-dominio.com.br/privkey.pem;
+    
+    # Configurações SSL
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Logs
+    access_log /var/log/nginx/backnet-access.log;
+    error_log /var/log/nginx/backnet-error.log;
+
+    # Tamanho máximo de upload
+    client_max_body_size 10M;
+
+    # Timeout para requisições longas
+    proxy_read_timeout 300s;
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+
+    # Headers de segurança
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Proxy para API do backend
+    location /api {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_redirect off;
+    }
+
+    # Proxy para webhooks
+    location /webhook {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    # Proxy para boletos
+    location /boleto {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy para uploads
+    location /uploads {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Arquivos estáticos do frontend
+    location / {
+        root /home/projetos/BackNet-ERP/frontend/build;
+        try_files $uri $uri/ /index.html;
+        
+        # Cache para arquivos estáticos
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+        
+        # Sem cache para index.html
+        location = /index.html {
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
+        }
+    }
+}
+```
+
+### 3. Habilitar Site
+
+```bash
+# Criar link simbólico
+sudo ln -s /etc/nginx/sites-available/backnet /etc/nginx/sites-enabled/
+
+# Remover site padrão (opcional)
+sudo rm /etc/nginx/sites-enabled/default
+
+# Testar configuração
+sudo nginx -t
+
+# Recarregar Nginx
+sudo systemctl reload nginx
+```
+
+### 4. Configurar SSL com Let's Encrypt (Opcional)
+
+```bash
+# Instalar Certbot
+sudo apt install certbot python3-certbot-nginx -y
+
+# Obter certificado
+sudo certbot --nginx -d seu-dominio.com.br -d www.seu-dominio.com.br
+
+# Renovação automática (já configurada pelo certbot)
+sudo certbot renew --dry-run
+```
+
+### 5. Configuração Alternativa (Frontend com Express)
+
+Se preferir usar o servidor Express do frontend em vez de servir arquivos estáticos diretamente pelo Nginx:
+
+```nginx
+# No bloco location /, substitua por:
+location / {
+    proxy_pass http://frontend;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+}
+```
+
+---
+
+## Build e Deploy
+
+### Build Completo
+
+```bash
+# Build do backend
+cd backend
+npm run build
+
+# Build do frontend
+cd ../frontend
+npm run build
+```
+
+### Estrutura de Deploy
+
+```
+/home/projetos/BackNet-ERP/
+├── backend/
+│   ├── dist/              # Código compilado do backend
+│   ├── .env               # Variáveis de ambiente
+│   └── node_modules/      # Dependências
+├── frontend/
+│   ├── build/             # Arquivos estáticos do frontend
+│   ├── .env               # Variáveis de ambiente
+│   └── node_modules/      # Dependências
+└── logs/                  # Logs do PM2
+```
 
 ---
 
 ## Automação com PM2
 
-### Desenvolvimento
+### Instalação do PM2
 
 ```bash
-pm2 start ecosystem.config.js
+npm install -g pm2
 ```
 
-### Produção / Release
+### Configuração do PM2
+
+Crie ou edite `ecosystem.config.js` na raiz do projeto:
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'BackNet-backend',
+      cwd: './backend',
+      script: 'dist/index.js',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001
+      },
+      error_file: './logs/backend-error.log',
+      out_file: './logs/backend-out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G'
+    },
+    {
+      name: 'BackNet-frontend',
+      cwd: './frontend',
+      script: 'server.js',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000
+      },
+      error_file: './logs/frontend-error.log',
+      out_file: './logs/frontend-out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '500M'
+    }
+  ]
+};
+```
+
+### Comandos PM2
 
 ```bash
-cd release
+# Iniciar aplicações
 pm2 start ecosystem.config.js
-```
 
-- `BackNet-backend-release`: inicia `npm start` dentro de `release/backend` (porta padrão 6001).
-- `BackNet-frontend-release`: inicia o servidor estático (`npm start`) em `release/frontend` (porta padrão 7000), com rewrite automático para SPA.
-- Logs ficam em `release/logs/` (ignorados pelo Git).
+# Ver status
+pm2 status
+
+# Ver logs
+pm2 logs
+
+# Reiniciar
+pm2 restart all
+
+# Parar
+pm2 stop all
+
+# Salvar configuração para iniciar no boot
+pm2 save
+pm2 startup
+```
 
 ---
 
 ## Integrações e Webhooks
 
-- **Asaas**
-  - Geração, cancelamento e liquidação de boletos.
-  - Registro automático de webhooks (com token armazenado em `bancos.webhook_secret`).
-  - `notificationDisabled` configurado para evitar envios automáticos de e-mail/SMS.
-  - Fallback local para linha digitável FEBRABAN em ambiente sandbox.
+### Asaas
 
-- **Efí (Gerencianet)**
-  - Fluxo equivalente para boletos.
-  - Webhooks validados usando `webhook_secret` salvo no banco.
+- Geração, cancelamento e liquidação de boletos.
+- Registro automático de webhooks (com token armazenado em `bancos.webhook_secret`).
+- `notificationDisabled` configurado para evitar envios automáticos de e-mail/SMS.
+- Fallback local para linha digitável FEBRABAN em ambiente sandbox.
 
-- **Scheduler** (`SchedulerService`)
-  - Gera títulos automaticamente a partir dos contratos.
-  - Persiste `charge_id`, `linha_digitavel`, `codigo_barras`, `qrcode`, `nosso_numero` etc.
+### Efí (Gerencianet)
+
+- Fluxo equivalente para boletos.
+- Webhooks validados usando `webhook_secret` salvo no banco.
+
+### Scheduler
+
+- Gera títulos automaticamente a partir dos contratos.
+- Persiste `charge_id`, `linha_digitavel`, `codigo_barras`, `qrcode`, `nosso_numero` etc.
+
+### URLs de Webhook
+
+- **Asaas**: `https://seu-dominio.com.br/webhook/asaas`
+- **Efí**: `https://seu-dominio.com.br/webhook/efi`
+
+---
+
+## Variáveis de Ambiente
+
+### Backend (.env)
+
+| Variável | Descrição | Exemplo |
+|----------|-----------|---------|
+| `PORT` | Porta da API | `3001` |
+| `NODE_ENV` | Ambiente de execução | `production` |
+| `BASE_URL` | URL base da aplicação | `http://localhost:3001` |
+| `DB_HOST` | Host do banco de dados | `localhost` |
+| `DB_PORT` | Porta do banco de dados | `3306` |
+| `DB_NAME` | Nome do banco de dados | `backnet` |
+| `DB_USER` | Usuário do banco de dados | `backnet` |
+| `DB_PASSWORD` | Senha do banco de dados | `sua-senha` |
+| `JWT_SECRET` | Segredo para tokens JWT | `string-aleatoria` |
+| `INTERNAL_WEBHOOK_SECRET` | Token fallback para webhooks | `string-aleatoria` |
+
+### Frontend (.env)
+
+| Variável | Descrição | Exemplo |
+|----------|-----------|---------|
+| `PORT` | Porta do servidor Express | `3000` |
+| `BACKEND_URL` | URL do backend para proxy | `http://localhost:3001` |
+| `REACT_APP_API_URL` | URL da API (dev: completa, prod: `/api`) | `/api` ou `http://localhost:3001/api` |
+
+---
+
+## Troubleshooting
+
+### Backend não inicia
+
+- Verifique se o MySQL está rodando: `sudo systemctl status mysql`
+- Verifique as variáveis de ambiente no `.env`
+- Verifique os logs: `pm2 logs BackNet-backend`
+
+### Frontend não carrega
+
+- Verifique se o build foi executado: `cd frontend && npm run build`
+- Verifique as permissões da pasta `build/`
+- Verifique os logs do Nginx: `sudo tail -f /var/log/nginx/backnet-error.log`
+
+### Erro 502 Bad Gateway
+
+- Verifique se o backend está rodando: `pm2 status`
+- Verifique se a porta do backend está correta no Nginx
+- Verifique os logs do backend: `pm2 logs BackNet-backend`
+
+### Webhooks não funcionam
+
+- Verifique se a URL do webhook está correta no gateway
+- Verifique se o `webhook_secret` está configurado no banco de dados
+- Verifique os logs do backend para erros de validação
 
 ---
 
 ## Padrões Importantes
 
-- **Código**
-  - TypeScript em todo backend/frontend.
-  - Evitar `any`; interfaces e tipos fortes.
-  - Lidar com erros via `try/catch` e enviar mensagens amigáveis.
-  - Sem `console.log` em produção (usar `logger`).
-
-- **Frontend**
-  - Sempre usar Bootstrap (componentes e utilitários).
-  - Modais com DraggableModal, feedback via NotificationContext.
-  - Tabelas com ordenação local (`useSorting`) e DataTable padrão.
-  - API Key e Webhook Secret mascarados com botão de copiar.
-
-- **Banco e Webhooks**
-  - `banco.webhook_secret` gerado on-demand e exibido no modal.
-  - Webhooks Asaas/Efí expostos em `/webhook/asaas` e `/webhook/efi` (POST).
-  - `release/frontend/server.js` faz rewrite para `index.html` (SPA fallback).
+- **Código**: TypeScript em todo backend/frontend, evitar `any`, interfaces e tipos fortes.
+- **Frontend**: Sempre usar Bootstrap, modais com DraggableModal, tabelas com ordenação local.
+- **Banco e Webhooks**: `banco.webhook_secret` gerado on-demand e exibido no modal.
+- **Logs**: Usar `logger` estruturado, sem `console.log` em produção.
+- **Segurança**: Validação de entrada, rate limiting, headers de segurança no Nginx.
 
 ---
 
-Para detalhes adicionais consulte a documentação em `release/docs/` ou os arquivos de serviço específicos (`backend/src/services/bancos/*.ts`). Em caso de dúvidas ou novas integrações, abra uma issue ou ajuste o README conforme o fluxo evoluir.
-
+Para detalhes adicionais consulte a documentação em `release/docs/` ou os arquivos de serviço específicos (`backend/src/services/bancos/*.ts`).
