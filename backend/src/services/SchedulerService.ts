@@ -51,6 +51,7 @@ interface TituloWithRelations {
 interface ContratoWithPlano {
   plano?: {
     valor_mensal: number;
+    nome_plano?: string;
   };
 }
 
@@ -309,7 +310,8 @@ export class SchedulerService {
         include: [
           {
             model: Plano,
-            as: 'plano'
+            as: 'plano',
+            attributes: ['id', 'nome_plano', 'valor_mensal']
           }
         ]
       });
@@ -409,7 +411,7 @@ export class SchedulerService {
                   data_vencimento: dataVencimento instanceof Date ? dataVencimento : new Date(dataVencimento),
                   status: 'pendente',
                   pago: false,
-                  descricao: `Mensalidade - ${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
+                  descricao: `${plano?.nome_plano || 'Mensalidade'}\n${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
                   numero_titulo: numeroTitulo
                 });
 
