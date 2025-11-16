@@ -44,7 +44,7 @@ const Home: React.FC = () => {
                 <img 
                   src={dadosEmpresa.logo} 
                   alt={dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'} 
-                  style={{ height: '40px', width: 'auto', marginRight: '0.5rem' }}
+                  style={{ height: '60px', width: 'auto', marginRight: '0.75rem' }}
                 />
               ) : (
                 <i className="bi bi-broadcast me-2"></i>
@@ -387,7 +387,7 @@ const Home: React.FC = () => {
                   <img 
                     src={dadosEmpresa.logo} 
                     alt={dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'} 
-                    style={{ height: '30px', width: 'auto', marginRight: '0.5rem' }}
+                    style={{ height: '50px', width: 'auto', marginRight: '0.75rem' }}
                   />
                 ) : (
                   <i className="bi bi-broadcast me-2"></i>
