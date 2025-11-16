@@ -28,6 +28,15 @@ const Home: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const companyName = dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom';
+
+  // Atualizar título da página com o nome da empresa
+  useEffect(() => {
+    if (companyName) {
+      document.title = `${companyName} - Consultoria e Assessoria Técnica em Telecomunicações`;
+    }
+  }, [companyName]);
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -64,8 +73,6 @@ const Home: React.FC = () => {
   const getPhoneLink = (phone: string): string => {
     return `tel:${phone}`;
   };
-
-  const companyName = dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom';
 
   return (
     <div className="home-page">
