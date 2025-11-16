@@ -259,8 +259,10 @@
 }
 
 .tech-badge {
-  display: inline-block;
-  padding: 0.375rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
@@ -268,12 +270,30 @@
   font-weight: 500;
   color: var(--text-primary);
   transition: all 0.2s ease;
+  min-height: 2.5rem;
+}
+
+.tech-badge-logo {
+  height: 20px;
+  width: auto;
+  max-width: 60px;
+  object-fit: contain;
+  filter: brightness(0) invert(0);
+  transition: filter 0.2s ease;
+}
+
+[data-theme="dark"] .tech-badge-logo {
+  filter: brightness(0) invert(1);
 }
 
 .tech-badge:hover {
   background-color: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
+}
+
+.tech-badge:hover .tech-badge-logo {
+  filter: brightness(0) invert(1);
 }
 
 /* Features Section */

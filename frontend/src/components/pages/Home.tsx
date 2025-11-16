@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DadosEmpresaService } from '../../services/dadosEmpresaService';
+import { getBrandLogo } from '../../utils/brandLogos';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -299,8 +300,15 @@ const Home: React.FC = () => {
                   Roteador de Borda
                 </h5>
                 <div className="tech-badges">
-                  <span className="tech-badge">Huawei</span>
-                  <span className="tech-badge">Mikrotik</span>
+                  {['Huawei', 'Mikrotik'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge">
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span>{brand}</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -313,8 +321,15 @@ const Home: React.FC = () => {
                   Switch
                 </h5>
                 <div className="tech-badges">
-                  <span className="tech-badge">Mikrotik</span>
-                  <span className="tech-badge">Intelbras</span>
+                  {['Mikrotik', 'Intelbras'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge">
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span>{brand}</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -327,11 +342,15 @@ const Home: React.FC = () => {
                   ERPs
                 </h5>
                 <div className="tech-badges">
-                  <span className="tech-badge">IXC Provedor</span>
-                  <span className="tech-badge">SGP</span>
-                  <span className="tech-badge">Mikweb</span>
-                  <span className="tech-badge">Atlaz</span>
-                  <span className="tech-badge">MKAuth</span>
+                  {['IXC Provedor', 'SGP', 'Mikweb', 'Atlaz', 'MKAuth'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge">
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span>{brand}</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -344,7 +363,15 @@ const Home: React.FC = () => {
                   Virtualização
                 </h5>
                 <div className="tech-badges">
-                  <span className="tech-badge">Proxmox</span>
+                  {['Proxmox'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge">
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span>{brand}</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -357,8 +384,15 @@ const Home: React.FC = () => {
                   DNS
                 </h5>
                 <div className="tech-badges">
-                  <span className="tech-badge">Unbound</span>
-                  <span className="tech-badge">Bind9</span>
+                  {['Unbound', 'Bind9'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge">
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span>{brand}</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -371,10 +405,15 @@ const Home: React.FC = () => {
                   Monitoramento
                 </h5>
                 <div className="tech-badges">
-                  <span className="tech-badge">Zabbix</span>
-                  <span className="tech-badge">Grafana</span>
-                  <span className="tech-badge">The Dude</span>
-                  <span className="tech-badge">LibreNMS</span>
+                  {['Zabbix', 'Grafana', 'The Dude', 'LibreNMS'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge">
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span>{brand}</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -387,7 +426,15 @@ const Home: React.FC = () => {
                   API
                 </h5>
                 <div className="tech-badges">
-                  <span className="tech-badge">Bloqueio Anatel</span>
+                  {['Bloqueio Anatel'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge">
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span>{brand}</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
