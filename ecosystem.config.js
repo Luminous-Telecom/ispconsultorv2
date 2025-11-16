@@ -21,8 +21,7 @@ module.exports = {
       restart_delay: 4000,
       max_restarts: 10,
       min_uptime: '10s',
-      autorestart: true,
-      cron_restart: '0 3 * * *', // Reinicia diariamente às 3h da manhã
+      autorestart: false,
       kill_timeout: 5000,
       wait_ready: true,
       listen_timeout: 10000
