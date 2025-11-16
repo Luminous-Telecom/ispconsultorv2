@@ -376,6 +376,12 @@
   padding: 0.25rem;
   border-radius: 0.25rem;
   display: block;
+  mix-blend-mode: normal;
+}
+
+/* Garantir que o badge tenha fundo branco mesmo com logo invertida */
+.tech-badge:has(.tech-badge-logo-invert) {
+  background-color: #ffffff !important;
 }
 
 .tech-badge-text {
