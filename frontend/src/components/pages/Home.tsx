@@ -288,9 +288,9 @@ const Home: React.FC = () => {
                   {['VSOL', 'Fiberhome', 'Overteck'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
-                      <span key={brand} className="tech-badge">
+                      <span key={brand} className="tech-badge" title={brand}>
                         {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span>{brand}</span>
+                        <span className="tech-badge-text">{brand}</span>
                       </span>
                     );
                   })}
@@ -309,9 +309,9 @@ const Home: React.FC = () => {
                   {['Huawei', 'Mikrotik'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
-                      <span key={brand} className="tech-badge">
+                      <span key={brand} className="tech-badge" title={brand}>
                         {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span>{brand}</span>
+                        <span className="tech-badge-text">{brand}</span>
                       </span>
                     );
                   })}
@@ -330,9 +330,9 @@ const Home: React.FC = () => {
                   {['Mikrotik', 'Intelbras'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
-                      <span key={brand} className="tech-badge">
+                      <span key={brand} className="tech-badge" title={brand}>
                         {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span>{brand}</span>
+                        <span className="tech-badge-text">{brand}</span>
                       </span>
                     );
                   })}
@@ -351,9 +351,9 @@ const Home: React.FC = () => {
                   {['IXC Provedor', 'SGP', 'Mikweb', 'Atlaz', 'MKAuth'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
-                      <span key={brand} className="tech-badge">
+                      <span key={brand} className="tech-badge" title={brand}>
                         {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span>{brand}</span>
+                        <span className="tech-badge-text">{brand}</span>
                       </span>
                     );
                   })}
@@ -372,9 +372,9 @@ const Home: React.FC = () => {
                   {['Proxmox'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
-                      <span key={brand} className="tech-badge">
+                      <span key={brand} className="tech-badge" title={brand}>
                         {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span>{brand}</span>
+                        <span className="tech-badge-text">{brand}</span>
                       </span>
                     );
                   })}
@@ -393,9 +393,9 @@ const Home: React.FC = () => {
                   {['Unbound', 'Bind9'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
-                      <span key={brand} className="tech-badge">
+                      <span key={brand} className="tech-badge" title={brand}>
                         {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span>{brand}</span>
+                        <span className="tech-badge-text">{brand}</span>
                       </span>
                     );
                   })}
@@ -414,9 +414,9 @@ const Home: React.FC = () => {
                   {['Zabbix', 'Grafana', 'The Dude', 'LibreNMS'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
-                      <span key={brand} className="tech-badge">
+                      <span key={brand} className="tech-badge" title={brand}>
                         {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span>{brand}</span>
+                        <span className="tech-badge-text">{brand}</span>
                       </span>
                     );
                   })}
@@ -435,9 +435,9 @@ const Home: React.FC = () => {
                   {['Bloqueio Anatel'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
-                      <span key={brand} className="tech-badge">
+                      <span key={brand} className="tech-badge" title={brand}>
                         {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span>{brand}</span>
+                        <span className="tech-badge-text">{brand}</span>
                       </span>
                     );
                   })}
