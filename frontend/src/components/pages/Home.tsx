@@ -3,17 +3,18 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DadosEmpresaService } from '../../services/dadosEmpresaService';
 import { getBrandLogo } from '../../utils/brandLogos';
+import { useTheme } from '../../contexts/ThemeContext';
 import './Home.css';
 
 const Home: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
-  // Buscar dados da empresa (incluindo logo)
-  // Não requer autenticação - se falhar, apenas não exibe a logo
+  // Buscar dados públicos da empresa (incluindo logo) para o site público
   const { data: dadosEmpresa } = useQuery({
-    queryKey: ['dados-empresa'],
-    queryFn: () => DadosEmpresaService.get(),
+    queryKey: ['dados-empresa-public'],
+    queryFn: () => DadosEmpresaService.getPublic(),
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
     retry: false, // Não tentar novamente se falhar
     throwOnError: false, // Não lançar erro para evitar redirecionamento
@@ -107,6 +108,16 @@ const Home: React.FC = () => {
                     setIsMobileMenuOpen(false);
                   }}>
                     Contato
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className="nav-link theme-toggle-btn"
+                    onClick={toggleTheme}
+                    aria-label={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
+                    title={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
+                  >
+                    <i className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'}`}></i>
                   </button>
                 </li>
                 <li className="nav-item ms-3">

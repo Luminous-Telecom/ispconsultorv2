@@ -3,9 +3,9 @@ import axios from 'axios';
 import { API_CONFIG } from '../config/api';
 
 // Cliente axios específico para rotas públicas (sem autenticação)
-// Sempre usar URL relativa /api para evitar problemas de CORS
+// Usar API_CONFIG.BASE_URL para funcionar em desenvolvimento e produção
 const publicApiClient = axios.create({
-  baseURL: '/api',
+  baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
@@ -60,10 +60,26 @@ export interface UpdateDadosEmpresa {
 }
 
 export class DadosEmpresaService {
+  // Buscar dados públicos da empresa (para site público)
+  static async getPublic(): Promise<Partial<DadosEmpresa>> {
+    try {
+      const response = await publicApiClient.get<Partial<DadosEmpresa>>('/dados-empresa/public');
+      return response.data || {};
+    } catch (error) {
+      // Retornar objeto vazio em caso de erro
+      return {};
+    }
+  }
+
+  // Buscar dados completos da empresa (exclusivo do sistema - requer autenticação)
   static async get(): Promise<DadosEmpresa> {
     try {
-      // Usar cliente público para evitar problemas de autenticação
-      const response = await publicApiClient.get<DadosEmpresa>('/dados-empresa');
+      const response = await apiService.get<DadosEmpresa>('/dados-empresa');
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.message || 'Erro ao buscar dados da empresa');
+      }
+      
       const data = response.data;
 
       // Garantir que sempre retornamos um objeto válido

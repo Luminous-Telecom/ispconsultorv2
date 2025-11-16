@@ -12,7 +12,7 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/auth\/login$/i },
   { path: /^\/webhook(\/.*)?$/i },
   { path: /^\/uploads(\/.*)?$/i },
-  { method: 'GET', path: /^\/api\/dados-empresa\/?$/i }, // GET dados da empresa (público) - aceita com ou sem barra final
+  { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET dados públicos da empresa (para site público)
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
 ];
 
@@ -65,10 +65,8 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
   const authHeader = req.get('Authorization');
 
   if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json({
-      success: false,
-      message: 'Token de autenticação não fornecido',
-    });
+    // Bloquear todas as rotas da API sem retornar informação
+    res.status(404).end();
     return;
   }
 
@@ -84,10 +82,8 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
       message: error instanceof Error ? error.message : 'Erro desconhecido',
     });
 
-    res.status(401).json({
-      success: false,
-      message: 'Token inválido ou expirado',
-    });
+    // Bloquear todas as rotas da API sem retornar informação
+    res.status(404).end();
   }
 };
 

@@ -2,6 +2,10 @@ import { Request, Response } from 'express';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import { logger } from '../utils/logger';
 
+interface AuthenticatedRequest extends Request {
+  user?: any;
+}
+
 export class DadosEmpresaController {
   // Dados padrão para criação de empresa
   private static getDefaultData() {
@@ -48,7 +52,8 @@ export class DadosEmpresaController {
       return logo;
     }
   }
-  static async get(req: Request, res: Response): Promise<void> {
+  // Rota pública para o site - retorna apenas dados não sensíveis
+  static async getPublic(req: Request, res: Response): Promise<void> {
     try {
       let dadosEmpresa = await DadosEmpresa.findOne();
 
@@ -59,6 +64,48 @@ export class DadosEmpresaController {
       const dadosEmpresaJson = dadosEmpresa.toJSON();
       dadosEmpresaJson.logo = DadosEmpresaController.buildLogoUrl(req, dadosEmpresaJson.logo);
 
+      // Criar objeto apenas com dados públicos (sem dados sensíveis)
+      const { 
+        id, 
+        responsavel_nome, 
+        responsavel_cpf, 
+        responsavel_cargo, 
+        inscricao_estadual, 
+        inscricao_municipal, 
+        created_at, 
+        updated_at,
+        ...publicData 
+      } = dadosEmpresaJson;
+      
+      res.json(publicData);
+    } catch (error) {
+      console.error('Erro ao buscar dados públicos da empresa:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  }
+
+  // Rota exclusiva do sistema administrativo - requer autenticação
+  static async get(req: Request, res: Response): Promise<void> {
+    try {
+      // Verificar autenticação - se não houver token válido, bloquear
+      const authHeader = req.get('Authorization');
+      const hasValidToken = authHeader?.startsWith('Bearer ') && (req as AuthenticatedRequest).user;
+      
+      if (!hasValidToken) {
+        res.status(404).end();
+        return;
+      }
+
+      let dadosEmpresa = await DadosEmpresa.findOne();
+
+      if (!dadosEmpresa) {
+        dadosEmpresa = await DadosEmpresa.create(DadosEmpresaController.getDefaultData());
+      }
+
+      const dadosEmpresaJson = dadosEmpresa.toJSON();
+      dadosEmpresaJson.logo = DadosEmpresaController.buildLogoUrl(req, dadosEmpresaJson.logo);
+
+      // Retornar dados completos apenas para requisições autenticadas do sistema
       res.json(dadosEmpresaJson);
     } catch (error) {
       console.error('Erro ao buscar dados da empresa:', error);
