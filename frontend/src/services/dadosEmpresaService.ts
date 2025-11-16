@@ -3,42 +3,14 @@ import axios from 'axios';
 import { API_CONFIG } from '../config/api';
 
 // Cliente axios específico para rotas públicas (sem autenticação)
-// Garantir que sempre use URL relativa para evitar problemas de CORS e autenticação
-const getPublicBaseURL = (): string => {
-  const baseURL = API_CONFIG.BASE_URL;
-  // Se for URL absoluta, extrair apenas o path
-  if (baseURL.startsWith('http://') || baseURL.startsWith('https://')) {
-    try {
-      const url = new URL(baseURL);
-      return url.pathname || '/api';
-    } catch {
-      return '/api';
-    }
-  }
-  // Se já for relativa, usar como está
-  return baseURL || '/api';
-};
-
+// Sempre usar URL relativa /api para evitar problemas de CORS
 const publicApiClient = axios.create({
-  baseURL: getPublicBaseURL(),
+  baseURL: '/api',
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-// Garantir que NUNCA envie token de autenticação para rotas públicas
-publicApiClient.interceptors.request.use(
-  (config) => {
-    // Remover explicitamente qualquer header de Authorization
-    if (config.headers) {
-      delete config.headers.Authorization;
-      delete config.headers.authorization;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 export interface DadosEmpresa {
   id: number;

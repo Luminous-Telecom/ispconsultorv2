@@ -34,79 +34,20 @@ export class ApiClient {
     this.api.interceptors.request.use(
       (config) => {
         // Lista de rotas públicas que não precisam de autenticação
-        // Incluir tanto com /api quanto sem /api para garantir compatibilidade
         const publicRoutes = [
-          '/dados-empresa',
-          '/dados-empresa/logo',
           '/api/dados-empresa',
           '/api/dados-empresa/logo',
-          '/auth/login',
           '/api/auth/login',
-          '/health',
           '/api/health',
         ];
         
         // Verificar se a URL é uma rota pública
-        const url = config.url || '';
-        const baseURL = config.baseURL || '';
-        
-        // Construir string de URL completa para verificação
-        let urlToCheck = url;
-        
-        // Se a URL não é completa e há baseURL, combinar
-        if (!url.startsWith('http://') && !url.startsWith('https://') && baseURL) {
-          const base = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL;
-          const path = url.startsWith('/') ? url : `/${url}`;
-          urlToCheck = `${base}${path}`;
-        }
-        
-        // Extrair apenas o pathname para verificação (remover protocolo, host, query params)
-        let pathname = urlToCheck;
-        try {
-          if (urlToCheck.startsWith('http://') || urlToCheck.startsWith('https://')) {
-            const urlObj = new URL(urlToCheck);
-            pathname = urlObj.pathname;
-          } else {
-            // Remover query params se houver
-            pathname = urlToCheck.split('?')[0];
-          }
-        } catch {
-          // Se falhar, remover query params manualmente
-          pathname = urlToCheck.split('?')[0];
-        }
-        
-        // Normalizar pathname
-        pathname = pathname.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
-        
-        // Verificar se é rota pública
-        // Primeiro verificar diretamente na URL completa (para URLs absolutas)
-        const urlString = urlToCheck.toLowerCase();
-        const isPublicRouteByUrl = publicRoutes.some(route => {
-          return urlString.includes(route.toLowerCase()) || 
-                 urlString.includes(`/api${route.toLowerCase()}`);
-        });
-        
-        // Depois verificar pelo pathname normalizado
-        const isPublicRouteByPath = publicRoutes.some(route => {
-          const normalizedRoute = route.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
-          // Verificar correspondência exata ou se pathname contém a rota
-          return pathname === normalizedRoute ||
-                 pathname === `/${normalizedRoute}` ||
-                 pathname.endsWith(`/${normalizedRoute}`) ||
-                 pathname.includes(`/${normalizedRoute}/`) ||
-                 pathname.includes(`/${normalizedRoute}`);
-        });
-        
-        const isPublicRoute = isPublicRouteByUrl || isPublicRouteByPath;
+        const url = (config.url || '').toLowerCase();
+        const isPublicRoute = publicRoutes.some(route => url.includes(route.toLowerCase()));
         
         // Só adicionar token se não for rota pública
         if (isPublicRoute) {
-          // Remover token se for rota pública (caso tenha sido adicionado anteriormente)
-          delete config.headers.Authorization;
-          // Garantir que não há token sendo enviado
-          if (config.headers) {
-            delete config.headers.Authorization;
-          }
+          delete config.headers?.Authorization;
         } else {
           const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
           if (token) {
