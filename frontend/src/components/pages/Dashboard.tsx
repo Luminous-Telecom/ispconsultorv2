@@ -307,7 +307,7 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
     return (
       <div className="chart-container">
         <h6 className="chart-title">{title}</h6>
-        <div style={{ width: '140px', height: '140px', minWidth: '140px', minHeight: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '100px', height: '100px', minWidth: '100px', minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <p className="text-muted small">Sem dados</p>
         </div>
       </div>
@@ -364,11 +364,13 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
 
   return (
     <div className="chart-container">
-      <h6 className="chart-title">{title}</h6>
-      <div className="d-flex align-items-center">
-        <div ref={containerRef} style={{ width: '140px', height: '140px', minWidth: '140px', minHeight: '140px', position: 'relative' }}>
+      <h6 className="chart-title">
+        {title} ({formatPieValue(total, title)})
+      </h6>
+      <div className="d-flex align-items-center" style={{ minWidth: 0, overflow: 'hidden', justifyContent: 'center' }}>
+        <div ref={containerRef} style={{ width: '100px', height: '100px', minWidth: '100px', minHeight: '100px', maxWidth: '100px', flexShrink: 0, position: 'relative' }}>
           {isReady && dimensions && dimensions.width > 0 && dimensions.height > 0 ? (
-            <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={140} minWidth={140}>
+            <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={100} minWidth={100}>
               <PieChart>
               <Pie
                 data={filteredChartData}
@@ -376,8 +378,8 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                innerRadius={28}
-                outerRadius={58}
+                innerRadius={20}
+                outerRadius={42}
                 fill="#8884d8"
                 paddingAngle={2}
                 labelLine={false}
@@ -405,14 +407,7 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
           )}
         </div>
 
-        <div className="chart-legend ms-3">
-          <div className="pie-center-recharts mb-2 text-center">
-            <span className="pie-total-recharts text-primary fw-bold">
-              {formatPieValue(total, title)}
-            </span>
-            <small className="d-block text-muted">Total</small>
-          </div>
-
+        <div className="chart-legend ms-3" style={{ minWidth: 0, flex: '1 1 auto', overflow: 'hidden', maxWidth: 'calc(100% - 120px)' }}>
           {data.map((item, index) => (
             <div
               key={index}
@@ -420,11 +415,12 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
               style={{
                 cursor: 'pointer',
                 opacity: hiddenItems.has(index) ? 0.5 : 1,
-                textDecoration: hiddenItems.has(index) ? 'line-through' : 'none'
+                textDecoration: hiddenItems.has(index) ? 'line-through' : 'none',
+                minWidth: 0
               }}
               onClick={() => onToggleItem(index)}
             >
-              <div className="legend-color" style={{ backgroundColor: item.color || '#6c757d' }}></div>
+              <div className="legend-color" style={{ backgroundColor: item.color || '#6c757d', flexShrink: 0 }}></div>
               <span className="legend-label">
                 {item.label}: {formatPieValue(item.value || 0, title)}
               </span>

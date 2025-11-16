@@ -766,6 +766,8 @@ body {
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
   height: 100%;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .chart-container {
@@ -774,6 +776,8 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .chart-title {
@@ -839,6 +843,8 @@ body {
   gap: 0.125rem;
   align-items: flex-start;
   margin-left: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .legend-item {
@@ -851,6 +857,8 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  min-width: 0;
+  width: 100%;
 }
 
 .legend-item:hover {
@@ -864,6 +872,11 @@ body {
 }
 
 .legend-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
   color: var(--text-secondary);
 }
 
