@@ -45,7 +45,6 @@ const Home: React.FC = () => {
                 <img 
                   src={dadosEmpresa.logo} 
                   alt={dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'} 
-                  style={{ height: '60px', width: 'auto', marginRight: '0.75rem' }}
                 />
               ) : (
                 <i className="bi bi-broadcast me-2"></i>
@@ -129,10 +128,10 @@ const Home: React.FC = () => {
               <h1 className="hero-title">
                 {dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}
               </h1>
-              <h2 className="hero-subtitle" style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+              <h2 className="hero-subtitle">
                 Consultoria e Assessoria Técnica em Telecomunicações
               </h2>
-              <p className="hero-subtitle" style={{ fontSize: '1.125rem', fontWeight: 400 }}>
+              <p className="hero-subtitle">
                 Soluções especializadas para empresas de telecomunicações.
                 Otimização de processos, gestão eficiente e suporte técnico especializado
                 para impulsionar seu negócio.
@@ -580,7 +579,6 @@ const Home: React.FC = () => {
                   <img 
                     src={dadosEmpresa.logo} 
                     alt={dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'} 
-                    style={{ height: '50px', width: 'auto', marginRight: '0.75rem' }}
                   />
                 ) : (
                   <i className="bi bi-broadcast me-2"></i>
