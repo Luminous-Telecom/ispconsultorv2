@@ -6,10 +6,10 @@ export const brandLogos: Record<string, string> = {
   // OLT
   'VSOL': '/logos/vsol.png',
   'Fiberhome': '/logos/fiberhome.png',
-  'Overteck': '/logos/overteck.jpg',
+  'Overteck': '/logos/overtek.png',
   
   // Roteador de Borda
-  'Huawei': '/logos/huawei.png',
+  'Huawei': '/logos/huawei.webp',
   'Mikrotik': '/logos/mikrotik.png',
   
   // Switch
@@ -19,7 +19,7 @@ export const brandLogos: Record<string, string> = {
   'IXC Provedor': '/logos/ixc.png',
   'SGP': '/logos/sgp.png',
   'Mikweb': '/logos/mikweb.png',
-  'Atlaz': '/logos/atlaz.jpg',
+  'Atlaz': '/logos/atlaz.png',
   'MKAuth': '/logos/mkauth.png',
   
   // Virtualização
@@ -33,10 +33,10 @@ export const brandLogos: Record<string, string> = {
   'Zabbix': '/logos/zabbix.png',
   'Grafana': '/logos/grafana.png',
   'The Dude': '/logos/thedude.jpg',
-  'LibreNMS': '/logos/librenms.jpg',
+  'LibreNMS': '/logos/librenms.png',
   
   // API
-  'Bloqueio Anatel': '/logos/anatel.jpg',
+  'Bloqueio Anatel': '/logos/receitanet.jpg',
 };
 
 /**
