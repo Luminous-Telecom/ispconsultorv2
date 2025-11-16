@@ -131,6 +131,8 @@ export const apiProtectionMiddleware = (req: Request, res: Response, next: NextF
   const publicRoutes = [
     '/api/health',
     '/api/buscar-cep',
+    '/api/dados-empresa', // Rota pública para dados da empresa (site público)
+    '/api/auth/login',
     '/login',
     '/health'
   ];
