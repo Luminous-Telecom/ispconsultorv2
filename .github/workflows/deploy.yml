@@ -102,10 +102,28 @@ jobs:
         run: |
           npm install
           
-          # Frontend sempre precisa ser buildado se backend ou frontend mudaram
-          # (pois o backend precisa do frontend integrado)
+          # SEMPRE fazer build se não existir backend/dist ou se houver mudanças detectadas
+          # Isso garante que sempre teremos artefatos para copiar
           BUILD_WAS_EXECUTED="false"
+          SHOULD_BUILD="false"
+          
+          # Verificar se precisa fazer build
           if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+            SHOULD_BUILD="true"
+            echo "=== Mudanças detectadas, build necessário ==="
+          elif [ ! -d "backend/dist" ] || [ ! -f "backend/dist/index.js" ]; then
+            SHOULD_BUILD="true"
+            echo "=== backend/dist não existe, build necessário ==="
+          else
+            echo "=== Nenhuma mudança detectada e backend/dist existe, verificando se precisa rebuild ==="
+            # Mesmo sem mudanças detectadas, fazer build se frontend não estiver integrado
+            if [ ! -d "backend/dist/frontend" ] || [ ! -f "backend/dist/frontend/index.html" ]; then
+              SHOULD_BUILD="true"
+              echo "=== Frontend não está integrado, build necessário ==="
+            fi
+          fi
+          
+          if [ "${SHOULD_BUILD}" == "true" ]; then
             BUILD_WAS_EXECUTED="true"
             echo "=== INICIANDO BUILD ==="
             echo "Building frontend..."
@@ -148,8 +166,7 @@ jobs:
               exit 1
             fi
           else
-            echo "⚠ Nenhuma alteração detectada, pulando build"
-            echo "⚠ Se houver artefatos de build anteriores, eles serão mantidos"
+            echo "✓ Build não necessário - artefatos existentes estão atualizados"
           fi
           
           # Salvar flag para uso posterior
@@ -203,12 +220,20 @@ jobs:
             fi
           else
             echo "⚠ ERRO: backend/dist NÃO existe!"
+            echo "⚠ Isso significa que o build não foi executado ou falhou"
+            echo "⚠ Verificando se BUILD_WAS_EXECUTED está definido..."
+            if [ -z "${BUILD_WAS_EXECUTED}" ]; then
+              echo "⚠ BUILD_WAS_EXECUTED não está definido - isso é um problema!"
+            else
+              echo "BUILD_WAS_EXECUTED=${BUILD_WAS_EXECUTED}"
+            fi
             exit 1
           fi
           
           # Copiar artefatos do backend (frontend já está integrado no backend/dist/frontend)
-          # Copiar se houve mudanças detectadas OU se o build foi executado
-          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ] || [ "${BUILD_WAS_EXECUTED}" == "true" ]; then
+          # SEMPRE copiar se backend/dist existe (mesmo sem mudanças detectadas, pode ter sido buildado)
+          # Copiar se houve mudanças detectadas OU se o build foi executado OU se backend/dist existe
+          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ] || [ "${BUILD_WAS_EXECUTED}" == "true" ] || [ -d "../backend/dist" ]; then
             echo "=== Copiando artefatos do backend (com frontend integrado) ==="
             rm -rf backend/dist backend/package.json backend/package-lock.json backend/env.example
             cp -r ../backend/dist backend/dist
