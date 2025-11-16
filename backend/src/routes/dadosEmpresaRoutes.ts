@@ -31,6 +31,9 @@ router.get('/', DadosEmpresaController.get);
 // PUT /api/dados-empresa - Atualizar dados da empresa
 router.put('/', DadosEmpresaController.update);
 
+// GET /api/dados-empresa/logo - Buscar logo da empresa (redireciona para arquivo)
+router.get('/logo', DadosEmpresaController.getLogo);
+
 // POST /api/dados-empresa/logo - Upload da logo
 router.post('/logo', upload.single('logo'), DadosEmpresaController.uploadLogo);
 

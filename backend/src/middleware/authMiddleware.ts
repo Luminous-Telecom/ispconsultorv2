@@ -11,6 +11,8 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/health/i },
   { path: /^\/api\/auth\/login$/i },
   { path: /^\/webhook(\/.*)?$/i },
+  { path: /^\/uploads(\/.*)?$/i },
+  { method: 'GET', path: /^\/api\/dados-empresa\/logo$/i },
 ];
 
 const isPublicRoute = (req: Request): boolean => {

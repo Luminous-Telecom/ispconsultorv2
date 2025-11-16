@@ -1,5 +1,4 @@
 import { apiService } from './api';
-import { API_CONFIG } from '../config/api';
 
 export interface DadosEmpresa {
   id: number;
@@ -122,13 +121,19 @@ export class DadosEmpresaService {
   static async uploadLogo(file: File): Promise<{ success: boolean; logo: string }> {
     const formData = new FormData();
     formData.append('logo', file);
-    const response = await fetch(`${API_CONFIG.BASE_URL}/dados-empresa/logo`, {
-      method: 'POST',
-      body: formData
-    });
-    if (!response.ok) {
-      throw new Error('Falha no upload da logo');
+    
+    const response = await apiService.post<{ success: boolean; logo: string }>(
+      '/dados-empresa/logo',
+      formData
+    );
+    
+    if (response.success && response.data) {
+      const data = response.data as { logo?: string };
+      if (data.logo) {
+        return { success: true, logo: data.logo };
+      }
     }
-    return await response.json();
+    
+    throw new Error(response.message || 'Falha no upload da logo');
   }
 }

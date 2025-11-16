@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '../../../../services/dadosEmpresaService';
 import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
+import { ApiError } from '../../../../services/core/ErrorHandler';
 import DraggableModal from '../../../common/DraggableModal';
 import { useFormReset } from '../../../../hooks/useFormReset';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
@@ -96,15 +97,13 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       if (!file) return;
       
       const resp = await DadosEmpresaService.uploadLogo(file);
-      if (resp?.success && resp.logo) {
-        setDados(prev => ({ ...prev, logo: resp.logo }));
-        success('Logo atualizada com sucesso!');
-        queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
-      } else {
-        error('Não foi possível atualizar a logo');
-      }
+      setDados(prev => ({ ...prev, logo: resp.logo }));
+      success('Logo atualizada com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
     } catch (err) {
-      error('Erro ao enviar a logo');
+      const apiError = err as ApiError;
+      const errorMessage = apiError.message || 'Erro ao enviar a logo';
+      error(errorMessage);
     }
   };
 

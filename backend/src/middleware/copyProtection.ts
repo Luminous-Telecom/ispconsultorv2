@@ -147,17 +147,25 @@ export const apiProtectionMiddleware = (req: Request, res: Response, next: NextF
 
 // Middleware para prevenir hotlinking de imagens
 export const imageProtectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  // Permitir acesso a imagens de upload sem verificação de referer
+  if (req.path.startsWith('/uploads/')) {
+    return next();
+  }
+  
   if (req.path.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i)) {
     const referer = req.get('Referer');
-    const _origin = req.get('Origin');
+    const host = req.get('Host') || '';
     
-    // Permitir apenas requisições do mesmo domínio
-    if (referer && !referer.includes(req.get('Host') || '')) {
-      return res.status(403).json({
-        error: 'Hotlinking não permitido',
-        message: 'Imagens só podem ser acessadas do domínio autorizado'
-      });
+    // Permitir se não houver referer (acesso direto) ou se for do mesmo domínio
+    if (!referer || referer.includes(host)) {
+      return next();
     }
+    
+    // Bloquear hotlinking de outros domínios
+    return res.status(403).json({
+      error: 'Hotlinking não permitido',
+      message: 'Imagens só podem ser acessadas do domínio autorizado'
+    });
   }
   
   return next();
