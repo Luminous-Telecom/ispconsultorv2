@@ -383,17 +383,15 @@ export class SchedulerService {
               const ultimoDiaDoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
               let diaCorreto = Math.min(diaVencimento, ultimoDiaDoMes);
               
-              // Se data de início existe e está no mesmo mês, garantir que dia de vencimento seja >= dia de início
+              // Se data de início existe e estamos no mês da data de início, SEMPRE usar a data de início
               if (dataInicioContrato) {
                 const mesInicio = dataInicioContrato.getMonth();
                 const anoInicio = dataInicioContrato.getFullYear();
                 const diaInicio = dataInicioContrato.getDate();
                 
                 if (mesAtual === mesInicio && anoAtual === anoInicio) {
-                  // Se dia de vencimento é anterior ao dia de início, usar dia de início
-                  if (diaCorreto < diaInicio) {
-                    diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
-                  }
+                  // No primeiro mês (mês da data de início), sempre usar a data de início
+                  diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
                 }
               }
               
