@@ -23,7 +23,7 @@ interface FormFieldProps extends BaseComponentProps, ValidationProps, TooltipPro
   cols?: number;
   min?: number;
   max?: number;
-  step?: number;
+  step?: number | 'any';
   minLength?: number;
   maxLength?: number;
   pattern?: string;
