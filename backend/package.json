@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc && cp -r src/templates dist/ && cp -r images dist/ && cp -r migrations dist/",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc && cp -r src/templates dist/ && cp -r images dist/",
     "start": "node dist/index.js",
     "migrate": "npx sequelize-cli db:migrate",
     "migrate:undo": "npx sequelize-cli db:migrate:undo",
