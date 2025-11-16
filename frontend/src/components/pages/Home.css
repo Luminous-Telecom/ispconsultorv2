@@ -370,9 +370,10 @@
 }
 
 .tech-badge-logo-invert {
-  /* Remover filtros para mostrar logo com cores originais */
-  filter: none;
-  background-color: transparent;
+  filter: brightness(0);
+  background-color: #ffffff;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
 }
 
 .tech-badge-text {
