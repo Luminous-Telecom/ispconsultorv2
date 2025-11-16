@@ -401,16 +401,6 @@ export class BancoApiService {
         webhook_secret?: string | null;
       };
 
-      const isAsaas = banco.tipo_banco === 'asaas';
-      if (isAsaas && (!bancoComCredenciais.webhook_secret || bancoComCredenciais.webhook_secret === process.env.INTERNAL_WEBHOOK_SECRET)) {
-        logger.warn('Asaas :: webhook secret não configurado ou inválido', {
-          banco_id: banco.id,
-          titulo_id: titulo.id,
-          possui_secret: !!bancoComCredenciais.webhook_secret
-        });
-      }
-      
-
       // Verificar credenciais usando banco recarregado
       if (!this.verificarCredenciais(bancoComCredenciais as any, config)) {
         return {
