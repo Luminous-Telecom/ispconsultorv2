@@ -47,51 +47,46 @@ export class ApiClient {
         ];
         
         // Verificar se a URL é uma rota pública
-        // Extrair pathname de URLs completas ou usar URL relativa
         const url = config.url || '';
         const baseURL = config.baseURL || '';
         
-        // Construir URL completa para análise
-        let fullUrl = url;
-        if (baseURL && !url.startsWith('http://') && !url.startsWith('https://')) {
-          // Se baseURL existe e url não é completa, combinar
+        // Construir string de URL completa para verificação
+        let urlToCheck = url;
+        
+        // Se a URL não é completa e há baseURL, combinar
+        if (!url.startsWith('http://') && !url.startsWith('https://') && baseURL) {
           const base = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL;
           const path = url.startsWith('/') ? url : `/${url}`;
-          fullUrl = `${base}${path}`;
+          urlToCheck = `${base}${path}`;
         }
         
-        // Extrair pathname da URL (seja completa ou relativa)
-        let pathname = url;
+        // Extrair apenas o pathname para verificação (remover protocolo, host, query params)
+        let pathname = urlToCheck;
         try {
-          // Se for URL completa (http:// ou https://), extrair pathname
-          if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
-            const urlObj = new URL(fullUrl);
+          if (urlToCheck.startsWith('http://') || urlToCheck.startsWith('https://')) {
+            const urlObj = new URL(urlToCheck);
             pathname = urlObj.pathname;
           } else {
-            // URL relativa, normalizar
-            pathname = fullUrl.startsWith('/') ? fullUrl : `/${fullUrl}`;
+            // Remover query params se houver
+            pathname = urlToCheck.split('?')[0];
           }
         } catch {
-          // Se falhar ao parsear, usar URL original normalizada
-          pathname = url.startsWith('/') ? url : `/${url}`;
+          // Se falhar, remover query params manualmente
+          pathname = urlToCheck.split('?')[0];
         }
         
-        // Normalizar pathname (remover barras duplicadas e finais)
-        const normalizePath = (p: string) => {
-          const normalized = p.replace(/\/+/g, '/').replace(/\/$/, '');
-          return normalized || '/';
-        };
-        const normalizedPath = normalizePath(pathname);
+        // Normalizar pathname
+        pathname = pathname.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
         
-        // Verificar se é rota pública
+        // Verificar se é rota pública - verificar se pathname contém qualquer rota pública
         const isPublicRoute = publicRoutes.some(route => {
-          const normalizedRoute = normalizePath(route);
-          // Verificar múltiplas formas de correspondência
-          return normalizedPath === normalizedRoute ||
-                 normalizedPath.endsWith(`/${normalizedRoute}`) ||
-                 normalizedPath.includes(`/${normalizedRoute}/`) ||
-                 normalizedPath.includes(`/${normalizedRoute}`) ||
-                 pathname.includes(route);
+          const normalizedRoute = route.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
+          // Verificar correspondência exata ou se pathname termina com a rota
+          return pathname === normalizedRoute ||
+                 pathname === `/${normalizedRoute}` ||
+                 pathname.endsWith(`/${normalizedRoute}`) ||
+                 pathname.includes(`/${normalizedRoute}/`) ||
+                 pathname.includes(`/${normalizedRoute}`);
         });
         
         // Só adicionar token se não for rota pública
