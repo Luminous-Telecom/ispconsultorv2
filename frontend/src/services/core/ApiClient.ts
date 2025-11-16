@@ -100,14 +100,18 @@ export class ApiClient {
         const isPublicRoute = isPublicRouteByUrl || isPublicRouteByPath;
         
         // Só adicionar token se não for rota pública
-        if (!isPublicRoute) {
+        if (isPublicRoute) {
+          // Remover token se for rota pública (caso tenha sido adicionado anteriormente)
+          delete config.headers.Authorization;
+          // Garantir que não há token sendo enviado
+          if (config.headers) {
+            delete config.headers.Authorization;
+          }
+        } else {
           const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
-        } else {
-          // Remover token se for rota pública (caso tenha sido adicionado anteriormente)
-          delete config.headers.Authorization;
         }
         
         // Se for FormData, remover Content-Type para axios definir automaticamente com boundary
