@@ -349,6 +349,8 @@ export class SchedulerService {
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
             
+            logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data início RAW do banco: ${contrato.data_inicio}`);
+            
             const dataInicioContrato = contrato.data_inicio ? new Date(contrato.data_inicio) : null;
             if (dataInicioContrato) {
               dataInicioContrato.setHours(0, 0, 0, 0);
@@ -357,7 +359,7 @@ export class SchedulerService {
             const diaVencimentoConfig = await DiasVencimento.findByPk(contrato.dia_vencimento_id);
             const diaVencimento = diaVencimentoConfig?.dia || 15;
 
-            logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data início: ${dataInicioContrato ? dataInicioContrato.toLocaleDateString('pt-BR') : 'não definida'}, Dia vencimento configurado: ${diaVencimento}, Hoje: ${hoje.toLocaleDateString('pt-BR')}`);
+            logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data início processada: ${dataInicioContrato ? dataInicioContrato.toLocaleDateString('pt-BR') : 'não definida'}, Dia vencimento configurado: ${diaVencimento}, Hoje: ${hoje.toLocaleDateString('pt-BR')}`);
 
             // Começar sempre do mês atual (não do próximo mês)
             // Se data de início existe e está em um mês futuro, começar do mês da data de início
@@ -437,10 +439,10 @@ export class SchedulerService {
               // Gerar título se:
               // 1. Não existe título para este mês
               // 2. Respeita data de início (se existir)
-              // 3. Se está no mês atual OU se data de vencimento não passou
+              // 3. Data de vencimento não passou (sempre validar, mesmo no mês atual)
               const podeGerar = !tituloExistente && 
                 (!dataInicioContrato || dataVencimento >= dataInicioContrato) &&
-                (estaNoMesAtual || dataVencimento >= hoje);
+                dataVencimento >= hoje;
               
               logger.info(`[Scheduler] Contrato ID ${contrato.id}: Pode gerar título? ${podeGerar}`);
               
