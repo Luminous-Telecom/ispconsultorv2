@@ -42,27 +42,42 @@ export class ApiClient {
         ];
         
         // Verificar se a URL é uma rota pública
-        // Usar tanto a URL completa quanto apenas o path
+        // Extrair pathname de URLs completas ou usar URL relativa
         const url = config.url || '';
         const baseURL = config.baseURL || '';
-        const fullUrl = baseURL ? `${baseURL}${url}` : url;
         
-        // Normalizar URLs para comparação (remover barras duplicadas, etc)
-        const normalizeUrl = (u: string) => u.replace(/\/+/g, '/').replace(/\/$/, '');
-        const normalizedUrl = normalizeUrl(url);
-        const normalizedFullUrl = normalizeUrl(fullUrl);
+        // Tentar extrair pathname se for URL completa
+        let pathname = url;
+        try {
+          // Se a URL começa com http:// ou https://, extrair pathname
+          if (url.startsWith('http://') || url.startsWith('https://')) {
+            const urlObj = new URL(url);
+            pathname = urlObj.pathname;
+          } else if (baseURL && (baseURL.startsWith('http://') || baseURL.startsWith('https://'))) {
+            // Se baseURL é completa, construir URL completa e extrair pathname
+            const fullUrl = `${baseURL}${url}`;
+            const urlObj = new URL(fullUrl);
+            pathname = urlObj.pathname;
+          } else {
+            // URL relativa, usar como está
+            pathname = url.startsWith('/') ? url : `/${url}`;
+          }
+        } catch {
+          // Se falhar ao parsear, usar URL original
+          pathname = url;
+        }
+        
+        // Normalizar pathname (remover barras duplicadas e finais)
+        const normalizePath = (p: string) => p.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
+        const normalizedPath = normalizePath(pathname);
         
         const isPublicRoute = publicRoutes.some(route => {
-          const normalizedRoute = normalizeUrl(route);
-          // Verificar múltiplas formas de correspondência
-          return normalizedUrl === normalizedRoute ||
-                 normalizedUrl.endsWith(normalizedRoute) ||
-                 normalizedUrl.includes(normalizedRoute) ||
-                 normalizedFullUrl === normalizedRoute ||
-                 normalizedFullUrl.endsWith(normalizedRoute) ||
-                 normalizedFullUrl.includes(normalizedRoute) ||
-                 url.includes(route) ||
-                 fullUrl.includes(route);
+          const normalizedRoute = normalizePath(route);
+          // Verificar se o pathname corresponde à rota pública
+          return normalizedPath === normalizedRoute ||
+                 normalizedPath.endsWith(normalizedRoute) ||
+                 normalizedPath.includes(normalizedRoute) ||
+                 pathname.includes(route);
         });
         
         // Só adicionar token se não for rota pública
