@@ -766,7 +766,7 @@ body {
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   min-width: 0;
 }
 
@@ -777,7 +777,8 @@ body {
   -ms-user-select: none;
   user-select: none;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
+  width: 100%;
 }
 
 .chart-title {
@@ -842,9 +843,17 @@ body {
   flex-direction: column;
   gap: 0.125rem;
   align-items: flex-start;
-  margin-left: 0.5rem;
+  margin-left: 0;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
+  width: 100%;
+}
+
+@media (min-width: 576px) {
+  .chart-legend {
+    margin-left: 0.5rem;
+    max-width: calc(100% - 120px);
+  }
 }
 
 .legend-item {
@@ -859,6 +868,7 @@ body {
   user-select: none;
   min-width: 0;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .legend-item:hover {
