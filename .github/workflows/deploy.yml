@@ -54,19 +54,29 @@ jobs:
             CONFIG_CHANGED="false"
           fi
           
+          # Verificar mudanças em arquivos Docker (Dockerfile e .dockerignore)
+          if git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} | grep -qE '(Dockerfile|\.dockerignore)'; then
+            DOCKER_CHANGED="true"
+          else
+            DOCKER_CHANGED="false"
+          fi
+          
           # Se for o primeiro commit ou não conseguir determinar, build tudo
           if [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ]; then
             BACKEND_CHANGED="true"
             FRONTEND_CHANGED="true"
             CONFIG_CHANGED="true"
+            DOCKER_CHANGED="true"
           fi
           
           echo "backend_changed=${BACKEND_CHANGED}" >> $GITHUB_OUTPUT
           echo "frontend_changed=${FRONTEND_CHANGED}" >> $GITHUB_OUTPUT
           echo "config_changed=${CONFIG_CHANGED}" >> $GITHUB_OUTPUT
+          echo "docker_changed=${DOCKER_CHANGED}" >> $GITHUB_OUTPUT
           echo "Backend alterado: ${BACKEND_CHANGED}"
           echo "Frontend alterado: ${FRONTEND_CHANGED}"
           echo "Config/Docs alterado: ${CONFIG_CHANGED}"
+          echo "Docker alterado: ${DOCKER_CHANGED}"
       
       # Instala as dependências e executa o build apenas do que foi alterado
       - name: Instalar Dependências e Buildar Projeto
@@ -113,7 +123,7 @@ jobs:
           cd deployment
           
           # Criar estrutura de pastas se não existir
-          mkdir -p backend
+          mkdir -p backend frontend
           
           # Copiar artefatos do backend (frontend já está integrado no backend/dist/frontend)
           if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
@@ -125,6 +135,33 @@ jobs:
             cp ../backend/env.example backend/env.example
           else
             echo "Nenhuma alteração no backend, mantendo artefatos existentes"
+          fi
+          
+          # Copiar arquivos Docker do backend e frontend
+          if [ "${{ steps.changes.outputs.docker_changed }}" == "true" ]; then
+            echo "Copiando arquivos Docker..."
+            
+            # Backend Dockerfile e .dockerignore
+            if [ -f "../backend/Dockerfile" ]; then
+              cp ../backend/Dockerfile backend/Dockerfile
+              echo "backend/Dockerfile copiado"
+            fi
+            if [ -f "../backend/.dockerignore" ]; then
+              cp ../backend/.dockerignore backend/.dockerignore
+              echo "backend/.dockerignore copiado"
+            fi
+            
+            # Frontend Dockerfile e .dockerignore
+            if [ -f "../frontend/Dockerfile" ]; then
+              cp ../frontend/Dockerfile frontend/Dockerfile
+              echo "frontend/Dockerfile copiado"
+            fi
+            if [ -f "../frontend/.dockerignore" ]; then
+              cp ../frontend/.dockerignore frontend/.dockerignore
+              echo "frontend/.dockerignore copiado"
+            fi
+          else
+            echo "Nenhuma alteração em arquivos Docker"
           fi
           
           # Copiar arquivos de configuração e documentação na raiz
