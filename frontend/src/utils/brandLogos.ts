@@ -38,6 +38,13 @@ export const brandLogos: Record<string, string> = {
   
   // API
   'Bloqueio Anatel': '/logos/blockdomi.png',
+  
+  // Sistemas Operacionais
+  'Windows Server': '/logos/windows-server.png',
+  'Debian': '/logos/debian.png',
+  'Ubuntu': '/logos/ubuntu.png',
+  'Windows 10': '/logos/windows10.png',
+  'Windows 11': '/logos/windows11.png',
 };
 
 /**

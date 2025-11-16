@@ -444,6 +444,27 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Sistemas Operacionais */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-cpu me-2"></i>
+                  Sistemas Operacionais
+                </h5>
+                <div className="tech-badges">
+                  {['Windows Server', 'Debian', 'Ubuntu', 'Windows 10', 'Windows 11'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge" title={brand}>
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span className="tech-badge-text">{brand}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
