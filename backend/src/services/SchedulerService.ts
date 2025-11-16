@@ -357,6 +357,8 @@ export class SchedulerService {
             const diaVencimentoConfig = await DiasVencimento.findByPk(contrato.dia_vencimento_id);
             const diaVencimento = diaVencimentoConfig?.dia || 15;
 
+            logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data início: ${dataInicioContrato ? dataInicioContrato.toLocaleDateString('pt-BR') : 'não definida'}, Dia vencimento configurado: ${diaVencimento}, Hoje: ${hoje.toLocaleDateString('pt-BR')}`);
+
             // Começar sempre do mês atual (não do próximo mês)
             // Se data de início existe e está em um mês futuro, começar do mês da data de início
             let mesAtual: number;
@@ -366,10 +368,12 @@ export class SchedulerService {
               // Data de início é futura, começar do mês da data de início
               mesAtual = dataInicioContrato.getMonth();
               anoAtual = dataInicioContrato.getFullYear();
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data início é futura, começando do mês ${mesAtual + 1}/${anoAtual}`);
             } else {
               // Começar do mês atual
               mesAtual = hoje.getMonth();
               anoAtual = hoje.getFullYear();
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Começando do mês atual ${mesAtual + 1}/${anoAtual}`);
             }
             
             let tentativas = 0;
@@ -378,10 +382,14 @@ export class SchedulerService {
             while (títulosCriadosNoContrato < titulosGerar && tentativas < 100) {
               tentativas++;
               
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Iteração ${tentativas} - Processando mês ${mesAtual + 1}/${anoAtual}`);
+              
               // Criar data de vencimento com o dia correto
               // Se o dia não existir no mês (ex: dia 31 em fevereiro), ajusta para o último dia válido
               const ultimoDiaDoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
               let diaCorreto = Math.min(diaVencimento, ultimoDiaDoMes);
+              
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Dia vencimento configurado: ${diaVencimento}, Último dia do mês: ${ultimoDiaDoMes}, Dia correto inicial: ${diaCorreto}`);
               
               // Se data de início existe e estamos no mês da data de início, SEMPRE usar a data de início
               if (dataInicioContrato) {
@@ -389,14 +397,25 @@ export class SchedulerService {
                 const anoInicio = dataInicioContrato.getFullYear();
                 const diaInicio = dataInicioContrato.getDate();
                 
+                logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data início - Mês: ${mesInicio + 1}, Ano: ${anoInicio}, Dia: ${diaInicio}`);
+                logger.info(`[Scheduler] Contrato ID ${contrato.id}: Comparando mês atual (${mesAtual + 1}/${anoAtual}) com mês início (${mesInicio + 1}/${anoInicio})`);
+                
                 if (mesAtual === mesInicio && anoAtual === anoInicio) {
                   // No primeiro mês (mês da data de início), sempre usar a data de início
+                  const diaCorretoAntes = diaCorreto;
                   diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
+                  logger.info(`[Scheduler] Contrato ID ${contrato.id}: ESTAMOS NO MÊS DA DATA DE INÍCIO! Ajustando dia de ${diaCorretoAntes} para ${diaCorreto} (dia início: ${diaInicio})`);
+                } else {
+                  logger.info(`[Scheduler] Contrato ID ${contrato.id}: NÃO estamos no mês da data de início, usando dia de vencimento normal: ${diaCorreto}`);
                 }
+              } else {
+                logger.info(`[Scheduler] Contrato ID ${contrato.id}: Sem data de início definida, usando dia de vencimento normal: ${diaCorreto}`);
               }
               
               const dataVencimento = new Date(anoAtual, mesAtual, diaCorreto);
               dataVencimento.setHours(0, 0, 0, 0);
+              
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data de vencimento calculada: ${dataVencimento.toLocaleDateString('pt-BR')}`);
 
               // Verificar se já existe título para este mês
               const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
@@ -408,6 +427,13 @@ export class SchedulerService {
               // Verificar se estamos no mês atual
               const estaNoMesAtual = mesAtual === hoje.getMonth() && anoAtual === hoje.getFullYear();
               
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Título existente para este mês: ${tituloExistente ? 'SIM' : 'NÃO'}`);
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Está no mês atual: ${estaNoMesAtual}`);
+              if (dataInicioContrato) {
+                logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data vencimento >= Data início? ${dataVencimento >= dataInicioContrato} (${dataVencimento.toLocaleDateString('pt-BR')} >= ${dataInicioContrato.toLocaleDateString('pt-BR')})`);
+              }
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data vencimento >= Hoje? ${dataVencimento >= hoje} (${dataVencimento.toLocaleDateString('pt-BR')} >= ${hoje.toLocaleDateString('pt-BR')})`);
+              
               // Gerar título se:
               // 1. Não existe título para este mês
               // 2. Respeita data de início (se existir)
@@ -416,8 +442,11 @@ export class SchedulerService {
                 (!dataInicioContrato || dataVencimento >= dataInicioContrato) &&
                 (estaNoMesAtual || dataVencimento >= hoje);
               
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Pode gerar título? ${podeGerar}`);
+              
               // Se não pode gerar, avançar para próximo mês
               if (!podeGerar) {
+                logger.info(`[Scheduler] Contrato ID ${contrato.id}: NÃO pode gerar, avançando para próximo mês`);
                 mesAtual++;
                 if (mesAtual > 11) {
                   mesAtual = 0;
@@ -427,6 +456,7 @@ export class SchedulerService {
               }
               
               if (podeGerar) {
+                logger.info(`[Scheduler] Contrato ID ${contrato.id}: GERANDO TÍTULO para ${dataVencimento.toLocaleDateString('pt-BR')}`);
                 // Calcular valor do título
                 const plano = (contrato as ContratoWithPlano).plano;
                 
