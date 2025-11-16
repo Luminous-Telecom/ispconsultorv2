@@ -1,4 +1,15 @@
 import { apiService } from './api';
+import axios from 'axios';
+import { API_CONFIG } from '../config/api';
+
+// Cliente axios específico para rotas públicas (sem autenticação)
+const publicApiClient = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export interface DadosEmpresa {
   id: number;
@@ -50,7 +61,8 @@ export interface UpdateDadosEmpresa {
 export class DadosEmpresaService {
   static async get(): Promise<DadosEmpresa> {
     try {
-      const response = await apiService.get<DadosEmpresa>('/dados-empresa');
+      // Usar cliente público para evitar problemas de autenticação
+      const response = await publicApiClient.get<DadosEmpresa>('/dados-empresa');
       const data = response.data;
 
       // Garantir que sempre retornamos um objeto válido
