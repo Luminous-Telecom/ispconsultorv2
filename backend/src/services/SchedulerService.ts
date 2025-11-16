@@ -400,6 +400,7 @@ export class SchedulerService {
               logger.info(`[Scheduler] Contrato ID ${contrato.id}: Dia vencimento configurado: ${diaVencimento}, Último dia do mês: ${ultimoDiaDoMes}, Dia correto inicial: ${diaCorreto}`);
               
               // Se data de início existe e estamos no mês da data de início, SEMPRE usar a data de início
+              // Se a data de início já passou mas estamos no mesmo mês, usar a data atual (hoje)
               if (dataInicioContrato) {
                 const mesInicio = dataInicioContrato.getMonth();
                 const anoInicio = dataInicioContrato.getFullYear();
@@ -409,10 +410,18 @@ export class SchedulerService {
                 logger.info(`[Scheduler] Contrato ID ${contrato.id}: Comparando mês atual (${mesAtual + 1}/${anoAtual}) com mês início (${mesInicio + 1}/${anoInicio})`);
                 
                 if (mesAtual === mesInicio && anoAtual === anoInicio) {
-                  // No primeiro mês (mês da data de início), sempre usar a data de início
-                  const diaCorretoAntes = diaCorreto;
-                  diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
-                  logger.info(`[Scheduler] Contrato ID ${contrato.id}: ESTAMOS NO MÊS DA DATA DE INÍCIO! Ajustando dia de ${diaCorretoAntes} para ${diaCorreto} (dia início: ${diaInicio})`);
+                  // No primeiro mês (mês da data de início)
+                  // Se data de início já passou mas estamos no mesmo mês, usar data atual (hoje)
+                  // Caso contrário, usar a data de início
+                  if (dataInicioContrato < hoje) {
+                    const diaHoje = hoje.getDate();
+                    diaCorreto = Math.min(diaHoje, ultimoDiaDoMes);
+                    logger.info(`[Scheduler] Contrato ID ${contrato.id}: ESTAMOS NO MÊS DA DATA DE INÍCIO! Data início (${diaInicio}) já passou, usando data atual (hoje: ${diaHoje}) como dia de vencimento: ${diaCorreto}`);
+                  } else {
+                    const diaCorretoAntes = diaCorreto;
+                    diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
+                    logger.info(`[Scheduler] Contrato ID ${contrato.id}: ESTAMOS NO MÊS DA DATA DE INÍCIO! Ajustando dia de ${diaCorretoAntes} para ${diaCorreto} (dia início: ${diaInicio})`);
+                  }
                 } else {
                   logger.info(`[Scheduler] Contrato ID ${contrato.id}: NÃO estamos no mês da data de início, usando dia de vencimento normal: ${diaCorreto}`);
                 }
