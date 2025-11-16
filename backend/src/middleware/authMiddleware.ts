@@ -12,6 +12,7 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/auth\/login$/i },
   { path: /^\/webhook(\/.*)?$/i },
   { path: /^\/uploads(\/.*)?$/i },
+  { method: 'GET', path: /^\/api\/dados-empresa$/i }, // GET dados da empresa (público)
   { method: 'GET', path: /^\/api\/dados-empresa\/logo$/i },
 ];
 
