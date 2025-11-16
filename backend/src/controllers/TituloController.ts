@@ -128,7 +128,7 @@ export class TituloController {
     const templateVars = {
       // Dados da empresa (Beneficiário)
       LOGOMARCA: logoEmpresa,
-      CEDENTE: dadosEmpresa.razao_social || 'BackNet',
+      CEDENTE: (dadosEmpresa.razao_social && dadosEmpresa.razao_social.trim()) || (dadosEmpresa.nome_fantasia && dadosEmpresa.nome_fantasia.trim()) || 'Empresa não configurada',
       EMPRESACPF: dadosEmpresa.cnpj || '',
       EMPRESAENDERECO: `${dadosEmpresa.endereco || ''} ${dadosEmpresa.numero || ''}`.trim(),
       EMPRESABAIRRO: dadosEmpresa.bairro || '',
@@ -1007,7 +1007,7 @@ export class TituloController {
       const templateVars = {
         // Dados da empresa (Beneficiário)
         LOGOMARCA: dadosEmpresa.logo || '',
-        CEDENTE: dadosEmpresa.razao_social || 'BackNet',
+        CEDENTE: (dadosEmpresa.razao_social && dadosEmpresa.razao_social.trim()) || (dadosEmpresa.nome_fantasia && dadosEmpresa.nome_fantasia.trim()) || 'Empresa não configurada',
         EMPRESACPF: dadosEmpresa.cnpj || '',
         EMPRESAENDERECO: `${dadosEmpresa.endereco || ''} ${dadosEmpresa.numero || ''}`.trim(),
         EMPRESABAIRRO: dadosEmpresa.bairro || '',
