@@ -43,13 +43,13 @@ const Home: React.FC = () => {
               {dadosEmpresa?.logo ? (
                 <img 
                   src={dadosEmpresa.logo} 
-                  alt="Luminous Telecom" 
+                  alt={dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'} 
                   style={{ height: '40px', width: 'auto', marginRight: '0.5rem' }}
                 />
               ) : (
                 <i className="bi bi-broadcast me-2"></i>
               )}
-              <span>Luminous Telecom</span>
+              <span>{dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}</span>
             </Link>
             <button
               className="navbar-toggler"
@@ -118,7 +118,7 @@ const Home: React.FC = () => {
           <div className="row align-items-center min-vh-100">
             <div className="col-lg-6">
               <h1 className="hero-title">
-                Luminous Telecom
+                {dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}
               </h1>
               <h2 className="hero-subtitle" style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
                 Consultoria e Assessoria Técnica em Telecomunicações
@@ -333,18 +333,36 @@ const Home: React.FC = () => {
                 Solicite um orçamento ou agende uma consultoria.
               </p>
               <div className="contact-info">
-                <div className="contact-item">
-                  <i className="bi bi-envelope"></i>
-                  <span>contato@consultoriatelecom.com.br</span>
-                </div>
-                <div className="contact-item">
-                  <i className="bi bi-telephone"></i>
-                  <span>(00) 0000-0000</span>
-                </div>
-                <div className="contact-item">
-                  <i className="bi bi-whatsapp"></i>
-                  <span>(00) 00000-0000</span>
-                </div>
+                {dadosEmpresa?.email && (
+                  <div className="contact-item">
+                    <i className="bi bi-envelope"></i>
+                    <span>{dadosEmpresa.email}</span>
+                  </div>
+                )}
+                {dadosEmpresa?.telefone && (
+                  <div className="contact-item">
+                    <i className="bi bi-telephone"></i>
+                    <span>{dadosEmpresa.telefone}</span>
+                  </div>
+                )}
+                {dadosEmpresa?.celular && (
+                  <div className="contact-item">
+                    <i className="bi bi-whatsapp"></i>
+                    <span>{dadosEmpresa.celular}</span>
+                  </div>
+                )}
+                {(!dadosEmpresa?.email && !dadosEmpresa?.telefone && !dadosEmpresa?.celular) && (
+                  <>
+                    <div className="contact-item">
+                      <i className="bi bi-envelope"></i>
+                      <span>contato@consultoriatelecom.com.br</span>
+                    </div>
+                    <div className="contact-item">
+                      <i className="bi bi-telephone"></i>
+                      <span>(00) 0000-0000</span>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="mt-5">
                 <button className="btn btn-primary btn-lg me-3" onClick={() => scrollToSection('contato')}>
@@ -368,13 +386,13 @@ const Home: React.FC = () => {
                 {dadosEmpresa?.logo ? (
                   <img 
                     src={dadosEmpresa.logo} 
-                    alt="Luminous Telecom" 
+                    alt={dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'} 
                     style={{ height: '30px', width: 'auto', marginRight: '0.5rem' }}
                   />
                 ) : (
                   <i className="bi bi-broadcast me-2"></i>
                 )}
-                Luminous Telecom
+                {dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}
               </h5>
               <p className="text-muted">
                 Consultoria e assessoria técnica especializada em telecomunicações.
@@ -382,7 +400,7 @@ const Home: React.FC = () => {
             </div>
             <div className="col-md-6 text-md-end">
               <p className="text-muted mb-0">
-                &copy; {new Date().getFullYear()} Luminous Telecom. Todos os direitos reservados.
+                &copy; {new Date().getFullYear()} {dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}. Todos os direitos reservados.
               </p>
             </div>
           </div>
