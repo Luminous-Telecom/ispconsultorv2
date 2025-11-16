@@ -418,8 +418,8 @@ export class SchedulerService {
                 (!dataInicioContrato || dataVencimento >= dataInicioContrato) &&
                 (estaNoMesAtual || dataVencimento >= hoje);
               
-              // Se não pode gerar e não estamos no mês atual, pular para próximo mês
-              if (!podeGerar && !estaNoMesAtual) {
+              // Se não pode gerar, avançar para próximo mês
+              if (!podeGerar) {
                 mesAtual++;
                 if (mesAtual > 11) {
                   mesAtual = 0;
