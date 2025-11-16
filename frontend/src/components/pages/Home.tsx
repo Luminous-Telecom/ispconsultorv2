@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { DadosEmpresaService } from '../../services/dadosEmpresaService';
 import './Home.css';
 
 const Home: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Buscar dados da empresa (incluindo logo)
+  const { data: dadosEmpresa } = useQuery({
+    queryKey: ['dados-empresa'],
+    queryFn: () => DadosEmpresaService.get(),
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,8 +37,16 @@ const Home: React.FC = () => {
         <nav className="navbar navbar-expand-lg">
           <div className="container">
             <Link to="/" className="navbar-brand">
-              <i className="bi bi-broadcast me-2"></i>
-              <span>Consultoria Telecom</span>
+              {dadosEmpresa?.logo ? (
+                <img 
+                  src={dadosEmpresa.logo} 
+                  alt="Luminous Telecom" 
+                  style={{ height: '40px', width: 'auto', marginRight: '0.5rem' }}
+                />
+              ) : (
+                <i className="bi bi-broadcast me-2"></i>
+              )}
+              <span>Luminous Telecom</span>
             </Link>
             <button
               className="navbar-toggler"
@@ -98,9 +115,12 @@ const Home: React.FC = () => {
           <div className="row align-items-center min-vh-100">
             <div className="col-lg-6">
               <h1 className="hero-title">
-                Consultoria e Assessoria Técnica em Telecomunicações
+                Luminous Telecom
               </h1>
-              <p className="hero-subtitle">
+              <h2 className="hero-subtitle" style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+                Consultoria e Assessoria Técnica em Telecomunicações
+              </h2>
+              <p className="hero-subtitle" style={{ fontSize: '1.125rem', fontWeight: 400 }}>
                 Soluções especializadas para empresas de telecomunicações.
                 Otimização de processos, gestão eficiente e suporte técnico especializado
                 para impulsionar seu negócio.
@@ -341,9 +361,17 @@ const Home: React.FC = () => {
         <div className="container">
           <div className="row">
             <div className="col-md-6">
-              <h5>
-                <i className="bi bi-broadcast me-2"></i>
-                Consultoria Telecom
+              <h5 className="d-flex align-items-center">
+                {dadosEmpresa?.logo ? (
+                  <img 
+                    src={dadosEmpresa.logo} 
+                    alt="Luminous Telecom" 
+                    style={{ height: '30px', width: 'auto', marginRight: '0.5rem' }}
+                  />
+                ) : (
+                  <i className="bi bi-broadcast me-2"></i>
+                )}
+                Luminous Telecom
               </h5>
               <p className="text-muted">
                 Consultoria e assessoria técnica especializada em telecomunicações.
@@ -351,7 +379,7 @@ const Home: React.FC = () => {
             </div>
             <div className="col-md-6 text-md-end">
               <p className="text-muted mb-0">
-                &copy; {new Date().getFullYear()} Consultoria Telecom. Todos os direitos reservados.
+                &copy; {new Date().getFullYear()} Luminous Telecom. Todos os direitos reservados.
               </p>
             </div>
           </div>

@@ -35,6 +35,13 @@
   align-items: center;
 }
 
+.home-header .navbar-brand img {
+  height: 40px;
+  width: auto;
+  margin-right: 0.5rem;
+  object-fit: contain;
+}
+
 .home-header .navbar-brand i {
   font-size: 1.75rem;
 }
@@ -80,16 +87,24 @@
 .hero-title {
   font-size: 3rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: var(--text-primary);
   line-height: 1.2;
 }
 
 .hero-subtitle {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   color: var(--text-secondary);
   margin-bottom: 2rem;
   line-height: 1.6;
+  font-weight: 400;
+}
+
+.hero-subtitle h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
 }
 
 .hero-buttons {
@@ -283,6 +298,13 @@
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
+}
+
+.home-footer h5 img {
+  height: 30px;
+  width: auto;
+  margin-right: 0.5rem;
+  object-fit: contain;
 }
 
 .home-footer h5 i {
