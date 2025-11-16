@@ -220,7 +220,7 @@
 /* Technologies Section */
 .section-technologies {
   padding: 5rem 0;
-  background-color: white;
+  background-color: var(--bg-secondary);
 }
 
 .tech-category {
