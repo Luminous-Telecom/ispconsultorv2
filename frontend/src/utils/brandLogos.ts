@@ -9,7 +9,7 @@ export const brandLogos: Record<string, string> = {
   'Overteck': '/logos/overtek.png',
   
   // Roteador de Borda
-  'Huawei': '/logos/huawei.webp',
+  'Huawei': '/logos/huawei.png',
   'Mikrotik': '/logos/mikrotik.png',
   
   // Switch
@@ -36,7 +36,7 @@ export const brandLogos: Record<string, string> = {
   'LibreNMS': '/logos/librenms.png',
   
   // API
-  'Bloqueio Anatel': '/logos/receitanet.jpg',
+  'Bloqueio Anatel': '/logos/blockdomi.png',
 };
 
 /**
