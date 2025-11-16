@@ -317,6 +317,15 @@ PORT=3001
 NODE_ENV=production
 BASE_URL=http://localhost:3001
 
+# ⚠️ IMPORTANTE: Configuração da API para o frontend
+# Em produção, SEMPRE use URL relativa: /api
+# O backend gera /config.js dinamicamente com este valor
+# O frontend sempre prioriza window.__APP_CONFIG__ sobre process.env
+REACT_APP_API_URL=/api
+REACT_APP_API_TIMEOUT=10000
+REACT_APP_API_RETRY_ATTEMPTS=3
+REACT_APP_API_RETRY_DELAY=1000
+
 # Configurações do Banco de Dados
 DB_HOST=localhost
 DB_PORT=3306
@@ -380,19 +389,28 @@ cp env.example .env
 
 ### 2. Editar `.env` do Frontend
 
+⚠️ **IMPORTANTE:** O arquivo `.env` do frontend é usado **APENAS** em desenvolvimento local (`npm run dev`).  
+Em produção, as configurações vêm do backend via `window.__APP_CONFIG__` (arquivo `/config.js` gerado dinamicamente).
+
 **Para Desenvolvimento (modo separado):**
 ```env
 PORT=3000
 BACKEND_URL=http://localhost:3001
+# Use URL completa APENAS em desenvolvimento local
 REACT_APP_API_URL=http://localhost:3001/api
 ```
 
-**Para Produção (com Nginx):**
+**Para Produção:**
 ```env
+# ⚠️ NÃO é necessário configurar REACT_APP_API_URL em produção
+# O backend gera /config.js automaticamente com REACT_APP_API_URL=/api
+# O frontend sempre prioriza window.__APP_CONFIG__ sobre process.env
 PORT=3000
 BACKEND_URL=http://localhost:3001
-REACT_APP_API_URL=/api
 ```
+
+**Nota:** Em produção, o backend lê `REACT_APP_API_URL=/api` do seu `.env` e gera `/config.js` dinamicamente.  
+O frontend buildado não deve ter URLs hardcoded - sempre use `/api` (relativo).
 
 ### 3. Build do Frontend
 
@@ -525,8 +543,11 @@ server {
     }
 
     # Arquivos estáticos do frontend
+    # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
+    # Desenvolvimento: /home/projetos/BackNet-ERP/frontend/build
+    # Produção: /opt/backnet.prod/frontend/build (ou o caminho onde está seu frontend)
     location / {
-        root /home/projetos/BackNet-ERP/frontend/build;
+        root /opt/backnet.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
         try_files $uri $uri/ /index.html;
         
         # Cache para arquivos estáticos
@@ -544,6 +565,11 @@ server {
     }
 }
 ```
+
+**⚠️ Nota Importante sobre o caminho:**
+- O caminho `root` deve apontar para onde o frontend foi buildado em produção
+- Se você fez o build localmente e copiou, ajuste para o caminho correto
+- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/backnet.prod/backend/dist/frontend;`
 
 #### Opção B: HTTPS com SSL (Recomendado para Produção)
 
@@ -650,8 +676,11 @@ server {
     }
 
     # Arquivos estáticos do frontend
+    # ⚠️ IMPORTANTE: Ajuste o caminho abaixo conforme seu ambiente!
+    # Desenvolvimento: /home/projetos/BackNet-ERP/frontend/build
+    # Produção: /opt/backnet.prod/frontend/build (ou o caminho onde está seu frontend)
     location / {
-        root /home/projetos/BackNet-ERP/frontend/build;
+        root /opt/backnet.prod/frontend/build;  # ⚠️ AJUSTE ESTE CAMINHO!
         try_files $uri $uri/ /index.html;
         
         # Cache para arquivos estáticos
@@ -669,6 +698,11 @@ server {
     }
 }
 ```
+
+**⚠️ Nota Importante sobre o caminho:**
+- O caminho `root` deve apontar para onde o frontend foi buildado em produção
+- Se você fez o build localmente e copiou, ajuste para o caminho correto
+- Se o frontend está integrado no backend (`backend/dist/frontend`), use: `root /opt/backnet.prod/backend/dist/frontend;`
 
 ### 4. Habilitar Site
 
@@ -886,6 +920,7 @@ pm2 startup
 | `PORT` | Porta da API | `3001` |
 | `NODE_ENV` | Ambiente de execução | `production` |
 | `BASE_URL` | URL base da aplicação | `http://localhost:3001` |
+| `REACT_APP_API_URL` | ⚠️ **URL da API para o frontend** (obrigatório em produção) | `/api` (relativo) |
 | `DB_HOST` | Host do banco de dados | `localhost` |
 | `DB_PORT` | Porta do banco de dados | `3306` |
 | `DB_NAME` | Nome do banco de dados | `backnet` |
@@ -894,13 +929,22 @@ pm2 startup
 | `JWT_SECRET` | Segredo para tokens JWT | `string-aleatoria` |
 | `INTERNAL_WEBHOOK_SECRET` | Token fallback para webhooks | `string-aleatoria` |
 
+**⚠️ Sobre `REACT_APP_API_URL` no backend:**
+- Em produção: **SEMPRE** use `/api` (URL relativa)
+- O backend gera `/config.js` dinamicamente com este valor
+- O frontend sempre prioriza `window.__APP_CONFIG__` sobre `process.env`
+- Não faça build do frontend com URLs hardcoded
+
 ### Frontend (.env)
+
+⚠️ **IMPORTANTE:** O `.env` do frontend é usado **APENAS** em desenvolvimento local (`npm run dev`).  
+Em produção, as configurações vêm do backend via `window.__APP_CONFIG__`.
 
 | Variável | Descrição | Exemplo |
 |----------|-----------|---------|
 | `PORT` | Porta do servidor Express | `3000` |
 | `BACKEND_URL` | URL do backend para proxy | `http://localhost:3001` |
-| `REACT_APP_API_URL` | URL da API (dev: completa, prod: `/api`) | `/api` ou `http://localhost:3001/api` |
+| `REACT_APP_API_URL` | URL da API (apenas desenvolvimento local) | `http://localhost:3001/api` |
 
 ---
 

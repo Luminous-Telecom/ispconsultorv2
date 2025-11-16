@@ -129,16 +129,17 @@ app.use((req, res, next) => {
 const corsOrigins = [
   process.env.FRONTEND_URL,
   process.env.PRODUCTION_URL,
-  process.env.CORS_ORIGIN
+  process.env.CORS_ORIGIN,
+  'https://luminoustelecom.com.br',
+  'http://luminoustelecom.com.br'
 ].filter((url): url is string => Boolean(url));
 
 app.use(cors({
-  origin: corsOrigins.length > 0 ? corsOrigins : (origin, callback) => {
-    // Se não houver origens definidas, aceitar requisições da mesma origem (frontend integrado)
-    callback(null, true);
-  },
+  origin: corsOrigins.length > 0 ? corsOrigins : true, // Aceitar todas as origens quando frontend integrado (via Nginx)
   credentials: true,
-  exposedHeaders: ['Content-Disposition']
+  exposedHeaders: ['Content-Disposition'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Servir arquivos estáticos de uploads

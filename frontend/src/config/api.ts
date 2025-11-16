@@ -14,11 +14,14 @@ declare global {
 }
 
 const getDynamicConfig = (): AppConfig => {
+  // SEMPRE priorizar window.__APP_CONFIG__ (configuração dinâmica do backend)
+  // process.env só é usado como fallback em desenvolvimento local
   if (typeof window !== 'undefined' && window.__APP_CONFIG__) {
     return window.__APP_CONFIG__;
   }
+  // Fallback apenas para desenvolvimento local (quando não há window.__APP_CONFIG__)
   return {
-    REACT_APP_API_URL: process.env.REACT_APP_API_URL || '',
+    REACT_APP_API_URL: process.env.REACT_APP_API_URL || '/api',
     REACT_APP_API_TIMEOUT: process.env.REACT_APP_API_TIMEOUT || '10000',
     REACT_APP_API_RETRY_ATTEMPTS: process.env.REACT_APP_API_RETRY_ATTEMPTS || '3',
     REACT_APP_API_RETRY_DELAY: process.env.REACT_APP_API_RETRY_DELAY || '1000',
@@ -28,12 +31,17 @@ const getDynamicConfig = (): AppConfig => {
 export const API_CONFIG = {
   get BASE_URL() {
     const config = getDynamicConfig();
+    const apiUrl = config.REACT_APP_API_URL || '/api';
+    
+    // Se for URL absoluta em desenvolvimento local, usar como está
     if (process.env.NODE_ENV === 'development' && 
-        config.REACT_APP_API_URL && 
-        (config.REACT_APP_API_URL.startsWith('http://') || config.REACT_APP_API_URL.startsWith('https://'))) {
-      return config.REACT_APP_API_URL;
+        apiUrl && 
+        (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
+      return apiUrl;
     }
-    return ensureRelativeUrl(config.REACT_APP_API_URL) || '/api';
+    
+    // Em produção ou quando for relativa, garantir que comece com /
+    return ensureRelativeUrl(apiUrl) || '/api';
   },
   get BASE_URL_WITHOUT_API() {
     const url = this.BASE_URL;

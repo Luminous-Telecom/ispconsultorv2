@@ -14,10 +14,11 @@ export const ensureRelativeUrl = (url: string): string => {
 };
 
 export const getApiBaseUrl = (): string => {
+  // Priorizar window.__APP_CONFIG__ (configuração dinâmica do backend)
   const appConfig = typeof window !== 'undefined' && window.__APP_CONFIG__ 
     ? window.__APP_CONFIG__ 
-    : { REACT_APP_API_URL: process.env.REACT_APP_API_URL || '' };
+    : { REACT_APP_API_URL: process.env.REACT_APP_API_URL || '/api' };
   
-  return ensureRelativeUrl(appConfig.REACT_APP_API_URL);
+  return ensureRelativeUrl(appConfig.REACT_APP_API_URL) || '/api';
 };
 

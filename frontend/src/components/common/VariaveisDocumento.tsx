@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { API_CONFIG } from '../../config/api';
 
 interface Variavel {
   variavel: string;
@@ -20,7 +21,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   const { data: variaveisData, isLoading } = useQuery({
     queryKey: ['variaveis-documento'],
     queryFn: async () => {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/modelos-contrato/variaveis`);
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/modelos-contrato/variaveis`);
       return response.data.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
