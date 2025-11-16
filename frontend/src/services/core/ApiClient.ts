@@ -34,11 +34,16 @@ export class ApiClient {
     this.api.interceptors.request.use(
       (config) => {
         // Lista de rotas públicas que não precisam de autenticação
+        // Incluir tanto com /api quanto sem /api para garantir compatibilidade
         const publicRoutes = [
           '/dados-empresa',
           '/dados-empresa/logo',
+          '/api/dados-empresa',
+          '/api/dados-empresa/logo',
           '/auth/login',
+          '/api/auth/login',
           '/health',
+          '/api/health',
         ];
         
         // Verificar se a URL é uma rota pública
