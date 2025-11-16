@@ -14,14 +14,15 @@ export class ContratoController {
     plano_id: Joi.number().integer().min(1).required(),
     desconto_percentual: Joi.number().min(0).max(100).allow(null),
     desconto_valor: Joi.number().min(0).allow(null),
-    data_inicio: Joi.date().allow(null, '').optional(),
-    data_fim: Joi.date().allow(null, '').optional(),
+    // Aceitar string (YYYY-MM-DD) ou Date para evitar conversão de timezone pelo Joi
+    data_inicio: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
+    data_fim: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
     status: Joi.string().valid('ativo', 'inativo', 'suspenso').default('ativo'),
     observacoes: Joi.string().allow(null, ''),
     isento_mensalidade: Joi.boolean().default(false),
     dia_vencimento_id: Joi.number().integer().min(1).required(),
     conta_boleto: Joi.number().integer().min(1).required(),
-    data_validade_desconto: Joi.date().allow(null, '').optional(),
+    data_validade_desconto: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
     modelo_contrato_id: Joi.number().integer().min(1).required()
   });
 
@@ -30,14 +31,15 @@ export class ContratoController {
     plano_id: Joi.number().integer().min(1),
     desconto_percentual: Joi.number().min(0).max(100).allow(null),
     desconto_valor: Joi.number().min(0).allow(null),
-    data_inicio: Joi.date().allow(null, '').optional(),
-    data_fim: Joi.date().allow(null, '').optional(),
+    // Aceitar string (YYYY-MM-DD) ou Date para evitar conversão de timezone pelo Joi
+    data_inicio: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
+    data_fim: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
     status: Joi.string().valid('ativo', 'inativo', 'suspenso'),
     observacoes: Joi.string().allow(null, ''),
     isento_mensalidade: Joi.boolean(),
     dia_vencimento_id: Joi.number().integer().min(1),
     conta_boleto: Joi.number().integer().min(1),
-    data_validade_desconto: Joi.date().allow(null, '').optional(),
+    data_validade_desconto: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
     modelo_contrato_id: Joi.number().integer().min(1)
   });
 
@@ -164,18 +166,51 @@ export class ContratoController {
       if (value.data_validade_desconto === '') value.data_validade_desconto = null;
 
       // Normalizar datas para usar apenas a parte de data (sem hora/timezone)
-      // Isso evita problemas de conversão de timezone ao salvar no banco
+      // Parsear string diretamente (YYYY-MM-DD) para evitar conversão de timezone
       if (value.data_inicio) {
-        const dataRaw = new Date(value.data_inicio);
-        value.data_inicio = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+        if (typeof value.data_inicio === 'string') {
+          // Se for string no formato YYYY-MM-DD, parsear diretamente
+          const match = value.data_inicio.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (match) {
+            const [, year, month, day] = match;
+            value.data_inicio = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          } else {
+            // Fallback para Date normal se formato diferente
+            const dataRaw = new Date(value.data_inicio);
+            value.data_inicio = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+          }
+        } else if (value.data_inicio instanceof Date) {
+          // Se já for Date, normalizar
+          value.data_inicio = new Date(value.data_inicio.getFullYear(), value.data_inicio.getMonth(), value.data_inicio.getDate());
+        }
       }
       if (value.data_fim) {
-        const dataRaw = new Date(value.data_fim);
-        value.data_fim = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+        if (typeof value.data_fim === 'string') {
+          const match = value.data_fim.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (match) {
+            const [, year, month, day] = match;
+            value.data_fim = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          } else {
+            const dataRaw = new Date(value.data_fim);
+            value.data_fim = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+          }
+        } else if (value.data_fim instanceof Date) {
+          value.data_fim = new Date(value.data_fim.getFullYear(), value.data_fim.getMonth(), value.data_fim.getDate());
+        }
       }
       if (value.data_validade_desconto) {
-        const dataRaw = new Date(value.data_validade_desconto);
-        value.data_validade_desconto = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+        if (typeof value.data_validade_desconto === 'string') {
+          const match = value.data_validade_desconto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (match) {
+            const [, year, month, day] = match;
+            value.data_validade_desconto = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          } else {
+            const dataRaw = new Date(value.data_validade_desconto);
+            value.data_validade_desconto = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+          }
+        } else if (value.data_validade_desconto instanceof Date) {
+          value.data_validade_desconto = new Date(value.data_validade_desconto.getFullYear(), value.data_validade_desconto.getMonth(), value.data_validade_desconto.getDate());
+        }
       }
 
       // Verificar se o cliente existe
@@ -328,18 +363,51 @@ export class ContratoController {
       }
 
       // Normalizar datas para usar apenas a parte de data (sem hora/timezone)
-      // Isso evita problemas de conversão de timezone ao salvar no banco
+      // Parsear string diretamente (YYYY-MM-DD) para evitar conversão de timezone
       if (value.data_inicio) {
-        const dataRaw = new Date(value.data_inicio);
-        value.data_inicio = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+        if (typeof value.data_inicio === 'string') {
+          // Se for string no formato YYYY-MM-DD, parsear diretamente
+          const match = value.data_inicio.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (match) {
+            const [, year, month, day] = match;
+            value.data_inicio = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          } else {
+            // Fallback para Date normal se formato diferente
+            const dataRaw = new Date(value.data_inicio);
+            value.data_inicio = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+          }
+        } else if (value.data_inicio instanceof Date) {
+          // Se já for Date, normalizar
+          value.data_inicio = new Date(value.data_inicio.getFullYear(), value.data_inicio.getMonth(), value.data_inicio.getDate());
+        }
       }
       if (value.data_fim) {
-        const dataRaw = new Date(value.data_fim);
-        value.data_fim = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+        if (typeof value.data_fim === 'string') {
+          const match = value.data_fim.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (match) {
+            const [, year, month, day] = match;
+            value.data_fim = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          } else {
+            const dataRaw = new Date(value.data_fim);
+            value.data_fim = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+          }
+        } else if (value.data_fim instanceof Date) {
+          value.data_fim = new Date(value.data_fim.getFullYear(), value.data_fim.getMonth(), value.data_fim.getDate());
+        }
       }
       if (value.data_validade_desconto) {
-        const dataRaw = new Date(value.data_validade_desconto);
-        value.data_validade_desconto = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+        if (typeof value.data_validade_desconto === 'string') {
+          const match = value.data_validade_desconto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (match) {
+            const [, year, month, day] = match;
+            value.data_validade_desconto = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+          } else {
+            const dataRaw = new Date(value.data_validade_desconto);
+            value.data_validade_desconto = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+          }
+        } else if (value.data_validade_desconto instanceof Date) {
+          value.data_validade_desconto = new Date(value.data_validade_desconto.getFullYear(), value.data_validade_desconto.getMonth(), value.data_validade_desconto.getDate());
+        }
       }
 
       await contrato.update(value);
