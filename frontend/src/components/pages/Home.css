@@ -359,9 +359,9 @@
 }
 
 .tech-badge-logo {
-  height: 20px;
+  height: 32px;
   width: auto;
-  max-width: 60px;
+  max-width: 80px;
   object-fit: contain;
   transition: opacity 0.2s ease;
   display: block;
@@ -648,8 +648,8 @@
   }
 
   .tech-badge-logo {
-    height: 18px;
-    max-width: 50px;
+    height: 28px;
+    max-width: 70px;
   }
 
   .service-card,
@@ -710,8 +710,8 @@
   }
 
   .tech-badge-logo {
-    height: 16px;
-    max-width: 40px;
+    height: 24px;
+    max-width: 60px;
   }
 
   .feature-card,
