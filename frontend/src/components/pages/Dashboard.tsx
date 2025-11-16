@@ -943,11 +943,11 @@ const Dashboard: React.FC = () => {
               <div className="d-flex flex-wrap gap-3">
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Faturamento total</span>
-                  <strong className="dashboard-hero-value">{formatCurrency(receitaPrevistaPeriodo)}</strong>
+                  <strong className="dashboard-hero-value">{formatCurrency(receitaPagaPeriodo)}</strong>
                 </div>
                 <div className="dashboard-hero-stat">
-                  <span className="dashboard-hero-label">Receita recebida</span>
-                  <strong className="dashboard-hero-value">{formatCurrency(receitaPagaPeriodo)}</strong>
+                  <span className="dashboard-hero-label">Receita prevista</span>
+                  <strong className="dashboard-hero-value">{formatCurrency(receitaPrevistaPeriodo)}</strong>
                 </div>
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Receita pendente</span>
