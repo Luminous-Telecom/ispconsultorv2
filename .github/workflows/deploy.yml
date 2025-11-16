@@ -109,6 +109,22 @@ jobs:
             echo "Building backend..."
             npm ci --prefix backend
             npm run build --prefix backend
+            
+            # Copiar frontend buildado para backend/dist/frontend APÓS o build do backend
+            # Isso garante que o frontend não seja removido durante o build
+            echo "Integrando frontend buildado no backend..."
+            mkdir -p backend/dist/frontend
+            cp -r frontend/build/* backend/dist/frontend/
+            
+            # Verificar se foi copiado corretamente
+            if [ -f "backend/dist/frontend/index.html" ]; then
+              echo "✓ Frontend integrado com sucesso no backend"
+              echo "✓ Arquivos do frontend:"
+              ls -la backend/dist/frontend/ | head -10
+            else
+              echo "⚠ ERRO: Frontend não foi copiado corretamente!"
+              exit 1
+            fi
           else
             echo "Nenhuma alteração detectada, pulando build"
           fi
