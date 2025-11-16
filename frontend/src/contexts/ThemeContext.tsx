@@ -20,6 +20,23 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return savedTheme || 'light';
   });
 
+  // Aplicar tema na inicialização
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as Theme;
+    const initialTheme = savedTheme || 'light';
+    document.documentElement.setAttribute('data-theme', initialTheme);
+    
+    // Aplicar classes CSS para o tema
+    if (initialTheme === 'dark') {
+      document.body.classList.add('dark-theme');
+      document.body.classList.remove('light-theme');
+    } else {
+      document.body.classList.add('light-theme');
+      document.body.classList.remove('dark-theme');
+    }
+  }, []);
+
+  // Atualizar tema quando mudar
   useEffect(() => {
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);

@@ -139,11 +139,6 @@ const Home: React.FC = () => {
                     <i className={`bi ${theme === 'light' ? 'bi-moon' : 'bi-sun'}`}></i>
                   </button>
                 </li>
-                <li className="nav-item ms-3">
-                  <Link to="/adm" className="btn btn-primary-gradient">
-                    Área do Cliente
-                  </Link>
-                </li>
               </ul>
             </div>
           </div>
@@ -452,12 +447,9 @@ const Home: React.FC = () => {
                 )}
               </div>
               <div className="mt-5">
-                <button className="btn btn-primary-gradient btn-lg me-3" onClick={() => scrollToSection('contato')}>
+                <button className="btn btn-primary-gradient btn-lg" onClick={() => scrollToSection('contato')}>
                   Solicitar Orçamento
                 </button>
-                <Link to="/adm" className="btn btn-outline-gradient btn-lg">
-                  Área do Cliente
-                </Link>
               </div>
             </div>
           </div>
