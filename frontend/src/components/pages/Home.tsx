@@ -285,9 +285,15 @@ const Home: React.FC = () => {
                   OLT
                 </h5>
                 <div className="tech-badges">
-                  <span className="tech-badge">VSOL</span>
-                  <span className="tech-badge">Fiberhome</span>
-                  <span className="tech-badge">Overteck</span>
+                  {['VSOL', 'Fiberhome', 'Overteck'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge">
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span>{brand}</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
