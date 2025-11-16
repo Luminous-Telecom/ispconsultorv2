@@ -374,16 +374,24 @@ export class SchedulerService {
               });
 
               if (!tituloExistente && dataVencimento > hoje) {
-                // Calcular valor do título (aplicar descontos se houver)
+                // Calcular valor do título
                 const contratoComPlano = contrato as InstanceType<typeof ContratoModel> & ContratoWithPlano;
                 const plano = contratoComPlano.plano;
-                let valorTitulo = contrato.valor_final || (plano?.valor_mensal || 0);
-
-                // Aplicar descontos
-                if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
-                  valorTitulo = valorTitulo * (1 - contrato.desconto_percentual / 100);
-                } else if (contrato.desconto_valor && contrato.desconto_valor > 0) {
-                  valorTitulo = valorTitulo - contrato.desconto_valor;
+                
+                // Se valor_final já existe, usar ele (já tem descontos aplicados)
+                // Caso contrário, calcular a partir do plano aplicando descontos uma única vez
+                let valorTitulo: number;
+                if (contrato.valor_final) {
+                  valorTitulo = parseFloat(contrato.valor_final.toString());
+                } else {
+                  // Calcular a partir do plano aplicando descontos (percentual tem prioridade sobre valor)
+                  valorTitulo = parseFloat((plano?.valor_mensal || 0).toString());
+                  
+                  if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
+                    valorTitulo = valorTitulo * (1 - contrato.desconto_percentual / 100);
+                  } else if (contrato.desconto_valor && contrato.desconto_valor > 0) {
+                    valorTitulo = valorTitulo - contrato.desconto_valor;
+                  }
                 }
 
                 // Garantir valor mínimo de 0.01
