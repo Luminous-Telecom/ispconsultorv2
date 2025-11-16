@@ -78,16 +78,26 @@ export class ApiClient {
         // Normalizar pathname
         pathname = pathname.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
         
-        // Verificar se é rota pública - verificar se pathname contém qualquer rota pública
-        const isPublicRoute = publicRoutes.some(route => {
+        // Verificar se é rota pública
+        // Primeiro verificar diretamente na URL completa (para URLs absolutas)
+        const urlString = urlToCheck.toLowerCase();
+        const isPublicRouteByUrl = publicRoutes.some(route => {
+          return urlString.includes(route.toLowerCase()) || 
+                 urlString.includes(`/api${route.toLowerCase()}`);
+        });
+        
+        // Depois verificar pelo pathname normalizado
+        const isPublicRouteByPath = publicRoutes.some(route => {
           const normalizedRoute = route.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
-          // Verificar correspondência exata ou se pathname termina com a rota
+          // Verificar correspondência exata ou se pathname contém a rota
           return pathname === normalizedRoute ||
                  pathname === `/${normalizedRoute}` ||
                  pathname.endsWith(`/${normalizedRoute}`) ||
                  pathname.includes(`/${normalizedRoute}/`) ||
                  pathname.includes(`/${normalizedRoute}`);
         });
+        
+        const isPublicRoute = isPublicRouteByUrl || isPublicRouteByPath;
         
         // Só adicionar token se não for rota pública
         if (!isPublicRoute) {
