@@ -342,7 +342,7 @@ export class IntegrationWebhookController {
       }
 
       if (event === 'titulo.get') {
-        await IntegrationWebhookController.handleTituloGet(body.payload as IntegrationTituloPayload, res);
+        await IntegrationWebhookController.handleTituloGet(body.payload as IntegrationTituloPayload, req, res);
         return;
       }
 
@@ -905,7 +905,7 @@ export class IntegrationWebhookController {
     return date.toISOString();
   }
 
-  private static async handleTituloGet(payload: IntegrationTituloPayload | undefined, res: Response): Promise<void> {
+  private static async handleTituloGet(payload: IntegrationTituloPayload | undefined, req: Request, res: Response): Promise<void> {
     try {
       if (!payload?.tituloId && !payload?.numeroTitulo) {
         res.status(400).json({
@@ -976,8 +976,15 @@ export class IntegrationWebhookController {
           expiresAt
         });
 
-        // Construir URL do PDF
-        const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3001}`;
+        // Construir URL do PDF baseada no request atual
+        // Usar BASE_URL do .env se disponível, senão construir a partir do request
+        let baseUrl = process.env.BASE_URL;
+        if (!baseUrl) {
+          // Construir URL a partir do request (protocol + host)
+          const protocol = req.protocol || 'http';
+          const host = req.get('host') || '';
+          baseUrl = `${protocol}://${host}`;
+        }
         const pdfUrl = `${baseUrl}/webhook/integration/pdf/${token}`;
 
         res.json({
