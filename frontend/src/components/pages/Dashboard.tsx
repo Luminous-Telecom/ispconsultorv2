@@ -363,14 +363,14 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
   };
 
   return (
-    <div className="chart-container">
-      <h6 className="chart-title">
-        {title} ({formatPieValue(total, title)})
-      </h6>
-      <div className="d-flex align-items-center" style={{ minWidth: 0, overflow: 'hidden', justifyContent: 'center' }}>
-        <div ref={containerRef} style={{ width: '100px', height: '100px', minWidth: '100px', minHeight: '100px', maxWidth: '100px', flexShrink: 0, position: 'relative' }}>
+      <div className="chart-container">
+        <h6 className="chart-title">
+          {title} ({formatPieValue(total, title)})
+        </h6>
+        <div className="d-flex align-items-center" style={{ minWidth: 0, overflow: 'hidden', justifyContent: 'flex-start' }}>
+        <div ref={containerRef} style={{ width: '140px', height: '140px', minWidth: '140px', minHeight: '140px', maxWidth: '140px', flexShrink: 0, position: 'relative' }}>
           {isReady && dimensions && dimensions.width > 0 && dimensions.height > 0 ? (
-            <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={100} minWidth={100}>
+            <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={140} minWidth={140}>
               <PieChart>
               <Pie
                 data={filteredChartData}
@@ -378,8 +378,8 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                innerRadius={20}
-                outerRadius={42}
+                innerRadius={30}
+                outerRadius={60}
                 fill="#8884d8"
                 paddingAngle={2}
                 labelLine={false}
@@ -407,7 +407,7 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
           )}
         </div>
 
-        <div className="chart-legend ms-3" style={{ minWidth: 0, flex: '1 1 auto', overflow: 'hidden', maxWidth: 'calc(100% - 120px)' }}>
+        <div className="chart-legend ms-3" style={{ minWidth: 0, flex: '1 1 auto', overflow: 'hidden', maxWidth: 'calc(100% - 160px)' }}>
           {data.map((item, index) => (
             <div
               key={index}
@@ -966,7 +966,7 @@ const Dashboard: React.FC = () => {
         <div className="dashboard-section card border-0 shadow-sm mb-4">
           <div className="card-body">
             <div className="row g-3 mb-4">
-          <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={clientesChartData}
@@ -977,7 +977,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={planosChartData}
@@ -988,7 +988,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={statusPagamentoData}
@@ -999,7 +999,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={getDistribuicaoPlanos()}
@@ -1010,7 +1010,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={taxaPagamentoChartData}
@@ -1021,7 +1021,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-xl-2 col-lg-4 col-md-6">
+          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
                 data={contratosChartData}
