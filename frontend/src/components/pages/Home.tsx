@@ -87,6 +87,14 @@ const Home: React.FC = () => {
                 </li>
                 <li className="nav-item">
                   <button className="nav-link" onClick={() => {
+                    scrollToSection('tecnologias');
+                    setIsMobileMenuOpen(false);
+                  }}>
+                    Tecnologias
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button className="nav-link" onClick={() => {
                     scrollToSection('recursos');
                     setIsMobileMenuOpen(false);
                   }}>
@@ -250,6 +258,137 @@ const Home: React.FC = () => {
                   Acompanhamento contínuo, suporte técnico e consultoria
                   para garantir operação eficiente e sem interrupções.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Marcas e Tecnologias Section */}
+      <section id="tecnologias" className="section-technologies">
+        <div className="container">
+          <div className="row">
+            <div className="col-lg-8 mx-auto text-center mb-5">
+              <h2 className="section-title">Marcas e Tecnologias</h2>
+              <p className="section-subtitle">
+                Trabalhamos com as principais marcas e tecnologias do mercado de telecomunicações
+              </p>
+            </div>
+          </div>
+          <div className="row g-4">
+            {/* OLT */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-router me-2"></i>
+                  OLT
+                </h5>
+                <div className="tech-badges">
+                  <span className="tech-badge">VSOL</span>
+                  <span className="tech-badge">Fiberhome</span>
+                  <span className="tech-badge">Overteck</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Roteador de Borda */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-wifi me-2"></i>
+                  Roteador de Borda
+                </h5>
+                <div className="tech-badges">
+                  <span className="tech-badge">Huawei</span>
+                  <span className="tech-badge">Mikrotik</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Switch */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-diagram-3 me-2"></i>
+                  Switch
+                </h5>
+                <div className="tech-badges">
+                  <span className="tech-badge">Mikrotik</span>
+                  <span className="tech-badge">Intelbras</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* ERPs */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-laptop me-2"></i>
+                  ERPs
+                </h5>
+                <div className="tech-badges">
+                  <span className="tech-badge">IXC Provedor</span>
+                  <span className="tech-badge">SGP</span>
+                  <span className="tech-badge">Mikweb</span>
+                  <span className="tech-badge">Atlaz</span>
+                  <span className="tech-badge">MKAuth</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Virtualização */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-server me-2"></i>
+                  Virtualização
+                </h5>
+                <div className="tech-badges">
+                  <span className="tech-badge">Proxmox</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* DNS */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-globe me-2"></i>
+                  DNS
+                </h5>
+                <div className="tech-badges">
+                  <span className="tech-badge">Unbound</span>
+                  <span className="tech-badge">Bind9</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Monitoramento */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-graph-up me-2"></i>
+                  Monitoramento
+                </h5>
+                <div className="tech-badges">
+                  <span className="tech-badge">Zabbix</span>
+                  <span className="tech-badge">Grafana</span>
+                  <span className="tech-badge">The Dude</span>
+                  <span className="tech-badge">LibreNMS</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* API */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-code-slash me-2"></i>
+                  API
+                </h5>
+                <div className="tech-badges">
+                  <span className="tech-badge">Bloqueio Anatel</span>
+                </div>
               </div>
             </div>
           </div>
