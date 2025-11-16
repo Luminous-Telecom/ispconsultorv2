@@ -40,16 +40,16 @@ export const brandLogos: Record<string, string> = {
   // API
   'Bloqueio Anatel': '/logos/blockdomi.png',
   
-      // Sistemas Operacionais
-      'Windows Server': '/logos/windows-server.png',
-      'Debian': '/logos/debian.png',
-      'Ubuntu': '/logos/ubuntu.png',
-      'Windows': '/logos/windows.png',
+  // Sistemas Operacionais
+  'Windows Server': '/logos/windows-server.png',
+  'Debian': '/logos/debian.png',
+  'Ubuntu': '/logos/ubuntu.png',
+  'Windows': '/logos/windows.png',
 
-      // Rádios
-      'Mimosa': '/logos/mimosa.png',
-      'Ubiquiti': '/logos/ubiquiti.png',
-    };
+  // Rádios
+  'Mimosa': '/logos/mimosa.png',
+  'Ubiquiti': '/logos/ubiquiti.png',
+};
 
 /**
  * Retorna o caminho da logo de uma marca, ou null se não existir
