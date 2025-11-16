@@ -29,7 +29,7 @@ const Home: React.FC = () => {
           <div className="container">
             <Link to="/" className="navbar-brand">
               <i className="bi bi-broadcast me-2"></i>
-              <span>BackNet</span>
+              <span>Consultoria Telecom</span>
             </Link>
             <button
               className="navbar-toggler"
@@ -83,7 +83,7 @@ const Home: React.FC = () => {
                 </li>
                 <li className="nav-item ms-3">
                   <Link to="/adm" className="btn btn-primary">
-                    Acessar Sistema
+                    Área do Cliente
                   </Link>
                 </li>
               </ul>
@@ -98,24 +98,25 @@ const Home: React.FC = () => {
           <div className="row align-items-center min-vh-100">
             <div className="col-lg-6">
               <h1 className="hero-title">
-                Sistema de Gestão Completo para sua Empresa
+                Consultoria e Assessoria Técnica em Telecomunicações
               </h1>
               <p className="hero-subtitle">
-                Gerencie clientes, contratos, planos e finanças de forma integrada e eficiente.
-                Tudo em um único lugar, com segurança e praticidade.
+                Soluções especializadas para empresas de telecomunicações.
+                Otimização de processos, gestão eficiente e suporte técnico especializado
+                para impulsionar seu negócio.
               </p>
               <div className="hero-buttons">
-                <Link to="/adm" className="btn btn-primary btn-lg me-3">
-                  Começar Agora
-                </Link>
+                <button className="btn btn-primary btn-lg me-3" onClick={() => scrollToSection('contato')}>
+                  Solicitar Orçamento
+                </button>
                 <button className="btn btn-outline-primary btn-lg" onClick={() => scrollToSection('sobre')}>
-                  Saiba Mais
+                  Conheça Nossos Serviços
                 </button>
               </div>
             </div>
             <div className="col-lg-6 text-center">
               <div className="hero-image">
-                <i className="bi bi-graph-up-arrow"></i>
+                <i className="bi bi-broadcast"></i>
               </div>
             </div>
           </div>
@@ -127,10 +128,11 @@ const Home: React.FC = () => {
         <div className="container">
           <div className="row">
             <div className="col-lg-8 mx-auto text-center mb-5">
-              <h2 className="section-title">Sobre o BackNet</h2>
+              <h2 className="section-title">Sobre Nós</h2>
               <p className="section-subtitle">
-                Uma solução completa de gestão empresarial desenvolvida para simplificar
-                e otimizar os processos do seu negócio.
+                Especialistas em consultoria e assessoria técnica para empresas de telecomunicações.
+                Oferecemos soluções personalizadas para otimizar operações, melhorar gestão
+                e impulsionar o crescimento do seu negócio.
               </p>
             </div>
           </div>
@@ -138,36 +140,36 @@ const Home: React.FC = () => {
             <div className="col-md-4">
               <div className="feature-card">
                 <div className="feature-icon">
-                  <i className="bi bi-shield-check"></i>
+                  <i className="bi bi-award"></i>
                 </div>
-                <h3>Seguro e Confiável</h3>
+                <h3>Experiência Comprovada</h3>
                 <p>
-                  Seus dados protegidos com as melhores práticas de segurança
-                  e criptografia.
+                  Anos de experiência no mercado de telecomunicações,
+                  com conhecimento técnico especializado e resultados comprovados.
                 </p>
               </div>
             </div>
             <div className="col-md-4">
               <div className="feature-card">
                 <div className="feature-icon">
-                  <i className="bi bi-lightning-charge"></i>
+                  <i className="bi bi-people-fill"></i>
                 </div>
-                <h3>Rápido e Eficiente</h3>
+                <h3>Atendimento Personalizado</h3>
                 <p>
-                  Interface intuitiva e processos otimizados para máxima
-                  produtividade.
+                  Soluções sob medida para cada cliente, com acompanhamento
+                  próximo e suporte técnico especializado.
                 </p>
               </div>
             </div>
             <div className="col-md-4">
               <div className="feature-card">
                 <div className="feature-icon">
-                  <i className="bi bi-phone"></i>
+                  <i className="bi bi-graph-up-arrow"></i>
                 </div>
-                <h3>Totalmente Responsivo</h3>
+                <h3>Resultados Mensuráveis</h3>
                 <p>
-                  Acesse de qualquer dispositivo, a qualquer momento,
-                  de qualquer lugar.
+                  Foco em resultados práticos que impactam diretamente
+                  na eficiência operacional e na rentabilidade do negócio.
                 </p>
               </div>
             </div>
@@ -182,68 +184,68 @@ const Home: React.FC = () => {
             <div className="col-lg-8 mx-auto text-center mb-5">
               <h2 className="section-title">Nossos Serviços</h2>
               <p className="section-subtitle">
-                Soluções integradas para gerenciar todos os aspectos do seu negócio
+                Soluções completas de consultoria e assessoria técnica para empresas de telecomunicações
               </p>
             </div>
           </div>
           <div className="row g-4">
             <div className="col-md-6 col-lg-4">
               <div className="service-card">
-                <i className="bi bi-people service-icon"></i>
-                <h4>Gestão de Clientes</h4>
+                <i className="bi bi-gear service-icon"></i>
+                <h4>Assessoria Técnica</h4>
                 <p>
-                  Cadastro completo, histórico de interações e controle
-                  de relacionamento com seus clientes.
+                  Suporte técnico especializado para implementação, configuração
+                  e manutenção de sistemas de telecomunicações.
                 </p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="service-card">
-                <i className="bi bi-file-earmark-text service-icon"></i>
-                <h4>Gestão de Contratos</h4>
+                <i className="bi bi-diagram-3 service-icon"></i>
+                <h4>Consultoria em Processos</h4>
                 <p>
-                  Criação, acompanhamento e renovação de contratos
-                  de forma automatizada e organizada.
+                  Análise e otimização de processos operacionais, gestão de clientes,
+                  contratos e operações para maior eficiência.
                 </p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="service-card">
-                <i className="bi bi-wifi service-icon"></i>
-                <h4>Gestão de Planos</h4>
+                <i className="bi bi-laptop service-icon"></i>
+                <h4>Implementação de Sistemas</h4>
                 <p>
-                  Controle de planos e serviços oferecidos, com
-                  flexibilidade para personalização.
-                </p>
-              </div>
-            </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="service-card">
-                <i className="bi bi-bank service-icon"></i>
-                <h4>Integração Bancária</h4>
-                <p>
-                  Integração com principais gateways de pagamento
-                  para emissão automática de boletos.
-                </p>
-              </div>
-            </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="service-card">
-                <i className="bi bi-cash-coin service-icon"></i>
-                <h4>Controle Financeiro</h4>
-                <p>
-                  Acompanhamento de receitas, despesas e relatórios
-                  financeiros detalhados.
+                  Implementação e customização de sistemas de gestão
+                  específicos para empresas de telecomunicações.
                 </p>
               </div>
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="service-card">
                 <i className="bi bi-graph-up service-icon"></i>
-                <h4>Dashboard Inteligente</h4>
+                <h4>Análise e Planejamento</h4>
                 <p>
-                  Visão geral do negócio com gráficos e indicadores
-                  em tempo real.
+                  Análise de performance, planejamento estratégico e
+                  definição de métricas para crescimento sustentável.
+                </p>
+              </div>
+            </div>
+            <div className="col-md-6 col-lg-4">
+              <div className="service-card">
+                <i className="bi bi-book service-icon"></i>
+                <h4>Treinamento e Capacitação</h4>
+                <p>
+                  Treinamento de equipes, capacitação técnica e suporte
+                  para adoção de novas tecnologias e processos.
+                </p>
+              </div>
+            </div>
+            <div className="col-md-6 col-lg-4">
+              <div className="service-card">
+                <i className="bi bi-headset service-icon"></i>
+                <h4>Suporte Contínuo</h4>
+                <p>
+                  Acompanhamento contínuo, suporte técnico e consultoria
+                  para garantir operação eficiente e sem interrupções.
                 </p>
               </div>
             </div>
@@ -256,41 +258,41 @@ const Home: React.FC = () => {
         <div className="container">
           <div className="row align-items-center">
             <div className="col-lg-6">
-              <h2 className="section-title">Recursos Avançados</h2>
+              <h2 className="section-title">Por Que Escolher Nossa Consultoria?</h2>
               <div className="feature-list">
                 <div className="feature-item">
                   <i className="bi bi-check-circle-fill"></i>
                   <div>
-                    <h5>Agendamento Automático</h5>
-                    <p>Geração automática de títulos e boletos conforme configuração</p>
+                    <h5>Conhecimento Especializado</h5>
+                    <p>Equipe com vasta experiência no mercado de telecomunicações e tecnologias relacionadas</p>
                   </div>
                 </div>
                 <div className="feature-item">
                   <i className="bi bi-check-circle-fill"></i>
                   <div>
-                    <h5>Webhooks Integrados</h5>
-                    <p>Notificações em tempo real de eventos e atualizações</p>
+                    <h5>Soluções Personalizadas</h5>
+                    <p>Cada projeto é desenvolvido sob medida para atender às necessidades específicas do cliente</p>
                   </div>
                 </div>
                 <div className="feature-item">
                   <i className="bi bi-check-circle-fill"></i>
                   <div>
-                    <h5>Relatórios Personalizados</h5>
-                    <p>Geração de relatórios e documentos personalizados</p>
+                    <h5>Resultados Comprovados</h5>
+                    <p>Histórico de projetos bem-sucedidos que geraram aumento de eficiência e rentabilidade</p>
                   </div>
                 </div>
                 <div className="feature-item">
                   <i className="bi bi-check-circle-fill"></i>
                   <div>
-                    <h5>Multi-usuário</h5>
-                    <p>Sistema preparado para múltiplos usuários e permissões</p>
+                    <h5>Suporte Dedicado</h5>
+                    <p>Acompanhamento próximo e suporte técnico contínuo para garantir o sucesso do projeto</p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-lg-6 text-center">
               <div className="features-image">
-                <i className="bi bi-gear-wide-connected"></i>
+                <i className="bi bi-broadcast"></i>
               </div>
             </div>
           </div>
@@ -304,21 +306,29 @@ const Home: React.FC = () => {
             <div className="col-lg-8 mx-auto text-center">
               <h2 className="section-title">Entre em Contato</h2>
               <p className="section-subtitle mb-5">
-                Tem alguma dúvida ou precisa de suporte? Estamos aqui para ajudar!
+                Estamos prontos para ajudar sua empresa a alcançar melhores resultados.
+                Solicite um orçamento ou agende uma consultoria.
               </p>
               <div className="contact-info">
                 <div className="contact-item">
                   <i className="bi bi-envelope"></i>
-                  <span>contato@backnet.com.br</span>
+                  <span>contato@consultoriatelecom.com.br</span>
                 </div>
                 <div className="contact-item">
                   <i className="bi bi-telephone"></i>
                   <span>(00) 0000-0000</span>
                 </div>
+                <div className="contact-item">
+                  <i className="bi bi-whatsapp"></i>
+                  <span>(00) 00000-0000</span>
+                </div>
               </div>
               <div className="mt-5">
-                <Link to="/adm" className="btn btn-primary btn-lg">
-                  Acessar Sistema Administrativo
+                <button className="btn btn-primary btn-lg me-3" onClick={() => scrollToSection('contato')}>
+                  Solicitar Orçamento
+                </button>
+                <Link to="/adm" className="btn btn-outline-primary btn-lg">
+                  Área do Cliente
                 </Link>
               </div>
             </div>
@@ -333,15 +343,15 @@ const Home: React.FC = () => {
             <div className="col-md-6">
               <h5>
                 <i className="bi bi-broadcast me-2"></i>
-                BackNet
+                Consultoria Telecom
               </h5>
               <p className="text-muted">
-                Sistema de gestão empresarial completo e integrado.
+                Consultoria e assessoria técnica especializada em telecomunicações.
               </p>
             </div>
             <div className="col-md-6 text-md-end">
               <p className="text-muted mb-0">
-                &copy; {new Date().getFullYear()} BackNet. Todos os direitos reservados.
+                &copy; {new Date().getFullYear()} Consultoria Telecom. Todos os direitos reservados.
               </p>
             </div>
           </div>
