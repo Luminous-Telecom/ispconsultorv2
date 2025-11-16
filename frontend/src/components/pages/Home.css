@@ -368,7 +368,8 @@
 }
 
 .tech-badge-logo-invert {
-  filter: brightness(0);
+  /* Logo aparece com cores originais sobre fundo branco */
+  filter: none;
   display: block;
 }
 
