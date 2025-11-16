@@ -57,21 +57,24 @@ router.post('/logo', (req, res, next) => {
       // Tratar erros do multer
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({ 
+          res.status(400).json({ 
             success: false,
             message: 'Arquivo muito grande. Tamanho máximo: 2MB' 
           });
+          return;
         }
-        return res.status(400).json({ 
+        res.status(400).json({ 
           success: false,
           message: `Erro no upload: ${err.message}` 
         });
+        return;
       }
       // Erro de validação de tipo de arquivo
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         message: err.message || 'Erro ao processar arquivo' 
       });
+      return;
     }
     next();
   });
