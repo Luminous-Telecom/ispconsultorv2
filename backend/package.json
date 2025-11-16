@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc && cp -r src/templates dist/ && cp -r images dist/ && rm -rf dist/frontend && cp -r ../frontend/build dist/frontend",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc && cp -r src/templates dist/ && cp -r images dist/ && cp -r migrations dist/",
     "start": "node dist/index.js",
     "test": "jest",
     "lint": "eslint src --ext .ts",
