@@ -27,12 +27,12 @@ module.exports = {
       auto_lancamento_titulos: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: false
+        defaultValue: true
       },
       total_titulos_financeiro: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 12
+        defaultValue: 6
       },
       created_at: {
         type: Sequelize.DATE,
@@ -51,7 +51,7 @@ module.exports = {
     await queryInterface.sequelize.query(
       'INSERT INTO parametros (validar_cpf_cnpj, gerar_titulos_automatico, titulos_vence_sabado, auto_lancamento_titulos, total_titulos_financeiro) VALUES (?, ?, ?, ?, ?)',
       {
-        replacements: [true, false, false, false, 12]
+        replacements: [true, false, false, true, 6]
       }
     );
   },
