@@ -278,12 +278,7 @@
   width: auto;
   max-width: 60px;
   object-fit: contain;
-  filter: brightness(0) invert(0);
-  transition: filter 0.2s ease;
-}
-
-[data-theme="dark"] .tech-badge-logo {
-  filter: brightness(0) invert(1);
+  transition: opacity 0.2s ease;
 }
 
 .tech-badge:hover {
@@ -293,7 +288,7 @@
 }
 
 .tech-badge:hover .tech-badge-logo {
-  filter: brightness(0) invert(1);
+  opacity: 0.9;
 }
 
 /* Features Section */
