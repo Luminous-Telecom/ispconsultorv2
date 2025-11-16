@@ -354,16 +354,24 @@ export class SchedulerService {
               dataInicioContrato.setHours(0, 0, 0, 0);
             }
             
-            // Se data de início existe e é futura, usar ela; senão usar hoje
-            // Mas sempre respeitar que não podemos gerar títulos antes da data de início
-            const dataInicio = dataInicioContrato && dataInicioContrato > hoje ? dataInicioContrato : hoje;
-            
             const diaVencimentoConfig = await DiasVencimento.findByPk(contrato.dia_vencimento_id);
             const diaVencimento = diaVencimentoConfig?.dia || 15;
 
             // Começar sempre do mês atual (não do próximo mês)
-            let mesAtual = hoje.getMonth();
-            let anoAtual = hoje.getFullYear();
+            // Se data de início existe e está em um mês futuro, começar do mês da data de início
+            let mesAtual: number;
+            let anoAtual: number;
+            
+            if (dataInicioContrato && dataInicioContrato > hoje) {
+              // Data de início é futura, começar do mês da data de início
+              mesAtual = dataInicioContrato.getMonth();
+              anoAtual = dataInicioContrato.getFullYear();
+            } else {
+              // Começar do mês atual
+              mesAtual = hoje.getMonth();
+              anoAtual = hoje.getFullYear();
+            }
+            
             let tentativas = 0;
             let títulosCriadosNoContrato = 0;
 
@@ -373,7 +381,20 @@ export class SchedulerService {
               // Criar data de vencimento com o dia correto
               // Se o dia não existir no mês (ex: dia 31 em fevereiro), ajusta para o último dia válido
               const ultimoDiaDoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
-              const diaCorreto = Math.min(diaVencimento, ultimoDiaDoMes);
+              let diaCorreto = Math.min(diaVencimento, ultimoDiaDoMes);
+              
+              // Se data de início existe e está no mesmo mês, garantir que dia de vencimento seja >= dia de início
+              if (dataInicioContrato) {
+                const mesInicio = dataInicioContrato.getMonth();
+                const anoInicio = dataInicioContrato.getFullYear();
+                const diaInicio = dataInicioContrato.getDate();
+                
+                if (mesAtual === mesInicio && anoAtual === anoInicio && diaCorreto < diaInicio) {
+                  // Ajustar dia de vencimento para ser igual ou posterior ao dia de início
+                  diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
+                }
+              }
+              
               const dataVencimento = new Date(anoAtual, mesAtual, diaCorreto);
               dataVencimento.setHours(0, 0, 0, 0);
 
@@ -384,8 +405,10 @@ export class SchedulerService {
                 return `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}` === mesAno;
               });
 
-              // Gerar título se não existir e se a data de vencimento for >= data de início
-              if (!tituloExistente && dataVencimento >= dataInicio) {
+              // Gerar título se não existir e se a data de vencimento for >= data de início (ou não houver data de início)
+              const podeGerar = !tituloExistente && (!dataInicioContrato || dataVencimento >= dataInicioContrato);
+              
+              if (podeGerar) {
                 // Calcular valor do título
                 const plano = (contrato as ContratoWithPlano).plano;
                 
