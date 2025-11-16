@@ -44,15 +44,25 @@ export class ApiClient {
         // Verificar se a URL é uma rota pública
         // Usar tanto a URL completa quanto apenas o path
         const url = config.url || '';
-        const fullUrl = config.baseURL ? `${config.baseURL}${url}` : url;
+        const baseURL = config.baseURL || '';
+        const fullUrl = baseURL ? `${baseURL}${url}` : url;
+        
+        // Normalizar URLs para comparação (remover barras duplicadas, etc)
+        const normalizeUrl = (u: string) => u.replace(/\/+/g, '/').replace(/\/$/, '');
+        const normalizedUrl = normalizeUrl(url);
+        const normalizedFullUrl = normalizeUrl(fullUrl);
+        
         const isPublicRoute = publicRoutes.some(route => {
-          // Verificar se a URL contém a rota pública
-          return url.includes(route) || 
-                 url.endsWith(route) || 
-                 fullUrl.includes(route) ||
-                 fullUrl.endsWith(route) ||
-                 url === route ||
-                 fullUrl === route;
+          const normalizedRoute = normalizeUrl(route);
+          // Verificar múltiplas formas de correspondência
+          return normalizedUrl === normalizedRoute ||
+                 normalizedUrl.endsWith(normalizedRoute) ||
+                 normalizedUrl.includes(normalizedRoute) ||
+                 normalizedFullUrl === normalizedRoute ||
+                 normalizedFullUrl.endsWith(normalizedRoute) ||
+                 normalizedFullUrl.includes(normalizedRoute) ||
+                 url.includes(route) ||
+                 fullUrl.includes(route);
         });
         
         // Só adicionar token se não for rota pública
