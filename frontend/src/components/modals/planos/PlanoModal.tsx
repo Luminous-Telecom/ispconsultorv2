@@ -71,21 +71,25 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
   });
 
 
+  // Função auxiliar para normalizar data (evitar problemas de timezone)
+  const normalizeDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      // Usar apenas ano, mês e dia (sem hora/timezone) para evitar problemas de conversão
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch {
+      return '';
+    }
+  };
+
   // Carregar dados do plano quando modal abrir em modo edição
   useEffect(() => {
     if (isEditing && planoData) {
-      let dataInicio = '';
-      if (planoData.data_inicio) {
-        const d = new Date(planoData.data_inicio);
-        dataInicio = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : '';
-      }
-      
-      let dataFim = '';
-      if (planoData.data_fim) {
-        const d = new Date(planoData.data_fim);
-        dataFim = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : '';
-      }
-      
       setFormData({
         nome_plano: planoData.nome_plano || '',
         tipo_servico: planoData.tipo_servico || 'internet',
@@ -99,8 +103,8 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
         servicos_inclusos: Array.isArray(planoData.servicos_inclusos) ? planoData.servicos_inclusos : [],
         renovacao_automatica: planoData.renovacao_automatica ?? true,
         status: planoData.status || 'ativo',
-        data_inicio: dataInicio || new Date().toISOString().split('T')[0],
-        data_fim: dataFim,
+        data_inicio: normalizeDate(planoData.data_inicio) || new Date().toISOString().split('T')[0],
+        data_fim: normalizeDate(planoData.data_fim),
         observacoes: planoData.observacoes || ''
       });
       setErrors({});

@@ -169,6 +169,22 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const createContratoMutation = useCreateContrato();
   const updateContratoMutation = useUpdateContrato();
 
+  // Função auxiliar para normalizar data (evitar problemas de timezone)
+  const normalizeDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      // Usar apenas ano, mês e dia (sem hora/timezone) para evitar problemas de conversão
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch {
+      return '';
+    }
+  };
+
   // Carregar dados do contrato quando entrar em modo edição
   useEffect(() => {
     if (isEditMode && contratoData) {
@@ -176,14 +192,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         plano_id: contratoData.plano_id || 0,
         desconto_percentual: parseFloat(String(contratoData.desconto_percentual || 0)) || 0,
         desconto_valor: parseFloat(String(contratoData.desconto_valor || 0)) || 0,
-        data_inicio: contratoData.data_inicio ? contratoData.data_inicio.split('T')[0] : new Date().toISOString().split('T')[0],
-        data_fim: contratoData.data_fim ? contratoData.data_fim.split('T')[0] : '',
+        data_inicio: normalizeDate(contratoData.data_inicio) || new Date().toISOString().split('T')[0],
+        data_fim: normalizeDate(contratoData.data_fim),
         status: contratoData.status || 'ativo',
         observacoes: ensureString(contratoData.observacoes),
         isento_mensalidade: contratoData.isento_mensalidade || false,
         dia_vencimento_id: contratoData.dia_vencimento_id || 0,
         conta_boleto: contratoData.conta_boleto || 0,
-        data_validade_desconto: contratoData.data_validade_desconto ? contratoData.data_validade_desconto.split('T')[0] : '',
+        data_validade_desconto: normalizeDate(contratoData.data_validade_desconto),
         modelo_contrato_id: contratoData.modelo_contrato_id || 0
       });
       setErrors({});
