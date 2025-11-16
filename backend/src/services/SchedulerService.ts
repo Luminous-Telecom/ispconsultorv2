@@ -400,16 +400,6 @@ export class SchedulerService {
               const dataVencimento = new Date(anoAtual, mesAtual, diaCorreto);
               dataVencimento.setHours(0, 0, 0, 0);
 
-              // Se a data de vencimento já passou, pular para próximo mês
-              if (dataVencimento < hoje) {
-                mesAtual++;
-                if (mesAtual > 11) {
-                  mesAtual = 0;
-                  anoAtual++;
-                }
-                continue;
-              }
-
               // Verificar se já existe título para este mês
               const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
               const tituloExistente = titulosExistentes.find(t => {
@@ -417,9 +407,26 @@ export class SchedulerService {
                 return `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}` === mesAno;
               });
 
-              // Gerar título se não existir e se a data de vencimento for >= data de início (ou não houver data de início)
+              // Verificar se estamos no mês atual
+              const estaNoMesAtual = mesAtual === hoje.getMonth() && anoAtual === hoje.getFullYear();
+              
+              // Gerar título se:
+              // 1. Não existe título para este mês
+              // 2. Respeita data de início (se existir)
+              // 3. Se está no mês atual OU se data de vencimento não passou
               const podeGerar = !tituloExistente && 
-                (!dataInicioContrato || dataVencimento >= dataInicioContrato);
+                (!dataInicioContrato || dataVencimento >= dataInicioContrato) &&
+                (estaNoMesAtual || dataVencimento >= hoje);
+              
+              // Se não pode gerar e não estamos no mês atual, pular para próximo mês
+              if (!podeGerar && !estaNoMesAtual) {
+                mesAtual++;
+                if (mesAtual > 11) {
+                  mesAtual = 0;
+                  anoAtual++;
+                }
+                continue;
+              }
               
               if (podeGerar) {
                 // Calcular valor do título
