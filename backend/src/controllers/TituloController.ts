@@ -243,9 +243,8 @@ export class TituloController {
                         ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 
                         ext === 'gif' ? 'image/gif' : 'image/png';
         return `data:${mimeType};base64,${base64Image}`;
-      } else {
-        logger.warn('Arquivo de logo não encontrado', { imagePath, logo });
       }
+      // Logo não encontrado - retornar logo original (pode ser URL ou já estar em base64)
     } catch (error) {
       logger.warn('Erro ao converter logo para base64', { logo, error });
     }
@@ -281,8 +280,7 @@ export class TituloController {
         return `data:${mimeType};base64,${base64Image}`;
       }
       
-      // Se arquivo não existir, retornar string vazia
-      logger.warn('Arquivo de logo não encontrado', { imagePath, tipoBanco });
+      // Se arquivo não existir, retornar string vazia (logo padrão não é obrigatório)
       return '';
     } catch (error) {
       logger.error('Erro ao carregar logo do banco', { error, tipoBanco });
