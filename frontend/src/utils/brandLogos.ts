@@ -19,7 +19,7 @@ export const brandLogos: Record<string, string> = {
   'IXC Provedor': '/logos/ixc.png',
   'SGP': '/logos/sgp.png',
   'Mikweb': '/logos/mikweb.png',
-  'Atlaz': '/logos/atlaz.png',
+  'Atlaz': '/logos/atlaz.jpg',
   'MKAuth': '/logos/mkauth.png',
   
   // Virtualização
@@ -32,11 +32,11 @@ export const brandLogos: Record<string, string> = {
   // Monitoramento
   'Zabbix': '/logos/zabbix.png',
   'Grafana': '/logos/grafana.png',
-  'The Dude': '/logos/thedude.png',
-  'LibreNMS': '/logos/librenms.png',
+  'The Dude': '/logos/thedude.jpg',
+  'LibreNMS': '/logos/librenms.jpg',
   
   // API
-  'Bloqueio Anatel': '/logos/anatel.png',
+  'Bloqueio Anatel': '/logos/anatel.jpg',
 };
 
 /**
