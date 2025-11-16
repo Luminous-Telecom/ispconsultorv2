@@ -442,7 +442,112 @@ Crie o arquivo de configuração do Nginx:
 sudo nano /etc/nginx/sites-available/backnet
 ```
 
-**Configuração Completa do Nginx:**
+### 3. Configuração do Nginx
+
+Escolha uma das opções abaixo:
+
+#### Opção A: HTTP Apenas (Mais Simples)
+
+**Configuração Nginx HTTP:**
+
+```nginx
+# Upstream para o backend
+upstream backend {
+    server localhost:3001;
+    keepalive 64;
+}
+
+# Servidor HTTP
+server {
+    listen 80;
+    server_name seu-dominio.com.br www.seu-dominio.com.br;
+
+    # Logs
+    access_log /var/log/nginx/backnet-access.log;
+    error_log /var/log/nginx/backnet-error.log;
+
+    # Tamanho máximo de upload
+    client_max_body_size 10M;
+
+    # Timeout para requisições longas
+    proxy_read_timeout 300s;
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+
+    # Headers de segurança
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Proxy para API do backend
+    location /api {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_redirect off;
+    }
+
+    # Proxy para webhooks
+    location /webhook {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    # Proxy para boletos
+    location /boleto {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy para uploads
+    location /uploads {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Arquivos estáticos do frontend
+    location / {
+        root /home/projetos/BackNet-ERP/frontend/build;
+        try_files $uri $uri/ /index.html;
+        
+        # Cache para arquivos estáticos
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+        
+        # Sem cache para index.html
+        location = /index.html {
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
+        }
+    }
+}
+```
+
+#### Opção B: HTTPS com SSL (Recomendado para Produção)
+
+**Configuração Completa do Nginx com HTTPS:**
 
 ```nginx
 # Upstream para o backend
@@ -565,7 +670,7 @@ server {
 }
 ```
 
-### 3. Habilitar Site
+### 4. Habilitar Site
 
 ```bash
 # Criar link simbólico
@@ -581,7 +686,11 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 4. Configurar SSL com Let's Encrypt (Opcional)
+**⚠️ Importante:** 
+- Se usar **HTTP apenas**, ajuste o caminho do `root` no bloco `location /` para o caminho correto do seu servidor
+- Se usar **HTTPS**, continue para a próxima seção
+
+### 5. Configurar SSL com Let's Encrypt (Apenas para HTTPS)
 
 ```bash
 # Instalar Certbot
@@ -594,7 +703,7 @@ sudo certbot --nginx -d seu-dominio.com.br -d www.seu-dominio.com.br
 sudo certbot renew --dry-run
 ```
 
-### 5. Configuração Alternativa (Frontend com Express)
+### 6. Configuração Alternativa (Frontend com Express)
 
 Se preferir usar o servidor Express do frontend em vez de servir arquivos estáticos diretamente pelo Nginx:
 
