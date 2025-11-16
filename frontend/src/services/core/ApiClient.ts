@@ -33,9 +33,26 @@ export class ApiClient {
   private setupInterceptors(): void {
     this.api.interceptors.request.use(
       (config) => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        // Lista de rotas públicas que não precisam de autenticação
+        const publicRoutes = [
+          '/dados-empresa',
+          '/dados-empresa/logo',
+          '/auth/login',
+          '/health',
+        ];
+        
+        // Verificar se a URL é uma rota pública
+        const isPublicRoute = publicRoutes.some(route => {
+          const url = config.url || '';
+          return url.includes(route) || url.endsWith(route);
+        });
+        
+        // Só adicionar token se não for rota pública
+        if (!isPublicRoute) {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
         }
         
         // Se for FormData, remover Content-Type para axios definir automaticamente com boundary
