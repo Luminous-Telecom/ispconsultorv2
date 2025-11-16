@@ -33,7 +33,39 @@ const Home: React.FC = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+    setIsMobileMenuOpen(false);
   };
+
+  // Função para formatar número do WhatsApp (remove caracteres especiais e adiciona código do país)
+  const formatWhatsAppNumber = (phone: string): string => {
+    // Remove tudo que não é número
+    const numbersOnly = phone.replace(/\D/g, '');
+    // Se não começar com 55 (código do Brasil), adiciona
+    if (numbersOnly.length > 0 && !numbersOnly.startsWith('55')) {
+      // Se começar com 0, remove o 0 antes de adicionar o 55
+      const cleaned = numbersOnly.startsWith('0') ? numbersOnly.substring(1) : numbersOnly;
+      return `55${cleaned}`;
+    }
+    return numbersOnly;
+  };
+
+  // Função para criar link do WhatsApp
+  const getWhatsAppLink = (phone: string): string => {
+    const formatted = formatWhatsAppNumber(phone);
+    return `https://wa.me/${formatted}`;
+  };
+
+  // Função para criar link de email
+  const getEmailLink = (email: string): string => {
+    return `mailto:${email}`;
+  };
+
+  // Função para criar link de telefone
+  const getPhoneLink = (phone: string): string => {
+    return `tel:${phone}`;
+  };
+
+  const companyName = dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom';
 
   return (
     <div className="home-page">
@@ -45,68 +77,55 @@ const Home: React.FC = () => {
               {dadosEmpresa?.logo ? (
                 <img 
                   src={dadosEmpresa.logo} 
-                  alt={dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'} 
+                  alt={companyName}
+                  className="brand-logo"
                 />
               ) : (
-                <i className="bi bi-broadcast me-2"></i>
+                <div className="brand-icon">
+                  <i className="bi bi-broadcast-tower"></i>
+                </div>
               )}
-              <span>{dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}</span>
+              <span className="brand-name">{companyName}</span>
             </Link>
             <button
-              className="navbar-toggler"
+              className={`navbar-toggler ${isMobileMenuOpen ? 'active' : ''}`}
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle navigation"
             >
-              <span className="navbar-toggler-icon"></span>
+              <span></span>
+              <span></span>
+              <span></span>
             </button>
-            <div className={`collapse navbar-collapse ${isMobileMenuOpen ? 'show' : ''}`} id="navbarNav">
+            <div className={`navbar-collapse ${isMobileMenuOpen ? 'show' : ''}`}>
               <ul className="navbar-nav ms-auto">
                 <li className="nav-item">
-                  <button className="nav-link" onClick={() => {
-                    scrollToSection('inicio');
-                    setIsMobileMenuOpen(false);
-                  }}>
+                  <button className="nav-link" onClick={() => scrollToSection('inicio')}>
                     Início
                   </button>
                 </li>
                 <li className="nav-item">
-                  <button className="nav-link" onClick={() => {
-                    scrollToSection('sobre');
-                    setIsMobileMenuOpen(false);
-                  }}>
+                  <button className="nav-link" onClick={() => scrollToSection('sobre')}>
                     Sobre
                   </button>
                 </li>
                 <li className="nav-item">
-                  <button className="nav-link" onClick={() => {
-                    scrollToSection('servicos');
-                    setIsMobileMenuOpen(false);
-                  }}>
+                  <button className="nav-link" onClick={() => scrollToSection('servicos')}>
                     Serviços
                   </button>
                 </li>
                 <li className="nav-item">
-                  <button className="nav-link" onClick={() => {
-                    scrollToSection('tecnologias');
-                    setIsMobileMenuOpen(false);
-                  }}>
+                  <button className="nav-link" onClick={() => scrollToSection('tecnologias')}>
                     Tecnologias
                   </button>
                 </li>
                 <li className="nav-item">
-                  <button className="nav-link" onClick={() => {
-                    scrollToSection('recursos');
-                    setIsMobileMenuOpen(false);
-                  }}>
+                  <button className="nav-link" onClick={() => scrollToSection('recursos')}>
                     Recursos
                   </button>
                 </li>
                 <li className="nav-item">
-                  <button className="nav-link" onClick={() => {
-                    scrollToSection('contato');
-                    setIsMobileMenuOpen(false);
-                  }}>
+                  <button className="nav-link" onClick={() => scrollToSection('contato')}>
                     Contato
                   </button>
                 </li>
@@ -121,7 +140,7 @@ const Home: React.FC = () => {
                   </button>
                 </li>
                 <li className="nav-item ms-3">
-                  <Link to="/adm" className="btn btn-primary">
+                  <Link to="/adm" className="btn btn-primary-gradient">
                     Área do Cliente
                   </Link>
                 </li>
@@ -133,32 +152,50 @@ const Home: React.FC = () => {
 
       {/* Hero Section */}
       <section id="inicio" className="hero-section">
+        <div className="hero-background">
+          <div className="hero-bg-circle hero-bg-circle-1"></div>
+          <div className="hero-bg-circle hero-bg-circle-2"></div>
+        </div>
         <div className="container">
           <div className="row align-items-center min-vh-100">
             <div className="col-lg-6">
+              <div className="hero-badge">
+                Consultoria Especializada
+              </div>
               <h1 className="hero-title">
-                {dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}
+                <span className="hero-title-gradient">{companyName}</span>
               </h1>
               <h2 className="hero-subtitle">
                 Consultoria e Assessoria Técnica em Telecomunicações
               </h2>
-              <p className="hero-subtitle">
+              <p className="hero-description">
                 Soluções especializadas para empresas de telecomunicações.
                 Otimização de processos, gestão eficiente e suporte técnico especializado
                 para impulsionar seu negócio.
               </p>
               <div className="hero-buttons">
-                <button className="btn btn-primary btn-lg me-3" onClick={() => scrollToSection('contato')}>
+                <button className="btn btn-primary-gradient btn-lg me-3" onClick={() => scrollToSection('contato')}>
                   Solicitar Orçamento
                 </button>
-                <button className="btn btn-outline-primary btn-lg" onClick={() => scrollToSection('sobre')}>
+                <button className="btn btn-outline-gradient btn-lg" onClick={() => scrollToSection('sobre')}>
                   Conheça Nossos Serviços
                 </button>
               </div>
             </div>
             <div className="col-lg-6 text-center">
-              <div className="hero-image">
-                <i className="bi bi-broadcast"></i>
+              <div className="hero-image-wrapper">
+                <div className="hero-image-glow"></div>
+                <div className="hero-image-content">
+                  {dadosEmpresa?.logo ? (
+                    <img 
+                      src={dadosEmpresa.logo} 
+                      alt={companyName}
+                      className="hero-logo"
+                    />
+                  ) : (
+                    <i className="bi bi-broadcast-tower"></i>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -170,7 +207,9 @@ const Home: React.FC = () => {
         <div className="container">
           <div className="row">
             <div className="col-lg-8 mx-auto text-center mb-5">
-              <h2 className="section-title">Sobre Nós</h2>
+              <h2 className="section-title">
+                <span className="section-title-gradient">Sobre Nós</span>
+              </h2>
               <p className="section-subtitle">
                 Especialistas em consultoria e assessoria técnica para empresas de telecomunicações.
                 Oferecemos soluções personalizadas para otimizar operações, melhorar gestão
@@ -181,7 +220,7 @@ const Home: React.FC = () => {
           <div className="row g-4">
             <div className="col-md-4">
               <div className="feature-card">
-                <div className="feature-icon">
+                <div className="feature-icon feature-icon-purple">
                   <i className="bi bi-award"></i>
                 </div>
                 <h3>Experiência Comprovada</h3>
@@ -193,7 +232,7 @@ const Home: React.FC = () => {
             </div>
             <div className="col-md-4">
               <div className="feature-card">
-                <div className="feature-icon">
+                <div className="feature-icon feature-icon-cyan">
                   <i className="bi bi-people-fill"></i>
                 </div>
                 <h3>Atendimento Personalizado</h3>
@@ -205,7 +244,7 @@ const Home: React.FC = () => {
             </div>
             <div className="col-md-4">
               <div className="feature-card">
-                <div className="feature-icon">
+                <div className="feature-icon feature-icon-gradient">
                   <i className="bi bi-graph-up-arrow"></i>
                 </div>
                 <h3>Resultados Mensuráveis</h3>
@@ -224,53 +263,31 @@ const Home: React.FC = () => {
         <div className="container">
           <div className="row">
             <div className="col-lg-8 mx-auto text-center mb-5">
-              <h2 className="section-title">Nossos Serviços</h2>
+              <h2 className="section-title">
+                <span className="section-title-gradient">Nossos Serviços</span>
+              </h2>
               <p className="section-subtitle">
                 Soluções completas de consultoria e assessoria técnica para empresas de telecomunicações
               </p>
             </div>
           </div>
           <div className="row g-4">
-            <div className="col-md-6 col-lg-4">
-              <div className="service-card">
-                <i className="bi bi-gear service-icon"></i>
-                <h4>Assessoria Técnica</h4>
-                <p>
-                  Suporte técnico especializado para implementação, configuração
-                  e manutenção de sistemas de telecomunicações.
-                </p>
+            {[
+              { icon: 'bi-gear', title: 'Assessoria Técnica', description: 'Suporte técnico especializado para implementação, configuração e manutenção de sistemas de telecomunicações.' },
+              { icon: 'bi-laptop', title: 'Implementação de Sistemas', description: 'Implementação e customização de sistemas de gestão específicos para empresas de telecomunicações.' },
+              { icon: 'bi-graph-up', title: 'Análise e Planejamento', description: 'Análise de performance, planejamento estratégico e definição de métricas para crescimento sustentável.' },
+              { icon: 'bi-headset', title: 'Suporte Contínuo', description: 'Acompanhamento contínuo, suporte técnico e consultoria para garantir operação eficiente e sem interrupções.' },
+              { icon: 'bi-diagram-3', title: 'Otimização de Rede', description: 'Análise e otimização de infraestrutura de rede para melhor desempenho e confiabilidade.' },
+              { icon: 'bi-shield-check', title: 'Segurança e Compliance', description: 'Implementação de políticas de segurança e conformidade com regulamentações do setor.' },
+            ].map((service, index) => (
+              <div key={index} className="col-md-6 col-lg-4">
+                <div className="service-card">
+                  <i className={`bi ${service.icon} service-icon`}></i>
+                  <h4>{service.title}</h4>
+                  <p>{service.description}</p>
+                </div>
               </div>
-            </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="service-card">
-                <i className="bi bi-laptop service-icon"></i>
-                <h4>Implementação de Sistemas</h4>
-                <p>
-                  Implementação e customização de sistemas de gestão
-                  específicos para empresas de telecomunicações.
-                </p>
-              </div>
-            </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="service-card">
-                <i className="bi bi-graph-up service-icon"></i>
-                <h4>Análise e Planejamento</h4>
-                <p>
-                  Análise de performance, planejamento estratégico e
-                  definição de métricas para crescimento sustentável.
-                </p>
-              </div>
-            </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="service-card">
-                <i className="bi bi-headset service-icon"></i>
-                <h4>Suporte Contínuo</h4>
-                <p>
-                  Acompanhamento contínuo, suporte técnico e consultoria
-                  para garantir operação eficiente e sem interrupções.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -280,222 +297,54 @@ const Home: React.FC = () => {
         <div className="container">
           <div className="row">
             <div className="col-lg-8 mx-auto text-center mb-5">
-              <h2 className="section-title">Marcas e Tecnologias</h2>
+              <h2 className="section-title">
+                <span className="section-title-gradient">Marcas e Tecnologias</span>
+              </h2>
               <p className="section-subtitle">
                 Trabalhamos com as principais marcas e tecnologias do mercado de telecomunicações
               </p>
             </div>
           </div>
           <div className="row g-4">
-            {/* OLT */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-router me-2"></i>
-                  OLT
-                </h5>
-                <div className="tech-badges">
-                  {['VSOL', 'Fiberhome', 'Overteck'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
+            {[
+              { icon: 'bi-server', title: 'OLT', brands: ['VSOL', 'Fiberhome', 'Overteck'] },
+              { icon: 'bi-wifi', title: 'Roteador de Borda', brands: ['Huawei', 'Mikrotik'] },
+              { icon: 'bi-diagram-3', title: 'Switch', brands: ['Mikrotik', 'Intelbras', 'Grandstream'] },
+              { icon: 'bi-laptop', title: 'ERPs', brands: ['IXC Provedor', 'SGP', 'Mikweb', 'Atlaz', 'MKAuth', 'Receitanet'] },
+              { icon: 'bi-hdd', title: 'Virtualização', brands: ['Proxmox'] },
+              { icon: 'bi-globe', title: 'DNS', brands: ['Unbound', 'Bind9'] },
+              { icon: 'bi-graph-up', title: 'Monitoramento', brands: ['Zabbix', 'Grafana', 'The Dude', 'LibreNMS'] },
+              { icon: 'bi-code-slash', title: 'API', brands: ['Bloqueio Anatel'] },
+              { icon: 'bi-cpu', title: 'Sistemas Operacionais', brands: ['Windows Server', 'Debian', 'Ubuntu', 'Windows'] },
+              { icon: 'bi-broadcast-tower', title: 'Rádios', brands: ['Intelbras', 'Mimosa', 'Mikrotik', 'Grandstream', 'Ubiquiti'] },
+            ].map((category, index) => (
+              <div key={index} className="col-md-6 col-lg-3">
+                <div className="tech-category">
+                  <div className="tech-category-header">
+                    <i className={`bi ${category.icon}`}></i>
+                    <h5 className="tech-category-title">{category.title}</h5>
+                  </div>
+                  <div className="tech-badges">
+                    {category.brands.map((brand) => {
+                      const logo = getBrandLogo(brand);
+                      const isInvert = brand === 'Bloqueio Anatel';
+                      return (
+                        <span key={brand} className="tech-badge" title={brand}>
+                          {logo && (
+                            <img 
+                              src={logo} 
+                              alt={brand} 
+                              className={`tech-badge-logo ${isInvert ? 'tech-badge-logo-invert' : ''}`}
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                            />
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Roteador de Borda */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-wifi me-2"></i>
-                  Roteador de Borda
-                </h5>
-                <div className="tech-badges">
-                  {['Huawei', 'Mikrotik'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* Switch */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-diagram-3 me-2"></i>
-                  Switch
-                </h5>
-                <div className="tech-badges">
-                  {['Mikrotik', 'Intelbras', 'Grandstream'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* ERPs */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-laptop me-2"></i>
-                  ERPs
-                </h5>
-                <div className="tech-badges">
-                  {['IXC Provedor', 'SGP', 'Mikweb', 'Atlaz', 'MKAuth', 'Receitanet'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* Virtualização */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-server me-2"></i>
-                  Virtualização
-                </h5>
-                <div className="tech-badges">
-                  {['Proxmox'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* DNS */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-globe me-2"></i>
-                  DNS
-                </h5>
-                <div className="tech-badges">
-                  {['Unbound', 'Bind9'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* Monitoramento */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-graph-up me-2"></i>
-                  Monitoramento
-                </h5>
-                <div className="tech-badges">
-                  {['Zabbix', 'Grafana', 'The Dude', 'LibreNMS'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* API */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-code-slash me-2"></i>
-                  API
-                </h5>
-                <div className="tech-badges">
-                  {['Bloqueio Anatel'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo tech-badge-logo-invert" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* Sistemas Operacionais */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-cpu me-2"></i>
-                  Sistemas Operacionais
-                </h5>
-                <div className="tech-badges">
-                  {['Windows Server', 'Debian', 'Ubuntu', 'Windows'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* Rádios */}
-            <div className="col-md-6 col-lg-3">
-              <div className="tech-category">
-                <h5 className="tech-category-title">
-                  <i className="bi bi-broadcast-tower me-2"></i>
-                  Rádios
-                </h5>
-                <div className="tech-badges">
-                  {['Intelbras', 'Mimosa', 'Mikrotik', 'Grandstream', 'Ubiquiti'].map((brand) => {
-                    const logo = getBrandLogo(brand);
-                    return (
-                      <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-                        <span className="tech-badge-text">{brand}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -505,41 +354,32 @@ const Home: React.FC = () => {
         <div className="container">
           <div className="row align-items-center">
             <div className="col-lg-6">
-              <h2 className="section-title">Por Que Escolher Nossa Consultoria?</h2>
+              <h2 className="section-title">
+                <span className="section-title-gradient">Por Que Escolher Nossa Consultoria?</span>
+              </h2>
               <div className="feature-list">
-                <div className="feature-item">
-                  <i className="bi bi-check-circle-fill"></i>
-                  <div>
-                    <h5>Conhecimento Especializado</h5>
-                    <p>Equipe com vasta experiência no mercado de telecomunicações e tecnologias relacionadas</p>
+                {[
+                  { title: 'Conhecimento Especializado', description: 'Equipe com vasta experiência no mercado de telecomunicações e tecnologias relacionadas' },
+                  { title: 'Soluções Personalizadas', description: 'Cada projeto é desenvolvido sob medida para atender às necessidades específicas do cliente' },
+                  { title: 'Resultados Comprovados', description: 'Histórico de projetos bem-sucedidos que geraram aumento de eficiência e rentabilidade' },
+                  { title: 'Suporte Dedicado', description: 'Acompanhamento próximo e suporte técnico contínuo para garantir o sucesso do projeto' },
+                ].map((feature, index) => (
+                  <div key={index} className="feature-item">
+                    <i className="bi bi-check-circle-fill"></i>
+                    <div>
+                      <h5>{feature.title}</h5>
+                      <p>{feature.description}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="feature-item">
-                  <i className="bi bi-check-circle-fill"></i>
-                  <div>
-                    <h5>Soluções Personalizadas</h5>
-                    <p>Cada projeto é desenvolvido sob medida para atender às necessidades específicas do cliente</p>
-                  </div>
-                </div>
-                <div className="feature-item">
-                  <i className="bi bi-check-circle-fill"></i>
-                  <div>
-                    <h5>Resultados Comprovados</h5>
-                    <p>Histórico de projetos bem-sucedidos que geraram aumento de eficiência e rentabilidade</p>
-                  </div>
-                </div>
-                <div className="feature-item">
-                  <i className="bi bi-check-circle-fill"></i>
-                  <div>
-                    <h5>Suporte Dedicado</h5>
-                    <p>Acompanhamento próximo e suporte técnico contínuo para garantir o sucesso do projeto</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
             <div className="col-lg-6 text-center">
-              <div className="features-image">
-                <i className="bi bi-broadcast"></i>
+              <div className="features-image-wrapper">
+                <div className="features-image-glow"></div>
+                <div className="features-image-content">
+                  <i className="bi bi-lightning-charge"></i>
+                </div>
               </div>
             </div>
           </div>
@@ -551,48 +391,71 @@ const Home: React.FC = () => {
         <div className="container">
           <div className="row">
             <div className="col-lg-8 mx-auto text-center">
-              <h2 className="section-title">Entre em Contato</h2>
+              <h2 className="section-title">
+                <span className="section-title-gradient">Entre em Contato</span>
+              </h2>
               <p className="section-subtitle mb-5">
                 Estamos prontos para ajudar sua empresa a alcançar melhores resultados.
                 Solicite um orçamento ou agende uma consultoria.
               </p>
               <div className="contact-info">
                 {dadosEmpresa?.email && (
-                  <div className="contact-item">
+                  <a 
+                    href={getEmailLink(dadosEmpresa.email)} 
+                    className="contact-item"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <i className="bi bi-envelope"></i>
                     <span>{dadosEmpresa.email}</span>
-                  </div>
+                  </a>
                 )}
                 {dadosEmpresa?.telefone && (
-                  <div className="contact-item">
+                  <a 
+                    href={getPhoneLink(dadosEmpresa.telefone)} 
+                    className="contact-item"
+                  >
                     <i className="bi bi-telephone"></i>
                     <span>{dadosEmpresa.telefone}</span>
-                  </div>
+                  </a>
                 )}
                 {dadosEmpresa?.celular && (
-                  <div className="contact-item">
+                  <a 
+                    href={getWhatsAppLink(dadosEmpresa.celular)} 
+                    className="contact-item"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <i className="bi bi-whatsapp"></i>
                     <span>{dadosEmpresa.celular}</span>
-                  </div>
+                  </a>
                 )}
                 {(!dadosEmpresa?.email && !dadosEmpresa?.telefone && !dadosEmpresa?.celular) && (
                   <>
-                    <div className="contact-item">
+                    <a 
+                      href={getEmailLink('contato@consultoriatelecom.com.br')} 
+                      className="contact-item"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <i className="bi bi-envelope"></i>
                       <span>contato@consultoriatelecom.com.br</span>
-                    </div>
-                    <div className="contact-item">
+                    </a>
+                    <a 
+                      href={getPhoneLink('(00) 0000-0000')} 
+                      className="contact-item"
+                    >
                       <i className="bi bi-telephone"></i>
                       <span>(00) 0000-0000</span>
-                    </div>
+                    </a>
                   </>
                 )}
               </div>
               <div className="mt-5">
-                <button className="btn btn-primary btn-lg me-3" onClick={() => scrollToSection('contato')}>
+                <button className="btn btn-primary-gradient btn-lg me-3" onClick={() => scrollToSection('contato')}>
                   Solicitar Orçamento
                 </button>
-                <Link to="/adm" className="btn btn-outline-primary btn-lg">
+                <Link to="/adm" className="btn btn-outline-gradient btn-lg">
                   Área do Cliente
                 </Link>
               </div>
@@ -604,26 +467,31 @@ const Home: React.FC = () => {
       {/* Footer */}
       <footer className="home-footer">
         <div className="container">
-          <div className="row">
+          <div className="row align-items-center">
             <div className="col-md-6">
-              <h5 className="d-flex align-items-center">
+              <div className="footer-brand">
                 {dadosEmpresa?.logo ? (
                   <img 
                     src={dadosEmpresa.logo} 
-                    alt={dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'} 
+                    alt={companyName}
+                    className="footer-logo"
                   />
                 ) : (
-                  <i className="bi bi-broadcast me-2"></i>
+                  <div className="footer-icon">
+                    <i className="bi bi-broadcast-tower"></i>
+                  </div>
                 )}
-                {dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}
-              </h5>
-              <p className="text-muted">
-                Consultoria e assessoria técnica especializada em telecomunicações.
-              </p>
+                <div>
+                  <h5 className="footer-brand-name">{companyName}</h5>
+                  <p className="footer-description">
+                    Consultoria e assessoria técnica especializada em telecomunicações.
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="col-md-6 text-md-end">
-              <p className="text-muted mb-0">
-                &copy; {new Date().getFullYear()} {dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom'}. Todos os direitos reservados.
+              <p className="footer-copyright">
+                &copy; {new Date().getFullYear()} {companyName}. Todos os direitos reservados.
               </p>
             </div>
           </div>
@@ -634,4 +502,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-
