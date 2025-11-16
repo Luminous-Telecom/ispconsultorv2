@@ -44,13 +44,188 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 
 - **Node.js** >= 18
 - **NPM** >= 9
-- **MySQL** 5.7+ (ou compatível com Sequelize)
+- **MySQL** 5.7+ ou **MariaDB** 10.3+ (compatível com Sequelize)
 - **Nginx** (para produção)
 - **PM2** (opcional, para gerenciamento de processos)
+- **Git** (para clonar o repositório)
 
 ---
 
-## Instalação
+## Instalação das Dependências do Sistema
+
+### 1. Instalar Node.js e NPM
+
+**Ubuntu/Debian:**
+```bash
+# Instalar Node.js 20.x (LTS)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Verificar instalação
+node --version  # Deve mostrar v20.x ou superior
+npm --version   # Deve mostrar 9.x ou superior
+```
+
+**CentOS/RHEL:**
+```bash
+# Instalar Node.js 20.x (LTS)
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo yum install -y nodejs
+
+# Verificar instalação
+node --version
+npm --version
+```
+
+**Alternativa com NVM (Node Version Manager):**
+```bash
+# Instalar NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Recarregar terminal ou executar:
+source ~/.bashrc
+
+# Instalar Node.js 20
+nvm install 20
+nvm use 20
+nvm alias default 20
+
+# Verificar
+node --version
+npm --version
+```
+
+### 2. Instalar MySQL ou MariaDB
+
+**MySQL (Ubuntu/Debian):**
+```bash
+# Atualizar pacotes
+sudo apt update
+
+# Instalar MySQL Server
+sudo apt install mysql-server -y
+
+# Iniciar e habilitar MySQL
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# Configurar segurança (opcional, mas recomendado)
+sudo mysql_secure_installation
+
+# Verificar status
+sudo systemctl status mysql
+```
+
+**MariaDB (Ubuntu/Debian):**
+```bash
+# Atualizar pacotes
+sudo apt update
+
+# Instalar MariaDB Server
+sudo apt install mariadb-server mariadb-client -y
+
+# Iniciar e habilitar MariaDB
+sudo systemctl start mariadb
+sudo systemctl enable mariadb
+
+# Configurar segurança
+sudo mysql_secure_installation
+
+# Verificar status
+sudo systemctl status mariadb
+```
+
+**MySQL (CentOS/RHEL):**
+```bash
+# Instalar MySQL Server
+sudo yum install mysql-server -y
+
+# Iniciar e habilitar MySQL
+sudo systemctl start mysqld
+sudo systemctl enable mysqld
+
+# Obter senha temporária
+sudo grep 'temporary password' /var/log/mysqld.log
+
+# Configurar segurança
+sudo mysql_secure_installation
+```
+
+**MariaDB (CentOS/RHEL):**
+```bash
+# Instalar MariaDB Server
+sudo yum install mariadb-server mariadb -y
+
+# Iniciar e habilitar MariaDB
+sudo systemctl start mariadb
+sudo systemctl enable mariadb
+
+# Configurar segurança
+sudo mysql_secure_installation
+```
+
+### 3. Instalar PM2 (Gerenciador de Processos)
+
+```bash
+# Instalar PM2 globalmente
+sudo npm install -g pm2
+
+# Verificar instalação
+pm2 --version
+
+# Configurar PM2 para iniciar no boot do sistema
+pm2 startup
+# Siga as instruções exibidas pelo comando acima
+```
+
+### 4. Instalar Git
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install git -y
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum install git -y
+```
+
+**Verificar instalação:**
+```bash
+git --version
+```
+
+### 5. Instalar Nginx (Para Produção)
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install nginx -y
+
+# Iniciar e habilitar Nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+# Verificar status
+sudo systemctl status nginx
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum install nginx -y
+
+# Iniciar e habilitar Nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+# Verificar status
+sudo systemctl status nginx
+```
+
+---
+
+## Instalação do Projeto
 
 ### 1. Clonar o Repositório
 
@@ -76,13 +251,42 @@ cd ..
 
 ### 3. Configurar Banco de Dados
 
-Crie um banco de dados MySQL:
+**Acessar MySQL/MariaDB:**
+```bash
+# Como root
+sudo mysql -u root -p
 
+# Ou se tiver senha configurada
+mysql -u root -p
+```
+
+**Criar banco de dados e usuário:**
 ```sql
+-- Criar banco de dados
 CREATE DATABASE backnet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Criar usuário (substitua 'sua-senha-aqui' por uma senha segura)
 CREATE USER 'backnet'@'localhost' IDENTIFIED BY 'sua-senha-aqui';
+
+-- Conceder privilégios
 GRANT ALL PRIVILEGES ON backnet.* TO 'backnet'@'localhost';
+
+-- Aplicar alterações
 FLUSH PRIVILEGES;
+
+-- Verificar criação
+SHOW DATABASES;
+SELECT user, host FROM mysql.user WHERE user = 'backnet';
+
+-- Sair do MySQL
+EXIT;
+```
+
+**Testar conexão:**
+```bash
+mysql -u backnet -p backnet
+# Digite a senha configurada
+# Se conectar com sucesso, digite EXIT para sair
 ```
 
 ### 4. Executar Migrations
@@ -446,8 +650,24 @@ npm run build
 
 ### Instalação do PM2
 
+Se ainda não instalou o PM2, execute:
+
 ```bash
-npm install -g pm2
+sudo npm install -g pm2
+```
+
+### Configurar PM2 para iniciar no boot
+
+```bash
+# Gerar script de inicialização
+pm2 startup
+
+# Siga as instruções exibidas pelo comando acima
+# Geralmente será algo como:
+# sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u seu-usuario --hp /home/seu-usuario
+
+# Salvar configuração atual do PM2
+pm2 save
 ```
 
 ### Configuração do PM2

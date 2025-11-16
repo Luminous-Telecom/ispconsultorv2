@@ -47,16 +47,26 @@ jobs:
             FRONTEND_CHANGED="false"
           fi
           
+          # Verificar mudanças em arquivos de configuração/documentação na raiz
+          if git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} | grep -qE '^(README\.md|docker-compose\.yaml|ecosystem\.config\.js|\.gitignore|package\.json)$'; then
+            CONFIG_CHANGED="true"
+          else
+            CONFIG_CHANGED="false"
+          fi
+          
           # Se for o primeiro commit ou não conseguir determinar, build tudo
           if [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ]; then
             BACKEND_CHANGED="true"
             FRONTEND_CHANGED="true"
+            CONFIG_CHANGED="true"
           fi
           
           echo "backend_changed=${BACKEND_CHANGED}" >> $GITHUB_OUTPUT
           echo "frontend_changed=${FRONTEND_CHANGED}" >> $GITHUB_OUTPUT
+          echo "config_changed=${CONFIG_CHANGED}" >> $GITHUB_OUTPUT
           echo "Backend alterado: ${BACKEND_CHANGED}"
           echo "Frontend alterado: ${FRONTEND_CHANGED}"
+          echo "Config/Docs alterado: ${CONFIG_CHANGED}"
       
       # Instala as dependências e executa o build apenas do que foi alterado
       - name: Instalar Dependências e Buildar Projeto
@@ -114,7 +124,44 @@ jobs:
             cp ../backend/package-lock.json backend/package-lock.json
             cp ../backend/env.example backend/env.example
           else
-            echo "Nenhuma alteração, mantendo artefatos existentes"
+            echo "Nenhuma alteração no backend, mantendo artefatos existentes"
+          fi
+          
+          # Copiar arquivos de configuração e documentação na raiz
+          if [ "${{ steps.changes.outputs.config_changed }}" == "true" ]; then
+            echo "Copiando arquivos de configuração e documentação..."
+            
+            # README.md
+            if [ -f "../README.md" ]; then
+              cp ../README.md README.md
+              echo "README.md copiado"
+            fi
+            
+            # docker-compose.yaml
+            if [ -f "../docker-compose.yaml" ]; then
+              cp ../docker-compose.yaml docker-compose.yaml
+              echo "docker-compose.yaml copiado"
+            fi
+            
+            # ecosystem.config.js
+            if [ -f "../ecosystem.config.js" ]; then
+              cp ../ecosystem.config.js ecosystem.config.js
+              echo "ecosystem.config.js copiado"
+            fi
+            
+            # .gitignore
+            if [ -f "../.gitignore" ]; then
+              cp ../.gitignore .gitignore
+              echo ".gitignore copiado"
+            fi
+            
+            # package.json da raiz (se existir)
+            if [ -f "../package.json" ]; then
+              cp ../package.json package.json
+              echo "package.json copiado"
+            fi
+          else
+            echo "Nenhuma alteração em arquivos de configuração/documentação"
           fi
       
       - name: Commit e Push para Produção
