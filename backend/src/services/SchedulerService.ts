@@ -389,14 +389,26 @@ export class SchedulerService {
                 const anoInicio = dataInicioContrato.getFullYear();
                 const diaInicio = dataInicioContrato.getDate();
                 
-                if (mesAtual === mesInicio && anoAtual === anoInicio && diaCorreto < diaInicio) {
-                  // Ajustar dia de vencimento para ser igual ou posterior ao dia de início
-                  diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
+                if (mesAtual === mesInicio && anoAtual === anoInicio) {
+                  // Se dia de vencimento é anterior ao dia de início, usar dia de início
+                  if (diaCorreto < diaInicio) {
+                    diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
+                  }
                 }
               }
               
               const dataVencimento = new Date(anoAtual, mesAtual, diaCorreto);
               dataVencimento.setHours(0, 0, 0, 0);
+
+              // Se a data de vencimento já passou, pular para próximo mês
+              if (dataVencimento < hoje) {
+                mesAtual++;
+                if (mesAtual > 11) {
+                  mesAtual = 0;
+                  anoAtual++;
+                }
+                continue;
+              }
 
               // Verificar se já existe título para este mês
               const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
@@ -406,7 +418,8 @@ export class SchedulerService {
               });
 
               // Gerar título se não existir e se a data de vencimento for >= data de início (ou não houver data de início)
-              const podeGerar = !tituloExistente && (!dataInicioContrato || dataVencimento >= dataInicioContrato);
+              const podeGerar = !tituloExistente && 
+                (!dataInicioContrato || dataVencimento >= dataInicioContrato);
               
               if (podeGerar) {
                 // Calcular valor do título
