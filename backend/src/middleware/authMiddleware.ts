@@ -22,10 +22,14 @@ const isPublicRoute = (req: Request): boolean => {
   }
 
   const cleanedPath = req.originalUrl.split('?')[0];
-  return PUBLIC_ROUTES.some(({ method, path }) => {
-    if (method && method.toUpperCase() !== req.method.toUpperCase()) {
+  const method = req.method.toUpperCase();
+  
+  return PUBLIC_ROUTES.some(({ method: routeMethod, path }) => {
+    // Se a rota especifica um método, verificar se corresponde
+    if (routeMethod && routeMethod.toUpperCase() !== method) {
       return false;
     }
+    // Se não especifica método, aceitar qualquer método
     return path.test(cleanedPath);
   });
 };
