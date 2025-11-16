@@ -137,6 +137,37 @@ jobs:
             echo "Nenhuma alteração no backend, mantendo artefatos existentes"
           fi
           
+          # SEMPRE copiar arquivos necessários para migrations e configuração do Sequelize
+          echo "Copiando arquivos de configuração e migrations do Sequelize..."
+          
+          # Criar diretório config se não existir
+          mkdir -p backend/config
+          
+          # Copiar config/config.js (necessário para Sequelize CLI)
+          if [ -f "../backend/config/config.js" ]; then
+            cp ../backend/config/config.js backend/config/config.js
+            echo "✓ backend/config/config.js copiado"
+          else
+            echo "⚠ backend/config/config.js não encontrado"
+          fi
+          
+          # Copiar .sequelizerc (necessário para Sequelize CLI saber onde estão os arquivos)
+          if [ -f "../backend/.sequelizerc" ]; then
+            cp ../backend/.sequelizerc backend/.sequelizerc
+            echo "✓ backend/.sequelizerc copiado"
+          else
+            echo "⚠ backend/.sequelizerc não encontrado"
+          fi
+          
+          # Copiar migrations (necessário para executar migrations)
+          if [ -d "../backend/migrations" ]; then
+            rm -rf backend/migrations
+            cp -r ../backend/migrations backend/migrations
+            echo "✓ backend/migrations copiado"
+          else
+            echo "⚠ backend/migrations não encontrado"
+          fi
+          
           # SEMPRE copiar arquivos Docker do backend e frontend (independente de mudanças)
           echo "Copiando arquivos Docker do backend e frontend..."
           
