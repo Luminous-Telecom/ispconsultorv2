@@ -42,9 +42,17 @@ export class ApiClient {
         ];
         
         // Verificar se a URL é uma rota pública
+        // Usar tanto a URL completa quanto apenas o path
+        const url = config.url || '';
+        const fullUrl = config.baseURL ? `${config.baseURL}${url}` : url;
         const isPublicRoute = publicRoutes.some(route => {
-          const url = config.url || '';
-          return url.includes(route) || url.endsWith(route);
+          // Verificar se a URL contém a rota pública
+          return url.includes(route) || 
+                 url.endsWith(route) || 
+                 fullUrl.includes(route) ||
+                 fullUrl.endsWith(route) ||
+                 url === route ||
+                 fullUrl === route;
         });
         
         // Só adicionar token se não for rota pública
@@ -53,6 +61,9 @@ export class ApiClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
+        } else {
+          // Remover token se for rota pública (caso tenha sido adicionado anteriormente)
+          delete config.headers.Authorization;
         }
         
         // Se for FormData, remover Content-Type para axios definir automaticamente com boundary
