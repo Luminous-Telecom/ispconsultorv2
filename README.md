@@ -223,6 +223,89 @@ sudo systemctl enable nginx
 sudo systemctl status nginx
 ```
 
+### 6. Instalar Dependências do Puppeteer (Chromium)
+
+O sistema usa Puppeteer para gerar PDFs. É necessário instalar as dependências do Chromium:
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install -y \
+    ca-certificates \
+    fonts-liberation \
+    libappindicator3-1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libc6 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libfontconfig1 \
+    libgbm1 \
+    libgcc1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libstdc++6 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    lsb-release \
+    wget \
+    xdg-utils
+```
+
+**CentOS/RHEL:**
+```bash
+sudo yum install -y \
+    alsa-lib \
+    atk \
+    cups-libs \
+    gtk3 \
+    ipa-gothic-fonts \
+    libXcomposite \
+    libXcursor \
+    libXdamage \
+    libXext \
+    libXi \
+    libXrandr \
+    libXScrnSaver \
+    libXtst \
+    pango \
+    xorg-x11-fonts-100dpi \
+    xorg-x11-fonts-75dpi \
+    xorg-x11-utils \
+    nss \
+    xorg-x11-fonts-Type1 \
+    xorg-x11-fonts-misc
+```
+
+**Verificar instalação:**
+Após instalar as dependências, reinicie o backend e teste a geração de PDF. Se ainda houver erros relacionados a bibliotecas compartilhadas, execute:
+
+```bash
+# Verificar se as bibliotecas estão instaladas (Ubuntu/Debian)
+ldconfig -p | grep libnss3
+
+# Se necessário, atualizar cache de bibliotecas
+sudo ldconfig
+```
+
 ---
 
 ## Instalação do Projeto
