@@ -370,7 +370,8 @@
 }
 
 .tech-badge-logo-invert {
-  filter: brightness(0);
+  filter: brightness(0) invert(0);
+  background-color: transparent;
 }
 
 .tech-badge-text {
