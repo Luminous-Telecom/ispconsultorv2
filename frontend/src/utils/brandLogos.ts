@@ -22,6 +22,7 @@ export const brandLogos: Record<string, string> = {
   'Mikweb': '/logos/mikweb.png',
   'Atlaz': '/logos/atlaz.png',
   'MKAuth': '/logos/mkauth.png',
+  'Receitanet': '/logos/receitanet.jpg',
   
   // Virtualização
   'Proxmox': '/logos/proxmox.png',

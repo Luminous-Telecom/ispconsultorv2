@@ -348,7 +348,7 @@ const Home: React.FC = () => {
                   ERPs
                 </h5>
                 <div className="tech-badges">
-                  {['IXC Provedor', 'SGP', 'Mikweb', 'Atlaz', 'MKAuth'].map((brand) => {
+                  {['IXC Provedor', 'SGP', 'Mikweb', 'Atlaz', 'MKAuth', 'Receitanet'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
                       <span key={brand} className="tech-badge" title={brand}>
