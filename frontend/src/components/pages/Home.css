@@ -261,16 +261,14 @@
 .tech-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
   padding: 0.5rem;
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-primary);
   transition: all 0.2s ease;
   min-height: 2.5rem;
+  min-width: 2.5rem;
   cursor: pointer;
   position: relative;
 }
@@ -284,29 +282,59 @@
 }
 
 .tech-badge-text {
-  opacity: 0;
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: opacity 0.2s ease, max-width 0.2s ease, margin-left 0.2s ease;
-  margin-left: 0;
+  display: none;
 }
 
 .tech-badge:hover {
   background-color: var(--primary-color);
-  color: white;
   border-color: var(--primary-color);
-  padding-right: 0.75rem;
-}
-
-.tech-badge:hover .tech-badge-text {
-  opacity: 1;
-  max-width: 200px;
-  margin-left: 0.5rem;
 }
 
 .tech-badge:hover .tech-badge-logo {
   opacity: 0.9;
+}
+
+/* Tooltip customizado */
+.tech-badge::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  border-radius: 0.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+}
+
+.tech-badge:hover::after {
+  opacity: 1;
+}
+
+.tech-badge::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0.25rem;
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+}
+
+.tech-badge:hover::before {
+  opacity: 1;
 }
 
 /* Features Section */
