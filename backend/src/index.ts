@@ -86,8 +86,9 @@ const app = express();
 const PORT = process.env.PORT;
 
 // Configurar trust proxy para funcionar corretamente atrás do Nginx
+// Confiar apenas no primeiro proxy (Nginx) para segurança do rate limiting
 // Isso permite que express-rate-limit identifique corretamente o IP do cliente
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 // Middleware de segurança
 // Aplicar helmet com exceção para rotas de PDF
