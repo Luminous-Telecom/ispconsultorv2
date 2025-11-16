@@ -6,7 +6,7 @@ export const brandLogos: Record<string, string> = {
   // OLT
   'VSOL': '/logos/vsol.png',
   'Fiberhome': '/logos/fiberhome.png',
-  'Overteck': '/logos/overteck.png',
+  'Overteck': '/logos/overteck.jpg',
   
   // Roteador de Borda
   'Huawei': '/logos/huawei.png',
