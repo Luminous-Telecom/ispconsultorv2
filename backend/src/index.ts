@@ -85,6 +85,10 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const PORT = process.env.PORT;
 
+// Configurar trust proxy para funcionar corretamente atrás do Nginx
+// Isso permite que express-rate-limit identifique corretamente o IP do cliente
+app.set('trust proxy', true);
+
 // Middleware de segurança
 // Aplicar helmet com exceção para rotas de PDF
 app.use((req, res, next) => {
