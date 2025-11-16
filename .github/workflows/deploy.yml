@@ -87,10 +87,15 @@ jobs:
           echo "frontend_changed=${FRONTEND_CHANGED}" >> $GITHUB_OUTPUT
           echo "config_changed=${CONFIG_CHANGED}" >> $GITHUB_OUTPUT
           echo "docker_changed=${DOCKER_CHANGED}" >> $GITHUB_OUTPUT
+          
+          echo "=== RESUMO DAS MUDANÇAS DETECTADAS ==="
           echo "Backend alterado: ${BACKEND_CHANGED}"
           echo "Frontend alterado: ${FRONTEND_CHANGED}"
           echo "Config/Docs alterado: ${CONFIG_CHANGED}"
           echo "Docker alterado: ${DOCKER_CHANGED}"
+          echo ""
+          echo "Commits comparados: ${PREV_COMMIT}..${CURRENT_COMMIT}"
+          echo "Total de arquivos alterados: $(echo "${CHANGED_FILES}" | wc -l)"
       
       # Instala as dependências e executa o build apenas do que foi alterado
       - name: Instalar Dependências e Buildar Projeto
@@ -99,16 +104,33 @@ jobs:
           
           # Frontend sempre precisa ser buildado se backend ou frontend mudaram
           # (pois o backend precisa do frontend integrado)
+          BUILD_WAS_EXECUTED="false"
           if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
+            BUILD_WAS_EXECUTED="true"
+            echo "=== INICIANDO BUILD ==="
             echo "Building frontend..."
             npm ci --prefix frontend
             npm run build --prefix frontend
+            
+            # Verificar se frontend foi buildado
+            if [ ! -d "frontend/build" ] || [ ! -f "frontend/build/index.html" ]; then
+              echo "⚠ ERRO: Frontend não foi buildado corretamente!"
+              exit 1
+            fi
+            echo "✓ Frontend buildado com sucesso"
             
             # Backend sempre precisa ser buildado se frontend ou backend mudaram
             # (pois o backend integra o frontend no build)
             echo "Building backend..."
             npm ci --prefix backend
             npm run build --prefix backend
+            
+            # Verificar se backend foi buildado
+            if [ ! -d "backend/dist" ]; then
+              echo "⚠ ERRO: Backend não foi buildado corretamente!"
+              exit 1
+            fi
+            echo "✓ Backend buildado com sucesso"
             
             # Copiar frontend buildado para backend/dist/frontend APÓS o build do backend
             # Isso garante que o frontend não seja removido durante o build
@@ -126,8 +148,12 @@ jobs:
               exit 1
             fi
           else
-            echo "Nenhuma alteração detectada, pulando build"
+            echo "⚠ Nenhuma alteração detectada, pulando build"
+            echo "⚠ Se houver artefatos de build anteriores, eles serão mantidos"
           fi
+          
+          # Salvar flag para uso posterior
+          echo "BUILD_WAS_EXECUTED=${BUILD_WAS_EXECUTED}" >> $GITHUB_ENV
       
       # === 3. O Passo de Deployment ===
       
@@ -152,19 +178,63 @@ jobs:
         run: |
           cd deployment
           
+          # Debug: mostrar valores das flags
+          echo "=== DEBUG: Flags de mudanças ==="
+          echo "backend_changed: ${{ steps.changes.outputs.backend_changed }}"
+          echo "frontend_changed: ${{ steps.changes.outputs.frontend_changed }}"
+          echo "config_changed: ${{ steps.changes.outputs.config_changed }}"
+          echo "docker_changed: ${{ steps.changes.outputs.docker_changed }}"
+          
           # Criar estrutura de pastas se não existir
           mkdir -p backend frontend
           
+          # Verificar se backend/dist existe antes de copiar
+          echo "=== Verificando backend/dist antes de copiar ==="
+          if [ -d "../backend/dist" ]; then
+            echo "✓ backend/dist existe"
+            echo "Conteúdo de backend/dist:"
+            ls -la ../backend/dist/ | head -20
+            if [ -d "../backend/dist/frontend" ]; then
+              echo "✓ backend/dist/frontend existe"
+              echo "Conteúdo de backend/dist/frontend:"
+              ls -la ../backend/dist/frontend/ | head -10
+            else
+              echo "⚠ backend/dist/frontend NÃO existe!"
+            fi
+          else
+            echo "⚠ ERRO: backend/dist NÃO existe!"
+            exit 1
+          fi
+          
           # Copiar artefatos do backend (frontend já está integrado no backend/dist/frontend)
-          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ]; then
-            echo "Copiando artefatos do backend (com frontend integrado)..."
+          # Copiar se houve mudanças detectadas OU se o build foi executado
+          if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ] || [ "${BUILD_WAS_EXECUTED}" == "true" ]; then
+            echo "=== Copiando artefatos do backend (com frontend integrado) ==="
             rm -rf backend/dist backend/package.json backend/package-lock.json backend/env.example
             cp -r ../backend/dist backend/dist
             cp ../backend/package.json backend/package.json
             cp ../backend/package-lock.json backend/package-lock.json
             cp ../backend/env.example backend/env.example
+            
+            # Verificar se foi copiado corretamente
+            echo "=== Verificando cópia ==="
+            if [ -d "backend/dist" ]; then
+              echo "✓ backend/dist copiado"
+              if [ -d "backend/dist/frontend" ]; then
+                echo "✓ backend/dist/frontend copiado"
+                echo "Arquivos em backend/dist/frontend:"
+                ls -la backend/dist/frontend/ | head -10
+              else
+                echo "⚠ ERRO: backend/dist/frontend NÃO foi copiado!"
+                exit 1
+              fi
+            else
+              echo "⚠ ERRO: backend/dist NÃO foi copiado!"
+              exit 1
+            fi
           else
-            echo "Nenhuma alteração no backend, mantendo artefatos existentes"
+            echo "⚠ Nenhuma alteração detectada (backend_changed=${{ steps.changes.outputs.backend_changed }}, frontend_changed=${{ steps.changes.outputs.frontend_changed }})"
+            echo "⚠ Mantendo artefatos existentes (isso pode ser um problema se houver mudanças não detectadas)"
           fi
           
           # SEMPRE copiar arquivos necessários para migrations e configuração do Sequelize
