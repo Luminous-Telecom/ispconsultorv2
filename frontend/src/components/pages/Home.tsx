@@ -464,6 +464,27 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Rádios */}
+            <div className="col-md-6 col-lg-3">
+              <div className="tech-category">
+                <h5 className="tech-category-title">
+                  <i className="bi bi-broadcast-tower me-2"></i>
+                  Rádios
+                </h5>
+                <div className="tech-badges">
+                  {['Intelbras', 'Mimosa', 'Mikrotik', 'Grandstream', 'Ubiquiti'].map((brand) => {
+                    const logo = getBrandLogo(brand);
+                    return (
+                      <span key={brand} className="tech-badge" title={brand}>
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        <span className="tech-badge-text">{brand}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
