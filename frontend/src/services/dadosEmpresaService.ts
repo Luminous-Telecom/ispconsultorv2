@@ -127,11 +127,32 @@ export class DadosEmpresaService {
       formData
     );
     
-    if (response.success && response.data) {
-      const data = response.data as { logo?: string };
-      if (data.logo) {
-        return { success: true, logo: data.logo };
-      }
+    // Se resposta já tem success: false, lançar erro
+    if (response.success === false) {
+      throw new Error(response.message || 'Falha no upload da logo');
+    }
+    
+    // Tentar extrair logo de diferentes formatos de resposta
+    let logo: string | undefined;
+    
+    // Formato 1: response.data.logo (quando ResponseTransformer envolve)
+    if (response.data && typeof response.data === 'object' && 'logo' in response.data) {
+      logo = (response.data as { logo?: string }).logo;
+    }
+    
+    // Formato 2: response.logo (resposta direta do backend)
+    if (!logo && 'logo' in response) {
+      logo = (response as { logo?: string }).logo;
+    }
+    
+    // Formato 3: response.data é o objeto direto
+    if (!logo && response.data && typeof response.data === 'object') {
+      const data = response.data as { logo?: string; success?: boolean };
+      logo = data.logo;
+    }
+    
+    if (logo) {
+      return { success: true, logo };
     }
     
     throw new Error(response.message || 'Falha no upload da logo');

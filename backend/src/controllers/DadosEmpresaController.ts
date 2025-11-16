@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { DadosEmpresa } from '../models/DadosEmpresa';
+import { logger } from '../utils/logger';
 
 export class DadosEmpresaController {
   // Dados padrão para criação de empresa
@@ -92,7 +93,37 @@ export class DadosEmpresaController {
   static async uploadLogo(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        res.status(400).json({ error: 'Arquivo não enviado' });
+        // Verificar se é erro do multer
+        if (req.body && (req.body as any).error) {
+          res.status(400).json({ 
+            success: false,
+            message: (req.body as any).error 
+          });
+          return;
+        }
+        res.status(400).json({ 
+          success: false,
+          message: 'Arquivo não enviado' 
+        });
+        return;
+      }
+
+      // Validar tipo de arquivo
+      const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedMimes.includes(req.file.mimetype)) {
+        // Deletar arquivo inválido se foi salvo
+        if (req.file.path) {
+          try {
+            const fs = require('fs');
+            if (fs.existsSync(req.file.path)) {
+              fs.unlinkSync(req.file.path);
+            }
+          } catch {}
+        }
+        res.status(400).json({ 
+          success: false,
+          message: 'Tipo de arquivo inválido. Apenas imagens são permitidas (JPG, PNG, GIF, WEBP)' 
+        });
         return;
       }
 
@@ -102,14 +133,33 @@ export class DadosEmpresaController {
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresa.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
       } else {
+        // Deletar logo antiga se existir
+        if (dadosEmpresa.logo) {
+          try {
+            const fs = require('fs');
+            const path = require('path');
+            const oldLogoPath = dadosEmpresa.logo.startsWith('/') 
+              ? path.join(process.cwd(), dadosEmpresa.logo)
+              : path.join(process.cwd(), dadosEmpresa.logo);
+            if (fs.existsSync(oldLogoPath)) {
+              fs.unlinkSync(oldLogoPath);
+            }
+          } catch (err) {
+            // Ignorar erro ao deletar logo antiga
+          }
+        }
         await dadosEmpresa.update({ logo: filePath });
       }
 
       const logoUrl = DadosEmpresaController.buildLogoUrl(req, filePath);
       res.json({ success: true, logo: logoUrl });
     } catch (error) {
-      console.error('Erro ao fazer upload da logo:', error);
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      logger.error('Erro ao fazer upload da logo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      res.status(500).json({ 
+        success: false,
+        message: errorMessage 
+      });
     }
   }
 
