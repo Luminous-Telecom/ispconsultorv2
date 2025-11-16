@@ -94,11 +94,11 @@ export class Contrato extends Model<
     const plano = await this.getPlano();
     let valor = parseFloat(plano.valor_mensal.toString());
 
+    // Aplicar desconto (percentual tem prioridade sobre valor)
+    // Os dois campos podem existir (representam a mesma coisa), mas aplicamos apenas um
     if (this.desconto_percentual && this.desconto_percentual > 0) {
       valor = valor * (1 - this.desconto_percentual / 100);
-    }
-
-    if (this.desconto_valor && this.desconto_valor > 0) {
+    } else if (this.desconto_valor && this.desconto_valor > 0) {
       valor = Math.max(0, valor - this.desconto_valor);
     }
 
