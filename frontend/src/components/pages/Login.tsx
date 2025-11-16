@@ -31,7 +31,7 @@ const Login: React.FC = () => {
           sessionStorage.setItem('last_login_time', Date.now().toString());
           success('Autenticação realizada com sucesso.');
           // Usar window.location para forçar reload completo e evitar problemas de cache/SPA
-          window.location.href = '/dashboard';
+          window.location.href = '/adm';
         } else {
           error('Erro ao salvar token de autenticação. Tente novamente.');
           removeAuthToken();
