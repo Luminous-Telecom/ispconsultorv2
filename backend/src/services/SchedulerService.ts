@@ -351,9 +351,15 @@ export class SchedulerService {
             
             logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data início RAW do banco: ${contrato.data_inicio}`);
             
-            const dataInicioContrato = contrato.data_inicio ? new Date(contrato.data_inicio) : null;
-            if (dataInicioContrato) {
+            // Normalizar data de início para usar apenas a parte de data (sem hora/timezone)
+            // Isso evita problemas de conversão de timezone (ex: 16/11 UTC vira 15/11 GMT-0300)
+            let dataInicioContrato: Date | null = null;
+            if (contrato.data_inicio) {
+              const dataRaw = new Date(contrato.data_inicio);
+              // Criar nova data usando apenas ano, mês e dia (timezone local)
+              dataInicioContrato = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
               dataInicioContrato.setHours(0, 0, 0, 0);
+              logger.info(`[Scheduler] Contrato ID ${contrato.id}: Data início normalizada - Ano: ${dataInicioContrato.getFullYear()}, Mês: ${dataInicioContrato.getMonth() + 1}, Dia: ${dataInicioContrato.getDate()}`);
             }
             
             const diaVencimentoConfig = await DiasVencimento.findByPk(contrato.dia_vencimento_id);
