@@ -243,12 +243,15 @@ export class ContratoController {
         if (plano) {
           let valorFinal = parseFloat(plano.valor_mensal.toString());
           
-          // Aplicar desconto (percentual tem prioridade sobre valor)
-          // Os dois campos podem existir (representam a mesma coisa), mas aplicamos apenas um
-          if (value.desconto_percentual && value.desconto_percentual > 0) {
-            valorFinal = valorFinal * (1 - (parseFloat(value.desconto_percentual) / 100));
-          } else if (value.desconto_valor && parseFloat(value.desconto_valor) > 0) {
-            valorFinal = valorFinal - parseFloat(value.desconto_valor);
+          // Sempre usar desconto em valor quando disponível (mais preciso)
+          // Se não houver desconto em valor, calcular a partir do percentual
+          if (value.desconto_valor && parseFloat(value.desconto_valor.toString()) > 0) {
+            const descontoValor = parseFloat(value.desconto_valor.toString());
+            valorFinal = valorFinal - descontoValor;
+          } else if (value.desconto_percentual && value.desconto_percentual > 0) {
+            // Calcular valor do desconto a partir do percentual
+            const descontoValor = valorFinal * (parseFloat(value.desconto_percentual.toString()) / 100);
+            valorFinal = valorFinal - descontoValor;
           }
           
           // Garantir que o valor não seja negativo
@@ -256,7 +259,8 @@ export class ContratoController {
             valorFinal = 0;
           }
           
-          value.valor_final = valorFinal.toFixed(2);
+          // Arredondar para 2 casas decimais para evitar problemas de precisão
+          value.valor_final = Math.round(valorFinal * 100) / 100;
         }
       }
 
@@ -358,15 +362,20 @@ export class ContratoController {
         const plano = await contrato.getPlano();
         let novoValorFinal = parseFloat(plano.valor_mensal.toString());
 
-        // Aplicar desconto (percentual tem prioridade sobre valor)
-        // Os dois campos podem existir (representam a mesma coisa), mas aplicamos apenas um
-        if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
-          novoValorFinal = novoValorFinal * (1 - contrato.desconto_percentual / 100);
-        } else if (contrato.desconto_valor && contrato.desconto_valor > 0) {
-          novoValorFinal = Math.max(0, novoValorFinal - contrato.desconto_valor);
+        // Sempre usar desconto em valor quando disponível (mais preciso)
+        // Se não houver desconto em valor, calcular a partir do percentual
+        if (contrato.desconto_valor && contrato.desconto_valor > 0) {
+          const descontoValor = parseFloat(contrato.desconto_valor.toString());
+          novoValorFinal = Math.max(0, novoValorFinal - descontoValor);
+        } else if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
+          // Calcular valor do desconto a partir do percentual
+          const descontoValor = novoValorFinal * (parseFloat(contrato.desconto_percentual.toString()) / 100);
+          novoValorFinal = Math.max(0, novoValorFinal - descontoValor);
         }
 
-        await contrato.update({ valor_final: parseFloat(novoValorFinal.toFixed(2)) });
+        // Arredondar para 2 casas decimais para evitar problemas de precisão
+        const valorFinalArredondado = Math.round(novoValorFinal * 100) / 100;
+        await contrato.update({ valor_final: valorFinalArredondado });
       }
 
       res.json({

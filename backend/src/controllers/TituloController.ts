@@ -582,12 +582,14 @@ export class TituloController {
       // Calcular valor final com desconto/acréscimo
       let valorFinal = parseFloat(plano.valor_mensal.toString());
       
-      // Aplicar desconto (percentual tem prioridade sobre valor)
-      // Os dois campos podem existir (representam a mesma coisa), mas aplicamos apenas um
-      if (desconto_percentual && desconto_percentual > 0) {
-        valorFinal = valorFinal * (1 - (desconto_percentual / 100));
-      } else if (desconto_valor && desconto_valor > 0) {
-        valorFinal = valorFinal - desconto_valor;
+      // Sempre usar desconto em valor quando disponível (mais preciso)
+      // Se não houver desconto em valor, calcular a partir do percentual
+      if (desconto_valor && desconto_valor > 0) {
+        valorFinal = valorFinal - parseFloat(desconto_valor.toString());
+      } else if (desconto_percentual && desconto_percentual > 0) {
+        // Calcular valor do desconto a partir do percentual
+        const descontoValor = valorFinal * (parseFloat(desconto_percentual.toString()) / 100);
+        valorFinal = valorFinal - descontoValor;
       }
       
       // Aplicar acréscimo percentual

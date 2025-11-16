@@ -447,11 +447,14 @@ export class SchedulerService {
                 if (valorTitulo <= 0 && plano?.valor_mensal) {
                   valorTitulo = Number(plano.valor_mensal);
                   
-                  // Aplicar desconto (percentual tem prioridade sobre valor)
-                  if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
-                    valorTitulo = valorTitulo * (1 - contrato.desconto_percentual / 100);
-                  } else if (contrato.desconto_valor && contrato.desconto_valor > 0) {
-                    valorTitulo = valorTitulo - contrato.desconto_valor;
+                  // Sempre usar desconto em valor quando disponível (mais preciso)
+                  // Se não houver desconto em valor, calcular a partir do percentual
+                  if (contrato.desconto_valor && contrato.desconto_valor > 0) {
+                    valorTitulo = valorTitulo - Number(contrato.desconto_valor);
+                  } else if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
+                    // Calcular valor do desconto a partir do percentual
+                    const descontoValor = valorTitulo * (Number(contrato.desconto_percentual) / 100);
+                    valorTitulo = valorTitulo - descontoValor;
                   }
                 }
 
