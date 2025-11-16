@@ -453,7 +453,7 @@ const Home: React.FC = () => {
                   Sistemas Operacionais
                 </h5>
                 <div className="tech-badges">
-                  {['Windows Server', 'Debian', 'Ubuntu', 'Windows 10', 'Windows 11'].map((brand) => {
+                  {['Windows Server', 'Debian', 'Ubuntu', 'Windows'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
                       <span key={brand} className="tech-badge" title={brand}>

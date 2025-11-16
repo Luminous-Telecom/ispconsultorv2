@@ -43,8 +43,7 @@ export const brandLogos: Record<string, string> = {
   'Windows Server': '/logos/windows-server.png',
   'Debian': '/logos/debian.png',
   'Ubuntu': '/logos/ubuntu.png',
-  'Windows 10': '/logos/windows10.png',
-  'Windows 11': '/logos/windows11.png',
+  'Windows': '/logos/windows.png',
 };
 
 /**
