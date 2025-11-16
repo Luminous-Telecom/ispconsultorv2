@@ -51,37 +51,46 @@ export class ApiClient {
         const url = config.url || '';
         const baseURL = config.baseURL || '';
         
-        // Tentar extrair pathname se for URL completa
+        // Construir URL completa para análise
+        let fullUrl = url;
+        if (baseURL && !url.startsWith('http://') && !url.startsWith('https://')) {
+          // Se baseURL existe e url não é completa, combinar
+          const base = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL;
+          const path = url.startsWith('/') ? url : `/${url}`;
+          fullUrl = `${base}${path}`;
+        }
+        
+        // Extrair pathname da URL (seja completa ou relativa)
         let pathname = url;
         try {
-          // Se a URL começa com http:// ou https://, extrair pathname
-          if (url.startsWith('http://') || url.startsWith('https://')) {
-            const urlObj = new URL(url);
-            pathname = urlObj.pathname;
-          } else if (baseURL && (baseURL.startsWith('http://') || baseURL.startsWith('https://'))) {
-            // Se baseURL é completa, construir URL completa e extrair pathname
-            const fullUrl = `${baseURL}${url}`;
+          // Se for URL completa (http:// ou https://), extrair pathname
+          if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
             const urlObj = new URL(fullUrl);
             pathname = urlObj.pathname;
           } else {
-            // URL relativa, usar como está
-            pathname = url.startsWith('/') ? url : `/${url}`;
+            // URL relativa, normalizar
+            pathname = fullUrl.startsWith('/') ? fullUrl : `/${fullUrl}`;
           }
         } catch {
-          // Se falhar ao parsear, usar URL original
-          pathname = url;
+          // Se falhar ao parsear, usar URL original normalizada
+          pathname = url.startsWith('/') ? url : `/${url}`;
         }
         
         // Normalizar pathname (remover barras duplicadas e finais)
-        const normalizePath = (p: string) => p.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
+        const normalizePath = (p: string) => {
+          const normalized = p.replace(/\/+/g, '/').replace(/\/$/, '');
+          return normalized || '/';
+        };
         const normalizedPath = normalizePath(pathname);
         
+        // Verificar se é rota pública
         const isPublicRoute = publicRoutes.some(route => {
           const normalizedRoute = normalizePath(route);
-          // Verificar se o pathname corresponde à rota pública
+          // Verificar múltiplas formas de correspondência
           return normalizedPath === normalizedRoute ||
-                 normalizedPath.endsWith(normalizedRoute) ||
-                 normalizedPath.includes(normalizedRoute) ||
+                 normalizedPath.endsWith(`/${normalizedRoute}`) ||
+                 normalizedPath.includes(`/${normalizedRoute}/`) ||
+                 normalizedPath.includes(`/${normalizedRoute}`) ||
                  pathname.includes(route);
         });
         
