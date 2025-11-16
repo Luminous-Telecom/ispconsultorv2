@@ -378,13 +378,24 @@ export class SchedulerService {
                 const contratoComPlano = contrato as InstanceType<typeof ContratoModel> & ContratoWithPlano;
                 const plano = contratoComPlano.plano;
                 
-                // Se valor_final já existe, usar ele (já tem descontos aplicados)
+                // Usar valor_final do contrato se existir (já tem descontos aplicados)
                 // Caso contrário, calcular a partir do plano aplicando descontos uma única vez
                 let valorTitulo: number;
-                if (contrato.valor_final) {
-                  valorTitulo = parseFloat(contrato.valor_final.toString());
+                
+                // Verificar se valor_final existe e é válido (não null, não undefined, maior que 0)
+                // O valor_final já foi calculado e salvo pelo ContratoController com os descontos aplicados
+                const valorFinalRaw = contrato.valor_final;
+                const valorFinalContrato = valorFinalRaw !== null && valorFinalRaw !== undefined 
+                  ? parseFloat(String(valorFinalRaw)) 
+                  : null;
+                
+                if (valorFinalContrato !== null && !isNaN(valorFinalContrato) && valorFinalContrato > 0) {
+                  // Usar valor_final diretamente (já tem descontos aplicados no ContratoController)
+                  // NÃO aplicar descontos novamente aqui
+                  valorTitulo = valorFinalContrato;
                 } else {
                   // Calcular a partir do plano aplicando descontos (percentual tem prioridade sobre valor)
+                  // Isso só acontece se valor_final não foi salvo no banco
                   valorTitulo = parseFloat((plano?.valor_mensal || 0).toString());
                   
                   if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
