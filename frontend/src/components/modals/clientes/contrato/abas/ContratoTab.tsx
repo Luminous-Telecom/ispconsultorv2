@@ -61,13 +61,17 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
   // Handlers simplificados para desconto
   const handleDescontoPercentualChange = (value: FormValue) => {
     const percentual = typeof value === 'string' ? parseFloat(value) || 0 : (typeof value === 'number' ? value : 0);
-    handleInputChange('desconto_percentual', percentual);
+    // Arredondar para 2 casas decimais para evitar problemas de validação HTML5 com step={0.01}
+    const percentualArredondado = Math.round(percentual * 100) / 100;
+    handleInputChange('desconto_percentual', percentualArredondado);
     
     // Calcular valor do desconto baseado no valor do plano selecionado
     if (planoSelecionado?.valor_mensal) {
       const valorPlano = parseFloat(String(planoSelecionado.valor_mensal));
-      const descontoValor = percentual > 0 ? (valorPlano * percentual) / 100 : 0;
-      handleInputChange('desconto_valor', descontoValor);
+      const descontoValor = percentualArredondado > 0 ? (valorPlano * percentualArredondado) / 100 : 0;
+      // Arredondar o valor também para 2 casas decimais
+      const descontoValorArredondado = Math.round(descontoValor * 100) / 100;
+      handleInputChange('desconto_valor', descontoValorArredondado);
     }
   };
 
@@ -79,7 +83,9 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
     if (planoSelecionado?.valor_mensal) {
       const valorPlano = parseFloat(String(planoSelecionado.valor_mensal));
       const percentual = valor > 0 && valorPlano > 0 ? (valor * 100) / valorPlano : 0;
-      handleInputChange('desconto_percentual', percentual);
+      // Arredondar para 2 casas decimais para evitar problemas de validação HTML5 com step={0.01}
+      const percentualArredondado = Math.round(percentual * 100) / 100;
+      handleInputChange('desconto_percentual', percentualArredondado);
     }
   };
   return (
@@ -212,7 +218,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           isInvalid={!!errors.desconto_percentual}
           min={0}
           max={100}
-          step={0.01}
+          step="any"
         />
       </div>
 
