@@ -436,7 +436,7 @@ const Home: React.FC = () => {
                     const logo = getBrandLogo(brand);
                     return (
                       <span key={brand} className="tech-badge" title={brand}>
-                        {logo && <img src={logo} alt={brand} className="tech-badge-logo" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+                        {logo && <img src={logo} alt={brand} className="tech-badge-logo tech-badge-logo-invert" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
                         <span className="tech-badge-text">{brand}</span>
                       </span>
                     );

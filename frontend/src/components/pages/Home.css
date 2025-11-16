@@ -281,6 +281,10 @@
   transition: opacity 0.2s ease;
 }
 
+.tech-badge-logo-invert {
+  filter: brightness(0);
+}
+
 .tech-badge-text {
   display: none;
 }
