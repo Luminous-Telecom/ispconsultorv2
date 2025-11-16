@@ -369,35 +369,21 @@ export class SchedulerService {
               const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
               const tituloExistente = titulosExistentes.find(t => {
                 const dataTitulo = new Date(t.data_vencimento);
-                const mesAnoTitulo = `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}`;
-                return mesAnoTitulo === mesAno;
+                return `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}` === mesAno;
               });
 
               if (!tituloExistente && dataVencimento > hoje) {
                 // Calcular valor do título
-                const contratoComPlano = contrato as InstanceType<typeof ContratoModel> & ContratoWithPlano;
-                const plano = contratoComPlano.plano;
+                const plano = (contrato as ContratoWithPlano).plano;
                 
                 // Usar valor_final do contrato se existir (já tem descontos aplicados)
                 // Caso contrário, calcular a partir do plano aplicando descontos uma única vez
-                let valorTitulo: number;
+                let valorTitulo: number = Number(contrato.valor_final) || 0;
                 
-                // Verificar se valor_final existe e é válido (não null, não undefined, maior que 0)
-                // O valor_final já foi calculado e salvo pelo ContratoController com os descontos aplicados
-                const valorFinalRaw = contrato.valor_final;
-                const valorFinalContrato = valorFinalRaw !== null && valorFinalRaw !== undefined 
-                  ? parseFloat(String(valorFinalRaw)) 
-                  : null;
-                
-                if (valorFinalContrato !== null && !isNaN(valorFinalContrato) && valorFinalContrato > 0) {
-                  // Usar valor_final diretamente (já tem descontos aplicados no ContratoController)
-                  // NÃO aplicar descontos novamente aqui
-                  valorTitulo = valorFinalContrato;
-                } else {
-                  // Calcular a partir do plano aplicando descontos (percentual tem prioridade sobre valor)
-                  // Isso só acontece se valor_final não foi salvo no banco
-                  valorTitulo = parseFloat((plano?.valor_mensal || 0).toString());
+                if (valorTitulo <= 0 && plano?.valor_mensal) {
+                  valorTitulo = Number(plano.valor_mensal);
                   
+                  // Aplicar desconto (percentual tem prioridade sobre valor)
                   if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
                     valorTitulo = valorTitulo * (1 - contrato.desconto_percentual / 100);
                   } else if (contrato.desconto_valor && contrato.desconto_valor > 0) {
