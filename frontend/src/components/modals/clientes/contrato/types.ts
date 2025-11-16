@@ -22,7 +22,7 @@ export interface BulkAction<T = Record<string, unknown>> {
   label: string;
   action?: (selectedItems: T[]) => void;
   variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info';
-  disabled?: (selectedItems: T[]) => boolean;
+  disabled?: boolean | ((selectedItems: T[]) => boolean);
   dropdown?: {
     label: string;
     action: () => void;

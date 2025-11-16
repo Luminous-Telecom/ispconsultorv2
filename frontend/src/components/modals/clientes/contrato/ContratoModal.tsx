@@ -58,6 +58,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     if (!show) {
       setInternalContratoId(contratoId);
       setActiveTab('contrato');
+      setShowCancelados(false);
+      setPage(1);
+      setLimit(10);
     }
   }, [show, contratoId]);
   
@@ -109,6 +112,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [showCancelados, setShowCancelados] = useState(false);
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -550,43 +554,92 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   // Colunas para a tabela de títulos
   const columns = [
-    { key: 'id', label: 'ID', sortable: true, render: (item: Titulo) => item.id },
+    { 
+      key: 'id', 
+      label: 'ID', 
+      sortable: true, 
+      searchable: true,
+      render: (item: Titulo) => item.id 
+    },
+    {
+      key: 'contrato_id',
+      label: 'Contrato',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.contrato_id || '-'
+    },
     {
       key: 'status',
       label: 'Status',
+      sortable: true,
+      searchable: true,
       render: (item: Titulo) => (
         <span className={`badge bg-${getStatusColor(item.status)}`}>{item.status}</span>
       )
     },
-    { key: 'plano', label: 'Plano', render: (item: Titulo) => item.plano?.nome_plano || '-' },
-    { key: 'numero_titulo', label: 'Nº Título', render: (item: Titulo) => item.numero_titulo || '-' },
+    { 
+      key: 'plano', 
+      label: 'Plano', 
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.plano?.nome_plano || '-' 
+    },
+    { 
+      key: 'numero_titulo', 
+      label: 'Nº Título', 
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.numero_titulo || '-' 
+    },
     {
       key: 'data_vencimento',
       label: 'Vencimento',
+      sortable: true,
+      searchable: false,
       render: (item: Titulo) => new Date(item.data_vencimento).toLocaleDateString('pt-BR')
     },
     {
       key: 'valor',
       label: 'Valor',
+      sortable: true,
+      searchable: true,
       render: (item: Titulo) => `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
       key: 'valor_pago',
       label: 'Valor baixado',
+      sortable: true,
+      searchable: true,
       render: (item: Titulo) => item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00'
     },
     {
       key: 'valor_aberto',
       label: 'Valor aberto',
+      sortable: true,
+      searchable: true,
       render: (item: Titulo) => (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`
     },
     {
       key: 'data_pagamento',
       label: 'Data Pagamento',
+      sortable: true,
+      searchable: false,
       render: (item: Titulo) => item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'
     },
-    { key: 'charge_id', label: 'Charge ID', render: (item: Titulo) => item.charge_id || '-' },
-    { key: 'nosso_numero', label: 'Nosso Número', render: (item: Titulo) => item.nosso_numero || '-' }
+    { 
+      key: 'charge_id', 
+      label: 'Charge ID', 
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.charge_id || '-' 
+    },
+    { 
+      key: 'nosso_numero', 
+      label: 'Nosso Número', 
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.nosso_numero || '-' 
+    }
   ];
 
   // Colunas para a tabela de termos
@@ -624,17 +677,18 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   ];
 
-  // Filtrar dados (remover cancelados e inativos)
+  // Não filtrar cancelados aqui - deixar o FinanceiroTab gerenciar através do showCancelados
   const filteredData = isEditMode && titulosData?.data 
-    ? titulosData.data.filter((titulo: Titulo) => titulo.status !== 'cancelado')
+    ? titulosData.data
     : [];
   
   const filteredTermosData = isEditMode && termosArray.length > 0
     ? termosArray.filter((termo: TermoContrato) => termo.ativo)
     : [];
 
-  // Ordenar por ID decrescente
-  const sortedData = [...filteredData].sort((a: Titulo, b: Titulo) => (b.id || 0) - (a.id || 0));
+  // Não ordenar aqui - deixar o Table gerenciar a ordenação através das colunas sortable
+  // Apenas passar os dados filtrados, o Table fará a ordenação inicial e permitirá mudanças pelo usuário
+  const sortedData = filteredData;
   const sortedTermosData = [...filteredTermosData].sort((a: TermoContrato, b: TermoContrato) => (b.id || 0) - (a.id || 0));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -861,6 +915,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   columns={columns}
                   isGeneratingPdf={isGeneratingPdf}
                   onRefresh={refetchTitulos}
+                  showCancelados={showCancelados}
+                  setShowCancelados={setShowCancelados}
                 />
               ) : (
                 <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>

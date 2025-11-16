@@ -658,6 +658,18 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       render: (item: CarneParcela) => item.id
     },
     {
+      key: 'contrato_id',
+      label: 'Contrato',
+      sortable: true,
+      searchable: true,
+      render: (item: CarneParcela) => {
+        // Verificar se tem contrato_id diretamente (pode vir do backend mesmo não estando na interface)
+        const itemAny = item as unknown as { contrato_id?: number; contrato?: { id?: number } };
+        const contratoId = itemAny.contrato_id || itemAny.contrato?.id;
+        return contratoId || '-';
+      }
+    },
+    {
       key: 'status',
       label: 'Status',
       sortable: true,
