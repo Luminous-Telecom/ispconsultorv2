@@ -50,19 +50,26 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   }, []);
 
 
-  // Memoizar o filtro de cancelados para garantir que o Table detecte mudanças
-  const customFilters = useCallback((data: Titulo[]) => {
-    // Filtrar cancelados se necessário
+  // Função para filtrar cancelados
+  const filterCancelados = useCallback((data: Titulo[]) => {
     return data.filter((titulo) => {
-      // Verificar se o status é 'cancelado' (case-insensitive para garantir)
       const isCancelado = titulo.status?.toLowerCase() === 'cancelado';
-      
       if (isCancelado && !showCancelados) {
         return false;
       }
       return true;
     });
   }, [showCancelados]);
+
+  // Memoizar o filtro de cancelados para garantir que o Table detecte mudanças
+  const customFilters = useCallback((data: Titulo[]) => {
+    return filterCancelados(data);
+  }, [filterCancelados]);
+
+  // Dados filtrados para usar no resumo financeiro
+  const filteredData = useMemo(() => {
+    return filterCancelados(sortedData);
+  }, [sortedData, filterCancelados]);
 
   // Memoizar bulkActions para evitar recriação desnecessária
   const memoizedBulkActions = useMemo(() => {
@@ -97,8 +104,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               pagination: {
                 current_page: page,
                 per_page: limit,
-                total: sortedData.length,
-                last_page: Math.ceil(sortedData.length / limit)
+                total: filteredData.length,
+                last_page: Math.ceil(filteredData.length / limit)
               },
               loading: isLoading,
               selectable: true,
@@ -137,7 +144,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           />
 
         {/* Resumo Financeiro */}
-        {sortedData.length > 0 && (
+        {filteredData.length > 0 && (
           <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle text-muted me-2"></i>
@@ -146,13 +153,13 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             <div className="d-flex gap-4">
               <div className="text-end">
                 <div className="small text-muted">Valor:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: Titulo) => {
+                <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
                   return sum + Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0);
                 }, 0).toFixed(2)}</strong>
               </div>
               <div className="text-end">
                 <div className="small text-muted">Valor baixado:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: Titulo) => {
+                <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
                   if (item.pago && item.status === 'pago') {
                     return sum + Number(item.valor_pago || 0);
                   }
@@ -161,16 +168,18 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               </div>
               <div className="text-end">
                 <div className="small text-muted">Valor aberto:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: Titulo) => {
+                <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
                   return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0));
                 }, 0).toFixed(2)}</strong>
               </div>
-              <div className="text-end">
-                <div className="small text-muted">Valor cancelado:</div>
-                <strong>R$ {sortedData.reduce((sum: number, item: Titulo) => {
-                  return sum + (item.status === 'cancelado' ? Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0) : 0);
-                }, 0).toFixed(2)}</strong>
-              </div>
+              {showCancelados && (
+                <div className="text-end">
+                  <div className="small text-muted">Valor cancelado:</div>
+                  <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
+                    return sum + (item.status === 'cancelado' ? Number(item.valor || (item as Titulo & { valor_parcela?: number }).valor_parcela || 0) : 0);
+                  }, 0).toFixed(2)}</strong>
+                </div>
+              )}
             </div>
           </div>
         )}
