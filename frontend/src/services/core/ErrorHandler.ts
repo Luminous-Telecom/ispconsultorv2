@@ -74,12 +74,20 @@ export class ErrorHandler {
           const lastLoginTime = sessionStorage.getItem('last_login_time');
           const timeSinceLogin = lastLoginTime ? Date.now() - parseInt(lastLoginTime, 10) : Infinity;
           
-          if (currentPath !== '/login' && timeSinceLogin > 2000) {
+          // Não redirecionar se estiver na página pública (/) ou já estiver no login
+          // Apenas redirecionar se estiver em rotas protegidas (/adm/*)
+          if (currentPath !== '/login' && currentPath !== '/' && !currentPath.startsWith('/adm')) {
+            // Se não estiver em rota protegida, não redirecionar
+            break;
+          }
+          
+          // Redirecionar apenas se estiver em rota protegida e não tiver token válido
+          if (currentPath.startsWith('/adm') && timeSinceLogin > 2000) {
             if (hasToken) {
               localStorage.removeItem('auth_token');
             }
             setTimeout(() => {
-              if (window.location.pathname !== '/login') {
+              if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
                 window.location.href = '/login';
               }
             }, 100);

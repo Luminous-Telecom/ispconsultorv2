@@ -9,10 +9,13 @@ const Home: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Buscar dados da empresa (incluindo logo)
+  // Não requer autenticação - se falhar, apenas não exibe a logo
   const { data: dadosEmpresa } = useQuery({
     queryKey: ['dados-empresa'],
     queryFn: () => DadosEmpresaService.get(),
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    retry: false, // Não tentar novamente se falhar
+    throwOnError: false, // Não lançar erro para evitar redirecionamento
   });
 
   useEffect(() => {
