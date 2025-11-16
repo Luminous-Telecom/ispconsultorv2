@@ -374,23 +374,55 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          git add .
+          # Adicionar todos os arquivos (incluindo não rastreados)
+          git add -A
+          
+          # Verificar status antes do commit
+          echo "=== Status do Git antes do commit ==="
+          git status --short
+          
+          # Se BUILD_WAS_EXECUTED=true, sempre fazer commit mesmo sem mudanças detectadas
+          # (porque o build foi executado e pode ter gerado novos arquivos)
+          FORCE_COMMIT="false"
+          if [ "${BUILD_WAS_EXECUTED}" == "true" ]; then
+            FORCE_COMMIT="true"
+            echo "⚠ Build foi executado, forçando commit mesmo sem mudanças detectadas"
+          fi
           
           # Verificar se há mudanças para commitar
-          if git diff --staged --quiet; then
-            echo "Nenhuma mudança para commitar"
+          if git diff --staged --quiet && [ "${FORCE_COMMIT}" != "true" ]; then
+            echo "⚠ Nenhuma mudança detectada e build não foi executado"
+            echo "⚠ Pulando commit (arquivos já estão atualizados)"
           else
-            git commit -m "Deploy: ${{ steps.commit_info.outputs.hash }} - ${{ steps.commit_info.outputs.message }}
+            if [ "${FORCE_COMMIT}" == "true" ] && git diff --staged --quiet; then
+              echo "⚠ Build foi executado mas nenhuma mudança detectada"
+              echo "⚠ Fazendo commit vazio para registrar o deploy..."
+              git commit --allow-empty -m "Deploy: ${{ steps.commit_info.outputs.hash }} - ${{ steps.commit_info.outputs.message }}
+
+            Commit original: ${{ steps.commit_info.outputs.hash }}
+            Autor: ${{ steps.commit_info.outputs.author }}
+            Data: ${{ steps.commit_info.outputs.date }}
+            Workflow: ${{ github.workflow }}
+            Run: ${{ github.run_id }}
+            Nota: Build executado mas arquivos idênticos aos existentes"
+            else
+              echo "✓ Mudanças detectadas, fazendo commit..."
+              git commit -m "Deploy: ${{ steps.commit_info.outputs.hash }} - ${{ steps.commit_info.outputs.message }}
 
             Commit original: ${{ steps.commit_info.outputs.hash }}
             Autor: ${{ steps.commit_info.outputs.author }}
             Data: ${{ steps.commit_info.outputs.date }}
             Workflow: ${{ github.workflow }}
             Run: ${{ github.run_id }}"
+            fi
             
             git remote set-url origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
             git push origin main
           fi
+          
+          # Mostrar último commit para confirmação
+          echo "=== Último commit no repositório de produção ==="
+          git log -1 --oneline
           
       - name: Criar Release no GitHub
         if: success()
