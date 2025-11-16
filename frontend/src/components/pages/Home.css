@@ -368,8 +368,8 @@
 }
 
 .tech-badge-logo-invert {
-  /* Logo aparece com cores originais sobre fundo branco */
-  filter: none;
+  /* Inverter logo branca para preta para visibilidade sobre fundo branco */
+  filter: brightness(0);
   display: block;
 }
 
