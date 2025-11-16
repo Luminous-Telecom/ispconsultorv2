@@ -133,56 +133,45 @@ jobs:
             cp ../backend/package.json backend/package.json
             cp ../backend/package-lock.json backend/package-lock.json
             cp ../backend/env.example backend/env.example
-            
-            # Sempre copiar arquivos Docker do backend quando houver mudanças
-            echo "Copiando arquivos Docker do backend..."
-            if [ -f "../backend/Dockerfile" ]; then
-              cp ../backend/Dockerfile backend/Dockerfile
-              echo "backend/Dockerfile copiado"
-            fi
-            if [ -f "../backend/.dockerignore" ]; then
-              cp ../backend/.dockerignore backend/.dockerignore
-              echo "backend/.dockerignore copiado"
-            fi
-            
-            # Sempre copiar arquivos Docker do frontend quando houver mudanças
-            echo "Copiando arquivos Docker do frontend..."
-            if [ -f "../frontend/Dockerfile" ]; then
-              cp ../frontend/Dockerfile frontend/Dockerfile
-              echo "frontend/Dockerfile copiado"
-            fi
-            if [ -f "../frontend/.dockerignore" ]; then
-              cp ../frontend/.dockerignore frontend/.dockerignore
-              echo "frontend/.dockerignore copiado"
-            fi
           else
             echo "Nenhuma alteração no backend, mantendo artefatos existentes"
           fi
           
-          # Copiar arquivos Docker também quando houver mudanças específicas neles
-          if [ "${{ steps.changes.outputs.docker_changed }}" == "true" ]; then
-            echo "Atualizando arquivos Docker devido a mudanças específicas..."
-            
-            # Backend Dockerfile e .dockerignore
-            if [ -f "../backend/Dockerfile" ]; then
-              cp ../backend/Dockerfile backend/Dockerfile
-              echo "backend/Dockerfile atualizado"
-            fi
-            if [ -f "../backend/.dockerignore" ]; then
-              cp ../backend/.dockerignore backend/.dockerignore
-              echo "backend/.dockerignore atualizado"
-            fi
-            
-            # Frontend Dockerfile e .dockerignore
-            if [ -f "../frontend/Dockerfile" ]; then
-              cp ../frontend/Dockerfile frontend/Dockerfile
-              echo "frontend/Dockerfile atualizado"
-            fi
-            if [ -f "../frontend/.dockerignore" ]; then
-              cp ../frontend/.dockerignore frontend/.dockerignore
-              echo "frontend/.dockerignore atualizado"
-            fi
+          # SEMPRE copiar arquivos Docker do backend e frontend (independente de mudanças)
+          echo "Copiando arquivos Docker do backend e frontend..."
+          
+          # Backend Dockerfile e .dockerignore
+          if [ -f "../backend/Dockerfile" ]; then
+            cp ../backend/Dockerfile backend/Dockerfile
+            echo "✓ backend/Dockerfile copiado"
+          else
+            echo "⚠ backend/Dockerfile não encontrado"
           fi
+          if [ -f "../backend/.dockerignore" ]; then
+            cp ../backend/.dockerignore backend/.dockerignore
+            echo "✓ backend/.dockerignore copiado"
+          else
+            echo "⚠ backend/.dockerignore não encontrado"
+          fi
+          
+          # Frontend Dockerfile e .dockerignore
+          if [ -f "../frontend/Dockerfile" ]; then
+            cp ../frontend/Dockerfile frontend/Dockerfile
+            echo "✓ frontend/Dockerfile copiado"
+          else
+            echo "⚠ frontend/Dockerfile não encontrado"
+          fi
+          if [ -f "../frontend/.dockerignore" ]; then
+            cp ../frontend/.dockerignore frontend/.dockerignore
+            echo "✓ frontend/.dockerignore copiado"
+          else
+            echo "⚠ frontend/.dockerignore não encontrado"
+          fi
+          
+          # Verificar se os arquivos foram copiados
+          echo "Verificando arquivos Docker copiados:"
+          ls -la backend/ | grep -E "(Dockerfile|dockerignore)" || echo "Nenhum arquivo Docker encontrado em backend/"
+          ls -la frontend/ | grep -E "(Dockerfile|dockerignore)" || echo "Nenhum arquivo Docker encontrado em frontend/"
           
           # Copiar arquivos de configuração e documentação na raiz
           if [ "${{ steps.changes.outputs.config_changed }}" == "true" ]; then
