@@ -364,24 +364,23 @@
   max-width: 60px;
   object-fit: contain;
   transition: opacity 0.2s ease;
-  background-color: #ffffff;
-  padding: 0.25rem;
-  border-radius: 0.25rem;
   display: block;
 }
 
 .tech-badge-logo-invert {
   filter: brightness(0);
-  background-color: #ffffff !important;
-  padding: 0.25rem;
-  border-radius: 0.25rem;
   display: block;
-  mix-blend-mode: normal;
 }
 
-/* Garantir que o badge tenha fundo branco mesmo com logo invertida */
-.tech-badge:has(.tech-badge-logo-invert) {
+/* Garantir fundo branco no badge e na logo */
+.tech-badge {
   background-color: #ffffff !important;
+}
+
+.tech-badge img {
+  background-color: #ffffff;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
 }
 
 .tech-badge-text {
