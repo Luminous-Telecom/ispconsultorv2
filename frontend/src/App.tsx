@@ -10,6 +10,7 @@ import './styles/protection.css';
 import Layout from './components/layout/Layout';
 //
 // Pages
+import Home from './components/pages/Home';
 import Dashboard from './components/pages/Dashboard';
 import Login from './components/pages/Login';
 
@@ -49,6 +50,7 @@ function App() {
           <NotificationProvider>
             <Router>
               <Routes>
+                <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/adm" element={<Layout />}>
                   <Route index element={<Dashboard />} />
