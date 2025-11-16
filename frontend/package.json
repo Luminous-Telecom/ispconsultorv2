@@ -22,12 +22,14 @@
     "react-router-dom": "^7.9.1",
     "react-scripts": "5.0.1",
     "recharts": "^3.3.0",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "javascript-obfuscator": "^4.1.0"
   },
   "scripts": {
     "start": "node server.js",
     "dev": "react-scripts start",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' react-scripts build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' react-scripts build && npm run obfuscate",
+    "obfuscate": "javascript-obfuscator build/static/js --output build/static/js --compact true --control-flow-flattening true --control-flow-flattening-threshold 0.75 --dead-code-injection true --dead-code-injection-threshold 0.4 --debug-protection false --debug-protection-interval 0 --disable-console-output false --identifier-names-generator hexadecimal --log false --numbers-to-expressions true --rename-globals false --self-defending true --simplify true --split-strings true --split-strings-chunk-length 10 --string-array true --string-array-calls-transform true --string-array-encoding base64 --string-array-index-shift true --string-array-rotate true --string-array-shuffle true --string-array-wrappers-count 2 --string-array-wrappers-chained-calls true --string-array-wrappers-parameters-max-count 4 --string-array-wrappers-type function --string-array-threshold 0.75 --transform-object-keys true --unicode-escape-sequence false",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .ts,.tsx",
