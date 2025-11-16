@@ -34,9 +34,10 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
   // Não aplicar headers de frame para rotas de PDF
   if (!isPdfRoute) {
     res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+    if (process.env.NODE_ENV !== 'production') {
+      res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+      res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    }
   }
   
   res.setHeader('Referrer-Policy', 'no-referrer');
