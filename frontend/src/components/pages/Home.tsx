@@ -327,7 +327,7 @@ const Home: React.FC = () => {
                   Switch
                 </h5>
                 <div className="tech-badges">
-                  {['Mikrotik', 'Intelbras'].map((brand) => {
+                  {['Mikrotik', 'Intelbras', 'Grandstream'].map((brand) => {
                     const logo = getBrandLogo(brand);
                     return (
                       <span key={brand} className="tech-badge" title={brand}>

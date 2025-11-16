@@ -14,6 +14,7 @@ export const brandLogos: Record<string, string> = {
   
   // Switch
   'Intelbras': '/logos/intelbras.png',
+  'Grandstream': '/logos/grandstream.png',
   
   // ERPs
   'IXC Provedor': '/logos/ixc.png',
