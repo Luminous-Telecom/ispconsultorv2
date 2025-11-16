@@ -293,6 +293,47 @@ jobs:
             echo "⚠ backend/migrations não encontrado"
           fi
           
+          # Copiar build do frontend para frontend/ (se build foi executado)
+          if [ "${BUILD_WAS_EXECUTED}" == "true" ] || [ -d "../frontend/build" ]; then
+            echo "=== Copiando build do frontend para frontend/ ==="
+            if [ -d "../frontend/build" ]; then
+              # Limpar pasta frontend/ antes de copiar (exceto Dockerfiles)
+              if [ -f "frontend/Dockerfile" ]; then
+                cp frontend/Dockerfile frontend/Dockerfile.backup
+              fi
+              if [ -f "frontend/.dockerignore" ]; then
+                cp frontend/.dockerignore frontend/.dockerignore.backup
+              fi
+              
+              rm -rf frontend/*
+              
+              # Restaurar Dockerfiles
+              if [ -f "frontend/Dockerfile.backup" ]; then
+                mv frontend/Dockerfile.backup frontend/Dockerfile
+              fi
+              if [ -f "frontend/.dockerignore.backup" ]; then
+                mv frontend/.dockerignore.backup frontend/.dockerignore
+              fi
+              
+              # Copiar build do frontend
+              cp -r ../frontend/build/* frontend/
+              
+              # Verificar se foi copiado
+              if [ -f "frontend/index.html" ]; then
+                echo "✓ Frontend build copiado para frontend/"
+                echo "Arquivos em frontend/:"
+                ls -la frontend/ | head -10
+              else
+                echo "⚠ ERRO: Frontend build não foi copiado corretamente!"
+                exit 1
+              fi
+            else
+              echo "⚠ frontend/build não existe, pulando cópia"
+            fi
+          else
+            echo "⚠ Build não foi executado, mantendo frontend/ existente"
+          fi
+          
           # SEMPRE copiar arquivos Docker do backend e frontend (independente de mudanças)
           echo "Copiando arquivos Docker do backend e frontend..."
           
