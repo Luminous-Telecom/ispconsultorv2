@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest # O ambiente onde o código será executado
 
     steps:
-      # Faz o checkout do código com histórico para comparação
+      # Faz o checkout do código com histórico completo para comparação
       - name: Checkout Código Fonte
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Buscar pelo menos 2 commits para poder comparar
+          fetch-depth: 0  # Buscar histórico completo para comparação precisa
         
       # Configura o ambiente Node.js
       - name: Configurar Node.js
@@ -30,43 +30,57 @@ jobs:
         id: changes
         run: |
           # Obter o commit anterior (HEAD~1) ou usar o commit atual se for o primeiro
-          PREV_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)
-          CURRENT_COMMIT=$(git rev-parse HEAD)
+          # Usar ${{ github.event.before }} se disponível (commit anterior no push)
+          PREV_COMMIT="${{ github.event.before }}"
+          CURRENT_COMMIT="${{ github.sha }}"
           
-          # Verificar mudanças no backend
-          if git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} | grep -qE '^backend/'; then
-            BACKEND_CHANGED="true"
-          else
-            BACKEND_CHANGED="false"
+          # Se não houver commit anterior no evento, tentar HEAD~1
+          if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "0000000000000000000000000000000000000000" ]; then
+            PREV_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)
           fi
           
-          # Verificar mudanças no frontend
-          if git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} | grep -qE '^frontend/'; then
-            FRONTEND_CHANGED="true"
-          else
-            FRONTEND_CHANGED="false"
-          fi
-          
-          # Verificar mudanças em arquivos de configuração/documentação na raiz
-          if git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} | grep -qE '^(README\.md|docker-compose\.yaml|ecosystem\.config\.js|\.gitignore|package\.json)$'; then
-            CONFIG_CHANGED="true"
-          else
-            CONFIG_CHANGED="false"
-          fi
-          
-          # Verificar mudanças em arquivos Docker (Dockerfile e .dockerignore)
-          if git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} | grep -qE '(Dockerfile|\.dockerignore)'; then
-            DOCKER_CHANGED="true"
-          else
-            DOCKER_CHANGED="false"
-          fi
-          
-          # Se for o primeiro commit ou não conseguir determinar, build tudo
-          if [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ]; then
+          # Se ainda não conseguir, usar o commit atual (primeiro commit)
+          if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ]; then
+            echo "Primeiro commit ou não foi possível determinar commit anterior, buildando tudo"
             BACKEND_CHANGED="true"
             FRONTEND_CHANGED="true"
             CONFIG_CHANGED="true"
             DOCKER_CHANGED="true"
+          else
+            echo "Comparando commits: ${PREV_COMMIT}..${CURRENT_COMMIT}"
+            
+            # Listar todos os arquivos alterados
+            CHANGED_FILES=$(git diff --name-only ${PREV_COMMIT} ${CURRENT_COMMIT} || echo "")
+            echo "Arquivos alterados:"
+            echo "${CHANGED_FILES}"
+            
+            # Verificar mudanças no backend
+            if echo "${CHANGED_FILES}" | grep -qE '^backend/'; then
+              BACKEND_CHANGED="true"
+            else
+              BACKEND_CHANGED="false"
+            fi
+            
+            # Verificar mudanças no frontend
+            if echo "${CHANGED_FILES}" | grep -qE '^frontend/'; then
+              FRONTEND_CHANGED="true"
+            else
+              FRONTEND_CHANGED="false"
+            fi
+            
+            # Verificar mudanças em arquivos de configuração/documentação na raiz
+            if echo "${CHANGED_FILES}" | grep -qE '^(README\.md|docker-compose\.yaml|ecosystem\.config\.js|\.gitignore|package\.json)$'; then
+              CONFIG_CHANGED="true"
+            else
+              CONFIG_CHANGED="false"
+            fi
+            
+            # Verificar mudanças em arquivos Docker (Dockerfile e .dockerignore)
+            if echo "${CHANGED_FILES}" | grep -qE '(Dockerfile|\.dockerignore)'; then
+              DOCKER_CHANGED="true"
+            else
+              DOCKER_CHANGED="false"
+            fi
           fi
           
           echo "backend_changed=${BACKEND_CHANGED}" >> $GITHUB_OUTPUT
