@@ -85,7 +85,7 @@
 }
 
 .hero-title {
-  font-size: 3rem;
+  font-size: 2rem;
   font-weight: 700;
   margin-bottom: 1rem;
   color: var(--text-primary);
@@ -93,7 +93,7 @@
 }
 
 .hero-subtitle {
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: var(--text-secondary);
   margin-bottom: 2rem;
   line-height: 1.6;
@@ -101,7 +101,7 @@
 }
 
 .hero-section h2 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--text-primary);
@@ -136,14 +136,14 @@
 }
 
 .section-title {
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 1rem;
   color: var(--text-primary);
 }
 
 .section-subtitle {
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: var(--text-secondary);
   max-width: 600px;
   margin: 0 auto;
@@ -171,7 +171,7 @@
 }
 
 .feature-card h3 {
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--text-primary);
@@ -206,7 +206,7 @@
 }
 
 .service-card h4 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--text-primary);
@@ -239,7 +239,7 @@
 }
 
 .tech-category-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--text-primary);
@@ -365,7 +365,7 @@
 }
 
 .feature-item h5 {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
@@ -400,7 +400,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: var(--text-primary);
 }
 
@@ -436,21 +436,55 @@
 }
 
 /* Responsive */
+@media (max-width: 992px) {
+  .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .hero-section h2 {
+    font-size: 1.125rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .tech-category {
+    margin-bottom: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   .hero-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .hero-section h2 {
     font-size: 1rem;
   }
 
   .hero-image {
-    font-size: 8rem;
+    font-size: 6rem;
   }
 
   .section-title {
-    font-size: 2rem;
+    font-size: 1.25rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .section-about,
+  .section-services,
+  .section-features,
+  .section-contact,
+  .section-technologies {
+    padding: 3rem 0;
   }
 
   .contact-info {
@@ -459,8 +493,71 @@
   }
 
   .features-image {
-    font-size: 8rem;
+    font-size: 6rem;
     margin-top: 2rem;
+  }
+
+  .tech-badge {
+    min-height: 2rem;
+    min-width: 2rem;
+    padding: 0.375rem;
+  }
+
+  .tech-badge-logo {
+    height: 18px;
+    max-width: 50px;
+  }
+
+  .service-card,
+  .feature-card {
+    padding: 1.5rem;
+  }
+
+  .hero-buttons .btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-title {
+    font-size: 1.25rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .section-title {
+    font-size: 1.125rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .hero-buttons .btn {
+    width: 100%;
+  }
+
+  .tech-badges {
+    gap: 0.375rem;
+  }
+
+  .tech-badge {
+    min-height: 1.75rem;
+    min-width: 1.75rem;
+    padding: 0.25rem;
+  }
+
+  .tech-badge-logo {
+    height: 16px;
+    max-width: 40px;
   }
 }
 
