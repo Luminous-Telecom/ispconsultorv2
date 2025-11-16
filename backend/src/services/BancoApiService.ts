@@ -401,6 +401,8 @@ export class BancoApiService {
         webhook_secret?: string | null;
       };
 
+      const isAsaas = banco.tipo_banco === 'asaas';
+
       // Verificar credenciais usando banco recarregado
       if (!this.verificarCredenciais(bancoComCredenciais as any, config)) {
         return {
