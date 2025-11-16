@@ -367,13 +367,15 @@
   background-color: #ffffff;
   padding: 0.25rem;
   border-radius: 0.25rem;
+  display: block;
 }
 
 .tech-badge-logo-invert {
   filter: brightness(0);
-  background-color: #ffffff;
+  background-color: #ffffff !important;
   padding: 0.25rem;
   border-radius: 0.25rem;
+  display: block;
 }
 
 .tech-badge-text {
