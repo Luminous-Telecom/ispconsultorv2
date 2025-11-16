@@ -163,6 +163,21 @@ export class ContratoController {
       if (value.data_fim === '') value.data_fim = null;
       if (value.data_validade_desconto === '') value.data_validade_desconto = null;
 
+      // Normalizar datas para usar apenas a parte de data (sem hora/timezone)
+      // Isso evita problemas de conversão de timezone ao salvar no banco
+      if (value.data_inicio) {
+        const dataRaw = new Date(value.data_inicio);
+        value.data_inicio = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+      }
+      if (value.data_fim) {
+        const dataRaw = new Date(value.data_fim);
+        value.data_fim = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+      }
+      if (value.data_validade_desconto) {
+        const dataRaw = new Date(value.data_validade_desconto);
+        value.data_validade_desconto = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+      }
+
       // Verificar se o cliente existe
       const cliente = await Cliente.findByPk(value.cliente_id);
       if (!cliente) {
@@ -310,6 +325,21 @@ export class ContratoController {
       }
       if (value.data_validade_desconto === 'Invalid date' || value.data_validade_desconto === '' || (typeof value.data_validade_desconto === 'string' && isNaN(Date.parse(value.data_validade_desconto)))) {
         delete value.data_validade_desconto;
+      }
+
+      // Normalizar datas para usar apenas a parte de data (sem hora/timezone)
+      // Isso evita problemas de conversão de timezone ao salvar no banco
+      if (value.data_inicio) {
+        const dataRaw = new Date(value.data_inicio);
+        value.data_inicio = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+      }
+      if (value.data_fim) {
+        const dataRaw = new Date(value.data_fim);
+        value.data_fim = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
+      }
+      if (value.data_validade_desconto) {
+        const dataRaw = new Date(value.data_validade_desconto);
+        value.data_validade_desconto = new Date(dataRaw.getFullYear(), dataRaw.getMonth(), dataRaw.getDate());
       }
 
       await contrato.update(value);
