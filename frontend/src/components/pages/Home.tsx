@@ -224,16 +224,6 @@ const Home: React.FC = () => {
             </div>
             <div className="col-md-6 col-lg-4">
               <div className="service-card">
-                <i className="bi bi-diagram-3 service-icon"></i>
-                <h4>Consultoria em Processos</h4>
-                <p>
-                  Análise e otimização de processos operacionais, gestão de clientes,
-                  contratos e operações para maior eficiência.
-                </p>
-              </div>
-            </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="service-card">
                 <i className="bi bi-laptop service-icon"></i>
                 <h4>Implementação de Sistemas</h4>
                 <p>
@@ -249,16 +239,6 @@ const Home: React.FC = () => {
                 <p>
                   Análise de performance, planejamento estratégico e
                   definição de métricas para crescimento sustentável.
-                </p>
-              </div>
-            </div>
-            <div className="col-md-6 col-lg-4">
-              <div className="service-card">
-                <i className="bi bi-book service-icon"></i>
-                <h4>Treinamento e Capacitação</h4>
-                <p>
-                  Treinamento de equipes, capacitação técnica e suporte
-                  para adoção de novas tecnologias e processos.
                 </p>
               </div>
             </div>
