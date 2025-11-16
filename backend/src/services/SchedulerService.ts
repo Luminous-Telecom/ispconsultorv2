@@ -346,12 +346,22 @@ export class SchedulerService {
 
           if (titulosGerar > 0) {
             // Buscar data inicial do contrato ou usar data atual
-            const _dataInicio = contrato.data_inicio || new Date();
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            
+            const dataInicioContrato = contrato.data_inicio ? new Date(contrato.data_inicio) : null;
+            if (dataInicioContrato) {
+              dataInicioContrato.setHours(0, 0, 0, 0);
+            }
+            
+            // Se data de início existe e é futura, usar ela; senão usar hoje
+            // Mas sempre respeitar que não podemos gerar títulos antes da data de início
+            const dataInicio = dataInicioContrato && dataInicioContrato > hoje ? dataInicioContrato : hoje;
+            
             const diaVencimentoConfig = await DiasVencimento.findByPk(contrato.dia_vencimento_id);
             const diaVencimento = diaVencimentoConfig?.dia || 15;
 
-            // Gerar os títulos faltantes
-            const hoje = new Date();
+            // Começar sempre do mês atual (não do próximo mês)
             let mesAtual = hoje.getMonth();
             let anoAtual = hoje.getFullYear();
             let tentativas = 0;
@@ -365,7 +375,7 @@ export class SchedulerService {
               const ultimoDiaDoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
               const diaCorreto = Math.min(diaVencimento, ultimoDiaDoMes);
               const dataVencimento = new Date(anoAtual, mesAtual, diaCorreto);
-              
+              dataVencimento.setHours(0, 0, 0, 0);
 
               // Verificar se já existe título para este mês
               const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
@@ -374,7 +384,8 @@ export class SchedulerService {
                 return `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}` === mesAno;
               });
 
-              if (!tituloExistente && dataVencimento > hoje) {
+              // Gerar título se não existir e se a data de vencimento for >= data de início
+              if (!tituloExistente && dataVencimento >= dataInicio) {
                 // Calcular valor do título
                 const plano = (contrato as ContratoWithPlano).plano;
                 
