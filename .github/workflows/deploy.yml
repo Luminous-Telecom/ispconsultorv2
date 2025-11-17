@@ -445,6 +445,16 @@ jobs:
           git add -f backend/dist/ || true
           git add -f frontend/ || true
           
+          # Verificar se ContratoPlanoAdicional.js está presente antes do commit
+          if [ -f "backend/dist/models/ContratoPlanoAdicional.js" ]; then
+            echo "✓ ContratoPlanoAdicional.js presente antes do commit"
+            git add -f backend/dist/models/ContratoPlanoAdicional.js
+          else
+            echo "⚠ AVISO: ContratoPlanoAdicional.js NÃO encontrado antes do commit!"
+            echo "Listando arquivos em backend/dist/models/:"
+            ls -la backend/dist/models/ | grep -i contrato || echo "Nenhum arquivo Contrato encontrado"
+          fi
+          
           # Verificar status antes do commit
           echo "=== Status do Git antes do commit ==="
           git status --short
