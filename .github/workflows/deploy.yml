@@ -440,7 +440,10 @@ jobs:
           git config user.email "actions@github.com"
           
           # Adicionar todos os arquivos (incluindo não rastreados)
+          # Forçar adição de arquivos compilados mesmo que estejam no .gitignore
           git add -A
+          git add -f backend/dist/ || true
+          git add -f frontend/ || true
           
           # Verificar status antes do commit
           echo "=== Status do Git antes do commit ==="
