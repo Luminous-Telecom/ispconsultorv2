@@ -87,28 +87,39 @@
   color: #ffffff;
 }
 
+/* container compacto e sem padding que aumenta height */
 .navbar-toggler {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: transparent;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   width: 30px;
   height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  border-radius: 0.25rem;
+  padding: 0;                 /* importante: remove padding que aumentaria a altura */
+  position: relative;         /* para posicionamento absoluto dos spans */
+  cursor: pointer;
 }
 
+/* spans posicionados absolutamente para não "sair" do container */
 .navbar-toggler span {
-  width: 100%;
+  position: absolute;
+  left: 50%;
+  width: 20px;                /* deixa um espaçamento interno à esquerda/direita */
   height: 2px;
   background: white;
   border-radius: 2px;
-  transition: all 0.3s ease;
+  transform: translateX(-50%);
+  transition: transform 0.28s ease, top 0.28s ease, opacity 0.2s ease;
 }
 
+/* posições iniciais: topo, centro, base */
+.navbar-toggler span:nth-child(1) { top: 5px; }
+.navbar-toggler span:nth-child(2) { top: 50%; transform: translate(-50%,-50%); }
+.navbar-toggler span:nth-child(3) { bottom: 5px; }
+
+/* estado "ativo" — move a 1ª e a 3ª para o centro e rotaciona para formar o X */
 .navbar-toggler.active span:nth-child(1) {
-  transform: rotate(45deg) translate(6px, 6px);
+  top: 50%;
+  transform: translate(-50%,-50%) rotate(45deg);
 }
 
 .navbar-toggler.active span:nth-child(2) {
@@ -116,7 +127,14 @@
 }
 
 .navbar-toggler.active span:nth-child(3) {
-  transform: rotate(-45deg) translate(6px, -6px);
+  top: 50%;
+  transform: translate(-50%,-50%) rotate(-45deg);
+}
+
+.navbar-toggler:focus,
+.navbar-toggler:active {
+  outline: 1px solid rgba(255, 255, 255, 0.3);  /* mais fino */
+  box-shadow: none;
 }
 
 .navbar-collapse {
