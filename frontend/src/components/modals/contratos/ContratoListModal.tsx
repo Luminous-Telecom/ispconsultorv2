@@ -122,7 +122,26 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: false,
       searchable: true,
       render: (item: Contrato) => 
-        item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2).replace('.', ',')}` : '-'
+        item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
+    },
+    {
+      key: 'desconto',
+      label: 'Desconto',
+      sortable: false,
+      searchable: false,
+      render: (item: Contrato) => {
+        // Priorizar desconto em valor
+        if (item.desconto_valor && Number(item.desconto_valor) > 0) {
+          return `R$ ${Number(item.desconto_valor).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+        }
+        // Se não tiver desconto em valor, calcular a partir do percentual
+        if (item.desconto_percentual && Number(item.desconto_percentual) > 0 && item.plano?.valor_mensal) {
+          const valorPlano = Number(item.plano.valor_mensal);
+          const descontoValor = valorPlano * (Number(item.desconto_percentual) / 100);
+          return `R$ ${descontoValor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+        }
+        return '-';
+      }
     },
     {
       key: 'valor_final_str',
@@ -130,7 +149,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: false,
       searchable: true,
       render: (item: Contrato) => 
-        item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2).replace('.', ',')}` : '-'
+        item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
     },
     {
       key: 'status',
