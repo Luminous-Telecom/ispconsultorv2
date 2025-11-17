@@ -226,7 +226,33 @@ export class DashboardController {
       }
     }
 
-    const contratos = await Contrato.findAll({ attributes: ['cliente_id', 'valor_final'] });
+    // Filtrar contratos que se sobrepõem ao período
+    const contratoWhere = inicioPeriodo && fimPeriodo ? {
+      [Op.and]: [
+        {
+          data_inicio: {
+            [Op.lte]: fimPeriodo
+          }
+        },
+        {
+          [Op.or]: [
+            {
+              data_fim: {
+                [Op.gte]: inicioPeriodo
+              }
+            },
+            {
+              data_fim: null
+            }
+          ]
+        }
+      ]
+    } : {};
+
+    const contratos = await Contrato.findAll({ 
+      attributes: ['cliente_id', 'valor_final'],
+      where: contratoWhere
+    });
     const totalValorContratos = contratos.reduce((acumulado, contrato) => {
       return acumulado + parseFloat(String(contrato.valor_final || 0));
     }, 0);
