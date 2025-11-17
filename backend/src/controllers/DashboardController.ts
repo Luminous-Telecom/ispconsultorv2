@@ -882,18 +882,21 @@ export class DashboardController {
         case 'pago':
         case 'pago_atraso':
           totalRecebido += valorPago;
-          // Títulos já pagos não entram na receita prevista (já foram recebidos)
+          // Receita prevista = total a receber + recebidos no período
+          totalPrevisto += valorTitulo;
           break;
         case 'parcial':
           totalRecebido += Math.min(valorPago, valorTitulo);
           const valorPendenteParcial = Math.max(valorTitulo - valorPago, 0);
           totalPendente += valorPendenteParcial;
-          totalPrevisto += valorPendenteParcial; // Receita prevista = apenas a parte pendente
+          // Receita prevista = total a receber + recebidos no período
+          totalPrevisto += valorTitulo;
           break;
         case 'pendente':
         case 'vencido':
           totalPendente += valorTitulo;
-          totalPrevisto += valorTitulo; // Receita prevista = apenas pendentes/vencidos
+          // Receita prevista = total a receber + recebidos no período
+          totalPrevisto += valorTitulo;
           break;
         case 'cancelado':
           // Títulos cancelados não entram no previsto nem no pendente
