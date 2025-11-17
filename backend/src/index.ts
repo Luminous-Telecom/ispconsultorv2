@@ -134,9 +134,7 @@ app.use((req, res, next) => {
 const corsOrigins = [
   process.env.FRONTEND_URL,
   process.env.PRODUCTION_URL,
-  process.env.CORS_ORIGIN,
-  'https://luminoustelecom.com.br',
-  'http://luminoustelecom.com.br'
+  process.env.CORS_ORIGIN
 ].filter((url): url is string => Boolean(url));
 
 app.use(cors({
