@@ -76,6 +76,22 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     }));
   }, [contratos]);
 
+  // Calcular valor total mensal de todos os contratos
+  const valorTotalMensal = React.useMemo(() => {
+    if (!contratos) return 0;
+    
+    return contratos.reduce((total, contrato) => {
+      const valor = contrato.valor_final 
+        ? parseFloat(contrato.valor_final.toString())
+        : (contrato.plano?.valor_mensal ? parseFloat(contrato.plano.valor_mensal.toString()) : 0);
+      return total + valor;
+    }, 0);
+  }, [contratos]);
+
+  const formatCurrency = (value: number): string => {
+    return `R$ ${value.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+  };
+
   const columns: TableConfig<Contrato & { cliente_razao_social?: string; plano_nome?: string; valor_plano_str?: string; valor_final_str?: string }>['columns'] = [
     {
       key: 'id',
@@ -329,49 +345,59 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       size="lg"
       modalId="contrato-list-modal"
     >
-      <div>
-        <Table
-          config={{
-            columns,
-            data: dataWithVirtualFields,
-            loading: isLoading,
-            searchable: true,
-            searchPlaceholder: 'Buscar por cliente ou plano...',
-            sortable: true,
-            striped: true,
-            hover: true,
-            responsive: true,
-            selectable: true,
-            multiSelect: !onSelectContrato, // Seleção múltipla se não for modo de seleção única
-            bulkActions: bulkActions.map(action => ({
-              key: action.label.toLowerCase().replace(/\s+/g, '-'),
-              label: action.label,
-              onClick: action.action,
-              disabled: action.disabled,
-              dropdown: action.dropdown
-            })),
-            emptyMessage: 'Nenhum contrato encontrado'
-          }}
-          tableId="contrato-list-modal"
-          onSelectionChange={(items) => {
-            setSelectedItems(items);
-            // Se é modo seleção única (onSelectContrato presente)
-            if (onSelectContrato) {
-              if (items.length > 0) {
-                // Sempre pega o último item selecionado (mais recente)
-                const selectedItem = items[items.length - 1];
-                onSelectContrato(selectedItem);
-                onClose();
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          <Table
+            config={{
+              columns,
+              data: dataWithVirtualFields,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: 'Buscar por cliente ou plano...',
+              sortable: true,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: !onSelectContrato, // Seleção múltipla se não for modo de seleção única
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                dropdown: action.dropdown
+              })),
+              emptyMessage: 'Nenhum contrato encontrado'
+            }}
+            tableId="contrato-list-modal"
+            onSelectionChange={(items) => {
+              setSelectedItems(items);
+              // Se é modo seleção única (onSelectContrato presente)
+              if (onSelectContrato) {
+                if (items.length > 0) {
+                  // Sempre pega o último item selecionado (mais recente)
+                  const selectedItem = items[items.length - 1];
+                  onSelectContrato(selectedItem);
+                  onClose();
+                }
               }
-            }
-          }}
-          onRowClick={onSelectContrato ? (item) => {
-            // Clique na linha seleciona e fecha quando em modo seleção
-            onSelectContrato(item);
-            onClose();
-          } : undefined}
-          onRefresh={refetch}
-        />
+            }}
+            onRowClick={onSelectContrato ? (item) => {
+              // Clique na linha seleciona e fecha quando em modo seleção
+              onSelectContrato(item);
+              onClose();
+            } : undefined}
+            onRefresh={refetch}
+          />
+        </div>
+        
+        {/* Valor total mensal - no final do modal */}
+        <div className="p-2 border-top" style={{ flexShrink: 0 }}>
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="small text-muted">Valor Total Mensal:</span>
+            <span className="small fw-bold">{formatCurrency(valorTotalMensal)}</span>
+          </div>
+        </div>
       </div>
 
       {/* Modal de Contrato (criação e edição unificados) */}
