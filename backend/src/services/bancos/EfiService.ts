@@ -233,9 +233,30 @@ export class EfiService implements IBancoService {
         const chargeIdString = chargeId != null ? String(chargeId) : null;
         const barcode = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.barcode);
         const url = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.url);
+        // Importar BarcodeService para conversão correta (antes de usar)
+        const { BarcodeService } = await import('../BarcodeService');
+        
         const linhaDigitavelPath = efiConfig.api_response_mapping.boleto.linha_digitavel || '';
         const linhaDigitavelRaw = linhaDigitavelPath ? this.getNestedValue(dados, linhaDigitavelPath) : null;
-        const linhaDigitavel = typeof linhaDigitavelRaw === 'string' ? linhaDigitavelRaw : null;
+        let linhaDigitavel = typeof linhaDigitavelRaw === 'string' ? linhaDigitavelRaw : null;
+        
+        // Se não tem linha digitável separada, usar o barcode (que pode ser linha digitável)
+        if (!linhaDigitavel && barcode && typeof barcode === 'string') {
+          const barcodeLimpo = barcode.replace(/\D/g, '');
+          if (barcodeLimpo.length === 47) {
+            // É linha digitável, usar diretamente
+            linhaDigitavel = barcodeLimpo;
+          } else if (barcodeLimpo.length === 44) {
+            // É código de barras, manter como está (será formatado depois)
+            linhaDigitavel = barcodeLimpo;
+          }
+        }
+        
+        // Formatar linha digitável se necessário
+        if (linhaDigitavel) {
+          const linhaDigitavelFormatada = BarcodeService.formatarLinhaDigitavel(linhaDigitavel);
+          linhaDigitavel = linhaDigitavelFormatada || linhaDigitavel;
+        }
         const pdfUrl = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pdf);
         const pixQrcode = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pix_qrcode);
         const pixQrcodeImage = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pix_qrcode_image);
@@ -250,9 +271,6 @@ export class EfiService implements IBancoService {
             ? String(nossoNumeroRaw)
             : null;
 
-        // Importar BarcodeService para conversão correta
-        const { BarcodeService } = await import('../BarcodeService');
-        
         let codigoBarrasFinal: string | null = null;
         if (barcode && typeof barcode === 'string') {
           const barcodeLimpo = barcode.replace(/\D/g, '');
