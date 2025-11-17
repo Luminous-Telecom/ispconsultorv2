@@ -88,6 +88,27 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     }, 0);
   }, [contratos]);
 
+  // Calcular valor total de descontos
+  const valorTotalDescontos = React.useMemo(() => {
+    if (!contratos) return 0;
+    
+    return contratos.reduce((total, contrato) => {
+      let desconto = 0;
+      
+      // Priorizar desconto em valor
+      if (contrato.desconto_valor && Number(contrato.desconto_valor) > 0) {
+        desconto = Number(contrato.desconto_valor);
+      }
+      // Se não tiver desconto em valor, calcular a partir do percentual
+      else if (contrato.desconto_percentual && Number(contrato.desconto_percentual) > 0 && contrato.plano?.valor_mensal) {
+        const valorPlano = Number(contrato.plano.valor_mensal);
+        desconto = valorPlano * (Number(contrato.desconto_percentual) / 100);
+      }
+      
+      return total + desconto;
+    }, 0);
+  }, [contratos]);
+
   const formatCurrency = (value: number): string => {
     return `R$ ${value.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
   };
@@ -410,11 +431,15 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           />
         </div>
         
-        {/* Valor total mensal - no final do modal */}
+        {/* Valor total mensal e descontos - no final do modal */}
         <div className="p-2 border-top" style={{ flexShrink: 0 }}>
-          <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex justify-content-between align-items-center mb-1">
             <span className="small text-muted">Valor Total Mensal:</span>
             <span className="small fw-bold">{formatCurrency(valorTotalMensal)}</span>
+          </div>
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="small text-muted">Valor Total Descontos:</span>
+            <span className="small fw-bold">{formatCurrency(valorTotalDescontos)}</span>
           </div>
         </div>
       </div>
