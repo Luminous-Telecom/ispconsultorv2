@@ -62,21 +62,73 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     }
   };
 
-  // Adicionar campos virtuais para busca funcionar com campos aninhados
+  // Adicionar campos virtuais para busca e ordenação funcionar com campos aninhados
   const dataWithVirtualFields = React.useMemo(() => {
     if (!contratos) return [];
     
-    return contratos.map((c: Contrato) => ({
-      ...c,
-      // Adicionar campos virtuais para busca funcionar com campos aninhados
-      cliente_razao_social: c.cliente?.razao_social || '',
-      plano_nome: c.plano?.nome_plano || '',
-      valor_plano_str: (c.plano?.valor_mensal || 0).toString(),
-      valor_final_str: (c.valor_final || 0).toString()
-    }));
+    return contratos.map((c: Contrato) => {
+      // Calcular desconto para ordenação
+      let descontoValor = 0;
+      if (c.desconto_valor && Number(c.desconto_valor) > 0) {
+        descontoValor = Number(c.desconto_valor);
+      } else if (c.desconto_percentual && Number(c.desconto_percentual) > 0 && c.plano?.valor_mensal) {
+        const valorPlano = Number(c.plano.valor_mensal);
+        descontoValor = valorPlano * (Number(c.desconto_percentual) / 100);
+      }
+
+      return {
+        ...c,
+        // Adicionar campos virtuais para busca funcionar com campos aninhados
+        cliente_razao_social: c.cliente?.razao_social || '',
+        plano_nome: c.plano?.nome_plano || '',
+        valor_plano_str: (c.plano?.valor_mensal || 0).toString(),
+        valor_final_str: (c.valor_final || 0).toString(),
+        // Campos numéricos para ordenação
+        valor_plano_num: c.plano?.valor_mensal ? Number(c.plano.valor_mensal) : 0,
+        desconto_num: descontoValor,
+        valor_final_num: c.valor_final ? Number(c.valor_final) : 0
+      };
+    });
   }, [contratos]);
 
-  const columns: TableConfig<Contrato & { cliente_razao_social?: string; plano_nome?: string; valor_plano_str?: string; valor_final_str?: string }>['columns'] = [
+  // Calcular valor total mensal de todos os contratos
+  const valorTotalMensal = React.useMemo(() => {
+    if (!contratos) return 0;
+    
+    return contratos.reduce((total, contrato) => {
+      const valor = contrato.valor_final 
+        ? parseFloat(contrato.valor_final.toString())
+        : (contrato.plano?.valor_mensal ? parseFloat(contrato.plano.valor_mensal.toString()) : 0);
+      return total + valor;
+    }, 0);
+  }, [contratos]);
+
+  // Calcular valor total de descontos
+  const valorTotalDescontos = React.useMemo(() => {
+    if (!contratos) return 0;
+    
+    return contratos.reduce((total, contrato) => {
+      let desconto = 0;
+      
+      // Priorizar desconto em valor
+      if (contrato.desconto_valor && Number(contrato.desconto_valor) > 0) {
+        desconto = Number(contrato.desconto_valor);
+      }
+      // Se não tiver desconto em valor, calcular a partir do percentual
+      else if (contrato.desconto_percentual && Number(contrato.desconto_percentual) > 0 && contrato.plano?.valor_mensal) {
+        const valorPlano = Number(contrato.plano.valor_mensal);
+        desconto = valorPlano * (Number(contrato.desconto_percentual) / 100);
+      }
+      
+      return total + desconto;
+    }, 0);
+  }, [contratos]);
+
+  const formatCurrency = (value: number): string => {
+    return `R$ ${value.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+  };
+
+  const columns: TableConfig<Contrato & { cliente_razao_social?: string; plano_nome?: string; valor_plano_str?: string; valor_final_str?: string; valor_plano_num?: number; desconto_num?: number; valor_final_num?: number }>['columns'] = [
     {
       key: 'id',
       label: 'ID',
@@ -101,20 +153,39 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       render: (item: Contrato & { plano_nome?: string }) => item.plano?.nome_plano || item.plano_nome || '-'
     },
     {
-      key: 'valor_plano_str',
+      key: 'valor_plano_num',
       label: 'Valor Plano',
-      sortable: false,
+      sortable: true,
       searchable: true,
       render: (item: Contrato) => 
-        item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2).replace('.', ',')}` : '-'
+        item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
     },
     {
-      key: 'valor_final_str',
+      key: 'desconto_num',
+      label: 'Desconto',
+      sortable: true,
+      searchable: false,
+      render: (item: Contrato) => {
+        // Priorizar desconto em valor
+        if (item.desconto_valor && Number(item.desconto_valor) > 0) {
+          return `R$ ${Number(item.desconto_valor).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+        }
+        // Se não tiver desconto em valor, calcular a partir do percentual
+        if (item.desconto_percentual && Number(item.desconto_percentual) > 0 && item.plano?.valor_mensal) {
+          const valorPlano = Number(item.plano.valor_mensal);
+          const descontoValor = valorPlano * (Number(item.desconto_percentual) / 100);
+          return `R$ ${descontoValor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+        }
+        return '-';
+      }
+    },
+    {
+      key: 'valor_final_num',
       label: 'Valor Final',
-      sortable: false,
+      sortable: true,
       searchable: true,
       render: (item: Contrato) => 
-        item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2).replace('.', ',')}` : '-'
+        item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
     },
     {
       key: 'status',
@@ -329,49 +400,63 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       size="lg"
       modalId="contrato-list-modal"
     >
-      <div>
-        <Table
-          config={{
-            columns,
-            data: dataWithVirtualFields,
-            loading: isLoading,
-            searchable: true,
-            searchPlaceholder: 'Buscar por cliente ou plano...',
-            sortable: true,
-            striped: true,
-            hover: true,
-            responsive: true,
-            selectable: true,
-            multiSelect: !onSelectContrato, // Seleção múltipla se não for modo de seleção única
-            bulkActions: bulkActions.map(action => ({
-              key: action.label.toLowerCase().replace(/\s+/g, '-'),
-              label: action.label,
-              onClick: action.action,
-              disabled: action.disabled,
-              dropdown: action.dropdown
-            })),
-            emptyMessage: 'Nenhum contrato encontrado'
-          }}
-          tableId="contrato-list-modal"
-          onSelectionChange={(items) => {
-            setSelectedItems(items);
-            // Se é modo seleção única (onSelectContrato presente)
-            if (onSelectContrato) {
-              if (items.length > 0) {
-                // Sempre pega o último item selecionado (mais recente)
-                const selectedItem = items[items.length - 1];
-                onSelectContrato(selectedItem);
-                onClose();
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          <Table
+            config={{
+              columns,
+              data: dataWithVirtualFields,
+              loading: isLoading,
+              searchable: true,
+              searchPlaceholder: 'Buscar por cliente ou plano...',
+              sortable: true,
+              striped: true,
+              hover: true,
+              responsive: true,
+              selectable: true,
+              multiSelect: !onSelectContrato, // Seleção múltipla se não for modo de seleção única
+              bulkActions: bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled,
+                dropdown: action.dropdown
+              })),
+              emptyMessage: 'Nenhum contrato encontrado'
+            }}
+            tableId="contrato-list-modal"
+            onSelectionChange={(items) => {
+              setSelectedItems(items);
+              // Se é modo seleção única (onSelectContrato presente)
+              if (onSelectContrato) {
+                if (items.length > 0) {
+                  // Sempre pega o último item selecionado (mais recente)
+                  const selectedItem = items[items.length - 1];
+                  onSelectContrato(selectedItem);
+                  onClose();
+                }
               }
-            }
-          }}
-          onRowClick={onSelectContrato ? (item) => {
-            // Clique na linha seleciona e fecha quando em modo seleção
-            onSelectContrato(item);
-            onClose();
-          } : undefined}
-          onRefresh={refetch}
-        />
+            }}
+            onRowClick={onSelectContrato ? (item) => {
+              // Clique na linha seleciona e fecha quando em modo seleção
+              onSelectContrato(item);
+              onClose();
+            } : undefined}
+            onRefresh={refetch}
+          />
+        </div>
+        
+        {/* Valor total mensal e descontos - no final do modal */}
+        <div className="p-2 border-top" style={{ flexShrink: 0 }}>
+          <div className="d-flex justify-content-between align-items-center mb-1">
+            <span className="small text-muted">Valor Total Mensal:</span>
+            <span className="small fw-bold">{formatCurrency(valorTotalMensal)}</span>
+          </div>
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="small text-muted">Valor Total Descontos:</span>
+            <span className="small fw-bold">{formatCurrency(valorTotalDescontos)}</span>
+          </div>
+        </div>
       </div>
 
       {/* Modal de Contrato (criação e edição unificados) */}

@@ -439,15 +439,25 @@ export class AsaasService implements IBancoService {
 
     const headers = this.buildAuthHeaders(token);
     const endpointBase = `${baseUrl}${asaasConfig.api_endpoints.webhook ?? '/webhook'}`;
-    const webhookSecret = typeof (banco as Banco).webhook_secret === 'string' && (banco as Banco).webhook_secret
-      ? (banco as Banco).webhook_secret as string
-      : undefined;
+    
+    // Buscar webhook_token do campo webhook_secret ou configuracoes JSON
+    let webhookSecret: string | undefined = undefined;
+    
+    // Primeiro tentar webhook_secret direto
+    if (banco.webhook_secret && typeof banco.webhook_secret === 'string' && banco.webhook_secret.trim()) {
+      webhookSecret = banco.webhook_secret;
+    } 
+    // Se não encontrou, tentar no campo configuracoes JSON
+    else if (banco.configuracoes && typeof banco.configuracoes === 'object') {
+      const webhookToken = banco.configuracoes.webhook_token;
+      if (typeof webhookToken === 'string' && webhookToken.trim()) {
+        webhookSecret = webhookToken;
+      }
+    }
 
     logger.info('Asaas :: iniciando configuração de webhook', {
       banco_id: banco.id,
       url_retorno: urlRetorno,
-      endpoint: endpointBase,
-      sandbox: banco.sandbox,
       has_webhook_secret: !!webhookSecret
     });
 
