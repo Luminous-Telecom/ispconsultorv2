@@ -151,29 +151,33 @@ app.use(cors({
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 // Middleware de rate limiting
-// Limite muito alto para uso normal do sistema (proteção apenas contra ataques DDoS)
-// Em produção, pode ser ajustado via variáveis de ambiente se necessário
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1 minuto (janela menor para reset mais rápido)
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10000'), // 10000 requisições por minuto (muito alto para uso normal)
-  message: {
-    error: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  // Não aplicar rate limiting em rotas de webhook, health check e rotas públicas
-  skip: (req) => {
-    return req.path.startsWith('/webhook/') || 
-           req.path === '/health' || 
-           req.path === '/config.js' ||
-           req.path.startsWith('/api/dados-empresa/public');
-  }
-});
+// DESABILITADO POR PADRÃO para evitar bloqueios durante uso normal do sistema
+// Para habilitar, defina ENABLE_RATE_LIMIT=true nas variáveis de ambiente
+// O rate limiting pode causar problemas quando o sistema faz muitas requisições simultâneas
+const shouldEnableRateLimit = process.env.ENABLE_RATE_LIMIT === 'true';
 
-// Aplicar rate limiting apenas em produção ou se explicitamente habilitado
-// Em desenvolvimento, rate limiting está desabilitado por padrão
-if (process.env.NODE_ENV === 'production' || process.env.ENABLE_RATE_LIMIT === 'true') {
+if (shouldEnableRateLimit) {
+  const limiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1 minuto
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100000'), // 100000 requisições por minuto (extremamente alto)
+    message: {
+      error: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Não aplicar rate limiting em rotas de webhook, health check e rotas públicas
+    skip: (req) => {
+      return req.path.startsWith('/webhook/') || 
+             req.path === '/health' || 
+             req.path === '/config.js' ||
+             req.path.startsWith('/api/dados-empresa/public');
+    }
+  });
+  
   app.use('/api/', limiter);
+  logger.info('Rate limiting habilitado (configurado via ENABLE_RATE_LIMIT=true)');
+} else {
+  logger.info('Rate limiting desabilitado por padrão para evitar bloqueios durante uso normal');
 }
 
 // Middleware de parsing
