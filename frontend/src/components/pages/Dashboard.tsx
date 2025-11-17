@@ -621,14 +621,10 @@ const Dashboard: React.FC = () => {
   const contratosInativos = contratos.filter(c => c.status === 'inativo').length;
   const contratosSuspensos = contratos.filter(c => c.status === 'suspenso').length;
 
-  // Receitas reais do backend
-  const receitaTotalGlobal = (stats?.valorTotalRecebido || 0) + (stats?.valorTotalReceber || 0);
-  const receitaPagaGlobal = stats?.valorTotalRecebido || 0;
-  const receitaPendenteGlobal = stats?.valorTotalReceber || 0;
-
-  const receitaPrevistaPeriodo = dashboardData?.resumoPeriodo?.totalPrevisto ?? receitaTotalGlobal;
-  const receitaPagaPeriodo = dashboardData?.resumoPeriodo?.totalRecebido ?? receitaPagaGlobal;
-  const receitaPendentePeriodo = dashboardData?.resumoPeriodo?.totalPendente ?? receitaPendenteGlobal;
+  // Valores do período selecionado (sempre usar valores do período, nunca globais)
+  const receitaPrevistaPeriodo = dashboardData?.resumoPeriodo?.totalPrevisto ?? 0;
+  const receitaPagaPeriodo = dashboardData?.resumoPeriodo?.totalRecebido ?? 0;
+  const receitaPendentePeriodo = dashboardData?.resumoPeriodo?.totalPendente ?? 0;
   // Clientes ativos no período (filtrados pelo período selecionado)
   const clientesAtivosPeriodo = clientes.filter(c => c.ativo).length;
   // Clientes com títulos no período
