@@ -56,7 +56,7 @@ interface TituloUpdateData {
   qrcode_image?: string;
   data_pagamento?: string | null;
   valor_pago?: number | null;
-  data_vencimento?: string;
+  data_vencimento?: string | Date;
 }
 
 interface EfiPaymentData {
@@ -91,6 +91,26 @@ interface TituloWithBanco {
 }
 
 export class WebhookController {
+  private static normalizeDate(value: string | Date | null | undefined): Date | null {
+    if (!value) return null;
+    
+    if (typeof value === 'string') {
+      const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (match) {
+        const [, year, month, day] = match;
+        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      }
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? null : new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+    
+    if (value instanceof Date) {
+      return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+    }
+    
+    return null;
+  }
+
   /**
    * Webhook unificado para receber notificações da Efí sobre todos os tipos de operações
    * (PIX, Bolix, carnês, boletos individuais, etc.)
@@ -499,19 +519,11 @@ export class WebhookController {
     try {
       const type = notificacao.type || '';
       const identifiers = notificacao.identifiers || {};
-      const status = typeof notificacao.status === 'object' && notificacao.status !== null && 'current' in notificacao.status
-        ? notificacao.status.current || null
-        : typeof notificacao.status === 'string' 
-          ? notificacao.status 
-          : null;
+      const status = typeof notificacao.status === 'object' && notificacao.status?.current
+        ? notificacao.status.current
+        : typeof notificacao.status === 'string' ? notificacao.status : null;
       const customId = notificacao.custom_id || null;
       
-      logger.info('Processando notificação individual', {
-        type,
-        custom_id: customId,
-        status,
-        identifiers
-      });
 
       if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
         logger.warn('Webhook EFI: secret inválido em notificação individual', {
@@ -596,54 +608,15 @@ export class WebhookController {
         pago: isPago
       };
 
-      // Tentar consultar dados atualizados da EFI (opcional - apenas se conseguir token válido)
-      try {
-        const resultadoConsulta = await WebhookController.consultarDadosAtualizadosTitulo(titulo as TituloWithBanco);
-        if (resultadoConsulta.success && resultadoConsulta.data) {
-          const dadosAtualizados = resultadoConsulta.data;
-          
-          // Atualizar dados específicos se disponíveis (usar dados reais da EFI)
-          if (dadosAtualizados.codigo_barras) updateData.codigo_barras = dadosAtualizados.codigo_barras;
-          if (dadosAtualizados.linha_digitavel) updateData.linha_digitavel = dadosAtualizados.linha_digitavel;
-          if (dadosAtualizados.url_boleto) updateData.url_boleto = dadosAtualizados.url_boleto;
-          if (dadosAtualizados.qrcode) updateData.qrcode = dadosAtualizados.qrcode;
-          if (dadosAtualizados.qrcode_image) updateData.qrcode_image = dadosAtualizados.qrcode_image;
-        }
-      } catch (error) {
-        // Se falhar ao consultar dados, simplesmente continua sem atualizar esses campos
-        // O status será atualizado normalmente com os dados do webhook
-        logger.debug('Não foi possível consultar dados adicionais da EFI', {
-          titulo_id: titulo.id,
-          charge_id: chargeId,
-          error: error instanceof Error ? error.message : 'Erro desconhecido'
-        });
-      }
       
-      // Se está sendo marcada como paga via webhook, atualizar data_pagamento
       if (isPago && !titulo.pago) {
-        // Usar data do webhook se disponível, senão usar data atual
-        let dataPagamento = new Date().toISOString().split('T')[0]; // Default: hoje
-        
-        if (dadosCompletos?.created_at) {
-          // Converter data do webhook (formato: "2025-09-23 23:11:17" ou "2025-09-23")
-          try {
-            const dataWebhook = dadosCompletos.created_at.includes(' ') 
-              ? dadosCompletos.created_at.split(' ')[0] // Pegar apenas a data
-              : dadosCompletos.created_at;
-            
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dataWebhook)) {
-              dataPagamento = dataWebhook;
-            }
-          } catch {
-            // Manter data atual se houver erro na conversão
-          }
-        }
-        
-        updateData.data_pagamento = dataPagamento;
-        updateData.valor_pago = titulo.valor; // Assumir valor total pago
+        const dataWebhook = dadosCompletos?.created_at?.split(' ')[0];
+        updateData.data_pagamento = dataWebhook && /^\d{4}-\d{2}-\d{2}$/.test(dataWebhook) 
+          ? dataWebhook 
+          : new Date().toISOString().split('T')[0];
+        updateData.valor_pago = titulo.valor;
       }
       
-      // Se está sendo desmarcada como paga, limpar data_pagamento
       if (!isPago && titulo.pago) {
         updateData.data_pagamento = null;
         updateData.valor_pago = null;
@@ -651,31 +624,19 @@ export class WebhookController {
       
       // Atualizar data de vencimento se fornecida no webhook
       if (dadosCompletos?.expire_at) {
-        const novaDataVencimento = dadosCompletos.expire_at;
-        // Validar formato de data (YYYY-MM-DD)
-        if (/^\d{4}-\d{2}-\d{2}$/.test(novaDataVencimento)) {
-          updateData.data_vencimento = novaDataVencimento;
+        const normalizedDate = WebhookController.normalizeDate(dadosCompletos.expire_at);
+        if (normalizedDate) {
+          updateData.data_vencimento = normalizedDate;
         }
       } else if (dadosCompletos?.due_date) {
-        const novaDataVencimento = dadosCompletos.due_date;
-        if (/^\d{4}-\d{2}-\d{2}$/.test(novaDataVencimento)) {
-          updateData.data_vencimento = novaDataVencimento;
+        const normalizedDate = WebhookController.normalizeDate(dadosCompletos.due_date);
+        if (normalizedDate) {
+          updateData.data_vencimento = normalizedDate;
         }
       }
       
       await titulo.update(updateData as Partial<typeof titulo>);
 
-      logger.info('Status do título atualizado via webhook', {
-        titulo_id: titulo.id,
-        charge_id: chargeId,
-        status_anterior: titulo.status,
-        status_novo: novoStatus,
-        pago_anterior: titulo.pago,
-        pago_novo: isPago,
-        data_pagamento: updateData.data_pagamento || 'não alterada',
-        data_vencimento: updateData.data_vencimento || 'não alterada',
-        valor_pago: updateData.valor_pago || 'não alterado'
-      });
 
       return 1;
     } catch (error) {
@@ -699,14 +660,11 @@ export class WebhookController {
   ): Promise<WebhookResponse> {
     try {
       const chargeId = 'charge_id' in notification ? notification.charge_id : notification.id;
-      const status = typeof notification.status === 'string' ? notification.status : (typeof notification.status === 'object' && notification.status !== null && 'current' in notification.status ? notification.status.current : undefined);
+      const status = typeof notification.status === 'string' 
+        ? notification.status 
+        : notification.status?.current;
       const customId = notification.custom_id;
 
-      logger.info('Processando notificação de charge', {
-        charge_id: chargeId,
-        status,
-        custom_id: customId
-      });
 
       if (!chargeId) {
         return {
@@ -810,7 +768,6 @@ export class WebhookController {
    */
   private static async processarNotificacaoGenerica(notification: NotificationItem | ChargeNotification, receivedSecret?: string): Promise<WebhookResponse> {
     try {
-      logger.info('Processando notificação genérica', { notification });
 
       // Tentar identificar o tipo de notificação pelos campos disponíveis
       const chargeId = 'charge_id' in notification ? notification.charge_id : notification.id;
@@ -837,7 +794,9 @@ export class WebhookController {
             };
           }
 
-          const statusString = typeof notification.status === 'string' ? notification.status : (typeof notification.status === 'object' && notification.status !== null && 'current' in notification.status ? (notification.status.current || 'pendente') : 'pendente');
+          const statusString = typeof notification.status === 'string' 
+            ? notification.status 
+            : notification.status?.current || 'pendente';
           const novoStatus = WebhookController.mapearStatusEfi(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
           await titulo.update({ status: novoStatus });
           
@@ -852,7 +811,6 @@ export class WebhookController {
         }
       }
 
-      logger.warn('Não foi possível processar notificação genérica', { notification });
       return {
         success: false,
         message: 'Não foi possível processar notificação genérica',
@@ -872,117 +830,6 @@ export class WebhookController {
     }
   }
 
-  /**
-   * Consultar dados atualizados do título na EFI
-   */
-  private static async consultarDadosAtualizadosTitulo(titulo: TituloWithBanco): Promise<{ success: boolean; data?: EfiDadosAtualizados; message?: string }> {
-    try {
-      if (!titulo.charge_id) {
-        return { success: false, message: 'Charge ID não disponível' };
-      }
-
-      // Acessar o banco do título (já incluído no findOne)
-      const banco = titulo.banco;
-      
-      if (!banco || banco.tipo_banco !== 'efi') {
-        return { success: false, message: 'Banco EFI não encontrado' };
-      }
-
-      // Usar o BancoApiService para consultar dados atualizados
-      // Tipo TituloWithRelations é interno ao BancoApiService, então usamos type assertion
-      // Criar objeto compatível com TituloWithRelations do BancoApiService
-      interface TituloWithRelationsForService extends Titulo {
-        banco?: Banco;
-        cliente?: Cliente;
-        plano?: Plano;
-      }
-      const tituloWithRelations = titulo as TituloWithRelationsForService;
-      const resultado = await BancoApiService.consultarStatus(tituloWithRelations);
-      
-      if (resultado.success && resultado.data) {
-        const dados = resultado.data;
-        
-        
-        // Extrair dados específicos baseado na estrutura real da EFI
-        const dadosAtualizados: EfiDadosAtualizados = {};
-        
-        // Type assertion para payment
-        const paymentData = dados as EfiPaymentData;
-        const payment = paymentData.payment;
-        
-        // Código de barras (linha digitável) - está em payment.banking_billet.barcode
-        if (payment?.banking_billet?.barcode) {
-          dadosAtualizados.linha_digitavel = payment.banking_billet.barcode;
-        }
-        
-        // URL do boleto - está em payment.banking_billet.url
-        if (payment?.banking_billet?.url) {
-          dadosAtualizados.url_boleto = payment.banking_billet.url;
-        }
-        
-        // PDF do boleto - está em payment.banking_billet.pdf.charge
-        if (payment?.banking_billet?.pdf?.charge) {
-          dadosAtualizados.pdf_url = payment.banking_billet.pdf.charge;
-        }
-        
-        // Para títulos, usar dados da EFI (reais ou zeros)
-        if (payment?.banking_billet?.barcode) {
-          // Usar linha digitável da EFI (pode ser real ou zeros)
-          dadosAtualizados.linha_digitavel = payment.banking_billet.barcode;
-          // Converter linha digitável para código de barras (remover pontos e espaços)
-          dadosAtualizados.codigo_barras = payment.banking_billet.barcode.replace(/[.\s]/g, '');
-        }
-        
-        // Para títulos, verificar se há dados PIX disponíveis
-        // Nota: No sandbox da EFI, dados PIX podem não estar disponíveis para títulos
-        if (payment?.banking_billet?.pix) {
-          logger.info('Dados PIX encontrados em payment.banking_billet.pix', {
-            titulo_id: titulo.id,
-            charge_id: titulo.charge_id,
-            pix_data: payment.banking_billet.pix
-          });
-          
-          if (payment.banking_billet.pix.qrcode) {
-            dadosAtualizados.qrcode = payment.banking_billet.pix.qrcode;
-          }
-          if (payment.banking_billet.pix.qrcode_image) {
-            dadosAtualizados.qrcode_image = payment.banking_billet.pix.qrcode_image;
-          }
-        } else {
-          logger.info('Dados PIX não disponíveis para título (normal no sandbox)', {
-            titulo_id: titulo.id,
-            charge_id: titulo.charge_id,
-            tem_payment_banking_billet: !!payment?.banking_billet,
-            chaves_banking_billet: payment?.banking_billet ? Object.keys(payment.banking_billet) : []
-          });
-        }
-        
-        
-        return { 
-          success: true, 
-          data: dadosAtualizados 
-        };
-      }
-      
-      return { 
-        success: false, 
-        message: resultado.message || 'Erro ao consultar dados' 
-      };
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      logger.error('Erro ao consultar dados atualizados do título', {
-        titulo_id: titulo.id,
-        charge_id: titulo.charge_id,
-        error: errorMessage
-      });
-      
-      return { 
-        success: false, 
-        message: 'Erro interno ao consultar dados' 
-      };
-    }
-  }
 
   /**
    * Mapear status da Efí para status interno
@@ -1072,11 +919,9 @@ export class WebhookController {
 
         for (const banco of bancosAsaas) {
           const token = getWebhookToken(banco);
-          if (token) {
-            if (!receivedSecret || receivedSecret === token) {
-              expectedSecret = token;
-              break;
-            }
+          if (token && (!receivedSecret || receivedSecret === token)) {
+            expectedSecret = token;
+            break;
           }
         }
       }
@@ -1138,12 +983,9 @@ export class WebhookController {
           : undefined;
 
       if (novoStatus === 'pago') {
-        updates.data_pagamento = paymentDate ? new Date(paymentDate) : new Date();
-        if (typeof payment.value === 'number') {
-          updates.valor_pago = Number(payment.value);
-        } else if (typeof payment.netValue === 'number') {
-          updates.valor_pago = Number(payment.netValue);
-        }
+        updates.data_pagamento = paymentDate ? WebhookController.normalizeDate(paymentDate) || new Date() : new Date();
+        updates.valor_pago = typeof payment.value === 'number' ? Number(payment.value) : 
+                             typeof payment.netValue === 'number' ? Number(payment.netValue) : undefined;
       }
 
       if (typeof payment.nossoNumero === 'string') {
@@ -1177,7 +1019,10 @@ export class WebhookController {
       }
 
       if (typeof payment.dueDate === 'string') {
-        updates.data_vencimento = new Date(payment.dueDate);
+        const normalizedDate = WebhookController.normalizeDate(payment.dueDate);
+        if (normalizedDate) {
+          updates.data_vencimento = normalizedDate;
+        }
       }
 
       if (Object.keys(updates).length > 0) {
