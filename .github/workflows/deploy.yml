@@ -248,6 +248,14 @@ jobs:
             cp ../backend/package.json backend/package.json
             cp ../backend/package-lock.json backend/package-lock.json
             cp ../backend/env.example backend/env.example
+            # Copiar arquivos fonte necessários para build (tsconfig.json e src/)
+            if [ -f "../backend/tsconfig.json" ]; then
+              cp ../backend/tsconfig.json backend/tsconfig.json
+            fi
+            if [ -d "../backend/src" ]; then
+              rm -rf backend/src
+              cp -r ../backend/src backend/src
+            fi
             
             # Verificar se foi copiado corretamente
             echo "=== Verificando cópia ==="
