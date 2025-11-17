@@ -855,7 +855,6 @@ export class DashboardController {
         ? parseFloat(titulo.valor_pago.toString())
         : valorTitulo;
 
-      totalPrevisto += valorTitulo;
       if (titulo.cliente_id) {
         clientesPeriodo.add(titulo.cliente_id);
       }
@@ -864,16 +863,26 @@ export class DashboardController {
         case 'pago':
         case 'pago_atraso':
           totalRecebido += valorPago;
+          // Títulos já pagos não entram na receita prevista (já foram recebidos)
           break;
         case 'parcial':
           totalRecebido += Math.min(valorPago, valorTitulo);
-          totalPendente += Math.max(valorTitulo - valorPago, 0);
+          const valorPendenteParcial = Math.max(valorTitulo - valorPago, 0);
+          totalPendente += valorPendenteParcial;
+          totalPrevisto += valorPendenteParcial; // Receita prevista = apenas a parte pendente
           break;
         case 'pendente':
         case 'vencido':
           totalPendente += valorTitulo;
+          totalPrevisto += valorTitulo; // Receita prevista = apenas pendentes/vencidos
+          break;
+        case 'cancelado':
+          // Títulos cancelados não entram no previsto nem no pendente
           break;
         default:
+          // Para outros status, considerar como pendente
+          totalPendente += valorTitulo;
+          totalPrevisto += valorTitulo;
           break;
       }
     }
