@@ -1018,7 +1018,6 @@ export class WebhookController {
       const payload = req.body as Record<string, JsonValue> | undefined;
 
       if (!payload || typeof payload !== 'object') {
-        logger.warn('Webhook Asaas recebeu payload inválido', { payload });
         res.status(400).json({
           success: false,
           message: 'Payload inválido'
@@ -1028,22 +1027,14 @@ export class WebhookController {
 
       const receivedSecret =
         req.get('asaas-access-token') ||
-        req.get('x-internal-webhook-secret') ||
-        (typeof payload?.secret === 'string' ? payload.secret : undefined) ||
+        req.get('access_token') ||
         (typeof payload?.token === 'string' ? payload.token : undefined);
 
-      const event = typeof payload.event === 'string' ? payload.event : '';
       const payment = (payload.payment && typeof payload.payment === 'object' && !Array.isArray(payload.payment))
         ? payload.payment as Record<string, JsonValue>
         : undefined;
 
-      logger.info('Webhook Asaas recebido', {
-        event,
-        payment_id: payment?.id || null
-      });
-
       if (!payment || !payment.id) {
-        logger.warn('Webhook Asaas sem payment.id', { payload });
         res.status(200).json({
           success: true,
           message: 'Webhook recebido sem payment.id'
@@ -1058,34 +1049,56 @@ export class WebhookController {
         include: [{ model: Banco, as: 'banco' }]
       }) as (Titulo & { banco?: Banco | null }) | null;
 
-      const bancoSecret = typeof titulo?.banco?.webhook_secret === 'string' && titulo.banco.webhook_secret
-        ? titulo.banco.webhook_secret
-        : undefined;
-      const expectedSecret = bancoSecret || process.env.INTERNAL_WEBHOOK_SECRET;
-
-      if (expectedSecret) {
-        if (!receivedSecret || receivedSecret !== expectedSecret) {
-          logger.warn('Webhook Asaas com token inválido', {
-            fornecido: receivedSecret ? 'presente' : 'ausente',
-            banco_id: titulo?.banco_id ?? null,
-            possui_secret_banco: !!bancoSecret
-          });
-          res.status(401).json({
-            success: false,
-            message: 'Token do webhook inválido'
-          });
-          return;
+      const getWebhookToken = (banco: Banco): string | undefined => {
+        if (banco.webhook_secret && typeof banco.webhook_secret === 'string' && banco.webhook_secret.trim()) {
+          return banco.webhook_secret;
         }
-      } else {
-        logger.warn('Webhook Asaas recebido sem secret configurado', {
-          banco_id: titulo?.banco_id ?? null
+        if (banco.configuracoes?.webhook_token && typeof banco.configuracoes.webhook_token === 'string') {
+          return banco.configuracoes.webhook_token.trim() || undefined;
+        }
+        return undefined;
+      };
+
+      let expectedSecret: string | undefined = undefined;
+
+      if (titulo?.banco?.tipo_banco === 'asaas') {
+        expectedSecret = getWebhookToken(titulo.banco);
+      }
+
+      if (!expectedSecret) {
+        const bancosAsaas = await Banco.findAll({
+          where: { tipo_banco: 'asaas', ativo: true }
         });
+
+        for (const banco of bancosAsaas) {
+          const token = getWebhookToken(banco);
+          if (token) {
+            if (!receivedSecret || receivedSecret === token) {
+              expectedSecret = token;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!expectedSecret) {
+        res.status(401).json({
+          success: false,
+          message: 'Token do webhook não configurado'
+        });
+        return;
+      }
+
+      if (!receivedSecret || receivedSecret !== expectedSecret) {
+        logger.warn('Webhook Asaas com token inválido');
+        res.status(401).json({
+          success: false,
+          message: 'Token do webhook inválido'
+        });
+        return;
       }
 
       if (!titulo) {
-        logger.warn('Webhook Asaas: título não encontrado para charge_id', {
-          charge_id: chargeId
-        });
         res.status(200).json({
           success: true,
           message: 'Título não encontrado para este charge_id'
@@ -1167,41 +1180,17 @@ export class WebhookController {
         updates.data_vencimento = new Date(payment.dueDate);
       }
 
-      if (Object.keys(updates).length === 0) {
-        logger.info('Webhook Asaas não possui campos para atualizar', {
-          titulo_id: titulo.id,
-          charge_id: chargeId,
-          event,
-          paymentStatus
-        });
-        res.status(200).json({
-          success: true,
-          message: 'Nenhum campo atualizado'
-        });
-        return;
+      if (Object.keys(updates).length > 0) {
+        await titulo.update(updates);
       }
-
-      logger.info('Webhook Asaas atualizando título', {
-        titulo_id: titulo.id,
-        charge_id: chargeId,
-        event,
-        paymentStatus,
-        campos: Object.keys(updates)
-      });
-
-      await titulo.update(updates);
 
       res.status(200).json({
         success: true,
         message: 'Título atualizado via webhook Asaas'
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-
       logger.error('Erro ao processar webhook Asaas', {
-        error: errorMessage,
-        stack: errorStack
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       });
 
       res.status(500).json({
