@@ -887,11 +887,57 @@ export class DashboardController {
       }
     }
 
+    // Calcular ticket médio: soma dos valores dos planos com clientes / quantidade de clientes ativos com planos
+    const contratosAtivos = await Contrato.findAll({
+      attributes: ['id', 'cliente_id', 'valor_final', 'plano_id'],
+      include: [
+        {
+          association: 'plano',
+          attributes: ['id', 'valor_mensal']
+        },
+        {
+          association: 'cliente',
+          attributes: ['id', 'ativo'],
+          where: { ativo: true }
+        }
+      ],
+      where: {
+        status: 'ativo'
+      }
+    });
+
+    let valorTotalPlanos = 0;
+    const clientesComPlanos = new Set<number>();
+
+    for (const contrato of contratosAtivos) {
+      const contratoJson = contrato.toJSON() as any;
+      const cliente = contratoJson.cliente;
+      
+      if (cliente && cliente.ativo) {
+        const clienteId = contrato.cliente_id;
+        if (clienteId) {
+          clientesComPlanos.add(clienteId);
+          
+          // Usar valor_final do contrato se disponível, senão usar valor_mensal do plano
+          if (contrato.valor_final && parseFloat(contrato.valor_final.toString()) > 0) {
+            valorTotalPlanos += parseFloat(contrato.valor_final.toString());
+          } else if (contratoJson.plano && contratoJson.plano.valor_mensal) {
+            valorTotalPlanos += parseFloat(contratoJson.plano.valor_mensal.toString());
+          }
+        }
+      }
+    }
+
+    const ticketMedio = clientesComPlanos.size > 0 
+      ? valorTotalPlanos / clientesComPlanos.size 
+      : 0;
+
     return {
       totalPrevisto,
       totalRecebido,
       totalPendente,
-      clientesComTitulos: clientesPeriodo.size
+      clientesComTitulos: clientesPeriodo.size,
+      ticketMedio
     };
   }
 
