@@ -257,16 +257,30 @@ export class DashboardController {
       return acumulado + parseFloat(String(contrato.valor_final || 0));
     }, 0);
 
+    // Calcular títulos vencidos no período
+    const hoje = new Date();
+    hoje.setHours(23, 59, 59, 999);
+    const titulosVencidosWhere = inicioPeriodo && fimPeriodo ? {
+      ...tituloWhere,
+      data_vencimento: {
+        [Op.and]: [
+          { [Op.lte]: hoje },
+          { [Op.between]: [inicioPeriodo, fimPeriodo] }
+        ]
+      },
+      status: 'pendente'
+    } : {
+      data_vencimento: { [Op.lte]: hoje },
+      status: 'pendente'
+    };
+
     return {
       totalClientes: totalClientes,
       clientesAtivos: clientesAtivos,
       planosAtivos: planosAtivos,
       titulosAtivos: titulosAtivos,
       titulosVencidos: await Titulo.count({
-        where: {
-          data_vencimento: { [Op.lte]: new Date() },
-          status: 'pendente'
-        }
+        where: titulosVencidosWhere
       }),
       valorTotalReceber: valorTotalPendente,
       valorTotalRecebido: valorTotalPago,
