@@ -216,12 +216,10 @@ export class AsaasService implements IBancoService {
           }
         }
 
+        // BarcodeService já está importado no topo do arquivo
         const linhaDigitavelFormatada = linhaDigitavelRaw
           ? BarcodeService.formatarLinhaDigitavel(linhaDigitavelRaw)
           : null;
-
-        // Importar BarcodeService para conversão correta
-        const { BarcodeService } = await import('../BarcodeService');
         
         const codigoBarrasFinal = (() => {
           if (!barcode) return null;
