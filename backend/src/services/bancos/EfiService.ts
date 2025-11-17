@@ -238,25 +238,8 @@ export class EfiService implements IBancoService {
         
         const linhaDigitavelPath = efiConfig.api_response_mapping.boleto.linha_digitavel || '';
         const linhaDigitavelRaw = linhaDigitavelPath ? this.getNestedValue(dados, linhaDigitavelPath) : null;
-        let linhaDigitavel = typeof linhaDigitavelRaw === 'string' ? linhaDigitavelRaw : null;
-        
-        // Se não tem linha digitável separada, usar o barcode (que pode ser linha digitável)
-        if (!linhaDigitavel && barcode && typeof barcode === 'string') {
-          const barcodeLimpo = barcode.replace(/\D/g, '');
-          if (barcodeLimpo.length === 47) {
-            // É linha digitável, usar diretamente
-            linhaDigitavel = barcodeLimpo;
-          } else if (barcodeLimpo.length === 44) {
-            // É código de barras, manter como está (será formatado depois)
-            linhaDigitavel = barcodeLimpo;
-          }
-        }
-        
-        // Formatar linha digitável se necessário
-        if (linhaDigitavel) {
-          const linhaDigitavelFormatada = BarcodeService.formatarLinhaDigitavel(linhaDigitavel);
-          linhaDigitavel = linhaDigitavelFormatada || linhaDigitavel;
-        }
+        const linhaDigitavel = (typeof linhaDigitavelRaw === 'string' ? linhaDigitavelRaw : null) || (typeof barcode === 'string' ? barcode : null);
+        const linhaDigitavelFormatada = linhaDigitavel ? BarcodeService.formatarLinhaDigitavel(linhaDigitavel) : null;
         const pdfUrl = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pdf);
         const pixQrcode = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pix_qrcode);
         const pixQrcodeImage = this.getNestedValue(dados, efiConfig.api_response_mapping.boleto.pix_qrcode_image);
@@ -274,29 +257,14 @@ export class EfiService implements IBancoService {
         let codigoBarrasFinal: string | null = null;
         if (barcode && typeof barcode === 'string') {
           const barcodeLimpo = barcode.replace(/\D/g, '');
-          if (barcodeLimpo.length === 47) {
-            // Converter linha digitável (47 dígitos) para código de barras (44 dígitos)
-            codigoBarrasFinal = BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcodeLimpo);
-          } else if (barcodeLimpo.length === 44) {
-            // Já é código de barras
-            codigoBarrasFinal = barcodeLimpo;
-          } else {
-            codigoBarrasFinal = barcodeLimpo || null;
-          }
-        } else if (typeof barcode === 'string') {
-          const barcodeLimpo = barcode.replace(/\D/g, '');
-          if (barcodeLimpo.length === 47) {
-            codigoBarrasFinal = BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcodeLimpo);
-          } else {
-            codigoBarrasFinal = barcodeLimpo || null;
-          }
+          codigoBarrasFinal = BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcodeLimpo);
         }
 
         await titulo.update({
           charge_id: chargeIdString,
-          codigo_barras: typeof codigoBarrasFinal === 'string' ? codigoBarrasFinal : null,
+          codigo_barras: codigoBarrasFinal,
           url_boleto: typeof url === 'string' ? url : null,
-          linha_digitavel: typeof linhaDigitavel === 'string' ? linhaDigitavel : null,
+          linha_digitavel: linhaDigitavelFormatada,
           qrcode: typeof pixQrcode === 'string' ? pixQrcode : null,
           qrcode_image: typeof pixQrcodeImage === 'string' ? pixQrcodeImage : null,
           nosso_numero: nossoNumero,

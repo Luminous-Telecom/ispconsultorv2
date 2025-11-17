@@ -221,18 +221,7 @@ export class AsaasService implements IBancoService {
           ? BarcodeService.formatarLinhaDigitavel(linhaDigitavelRaw)
           : null;
         
-        const codigoBarrasFinal = (() => {
-          if (!barcode) return null;
-          const apenasDigitos = barcode.replace(/\D/g, '');
-          if (apenasDigitos.length === 44) {
-            return apenasDigitos;
-          }
-          if (apenasDigitos.length === 47) {
-            // Converter linha digitável (47 dígitos) para código de barras (44 dígitos)
-            return BarcodeService.converterLinhaDigitavelParaCodigoBarras(apenasDigitos);
-          }
-          return apenasDigitos || null;
-        })();
+        const codigoBarrasFinal = barcode ? BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcode.replace(/\D/g, '')) : null;
 
         const pixQrCodeImageNormalized = pixQrCodeImage && !pixQrCodeImage.startsWith('data:image/')
           ? `data:image/png;base64,${pixQrCodeImage}`
