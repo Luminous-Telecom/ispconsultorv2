@@ -916,14 +916,17 @@ export class TituloController {
           }
 
           // Sucesso - atualizar título com dados do banco
-          let codigoBarrasFinal = resultado.data.codigo_barras as string;
-          if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras as string)) {
+          let codigoBarrasFinal = typeof resultado.data.codigo_barras === 'string' ? resultado.data.codigo_barras : null;
+          if (codigoBarrasFinal && !BarcodeService.validarCodigoBarrasFebraban(codigoBarrasFinal)) {
             logger.warn('Código de barras da API inválido, usando mesmo assim', {
               titulo_id: titulo.id,
-              codigo_original: resultado.data.codigo_barras
+              codigo_original: codigoBarrasFinal
             });
-            codigoBarrasFinal = resultado.data.codigo_barras as string;
           }
+
+          // IMPORTANTE: Não usar valor anterior se codigoBarrasFinal for null
+          // Isso evita que um código de barras seja copiado para outro título
+          const codigoBarrasParaSalvar = codigoBarrasFinal !== null ? codigoBarrasFinal : null;
 
           // Atualizar título com dados do banco
           await titulo.update({
@@ -931,7 +934,7 @@ export class TituloController {
             url_boleto: resultado.data.url_boleto as string | null,
             qrcode: resultado.data.qrcode as string | null,
             qrcode_image: resultado.data.qrcode_image as string | null,
-            codigo_barras: codigoBarrasFinal,
+            codigo_barras: codigoBarrasParaSalvar,
             linha_digitavel: resultado.data.linha_digitavel as string | null,
             nosso_numero: resultado.data.nosso_numero as string | null
           });
@@ -1168,17 +1171,24 @@ export class TituloController {
             const resultado = await BancoApiService.gerarTitulo(titulo as TituloComRelacoes);
             
             if (resultado.success && resultado.data) {
-              let codigoBarrasFinal = resultado.data.codigo_barras as string;
-              if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras as string)) {
-                codigoBarrasFinal = resultado.data.codigo_barras as string;
+              let codigoBarrasFinal = typeof resultado.data.codigo_barras === 'string' ? resultado.data.codigo_barras : null;
+              if (codigoBarrasFinal && !BarcodeService.validarCodigoBarrasFebraban(codigoBarrasFinal)) {
+                logger.warn('Código de barras da API fora do padrão FEBRABAN', {
+                  titulo_id: titulo.id,
+                  codigo_original: codigoBarrasFinal
+                });
               }
+
+              // IMPORTANTE: Não usar valor anterior se codigoBarrasFinal for null
+              // Isso evita que um código de barras seja copiado para outro título
+              const codigoBarrasParaSalvar = codigoBarrasFinal !== null ? codigoBarrasFinal : null;
 
               await titulo.update({
                 charge_id: resultado.data.charge_id,
                 url_boleto: resultado.data.url_boleto as string | null,
                 qrcode: resultado.data.qrcode as string | null,
                 qrcode_image: resultado.data.qrcode_image as string | null,
-                codigo_barras: codigoBarrasFinal,
+                codigo_barras: codigoBarrasParaSalvar,
                 linha_digitavel: resultado.data.linha_digitavel as string | null,
                 nosso_numero: resultado.data.nosso_numero as string | null
               });
@@ -1322,24 +1332,27 @@ export class TituloController {
             const resultado = await BancoApiService.gerarTitulo(titulo as TituloComRelacoes);
             
             if (resultado.success && resultado.data) {
-              let codigoBarrasFinal = resultado.data.codigo_barras as string;
-              if (resultado.data.codigo_barras && !BarcodeService.validarCodigoBarrasFebraban(resultado.data.codigo_barras as string)) {
-                logger.warn('Código de barras da API fora do padrão FEBRABAN (mantendo valor retornado)', {
-                  titulo_id: titulo.id,
-                  codigo_original: resultado.data.codigo_barras
-                });
-                codigoBarrasFinal = resultado.data.codigo_barras as string;
-              }
+          let codigoBarrasFinal = typeof resultado.data.codigo_barras === 'string' ? resultado.data.codigo_barras : null;
+          if (codigoBarrasFinal && !BarcodeService.validarCodigoBarrasFebraban(codigoBarrasFinal)) {
+            logger.warn('Código de barras da API fora do padrão FEBRABAN (mantendo valor retornado)', {
+              titulo_id: titulo.id,
+              codigo_original: codigoBarrasFinal
+            });
+          }
 
-              await titulo.update({
-                charge_id: resultado.data.charge_id,
-                url_boleto: resultado.data.url_boleto as string | null,
-                qrcode: resultado.data.qrcode as string | null,
-                qrcode_image: resultado.data.qrcode_image as string | null,
-                codigo_barras: codigoBarrasFinal,
-                linha_digitavel: resultado.data.linha_digitavel as string | null,
-                nosso_numero: resultado.data.nosso_numero as string | null
-              });
+          // IMPORTANTE: Não usar valor anterior se codigoBarrasFinal for null
+          // Isso evita que um código de barras seja copiado para outro título
+          const codigoBarrasParaSalvar = codigoBarrasFinal !== null ? codigoBarrasFinal : null;
+
+          await titulo.update({
+            charge_id: resultado.data.charge_id,
+            url_boleto: resultado.data.url_boleto as string | null,
+            qrcode: resultado.data.qrcode as string | null,
+            qrcode_image: resultado.data.qrcode_image as string | null,
+            codigo_barras: codigoBarrasParaSalvar,
+            linha_digitavel: resultado.data.linha_digitavel as string | null,
+            nosso_numero: resultado.data.nosso_numero as string | null
+          });
 
               logger.info('Título registrado com sucesso no banco', {
                 titulo_id: titulo.id,

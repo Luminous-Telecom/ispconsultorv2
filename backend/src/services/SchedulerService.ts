@@ -655,6 +655,15 @@ export class SchedulerService {
             const chargeId = typeof dados.charge_id === 'string' ? dados.charge_id : undefined;
             let codigoBarrasFinal = typeof dados.codigo_barras === 'string' ? dados.codigo_barras : null;
 
+            // Log para debug - verificar se cada título está recebendo código diferente
+            logger.info('Dados retornados pela API do banco', {
+              titulo_id: titulo.id,
+              numero_titulo: titulo.numero_titulo,
+              charge_id: chargeId,
+              codigo_barras_recebido: codigoBarrasFinal,
+              codigo_barras_atual: titulo.codigo_barras
+            });
+
             if (codigoBarrasFinal && !BarcodeService.validarCodigoBarrasFebraban(codigoBarrasFinal)) {
               logger.warn('Código de barras retornado pelo banco está fora do padrão FEBRABAN', {
                 titulo_id: titulo.id,
@@ -663,14 +672,25 @@ export class SchedulerService {
               });
             }
 
+            // IMPORTANTE: Se codigoBarrasFinal for null, NÃO usar o valor anterior do título
+            // Isso evita que um código de barras seja copiado para outro título
+            const codigoBarrasParaSalvar = codigoBarrasFinal !== null ? codigoBarrasFinal : null;
+
             await titulo.update({
               charge_id: chargeId ?? titulo.charge_id,
               url_boleto: typeof dados.url_boleto === 'string' ? dados.url_boleto : titulo.url_boleto,
               qrcode: typeof dados.qrcode === 'string' ? dados.qrcode : titulo.qrcode,
               qrcode_image: typeof dados.qrcode_image === 'string' ? dados.qrcode_image : titulo.qrcode_image,
-              codigo_barras: codigoBarrasFinal ?? titulo.codigo_barras,
+              codigo_barras: codigoBarrasParaSalvar,
               linha_digitavel: typeof dados.linha_digitavel === 'string' ? dados.linha_digitavel : titulo.linha_digitavel,
               nosso_numero: typeof dados.nosso_numero === 'string' ? dados.nosso_numero : titulo.nosso_numero
+            });
+
+            // Log após atualização para confirmar
+            logger.info('Título atualizado com código de barras', {
+              titulo_id: titulo.id,
+              numero_titulo: titulo.numero_titulo,
+              codigo_barras_salvo: codigoBarrasParaSalvar
             });
 
             detalhes.push({
