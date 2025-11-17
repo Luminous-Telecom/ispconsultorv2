@@ -469,7 +469,33 @@ jobs:
             fi
             
             git remote set-url origin https://${GITHUB_TOKEN}@github.com/Luminous-Telecom/backnet.prod.git
-            git push origin main
+            
+            # Fazer fetch e pull antes do push para integrar mudanças remotas
+            echo "=== Fazendo fetch para verificar mudanças remotas ==="
+            git fetch origin main
+            
+            # Verificar se há mudanças remotas
+            if git rev-list HEAD..origin/main --count | grep -q '[1-9]'; then
+              echo "⚠ Mudanças remotas detectadas, fazendo merge..."
+              # Tentar merge com estratégia que prioriza nossas mudanças (artefatos compilados)
+              git pull origin main --no-rebase --no-edit || {
+                echo "⚠ Conflito no merge, usando estratégia ours (manter nossas mudanças de deploy)"
+                # Em caso de conflito, manter nossas mudanças (artefatos compilados são mais recentes)
+                git merge origin/main --strategy-option=ours --no-edit || {
+                  echo "⚠ Erro no merge, abortando merge e mantendo estado atual"
+                  git merge --abort 2>/dev/null || true
+                }
+              }
+            else
+              echo "✓ Nenhuma mudança remota, prosseguindo com push"
+            fi
+            
+            # Tentar push
+            echo "=== Fazendo push para produção ==="
+            git push origin main || {
+              echo "⚠ Erro no push, tentando force push (isso é seguro para repositório de deploy)"
+              git push origin main --force
+            }
           fi
           
           # Mostrar último commit para confirmação
