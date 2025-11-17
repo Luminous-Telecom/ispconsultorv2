@@ -42,6 +42,7 @@ export interface DashboardData {
     totalRecebido: number;
     totalPendente: number;
     clientesComTitulos: number;
+    ticketMedio: number;
   };
 }
 
