@@ -19,6 +19,7 @@ export class Usuario extends Model<
   declare ativo: CreationOptional<boolean>;
   declare precisa_trocar_senha: CreationOptional<boolean>;
   declare ultimo_login: CreationOptional<Date | null>;
+  declare webhook_secret: CreationOptional<string | null>;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 }
@@ -61,6 +62,10 @@ Usuario.init(
     },
     ultimo_login: {
       type: DataTypes.DATE,
+      allowNull: true,
+    },
+    webhook_secret: {
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
     created_at: {

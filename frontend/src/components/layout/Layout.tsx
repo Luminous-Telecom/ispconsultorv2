@@ -10,6 +10,7 @@ import { PlanoListModal } from '../modals/planos';
 import { BancoListModal } from '../modals/bancos';
 import ContratoListModal from '../modals/contratos/ContratoListModal';
 import { DadosEmpresaModal } from '../modals/empresa/empresa';
+import UsuariosModal from '../modals/parametros/UsuariosModal';
 import RecursosSistemaModal from '../modals/parametros/RecursosSistemaModal';
 import { ServidorEmailModal } from '../modals/parametros/servidor-email';
 import { ServidorWhatsappModal } from '../modals/parametros/servidor-whatsapp';
@@ -76,6 +77,7 @@ const Layout: React.FC = () => {
   ];
 
   const parametrosDropdownItems = [
+    { id: 'usuarios', label: 'Usuários', icon: 'bi-people', onClick: () => openModal('usuarios') },
     { id: 'recursos-sistema', label: 'Recursos do Sistema', icon: 'bi-gear', onClick: () => openModal('recursos-sistema') },
     { id: 'agendador-tarefas', label: 'Agendador de Tarefas', icon: 'bi-clock-history', onClick: () => openModal('agendador-tarefas') },
     { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => openModal('servidor-email') },
@@ -236,6 +238,13 @@ const Layout: React.FC = () => {
       )}
       
       {/* Modais de Parâmetros */}
+      {activeModal === 'usuarios' && (
+        <UsuariosModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
+      
       {activeModal === 'recursos-sistema' && (
         <RecursosSistemaModal
           show={true}

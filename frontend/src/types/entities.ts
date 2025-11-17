@@ -426,3 +426,42 @@ export interface ValidationError {
   message: string;
 }
 
+// ============================================
+// Usuario
+// ============================================
+export interface Usuario {
+  id: number;
+  nome: string;
+  email: string;
+  role: 'admin' | 'user';
+  ativo: boolean;
+  precisa_trocar_senha: boolean;
+  ultimo_login?: string | null;
+  webhook_secret?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateUsuario {
+  nome: string;
+  email: string;
+  password: string;
+  role?: 'admin' | 'user';
+  ativo?: boolean;
+}
+
+export interface UpdateUsuario {
+  nome?: string;
+  email?: string;
+  password?: string;
+  role?: 'admin' | 'user';
+  ativo?: boolean;
+}
+
+export interface UsuarioFilters extends Record<string, string | number | boolean | null | undefined> {
+  page?: number;
+  limit?: number;
+  search?: string;
+  ativo?: boolean;
+}
+
