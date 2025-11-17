@@ -604,9 +604,7 @@ const Dashboard: React.FC = () => {
   const planos = dashboardData?.planos || [];
   const contratos = dashboardData?.contratos || [];
   const contratosTodos = dashboardData?.contratosTodos || [];
-  const titulos = dashboardData?.titulos || [];
   const titulosTodos = dashboardData?.titulosTodos || [];
-  const stats = dashboardData?.stats;
 
   // Estatísticas de clientes (TODOS os clientes para gráficos)
   const totalClientes = clientesTodos.length;
