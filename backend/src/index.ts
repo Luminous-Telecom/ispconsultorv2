@@ -150,19 +150,25 @@ app.use(cors({
 // Servir arquivos estáticos de uploads
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
-// Middleware de rate limiting (desabilitado para desenvolvimento)
-if (process.env.NODE_ENV === 'production') {
-  const limiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutos
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'), // limite normal para produção
-    message: {
-      error: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
+// Middleware de rate limiting
+// Aumentar limite para evitar bloqueios durante uso normal do sistema
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutos
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '5000'), // Aumentado para 5000 requisições por 15 minutos
+  message: {
+    error: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Não aplicar rate limiting em rotas de webhook e health check
+  skip: (req) => {
+    return req.path.startsWith('/webhook/') || req.path === '/health';
+  }
+});
+
+// Aplicar rate limiting apenas em produção ou se explicitamente habilitado
+if (process.env.NODE_ENV === 'production' || process.env.ENABLE_RATE_LIMIT === 'true') {
   app.use('/api/', limiter);
-} else {
 }
 
 // Middleware de parsing
