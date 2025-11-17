@@ -388,8 +388,7 @@ export class SchedulerService {
               const ultimoDiaDoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
               let diaCorreto = Math.min(diaVencimento, ultimoDiaDoMes);
               
-              // Se data de início existe e estamos no mês da data de início, SEMPRE usar a data de início
-              // Se a data de início já passou mas estamos no mesmo mês, usar a data atual (hoje)
+              // Se data de início existe e estamos no mês da data de início
               if (dataInicioContrato) {
                 const mesInicio = dataInicioContrato.getMonth();
                 const anoInicio = dataInicioContrato.getFullYear();
@@ -397,13 +396,21 @@ export class SchedulerService {
                 
                 if (mesAtual === mesInicio && anoAtual === anoInicio) {
                   // No primeiro mês (mês da data de início)
-                  // Se data de início já passou mas estamos no mesmo mês, usar data atual (hoje)
-                  // Caso contrário, usar a data de início
-                  if (dataInicioContrato < hoje) {
-                    const diaHoje = hoje.getDate();
-                    diaCorreto = Math.min(diaHoje, ultimoDiaDoMes);
+                  // Se o dia de vencimento for superior ao dia de início, usar o dia de vencimento
+                  // Caso contrário, usar a data de início (ou hoje se já passou)
+                  if (diaVencimento > diaInicio) {
+                    // Vencimento é superior à data de início, usar o dia de vencimento
+                    diaCorreto = Math.min(diaVencimento, ultimoDiaDoMes);
                   } else {
-                    diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
+                    // Vencimento é igual ou inferior à data de início
+                    // Se data de início já passou mas estamos no mesmo mês, usar data atual (hoje)
+                    // Caso contrário, usar a data de início
+                    if (dataInicioContrato < hoje) {
+                      const diaHoje = hoje.getDate();
+                      diaCorreto = Math.min(diaHoje, ultimoDiaDoMes);
+                    } else {
+                      diaCorreto = Math.min(diaInicio, ultimoDiaDoMes);
+                    }
                   }
                 }
               }
