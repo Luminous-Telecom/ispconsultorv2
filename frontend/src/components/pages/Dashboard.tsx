@@ -616,7 +616,6 @@ const Dashboard: React.FC = () => {
   const planosInativos = totalPlanos - planosAtivos;
 
   // Estatísticas de contratos
-  const _totalContratos = contratos.length;
   const contratosAtivos = contratos.filter(c => c.status === 'ativo').length;
   const contratosInativos = contratos.filter(c => c.status === 'inativo').length;
   const contratosSuspensos = contratos.filter(c => c.status === 'suspenso').length;
@@ -740,47 +739,30 @@ const Dashboard: React.FC = () => {
 
   // Análise de clientes por plano
   const getClientesPorPlano = () => {
-    // Filtrar apenas contratos ativos
     const contratosAtivos = contratos.filter(c => c.status === 'ativo');
     
-    // Contar clientes únicos por plano baseado nos contratos ativos
-    // Usar Set para evitar contar o mesmo cliente múltiplas vezes no mesmo plano
-    const clientesPorPlano = new Map<number, Set<number>>();
-    
-    contratosAtivos.forEach(contrato => {
-      const planoId = contrato.plano_id;
-      const clienteId = contrato.cliente_id;
-      
-      if (planoId && clienteId) {
-        if (!clientesPorPlano.has(planoId)) {
-          clientesPorPlano.set(planoId, new Set());
+    // Contar clientes únicos por plano
+    const contagem = contratosAtivos.reduce((acc, contrato) => {
+      if (contrato.plano_id && contrato.cliente_id) {
+        const planoId = contrato.plano_id;
+        if (!acc[planoId]) {
+          acc[planoId] = new Set();
         }
-        clientesPorPlano.get(planoId)!.add(clienteId);
+        acc[planoId].add(contrato.cliente_id);
       }
-    });
+      return acc;
+    }, {} as Record<number, Set<number>>);
     
-    // Criar mapa de contagem
-    const contagem: Record<number, number> = {};
-    clientesPorPlano.forEach((clientesSet, planoId) => {
-      contagem[planoId] = clientesSet.size;
-    });
-    
-    // Incluir todos os planos, mesmo os sem clientes
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8'];
     return planos.map((plano, index) => ({
       label: plano.nome_plano,
-      value: contagem[plano.id] || 0,
+      value: contagem[plano.id]?.size || 0,
       color: cores[index % cores.length]
     })).sort((a, b) => b.value - a.value);
   };
 
-
-
   // Dados para gráficos
   const statusPagamentoData = getStatusPagamento();
-  const titulosPendentesCount = statusPagamentoData.find(item => item.label === 'Pendentes')?.value || 0;
-  const titulosVencidosCount = statusPagamentoData.find(item => item.label === 'Vencidos')?.value || 0;
-  const _totalTitulosEmAberto = titulosPendentesCount + titulosVencidosCount;
 
   const clientesChartData = [
     { label: 'Ativos', value: clientesAtivos, color: '#28a745' },

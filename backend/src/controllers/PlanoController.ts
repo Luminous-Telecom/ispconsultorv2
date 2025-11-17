@@ -84,8 +84,7 @@ export class PlanoController {
         raw: false
       });
 
-      // Garantir que servicos_inclusos seja um array e adicionar quantidade de clientes
-      // Buscar quantidade de contratos ativos para cada plano
+      // Buscar quantidade de contratos ativos por plano
       const planoIds = planos.map(p => p.id);
       const contratosAtivosPorPlano = await Contrato.findAll({
         attributes: [
@@ -100,10 +99,10 @@ export class PlanoController {
         raw: true
       });
 
-      const quantidadeClientesMap = new Map<number, number>();
-      contratosAtivosPorPlano.forEach((item: any) => {
-        quantidadeClientesMap.set(item.plano_id, parseInt(item.total as string, 10));
-      });
+      const quantidadeClientesMap = contratosAtivosPorPlano.reduce((acc, item: any) => {
+        acc[item.plano_id] = parseInt(item.total as string, 10);
+        return acc;
+      }, {} as Record<number, number>);
 
       const planosProcessados = planos.map(plano => {
         const planoData = plano.toJSON();
@@ -114,8 +113,7 @@ export class PlanoController {
             planoData.servicos_inclusos = [];
           }
         }
-        // Adicionar quantidade de clientes associados ao plano (apenas contratos ativos)
-        (planoData as any).quantidade_clientes = quantidadeClientesMap.get(plano.id) || 0;
+        (planoData as any).quantidade_clientes = quantidadeClientesMap[plano.id] || 0;
         return planoData;
       });
 

@@ -79,12 +79,11 @@ export class DashboardController {
       // Obter planos únicos dos contratos
       const planoIds = [...new Set(contratos.map(c => c.plano_id).filter(id => id !== null))] as number[];
       
-      // Buscar todas as estatísticas e dados em paralelo, respeitando o período selecionado
+      // Buscar todas as estatísticas e dados em paralelo
       const [statsData, titulosRecentes, titulosVencidos, clientes, planos, titulos] = await Promise.all([
         DashboardController.getStatsData(inicioPeriodo, fimPeriodo),
         DashboardController.getTitulosRecentesData(5),
         DashboardController.getTitulosVencidosData(10),
-        // Filtrar clientes criados no período
         Cliente.findAll({ 
           attributes: ['id', 'ativo', 'created_at'],
           where: {
@@ -93,18 +92,12 @@ export class DashboardController {
             }
           }
         }),
-        // Buscar todos os planos que têm contratos no período (não apenas os criados no período)
-        planoIds.length > 0 
-          ? Plano.findAll({ 
-              attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
-              where: {
-                id: { [Op.in]: planoIds }
-              }
-            })
-          : Plano.findAll({ 
-              attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
-              where: { status: 'ativo' }
-            }),
+        Plano.findAll({ 
+          attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
+          where: planoIds.length > 0 
+            ? { id: { [Op.in]: planoIds } }
+            : { status: 'ativo' }
+        }),
         // Filtrar títulos com vencimento no período
         Titulo.findAll({ 
           attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
