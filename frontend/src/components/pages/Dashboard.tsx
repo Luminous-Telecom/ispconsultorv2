@@ -740,14 +740,30 @@ const Dashboard: React.FC = () => {
 
   // Análise de clientes por plano
   const getClientesPorPlano = () => {
-    // Contar clientes por plano baseado nos contratos
-    const contagem = contratos.reduce((acc, contrato) => {
+    // Filtrar apenas contratos ativos
+    const contratosAtivos = contratos.filter(c => c.status === 'ativo');
+    
+    // Contar clientes únicos por plano baseado nos contratos ativos
+    // Usar Set para evitar contar o mesmo cliente múltiplas vezes no mesmo plano
+    const clientesPorPlano = new Map<number, Set<number>>();
+    
+    contratosAtivos.forEach(contrato => {
       const planoId = contrato.plano_id;
-      if (planoId) {
-        acc[planoId] = (acc[planoId] || 0) + 1;
+      const clienteId = contrato.cliente_id;
+      
+      if (planoId && clienteId) {
+        if (!clientesPorPlano.has(planoId)) {
+          clientesPorPlano.set(planoId, new Set());
+        }
+        clientesPorPlano.get(planoId)!.add(clienteId);
       }
-      return acc;
-    }, {} as Record<number, number>);
+    });
+    
+    // Criar mapa de contagem
+    const contagem: Record<number, number> = {};
+    clientesPorPlano.forEach((clientesSet, planoId) => {
+      contagem[planoId] = clientesSet.size;
+    });
     
     // Incluir todos os planos, mesmo os sem clientes
     const cores = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#17a2b8'];
