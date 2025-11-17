@@ -235,6 +235,8 @@ jobs:
           # Copiar se houve mudanças detectadas OU se o build foi executado OU se backend/dist existe
           if [ "${{ steps.changes.outputs.backend_changed }}" == "true" ] || [ "${{ steps.changes.outputs.frontend_changed }}" == "true" ] || [ "${BUILD_WAS_EXECUTED}" == "true" ] || [ -d "../backend/dist" ]; then
             echo "=== Copiando artefatos do backend (com frontend integrado) ==="
+            # Remover backend/src se existir (não deve estar em produção)
+            rm -rf backend/src
             rm -rf backend/dist backend/package.json backend/package-lock.json backend/env.example
             cp -r ../backend/dist backend/dist
             cp ../backend/package.json backend/package.json
@@ -415,11 +417,17 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
+          # Remover backend/src se existir (não deve estar em produção)
+          rm -rf backend/src
+          
           # Adicionar todos os arquivos (incluindo não rastreados)
           # Forçar adição de arquivos compilados mesmo que estejam no .gitignore
           git add -A
           git add -f backend/dist/ || true
           git add -f frontend/ || true
+          
+          # Remover backend/src do staging se foi adicionado acidentalmente
+          git rm -r --cached backend/src 2>/dev/null || true
           
           # Verificar status antes do commit
           echo "=== Status do Git antes do commit ==="
