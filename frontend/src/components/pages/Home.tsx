@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { DadosEmpresaService } from '../../services/dadosEmpresaService';
+import { DadosEmpresaService, type DadosEmpresa } from '../../services/dadosEmpresaService';
 import { getBrandLogo } from '../../utils/brandLogos';
 import { useTheme } from '../../contexts/ThemeContext';
 import './Home.css';
 
 // Throttle function para otimizar scroll handler
-const throttle = <T extends (...args: any[]) => void>(func: T, limit: number): T => {
+const throttle = <T extends (...args: unknown[]) => void>(func: T, limit: number): T => {
   let inThrottle: boolean;
-  return ((...args: any[]) => {
+  return ((...args: Parameters<T>) => {
     if (!inThrottle) {
       func(...args);
       inThrottle = true;
@@ -24,28 +24,23 @@ const Home: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   // Buscar dados públicos da empresa (incluindo logo) para o site público
-  // Usar suspense: false para não bloquear renderização inicial
-  const { data: dadosEmpresa } = useQuery({
+  const { data: dadosEmpresa } = useQuery<Partial<DadosEmpresa>>({
     queryKey: ['dados-empresa-public'],
     queryFn: () => DadosEmpresaService.getPublic(),
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
     retry: false, // Não tentar novamente se falhar
     throwOnError: false, // Não lançar erro para evitar redirecionamento
-    suspense: false, // Não bloquear renderização inicial
   });
 
   // Throttled scroll handler para melhorar INP
-  const handleScroll = useCallback(
-    throttle(() => {
-      setIsScrolled(window.scrollY > 50);
-    }, 100),
-    []
-  );
-
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    const throttledScroll = throttle(() => {
+      setIsScrolled(window.scrollY > 50);
+    }, 100);
+    
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    return () => window.removeEventListener('scroll', throttledScroll);
+  }, []);
 
   const companyName = useMemo(
     () => dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom',
