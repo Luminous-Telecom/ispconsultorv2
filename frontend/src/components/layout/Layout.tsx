@@ -195,71 +195,95 @@ const Layout: React.FC = () => {
             onActionClick={() => {}}
           />
 
-      {/* Modais sempre renderizados, apenas mudando show */}
-      <ClienteListModal
-        show={activeModal === 'clientes'}
-        onClose={closeModal}
-        title="Clientes"
-      />
+      {/* Modais renderizados condicionalmente apenas quando necessário */}
+      {activeModal === 'clientes' && (
+        <ClienteListModal
+          show={true}
+          onClose={closeModal}
+          title="Clientes"
+        />
+      )}
       
-      <PlanoListModal
-        show={activeModal === 'planos'}
-        onClose={closeModal}
-        title="Planos"
-      />
+      {activeModal === 'planos' && (
+        <PlanoListModal
+          show={true}
+          onClose={closeModal}
+          title="Planos"
+        />
+      )}
       
-      <BancoListModal
-        show={activeModal === 'bancos'}
-        onClose={closeModal}
-        title="Bancos"
-      />
+      {activeModal === 'bancos' && (
+        <BancoListModal
+          show={true}
+          onClose={closeModal}
+          title="Bancos"
+        />
+      )}
       
-      <ContratoListModal
-        show={activeModal === 'contratos'}
-        onClose={closeModal}
-        title="Contratos"
-      />
+      {activeModal === 'contratos' && (
+        <ContratoListModal
+          show={true}
+          onClose={closeModal}
+          title="Contratos"
+        />
+      )}
       
-      <DadosEmpresaModal
-        show={activeModal === 'dados-empresa'}
-        onClose={closeModal}
-      />
+      {activeModal === 'dados-empresa' && (
+        <DadosEmpresaModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
       
       {/* Modais de Parâmetros */}
-      <RecursosSistemaModal
-        show={activeModal === 'recursos-sistema'}
-        onClose={closeModal}
-      />
+      {activeModal === 'recursos-sistema' && (
+        <RecursosSistemaModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
       
-      <ServidorEmailModal
-        show={activeModal === 'servidor-email'}
-        onClose={closeModal}
-      />
+      {activeModal === 'servidor-email' && (
+        <ServidorEmailModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
       
-      <ServidorWhatsappModal
-        show={activeModal === 'servidor-whatsapp'}
-        onClose={closeModal}
-      />
+      {activeModal === 'servidor-whatsapp' && (
+        <ServidorWhatsappModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
       
-      <DocumentosSistemaModal
-        show={activeModal === 'documentos-sistema'}
-        onClose={closeModal}
-      />
+      {activeModal === 'documentos-sistema' && (
+        <DocumentosSistemaModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
       
-      <DiasVencimentoModal
-        show={activeModal === 'dias-vencimento'}
-        onClose={closeModal}
-      />
+      {activeModal === 'dias-vencimento' && (
+        <DiasVencimentoModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
 
-      <AtualizacoesModal
-        show={activeModal === 'atualizacoes'}
-        onClose={closeModal}
-      />
+      {activeModal === 'atualizacoes' && (
+        <AtualizacoesModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
 
-      <AgendadorTarefasModal
-        show={activeModal === 'agendador-tarefas'}
-        onClose={closeModal}
-      />
+      {activeModal === 'agendador-tarefas' && (
+        <AgendadorTarefasModal
+          show={true}
+          onClose={closeModal}
+        />
+      )}
 
     </div>
   );
