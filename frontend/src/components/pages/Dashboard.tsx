@@ -629,7 +629,10 @@ const Dashboard: React.FC = () => {
   const receitaPrevistaPeriodo = dashboardData?.resumoPeriodo?.totalPrevisto ?? receitaTotalGlobal;
   const receitaPagaPeriodo = dashboardData?.resumoPeriodo?.totalRecebido ?? receitaPagaGlobal;
   const receitaPendentePeriodo = dashboardData?.resumoPeriodo?.totalPendente ?? receitaPendenteGlobal;
-  const clientesPeriodo = dashboardData?.resumoPeriodo?.clientesComTitulos ?? clientesAtivos;
+  // Clientes ativos no período (filtrados pelo período selecionado)
+  const clientesAtivosPeriodo = clientes.filter(c => c.ativo).length;
+  // Clientes com títulos no período
+  const clientesComTitulosPeriodo = dashboardData?.resumoPeriodo?.clientesComTitulos ?? 0;
 
   // Métricas adicionais (usando dados reais quando disponíveis)
   // Ticket médio = valor total recebido / clientes ativos
@@ -955,8 +958,8 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Clientes ativos</span>
-                  <strong className="dashboard-hero-value">{formatNumber(clientesPeriodo)}</strong>
-                  <small className="dashboard-hero-label d-block">Clientes no período</small>
+                  <strong className="dashboard-hero-value">{formatNumber(clientesAtivosPeriodo)}</strong>
+                  <small className="dashboard-hero-label d-block">Clientes no período: {formatNumber(clientesComTitulosPeriodo)}</small>
                 </div>
               </div>
             </div>
