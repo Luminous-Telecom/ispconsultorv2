@@ -83,10 +83,11 @@ export class DashboardController {
       });
       
       // Buscar todas as estatísticas e dados em paralelo
-      const [statsData, titulosRecentes, titulosVencidos, clientes, planos, titulos] = await Promise.all([
+      const [statsData, titulosRecentes, titulosVencidos, clientesPeriodo, planos, titulosPeriodo, clientesTodos, titulosTodos, contratosTodos] = await Promise.all([
         DashboardController.getStatsData(inicioPeriodo, fimPeriodo),
         DashboardController.getTitulosRecentesData(5),
         DashboardController.getTitulosVencidosData(10),
+        // Clientes do período (para outras análises)
         Cliente.findAll({ 
           attributes: ['id', 'ativo', 'created_at'],
           where: {
@@ -95,12 +96,12 @@ export class DashboardController {
             }
           }
         }),
-        // Buscar todos os planos ativos (como na listagem de planos)
+        // Buscar todos os planos ativos (para gráficos de status e distribuição)
         Plano.findAll({ 
           attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
           where: { status: 'ativo' }
         }),
-        // Filtrar títulos com vencimento no período
+        // Títulos do período (para análises do período)
         Titulo.findAll({ 
           attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
           where: {
@@ -108,6 +109,18 @@ export class DashboardController {
               [Op.between]: [inicioPeriodo, fimPeriodo]
             }
           }
+        }),
+        // TODOS os clientes (para gráfico de status de clientes)
+        Cliente.findAll({ 
+          attributes: ['id', 'ativo', 'created_at']
+        }),
+        // TODOS os títulos (para gráfico de status de pagamento)
+        Titulo.findAll({ 
+          attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at']
+        }),
+        // TODOS os contratos (para gráfico de status de contratos)
+        Contrato.findAll({ 
+          attributes: ['id', 'status', 'plano_id', 'cliente_id']
         })
       ]);
 
@@ -123,11 +136,14 @@ export class DashboardController {
         stats: statsData,
         titulosRecentes,
         titulosVencidos,
-        clientes: clientes.map(c => c.toJSON()),
+        clientes: clientesPeriodo.map(c => c.toJSON()), // Clientes do período
+        clientesTodos: clientesTodos.map(c => c.toJSON()), // TODOS os clientes para gráficos
         planos: planos.map(p => p.toJSON()),
-        contratos: contratos.map(c => c.toJSON()),
+        contratos: contratos.map(c => c.toJSON()), // Contratos do período
+        contratosTodos: contratosTodos.map(c => c.toJSON()), // TODOS os contratos para gráficos
         contratosAtivosTodos: contratosAtivosTodos.map(c => c.toJSON()),
-        titulos: titulos.map(t => t.toJSON()),
+        titulos: titulosPeriodo.map(t => t.toJSON()), // Títulos do período
+        titulosTodos: titulosTodos.map(t => t.toJSON()), // TODOS os títulos para gráficos
         receitaUltimosMeses,
         clientesPorStatus: {
           labels: ['Ativos', 'Inativos'],

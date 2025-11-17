@@ -600,25 +600,28 @@ const Dashboard: React.FC = () => {
 
   // Processar dados vindos do backend
   const clientes = dashboardData?.clientes || [];
+  const clientesTodos = dashboardData?.clientesTodos || [];
   const planos = dashboardData?.planos || [];
   const contratos = dashboardData?.contratos || [];
+  const contratosTodos = dashboardData?.contratosTodos || [];
   const titulos = dashboardData?.titulos || [];
+  const titulosTodos = dashboardData?.titulosTodos || [];
   const stats = dashboardData?.stats;
 
-  // Estatísticas de clientes
-  const totalClientes = stats?.totalClientes || clientes.length;
-  const clientesAtivos = stats?.clientesAtivos || clientes.filter(c => c.ativo).length;
+  // Estatísticas de clientes (TODOS os clientes para gráficos)
+  const totalClientes = clientesTodos.length;
+  const clientesAtivos = clientesTodos.filter(c => c.ativo).length;
   const clientesInativos = totalClientes - clientesAtivos;
 
-  // Estatísticas de planos
+  // Estatísticas de planos (TODOS os planos para gráficos)
   const totalPlanos = planos.length;
-  const planosAtivos = stats?.planosAtivos || planos.filter(p => p.status === 'ativo').length;
+  const planosAtivos = planos.filter(p => p.status === 'ativo').length;
   const planosInativos = totalPlanos - planosAtivos;
 
-  // Estatísticas de contratos
-  const contratosAtivos = contratos.filter(c => c.status === 'ativo').length;
-  const contratosInativos = contratos.filter(c => c.status === 'inativo').length;
-  const contratosSuspensos = contratos.filter(c => c.status === 'suspenso').length;
+  // Estatísticas de contratos (TODOS os contratos para gráficos)
+  const contratosAtivos = contratosTodos.filter(c => c.status === 'ativo').length;
+  const contratosInativos = contratosTodos.filter(c => c.status === 'inativo').length;
+  const contratosSuspensos = contratosTodos.filter(c => c.status === 'suspenso').length;
 
   // Valores do período selecionado (sempre usar valores do período, nunca globais)
   const receitaPrevistaPeriodo = dashboardData?.resumoPeriodo?.totalPrevisto ?? 0;
@@ -629,11 +632,15 @@ const Dashboard: React.FC = () => {
   // Clientes com títulos no período (clientes únicos que têm títulos que vencem no período)
   const clientesComTitulosPeriodo = dashboardData?.resumoPeriodo?.clientesComTitulos ?? 0;
 
-  // Métricas adicionais (usando dados do período selecionado)
+  // Métricas adicionais
   // Ticket médio = soma dos valores dos planos com clientes / quantidade de clientes ativos com planos
   // Calculado no backend: soma de todos os valores dos contratos ativos / clientes únicos com contratos ativos
   const ticketMedio = dashboardData?.resumoPeriodo?.ticketMedio ?? 0;
-  const taxaPagamento = receitaPrevistaPeriodo > 0 ? (receitaPagaPeriodo / receitaPrevistaPeriodo) * 100 : 0;
+  
+  // Taxa de pagamento (TODOS os títulos, não apenas do período)
+  const totalTitulosTodos = titulosTodos.length;
+  const titulosPagosTodos = titulosTodos.filter(t => t.status === 'pago' || t.status === 'pago_atraso' || t.status === 'parcial').length;
+  const taxaPagamento = totalTitulosTodos > 0 ? (titulosPagosTodos / totalTitulosTodos) * 100 : 0;
 
   const agora = new Date();
   const lastUpdatedDate = agora.toLocaleDateString('pt-BR', {
@@ -705,12 +712,12 @@ const Dashboard: React.FC = () => {
     return meses;
   };
 
-  // Status de pagamento dos títulos
+  // Status de pagamento dos títulos (TODOS os títulos)
   const getStatusPagamento = () => {
-    const titulosPagos = titulos.filter(t => t.status === 'pago').length;
-    const titulosPendentes = titulos.filter(t => t.status === 'pendente').length;
-    const titulosVencidosCount = titulos.filter(t => t.status === 'vencido').length;
-    const titulosCancelados = titulos.filter(t => t.status === 'cancelado').length;
+    const titulosPagos = titulosTodos.filter(t => t.status === 'pago' || t.status === 'pago_atraso').length;
+    const titulosPendentes = titulosTodos.filter(t => t.status === 'pendente').length;
+    const titulosVencidosCount = titulosTodos.filter(t => t.status === 'vencido').length;
+    const titulosCancelados = titulosTodos.filter(t => t.status === 'cancelado').length;
     
     return [
       { label: 'Pagos', value: titulosPagos, color: '#28a745' },

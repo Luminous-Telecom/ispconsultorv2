@@ -25,11 +25,14 @@ export interface DashboardData {
   stats: DashboardStats;
   titulosRecentes: Titulo[];
   titulosVencidos: Titulo[];
-  clientes: Cliente[];
+  clientes: Cliente[]; // Clientes do período
+  clientesTodos?: Cliente[]; // TODOS os clientes para gráficos
   planos: Plano[];
-  contratos: Contrato[];
+  contratos: Contrato[]; // Contratos do período
+  contratosTodos?: Contrato[]; // TODOS os contratos para gráficos
   contratosAtivosTodos?: Contrato[]; // Todos os contratos ativos para gráfico "Clientes por Plano"
-  titulos: Titulo[];
+  titulos: Titulo[]; // Títulos do período
+  titulosTodos?: Titulo[]; // TODOS os títulos para gráficos
   receitaUltimosMeses: DashboardChart;
   clientesPorStatus: DashboardChart;
   aReceberPeriodo: DashboardChart;
