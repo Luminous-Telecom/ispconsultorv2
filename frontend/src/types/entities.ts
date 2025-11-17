@@ -66,6 +66,8 @@ export interface Plano {
   observacoes?: string;
   created_at: string;
   updated_at?: string;
+  quantidade_clientes?: number; // Quantidade de clientes associados ao plano
+  clientes?: Cliente[]; // Lista de clientes associados (quando incluído no backend)
 }
 
 // ============================================

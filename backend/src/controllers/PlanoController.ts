@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { Plano } from '../models/Plano';
+import { Contrato } from '../models/Contrato';
 import { Op, WhereOptions, Order } from 'sequelize';
+import { sequelize } from '../config/database';
 
 export class PlanoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -70,7 +72,10 @@ export class PlanoController {
           { 
             association: 'clientes', 
             attributes: ['id', 'razao_social', 'nome_fantasia'],
-            through: { attributes: ['desconto_percentual', 'desconto_valor', 'valor_final', 'status'] }
+            through: { 
+              attributes: ['desconto_percentual', 'desconto_valor', 'valor_final', 'status']
+            },
+            required: false // Incluir planos mesmo sem clientes
           }
         ],
         order,
@@ -79,7 +84,27 @@ export class PlanoController {
         raw: false
       });
 
-      // Garantir que servicos_inclusos seja um array
+      // Garantir que servicos_inclusos seja um array e adicionar quantidade de clientes
+      // Buscar quantidade de contratos ativos para cada plano
+      const planoIds = planos.map(p => p.id);
+      const contratosAtivosPorPlano = await Contrato.findAll({
+        attributes: [
+          'plano_id',
+          [sequelize.fn('COUNT', sequelize.col('id')), 'total']
+        ],
+        where: {
+          plano_id: { [Op.in]: planoIds },
+          status: 'ativo'
+        },
+        group: ['plano_id'],
+        raw: true
+      });
+
+      const quantidadeClientesMap = new Map<number, number>();
+      contratosAtivosPorPlano.forEach((item: any) => {
+        quantidadeClientesMap.set(item.plano_id, parseInt(item.total as string, 10));
+      });
+
       const planosProcessados = planos.map(plano => {
         const planoData = plano.toJSON();
         if (typeof planoData.servicos_inclusos === 'string') {
@@ -89,6 +114,8 @@ export class PlanoController {
             planoData.servicos_inclusos = [];
           }
         }
+        // Adicionar quantidade de clientes associados ao plano (apenas contratos ativos)
+        (planoData as any).quantidade_clientes = quantidadeClientesMap.get(plano.id) || 0;
         return planoData;
       });
 

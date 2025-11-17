@@ -92,6 +92,16 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         )
       },
       {
+        key: 'quantidade_clientes',
+        label: 'Clientes',
+        sortable: true,
+        render: (item: Plano) => (
+          <span className="badge bg-primary">
+            {item.quantidade_clientes ?? (item.clientes ? item.clientes.length : 0)}
+          </span>
+        )
+      },
+      {
         key: 'periodicidade',
         label: 'Periodicidade',
         sortable: true,
