@@ -250,16 +250,28 @@ export class EfiService implements IBancoService {
             ? String(nossoNumeroRaw)
             : null;
 
+        // Importar BarcodeService para conversão correta
+        const { BarcodeService } = await import('../BarcodeService');
+        
         let codigoBarrasFinal: string | null = null;
         if (barcode && typeof barcode === 'string') {
           const barcodeLimpo = barcode.replace(/\D/g, '');
           if (barcodeLimpo.length === 47) {
-            codigoBarrasFinal = barcodeLimpo.substring(0, 44);
+            // Converter linha digitável (47 dígitos) para código de barras (44 dígitos)
+            codigoBarrasFinal = BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcodeLimpo);
+          } else if (barcodeLimpo.length === 44) {
+            // Já é código de barras
+            codigoBarrasFinal = barcodeLimpo;
           } else {
-            codigoBarrasFinal = barcode;
+            codigoBarrasFinal = barcodeLimpo || null;
           }
         } else if (typeof barcode === 'string') {
-          codigoBarrasFinal = barcode;
+          const barcodeLimpo = barcode.replace(/\D/g, '');
+          if (barcodeLimpo.length === 47) {
+            codigoBarrasFinal = BarcodeService.converterLinhaDigitavelParaCodigoBarras(barcodeLimpo);
+          } else {
+            codigoBarrasFinal = barcodeLimpo || null;
+          }
         }
 
         await titulo.update({

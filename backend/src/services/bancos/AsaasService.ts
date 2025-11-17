@@ -220,6 +220,9 @@ export class AsaasService implements IBancoService {
           ? BarcodeService.formatarLinhaDigitavel(linhaDigitavelRaw)
           : null;
 
+        // Importar BarcodeService para conversão correta
+        const { BarcodeService } = await import('../BarcodeService');
+        
         const codigoBarrasFinal = (() => {
           if (!barcode) return null;
           const apenasDigitos = barcode.replace(/\D/g, '');
@@ -227,10 +230,8 @@ export class AsaasService implements IBancoService {
             return apenasDigitos;
           }
           if (apenasDigitos.length === 47) {
-            return apenasDigitos.substring(0, 4) +
-              apenasDigitos.substring(32, 33) +
-              apenasDigitos.substring(33) +
-              apenasDigitos.substring(4, 32);
+            // Converter linha digitável (47 dígitos) para código de barras (44 dígitos)
+            return BarcodeService.converterLinhaDigitavelParaCodigoBarras(apenasDigitos);
           }
           return apenasDigitos || null;
         })();

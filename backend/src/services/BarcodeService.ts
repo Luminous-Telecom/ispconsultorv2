@@ -190,5 +190,72 @@ export class BarcodeService {
         const resto = soma % 10;
         return resto === 0 ? 0 : 10 - resto;
     }
+
+    /**
+     * Converte linha digitável (47 dígitos) para código de barras (44 dígitos) conforme padrão FEBRABAN.
+     * 
+     * Estrutura da linha digitável (47 dígitos):
+     * AAAAA.BBBBB CCCCC.DDDDDD EEEEE.FFFFFF G HHHHHHHHHHHHH
+     * 
+     * Estrutura do código de barras (44 dígitos):
+     * AAAA G HHHHHHHHHHHHH BBBBB CCCCC DDDDDD EEEEE FFFFFF
+     * 
+     * Onde:
+     * - AAAAA = código do banco (5 dígitos na linha digitável, 4 no código de barras)
+     * - BBBBB = campo livre 1 (5 dígitos)
+     * - CCCCC = campo livre 2 (5 dígitos)
+     * - DDDDDD = campo livre 3 (6 dígitos)
+     * - EEEEE = campo livre 4 (5 dígitos)
+     * - FFFFFF = campo livre 5 (6 dígitos)
+     * - G = DV geral (1 dígito)
+     * - HHHHHHHHHHHHH = valor e data de vencimento (14 dígitos)
+     * 
+     * @param linhaDigitavel A linha digitável com 47 dígitos (com ou sem formatação)
+     * @returns O código de barras com 44 dígitos ou null se inválido
+     */
+    public static converterLinhaDigitavelParaCodigoBarras(linhaDigitavel: string | null | undefined): string | null {
+        if (!linhaDigitavel) {
+            return null;
+        }
+
+        const digitos = linhaDigitavel.replace(/\D/g, '');
+        
+        if (digitos.length !== 47) {
+            // Se não tem 47 dígitos, pode ser que já seja código de barras (44 dígitos)
+            if (digitos.length === 44) {
+                return digitos;
+            }
+            return null;
+        }
+
+        // Converter linha digitável (47 dígitos) para código de barras (44 dígitos)
+        // Linha digitável: AAAAA.BBBBB CCCCC.DDDDDD EEEEE.FFFFFF G HHHHHHHHHHHHH
+        // Código de barras: AAAA G HHHHHHHHHHHHH BBBBB CCCCC DDDDDD EEEEE FFFFFF
+        
+        const codigoBanco = digitos.substring(0, 4); // 4 primeiros dígitos (código do banco)
+        const campoLivre1 = digitos.substring(4, 9); // Posições 4-8 (5 dígitos)
+        const campoLivre2 = digitos.substring(10, 15); // Posições 10-14 (5 dígitos)
+        const campoLivre3 = digitos.substring(15, 21); // Posições 15-20 (6 dígitos)
+        const campoLivre4 = digitos.substring(21, 26); // Posições 21-25 (5 dígitos)
+        const campoLivre5 = digitos.substring(26, 32); // Posições 26-31 (6 dígitos)
+        const dvGeral = digitos.substring(32, 33); // Posição 32 (DV geral)
+        const valorVencimento = digitos.substring(33, 47); // Posições 33-46 (14 dígitos)
+
+        // Montar código de barras: AAAA + G + HHHHHHHHHHHHH + BBBBB + CCCCC + DDDDDD + EEEEE + FFFFFF
+        const codigoBarras = codigoBanco + 
+                            dvGeral + 
+                            valorVencimento + 
+                            campoLivre1 + 
+                            campoLivre2 + 
+                            campoLivre3 + 
+                            campoLivre4 + 
+                            campoLivre5;
+
+        if (codigoBarras.length !== 44) {
+            return null;
+        }
+
+        return codigoBarras;
+    }
 }
 
