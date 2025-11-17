@@ -18,7 +18,7 @@ import { TermoContrato } from './TermoContrato';
 import { ModeloTermo } from './ModeloTermo';
 import { Usuario } from './Usuario';
 import { ContratoPlanoAdicional } from './ContratoPlanoAdicional';
-
+//
 // Importar associações específicas
 import './associations';
 

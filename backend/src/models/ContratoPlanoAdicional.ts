@@ -11,7 +11,7 @@ import {
 import { sequelize } from '../config/database';
 import { Contrato } from './Contrato';
 import { Plano } from './Plano';
-
+//
 export class ContratoPlanoAdicional extends Model<
   InferAttributes<ContratoPlanoAdicional>,
   InferCreationAttributes<ContratoPlanoAdicional>

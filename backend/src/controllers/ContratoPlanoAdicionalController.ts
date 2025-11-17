@@ -4,7 +4,7 @@ import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { Op } from 'sequelize';
 import * as Joi from 'joi';
-
+//
 export class ContratoPlanoAdicionalController {
   // Schema de validação para criação
   private static createSchema = Joi.object({
