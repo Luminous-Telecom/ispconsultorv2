@@ -39,21 +39,75 @@ export class DashboardController {
   // Obter dados completos do dashboard
   static async getDashboardData(req: Request, res: Response): Promise<void> {
     try {
-      // Buscar todas as estatísticas e dados em paralelo
-      const [statsData, titulosRecentes, titulosVencidos, clientes, planos, contratos, titulos] = await Promise.all([
-        DashboardController.getStatsData(),
-        DashboardController.getTitulosRecentesData(5),
-        DashboardController.getTitulosVencidosData(10),
-        Cliente.findAll({ attributes: ['id', 'ativo', 'created_at'] }),
-        Plano.findAll({ attributes: ['id', 'status', 'nome_plano', 'tipo_servico'] }),
-        Contrato.findAll({ attributes: ['id', 'status', 'plano_id', 'valor_final', 'data_inicio', 'data_fim', 'created_at'] }),
-        Titulo.findAll({ attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'] })
-      ]);
-
       const { startDate, endDate } = req.query;
 
       const parsedStart = DashboardController.parseStartDate(startDate as string | undefined);
       const parsedEnd = DashboardController.parseEndDate(endDate as string | undefined, parsedStart);
+
+      // Preparar filtros de data para o período selecionado
+      const inicioPeriodo = new Date(parsedStart);
+      inicioPeriodo.setHours(0, 0, 0, 0);
+      const fimPeriodo = new Date(parsedEnd);
+      fimPeriodo.setHours(23, 59, 59, 999);
+
+      // Buscar todas as estatísticas e dados em paralelo, respeitando o período selecionado
+      const [statsData, titulosRecentes, titulosVencidos, clientes, planos, contratos, titulos] = await Promise.all([
+        DashboardController.getStatsData(inicioPeriodo, fimPeriodo),
+        DashboardController.getTitulosRecentesData(5),
+        DashboardController.getTitulosVencidosData(10),
+        // Filtrar clientes criados no período
+        Cliente.findAll({ 
+          attributes: ['id', 'ativo', 'created_at'],
+          where: {
+            created_at: {
+              [Op.between]: [inicioPeriodo, fimPeriodo]
+            }
+          }
+        }),
+        // Filtrar planos criados no período
+        Plano.findAll({ 
+          attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
+          where: {
+            created_at: {
+              [Op.between]: [inicioPeriodo, fimPeriodo]
+            }
+          }
+        }),
+        // Filtrar contratos que se sobrepõem ao período (data_inicio <= fimPeriodo E (data_fim >= inicioPeriodo OU data_fim IS NULL))
+        Contrato.findAll({ 
+          attributes: ['id', 'status', 'plano_id', 'valor_final', 'data_inicio', 'data_fim', 'created_at'],
+          where: {
+            [Op.and]: [
+              {
+                data_inicio: {
+                  [Op.lte]: fimPeriodo
+                }
+              },
+              {
+                [Op.or]: [
+                  {
+                    data_fim: {
+                      [Op.gte]: inicioPeriodo
+                    }
+                  },
+                  {
+                    data_fim: null
+                  }
+                ]
+              }
+            ]
+          }
+        }),
+        // Filtrar títulos com vencimento no período
+        Titulo.findAll({ 
+          attributes: ['id', 'valor', 'status', 'data_vencimento', 'created_at'],
+          where: {
+            data_vencimento: {
+              [Op.between]: [inicioPeriodo, fimPeriodo]
+            }
+          }
+        })
+      ]);
 
       const [aReceberPeriodo, recebidosPeriodo, resumoPeriodo] = await Promise.all([
         DashboardController.getReceberPorPeriodoData(parsedStart, parsedEnd),
@@ -100,7 +154,33 @@ export class DashboardController {
   }
 
   // Método auxiliar para obter estatísticas
-  private static async getStatsData() {
+  private static async getStatsData(startDate?: Date, endDate?: Date) {
+    // Preparar filtros de data se fornecidos
+    const inicioPeriodo = startDate ? new Date(startDate) : undefined;
+    const fimPeriodo = endDate ? new Date(endDate) : undefined;
+    
+    if (inicioPeriodo) inicioPeriodo.setHours(0, 0, 0, 0);
+    if (fimPeriodo) fimPeriodo.setHours(23, 59, 59, 999);
+
+    // Construir condições de filtro
+    const clienteWhere = inicioPeriodo && fimPeriodo ? {
+      created_at: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      }
+    } : {};
+
+    const planoWhere = inicioPeriodo && fimPeriodo ? {
+      created_at: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      }
+    } : {};
+
+    const tituloWhere = inicioPeriodo && fimPeriodo ? {
+      data_vencimento: {
+        [Op.between]: [inicioPeriodo, fimPeriodo]
+      }
+    } : {};
+
     const [
       totalClientes,
       clientesAtivos,
@@ -113,20 +193,22 @@ export class DashboardController {
       _titulosPagos,
       _carnesPendentes
     ] = await Promise.all([
-      Cliente.count(),
-      Cliente.count({ where: { ativo: true } }),
-      Plano.count(),
-      Plano.count({ where: { status: 'ativo' } }),
+      Cliente.count({ where: clienteWhere }),
+      Cliente.count({ where: { ...clienteWhere, ativo: true } }),
+      Plano.count({ where: planoWhere }),
+      Plano.count({ where: { ...planoWhere, status: 'ativo' } }),
       Banco.count(),
       Banco.count({ where: { ativo: true } }),
-      Titulo.count(),
-      Titulo.count({ where: { status: 'vencido' } }),
-      Titulo.count({ where: { status: 'pago' } }),
-      Titulo.count({ where: { status: 'pendente' } })
+      Titulo.count({ where: tituloWhere }),
+      Titulo.count({ where: { ...tituloWhere, status: 'vencido' } }),
+      Titulo.count({ where: { ...tituloWhere, status: 'pago' } }),
+      Titulo.count({ where: { ...tituloWhere, status: 'pendente' } })
     ]);
 
-    // Calcular valores monetários
-    const titulos = await Titulo.findAll();
+    // Calcular valores monetários - filtrar por período se fornecido
+    const titulos = await Titulo.findAll({
+      where: tituloWhere
+    });
 
     let _valorTotalTitulos = 0;
     let valorTotalPago = 0;
