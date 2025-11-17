@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import rateLimit from 'express-rate-limit';
 import path from 'path';
 
 // Importar configurações
@@ -18,6 +17,7 @@ import {
   imageProtectionMiddleware, 
   configProtectionMiddleware 
 } from './middleware/copyProtection';
+import { ddosProtectionMiddleware } from './middleware/ddosProtectionMiddleware';
 
 // Importar middleware do frontend
 import { frontendMiddleware } from './middleware/frontendMiddleware';
@@ -149,39 +149,31 @@ app.use(cors({
 // Servir arquivos estáticos de uploads
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
-// Middleware de rate limiting
-// DESABILITADO POR PADRÃO para evitar bloqueios durante uso normal do sistema
-// Para habilitar, defina ENABLE_RATE_LIMIT=true nas variáveis de ambiente
-// O rate limiting pode causar problemas quando o sistema faz muitas requisições simultâneas
-const shouldEnableRateLimit = process.env.ENABLE_RATE_LIMIT === 'true';
-
-if (shouldEnableRateLimit) {
-  const limiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1 minuto
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100000'), // 100000 requisições por minuto (extremamente alto)
-    message: {
-      error: 'Muitas requisições deste IP, tente novamente em alguns minutos.'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    // Não aplicar rate limiting em rotas de webhook, health check e rotas públicas
-    skip: (req) => {
-      return req.path.startsWith('/webhook/') || 
-             req.path === '/health' || 
-             req.path === '/config.js' ||
-             req.path.startsWith('/api/dados-empresa/public');
-    }
-  });
-  
-  app.use('/api/', limiter);
-  logger.info('Rate limiting habilitado (configurado via ENABLE_RATE_LIMIT=true)');
-} else {
-  logger.info('Rate limiting desabilitado por padrão para evitar bloqueios durante uso normal');
-}
-
 // Middleware de parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Middleware de proteção DDoS (Layer 7)
+// Configuração via variáveis de ambiente ou valores padrão
+const ddosMaxProcessingTime = parseInt(process.env.DDOS_MAX_PROCESSING_TIME || '15000'); // 15 segundos
+const ddosMaxConcurrentRequests = parseInt(process.env.DDOS_MAX_CONCURRENT_REQUESTS || '100'); // 100 requisições concorrentes
+
+app.use(ddosProtectionMiddleware({
+  maxProcessingTime: ddosMaxProcessingTime,
+  maxConcurrentRequests: ddosMaxConcurrentRequests,
+  skipRoutes: [
+    '/health',
+    '/api/health',
+    '/webhook',
+    '/config.js',
+    '/uploads'
+  ]
+}));
+
+logger.info('Middleware de proteção DDoS habilitado', {
+  maxProcessingTime: `${ddosMaxProcessingTime}ms`,
+  maxConcurrentRequests: ddosMaxConcurrentRequests
+});
 
 app.get('/config.js', (req, res) => {
   let apiUrl = process.env.REACT_APP_API_URL;
