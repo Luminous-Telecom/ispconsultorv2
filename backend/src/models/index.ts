@@ -17,6 +17,7 @@ import { DiasVencimento } from './DiasVencimento';
 import { TermoContrato } from './TermoContrato';
 import { ModeloTermo } from './ModeloTermo';
 import { Usuario } from './Usuario';
+import { ContratoPlanoAdicional } from './ContratoPlanoAdicional';
 
 // Importar associações específicas
 import './associations';
@@ -122,6 +123,27 @@ TermoContrato.belongsTo(Contrato, {
   as: 'contrato'
 });
 
+// ContratoPlanoAdicional
+Contrato.hasMany(ContratoPlanoAdicional, {
+  foreignKey: 'contrato_id',
+  as: 'planosAdicionais'
+});
+
+ContratoPlanoAdicional.belongsTo(Contrato, {
+  foreignKey: 'contrato_id',
+  as: 'contrato'
+});
+
+ContratoPlanoAdicional.belongsTo(Plano, {
+  foreignKey: 'plano_id',
+  as: 'plano'
+});
+
+Plano.hasMany(ContratoPlanoAdicional, {
+  foreignKey: 'plano_id',
+  as: 'contratosAdicionais'
+});
+
 TermoContrato.belongsTo(ModeloTermo, {
   foreignKey: 'modelo_termo_id',
   as: 'modeloTermo'
@@ -158,6 +180,7 @@ export {
   BancoConfiguracao,
   Titulo,
   Contrato,
+  ContratoPlanoAdicional,
   DadosEmpresa,
   ScheduledRoutine,
   RoutineExecutionLog,

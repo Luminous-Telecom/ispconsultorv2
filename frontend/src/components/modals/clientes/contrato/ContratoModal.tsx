@@ -25,8 +25,11 @@ import { Banco } from '../../../../types';
 import ContratoTab from './abas/ContratoTab';
 import TermosTab from './abas/TermosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
+import ServicosAdicionaisTab from './abas/ServicosAdicionaisTab';
 import { ContratoForm } from './types';
-import { TermoEditModal, SelecionarTermoModal } from './modals';
+import { TermoEditModal, SelecionarTermoModal, ServicoAdicionalModal } from './modals';
+import { useContratoPlanosAdicionais, useDeleteContratoPlanoAdicional } from '../../../../hooks/useContratoPlanosAdicionais';
+import { ContratoPlanoAdicional } from '../../../../services/contratoPlanoAdicionalService';
 import { ensureString } from '../../../../utils/stringUtils';
 import { BulkAction } from './types';
 
@@ -98,6 +101,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [selectedParcela, setSelectedParcela] = useState<Titulo | null>(null);
   const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
   const [selectedTermosItems, setSelectedTermosItems] = useState<TermoContrato[]>([]);
+  const [selectedServicosAdicionaisItems, setSelectedServicosAdicionaisItems] = useState<ContratoPlanoAdicional[]>([]);
   
   // Estados para modal de impressão
   const [showPreview, setShowPreview] = useState(false);
@@ -108,6 +112,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [showPlanoModal, setShowPlanoModal] = useState(false);
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [showModeloContratoModal, setShowModeloContratoModal] = useState(false);
+  const [showServicoAdicionalModal, setShowServicoAdicionalModal] = useState(false);
+  const [editingServicoAdicional, setEditingServicoAdicional] = useState<ContratoPlanoAdicional | null>(null);
   
   
   const [page, setPage] = useState(1);
@@ -142,6 +148,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Hooks para termos (apenas no modo edição)
   const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(isEditMode ? (internalContratoId || 0) : 0);
   const deleteTermoMutation = useDeleteTermoContrato();
+
+  // Hooks para serviços adicionais (apenas no modo edição)
+  const { data: servicosAdicionaisData, isLoading: isLoadingServicosAdicionais, refetch: refetchServicosAdicionais } = useContratoPlanosAdicionais(isEditMode ? (internalContratoId || 0) : 0);
+  const deleteServicoAdicionalMutation = useDeleteContratoPlanoAdicional();
 
   // Garantir que termosData seja sempre um array
   const termosArray = Array.isArray(termosData) ? termosData : [];
@@ -568,6 +578,81 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   ] : [];
 
+  // Bulk actions para serviços adicionais (apenas no modo edição)
+  const servicosAdicionaisBulkActions: BulkAction<ContratoPlanoAdicional>[] = isEditMode ? [
+    {
+      label: 'Novo',
+      action: () => {
+        setEditingServicoAdicional(null);
+        setShowServicoAdicionalModal(true);
+      }
+    },
+    {
+      label: 'Editar',
+      action: (selectedItems: ContratoPlanoAdicional[]) => {
+        if (selectedItems.length > 0) {
+          const servico = selectedItems[0];
+          setEditingServicoAdicional(servico);
+          setShowServicoAdicionalModal(true);
+        }
+      },
+      disabled: (selectedItems: ContratoPlanoAdicional[]) => selectedItems.length === 0
+    },
+    {
+      label: 'Deletar',
+      variant: 'danger',
+      action: async (selectedItems: ContratoPlanoAdicional[]) => {
+        if (selectedItems.length > 0) {
+          const confirmMessage = selectedItems.length === 1 
+            ? 'Tem certeza que deseja deletar este serviço adicional?'
+            : `Tem certeza que deseja deletar ${selectedItems.length} serviços adicionais?`;
+            
+          if (window.confirm(confirmMessage)) {
+            try {
+              let successCount = 0;
+              let errorCount = 0;
+              
+              for (const item of selectedItems) {
+                try {
+                  await deleteServicoAdicionalMutation.mutateAsync(item.id);
+                  successCount++;
+                } catch (err: unknown) {
+                  errorCount++;
+                  console.error('Erro ao deletar serviço adicional:', err);
+                  const errorMessage = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || 
+                    (err as { message?: string })?.message || 
+                    'Erro ao deletar serviço adicional';
+                  if (selectedItems.length === 1) {
+                    error(errorMessage);
+                  }
+                }
+              }
+              
+              if (successCount > 0) {
+                const message = successCount === 1 
+                  ? 'Serviço adicional deletado com sucesso!'
+                  : `${successCount} serviços adicionais deletados com sucesso!`;
+                success(message);
+              }
+              
+              if (errorCount > 0 && selectedItems.length > 1) {
+                error(`${errorCount} serviço(s) adicional(is) não puderam ser deletados`);
+              }
+              
+              queryClient.invalidateQueries({ queryKey: ['contrato-planos-adicionais', internalContratoId] });
+            } catch (err: unknown) {
+              const errorMessage = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || 
+                (err as { message?: string })?.message || 
+                'Erro ao deletar serviço(s) adicional(is)';
+              error(errorMessage);
+            }
+          }
+        }
+      },
+      disabled: (selectedItems: ContratoPlanoAdicional[]) => selectedItems.length === 0
+    }
+  ] : [];
+
   // Colunas para a tabela de títulos
   const columns = [
     { 
@@ -658,6 +743,87 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   ];
 
+  // Colunas para a tabela de serviços adicionais
+  const servicosAdicionaisColumns = [
+    { 
+      key: 'id', 
+      label: 'ID', 
+      sortable: true,
+      searchable: true,
+      render: (item: ContratoPlanoAdicional) => item.id 
+    },
+    {
+      key: 'plano',
+      label: 'Plano',
+      sortable: true,
+      searchable: true,
+      render: (item: ContratoPlanoAdicional) => item.plano?.nome_plano || 'N/A'
+    },
+    {
+      key: 'valor_original',
+      label: 'Valor Original',
+      sortable: true,
+      searchable: false,
+      render: (item: ContratoPlanoAdicional) => {
+        const valor = parseFloat(item.plano?.valor_mensal?.toString() || '0') || 0;
+        return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+      }
+    },
+    {
+      key: 'desconto',
+      label: 'Desconto',
+      sortable: false,
+      searchable: false,
+      render: (item: ContratoPlanoAdicional) => {
+        if (item.desconto_valor && parseFloat(item.desconto_valor.toString()) > 0) {
+          const valor = parseFloat(item.desconto_valor.toString()) || 0;
+          return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+        }
+        if (item.desconto_percentual && parseFloat(item.desconto_percentual.toString()) > 0) {
+          const percentual = parseFloat(item.desconto_percentual.toString()) || 0;
+          return `${percentual.toFixed(2).replace('.', ',')}%`;
+        }
+        return '-';
+      }
+    },
+    {
+      key: 'valor_final',
+      label: 'Valor Final',
+      sortable: true,
+      searchable: false,
+      render: (item: ContratoPlanoAdicional) => {
+        const valor = parseFloat(item.valor_final?.toString() || '0') || 0;
+        return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+      }
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      searchable: true,
+      render: (item: ContratoPlanoAdicional) => {
+        const statusColors: Record<string, string> = {
+          ativo: 'success',
+          inativo: 'secondary',
+          suspenso: 'warning'
+        };
+        const color = statusColors[item.status] || 'secondary';
+        return (
+          <span className={`badge bg-${color}`}>
+            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'observacoes',
+      label: 'Observações',
+      sortable: false,
+      searchable: true,
+      render: (item: ContratoPlanoAdicional) => item.observacoes || '-'
+    }
+  ];
+
   // Colunas para a tabela de termos
   const termosColumns = [
     { key: 'id', label: 'ID', sortable: true },
@@ -706,6 +872,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Apenas passar os dados filtrados, o Table fará a ordenação inicial e permitirá mudanças pelo usuário
   const sortedData = filteredData;
   const sortedTermosData = [...filteredTermosData].sort((a: TermoContrato, b: TermoContrato) => (b.id || 0) - (a.id || 0));
+  
+  // Dados de serviços adicionais
+  const servicosAdicionaisArray = servicosAdicionaisData?.data || [];
+  const sortedServicosAdicionaisData = [...servicosAdicionaisArray].sort((a: ContratoPlanoAdicional, b: ContratoPlanoAdicional) => (b.id || 0) - (a.id || 0));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -855,6 +1025,21 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 Financeiro
               </button>
             </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'servicos-adicionais' ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  if (isEditMode) {
+                    setActiveTab('servicos-adicionais');
+                  }
+                }}
+                disabled={!isEditMode}
+                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
+              >
+                Serviços Adicionais
+              </button>
+            </li>
           </ul>
 
           {/* Conteúdo das Abas */}
@@ -863,7 +1048,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             style={{ 
               flex: 1, 
               overflow: 'hidden', 
-              padding: (activeTab === 'termos' || activeTab === 'financeiro') ? '0' : '16px',
+              padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'servicos-adicionais') ? '0' : '16px',
               minHeight: 0
             }}
           >
@@ -938,6 +1123,31 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
                   <div className="text-center">
                     <p className="text-muted">Crie o contrato primeiro para gerenciar títulos financeiros.</p>
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* Aba Serviços Adicionais */}
+            {activeTab === 'servicos-adicionais' && (
+              isEditMode ? (
+                <ServicosAdicionaisTab
+                  isLoading={isLoadingServicosAdicionais}
+                  bulkActions={servicosAdicionaisBulkActions as unknown as BulkAction[]}
+                  limit={limit}
+                  setLimit={setLimit}
+                  page={page}
+                  setPage={setPage}
+                  sortedData={sortedServicosAdicionaisData}
+                  selectedItems={selectedServicosAdicionaisItems}
+                  setSelectedItems={setSelectedServicosAdicionaisItems}
+                  columns={servicosAdicionaisColumns}
+                  onRefresh={refetchServicosAdicionais}
+                />
+              ) : (
+                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                  <div className="text-center">
+                    <p className="text-muted">Crie o contrato primeiro para gerenciar serviços adicionais.</p>
                   </div>
                 </div>
               )
@@ -1024,6 +1234,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 termoCadastradoId: termo.id
               });
               setShowSelecionarTermoModal(false);
+            }}
+          />
+
+          <ServicoAdicionalModal
+            show={showServicoAdicionalModal}
+            onClose={() => {
+              setShowServicoAdicionalModal(false);
+              setEditingServicoAdicional(null);
+            }}
+            editingServico={editingServicoAdicional}
+            contratoId={internalContratoId!}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['contrato-planos-adicionais', internalContratoId] });
+              refetchServicosAdicionais();
             }}
           />
 

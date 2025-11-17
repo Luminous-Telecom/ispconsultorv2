@@ -1,6 +1,7 @@
 import * as cron from 'node-cron';
 import { ScheduledRoutine, RoutineExecutionLog } from '../models';
 import { DiasVencimento } from '../models/DiasVencimento';
+import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
 import { logger } from '../utils/logger';
 import { BarcodeService } from './BarcodeService';
 import type { JsonValue } from '../types';
@@ -464,6 +465,49 @@ export class SchedulerService {
                     valorTitulo = valorTitulo - descontoValor;
                   }
                 }
+
+                // Somar valores dos serviços adicionais ativos do contrato
+                const { Plano: PlanoModel } = await import('../models/Plano');
+                const servicosAdicionais = await ContratoPlanoAdicional.findAll({
+                  where: {
+                    contrato_id: contrato.id,
+                    status: 'ativo'
+                  },
+                  include: [
+                    {
+                      model: PlanoModel,
+                      as: 'plano',
+                      attributes: ['id', 'nome_plano', 'valor_mensal']
+                    }
+                  ]
+                });
+
+                let valorServicosAdicionais = 0;
+                for (const servico of servicosAdicionais) {
+                  // Usar valor_final se existir, senão calcular
+                  let valorServico = Number(servico.valor_final) || 0;
+                  
+                  // Acessar plano através do get() para obter os dados incluídos
+                  const servicoPlain = servico.get({ plain: true }) as any;
+                  const planoAdicional = servicoPlain.plano;
+                  
+                  if (valorServico <= 0 && planoAdicional?.valor_mensal) {
+                    valorServico = Number(planoAdicional.valor_mensal);
+                    
+                    // Aplicar descontos do serviço adicional
+                    if (servico.desconto_valor && servico.desconto_valor > 0) {
+                      valorServico = valorServico - Number(servico.desconto_valor);
+                    } else if (servico.desconto_percentual && servico.desconto_percentual > 0) {
+                      const descontoValor = valorServico * (Number(servico.desconto_percentual) / 100);
+                      valorServico = valorServico - descontoValor;
+                    }
+                  }
+                  
+                  valorServicosAdicionais += Math.max(0, valorServico);
+                }
+
+                // Somar o valor do título principal com os serviços adicionais
+                valorTitulo = valorTitulo + valorServicosAdicionais;
 
                 // Garantir valor mínimo de 0.01
                 valorTitulo = Math.max(0.01, valorTitulo);
