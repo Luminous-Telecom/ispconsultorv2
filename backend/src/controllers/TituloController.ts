@@ -377,10 +377,12 @@ export class TituloController {
         success: true,
         data: rows,
         pagination: {
+          current_page: Number(page),
+          per_page: Number(limit),
           total: count,
-          page: Number(page),
-          limit: Number(limit),
-          totalPages: Math.ceil(count / Number(limit))
+          last_page: Math.ceil(count / Number(limit)),
+          from: offset + 1,
+          to: Math.min(offset + Number(limit), count)
         }
       });
     } catch (error: unknown) {

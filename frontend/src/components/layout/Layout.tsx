@@ -9,6 +9,7 @@ import { ClienteListModal } from '../modals/clientes';
 import { PlanoListModal } from '../modals/planos';
 import { BancoListModal } from '../modals/bancos';
 import ContratoListModal from '../modals/contratos/ContratoListModal';
+import FinanceiroModal from '../modals/financeiro/FinanceiroModal';
 import { DadosEmpresaModal } from '../modals/empresa/empresa';
 import UsuariosModal from '../modals/parametros/UsuariosModal';
 import RecursosSistemaModal from '../modals/parametros/RecursosSistemaModal';
@@ -73,6 +74,7 @@ const Layout: React.FC = () => {
     { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => openModal('planos') },
     { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => openModal('bancos') },
     { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: true, modalHandler: () => openModal('contratos') },
+    { path: '/financeiro', icon: 'bi-cash-coin', label: 'Financeiro', isModal: true, modalHandler: () => openModal('financeiro') },
     { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => openModal('dados-empresa') },
   ];
 
@@ -227,6 +229,13 @@ const Layout: React.FC = () => {
           show={true}
           onClose={closeModal}
           title="Contratos"
+        />
+      )}
+      
+      {activeModal === 'financeiro' && (
+        <FinanceiroModal
+          show={true}
+          onClose={closeModal}
         />
       )}
       

@@ -110,6 +110,16 @@ export interface Titulo {
   banco?: Banco;
 }
 
+export interface TituloFilters extends Record<string, string | number | boolean | null | undefined> {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'parcial' | 'pago_atraso';
+  cliente_id?: number;
+  data_vencimento_inicio?: string;
+  data_vencimento_fim?: string;
+}
+
 // ============================================
 // Contrato
 // ============================================
