@@ -630,11 +630,10 @@ const Dashboard: React.FC = () => {
   // Clientes com títulos no período
   const clientesComTitulosPeriodo = dashboardData?.resumoPeriodo?.clientesComTitulos ?? 0;
 
-  // Métricas adicionais (usando dados reais quando disponíveis)
-  // Ticket médio = valor total recebido / clientes ativos
-  const ticketMedio = stats?.ticketMedio ?? (clientesAtivos > 0 ? receitaPagaGlobal / clientesAtivos : 0);
+  // Métricas adicionais (usando dados do período selecionado)
+  // Ticket médio = valor total recebido no período / clientes ativos no período
+  const ticketMedio = clientesAtivosPeriodo > 0 ? receitaPagaPeriodo / clientesAtivosPeriodo : 0;
   const taxaPagamento = receitaPrevistaPeriodo > 0 ? (receitaPagaPeriodo / receitaPrevistaPeriodo) * 100 : 0;
-  const _receitaPorCliente = totalClientes > 0 ? receitaTotalGlobal / totalClientes : 0;
 
   const agora = new Date();
   const lastUpdatedDate = agora.toLocaleDateString('pt-BR', {
