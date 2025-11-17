@@ -75,6 +75,10 @@ export class BarcodeService {
      * @returns Uma string HTML contendo o SVG do código de barras ou uma mensagem de erro.
      */
     public static generateFebrabanBarcodeSvg(codigoBarras: string): string {
+        if (!codigoBarras || typeof codigoBarras !== 'string') {
+            return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Código de barras inválido - valor não fornecido</div>';
+        }
+
         const codigoLimpo = codigoBarras.replace(/\D/g, '');
 
         if (!codigoLimpo || codigoLimpo.length < 20) {
@@ -94,9 +98,18 @@ export class BarcodeService {
         }
 
         try {
-            // Usar JsBarcode com configurações otimizadas para bancos
+            // Criar um novo canvas para cada código de barras (evita cache/reutilização)
             const canvas = createCanvas(500, 100);
-            JsBarcode(canvas, codigoParaUsar, {
+            const ctx = canvas.getContext('2d');
+            
+            // Limpar o canvas antes de desenhar
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Usar JsBarcode com configurações otimizadas para bancos
+            // IMPORTANTE: Passar o código como string para garantir que cada código seja único
+            JsBarcode(canvas, String(codigoParaUsar), {
                 format: "CODE128", // CODE128 com configurações otimizadas
                 width: 3, // Largura das barras aumentada para melhor leitura
                 height: 80, // Altura aumentada para melhor leitura
@@ -111,11 +124,12 @@ export class BarcodeService {
             return `
                 <div class="barcode-container">
                     <div class="barcode-wrap">
-                        <img src="${dataUrl}" alt="Código de Barras" style="width: auto; height: 80px; max-width: 500px;" />
+                        <img src="${dataUrl}" alt="Código de Barras ${codigoParaUsar.substring(0, 10)}..." style="width: auto; height: 80px; max-width: 500px;" />
                     </div>
                 </div>
             `;
-        } catch {
+        } catch (error) {
+            console.error('Erro ao gerar código de barras:', error);
             return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Erro ao gerar código de barras</div>';
         }
     }
