@@ -737,9 +737,11 @@ const Dashboard: React.FC = () => {
   };
 
 
-  // Análise de clientes por plano
+  // Análise de clientes por plano (usar todos os contratos ativos, não apenas os do período)
   const getClientesPorPlano = () => {
-    const contratosAtivos = contratos.filter(c => c.status === 'ativo');
+    // Usar contratosAtivosTodos se disponível, senão usar contratos filtrados
+    const contratosParaContar = dashboardData?.contratosAtivosTodos || contratos;
+    const contratosAtivos = contratosParaContar.filter(c => c.status === 'ativo');
     
     // Contar clientes únicos por plano
     const contagem = contratosAtivos.reduce((acc, contrato) => {

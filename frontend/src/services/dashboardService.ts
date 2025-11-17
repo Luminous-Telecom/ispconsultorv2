@@ -28,6 +28,7 @@ export interface DashboardData {
   clientes: Cliente[];
   planos: Plano[];
   contratos: Contrato[];
+  contratosAtivosTodos?: Contrato[]; // Todos os contratos ativos para gráfico "Clientes por Plano"
   titulos: Titulo[];
   receitaUltimosMeses: DashboardChart;
   clientesPorStatus: DashboardChart;

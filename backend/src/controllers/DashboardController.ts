@@ -50,7 +50,7 @@ export class DashboardController {
       const fimPeriodo = new Date(parsedEnd);
       fimPeriodo.setHours(23, 59, 59, 999);
 
-      // Buscar contratos primeiro para obter os planos únicos
+      // Buscar contratos do período para análises do período
       const contratos = await Contrato.findAll({ 
         attributes: ['id', 'status', 'plano_id', 'cliente_id', 'valor_final', 'data_inicio', 'data_fim', 'created_at'],
         where: {
@@ -75,9 +75,12 @@ export class DashboardController {
           ]
         }
       });
-
-      // Obter planos únicos dos contratos
-      const planoIds = [...new Set(contratos.map(c => c.plano_id).filter(id => id !== null))] as number[];
+      
+      // Buscar todos os contratos ativos para o gráfico "Clientes por Plano" (como na listagem de planos)
+      const contratosAtivosTodos = await Contrato.findAll({
+        attributes: ['id', 'status', 'plano_id', 'cliente_id'],
+        where: { status: 'ativo' }
+      });
       
       // Buscar todas as estatísticas e dados em paralelo
       const [statsData, titulosRecentes, titulosVencidos, clientes, planos, titulos] = await Promise.all([
@@ -92,11 +95,10 @@ export class DashboardController {
             }
           }
         }),
+        // Buscar todos os planos ativos (como na listagem de planos)
         Plano.findAll({ 
           attributes: ['id', 'status', 'nome_plano', 'tipo_servico'],
-          where: planoIds.length > 0 
-            ? { id: { [Op.in]: planoIds } }
-            : { status: 'ativo' }
+          where: { status: 'ativo' }
         }),
         // Filtrar títulos com vencimento no período
         Titulo.findAll({ 
@@ -124,6 +126,7 @@ export class DashboardController {
         clientes: clientes.map(c => c.toJSON()),
         planos: planos.map(p => p.toJSON()),
         contratos: contratos.map(c => c.toJSON()),
+        contratosAtivosTodos: contratosAtivosTodos.map(c => c.toJSON()),
         titulos: titulos.map(t => t.toJSON()),
         receitaUltimosMeses,
         clientesPorStatus: {
