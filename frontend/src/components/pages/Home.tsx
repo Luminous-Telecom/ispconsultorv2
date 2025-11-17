@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DadosEmpresaService } from '../../services/dadosEmpresaService';
@@ -6,29 +6,51 @@ import { getBrandLogo } from '../../utils/brandLogos';
 import { useTheme } from '../../contexts/ThemeContext';
 import './Home.css';
 
+// Throttle function para otimizar scroll handler
+const throttle = <T extends (...args: any[]) => void>(func: T, limit: number): T => {
+  let inThrottle: boolean;
+  return ((...args: any[]) => {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  }) as T;
+};
+
 const Home: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   // Buscar dados públicos da empresa (incluindo logo) para o site público
+  // Usar suspense: false para não bloquear renderização inicial
   const { data: dadosEmpresa } = useQuery({
     queryKey: ['dados-empresa-public'],
     queryFn: () => DadosEmpresaService.getPublic(),
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
     retry: false, // Não tentar novamente se falhar
     throwOnError: false, // Não lançar erro para evitar redirecionamento
+    suspense: false, // Não bloquear renderização inicial
   });
 
-  useEffect(() => {
-    const handleScroll = () => {
+  // Throttled scroll handler para melhorar INP
+  const handleScroll = useCallback(
+    throttle(() => {
       setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    }, 100),
+    []
+  );
 
-  const companyName = dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom';
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  const companyName = useMemo(
+    () => dadosEmpresa?.nome_fantasia || dadosEmpresa?.razao_social || 'Luminous Telecom',
+    [dadosEmpresa]
+  );
 
   // Atualizar título da página com o nome da empresa
   useEffect(() => {
@@ -37,42 +59,37 @@ const Home: React.FC = () => {
     }
   }, [companyName]);
 
-  const scrollToSection = (id: string) => {
+  // Memoizar scrollToSection para melhorar INP
+  const scrollToSection = useCallback((id: string) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
     setIsMobileMenuOpen(false);
-  };
+  }, []);
 
-  // Função para formatar número do WhatsApp (remove caracteres especiais e adiciona código do país)
-  const formatWhatsAppNumber = (phone: string): string => {
-    // Remove tudo que não é número
+  // Memoizar funções de formatação para melhorar performance
+  const formatWhatsAppNumber = useCallback((phone: string): string => {
     const numbersOnly = phone.replace(/\D/g, '');
-    // Se não começar com 55 (código do Brasil), adiciona
     if (numbersOnly.length > 0 && !numbersOnly.startsWith('55')) {
-      // Se começar com 0, remove o 0 antes de adicionar o 55
       const cleaned = numbersOnly.startsWith('0') ? numbersOnly.substring(1) : numbersOnly;
       return `55${cleaned}`;
     }
     return numbersOnly;
-  };
+  }, []);
 
-  // Função para criar link do WhatsApp
-  const getWhatsAppLink = (phone: string): string => {
+  const getWhatsAppLink = useCallback((phone: string): string => {
     const formatted = formatWhatsAppNumber(phone);
     return `https://wa.me/${formatted}`;
-  };
+  }, [formatWhatsAppNumber]);
 
-  // Função para criar link de email
-  const getEmailLink = (email: string): string => {
+  const getEmailLink = useCallback((email: string): string => {
     return `mailto:${email}`;
-  };
+  }, []);
 
-  // Função para criar link de telefone
-  const getPhoneLink = (phone: string): string => {
+  const getPhoneLink = useCallback((phone: string): string => {
     return `tel:${phone}`;
-  };
+  }, []);
 
   return (
     <div className="home-page">
@@ -86,6 +103,10 @@ const Home: React.FC = () => {
                   src={dadosEmpresa.logo} 
                   alt={companyName}
                   className="brand-logo"
+                  loading="eager"
+                  fetchPriority="high"
+                  width="40"
+                  height="40"
                 />
               ) : (
                 <div className="brand-icon">
@@ -167,7 +188,7 @@ const Home: React.FC = () => {
               <h1 className="hero-title">
                 <span className="hero-title-gradient">{companyName}</span>
               </h1>
-              <h2 className="hero-subtitle">
+              <h2 className="h4 mb-0 hero-subtitle">
                 Consultoria e Assessoria Técnica em Telecomunicações
               </h2>
               <p className="hero-description">
@@ -193,6 +214,10 @@ const Home: React.FC = () => {
                       src={dadosEmpresa.logo} 
                       alt={companyName}
                       className="hero-logo"
+                      loading="eager"
+                      fetchPriority="high"
+                      width="200"
+                      height="200"
                     />
                   ) : (
                     <i className="bi bi-broadcast-tower"></i>
@@ -337,6 +362,9 @@ const Home: React.FC = () => {
                               src={logo} 
                               alt={brand} 
                               className={`tech-badge-logo ${isInvert ? 'tech-badge-logo-invert' : ''}`}
+                              loading="lazy"
+                              width="40"
+                              height="40"
                               onError={(e) => { e.currentTarget.style.display = 'none'; }} 
                             />
                           )}
@@ -474,6 +502,9 @@ const Home: React.FC = () => {
                     src={dadosEmpresa.logo} 
                     alt={companyName}
                     className="footer-logo"
+                    loading="lazy"
+                    width="40"
+                    height="40"
                   />
                 ) : (
                   <div className="footer-icon">
