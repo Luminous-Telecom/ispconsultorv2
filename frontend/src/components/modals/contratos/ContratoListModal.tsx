@@ -62,18 +62,33 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     }
   };
 
-  // Adicionar campos virtuais para busca funcionar com campos aninhados
+  // Adicionar campos virtuais para busca e ordenação funcionar com campos aninhados
   const dataWithVirtualFields = React.useMemo(() => {
     if (!contratos) return [];
     
-    return contratos.map((c: Contrato) => ({
-      ...c,
-      // Adicionar campos virtuais para busca funcionar com campos aninhados
-      cliente_razao_social: c.cliente?.razao_social || '',
-      plano_nome: c.plano?.nome_plano || '',
-      valor_plano_str: (c.plano?.valor_mensal || 0).toString(),
-      valor_final_str: (c.valor_final || 0).toString()
-    }));
+    return contratos.map((c: Contrato) => {
+      // Calcular desconto para ordenação
+      let descontoValor = 0;
+      if (c.desconto_valor && Number(c.desconto_valor) > 0) {
+        descontoValor = Number(c.desconto_valor);
+      } else if (c.desconto_percentual && Number(c.desconto_percentual) > 0 && c.plano?.valor_mensal) {
+        const valorPlano = Number(c.plano.valor_mensal);
+        descontoValor = valorPlano * (Number(c.desconto_percentual) / 100);
+      }
+
+      return {
+        ...c,
+        // Adicionar campos virtuais para busca funcionar com campos aninhados
+        cliente_razao_social: c.cliente?.razao_social || '',
+        plano_nome: c.plano?.nome_plano || '',
+        valor_plano_str: (c.plano?.valor_mensal || 0).toString(),
+        valor_final_str: (c.valor_final || 0).toString(),
+        // Campos numéricos para ordenação
+        valor_plano_num: c.plano?.valor_mensal ? Number(c.plano.valor_mensal) : 0,
+        desconto_num: descontoValor,
+        valor_final_num: c.valor_final ? Number(c.valor_final) : 0
+      };
+    });
   }, [contratos]);
 
   // Calcular valor total mensal de todos os contratos
@@ -113,7 +128,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     return `R$ ${value.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
   };
 
-  const columns: TableConfig<Contrato & { cliente_razao_social?: string; plano_nome?: string; valor_plano_str?: string; valor_final_str?: string }>['columns'] = [
+  const columns: TableConfig<Contrato & { cliente_razao_social?: string; plano_nome?: string; valor_plano_str?: string; valor_final_str?: string; valor_plano_num?: number; desconto_num?: number; valor_final_num?: number }>['columns'] = [
     {
       key: 'id',
       label: 'ID',
@@ -138,17 +153,17 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       render: (item: Contrato & { plano_nome?: string }) => item.plano?.nome_plano || item.plano_nome || '-'
     },
     {
-      key: 'valor_plano_str',
+      key: 'valor_plano_num',
       label: 'Valor Plano',
-      sortable: false,
+      sortable: true,
       searchable: true,
       render: (item: Contrato) => 
         item.plano?.valor_mensal ? `R$ ${Number(item.plano.valor_mensal).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
     },
     {
-      key: 'desconto',
+      key: 'desconto_num',
       label: 'Desconto',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Contrato) => {
         // Priorizar desconto em valor
@@ -165,9 +180,9 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       }
     },
     {
-      key: 'valor_final_str',
+      key: 'valor_final_num',
       label: 'Valor Final',
-      sortable: false,
+      sortable: true,
       searchable: true,
       render: (item: Contrato) => 
         item.valor_final ? `R$ ${Number(item.valor_final).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}` : '-'
