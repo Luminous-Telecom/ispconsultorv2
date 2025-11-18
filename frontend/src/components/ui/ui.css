@@ -190,7 +190,7 @@
   opacity: 1;
 }
 
-/* Campos de data (calendários) - cursor pointer e ícone branco */
+/* Campos de data (calendários) - cursor pointer */
 input[type="date"],
 input[type="datetime-local"],
 input[type="time"],
@@ -208,13 +208,15 @@ input[type="week"]:hover {
   cursor: pointer !important;
 }
 
+/* Ícone de calendário - Modo claro (ícone escuro) */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="month"]::-webkit-calendar-picker-indicator,
 input[type="week"]::-webkit-calendar-picker-indicator {
-  filter: brightness(0) invert(1);
+  filter: brightness(0) saturate(100%);
   cursor: pointer !important;
+  opacity: 0.6;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator:hover,
@@ -223,14 +225,47 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover,
 input[type="month"]::-webkit-calendar-picker-indicator:hover,
 input[type="week"]::-webkit-calendar-picker-indicator:hover {
   cursor: pointer !important;
+  opacity: 1;
 }
 
-/* Para Firefox */
+/* Ícone de calendário - Modo escuro (ícone claro) */
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="month"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0) invert(1);
+  cursor: pointer !important;
+  opacity: 0.8;
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] input[type="month"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] input[type="week"]::-webkit-calendar-picker-indicator:hover {
+  cursor: pointer !important;
+  opacity: 1;
+}
+
+/* Para Firefox - Modo claro */
 input[type="date"]::-moz-calendar-picker-indicator,
 input[type="datetime-local"]::-moz-calendar-picker-indicator,
 input[type="time"]::-moz-calendar-picker-indicator,
 input[type="month"]::-moz-calendar-picker-indicator,
 input[type="week"]::-moz-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%);
+  cursor: pointer !important;
+  opacity: 0.6;
+}
+
+/* Para Firefox - Modo escuro */
+[data-theme="dark"] input[type="date"]::-moz-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-moz-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-moz-calendar-picker-indicator,
+[data-theme="dark"] input[type="month"]::-moz-calendar-picker-indicator,
+[data-theme="dark"] input[type="week"]::-moz-calendar-picker-indicator {
   filter: brightness(0) invert(1);
   cursor: pointer !important;
+  opacity: 0.8;
 }

@@ -203,6 +203,11 @@ const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, 
     return tickItem.toLocaleString('pt-BR');
   };
 
+  const formatXAxis = (tickItem: string) => {
+    // Backend já envia no formato MM/AA, apenas retorna
+    return tickItem || '';
+  };
+
   return (
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
@@ -211,7 +216,7 @@ const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, 
           <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={220} minWidth={200}>
             <RLineChart data={chartData} margin={{ top: 15, right: 30, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2f3844" />
-              <XAxis dataKey="name" stroke="#6c757d" fontSize={10} padding={{ left: 10, right: 10 }} />
+              <XAxis dataKey="name" stroke="#6c757d" fontSize={10} padding={{ left: 10, right: 10 }} tickFormatter={formatXAxis} />
               <YAxis stroke="#6c757d" fontSize={10} tickFormatter={formatYAxis} domain={[0, 'dataMax']} allowDecimals />
               <Tooltip content={<CustomTooltip format={format} />} />
               <Line 
@@ -456,55 +461,6 @@ const formatDateLabel = (value?: string): string => {
   return `${day}/${month}/${year}`;
 };
 
-const MONTH_NAME_MAP: Record<string, string> = {
-  jan: '01', janeiro: '01',
-  fev: '02', fevereiro: '02',
-  mar: '03', março: '03', marco: '03',
-  abr: '04', abril: '04',
-  mai: '05', maio: '05',
-  jun: '06', junho: '06',
-  jul: '07', julho: '07',
-  ago: '08', agosto: '08',
-  set: '09', setembro: '09',
-  out: '10', outubro: '10',
-  nov: '11', novembro: '11',
-  dez: '12', dezembro: '12',
-};
-
-const formatMonthNumeric = (label: string): string => {
-  if (!label) return '';
-  const trimmed = label.trim();
-
-  const parsed = new Date(trimmed);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed.toLocaleDateString('pt-BR', {
-      month: '2-digit',
-      year: '2-digit'
-    });
-  }
-
-  const matchMonthYear = trimmed.match(/^([A-Za-zçÇ]{3,9})\/?(\d{2,4})?$/);
-  if (matchMonthYear) {
-    const monthKey = matchMonthYear[1].toLowerCase();
-    const monthNumber = MONTH_NAME_MAP[monthKey];
-    const yearPart = matchMonthYear[2] ? matchMonthYear[2] : `${new Date().getFullYear()}`;
-    if (monthNumber) {
-      const yearNormalized = yearPart.length === 2 ? `20${yearPart}` : yearPart;
-      const date = new Date(Number(yearNormalized), Number(monthNumber) - 1, 1);
-      return date.toLocaleDateString('pt-BR', {
-        month: '2-digit',
-        year: '2-digit'
-      });
-    }
-  }
-
-  const matchNumeric = trimmed.match(/^(\d{1,2})\/?(\d{2})$/);
-  if (matchNumeric) {
-    return `${matchNumeric[1].padStart(2, '0')}/${matchNumeric[2]}`;
-  }
-
-  return trimmed;
-};
 
 const getCurrentMonthRange = () => {
   const today = new Date();
@@ -662,17 +618,14 @@ const Dashboard: React.FC = () => {
   });
 
   const receitaMensalChartData: ChartDataItem[] = dashboardData?.receitaUltimosMeses
-    ? dashboardData.receitaUltimosMeses.labels.map((label, index) => {
-        const formattedLabel = formatMonthNumeric(label);
-        return {
-          mes: formattedLabel,
-          valor: dashboardData.receitaUltimosMeses.data[index] ?? 0,
-          color:
-            index === (dashboardData.receitaUltimosMeses.data.length - 1)
-              ? '#28a745'
-              : '#6c757d'
-        };
-      })
+    ? dashboardData.receitaUltimosMeses.labels.map((label, index) => ({
+        mes: label,
+        valor: dashboardData.receitaUltimosMeses.data[index] ?? 0,
+        color:
+          index === (dashboardData.receitaUltimosMeses.data.length - 1)
+            ? '#28a745'
+            : '#6c757d'
+      }))
     : [];
 
   const recebidosPeriodoChartData: ChartDataItem[] = dashboardData?.recebidosPeriodo
@@ -703,7 +656,9 @@ const Dashboard: React.FC = () => {
     
     for (let i = 11; i >= 0; i--) {
       const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-      const mesAno = `${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
+      const mes = String(data.getMonth() + 1).padStart(2, '0');
+      const ano = String(data.getFullYear()).slice(-2);
+      const mesAno = `${mes}/${ano}`;
       
       const clientesMes = clientes.filter(cliente => {
         if (!cliente.created_at) return false;
@@ -712,7 +667,7 @@ const Dashboard: React.FC = () => {
       }).length;
       
       meses.push({
-        mes: formatMonthNumeric(mesAno),
+        mes: mesAno,
         valor: clientesMes,
         color: i === 11 ? '#007bff' : '#6c757d'
       });

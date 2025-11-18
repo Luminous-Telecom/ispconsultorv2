@@ -1010,7 +1010,10 @@ export class DashboardController {
         return acumulado;
       }, 0);
 
-      labels.push(mes.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
+      // Formatar como MM/AA (ex: 12/24, 01/25)
+      const month = String(mes.getMonth() + 1).padStart(2, '0');
+      const year = String(mes.getFullYear()).slice(-2);
+      labels.push(`${month}/${year}`);
       data.push(totalMes);
     }
 

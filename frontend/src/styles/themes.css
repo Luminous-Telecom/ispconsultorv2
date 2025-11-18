@@ -15,7 +15,7 @@
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #e9ecef;
-  --border-color: #2d3748;
+  --border-color: #dee2e6;
   --btn-close-filter: none;
   
   /* Cores de texto */
@@ -2594,11 +2594,11 @@ select:focus,
 .dashboard-container .chart-card:nth-child(5) { animation-delay: 0.25s; }
 .dashboard-container .chart-card:nth-child(6) { animation-delay: 0.3s; }
 
-/* Forçar todas as bordas a usar a cor especificada */
+/* Forçar todas as bordas a usar a cor do tema */
 * {
-  border-color: #2d3748 !important;
+  border-color: var(--border-color) !important;
 }
 
 .border-bottom {
-  border-bottom: var(--bs-border-width, 1px) var(--bs-border-style, solid) #2d3748 !important;
+  border-bottom: var(--bs-border-width, 1px) var(--bs-border-style, solid) var(--border-color) !important;
 }
