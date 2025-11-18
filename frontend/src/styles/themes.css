@@ -424,15 +424,61 @@ body {
   color: var(--text-primary);
   font-weight: 400;
   font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+  margin-left: 0.5rem;
 }
 
-.form-check-input {
+
+.form-switch .form-check-input::before {
+  content: '';
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: #ffffff;
+  top: 50%;
+  left: 0.125rem;
+  transform: translateY(-50%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.form-switch .form-check-input:checked {
+  background-color: var(--btn-primary-color);
+  border-color: var(--btn-primary-color);
+  background-image: none;
+}
+
+.form-switch .form-check-input:checked::before {
+  left: calc(100% - 0.875rem);
+  background-color: #ffffff;
+}
+
+.form-switch .form-check-input:checked:hover:not(:disabled) {
+  background-color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+/* Modo escuro - ajustes específicos */
+[data-theme="dark"] .form-check-input {
+  background-color: var(--bg-secondary);
   border-color: var(--border-color);
 }
 
-.form-check-input:checked {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+[data-theme="dark"] .form-check-input:hover:not(:disabled) {
+  border-color: var(--btn-primary-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="dark"] .form-switch .form-check-input {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-switch .form-check-input::before {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .form-select {

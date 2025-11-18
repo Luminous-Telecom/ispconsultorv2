@@ -214,7 +214,7 @@ const FormField: React.FC<FormFieldProps> = ({
       disabled,
       size,
       className,
-      isValid: isValid || (!error && !isInvalid),
+      isValid: isValid !== undefined ? isValid : (validationStatus === 'valid' ? true : undefined),
       isInvalid: isInvalid || !!error,
       validationMessage: validationMessage || error,
       validationStatus,

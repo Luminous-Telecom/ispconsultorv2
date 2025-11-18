@@ -46,8 +46,8 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
   const getCheckboxClasses = () => {
     const classes = ['form-check-input'];
     
-    // Validation
-    if (isValid || validationStatus === 'valid') {
+    // Validation - apenas adicionar classes se explicitamente definidas
+    if (isValid === true || validationStatus === 'valid') {
       classes.push('is-valid');
     } else if (isInvalid || validationStatus === 'invalid') {
       classes.push('is-invalid');
