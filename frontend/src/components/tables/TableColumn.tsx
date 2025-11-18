@@ -79,7 +79,11 @@ const TableColumn = <T extends { id: number | string }>({
   };
 
   const getColumnStyles = () => {
-    const styles: React.CSSProperties = {};
+    const styles: React.CSSProperties = {
+      textTransform: 'none',
+      padding: '0.5rem',
+      fontSize: '0.75rem',
+    };
     
     if (column.width) {
       styles.width = typeof column.width === 'number' ? `${column.width}px` : column.width;

@@ -219,7 +219,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         
         /* Estilos para modo escuro */
         [data-theme="dark"] .modal-content .form-control:not(:disabled):not(textarea) {
-          background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
           height: 30px !important;
@@ -228,7 +227,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         }
         
         [data-theme="dark"] .modal-content .form-select:not(:disabled) {
-          background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
           height: 30px !important;
@@ -241,7 +239,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         }
         
         [data-theme="dark"] .modal-content textarea.form-control:not(:disabled) {
-          background-color: #2d3748 !important;
           border-color: #4a5568 !important;
           color: #ffffff !important;
           height: auto !important;
@@ -336,7 +333,6 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           overflow: 'hidden',
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'scale(1)' : 'scale(0.95)',
-          transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
         }}
       >
         {/* Header arrastável */}

@@ -59,7 +59,7 @@ function Table<T extends { id: number | string }>({
     size: _size = 'md',
     variant: _variant = 'default',
     striped: _striped = false,
-    hover: _hover = true,
+    hover: _hover = false,
     bordered: _bordered = false,
     borderless: _borderless = false,
     responsive: _responsive = true,
@@ -188,7 +188,7 @@ function Table<T extends { id: number | string }>({
         <tr>
           {/* Checkbox de seleção - renderiza sempre que selectable for true */}
           {selectable && (
-            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '40px' }}>
+            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '40px', textTransform: 'none' }}>
               <input
                 className="form-check-input"
                 type="checkbox"

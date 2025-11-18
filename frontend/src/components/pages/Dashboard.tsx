@@ -305,8 +305,8 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
 
   if (!data || data.length === 0) {
     return (
-      <div className="chart-container">
-        <h6 className="chart-title">{title}</h6>
+      <div className="chart-container-pie">
+        <h6 className="chart-title-pie">{title}</h6>
         <div style={{ width: '100px', height: '100px', minWidth: '100px', minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <p className="text-muted small">Sem dados</p>
         </div>
@@ -352,8 +352,8 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
           fill="#ffffff"
           textAnchor="middle"
           dominantBaseline="central"
-          fontSize={10}
-          fontWeight={600}
+          fontSize={8}
+          fontWeight={400}
         >
           {`${(safePercent * 100).toFixed(0)}%`}
         </text>
@@ -362,42 +362,55 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
     return null;
   };
 
+  // Calcular raios baseado no tamanho do container (proporcional)
+  const getRadii = () => {
+    if (!dimensions) return { inner: 22, outer: 45 };
+    const size = Math.min(dimensions.width, dimensions.height);
+    // Interpolação linear: 80px -> 16/32, 110px -> 22/45
+    const ratio = (size - 80) / (110 - 80); // 0 a 1
+    const inner = Math.round(16 + (22 - 16) * ratio);
+    const outer = Math.round(32 + (45 - 32) * ratio);
+    return { inner, outer };
+  };
+
+  const radii = getRadii();
+
   return (
-      <div className="chart-container">
-        <h6 className="chart-title">
-          {title} ({formatPieValue(total, title)})
-        </h6>
-        <div className="pie-chart-wrapper">
-        <div ref={containerRef} className="pie-chart-container">
+    <div className="chart-container-pie">
+      <h6 className="chart-title-pie">
+        {title} ({formatPieValue(total, title)})
+      </h6>
+      <div className="pie-chart-content">
+        <div ref={containerRef} className="pie-chart-box">
           {isReady && dimensions && dimensions.width > 0 && dimensions.height > 0 ? (
-            <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={140} minWidth={140}>
+            <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={dimensions.height} minWidth={dimensions.width}>
               <PieChart>
-              <Pie
-                data={filteredChartData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={30}
-                outerRadius={60}
-                fill="#8884d8"
-                paddingAngle={2}
-                labelLine={false}
-                label={renderCustomizedLabel}
-                stroke="none"
-                isAnimationActive={false}
-              >
-                {filteredChartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.color || '#6c757d'}
-                    opacity={hiddenItems.has(index) ? 0.3 : 1}
-                    stroke="none"
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
+                <Pie
+                  data={filteredChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={radii.inner}
+                  outerRadius={radii.outer}
+                  fill="#8884d8"
+                  paddingAngle={2}
+                  labelLine={false}
+                  label={renderCustomizedLabel}
+                  stroke="none"
+                  isAnimationActive={false}
+                >
+                  {filteredChartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color || '#6c757d'}
+                      opacity={hiddenItems.has(index) ? 0.3 : 1}
+                      stroke="none"
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div className="spinner-border spinner-border-sm text-primary" role="status">
@@ -406,12 +419,11 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
             </div>
           )}
         </div>
-
-        <div className="chart-legend">
+        <div className="pie-legend-box">
           {data.map((item, index) => (
             <div
               key={index}
-              className="legend-item"
+              className="pie-legend-item"
               style={{
                 cursor: 'pointer',
                 opacity: hiddenItems.has(index) ? 0.5 : 1,
@@ -419,8 +431,8 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
               }}
               onClick={() => onToggleItem(index)}
             >
-              <div className="legend-color" style={{ backgroundColor: item.color || '#6c757d', flexShrink: 0 }}></div>
-              <span className="legend-label">
+              <div className="pie-legend-color" style={{ backgroundColor: item.color || '#6c757d' }}></div>
+              <span className="pie-legend-text">
                 {item.label}: {formatPieValue(item.value || 0, title)}
               </span>
             </div>
