@@ -76,6 +76,17 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     });
   }, [data]);
 
+  // Atualizar estado de paginação quando prop pagination mudar
+  useEffect(() => {
+    if (pagination) {
+      setState(prev => ({
+        ...prev,
+        currentPage: pagination.current_page,
+        pageSize: pagination.per_page,
+      }));
+    }
+  }, [pagination?.current_page, pagination?.per_page, pagination]);
+
   // Filtrar dados baseado em busca e filtros
   const filteredData = useMemo(() => {
     let result = [...state.data];
@@ -137,11 +148,17 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
   }, [filteredData, state.sortColumn, state.sortDirection, sortable]);
 
   // Paginar dados
+  // Se há paginação do servidor, os dados já vêm paginados, não fazer slice local
   const paginatedData = useMemo(() => {
+    if (pagination) {
+      // Paginação do servidor: dados já vêm paginados do backend
+      return sortedData;
+    }
+    // Paginação local: fazer slice dos dados
     const startIndex = (state.currentPage - 1) * state.pageSize;
     const endIndex = startIndex + state.pageSize;
     return sortedData.slice(startIndex, endIndex);
-  }, [sortedData, state.currentPage, state.pageSize]);
+  }, [sortedData, state.currentPage, state.pageSize, pagination]);
 
   // Calcular total de páginas
   const totalPages = useMemo(() => {
@@ -149,9 +166,12 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     return Math.ceil(sortedData.length / state.pageSize);
   }, [pagination, sortedData.length, state.pageSize]);
 
+  // Obter página atual (usar pagination se disponível, senão usar state)
+  const currentPage = pagination ? pagination.current_page : state.currentPage;
+
   // Verificar se tem próxima/anterior página
-  const hasNextPage = state.currentPage < totalPages;
-  const hasPreviousPage = state.currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
+  const hasPreviousPage = currentPage > 1;
 
   // Verificar seleção
   const isAllSelected = useMemo(() => {

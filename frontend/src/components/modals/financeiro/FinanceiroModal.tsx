@@ -52,18 +52,46 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const filters: TituloFilters = {
     page,
     limit,
-    search: search || undefined
+    search: search || undefined,
+    // Aplicar filtro de status no backend quando não mostrar cancelados
+    ...(showCancelados ? {} : { status: '!cancelado' })
   };
 
   const { data: titulosData, isLoading, refetch } = useTitulosFinanceiro(filters);
 
+
   const titulos = useMemo(() => titulosData?.data || [], [titulosData?.data]);
-  const pagination = titulosData?.pagination ? {
-    current_page: titulosData.pagination.current_page,
-    last_page: titulosData.pagination.last_page,
-    per_page: titulosData.pagination.per_page,
-    total: titulosData.pagination.total
-  } : undefined;
+  
+  // Paginação do backend - usar valores do backend quando disponíveis
+  const pagination = useMemo(() => {
+    if (!titulosData || !titulosData.pagination) {
+      return undefined;
+    }
+    
+    const pag = titulosData.pagination;
+    
+    // Garantir que todos os valores são números válidos
+    const currentPage = typeof pag.current_page === 'number' ? pag.current_page : page;
+    // Usar o limite atual do estado, não o do backend (pode estar desatualizado)
+    const perPage = limit;
+    // Usar total do backend
+    const total = typeof pag.total === 'number' ? pag.total : 0;
+    
+    // Recalcular last_page com o limite atual
+    const lastPage = total > 0 ? Math.ceil(total / perPage) : 1;
+    // Recalcular from e to com o limite atual
+    const from = total > 0 ? ((currentPage - 1) * perPage) + 1 : 0;
+    const to = total > 0 ? Math.min(currentPage * perPage, total) : 0;
+    
+    return {
+      current_page: currentPage,
+      last_page: lastPage,
+      per_page: perPage,
+      total: total,
+      from: from,
+      to: to
+    };
+  }, [titulosData, limit, page]);
 
   const sortedData = useSorting(titulos as unknown as Record<string, unknown>[], sortColumn, sortDirection) as unknown as Titulo[];
 
@@ -72,26 +100,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     setPage(1);
   }, [showCancelados]);
 
-  // Função para filtrar cancelados
-  const filterCancelados = useCallback((data: Titulo[]) => {
-    return data.filter((titulo) => {
-      const isCancelado = titulo.status?.toLowerCase() === 'cancelado';
-      if (isCancelado && !showCancelados) {
-        return false;
-      }
-      return true;
-    });
-  }, [showCancelados]);
-
-  // Memoizar o filtro de cancelados
-  const customFilters = useCallback((data: Titulo[]) => {
-    return filterCancelados(data);
-  }, [filterCancelados]);
-
-  // Dados filtrados para usar no resumo financeiro
-  const filteredData = useMemo(() => {
-    return filterCancelados(sortedData);
-  }, [sortedData, filterCancelados]);
+  // Dados filtrados para usar no resumo financeiro (já filtrados pelo backend)
+  const filteredData = sortedData;
 
   const formatCurrency = (value: number | string | null | undefined): string => {
     if (!value) return 'R$ 0,00';
@@ -407,7 +417,6 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               config={{
                 columns,
                 data: sortedData,
-                customFilters: customFilters,
                 loading: isLoading,
                 searchable: true,
                 searchPlaceholder: 'Buscar por número, cliente ou observações...',
@@ -440,7 +449,9 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                   current_page: pagination.current_page,
                   last_page: pagination.last_page,
                   per_page: pagination.per_page,
-                  total: pagination.total
+                  total: pagination.total,
+                  from: pagination.from,
+                  to: pagination.to
                 } : undefined,
                 customControls: (
                   <div className="form-check">
@@ -473,7 +484,10 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               }}
               onSearch={setSearch}
               onPageChange={setPage}
-              onPageSizeChange={setLimit}
+              onPageSizeChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1); // Resetar página ao mudar limite
+              }}
               onRefresh={refetch}
             />
           </div>

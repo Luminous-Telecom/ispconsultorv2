@@ -123,14 +123,21 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
 
   const deleteBancoMutation = useDeleteBanco();
 
-  // Paginação do backend
-  const pagination = {
+  // Paginação do backend - usar valores do backend quando disponíveis
+  const pagination = bancosData?.pagination ? {
+    current_page: bancosData.pagination.current_page,
+    last_page: bancosData.pagination.last_page,
+    per_page: bancosData.pagination.per_page,
+    total: bancosData.pagination.total,
+    from: bancosData.pagination.from,
+    to: bancosData.pagination.to
+  } : {
     current_page: page,
-    last_page: bancosData?.pagination?.last_page || 1,
+    last_page: 1,
     per_page: limit,
-    total: bancosData?.pagination?.total || 0,
-    from: bancosData?.pagination?.from || (page - 1) * limit + 1,
-    to: bancosData?.pagination?.to || Math.min(page * limit, bancosData?.pagination?.total || 0)
+    total: 0,
+    from: 0,
+    to: 0
   };
 
   const handleSelect = () => {

@@ -39,16 +39,37 @@ export abstract class BaseService<TEntity, TCreateData, TUpdateData, TFilters ex
       // a resposta será ApiResponse<PaginatedResponse<TEntity>>
       const response = await this.apiClient.get<PaginatedResponse<TEntity>>(url);
       
-      // ApiClient.get retorna ApiResponse<T>, então response.data contém o PaginatedResponse
-      // Verificar se response.data existe e tem estrutura PaginatedResponse
-      if (response.data && typeof response.data === 'object' && 'data' in response.data && 'pagination' in response.data) {
-        // response.data já é PaginatedResponse
-        return response.data as PaginatedResponse<TEntity>;
+      // ApiClient.get retorna ApiResponse<T>
+      // O interceptor do axios retorna response.data diretamente
+      // O ResponseTransformer.normalize envolve em ApiResponse
+      // Então response é { success: true, data: { success: true, data: [...], pagination: {...} } }
+      
+      // Verificar se response já é PaginatedResponse (tem success, data, pagination)
+      if (response && typeof response === 'object' && 'success' in response && 'data' in response && 'pagination' in response) {
+        // response já é PaginatedResponse
+        return response as PaginatedResponse<TEntity>;
+      }
+      
+      // Se response.data existe e tem estrutura PaginatedResponse
+      if (response.data && typeof response.data === 'object') {
+        // Se response.data já é PaginatedResponse (tem data e pagination)
+        if ('data' in response.data && 'pagination' in response.data) {
+          // Verificar se tem success também (ApiResponse<PaginatedResponse>)
+          if ('success' in response.data) {
+            // É ApiResponse<PaginatedResponse>, extrair o inner data
+            const innerData = (response.data as { data?: TEntity[]; pagination?: Record<string, unknown> });
+            return {
+              data: innerData.data || [],
+              pagination: innerData.pagination || {}
+            } as PaginatedResponse<TEntity>;
+          }
+          // É PaginatedResponse direto
+          return response.data as PaginatedResponse<TEntity>;
+        }
       }
       
       // Fallback: se response.data não tem a estrutura esperada, tentar extrair manualmente
-      // Pode ser que o backend retorne diretamente { data: [...], pagination: {...} }
-      const innerData = response.data;
+      const innerData = response.data || response;
       let data: TEntity[] = [];
       let pagination: Record<string, string | number | boolean | null | undefined | object> = {};
       

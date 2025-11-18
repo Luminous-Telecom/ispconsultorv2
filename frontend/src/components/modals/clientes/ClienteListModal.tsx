@@ -155,13 +155,21 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     }
   };
 
-  const pagination = {
+  // Paginação do backend - usar valores do backend quando disponíveis
+  const pagination = clientesData?.pagination ? {
+    current_page: clientesData.pagination.current_page,
+    last_page: clientesData.pagination.last_page,
+    per_page: clientesData.pagination.per_page,
+    total: clientesData.pagination.total,
+    from: clientesData.pagination.from,
+    to: clientesData.pagination.to
+  } : {
     current_page: page,
-    last_page: clientesData?.pagination?.last_page || 1,
+    last_page: 1,
     per_page: limit,
-    total: clientesData?.pagination?.total || 0,
-    from: clientesData?.pagination?.from || (page - 1) * limit + 1,
-    to: clientesData?.pagination?.to || Math.min(page * limit, clientesData?.pagination?.total || 0)
+    total: 0,
+    from: 0,
+    to: 0
   };
 
   // Bulk actions

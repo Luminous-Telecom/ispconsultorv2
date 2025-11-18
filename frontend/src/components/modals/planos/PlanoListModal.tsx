@@ -146,14 +146,21 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
 
   const deletePlanoMutation = useDeletePlano();
 
-  // Paginação do backend
-  const pagination = {
+  // Paginação do backend - usar valores do backend quando disponíveis
+  const pagination = planosData?.pagination ? {
+    current_page: planosData.pagination.current_page,
+    last_page: planosData.pagination.last_page,
+    per_page: planosData.pagination.per_page,
+    total: planosData.pagination.total,
+    from: planosData.pagination.from,
+    to: planosData.pagination.to
+  } : {
     current_page: page,
-    last_page: planosData?.pagination?.last_page || 1,
+    last_page: 1,
     per_page: limit,
-    total: planosData?.pagination?.total || 0,
-    from: planosData?.pagination?.from || (page - 1) * limit + 1,
-    to: planosData?.pagination?.to || Math.min(page * limit, planosData?.pagination?.total || 0)
+    total: 0,
+    from: 0,
+    to: 0
   };
 
   const getStatusBadgeClass = (status: string) => {

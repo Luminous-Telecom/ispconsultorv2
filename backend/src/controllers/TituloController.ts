@@ -9,7 +9,8 @@ import { BancoApiService } from '../services/BancoApiService';
 import { BarcodeService } from '../services/BarcodeService';
 import { logger } from '../utils/logger';
 import puppeteer from 'puppeteer';
-import { Op, WhereOptions } from 'sequelize';
+import { Op, WhereOptions, QueryTypes } from 'sequelize';
+import { sequelize } from '../config/database';
 import * as fs from 'fs';
 import * as path from 'path';
 import type htmlPdf from 'html-pdf-node';
@@ -322,7 +323,14 @@ export class TituloController {
       const where: WhereOptions = {};
       
       if (status) {
-        where.status = status;
+        // Suportar exclusão de status com prefixo !
+        if (typeof status === 'string' && status.startsWith('!')) {
+          const excludedStatus = status.substring(1);
+          // Usar Op.ne diretamente - mais simples e confiável
+          where.status = { [Op.ne]: excludedStatus };
+        } else {
+          where.status = status;
+        }
       }
       
       if (cliente_id) {
@@ -349,7 +357,33 @@ export class TituloController {
         ];
       }
 
-      const { count, rows } = await Titulo.findAndCountAll({
+      // Contar total de registros ANTES de buscar os dados
+      // Se houver filtro de exclusão de status (!cancelado), Op.ne pode ter problemas no count
+      // Usar findAll para contar quando há exclusão de status
+      let count: number;
+      
+      // Verificar se estamos usando exclusão de status (status começa com !)
+      const isStatusExclusion = status && typeof status === 'string' && status.startsWith('!');
+      
+      if (isStatusExclusion) {
+        // Op.ne pode ter problemas no count do Sequelize
+        // Usar findAll sem raw para garantir que o where é aplicado corretamente
+        // Mas sem includes para ser mais rápido
+        const allMatching = await Titulo.findAll({
+          where,
+          attributes: ['id']
+        });
+        count = allMatching.length;
+      } else {
+        // Para outros casos, usar count normal
+        count = await Titulo.count({
+          where
+        });
+      }
+      
+
+      // Buscar dados com includes
+      const rows = await Titulo.findAll({
         where,
         include: [
           {
@@ -373,16 +407,24 @@ export class TituloController {
         offset
       });
 
+      // Calcular valores de paginação
+      const total = Number(count);
+      const perPage = Number(limit);
+      const currentPage = Number(page);
+      const lastPage = total > 0 ? Math.ceil(total / perPage) : 1;
+      const from = total > 0 ? offset + 1 : 0;
+      const to = total > 0 ? Math.min(offset + perPage, total) : 0;
+
       res.json({
         success: true,
         data: rows,
         pagination: {
-          current_page: Number(page),
-          per_page: Number(limit),
-          total: count,
-          last_page: Math.ceil(count / Number(limit)),
-          from: offset + 1,
-          to: Math.min(offset + Number(limit), count)
+          current_page: currentPage,
+          per_page: perPage,
+          total: total,
+          last_page: lastPage,
+          from: from,
+          to: to
         }
       });
     } catch (error: unknown) {

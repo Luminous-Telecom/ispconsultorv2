@@ -41,7 +41,9 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     current_page: usuariosData.pagination.current_page,
     last_page: usuariosData.pagination.last_page,
     per_page: usuariosData.pagination.per_page,
-    total: usuariosData.pagination.total
+    total: usuariosData.pagination.total,
+    from: usuariosData.pagination.from,
+    to: usuariosData.pagination.to
   } : undefined;
 
   const deleteUsuarioMutation = useDeleteUsuario();

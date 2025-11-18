@@ -45,7 +45,7 @@ function Table<T extends { id: number | string }>({
     columns,
     data,
     loading = false,
-    pagination,
+    pagination: configPagination,
     filters = [],
     actions: _actions = [],
     bulkActions = [],
@@ -90,7 +90,7 @@ function Table<T extends { id: number | string }>({
   } = useTable({
     data: filteredData,
     columns,
-    pagination,
+    pagination: configPagination,
     filters,
     searchable,
     sortable,
@@ -378,7 +378,7 @@ function Table<T extends { id: number | string }>({
   return (
     <div className={className} style={{ width: '100%', margin: 0, padding: 0, boxSizing: 'border-box' }}>
       {/* Header com botões de ação e filtros */}
-      {(bulkActions.length > 0 || searchable || pagination || (!pagination && data.length > 0)) && (
+      {(bulkActions.length > 0 || searchable || configPagination || (!configPagination && data.length > 0)) && (
         <div className="border-bottom" style={{ margin: 0, padding: 0, background: 'transparent' }}>
           {/* Primeira linha: Botões de ação */}
           {bulkActions.length > 0 && (
@@ -480,17 +480,19 @@ function Table<T extends { id: number | string }>({
           </div>
 
           {/* Paginação centralizada */}
-          {(pagination || (!pagination && data.length > 0)) && (
+          {(configPagination || (!configPagination && data.length > 0)) && (
             <div className="d-flex align-items-center gap-2">
               {/* Seletor de linhas por página */}
               <select 
                 className="form-select form-select-sm" 
                 id={`${uniqueTableId}-limit`}
                 name="dataTableLimit"
-                value={pagination?.per_page || state.pageSize}
+                value={configPagination?.per_page || state.pageSize}
                 onChange={(e) => {
                   const newPageSize = parseInt(e.target.value);
-                  if (pagination) {
+                  if (configPagination) {
+                    // Quando há paginação do servidor, resetar página para 1 ao mudar limite
+                    onPageChange?.(1);
                     onPageSizeChange?.(newPageSize);
                   } else {
                     tableActions.setPageSize(newPageSize);
@@ -512,13 +514,13 @@ function Table<T extends { id: number | string }>({
                   type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
-                    if (pagination) {
+                    if (configPagination) {
                       onPageChange?.(1);
                     } else {
                       tableActions.setPage(1);
                     }
                   }}
-                  disabled={pagination ? pagination.current_page <= 1 : state.currentPage <= 1}
+                  disabled={configPagination ? configPagination.current_page <= 1 : state.currentPage <= 1}
                 >
                   <i className="bi bi-chevron-double-left"></i>
                 </button>
@@ -526,20 +528,20 @@ function Table<T extends { id: number | string }>({
                   type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
-                    if (pagination) {
-                      onPageChange?.(pagination.current_page - 1);
+                    if (configPagination) {
+                      onPageChange?.(configPagination.current_page - 1);
                     } else {
                       tableActions.setPage(state.currentPage - 1);
                     }
                   }}
-                  disabled={pagination ? pagination.current_page <= 1 : state.currentPage <= 1}
+                  disabled={configPagination ? configPagination.current_page <= 1 : state.currentPage <= 1}
                 >
                   <i className="bi bi-chevron-left"></i>
                 </button>
                 
                 <span className="small text-muted mx-2">
-                  {pagination ? (
-                    `${pagination.from || 0} - ${pagination.to || 0} / ${pagination.total || 0}`
+                  {configPagination ? (
+                    `${configPagination.from || 0} - ${configPagination.to || 0} / ${configPagination.total || 0}`
                   ) : (
                     `${((state.currentPage - 1) * state.pageSize) + 1}-${Math.min(state.currentPage * state.pageSize, data.length)} de ${data.length}`
                   )}
@@ -549,13 +551,13 @@ function Table<T extends { id: number | string }>({
                   type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
-                    if (pagination) {
-                      onPageChange?.(pagination.current_page + 1);
+                    if (configPagination) {
+                      onPageChange?.(configPagination.current_page + 1);
                     } else {
                       tableActions.setPage(state.currentPage + 1);
                     }
                   }}
-                  disabled={pagination ? pagination.current_page >= pagination.last_page : !hasNextPage}
+                  disabled={configPagination ? configPagination.current_page >= configPagination.last_page : !hasNextPage}
                 >
                   <i className="bi bi-chevron-right"></i>
                 </button>
@@ -563,13 +565,13 @@ function Table<T extends { id: number | string }>({
                   type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
-                    if (pagination) {
-                      onPageChange?.(pagination.last_page);
+                    if (configPagination) {
+                      onPageChange?.(configPagination.last_page);
                     } else {
                       tableActions.setPage(totalPages);
                     }
                   }}
-                  disabled={pagination ? pagination.current_page >= pagination.last_page : !hasNextPage}
+                  disabled={configPagination ? configPagination.current_page >= configPagination.last_page : !hasNextPage}
                 >
                   <i className="bi bi-chevron-double-right"></i>
                 </button>
