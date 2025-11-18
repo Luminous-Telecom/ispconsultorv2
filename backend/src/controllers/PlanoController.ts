@@ -258,10 +258,16 @@ export class PlanoController {
           if (fieldKey === 'data_inicio' || fieldKey === 'data_fim') {
             const dateValue = req.body[fieldKey];
             if (dateValue && dateValue !== '' && dateValue !== 'Invalid date') {
-              // Verificar se é uma data válida e converter para Date
-              const date = new Date(dateValue);
-              if (!isNaN(date.getTime())) {
-                (updateData as Record<string, Date | null>)[fieldKey] = date;
+              // Criar data local sem timezone para evitar problemas de conversão
+              // Formato esperado: YYYY-MM-DD
+              if (typeof dateValue === 'string') {
+                const [year, month, day] = dateValue.split('-').map(Number);
+                if (!Number.isNaN(year) && !Number.isNaN(month) && !Number.isNaN(day)) {
+                  const date = new Date(year, month - 1, day);
+                  (updateData as Record<string, Date | null>)[fieldKey] = date;
+                }
+              } else if (dateValue instanceof Date) {
+                (updateData as Record<string, Date | null>)[fieldKey] = dateValue;
               }
             }
           } else {

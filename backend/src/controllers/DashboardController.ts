@@ -714,9 +714,11 @@ export class DashboardController {
 
   private static parseStartDate(start?: string) {
     if (start) {
-      const parsed = new Date(start);
-      if (!Number.isNaN(parsed.getTime())) {
-        parsed.setHours(0, 0, 0, 0);
+      // Criar data local sem timezone para evitar problemas de conversão
+      // Formato esperado: YYYY-MM-DD
+      const [year, month, day] = start.split('-').map(Number);
+      if (!Number.isNaN(year) && !Number.isNaN(month) && !Number.isNaN(day)) {
+        const parsed = new Date(year, month - 1, day, 0, 0, 0, 0);
         return parsed;
       }
     }
@@ -727,9 +729,11 @@ export class DashboardController {
 
   private static parseEndDate(end: string | undefined, start: Date) {
     if (end) {
-      const parsed = new Date(end);
-      if (!Number.isNaN(parsed.getTime())) {
-        parsed.setHours(23, 59, 59, 999);
+      // Criar data local sem timezone para evitar problemas de conversão
+      // Formato esperado: YYYY-MM-DD
+      const [year, month, day] = end.split('-').map(Number);
+      if (!Number.isNaN(year) && !Number.isNaN(month) && !Number.isNaN(day)) {
+        const parsed = new Date(year, month - 1, day, 23, 59, 59, 999);
         if (parsed < start) {
           const ajustado = new Date(start);
           ajustado.setHours(23, 59, 59, 999);
