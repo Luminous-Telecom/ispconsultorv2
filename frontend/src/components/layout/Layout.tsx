@@ -5,6 +5,7 @@ import NotificationContainer from '../notifications/NotificationContainer';
 import { useTheme } from '../../contexts/ThemeContext';
 import DropdownMenu from '../common/DropdownMenu';
 import { Button } from '../ui';
+import { useDashboardFilters } from '../../contexts/DashboardFiltersContext';
 import { ClienteListModal } from '../modals/clientes';
 import { PlanoListModal } from '../modals/planos';
 import { BancoListModal } from '../modals/bancos';
@@ -34,6 +35,10 @@ const Layout: React.FC = () => {
   } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Dashboard filters (apenas na rota do dashboard)
+  const isDashboard = location.pathname === '/adm' || location.pathname === '/adm/dashboard';
+  const dashboardFilters = useDashboardFilters();
   
   // Estado para controlar qual modal está aberto (apenas um por vez)
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -145,7 +150,7 @@ const Layout: React.FC = () => {
       <div className="main-layout">
         {/* Header */}
         <header className="main-header">
-          <div className="d-flex align-items-center">
+          <div className="d-flex align-items-center flex-grow-1">
             <Button 
               variant="outline-secondary"
               size="sm"
@@ -157,9 +162,43 @@ const Layout: React.FC = () => {
             >
               {''}
             </Button>
-            <h2 className="h4 mb-0">
+            <h2 className="h4 mb-0 me-4">
               Dashboard
             </h2>
+            {isDashboard && (
+              <div className="d-flex align-items-center gap-2 flex-wrap">
+                <span className="text-muted small me-1">Data inicial:</span>
+                <input
+                  type="date"
+                  value={dashboardFilters.startDate}
+                  onChange={(e) => {
+                    dashboardFilters.setStartDate(e.target.value);
+                    if (dashboardFilters.endDate && new Date(`${e.target.value}T00:00:00`) > new Date(`${dashboardFilters.endDate}T00:00:00`)) {
+                      dashboardFilters.setEndDate(e.target.value);
+                    }
+                  }}
+                  className="form-control form-control-sm"
+                  style={{ width: '150px' }}
+                />
+                <span className="text-muted small me-1">Data final:</span>
+                <input
+                  type="date"
+                  value={dashboardFilters.endDate}
+                  onChange={(e) => {
+                    if (dashboardFilters.startDate && new Date(`${e.target.value}T00:00:00`) < new Date(`${dashboardFilters.startDate}T00:00:00`)) {
+                      dashboardFilters.setEndDate(dashboardFilters.startDate);
+                      return;
+                    }
+                    dashboardFilters.setEndDate(e.target.value);
+                  }}
+                  className="form-control form-control-sm"
+                  style={{ width: '150px' }}
+                />
+                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={dashboardFilters.handleResetPeriod}>
+                  Mês atual
+                </button>
+              </div>
+            )}
           </div>
           
           <div className="d-flex align-items-center gap-3">

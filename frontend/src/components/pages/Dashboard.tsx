@@ -1,6 +1,6 @@
 import React, { useState, useLayoutEffect, useRef } from 'react';
 import { useDashboard } from '../../hooks/useDashboard';
-import FormField from '../ui/FormField';
+import { useDashboardFilters } from '../../contexts/DashboardFiltersContext';
 import {
   LineChart as RLineChart,
   Line,
@@ -448,57 +448,13 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
   );
 };
 
-const formatDateToInput = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const formatDateLabel = (value?: string): string => {
-  if (!value) return '';
-  const [year, month, day] = value.split('-');
-  return `${day}/${month}/${year}`;
-};
-
-
-const getCurrentMonthRange = () => {
-  const today = new Date();
-  return {
-    start: new Date(today.getFullYear(), today.getMonth(), 1),
-    end: new Date(today.getFullYear(), today.getMonth() + 1, 0),
-  };
-};
-
 const Dashboard: React.FC = () => {
-  const { start: defaultStartDate, end: defaultEndDate } = getCurrentMonthRange();
-  const defaultStart = formatDateToInput(defaultStartDate);
-  const defaultEnd = formatDateToInput(defaultEndDate);
-
-  const [startDate, setStartDate] = useState<string>(defaultStart);
-  const [endDate, setEndDate] = useState<string>(defaultEnd);
-
-  const handleStartDateChange = (value: unknown) => {
-    if (typeof value !== 'string') return;
-    setStartDate(value);
-    if (endDate && new Date(`${value}T00:00:00`) > new Date(`${endDate}T00:00:00`)) {
-      setEndDate(value);
-    }
-  };
-
-  const handleEndDateChange = (value: unknown) => {
-    if (typeof value !== 'string') return;
-    if (startDate && new Date(`${value}T00:00:00`) < new Date(`${startDate}T00:00:00`)) {
-      setEndDate(startDate);
-      return;
-    }
-    setEndDate(value);
-  };
-
-  const handleResetPeriod = () => {
-    setStartDate(defaultStart);
-    setEndDate(defaultEnd);
-  };
+  const {
+    startDate,
+    endDate,
+    periodoInicioLabel,
+    periodoFimLabel,
+  } = useDashboardFilters();
 
   // Estados para controlar itens ocultos em cada gráfico
   const [hiddenClientes, setHiddenClientes] = useState<Set<number>>(new Set());
@@ -646,8 +602,6 @@ const Dashboard: React.FC = () => {
 
   const totalRecebidosPeriodo = recebidosPeriodoChartData.reduce((acc, item) => acc + (item.valor || 0), 0);
   const totalReceberPeriodo = receberPeriodoChartData.reduce((acc, item) => acc + (item.valor || 0), 0);
-  const periodoInicioLabel = formatDateLabel(startDate);
-  const periodoFimLabel = formatDateLabel(endDate);
 
   // Crescimento de clientes (últimos 12 meses)
   const getCrescimentoClientes = () => {
@@ -855,51 +809,6 @@ const Dashboard: React.FC = () => {
   return (
     <div className="dashboard-container">
       <div className="container-fluid px-0">
-        <div className="card border-0 shadow-sm mb-3">
-          <div className="card-body">
-            <div className="dashboard-filters position-relative">
-              <div className="row g-3 align-items-end w-100">
-                <div className="col-lg-3 col-md-6">
-                  <FormField
-                    formPrefix="DashboardFilters"
-                    type="date"
-                    label="Data inicial"
-                    name="startDate"
-                    value={startDate}
-                    onChange={handleStartDateChange}
-                    className="mb-0"
-                    size="sm"
-                  />
-                </div>
-                <div className="col-lg-3 col-md-6">
-                  <FormField
-                    formPrefix="DashboardFilters"
-                    type="date"
-                    label="Data final"
-                    name="endDate"
-                    value={endDate}
-                    onChange={handleEndDateChange}
-                    className="mb-0"
-                    size="sm"
-                  />
-                </div>
-                <div className="col-lg-3 col-md-6">
-                  <div className="dashboard-filters-actions mb-2 mb-md-0">
-                    <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleResetPeriod}>
-                      Mês atual
-                    </button>
-                  </div>
-                </div>
-                <div className="col-lg-3 col-md-6">
-                  <div className="dashboard-period-info text-md-end text-muted small">
-                    Período selecionado: {periodoInicioLabel} — {periodoFimLabel}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="dashboard-hero card border-0 shadow-sm mb-4">
           <div className="dashboard-hero-body">
             <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">

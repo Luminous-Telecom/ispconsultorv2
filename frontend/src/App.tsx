@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import './styles/themes.css';
 import './styles/protection.css';
 
@@ -52,7 +53,11 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/adm" element={<Layout />}>
+                <Route path="/adm" element={
+                  <DashboardFiltersProvider>
+                    <Layout />
+                  </DashboardFiltersProvider>
+                }>
                   <Route index element={<Dashboard />} />
                   <Route path="dashboard" element={<Dashboard />} />
                 </Route>
