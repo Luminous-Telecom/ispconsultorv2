@@ -1084,9 +1084,11 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           id="clienteTabContent" 
           style={{ 
             flex: 1, 
-            overflow: 'hidden', 
+            overflow: (activeTab === 'contratos' || activeTab === 'financeiro') ? 'hidden' : 'auto', 
             padding: (activeTab === 'contratos' || activeTab === 'financeiro') ? '0' : '16px', 
-            minHeight: 0 
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column'
           }}
         >
           {/* Aba Dados Básicos */}

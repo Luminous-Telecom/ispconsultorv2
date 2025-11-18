@@ -94,9 +94,10 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   }, [bulkActions, isGeneratingPdf]);
 
   return (
-    <div className="row" style={{ margin: 0, padding: 0 }}>
-      <div className="col-12" style={{ padding: 0 }}>
-        <Table
+    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
+      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
             config={{
               columns: columns,
               data: sortedData,
@@ -142,10 +143,11 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             onRefresh={onRefresh}
             onSort={handleSort}
           />
+        </div>
 
         {/* Resumo Financeiro */}
         {filteredData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded" style={{ flexShrink: 0 }}>
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle text-muted me-2"></i>
               <span className="small text-muted">Legenda de cores</span>

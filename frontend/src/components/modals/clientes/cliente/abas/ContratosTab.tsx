@@ -13,9 +13,10 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   onRefresh
 }) => {
   return (
-    <div className="row">
-      <div className="col-12">
-        <Table
+    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
           config={{
             columns: [
               { key: 'id', label: 'ID', sortable: true, searchable: true, render: (contrato: Contrato) => contrato.id },
@@ -185,10 +186,11 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           onSelectionChange={setSelectedContratosItems}
           onRefresh={onRefresh}
         />
+        </div>
 
         {/* Resumo de Contratos */}
         {sortedContratosData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded" style={{ margin: '1rem' }}>
+          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded" style={{ margin: '1rem', flexShrink: 0 }}>
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle text-muted me-2"></i>
               <span className="small text-muted">Resumo de contratos</span>

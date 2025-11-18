@@ -1047,9 +1047,11 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             className="tab-content" 
             style={{ 
               flex: 1, 
-              overflow: 'hidden', 
+              overflow: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'servicos-adicionais') ? 'hidden' : 'auto', 
               padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'servicos-adicionais') ? '0' : '16px',
-              minHeight: 0
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column'
             }}
           >
             {/* Aba Contrato */}

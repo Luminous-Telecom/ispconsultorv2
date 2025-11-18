@@ -17,9 +17,10 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
 }) => {
 
   return (
-    <div className="row">
-      <div className="col-12">
-        <Table
+    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
           config={{
             columns: columns as TableColumn<CarneParcela>[],
             data: sortedData,
@@ -93,10 +94,11 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           }}
           onRefresh={onRefresh}
         />
+        </div>
 
         {/* Resumo Financeiro */}
         {sortedData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded" style={{ margin: '1rem' }}>
+          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded" style={{ margin: '1rem', flexShrink: 0 }}>
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle text-muted me-2"></i>
               <span className="small text-muted">Legenda de cores</span>
