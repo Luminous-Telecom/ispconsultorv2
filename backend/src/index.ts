@@ -25,33 +25,7 @@ import { frontendMiddleware } from './middleware/frontendMiddleware';
 // Importar modelos para configurar relacionamentos
 import './models';
 
-// Importar rotas
-import clienteRoutes from './routes/clienteRoutes';
-import planoRoutes from './routes/planoRoutes';
-import bancoRoutes from './routes/bancoRoutes';
-import usuarioRoutes from './routes/usuarioRoutes';
-import tituloRoutes from './routes/titulos';
-import boletoRoutes from './routes/boletoRoutes';
-import dadosEmpresaRoutes from './routes/dadosEmpresaRoutes';
-import dashboardRoutes from './routes/dashboardRoutes';
-import webhookRoutes from './routes/webhookRoutes';
-import schedulerRoutes from './routes/schedulerRoutes';
-import workerRoutes from './routes/workerRoutes';
-import parametroRoutes from './routes/parametroRoutes';
-import parametrosRoutes from './routes/parametrosRoutes';
-import contratoRoutes from './routes/contratos';
-import servidorEmailRoutes from './routes/servidorEmailRoutes';
-import servidorWhatsAppRoutes from './routes/servidorWhatsAppRoutes';
-import mensagemWhatsAppRoutes from './routes/mensagemWhatsAppRoutes';
-import mensagemEmailRoutes from './routes/mensagemEmailRoutes';
-import modeloContratoRoutes from './routes/modeloContratoRoutes';
-import modeloReciboRoutes from './routes/modeloReciboRoutes';
-import modeloCartaRoutes from './routes/modeloCartaRoutes';
-import diasVencimentoRoutes from './routes/diasVencimentoRoutes';
-import termosContratoRoutes from './routes/termosContrato';
-import modelosTermoRoutes from './routes/modelosTermo';
-import atualizacoesRoutes from './routes/atualizacoesRoutes';
-import authRoutes from './routes/authRoutes';
+import routes from './routes';
 
 // Importar middlewares de autenticação
 import { authMiddleware } from './middleware/authMiddleware';
@@ -220,37 +194,8 @@ app.use(authMiddleware);
 // Servir arquivos estáticos (imagens, etc.)
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// Rotas da API
-app.use('/api/auth', authRoutes);
-app.use('/api/clientes', clienteRoutes);
-app.use('/api/planos', planoRoutes);
-app.use('/api/bancos', bancoRoutes);
-app.use('/api/usuarios', usuarioRoutes);
-app.use('/api/titulos', tituloRoutes);
-app.use('/api/contratos', contratoRoutes);
-app.use('/boleto', boletoRoutes);
-app.use('/api/dados-empresa', dadosEmpresaRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/scheduler', schedulerRoutes);
-app.use('/api/workers', workerRoutes);
-app.use('/api/parametro', parametroRoutes);
-app.use('/api/parametros', parametrosRoutes);
-
-// Rotas dos servidores e configurações
-app.use('/api/servidores-email', servidorEmailRoutes);
-app.use('/api/servidores-whatsapp', servidorWhatsAppRoutes);
-app.use('/api/mensagens-whatsapp', mensagemWhatsAppRoutes);
-app.use('/api/mensagens-email', mensagemEmailRoutes);
-app.use('/api/modelos-contrato', modeloContratoRoutes);
-app.use('/api/modelos-recibo', modeloReciboRoutes);
-app.use('/api/modelos-carta', modeloCartaRoutes);
-app.use('/api/dias-vencimento', diasVencimentoRoutes);
-app.use('/api/termos-contrato', termosContratoRoutes);
-app.use('/api/modelos-termo', modelosTermoRoutes);
-app.use('/api/atualizacoes', atualizacoesRoutes);
-
-// Rotas de webhook
-app.use('/webhook', webhookRoutes);
+// Usar rotas da aplicação
+app.use(routes);
 
 // Rota de CEP (seguindo padrão PHP)
 app.get('/api/buscar-cep/:cep', (req, res) => {
