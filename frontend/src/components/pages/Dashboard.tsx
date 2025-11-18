@@ -778,11 +778,13 @@ const Dashboard: React.FC = () => {
     };
     
     return (
-      <div className="chart-container">
-        <h6 className="chart-title">{title}</h6>
-        <div className="value-chart">
-          <div className="value-display" style={{ color: data[0]?.color || '#6f42c1' }}>
-            {formatValue(value)}
+      <div className="chart-container-pie">
+        <h6 className="chart-title-pie">{title}</h6>
+        <div className="pie-chart-content">
+          <div className="value-chart">
+            <div className="value-display" style={{ color: data[0]?.color || '#6f42c1' }}>
+              {formatValue(value)}
+            </div>
           </div>
         </div>
       </div>
@@ -908,6 +910,12 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </div>
+
+          <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+            <div className="chart-card">
+              {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
+            </div>
+          </div>
         </div>
 
         <div className="row g-3 mb-4">
@@ -946,13 +954,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="row g-3">
-          <div className="col-xl-6 col-lg-6">
-            <div className="chart-card">
-              {renderValueChart(ticketMedioChartData, 'Ticket Médio R$', 'currency')}
-            </div>
-          </div>
-
-          <div className="col-xl-6 col-lg-6">
+          <div className="col-xl-12 col-lg-12">
             <div className="chart-card">
               {renderBarChart(getClientesPorPlano(), 'Clientes por Plano', 'number')}
             </div>
