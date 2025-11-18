@@ -1,13 +1,13 @@
 /* Variáveis CSS para temas */
 :root {
-  /* Cores base */
-  --primary-color: #007bff;
-  --primary-hover: #0056b3;
+  /* Cores base - Cores do site */
+  --primary-color: #06b6d4;
+  --primary-hover: #0891b2;
   --secondary-color: #6c757d;
   --success-color: #28a745;
   --danger-color: #dc3545;
   --warning-color: #ffc107;
-  --info-color: #17a2b8;
+  --info-color: #9333ea;
   
   /* Cores de fundo */
   --bg-primary: #ffffff;
@@ -27,11 +27,11 @@
   --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
   
-  /* Sidebar - Modo claro harmonizado */
+  /* Sidebar - Modo claro harmonizado com cores do site */
   --sidebar-bg: #f8f9fa;
   --sidebar-text: #212529;
   --sidebar-hover: #e9ecef;
-  --sidebar-active: #007bff;
+  --sidebar-active: #06b6d4;
   
   /* Transições */
   --transition: all 0.3s ease;
@@ -40,29 +40,29 @@
 
 /* Tema escuro */
 [data-theme="dark"] {
-  /* Cores de fundo - Tons harmonizados */
-  --bg-primary: #1b272c;
-  --bg-secondary: #263237;
-  --bg-tertiary: #263237;
-  --border-color: #505050;
+  /* Cores de fundo - Tons do site */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #1e293b;
+  --border-color: rgba(255, 255, 255, 0.1);
   --btn-close-filter: invert(1);
   
-  /* Cores de texto */
-  --text-primary: #ffffff;
-  --text-secondary: #e0e6ea;
-  --text-muted: #a0a6aa;
-  --border-light: #505050;
+  /* Cores de texto - Cores do site */
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-light: rgba(255, 255, 255, 0.1);
   
   /* Sombras */
   --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.4);
   --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.6);
   
-  /* Sidebar - Modo escuro harmonizado */
-  --sidebar-bg: #314249;
-  --sidebar-text: #ffffff;
-  --sidebar-hover: #586f79;
-  --sidebar-active: #1b272c;
+  /* Sidebar - Modo escuro harmonizado com cores do site */
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #e2e8f0;
+  --sidebar-hover: #334155;
+  --sidebar-active: #06b6d4;
 }
 
 /* Estilos base para ambos os temas */
@@ -113,7 +113,7 @@ body {
 .sidebar-logo {
   width: 32px;
   height: 32px;
-  background-color: #007bff;
+  background: linear-gradient(135deg, #9333ea 0%, #06b6d4 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -338,14 +338,14 @@ body {
 }
 
 .btn-info {
-  background: #3b82f6;
+  background: #9333ea;
   color: white;
-  border: 1px solid #3b82f6;
+  border: 1px solid #9333ea;
 }
 
 .btn-info:hover {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: #7e22ce;
+  border-color: #7e22ce;
 }
 
 .btn-warning {
@@ -395,7 +395,7 @@ body {
 
 .form-select:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
   outline: none;
   background: var(--bg-secondary);
 }
@@ -419,8 +419,9 @@ body {
   cursor: pointer;
 }
 
+/* Hover padrão - será sobrescrito por regras específicas de tema */
 .table tbody tr:hover {
-  background: #3a4a52;
+  background: var(--bg-tertiary);
 }
 
 .table tbody tr:nth-child(even) {
@@ -428,7 +429,7 @@ body {
 }
 
 .table tbody tr:nth-child(even):hover {
-  background: #3a4a52;
+  background: var(--bg-tertiary);
 }
 
 /* Garantir hover visível no modo claro */
@@ -443,28 +444,28 @@ body {
 /* Linha selecionada - modo claro - Limpa */
 :root .table.table-striped tbody tr.table-active,
 :root .table tbody tr.table-active {
-  background-color: #0d6efd !important;
+  background-color: #06b6d4 !important;
 }
 
 :root .table.table-striped tbody tr.table-active td,
 :root .table tbody tr.table-active td,
 :root .table.table-striped tbody tr.table-active th,
 :root .table tbody tr.table-active th {
-  background-color: #0d6efd !important;
+  background-color: #06b6d4 !important;
   color: white !important;
 }
 
 /* Linha selecionada - modo escuro - Limpa */
 [data-theme="dark"] .table.table-striped tbody tr.table-active,
 [data-theme="dark"] .table tbody tr.table-active {
-  background-color: #1e40af !important;
+  background-color: #06b6d4 !important;
 }
 
 [data-theme="dark"] .table.table-striped tbody tr.table-active td,
 [data-theme="dark"] .table tbody tr.table-active td,
 [data-theme="dark"] .table.table-striped tbody tr.table-active th,
 [data-theme="dark"] .table tbody tr.table-active th {
-  background-color: #1e40af !important;
+  background-color: #06b6d4 !important;
   color: white !important;
 }
 
@@ -596,7 +597,7 @@ body {
 
 /* Cores dos cards */
 .stat-card-primary .stat-number {
-  color: #007bff;
+  color: #06b6d4;
 }
 
 .stat-card-success .stat-number {
@@ -604,7 +605,7 @@ body {
 }
 
 .stat-card-info .stat-number {
-  color: #17a2b8;
+  color: #9333ea;
 }
 
 .stat-card-warning .stat-number {
@@ -618,7 +619,7 @@ body {
 }
 
 [data-theme="dark"] .stat-card-primary .stat-number {
-  color: #4dabf7;
+  color: #06b6d4;
 }
 
 [data-theme="dark"] .stat-card-success .stat-number {
@@ -664,11 +665,11 @@ body {
 }
 
 .metric-card-primary .metric-icon {
-  background: #007bff;
+  background: #06b6d4;
 }
 
 .metric-card-info .metric-icon {
-  background: #17a2b8;
+  background: #9333ea;
 }
 
 .metric-card-success .metric-icon {
@@ -1055,7 +1056,7 @@ body {
 }
 
 .table tbody tr:hover {
-  background-color: #3a4a52;
+  background-color: #334155;
 }
 
 /* Garantir texto claro no modo escuro para linhas não selecionadas */
@@ -1077,7 +1078,7 @@ body {
 }
 
 .badge-primary {
-  background: #007bff;
+  background: #06b6d4;
   color: white;
 }
 
@@ -1097,7 +1098,7 @@ body {
 }
 
 .badge-info {
-  background: #3b82f6;
+  background: #9333ea;
   color: white;
 }
 
@@ -1215,31 +1216,31 @@ body {
 }
 
 .alert-info {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: #3b82f6;
-  color: #3b82f6;
+  background: rgba(147, 51, 234, 0.1);
+  border-color: #9333ea;
+  color: #9333ea;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td,
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > th {
-  background-color: #2a3a42 !important;
+  background-color: #1e293b !important;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > td,
 [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > th {
-  background-color: #1e2a30 !important;
+  background-color: #0f172a !important;
 }
 
 [data-theme="dark"] .table-striped > tbody > tr:hover > td,
 [data-theme="dark"] .table-striped > tbody > tr:hover > th {
-  background-color: #3a4a52 !important;
+  background-color: #334155 !important;
 }
 
 
 [data-theme="dark"] .table thead th {
-  background-color: #1b272c !important;
+  background-color: #0f172a !important;
   color: #ffffff !important;
-  border-bottom: 2px solid #007bff !important;
+  border-bottom: 2px solid #06b6d4 !important;
 }
 
 /* Garantir que cabeçalhos de tabela tenham texto claro no tema escuro */
@@ -1248,19 +1249,19 @@ body {
 }
 
 [data-theme="dark"] .table tbody tr {
-  background-color: #2a3a42 !important;
+  background-color: #1e293b !important;
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even) {
-  background-color: #1e2a30 !important;
+  background-color: #0f172a !important;
 }
 
 [data-theme="dark"] .table tbody tr:hover {
-  background-color: #3a4a52 !important;
+  background-color: #334155 !important;
 }
 
 [data-theme="dark"] .table tbody tr:nth-child(even):hover {
-  background-color: #3a4a52 !important;
+  background-color: #334155 !important;
 }
 
 /* Sobrescrever bg-light para tema escuro */
@@ -1291,7 +1292,7 @@ body {
 
 /* Sobrescrever badge bg-primary para tema escuro */
 [data-theme="dark"] .badge.bg-primary {
-  background-color: #007bff !important;
+  background-color: #06b6d4 !important;
   color: #ffffff !important;
 }
 
@@ -1315,7 +1316,7 @@ body {
 
 /* Sobrescrever badge bg-info para tema escuro */
 [data-theme="dark"] .badge.bg-info {
-  background-color: #17a2b8 !important;
+  background-color: #9333ea !important;
   color: #ffffff !important;
 }
 
@@ -1323,7 +1324,7 @@ body {
 [data-theme="dark"] .card,
 [data-theme="dark"] .card-body,
 [data-theme="dark"] .table-responsive {
-  background-color: #2a3a42 !important;
+  background-color: #1e293b !important;
   border-color: var(--border-color) !important;
 }
 
@@ -1436,7 +1437,7 @@ body {
 
 [data-theme="light"] .dropdown-item.active,
 [data-theme="light"] .dropdown-item:active {
-  background-color: #0d6efd;
+  background-color: #06b6d4;
   color: #ffffff;
 }
 
@@ -1464,7 +1465,7 @@ body {
 
 [data-theme="dark"] .dropdown-item.active,
 [data-theme="dark"] .dropdown-item:active {
-  background-color: #0d6efd;
+  background-color: #06b6d4;
   color: #ffffff;
 }
 
@@ -1497,8 +1498,8 @@ textarea {
 }
 
 [data-theme="light"] .form-control:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.25);
 }
 
 [data-theme="light"] .form-control::placeholder {
@@ -1512,8 +1513,8 @@ textarea {
 }
 
 [data-theme="light"] .form-control-sm:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.25);
 }
 
 /* Corrigir cores do campo de busca no tema escuro */
@@ -1527,7 +1528,7 @@ textarea {
 
 [data-theme="dark"] .form-control:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
   background-color: var(--bg-tertiary);
 }
 
@@ -1545,7 +1546,7 @@ textarea {
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
 }
 
 /* Estilos para Dropdown Menu */
@@ -1748,7 +1749,7 @@ button.dropdown-toggle .bi-chevron-down,
 [data-theme="dark"] .form-select:focus {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-  border-color: #4dabf7;
+  border-color: #06b6d4;
 }
 
 [data-theme="dark"] .card {
@@ -1816,7 +1817,7 @@ button.dropdown-toggle .bi-chevron-down,
 
 .ckeditor-wrapper .ck-editor__editable:focus {
   border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.25) !important;
   outline: 0 !important;
 }
 
@@ -1880,7 +1881,7 @@ th {
 
 .ckeditor-wrapper .ck-source-editing-area textarea:focus {
   border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.25) !important;
   outline: 0 !important;
 }
 
