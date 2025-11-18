@@ -5,6 +5,10 @@ import bcrypt from 'bcryptjs';
 import { logger } from '../utils/logger';
 import { Usuario } from '../models/Usuario';
 
+interface AuthenticatedRequest extends Request {
+  user?: JwtPayload | string;
+}
+
 const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
     'string.email': 'Email inválido',
@@ -121,6 +125,52 @@ export class AuthController {
       });
     } catch (err) {
       logger.error('Erro inesperado durante login', {
+        error: err instanceof Error ? err.message : 'Erro desconhecido',
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+      });
+    }
+  }
+
+  static async me(req: Request, res: Response): Promise<void> {
+    try {
+      const authenticatedReq = req as AuthenticatedRequest;
+      const userPayload = authenticatedReq.user as JwtPayload;
+
+      if (!userPayload || !userPayload.sub) {
+        res.status(401).json({
+          success: false,
+          message: 'Token inválido',
+        });
+        return;
+      }
+
+      const usuario = await Usuario.findByPk(userPayload.sub);
+
+      if (!usuario) {
+        res.status(404).json({
+          success: false,
+          message: 'Usuário não encontrado',
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: {
+          id: usuario.id,
+          nome: usuario.nome,
+          email: usuario.email,
+          role: usuario.role,
+          precisaTrocarSenha: usuario.precisa_trocar_senha,
+          ultimoLogin: usuario.ultimo_login,
+        },
+      });
+    } catch (err) {
+      logger.error('Erro ao buscar usuário atual', {
         error: err instanceof Error ? err.message : 'Erro desconhecido',
       });
 

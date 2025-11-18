@@ -132,12 +132,28 @@ body {
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 }
 
+.sidebar-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
 .sidebar-title {
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--sidebar-text);
   margin: 0;
   letter-spacing: -0.02em;
+}
+
+.sidebar-user-name {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin: 0;
+  opacity: 0.8;
+  line-height: 1.2;
 }
 
 .sidebar-nav {

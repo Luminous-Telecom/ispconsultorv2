@@ -11,9 +11,22 @@ export interface LoginResponse {
   token_type: string;
   expires_in: string | number;
   user: {
+    id: number;
+    nome: string;
     email: string;
     role: string;
+    precisaTrocarSenha?: boolean;
+    ultimoLogin?: string;
   };
+}
+
+export interface CurrentUser {
+  id: number;
+  nome: string;
+  email: string;
+  role: string;
+  precisaTrocarSenha?: boolean;
+  ultimoLogin?: string;
 }
 
 export const authService = {
@@ -25,6 +38,10 @@ export const authService = {
     }
 
     return response;
+  },
+
+  async getCurrentUser(): Promise<ApiResponse<CurrentUser>> {
+    return defaultApiClient.get<CurrentUser>('/auth/me');
   },
 
   logout(): void {

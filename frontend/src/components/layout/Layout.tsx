@@ -20,7 +20,7 @@ import { DocumentosSistemaModal } from '../modals/parametros/documentos-sistema'
 import DiasVencimentoModal from '../modals/parametros/DiasVencimentoModal';
 import AtualizacoesModal from '../modals/parametros/AtualizacoesModal';
 import AgendadorTarefasModal from '../modals/parametros/AgendadorTarefasModal';
-import { authService } from '../../services/authService';
+import { authService, CurrentUser } from '../../services/authService';
 import { getAuthToken } from '../../services/core';
 
 const Layout: React.FC = () => {
@@ -35,6 +35,7 @@ const Layout: React.FC = () => {
   } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   
   // Dashboard filters (apenas na rota do dashboard)
   const isDashboard = location.pathname === '/adm' || location.pathname === '/adm/dashboard';
@@ -42,6 +43,26 @@ const Layout: React.FC = () => {
   
   // Estado para controlar qual modal está aberto (apenas um por vez)
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  
+  // Carregar usuário atual da API
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const token = getAuthToken();
+      if (token) {
+        try {
+          const response = await authService.getCurrentUser();
+          if (response.success && response.data) {
+            setCurrentUser(response.data);
+          }
+        } catch (error) {
+          // Silenciosamente falhar se não conseguir carregar o usuário
+          console.error('Erro ao carregar usuário atual:', error);
+        }
+      }
+    };
+    
+    loadCurrentUser();
+  }, []);
   
   // Funções helper para abrir/fechar modais
   const openModal = (modalName: string) => {
@@ -102,7 +123,12 @@ const Layout: React.FC = () => {
           <div className="sidebar-logo">
             <i className="bi bi-broadcast"></i>
           </div>
-          <h1 className="sidebar-title">BackNet</h1>
+          <div className="sidebar-title-wrapper">
+            <h1 className="sidebar-title">BackNet</h1>
+            {currentUser?.nome && (
+              <p className="sidebar-user-name">{currentUser.nome}</p>
+            )}
+          </div>
         </div>
         
         <nav className="sidebar-nav">
