@@ -107,6 +107,7 @@ export interface TableConfig<T = Record<string, unknown>> {
   stickyActions?: boolean;
   className?: string;
   customControls?: React.ReactNode;
+  customControlsAfterActions?: React.ReactNode;
   customFilters?: (data: T[]) => T[];
 }
 

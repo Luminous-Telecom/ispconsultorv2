@@ -30,6 +30,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
   const [showCancelados, setShowCancelados] = useState(false);
+  const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
+  const [dataVencimentoFim, setDataVencimentoFim] = useState<string>('');
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [showReceberModal, setShowReceberModal] = useState(false);
@@ -54,7 +56,10 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     limit,
     search: search || undefined,
     // Aplicar filtro de status no backend quando não mostrar cancelados
-    ...(showCancelados ? {} : { status: '!cancelado' })
+    ...(showCancelados ? {} : { status: '!cancelado' }),
+    // Aplicar filtros de data de vencimento se preenchidos
+    ...(dataVencimentoInicio ? { data_vencimento_inicio: dataVencimentoInicio } : {}),
+    ...(dataVencimentoFim ? { data_vencimento_fim: dataVencimentoFim } : {})
   };
 
   const { data: titulosData, isLoading, refetch } = useTitulosFinanceiro(filters);
@@ -98,7 +103,18 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   // Resetar página quando o filtro mudar
   useEffect(() => {
     setPage(1);
-  }, [showCancelados]);
+  }, [showCancelados, dataVencimentoInicio, dataVencimentoFim]);
+
+  // Limpar filtros quando o modal fechar
+  useEffect(() => {
+    if (!show) {
+      setDataVencimentoInicio('');
+      setDataVencimentoFim('');
+      setSearch('');
+      setPage(1);
+      setSelectedItems([]);
+    }
+  }, [show]);
 
   // Dados filtrados para usar no resumo financeiro (já filtrados pelo backend)
   const filteredData = sortedData;
@@ -467,6 +483,28 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                     <label className="form-check-label" htmlFor="showCanceladosFinanceiro">
                       Mostrar cancelados
                     </label>
+                  </div>
+                ),
+                customControlsAfterActions: (
+                  <div className="d-flex align-items-center gap-2">
+                    <label htmlFor="dataVencimentoInicio" className="form-label mb-0 small">Data Inicial:</label>
+                    <input
+                      type="date"
+                      id="dataVencimentoInicio"
+                      className="form-control form-control-sm"
+                      style={{ width: '150px' }}
+                      value={dataVencimentoInicio}
+                      onChange={(e) => setDataVencimentoInicio(e.target.value)}
+                    />
+                    <label htmlFor="dataVencimentoFim" className="form-label mb-0 small">Data Final:</label>
+                    <input
+                      type="date"
+                      id="dataVencimentoFim"
+                      className="form-control form-control-sm"
+                      style={{ width: '150px' }}
+                      value={dataVencimentoFim}
+                      onChange={(e) => setDataVencimentoFim(e.target.value)}
+                    />
                   </div>
                 )
               }}

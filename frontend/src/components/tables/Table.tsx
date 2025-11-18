@@ -66,6 +66,7 @@ function Table<T extends { id: number | string }>({
     stickyHeader: _stickyHeader = false,
     stickyActions: _stickyActions = false,
     customControls,
+    customControlsAfterActions,
     customFilters,
   } = config;
 
@@ -381,8 +382,8 @@ function Table<T extends { id: number | string }>({
       {(bulkActions.length > 0 || searchable || configPagination || (!configPagination && data.length > 0)) && (
         <div className="border-bottom" style={{ margin: 0, padding: 0, background: 'transparent' }}>
           {/* Primeira linha: Botões de ação */}
-          {bulkActions.length > 0 && (
-            <div className="d-flex align-items-center mb-2" style={{ padding: '0.5rem 1rem' }}>
+          {(bulkActions.length > 0 || customControlsAfterActions) && (
+            <div className="d-flex align-items-center justify-content-between mb-2" style={{ padding: '0.5rem 1rem' }}>
               <div className="d-flex" style={{ gap: '8px' }}>
                 {bulkActions.map((bulkAction, index) => {
               // Novo sempre habilitado, outros só quando há seleção
@@ -454,8 +455,13 @@ function Table<T extends { id: number | string }>({
                 </button>
               );
             })}
-          </div>
-        </div>
+              </div>
+              {customControlsAfterActions && (
+                <div className="d-flex align-items-center gap-2">
+                  {customControlsAfterActions}
+                </div>
+              )}
+            </div>
           )}
 
         {/* Segunda linha: Busca + Paginação + Reload */}

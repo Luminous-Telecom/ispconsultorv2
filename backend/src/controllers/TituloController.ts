@@ -341,11 +341,15 @@ export class TituloController {
         where.data_vencimento = {};
         
         if (data_vencimento_inicio) {
-          where.data_vencimento[Op.gte] = new Date(data_vencimento_inicio as string);
+          const inicioDate = new Date(data_vencimento_inicio as string);
+          inicioDate.setHours(0, 0, 0, 0);
+          where.data_vencimento[Op.gte] = inicioDate;
         }
         
         if (data_vencimento_fim) {
-          where.data_vencimento[Op.lte] = new Date(data_vencimento_fim as string);
+          const fimDate = new Date(data_vencimento_fim as string);
+          fimDate.setHours(23, 59, 59, 999);
+          where.data_vencimento[Op.lte] = fimDate;
         }
       }
 
