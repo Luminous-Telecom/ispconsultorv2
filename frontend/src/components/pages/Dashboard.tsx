@@ -367,8 +367,8 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
         <h6 className="chart-title">
           {title} ({formatPieValue(total, title)})
         </h6>
-        <div className="d-flex align-items-center" style={{ minWidth: 0, overflow: 'hidden', justifyContent: 'flex-start' }}>
-        <div ref={containerRef} style={{ width: '140px', height: '140px', minWidth: '140px', minHeight: '140px', maxWidth: '140px', flexShrink: 0, position: 'relative' }}>
+        <div className="pie-chart-wrapper">
+        <div ref={containerRef} className="pie-chart-container">
           {isReady && dimensions && dimensions.width > 0 && dimensions.height > 0 ? (
             <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={140} minWidth={140}>
               <PieChart>
@@ -407,7 +407,7 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
           )}
         </div>
 
-        <div className="chart-legend ms-3" style={{ minWidth: 0, flex: '1 1 auto', overflow: 'hidden', maxWidth: 'calc(100% - 160px)' }}>
+        <div className="chart-legend">
           {data.map((item, index) => (
             <div
               key={index}
@@ -416,7 +416,6 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
                 cursor: 'pointer',
                 opacity: hiddenItems.has(index) ? 0.5 : 1,
                 textDecoration: hiddenItems.has(index) ? 'line-through' : 'none',
-                minWidth: 0
               }}
               onClick={() => onToggleItem(index)}
             >
@@ -967,9 +966,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="dashboard-section card border-0 shadow-sm mb-4">
-          <div className="card-body">
-            <div className="row g-3 mb-4">
+        <div className="row g-3 mb-4">
           <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
@@ -1085,8 +1082,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
       </div>
     </div>
   );
