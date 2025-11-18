@@ -341,14 +341,18 @@ export class TituloController {
         where.data_vencimento = {};
         
         if (data_vencimento_inicio) {
-          const inicioDate = new Date(data_vencimento_inicio as string);
-          inicioDate.setHours(0, 0, 0, 0);
+          // Criar data local sem timezone para evitar problemas de conversão
+          // Formato esperado: YYYY-MM-DD
+          const [year, month, day] = (data_vencimento_inicio as string).split('-').map(Number);
+          const inicioDate = new Date(year, month - 1, day, 0, 0, 0, 0);
           where.data_vencimento[Op.gte] = inicioDate;
         }
         
         if (data_vencimento_fim) {
-          const fimDate = new Date(data_vencimento_fim as string);
-          fimDate.setHours(23, 59, 59, 999);
+          // Criar data local sem timezone para evitar problemas de conversão
+          // Formato esperado: YYYY-MM-DD
+          const [year, month, day] = (data_vencimento_fim as string).split('-').map(Number);
+          const fimDate = new Date(year, month - 1, day, 23, 59, 59, 999);
           where.data_vencimento[Op.lte] = fimDate;
         }
       }
