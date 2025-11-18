@@ -121,7 +121,13 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
     // Garantir que o contador seja decrementado em caso de erro ou fechamento da conexão
     req.once('error', decrementCounter);
     req.once('close', decrementCounter);
-    req.socket?.once('close', decrementCounter);
+    
+    // Adicionar listener no socket apenas se não estiver destruído
+    // e aumentar limite de listeners para evitar warning
+    if (req.socket && !req.socket.destroyed) {
+      req.socket.setMaxListeners(15);
+      req.socket.once('close', decrementCounter);
+    }
 
     // Continuar com o próximo middleware
     next();

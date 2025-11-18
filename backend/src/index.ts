@@ -269,6 +269,10 @@ const startServer = async () => {
     const server = app.listen(PORT, async () => {
       server.maxHeadersCount = 2000; // Aumentar limite de cabeçalhos
       
+      // Aumentar limite de listeners para evitar warning de memory leak
+      // Isso é necessário devido ao middleware DDoS que adiciona listeners em sockets
+      server.setMaxListeners(20);
+      
       try {
         const { SchedulerService } = await import('./services/SchedulerService');
         const schedulerService = SchedulerService.getInstance();
