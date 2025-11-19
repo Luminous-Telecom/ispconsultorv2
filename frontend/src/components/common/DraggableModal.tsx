@@ -207,14 +207,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           background-color: #ffffff !important;
           border-color: #ced4da !important;
           color: #000000 !important;
-          height: auto !important;
           min-height: 30px !important;
           padding: 4px 8px !important;
           font-size: 13px !important;
           resize: vertical !important;
-          overflow: auto !important;
-          max-height: none !important;
-          width: 100% !important;
         }
         
         /* Estilos para modo escuro */
@@ -241,22 +237,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
         [data-theme="dark"] .modal-content textarea.form-control:not(:disabled) {
           border-color: #4a5568 !important;
           color: #ffffff !important;
-          height: auto !important;
           min-height: 30px !important;
           padding: 4px 8px !important;
           font-size: 13px !important;
           resize: vertical !important;
-          overflow: auto !important;
-          max-height: none !important;
-          width: 100% !important;
-        }
-        
-        /* Sobrescrever qualquer CSS do Bootstrap */
-        .modal-content textarea {
-          resize: vertical !important;
-          height: auto !important;
-          min-height: 30px !important;
-          overflow: auto !important;
         }
         
         .modal-content .form-control:disabled:not(textarea) {
@@ -274,12 +258,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
           border-color: #2d3748 !important;
           color: #718096 !important;
           cursor: not-allowed !important;
-          height: auto !important;
           min-height: 30px !important;
           padding: 4px 8px !important;
           font-size: 13px !important;
           resize: vertical !important;
-          overflow: auto !important;
         }
       `}</style>
 

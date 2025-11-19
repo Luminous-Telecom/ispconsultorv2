@@ -1804,6 +1804,7 @@ textarea {
   line-height: 1.25 !important;
   border-radius: 8px !important;
   border: 1px solid var(--border-color) !important;
+  resize: vertical !important;
 }
 
 .form-control:focus,
@@ -2740,4 +2741,10 @@ select:focus,
 
 .border-bottom {
   border-bottom: var(--bs-border-width, 1px) var(--bs-border-style, solid) var(--border-color) !important;
+}
+
+/* Estilos para Mensagens WhatsApp */
+.whatsapp-messages-container textarea {
+  resize: vertical;
+  overflow: hidden;
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FormField } from '../../../../ui';
 import { MensagensTabProps } from '../types';
 
@@ -21,6 +21,38 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   onCopyVariable,
   onInsertVariable
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const textareas = containerRef.current.querySelectorAll('textarea');
+    const cleanupFunctions: Array<() => void> = [];
+    
+    textareas.forEach((textarea) => {
+      adjustTextareaHeight(textarea);
+      
+      const handleInput = () => {
+        adjustTextareaHeight(textarea);
+      };
+      
+      textarea.addEventListener('input', handleInput);
+      
+      cleanupFunctions.push(() => {
+        textarea.removeEventListener('input', handleInput);
+      });
+    });
+
+    return () => {
+      cleanupFunctions.forEach(cleanup => cleanup());
+    };
+  }, [mensagemPadrao, interacao1, interacao2, interacao3, mensagemType]);
+
   const handleVariableClick = (variable: string) => {
     if (onInsertVariable) {
       onInsertVariable(variable);
@@ -29,15 +61,17 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
     }
   };
 
+
   return (
-    <div>
+    <div className="whatsapp-messages-container" ref={containerRef}>
       <div className="card">
-        <div className="card-header py-1 px-2">
-          <small className="fw-bold mb-0">
+        <div className="card-header py-2 px-3">
+          <h6 className="mb-0 d-flex align-items-center">
+            <i className="bi bi-chat-dots me-2"></i>
             Configuração de Mensagens
-          </small>
+          </h6>
         </div>
-        <div className="card-body p-2">
+        <div className="card-body p-3">
           <div className="row g-2">
             <div className="col-12">
               <FormField
@@ -64,9 +98,12 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
           {mensagemType && (
             <>
               {/* Tipo de Envio */}
-              <div className="row g-2 mt-2">
+              <div className="row g-2 mt-3">
                 <div className="col-12">
-                  <div className="form-label small">Tipo de Envio</div>
+                  <label className="form-label mb-2">
+                    <i className="bi bi-send me-2"></i>
+                    Tipo de Envio
+                  </label>
                   <div className="btn-group w-100" role="group">
                     <input
                       type="radio"
@@ -78,6 +115,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
                     />
                     <label className="btn btn-outline-secondary" htmlFor="envio-desativado">
+                      <i className="bi bi-x-circle me-1"></i>
                       Desativar
                     </label>
 
@@ -91,6 +129,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
                     />
                     <label className="btn btn-outline-secondary" htmlFor="envio-pdf">
+                      <i className="bi bi-file-pdf me-1"></i>
                       Anexa PDF
                     </label>
                   </div>
@@ -98,13 +137,19 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               </div>
 
               {/* Mensagem Padrão */}
-              <div className="row g-2 mt-2">
+              <div className="row g-2 mt-3">
                 <div className="col-12">
+                  <div className="mb-2">
+                    <label className="form-label">
+                      <i className="bi bi-chat-text me-2"></i>
+                      Mensagem Padrão
+                    </label>
+                  </div>
                   <FormField
                     name="mensagemPadrao"
                     type="textarea"
-                    label="Mensagem Padrão"
-                    placeholder="Digite a mensagem padrão"
+                    label=""
+                    placeholder="Digite a mensagem padrão que será enviada..."
                     rows={10}
                     size="sm"
                     value={mensagemPadrao}
@@ -115,25 +160,47 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 
               {/* Container de Variáveis */}
               {variaveisData && (
-                <div className="row g-2 mt-2">
+                <div className="row g-2 mt-3">
                   <div className="col-12">
-                    <div className="card">
-                      <div className="card-header py-1 px-2">
-                        <small className="fw-bold mb-0">Variáveis Disponíveis para Mensagens</small>
+                    <div className="card border-primary">
+                      <div className="card-header py-2 px-3 bg-primary bg-opacity-10">
+                        <h6 className="mb-0 d-flex align-items-center">
+                          <i className="bi bi-code-square me-2"></i>
+                          Variáveis Disponíveis para Mensagens
+                        </h6>
+                        <small className="text-muted d-block mt-1">
+                          Clique nas variáveis para inserir na mensagem
+                        </small>
                       </div>
-                      <div className="card-body p-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                        <div className="row g-2">
+                      <div className="card-body p-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                        <div className="row g-3">
                           {Object.entries(variaveisData).map(([chave, grupo]) => (
                             <div className="col-md-6" key={chave}>
-                              <div className="mb-2">
-                                <small className="fw-bold d-block mb-1">{grupo.titulo}</small>
-                                <div className="d-flex flex-wrap gap-1 align-items-center">
+                              <div className="mb-3">
+                                <h6 className="fw-bold mb-2 text-primary">
+                                  <i className="bi bi-tag me-1"></i>
+                                  {grupo.titulo}
+                                </h6>
+                                <div className="d-flex flex-wrap gap-2 align-items-center">
                                   {grupo.variaveis.map((variavel) => (
                                     <div key={variavel.variavel} className="d-flex align-items-center gap-1">
                                       <span
-                                        className="badge bg-secondary"
-                                        style={{ cursor: 'pointer', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                                        className="badge bg-info text-dark"
+                                        style={{ 
+                                          cursor: 'pointer', 
+                                          fontSize: '0.75rem', 
+                                          padding: '0.35rem 0.65rem',
+                                          transition: 'all 0.2s ease'
+                                        }}
                                         onClick={() => handleVariableClick(variavel.variavel)}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.transform = 'scale(1.05)';
+                                          e.currentTarget.style.backgroundColor = '#0dcaf0';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.transform = 'scale(1)';
+                                          e.currentTarget.style.backgroundColor = '';
+                                        }}
                                         title={`${variavel.descricao}. Clique para inserir.`}
                                       >
                                         {variavel.variavel}
@@ -141,11 +208,12 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                                       {onCopyVariable && (
                                         <button
                                           type="button"
-                                          className="btn btn-sm btn-link p-0"
+                                          className="btn btn-sm btn-link p-0 text-muted"
                                           onClick={() => onCopyVariable(variavel.variavel)}
                                           title="Copiar variável"
+                                          style={{ fontSize: '0.75rem' }}
                                         >
-                                          <i className="bi bi-clipboard" style={{ fontSize: '0.75rem' }}></i>
+                                          <i className="bi bi-clipboard"></i>
                                         </button>
                                       )}
                                     </div>
@@ -162,13 +230,20 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               )}
 
               {/* Interações (opcionais) */}
-              <div className="row g-2 mt-2">
+              <div className="row g-2 mt-3">
                 <div className="col-12">
+                  <div className="mb-2">
+                    <label className="form-label">
+                      <i className="bi bi-chat-left-text me-2"></i>
+                      Interação 01
+                    </label>
+                    <small className="text-muted d-block">Mensagem opcional para primeira interação</small>
+                  </div>
                   <FormField
                     name="interacao1"
                     type="textarea"
-                    label="Interação 01"
-                    placeholder="Digite a primeira mensagem"
+                    label=""
+                    placeholder="Digite a primeira mensagem de interação..."
                     rows={3}
                     size="sm"
                     value={interacao1}
@@ -177,13 +252,20 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                 </div>
               </div>
 
-              <div className="row g-2">
+              <div className="row g-2 mt-2">
                 <div className="col-12">
+                  <div className="mb-2">
+                    <label className="form-label">
+                      <i className="bi bi-chat-left-text me-2"></i>
+                      Interação 02
+                    </label>
+                    <small className="text-muted d-block">Mensagem opcional para segunda interação</small>
+                  </div>
                   <FormField
                     name="interacao2"
                     type="textarea"
-                    label="Interação 02"
-                    placeholder="Digite a segunda mensagem"
+                    label=""
+                    placeholder="Digite a segunda mensagem de interação..."
                     rows={3}
                     size="sm"
                     value={interacao2}
@@ -192,13 +274,20 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                 </div>
               </div>
 
-              <div className="row g-2">
+              <div className="row g-2 mt-2">
                 <div className="col-12">
+                  <div className="mb-2">
+                    <label className="form-label">
+                      <i className="bi bi-chat-left-text me-2"></i>
+                      Interação 03
+                    </label>
+                    <small className="text-muted d-block">Mensagem opcional para terceira interação</small>
+                  </div>
                   <FormField
                     name="interacao3"
                     type="textarea"
-                    label="Interação 03"
-                    placeholder="Digite a terceira mensagem"
+                    label=""
+                    placeholder="Digite a terceira mensagem de interação..."
                     rows={3}
                     size="sm"
                     value={interacao3}
@@ -215,4 +304,3 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 };
 
 export default MensagensTab;
-
