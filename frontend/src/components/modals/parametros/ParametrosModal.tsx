@@ -13,7 +13,6 @@ interface ParametrosModalProps {
 
 interface ParametrosForm {
   validar_cpf_cnpj: boolean;
-  gerar_titulos_automatico: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
@@ -27,7 +26,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   // Dados iniciais do formulário
   const initialFormData: ParametrosForm = {
     validar_cpf_cnpj: true,
-    gerar_titulos_automatico: false,
     titulos_vence_sabado: false,
     titulos_vence_domingo: false,
     auto_lancamento_titulos: false,
@@ -49,7 +47,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     
     return {
       validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
-      gerar_titulos_automatico: parametros.data.gerar_titulos_automatico ?? false,
       titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
       titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
       auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
@@ -103,7 +100,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     if (parametros?.data) {
       setFormData({
         validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
-        gerar_titulos_automatico: parametros.data.gerar_titulos_automatico ?? false,
         titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
         titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
         auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
@@ -191,24 +187,6 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
               <h6 className="mb-0">Geração de Títulos</h6>
             </div>
             <div className="card-body">
-              <div className="form-check mb-3">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="gerar_titulos_automatico"
-                  name="gerar_titulos_automatico"
-                  checked={formData.gerar_titulos_automatico}
-                  onChange={() => handleCheckboxChange('gerar_titulos_automatico')}
-                  disabled={updateParametrosMutation.isPending}
-                />
-                <label className="form-check-label" htmlFor="gerar_titulos_automatico">
-                  Gerar Títulos Automaticamente
-                </label>
-                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
-                  Gera títulos automaticamente ao criar/renovar contratos
-                </div>
-              </div>
-
               <div className="form-check mb-3">
                 <input
                   type="checkbox"

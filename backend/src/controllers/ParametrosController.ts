@@ -6,7 +6,6 @@ export class ParametrosController {
   // Schema de validação
   private static updateSchema = Joi.object({
     validar_cpf_cnpj: Joi.boolean().optional(),
-    gerar_titulos_automatico: Joi.boolean().optional(),
     titulos_vence_sabado: Joi.boolean().optional(),
     titulos_vence_domingo: Joi.boolean().optional(),
     auto_lancamento_titulos: Joi.boolean().optional(),
@@ -22,7 +21,6 @@ export class ParametrosController {
       if (!parametros) {
         parametros = await Parametros.create({
           validar_cpf_cnpj: true,
-          gerar_titulos_automatico: false,
           titulos_vence_sabado: false,
           titulos_vence_domingo: false,
           auto_lancamento_titulos: false,
@@ -61,7 +59,6 @@ export class ParametrosController {
       if (!parametros) {
         parametros = await Parametros.create({
           validar_cpf_cnpj: req.body.validar_cpf_cnpj ?? true,
-          gerar_titulos_automatico: req.body.gerar_titulos_automatico ?? false,
           titulos_vence_sabado: req.body.titulos_vence_sabado ?? false,
           titulos_vence_domingo: req.body.titulos_vence_domingo ?? false,
           auto_lancamento_titulos: req.body.auto_lancamento_titulos ?? false,
