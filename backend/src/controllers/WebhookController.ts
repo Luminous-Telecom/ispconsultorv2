@@ -3,6 +3,7 @@ import { Banco } from '../models/Banco';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Titulo } from '../models/Titulo';
+import { Usuario } from '../models/Usuario';
 import { BancoApiService } from '../services/BancoApiService';
 import { logger } from '../utils/logger';
 import { JsonValue } from '../types';
@@ -242,7 +243,7 @@ export class WebhookController {
 
       // Tentar cada banco ativo para encontrar o token correto
       for (const banco of bancosAtivos) {
-        if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
+        if (!(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
           logger.warn('Secret do webhook inválido para banco ativo', {
             banco_id: banco.id,
             possui_secret: !!banco.webhook_secret
@@ -299,7 +300,7 @@ export class WebhookController {
       
       // Tentar consultar a notificação em cada banco EFI
       for (const banco of bancosEfi) {
-        if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
+        if (!(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
           logger.warn('Secret do webhook inválido para banco (fallback)', {
             banco_id: banco.id,
             possui_secret: !!banco.webhook_secret
@@ -377,7 +378,7 @@ export class WebhookController {
         dados
       });
 
-      if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
+      if (!(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
         logger.warn('Webhook EFI: secret inválido ao processar dados', {
           banco_id: banco.id,
           possui_secret: !!banco.webhook_secret
@@ -525,7 +526,7 @@ export class WebhookController {
       const customId = notificacao.custom_id || null;
       
 
-      if (!WebhookController.isWebhookSecretValid(banco, receivedSecret)) {
+      if (!(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
         logger.warn('Webhook EFI: secret inválido em notificação individual', {
           banco_id: banco.id,
           possui_secret: !!banco.webhook_secret
@@ -590,7 +591,7 @@ export class WebhookController {
       }
 
       const bancoRelacionado = bancoContext ?? (titulo as Titulo & { banco?: Banco | null }).banco ?? null;
-      if (!WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret)) {
+      if (!(await WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret))) {
         logger.warn('Webhook EFI: secret inválido ao processar título', {
           charge_id: chargeId,
           banco_id: bancoRelacionado?.id ?? null
@@ -683,7 +684,7 @@ export class WebhookController {
 
       const bancoRelacionado = bancoContext ?? titulo?.banco ?? null;
 
-      if (!WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret)) {
+      if (!(await WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret))) {
         logger.warn('Webhook EFI: secret inválido ao processar charge', {
           charge_id: chargeId,
           banco_id: bancoRelacionado?.id ?? null
@@ -782,7 +783,7 @@ export class WebhookController {
           include: [{ model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret'] }]
         }) as (Titulo & { banco?: Banco | null }) | null;
         if (titulo) {
-          if (!WebhookController.isWebhookSecretValid(titulo.banco ?? undefined, receivedSecret)) {
+          if (!(await WebhookController.isWebhookSecretValid(titulo.banco ?? undefined, receivedSecret))) {
             logger.warn('Webhook EFI: secret inválido ao processar custom_id', {
               titulo_id: titulo.id,
               banco_id: titulo.banco?.id ?? null
@@ -849,12 +850,29 @@ export class WebhookController {
     return statusMap[statusEfi?.toLowerCase()] || 'pendente';
   }
 
-  private static isWebhookSecretValid(banco?: Banco | null, receivedSecret?: string): boolean {
-    const expectedSecret = banco?.webhook_secret ?? process.env.INTERNAL_WEBHOOK_SECRET;
-    if (!expectedSecret) {
+  private static async isWebhookSecretValid(banco?: Banco | null, receivedSecret?: string): Promise<boolean> {
+    if (!receivedSecret) {
+      return false;
+    }
+
+    // Primeiro tentar validar com webhook_secret do banco (se existir)
+    if (banco?.webhook_secret && banco.webhook_secret === receivedSecret) {
       return true;
     }
-    return receivedSecret === expectedSecret;
+
+    // Buscar usuário pelo webhook_secret
+    const usuario = await Usuario.findOne({
+      where: {
+        webhook_secret: receivedSecret
+      }
+    });
+
+    if (usuario && usuario.webhook_secret === receivedSecret) {
+      return true;
+    }
+
+    // Se não encontrou usuário nem banco, rejeitar
+    return false;
   }
 
   /**

@@ -6,6 +6,7 @@ import { Plano } from '../models/Plano';
 import { Titulo } from '../models/Titulo';
 import { TermoContrato } from '../models/TermoContrato';
 import { Banco } from '../models/Banco';
+import { Usuario } from '../models/Usuario';
 import { TituloController } from './TituloController';
 import { logger } from '../utils/logger';
 import crypto from 'crypto';
@@ -317,7 +318,7 @@ export class IntegrationWebhookController {
       const body = req.body as IntegrationWebhookRequestBody;
       const secret = body.secret;
 
-      if (!IntegrationWebhookController.isSecretValid(secret)) {
+      if (!(await IntegrationWebhookController.isSecretValid(secret))) {
         res.status(401).json({
           success: false,
           message: 'Credenciais inválidas para o webhook de integração'
@@ -364,13 +365,24 @@ export class IntegrationWebhookController {
     }
   }
 
-  private static isSecretValid(secret?: string): boolean {
-    const expectedSecret = process.env.INTERNAL_WEBHOOK_SECRET;
-    if (!expectedSecret) {
-      logger.warn('Variável INTERNAL_WEBHOOK_SECRET não configurada');
+  private static async isSecretValid(secret?: string): Promise<boolean> {
+    if (!secret || typeof secret !== 'string') {
       return false;
     }
-    return typeof secret === 'string' && secret === expectedSecret;
+
+    // Buscar usuário pelo webhook_secret
+    const usuario = await Usuario.findOne({
+      where: {
+        webhook_secret: secret
+      }
+    });
+
+    if (usuario && usuario.webhook_secret === secret) {
+      return true;
+    }
+
+    // Se não encontrou usuário, rejeitar
+    return false;
   }
 
   private static parseLimit(limit?: number): number {
