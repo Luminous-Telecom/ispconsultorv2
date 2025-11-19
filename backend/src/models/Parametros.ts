@@ -6,6 +6,7 @@ interface ParametrosAttributes {
   validar_cpf_cnpj: boolean;
   gerar_titulos_automatico: boolean;
   titulos_vence_sabado: boolean;
+  titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
   total_titulos_financeiro: number;
   created_at?: Date;
@@ -19,6 +20,7 @@ class Parametros extends Model<ParametrosAttributes, ParametrosCreationAttribute
   public validar_cpf_cnpj!: boolean;
   public gerar_titulos_automatico!: boolean;
   public titulos_vence_sabado!: boolean;
+  public titulos_vence_domingo!: boolean;
   public auto_lancamento_titulos!: boolean;
   public total_titulos_financeiro!: number;
   public readonly created_at!: Date;
@@ -43,6 +45,11 @@ Parametros.init(
       defaultValue: false
     },
     titulos_vence_sabado: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    titulos_vence_domingo: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false

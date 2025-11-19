@@ -8,6 +8,7 @@ export class ParametrosController {
     validar_cpf_cnpj: Joi.boolean().optional(),
     gerar_titulos_automatico: Joi.boolean().optional(),
     titulos_vence_sabado: Joi.boolean().optional(),
+    titulos_vence_domingo: Joi.boolean().optional(),
     auto_lancamento_titulos: Joi.boolean().optional(),
     total_titulos_financeiro: Joi.number().integer().min(1).max(24).optional()
   }).min(1);
@@ -23,6 +24,7 @@ export class ParametrosController {
           validar_cpf_cnpj: true,
           gerar_titulos_automatico: false,
           titulos_vence_sabado: false,
+          titulos_vence_domingo: false,
           auto_lancamento_titulos: false,
           total_titulos_financeiro: 12
         });
@@ -61,6 +63,7 @@ export class ParametrosController {
           validar_cpf_cnpj: req.body.validar_cpf_cnpj ?? true,
           gerar_titulos_automatico: req.body.gerar_titulos_automatico ?? false,
           titulos_vence_sabado: req.body.titulos_vence_sabado ?? false,
+          titulos_vence_domingo: req.body.titulos_vence_domingo ?? false,
           auto_lancamento_titulos: req.body.auto_lancamento_titulos ?? false,
           total_titulos_financeiro: req.body.total_titulos_financeiro ?? 12
         });

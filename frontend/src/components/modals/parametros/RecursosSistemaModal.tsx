@@ -15,6 +15,7 @@ interface ParametrosForm {
   validar_cpf_cnpj: boolean;
   gerar_titulos_automatico: boolean;
   titulos_vence_sabado: boolean;
+  titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
   total_titulos_financeiro: number;
 }
@@ -28,6 +29,7 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
     validar_cpf_cnpj: true,
     gerar_titulos_automatico: false,
     titulos_vence_sabado: false,
+    titulos_vence_domingo: false,
     auto_lancamento_titulos: false,
     total_titulos_financeiro: 12
   };
@@ -49,6 +51,7 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
       validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
       gerar_titulos_automatico: parametros.data.gerar_titulos_automatico ?? false,
       titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
+      titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
       auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
       total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
     };
@@ -212,6 +215,24 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
                 </label>
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
                   Permite que títulos tenham vencimento aos sábados
+                </div>
+              </div>
+
+              <div className="form-check mb-3">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="titulos_vence_domingo"
+                  name="titulos_vence_domingo"
+                  checked={formData.titulos_vence_domingo}
+                  onChange={() => handleCheckboxChange('titulos_vence_domingo')}
+                  disabled={updateParametrosMutation.isPending}
+                />
+                <label className="form-check-label" htmlFor="titulos_vence_domingo">
+                  Títulos Vencem aos Domingos
+                </label>
+                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                  Permite que títulos tenham vencimento aos domingos
                 </div>
               </div>
 
