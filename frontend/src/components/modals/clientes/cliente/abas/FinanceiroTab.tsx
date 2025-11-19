@@ -113,8 +113,10 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               <div className="text-end">
                 <div className="small text-muted">Valor baixado:</div>
                 <strong>R$ {sortedData.reduce((sum: number, item: CarneParcela) => {
-                  if (item.pago && item.status === 'pago') {
-                    return sum + Number(item.valor_pago || 0);
+                  // Considerar apenas valor_pago se existir e for maior que 0
+                  const valorPago = Number(item.valor_pago || 0);
+                  if (valorPago > 0) {
+                    return sum + valorPago;
                   }
                   return sum;
                 }, 0).toFixed(2)}</strong>
