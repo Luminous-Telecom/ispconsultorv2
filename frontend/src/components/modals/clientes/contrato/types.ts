@@ -10,7 +10,7 @@ export interface ContratoForm {
   dia_vencimento_id: number;
   conta_boleto: number;
   data_validade_desconto: string;
-  modelo_contrato_id: number;
+  modelo_documento_id: number;
 }
 
 export interface TermoFormData {

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ModeloTermo } from '../models/ModeloTermo';
+import { ModeloDocumento } from '../models/ModeloDocumento';
 import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
@@ -34,8 +34,11 @@ export class ModeloTermoController {
   // Listar todos os modelos de termo
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const modelos = await ModeloTermo.findAll({
-        order: [['tipo_termo', 'ASC'], ['nome', 'ASC']]
+      const modelos = await ModeloDocumento.findAll({
+        where: {
+          tipo: 'termo'
+        },
+        order: [['nome', 'ASC']]
       });
 
       res.json({
@@ -55,7 +58,7 @@ export class ModeloTermoController {
   static async getById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const modelo = await ModeloTermo.findByPk(id);
+      const modelo = await ModeloDocumento.findByPk(id);
 
       if (!modelo) {
         res.status(404).json({
@@ -91,12 +94,17 @@ export class ModeloTermoController {
         return;
       }
 
-      const modelo = await ModeloTermo.create({
+      const modelo = await ModeloDocumento.create({
         nome,
         descricao,
-        tipo_termo: tipo_termo || 'adesao',
+        tipo: 'termo',
         conteudo,
-        ativo: true
+        ativo: true,
+        tamanho_maximo: 10485760,
+        tipos_permitidos: 'pdf,doc,docx,xls,xlsx',
+        retencao_dias: 365,
+        auto_backup: false,
+        criptografia: false
       });
 
       res.status(201).json({
@@ -119,7 +127,7 @@ export class ModeloTermoController {
       const { id } = req.params;
       const { nome, descricao, tipo_termo, conteudo, ativo } = req.body;
 
-      const modelo = await ModeloTermo.findByPk(id);
+      const modelo = await ModeloDocumento.findByPk(id);
       if (!modelo) {
         res.status(404).json({
           success: false,
@@ -131,7 +139,7 @@ export class ModeloTermoController {
       await modelo.update({
         nome,
         descricao,
-        tipo_termo,
+        tipo: 'termo',
         conteudo,
         ativo
       });
@@ -154,7 +162,7 @@ export class ModeloTermoController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const modelo = await ModeloTermo.findByPk(id);
+      const modelo = await ModeloDocumento.findByPk(id);
 
       if (!modelo) {
         res.status(404).json({
@@ -183,7 +191,13 @@ export class ModeloTermoController {
   static async getByTipo(req: Request, res: Response): Promise<void> {
     try {
       const { tipo } = req.params;
-      const modelos = await ModeloTermo.findByTipo(tipo);
+      const modelos = await ModeloDocumento.findAll({
+        where: {
+          tipo: 'termo',
+          ativo: true
+        },
+        order: [['nome', 'ASC']]
+      });
 
       res.json({
         success: true,
@@ -202,7 +216,7 @@ export class ModeloTermoController {
   static async generatePdf(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const modelo = await ModeloTermo.findByPk(id);
+      const modelo = await ModeloDocumento.findByPk(id);
 
       if (!modelo) {
         res.status(404).json({
@@ -390,7 +404,7 @@ export class ModeloTermoController {
       const { id } = req.params;
       const { clienteId } = req.body;
 
-      const modelo = await ModeloTermo.findByPk(id);
+      const modelo = await ModeloDocumento.findByPk(id);
 
       if (!modelo) {
         res.status(404).json({
@@ -607,7 +621,7 @@ export class ModeloTermoController {
     try {
       const { id, contratoId } = req.params;
 
-      const modelo = await ModeloTermo.findByPk(id);
+      const modelo = await ModeloDocumento.findByPk(id);
 
       if (!modelo) {
         res.status(404).json({

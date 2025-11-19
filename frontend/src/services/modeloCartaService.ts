@@ -38,27 +38,27 @@ const normalizeResponse = <T>(response: ApiResponse<T>, fallback: T): { success:
 
 class ModeloCartaService {
   static async list(): Promise<{ success: boolean; data: ModeloCarta[]; message: string }> {
-    const response = await apiService.get<ModeloCarta[]>('/modelos-carta');
+    const response = await apiService.get<ModeloCarta[]>('/modelos-documento?tipo=carta');
     return normalizeResponse(response, []);
   }
 
   static async getById(id: number): Promise<{ success: boolean; data: ModeloCarta; message: string }> {
-    const response = await apiService.get<ModeloCarta>(`/modelos-carta/${id}`);
+    const response = await apiService.get<ModeloCarta>(`/modelos-documento/${id}`);
     return normalizeResponse(response, {} as ModeloCarta);
   }
 
   static async create(data: CreateModeloCarta): Promise<{ success: boolean; data: ModeloCarta; message: string }> {
-    const response = await apiService.post<ModeloCarta>('/modelos-carta', data);
+    const response = await apiService.post<ModeloCarta>('/modelos-documento', { ...data, tipo: 'carta' });
     return normalizeResponse(response, {} as ModeloCarta);
   }
 
   static async update(id: number, data: UpdateModeloCarta): Promise<{ success: boolean; data: ModeloCarta; message: string }> {
-    const response = await apiService.put<ModeloCarta>(`/modelos-carta/${id}`, data);
+    const response = await apiService.put<ModeloCarta>(`/modelos-documento/${id}`, data);
     return normalizeResponse(response, {} as ModeloCarta);
   }
 
   static async delete(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await apiService.delete<void>(`/modelos-carta/${id}`);
+    const response = await apiService.delete<void>(`/modelos-documento/${id}`);
     return {
       success: response.success,
       message: response.message ?? '',
@@ -67,7 +67,7 @@ class ModeloCartaService {
 
   static async generatePdf(id: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-carta/${id}/pdf`, { responseType: 'blob' });
+      const response = await apiService.get<Blob>(`/modelos-documento/${id}/pdf`, { responseType: 'blob' });
       const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {
@@ -83,7 +83,7 @@ class ModeloCartaService {
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-carta/${id}/pdf-teste?cliente_id=${clienteId}`, { responseType: 'blob' });
+      const response = await apiService.get<Blob>(`/modelos-documento/${id}/pdf-teste?cliente_id=${clienteId}`, { responseType: 'blob' });
       const blob = response.data;
 
       if (!blob || !(blob instanceof Blob)) {

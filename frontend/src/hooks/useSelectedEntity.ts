@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 /**
  * Hook utilitário para sincronizar um objeto selecionado com seu ID e a lista de entidades disponível.
@@ -16,8 +16,21 @@ export function useSelectedEntity<T extends { id: number }>(
   entities: T[] | null | undefined
 ): [T | null, React.Dispatch<React.SetStateAction<T | null>>] {
   const [selectedEntity, setSelectedEntity] = useState<T | null>(null);
+  const prevEntitiesRef = useRef<T[] | null | undefined>(null);
+  const prevSelectedIdRef = useRef<number | null | undefined>(null);
 
   useEffect(() => {
+    // Verificar se realmente mudou para evitar loops
+    const entitiesChanged = prevEntitiesRef.current !== entities;
+    const selectedIdChanged = prevSelectedIdRef.current !== selectedId;
+    
+    if (!entitiesChanged && !selectedIdChanged) {
+      return;
+    }
+
+    prevEntitiesRef.current = entities;
+    prevSelectedIdRef.current = selectedId;
+
     if (!selectedId) {
       setSelectedEntity(null);
       return;
@@ -34,6 +47,7 @@ export function useSelectedEntity<T extends { id: number }>(
         return previous && previous.id === selectedId ? previous : previous ?? null;
       }
 
+      // Comparar por ID para evitar atualizações desnecessárias
       if (previous?.id === entity.id) {
         return previous;
       }

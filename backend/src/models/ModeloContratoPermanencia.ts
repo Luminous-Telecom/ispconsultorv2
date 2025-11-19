@@ -3,20 +3,20 @@ import { sequelize } from '../config/database';
 
 export interface ModeloContratoPermanenciaAttributes {
   id: number;
-  modelo_contrato_id: number;
+  modelo_documento_id: number;
   modelo: string;
   created_at: Date;
   updated_at: Date;
 }
 
 export interface ModeloContratoPermanenciaCreationAttributes {
-  modelo_contrato_id: number;
+  modelo_documento_id: number;
   modelo: string;
 }
 
 export class ModeloContratoPermanencia extends Model<ModeloContratoPermanenciaAttributes, ModeloContratoPermanenciaCreationAttributes> implements ModeloContratoPermanenciaAttributes {
   public id!: number;
-  public modelo_contrato_id!: number;
+  public modelo_documento_id!: number;
   public modelo!: string;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
@@ -29,11 +29,11 @@ ModeloContratoPermanencia.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    modelo_contrato_id: {
+    modelo_documento_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'modelo_contrato',
+        model: 'modelo_documento',
         key: 'id',
       },
     },
@@ -60,7 +60,7 @@ ModeloContratoPermanencia.init(
     updatedAt: 'updated_at',
     indexes: [
       {
-        fields: ['modelo_contrato_id'],
+        fields: ['modelo_documento_id'],
       },
     ],
   }

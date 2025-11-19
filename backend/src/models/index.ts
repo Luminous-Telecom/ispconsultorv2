@@ -9,9 +9,7 @@ import { ScheduledRoutine } from './ScheduledRoutine';
 import { RoutineExecutionLog } from './RoutineExecutionLog';
 import { ServidorEmail } from './ServidorEmail';
 import { ServidorWhatsApp } from './ServidorWhatsApp';
-import { ModeloContrato } from './ModeloContrato';
-import { ModeloRecibo } from './ModeloRecibo';
-import { ModeloCarta } from './ModeloCarta';
+import { ModeloDocumento } from './ModeloDocumento';
 import { DiasVencimento } from './DiasVencimento';
 import { TermoContrato } from './TermoContrato';
 import { ModeloTermo } from './ModeloTermo';
@@ -134,13 +132,13 @@ Plano.hasMany(ContratoPlanoAdicional, {
   as: 'contratosAdicionais'
 });
 
-TermoContrato.belongsTo(ModeloTermo, {
-  foreignKey: 'modelo_termo_id',
-  as: 'modeloTermo'
+TermoContrato.belongsTo(ModeloDocumento, {
+  foreignKey: 'modelo_documento_id',
+  as: 'modeloDocumento'
 });
 
-ModeloTermo.hasMany(TermoContrato, {
-  foreignKey: 'modelo_termo_id',
+ModeloDocumento.hasMany(TermoContrato, {
+  foreignKey: 'modelo_documento_id',
   as: 'termosContrato'
 });
 
@@ -169,9 +167,7 @@ export {
   RoutineExecutionLog,
   ServidorEmail,
   ServidorWhatsApp,
-  ModeloContrato,
-  ModeloRecibo,
-  ModeloCarta,
+  ModeloDocumento,
   DiasVencimento,
   TermoContrato,
   ModeloTermo,

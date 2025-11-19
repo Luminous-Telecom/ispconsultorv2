@@ -23,7 +23,7 @@ import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
 import { TermoContrato } from './TermoContrato';
-import { ModeloTermo } from './ModeloTermo';
+import { ModeloDocumento } from './ModeloDocumento';
 
 export class Contrato extends Model<
   InferAttributes<Contrato>,
@@ -43,7 +43,7 @@ export class Contrato extends Model<
   declare dia_vencimento_id: number | null;
   declare conta_boleto: number | null;
   declare data_validade_desconto: Date | null;
-  declare modelo_contrato_id: number | null;
+  declare modelo_documento_id: number | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -139,17 +139,17 @@ export class Contrato extends Model<
     return TermoContrato.findAtivosByContrato(this.id);
   }
 
-  async adicionarTermo(modeloTermoId: number, assinado: 'SIM' | 'NAO' = 'NAO'): Promise<TermoContrato> {
-    const modeloTermo = await ModeloTermo.findByPk(modeloTermoId);
-    if (!modeloTermo) {
-      throw new Error('Modelo de termo não encontrado');
+  async adicionarTermo(modeloDocumentoId: number, tipoTermo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao' = 'adesao', assinado: 'SIM' | 'NAO' = 'NAO'): Promise<TermoContrato> {
+    const modeloDocumento = await ModeloDocumento.findByPk(modeloDocumentoId);
+    if (!modeloDocumento) {
+      throw new Error('Modelo de documento não encontrado');
     }
     
     return this.createTermo({
       contrato_id: this.id,
-      modelo_termo_id: modeloTermoId,
-      tipo_termo: modeloTermo.tipo_termo,
-      conteudo: modeloTermo.conteudo,
+      modelo_documento_id: modeloDocumentoId,
+      tipo_termo: tipoTermo,
+      conteudo: modeloDocumento.conteudo,
       assinado: assinado,
       ativo: true
     });
@@ -244,12 +244,12 @@ Contrato.init(
       allowNull: true,
       comment: 'Data de validade do desconto aplicado'
     },
-    modelo_contrato_id: {
+    modelo_documento_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: 'ID do modelo de contrato a ser utilizado',
+      comment: 'ID do modelo de documento a ser utilizado',
       references: {
-        model: 'modelo_contrato',
+        model: 'modelo_documento',
         key: 'id'
       }
     },

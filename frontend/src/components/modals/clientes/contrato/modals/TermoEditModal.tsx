@@ -48,7 +48,7 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
         await updateTermoMutation.mutateAsync({
           id: editingTermo.id,
           data: {
-            modelo_termo_id: termoFormData.termoCadastradoId,
+            modelo_documento_id: termoFormData.termoCadastradoId,
             assinado: termoFormData.assinado
           }
         });
@@ -57,7 +57,7 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
         await createTermoMutation.mutateAsync({
           contratoId: contratoId,
           data: {
-            modelo_termo_id: termoFormData.termoCadastradoId,
+            modelo_documento_id: termoFormData.termoCadastradoId,
             assinado: termoFormData.assinado
           }
         });

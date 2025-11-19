@@ -4,7 +4,7 @@ import { Contrato } from '../types';
 export interface TermoContrato {
   id: number;
   contrato_id: number;
-  modelo_termo_id?: number | null;
+  modelo_documento_id?: number | null;
   tipo_termo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao';
   conteudo: string;
   assinado: 'SIM' | 'NAO';
@@ -15,15 +15,15 @@ export interface TermoContrato {
   created_at: Date;
   updated_at: Date;
   contrato?: Contrato;
-  modeloTermo?: {
+  modeloDocumento?: {
     id: number;
     nome: string;
-    tipo_termo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao';
+    tipo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao';
   };
 }
 
 export interface CreateTermoContratoData {
-  modelo_termo_id?: number | null;
+  modelo_documento_id?: number | null;
   assinado?: 'SIM' | 'NAO';
 }
 

@@ -1,42 +1,31 @@
-import { ModeloContrato } from './ModeloContrato';
+import { ModeloDocumento } from './ModeloDocumento';
 import ModeloContratoConteudo from './ModeloContratoConteudo';
-import ModeloTermoAdesao from './ModeloTermoAdesao';
 import ModeloContratoPermanencia from './ModeloContratoPermanencia';
 
 // Definir associações
-ModeloContrato.hasOne(ModeloContratoConteudo, {
-  foreignKey: 'modelo_contrato_id',
+// Nota: ModeloTermoAdesao foi removido - agora usa campo conteudo_adesao em ModeloDocumento
+ModeloDocumento.hasOne(ModeloContratoConteudo, {
+  foreignKey: 'modelo_documento_id',
   as: 'modeloContratoConteudo',
 });
 
-ModeloContrato.hasOne(ModeloTermoAdesao, {
-  foreignKey: 'modelo_contrato_id',
-  as: 'modeloTermoAdesao',
-});
-
-ModeloContrato.hasOne(ModeloContratoPermanencia, {
-  foreignKey: 'modelo_contrato_id',
+ModeloDocumento.hasOne(ModeloContratoPermanencia, {
+  foreignKey: 'modelo_documento_id',
   as: 'modeloContratoPermanencia',
 });
 
-ModeloContratoConteudo.belongsTo(ModeloContrato, {
-  foreignKey: 'modelo_contrato_id',
-  as: 'modeloContrato',
+ModeloContratoConteudo.belongsTo(ModeloDocumento, {
+  foreignKey: 'modelo_documento_id',
+  as: 'modeloDocumento',
 });
 
-ModeloTermoAdesao.belongsTo(ModeloContrato, {
-  foreignKey: 'modelo_contrato_id',
-  as: 'modeloContrato',
-});
-
-ModeloContratoPermanencia.belongsTo(ModeloContrato, {
-  foreignKey: 'modelo_contrato_id',
-  as: 'modeloContrato',
+ModeloContratoPermanencia.belongsTo(ModeloDocumento, {
+  foreignKey: 'modelo_documento_id',
+  as: 'modeloDocumento',
 });
 
 export {
-  ModeloContrato,
+  ModeloDocumento,
   ModeloContratoConteudo,
-  ModeloTermoAdesao,
   ModeloContratoPermanencia,
 };

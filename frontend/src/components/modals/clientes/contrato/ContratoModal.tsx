@@ -82,7 +82,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     dia_vencimento_id: 0,
     conta_boleto: 0,
     data_validade_desconto: '',
-    modelo_contrato_id: 0
+    modelo_documento_id: 0
   });
 
   const [errors, setErrors] = useState<Partial<ContratoForm>>({});
@@ -125,7 +125,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const { data: planosData } = usePlanos();
   const { data: bancosData } = useBancos();
   const { data: modelosContratoData } = useQuery({
-    queryKey: ['modelos-contrato'],
+    queryKey: ['modelos-documento', 'contrato'],
     queryFn: () => DocumentoSistemaService.getByType('contrato'),
     enabled: show,
   });
@@ -143,7 +143,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Objetos selecionados sincronizados com os selects
   const [planoSelecionado, setPlanoSelecionado] = useSelectedEntity<Plano>(formData.plano_id, planos);
   const [bancoSelecionado, setBancoSelecionado] = useSelectedEntity<Banco>(formData.conta_boleto, bancos);
-  const [modeloContratoSelecionado, setModeloContratoSelecionado] = useSelectedEntity<DocumentoSistema>(formData.modelo_contrato_id, modelosContrato);
+  const [modeloContratoSelecionado, setModeloContratoSelecionado] = useSelectedEntity<DocumentoSistema>(formData.modelo_documento_id, modelosContrato);
 
   // Hooks para termos (apenas no modo edição)
   const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(isEditMode ? (internalContratoId || 0) : 0);
@@ -210,7 +210,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         dia_vencimento_id: contratoData.dia_vencimento_id || 0,
         conta_boleto: contratoData.conta_boleto || 0,
         data_validade_desconto: normalizeDate(contratoData.data_validade_desconto),
-        modelo_contrato_id: contratoData.modelo_contrato_id || 0
+        modelo_documento_id: contratoData.modelo_documento_id || 0
       });
       setErrors({});
     } else if (!isEditMode && show) {
@@ -227,7 +227,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         dia_vencimento_id: 0,
         conta_boleto: 0,
         data_validade_desconto: '',
-        modelo_contrato_id: 0
+        modelo_documento_id: 0
       });
       setErrors({});
     }
@@ -262,7 +262,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
 
   const handleModeloContratoSelect = (modelo: DocumentoSistema) => {
     setModeloContratoSelecionado(modelo);
-    setFormData(prev => ({ ...prev, modelo_contrato_id: modelo.id }));
+    setFormData(prev => ({ ...prev, modelo_documento_id: modelo.id }));
     setShowModeloContratoModal(false);
   };
 
@@ -273,8 +273,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       newErrors.plano_id = 'Plano é obrigatório';
     }
 
-    if (!formData.modelo_contrato_id || formData.modelo_contrato_id === 0) {
-      newErrors.modelo_contrato_id = 'Modelo de contrato é obrigatório';
+    if (!formData.modelo_documento_id || formData.modelo_documento_id === 0) {
+      newErrors.modelo_documento_id = 'Modelo de contrato é obrigatório';
     }
 
     if (!formData.dia_vencimento_id || formData.dia_vencimento_id === 0) {
@@ -524,7 +524,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           setEditingTermo(termo);
           setTermoFormData({
             assinado: termo.assinado,
-            termoCadastradoId: termo.modelo_termo_id || 0
+            termoCadastradoId: termo.modelo_documento_id || 0
           });
           setShowTermoModal(true);
         }
@@ -560,10 +560,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       action: async () => {
         if (selectedTermosItems.length > 0 && internalContratoId) {
           const termo = selectedTermosItems[0];
-          if (termo.modelo_termo_id && internalContratoId) {
+          if (termo.modelo_documento_id && internalContratoId) {
             setIsGeneratingPdf(true);
             try {
-              const blob = await ModeloTermoService.generatePdfWithContrato(termo.modelo_termo_id, internalContratoId);
+              const blob = await ModeloTermoService.generatePdfWithContrato(termo.modelo_documento_id, internalContratoId);
               const url = window.URL.createObjectURL(blob);
               setPdfUrl(url);
               setShowPreview(true);
@@ -827,7 +827,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Colunas para a tabela de termos
   const termosColumns = [
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'nome_termo', label: 'Nome do Termo', sortable: true, render: (item: TermoContrato) => item.modeloTermo?.nome || '-' },
+    { key: 'nome_termo', label: 'Nome do Termo', sortable: true, render: (item: TermoContrato) => item.modeloDocumento?.nome || '-' },
     {
       key: 'assinado',
       label: 'Assinado',
@@ -910,7 +910,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           dia_vencimento_id: formData.dia_vencimento_id,
           conta_boleto: formData.conta_boleto,
           data_validade_desconto: formData.data_validade_desconto || undefined,
-          modelo_contrato_id: formData.modelo_contrato_id
+          modelo_documento_id: formData.modelo_documento_id
         };
 
         const novoContrato = await createContratoMutation.mutateAsync(contratoData);

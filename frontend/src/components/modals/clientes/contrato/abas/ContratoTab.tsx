@@ -18,7 +18,7 @@ interface ContratoForm {
   dia_vencimento_id: number;
   conta_boleto: number;
   data_validade_desconto: string;
-  modelo_contrato_id: number;
+  modelo_documento_id: number;
 }
 
 interface ContratoTabProps {
@@ -278,7 +278,7 @@ const ContratoTab: React.FC<ContratoTabProps> = ({
           label="Modelo de Contrato"
           idFieldTitle="Digite o ID do modelo de contrato"
           helpText="Selecione um modelo de contrato cadastrado no sistema"
-          error={errors.modelo_contrato_id}
+          error={errors.modelo_documento_id}
           required
         />
       </div>

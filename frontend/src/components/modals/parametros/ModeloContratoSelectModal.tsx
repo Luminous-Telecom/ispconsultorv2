@@ -75,7 +75,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
 
   // Query para buscar modelos de contrato
   const { data: modelosData, isLoading, refetch } = useQuery({
-    queryKey: ['modelos-contrato'],
+    queryKey: ['modelos-documento', 'contrato'],
     queryFn: () => DocumentoSistemaService.getByType('contrato'),
     enabled: show,
   });

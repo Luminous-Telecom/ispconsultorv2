@@ -3,7 +3,7 @@ import { Contrato } from '../models/Contrato';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
-import { ModeloContrato } from '../models/ModeloContrato';
+import { ModeloDocumento } from '../models/ModeloDocumento';
 import { Op, WhereOptions } from 'sequelize';
 import * as Joi from 'joi';
 
@@ -46,7 +46,7 @@ export class ContratoController {
     dia_vencimento_id: Joi.number().integer().min(1).required(),
     conta_boleto: Joi.number().integer().min(1).required(),
     data_validade_desconto: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
-    modelo_contrato_id: Joi.number().integer().min(1).required()
+    modelo_documento_id: Joi.number().integer().min(1).required()
   });
 
   // Schema de validação para atualização
@@ -63,7 +63,7 @@ export class ContratoController {
     dia_vencimento_id: Joi.number().integer().min(1),
     conta_boleto: Joi.number().integer().min(1),
     data_validade_desconto: Joi.alternatives().try(Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/), Joi.date()).allow(null, '').optional(),
-    modelo_contrato_id: Joi.number().integer().min(1)
+    modelo_documento_id: Joi.number().integer().min(1)
   });
 
   // Listar todos os contratos com paginação
@@ -225,13 +225,13 @@ export class ContratoController {
         }
       }
 
-      // Verificar se o modelo de contrato existe (se fornecido)
-      if (value.modelo_contrato_id) {
-        const modeloContrato = await ModeloContrato.findByPk(value.modelo_contrato_id);
-        if (!modeloContrato) {
+      // Verificar se o modelo de documento existe (se fornecido)
+      if (value.modelo_documento_id) {
+        const modeloDocumento = await ModeloDocumento.findByPk(value.modelo_documento_id);
+        if (!modeloDocumento) {
           res.status(404).json({
             success: false,
-            message: 'Modelo de contrato não encontrado'
+            message: 'Modelo de documento não encontrado'
           });
           return;
         }
@@ -290,10 +290,10 @@ export class ContratoController {
           fields?: string[];
         }
         const fkError = error as ForeignKeyError;
-        if (fkError.table === 'modelo_contrato' || fkError.fields?.includes('modelo_contrato_id')) {
+        if (fkError.table === 'modelo_documento' || fkError.fields?.includes('modelo_documento_id')) {
           res.status(404).json({
             success: false,
-            message: 'Modelo de contrato não encontrado'
+            message: 'Modelo de documento não encontrado'
           });
           return;
         }

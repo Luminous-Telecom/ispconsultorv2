@@ -16,7 +16,7 @@ export interface Contrato {
   dia_vencimento_id: number | null;
   conta_boleto: number | null;
   data_validade_desconto: string | null;
-  modelo_contrato_id: number | null;
+  modelo_documento_id: number | null;
   created_at: string;
   updated_at: string;
   cliente?: {
@@ -48,7 +48,7 @@ export interface CreateContratoData {
   dia_vencimento_id: number;
   conta_boleto: number;
   data_validade_desconto?: string;
-  modelo_contrato_id: number;
+  modelo_documento_id: number;
 }
 
 export interface UpdateContratoData extends Partial<CreateContratoData> {

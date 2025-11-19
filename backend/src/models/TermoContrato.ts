@@ -10,7 +10,7 @@ import {
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Contrato } from './Contrato';
-import { ModeloTermo } from './ModeloTermo';
+import { ModeloDocumento } from './ModeloDocumento';
 
 export class TermoContrato extends Model<
   InferAttributes<TermoContrato>,
@@ -18,7 +18,7 @@ export class TermoContrato extends Model<
 > {
   declare id: CreationOptional<number>;
   declare contrato_id: number;
-  declare modelo_termo_id: number | null;
+  declare modelo_documento_id: number | null;
   declare tipo_termo: 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao';
   declare conteudo: string;
   declare assinado: 'SIM' | 'NAO';
@@ -34,9 +34,9 @@ export class TermoContrato extends Model<
   declare setContrato: BelongsToSetAssociationMixin<Contrato, number>;
   declare createContrato: BelongsToCreateAssociationMixin<Contrato>;
 
-  declare getModeloTermo: BelongsToGetAssociationMixin<ModeloTermo>;
-  declare setModeloTermo: BelongsToSetAssociationMixin<ModeloTermo, number>;
-  declare createModeloTermo: BelongsToCreateAssociationMixin<ModeloTermo>;
+  declare getModeloDocumento: BelongsToGetAssociationMixin<ModeloDocumento>;
+  declare setModeloDocumento: BelongsToSetAssociationMixin<ModeloDocumento, number>;
+  declare createModeloDocumento: BelongsToCreateAssociationMixin<ModeloDocumento>;
 
   // Métodos de instância
   static async findByContrato(contratoId: number): Promise<TermoContrato[]> {
@@ -44,8 +44,8 @@ export class TermoContrato extends Model<
       where: { contrato_id: contratoId },
       include: [
         {
-          association: 'modeloTermo',
-          attributes: ['id', 'nome', 'tipo_termo']
+          association: 'modeloDocumento',
+          attributes: ['id', 'nome', 'tipo']
         }
       ],
       order: [['created_at', 'DESC']]
@@ -85,11 +85,11 @@ TermoContrato.init(
         key: 'id'
       }
     },
-    modelo_termo_id: {
+    modelo_documento_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'modelos_termo',
+        model: 'modelo_documento',
         key: 'id'
       }
     },
@@ -145,7 +145,7 @@ TermoContrato.init(
         fields: ['contrato_id']
       },
       {
-        fields: ['modelo_termo_id']
+        fields: ['modelo_documento_id']
       },
       {
         fields: ['ativo']

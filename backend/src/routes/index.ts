@@ -17,9 +17,7 @@ import servidorEmailRoutes from './servidorEmailRoutes';
 import servidorWhatsAppRoutes from './servidorWhatsAppRoutes';
 import mensagemWhatsAppRoutes from './mensagemWhatsAppRoutes';
 import mensagemEmailRoutes from './mensagemEmailRoutes';
-import modeloContratoRoutes from './modeloContratoRoutes';
-import modeloReciboRoutes from './modeloReciboRoutes';
-import modeloCartaRoutes from './modeloCartaRoutes';
+import modeloDocumentoRoutes from './modeloDocumentoRoutes';
 import diasVencimentoRoutes from './diasVencimentoRoutes';
 import termosContratoRoutes from './termosContrato';
 import modelosTermoRoutes from './modelosTermo';
@@ -49,9 +47,7 @@ const routes = [
     { path: '/api/servidores-whatsapp', route: servidorWhatsAppRoutes },
     { path: '/api/mensagens-whatsapp', route: mensagemWhatsAppRoutes },
     { path: '/api/mensagens-email', route: mensagemEmailRoutes },
-    { path: '/api/modelos-contrato', route: modeloContratoRoutes },
-    { path: '/api/modelos-recibo', route: modeloReciboRoutes },
-    { path: '/api/modelos-carta', route: modeloCartaRoutes },
+    { path: '/api/modelos-documento', route: modeloDocumentoRoutes },
     { path: '/api/dias-vencimento', route: diasVencimentoRoutes },
     { path: '/api/termos-contrato', route: termosContratoRoutes },
     { path: '/api/modelos-termo', route: modelosTermoRoutes },

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { TermoContrato } from '../models/TermoContrato';
 import { Contrato } from '../models/Contrato';
-import { ModeloTermo } from '../models/ModeloTermo';
+import { ModeloDocumento } from '../models/ModeloDocumento';
 
 export class TermoContratoController {
   // Listar termos de um contrato específico
@@ -65,7 +65,7 @@ export class TermoContratoController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
-      const { modelo_termo_id, assinado } = req.body;
+      const { modelo_documento_id, tipo_termo, assinado } = req.body;
 
       // Validações
       if (!contratoId) {
@@ -76,8 +76,8 @@ export class TermoContratoController {
         return;
       }
 
-      // Se não há modelo_termo_id, retornar erro
-      if (!modelo_termo_id) {
+      // Se não há modelo_documento_id, retornar erro
+      if (!modelo_documento_id) {
         res.status(400).json({
           success: false,
           message: 'É obrigatório selecionar um modelo de termo'
@@ -95,9 +95,9 @@ export class TermoContratoController {
         return;
       }
 
-      // Buscar o modelo de termo
-      const modeloTermo = await ModeloTermo.findByPk(modelo_termo_id);
-      if (!modeloTermo) {
+      // Buscar o modelo de documento (termo)
+      const modeloDocumento = await ModeloDocumento.findByPk(modelo_documento_id);
+      if (!modeloDocumento) {
         res.status(404).json({
           success: false,
           message: 'Modelo de termo não encontrado'
@@ -105,11 +105,15 @@ export class TermoContratoController {
         return;
       }
 
+      // O tipo_termo é passado no body ou usa 'adesao' como padrão
+      // O modelo_documento agora é sempre do tipo 'termo'
+      const tipoTermo = req.body.tipo_termo || 'adesao';
+
       const termo = await TermoContrato.create({
         contrato_id: parseInt(contratoId),
-        modelo_termo_id: modelo_termo_id,
-        tipo_termo: modeloTermo.tipo_termo,
-        conteudo: modeloTermo.conteudo,
+        modelo_documento_id: modelo_documento_id,
+        tipo_termo: tipoTermo as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
+        conteudo: modeloDocumento.conteudo,
         assinado: assinado || 'NAO',
         ativo: true
       });
@@ -132,7 +136,7 @@ export class TermoContratoController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { ativo, modelo_termo_id, assinado } = req.body;
+      const { ativo, modelo_documento_id, assinado } = req.body;
 
       const termo = await TermoContrato.findByPk(id);
       
@@ -146,7 +150,7 @@ export class TermoContratoController {
 
       // Atualizar apenas campos permitidos
       if (ativo !== undefined) termo.ativo = ativo;
-      if (modelo_termo_id !== undefined) termo.modelo_termo_id = modelo_termo_id;
+      if (modelo_documento_id !== undefined) termo.modelo_documento_id = modelo_documento_id;
       if (assinado !== undefined) termo.assinado = assinado;
 
       await termo.save();

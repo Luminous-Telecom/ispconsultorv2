@@ -138,7 +138,7 @@ export interface Contrato {
   dia_vencimento?: number;
   conta_boleto?: number;
   data_validade_desconto?: string;
-  modelo_contrato_id?: number;
+  modelo_documento_id?: number;
   created_at: string;
   updated_at?: string;
   
@@ -295,6 +295,27 @@ export interface DadosEmpresa {
   cidade?: string;
   estado?: string;
   logo?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ============================================
+// Modelo Documento
+// ============================================
+export interface ModeloDocumento {
+  id: number;
+  nome: string;
+  tipo: 'contrato' | 'recibo' | 'carta' | 'boleto' | 'comprovante' | 'outro';
+  conteudo: string;
+  conteudo_adesao?: string;
+  conteudo_permanencia?: string;
+  descricao?: string;
+  ativo: boolean;
+  tamanho_maximo: number;
+  tipos_permitidos: string;
+  retencao_dias: number;
+  auto_backup: boolean;
+  criptografia: boolean;
   created_at?: string;
   updated_at?: string;
 }
