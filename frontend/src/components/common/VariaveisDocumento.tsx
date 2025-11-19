@@ -21,7 +21,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   const { data: variaveisData, isLoading } = useQuery({
     queryKey: ['variaveis-documento'],
     queryFn: async () => {
-      const response = await axios.get(`${API_CONFIG.BASE_URL}/modelos-contrato/variaveis`);
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/modelos-documento/variaveis`);
       return response.data.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutos

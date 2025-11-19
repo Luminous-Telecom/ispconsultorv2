@@ -27,7 +27,7 @@ export default class VariablePlugin extends Plugin {
     const buscarVariaveis = async (): Promise<VariaveisData> => {
       const { getApiBaseUrl } = await import('../../utils/urlUtils');
       const baseUrl = getApiBaseUrl();
-      const url = `${baseUrl}/modelos-contrato/variaveis`;
+      const url = `${baseUrl}/modelos-documento/variaveis`;
       
       const response = await fetch(url);
       if (!response.ok) {

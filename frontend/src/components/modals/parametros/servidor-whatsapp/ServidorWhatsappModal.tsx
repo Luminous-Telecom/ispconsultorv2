@@ -59,7 +59,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const { data: variaveisData } = useQuery<Record<string, GrupoVariaveis>>({
     queryKey: ['variaveis-documento'],
     queryFn: async () => {
-      const response = await defaultApiClient.get<Record<string, GrupoVariaveis>>('/modelos-contrato/variaveis');
+      const response = await defaultApiClient.get<Record<string, GrupoVariaveis>>('/modelos-documento/variaveis');
 
       if (response.success && response.data) {
         return response.data;
