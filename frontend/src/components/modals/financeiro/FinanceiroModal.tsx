@@ -558,7 +558,15 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 <div className="text-end">
                   <div className="small text-muted">Valor aberto:</div>
                   <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                    return sum + ((item.pago || item.status === 'cancelado') ? 0 : Number(item.valor_final || item.valor || 0));
+                    // Considerar apenas títulos pendentes ou vencidos (não pagos e não cancelados)
+                    if (item.status === 'pago' || item.status === 'cancelado') {
+                      return sum;
+                    }
+                    // Calcular valor aberto: valor final - valor pago
+                    const valorFinal = Number(item.valor_final || item.valor || 0);
+                    const valorPago = Number(item.valor_pago || 0);
+                    const valorAberto = valorFinal - valorPago;
+                    return sum + (valorAberto > 0 ? valorAberto : 0);
                   }, 0))}</strong>
                 </div>
                 {showCancelados && (
