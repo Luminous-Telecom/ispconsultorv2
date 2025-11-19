@@ -202,8 +202,6 @@ export interface Banco {
   
   // Relacionamentos
   clientes?: Cliente[];
-  banco_configuracoes?: BancoConfiguracao[];
-  configuracao_principal?: BancoConfiguracao;
 }
 
 // ============================================
@@ -274,23 +272,6 @@ export interface CarneParcela {
   // Relacionamentos
   carne?: Carne;
   plano?: Plano;
-}
-
-// ============================================
-// Banco Configuração
-// ============================================
-export interface BancoConfiguracao {
-  id: number;
-  banco_id: number;
-  tipo_banco: string;
-  configuracao: Record<string, unknown>;
-  ativo: boolean;
-  observacoes?: string;
-  created_at?: string;
-  updated_at?: string;
-  
-  // Relacionamentos
-  banco?: Banco;
 }
 
 // ============================================

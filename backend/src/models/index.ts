@@ -2,7 +2,6 @@
 import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
-import { BancoConfiguracao } from './BancoConfiguracao';
 import { Titulo } from './Titulo';
 import { Contrato } from './Contrato';
 import { DadosEmpresa } from './DadosEmpresa';
@@ -69,15 +68,6 @@ Banco.hasMany(Titulo, {
   as: 'titulos'
 });
 
-Banco.hasMany(BancoConfiguracao, {
-  foreignKey: 'banco_id',
-  as: 'bancoConfiguracoes'
-});
-
-Banco.hasOne(BancoConfiguracao, {
-  foreignKey: 'banco_id',
-  as: 'configuracaoPrincipal'
-});
 
 
 // Titulo
@@ -154,12 +144,6 @@ ModeloTermo.hasMany(TermoContrato, {
   as: 'termosContrato'
 });
 
-// BancoConfiguracao
-BancoConfiguracao.belongsTo(Banco, {
-  foreignKey: 'banco_id',
-  as: 'banco'
-});
-
 // ScheduledRoutine
 ScheduledRoutine.hasMany(RoutineExecutionLog, {
   foreignKey: 'routine_id',
@@ -177,7 +161,6 @@ export {
   Cliente,
   Plano,
   Banco,
-  BancoConfiguracao,
   Titulo,
   Contrato,
   ContratoPlanoAdicional,

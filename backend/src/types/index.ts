@@ -117,19 +117,6 @@ export interface Banco extends BaseEntity {
   
   // Relacionamentos
   clientes?: Cliente[];
-  banco_configuracoes?: BancoConfiguracao[];
-  configuracao_principal?: BancoConfiguracao;
-}
-
-export interface BancoConfiguracao extends BaseEntity {
-  banco_id: number;
-  tipo_banco: string;
-  configuracao: Record<string, JsonValue>;
-  ativo: boolean;
-  observacoes?: string;
-  
-  // Relacionamentos
-  banco?: Banco;
 }
 
 

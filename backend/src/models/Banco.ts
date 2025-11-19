@@ -20,7 +20,6 @@ import {
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Cliente } from './Cliente';
-import { BancoConfiguracao } from './BancoConfiguracao';
 import { Titulo } from './Titulo';
 
 interface DadosTesteConexao {
@@ -102,20 +101,6 @@ export class Banco extends Model<
   declare createTitulo: HasManyCreateAssociationMixin<Titulo>;
 
 
-  declare getConfiguracoes: HasManyGetAssociationsMixin<BancoConfiguracao>;
-  declare addConfiguracao: HasManyAddAssociationMixin<BancoConfiguracao, number>;
-  declare addConfiguracoes: HasManyAddAssociationsMixin<BancoConfiguracao, number>;
-  declare setConfiguracoes: HasManySetAssociationsMixin<BancoConfiguracao, number>;
-  declare removeConfiguracao: HasManyRemoveAssociationMixin<BancoConfiguracao, number>;
-  declare removeConfiguracoes: HasManyRemoveAssociationsMixin<BancoConfiguracao, number>;
-  declare hasConfiguracao: HasManyHasAssociationMixin<BancoConfiguracao, number>;
-  declare hasConfiguracoes: HasManyHasAssociationsMixin<BancoConfiguracao, number>;
-  declare countConfiguracoes: HasManyCountAssociationsMixin;
-  declare createConfiguracao: HasManyCreateAssociationMixin<BancoConfiguracao>;
-
-  declare getConfiguracaoPrincipal: HasOneGetAssociationMixin<BancoConfiguracao>;
-  declare setConfiguracaoPrincipal: HasOneSetAssociationMixin<BancoConfiguracao, number>;
-  declare createConfiguracaoPrincipal: HasOneCreateAssociationMixin<BancoConfiguracao>;
 
   toJSON(): Record<string, unknown> {
     const {
