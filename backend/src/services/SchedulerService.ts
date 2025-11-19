@@ -4,6 +4,7 @@ import { DiasVencimento } from '../models/DiasVencimento';
 import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
 import { logger } from '../utils/logger';
 import { BarcodeService } from './BarcodeService';
+import { ajustarDataVencimento } from '../utils/dateUtils';
 import type { JsonValue } from '../types';
 
 interface RoutineResult {
@@ -416,8 +417,11 @@ export class SchedulerService {
                 }
               }
               
-              const dataVencimento = new Date(anoAtual, mesAtual, diaCorreto);
+              let dataVencimento = new Date(anoAtual, mesAtual, diaCorreto);
               dataVencimento.setHours(0, 0, 0, 0);
+
+              // Ajustar data de vencimento baseado nos parâmetros (sábado/domingo)
+              dataVencimento = await ajustarDataVencimento(dataVencimento, parametros);
 
               // Verificar se já existe título para este mês
               const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;

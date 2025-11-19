@@ -7,6 +7,7 @@ import { Banco } from '../models/Banco';
 import { DiasVencimento } from '../models/DiasVencimento';
 import { BancoApiService } from '../services/BancoApiService';
 import { BarcodeService } from '../services/BarcodeService';
+import { ajustarDataVencimento } from '../utils/dateUtils';
 import { logger } from '../utils/logger';
 import puppeteer from 'puppeteer';
 import { Op, WhereOptions, QueryTypes } from 'sequelize';
@@ -668,9 +669,12 @@ export class TituloController {
 
       // Criar título
       // Garantir que data_vencimento é um objeto Date para evitar problemas de fuso horário
-      const dataVencimentoParaSalvar = dataVencimentoFinal instanceof Date 
+      let dataVencimentoParaSalvar = dataVencimentoFinal instanceof Date 
         ? dataVencimentoFinal 
         : new Date(dataVencimentoFinal);
+      
+      // Ajustar data de vencimento baseado nos parâmetros (sábado/domingo)
+      dataVencimentoParaSalvar = await ajustarDataVencimento(dataVencimentoParaSalvar);
       
       const titulo = await Titulo.create({
         cliente_id,
