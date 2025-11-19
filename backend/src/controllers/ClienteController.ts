@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Cliente } from '../models/Cliente';
 import { Op, WhereOptions } from 'sequelize';
 import Joi from 'joi';
+import axios from 'axios';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -476,6 +477,91 @@ export class ClienteController {
         success: false,
         error: 'Erro interno do servidor',
         message: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  // Consultar dados do CNPJ na ReceitaWS
+  static async consultarCnpj(req: Request, res: Response): Promise<void> {
+    try {
+      const { cnpj } = req.params;
+      
+      // Remover formatação do CNPJ
+      const cnpjLimpo = cnpj.replace(/\D/g, '');
+      
+      if (cnpjLimpo.length !== 14) {
+        res.status(400).json({
+          success: false,
+          error: 'CNPJ inválido',
+          message: 'CNPJ deve ter 14 dígitos'
+        });
+        return;
+      }
+
+      // Consultar na API ReceitaWS
+      const response = await axios.get(`https://www.receitaws.com.br/v1/cnpj/${cnpjLimpo}`, {
+        timeout: 10000
+      });
+
+      if (response.data.status === 'ERROR') {
+        res.status(404).json({
+          success: false,
+          error: 'CNPJ não encontrado',
+          message: response.data.message || 'CNPJ não encontrado na base da Receita Federal'
+        });
+        return;
+      }
+
+      // Mapear dados da API para o formato do sistema
+      const dadosEmpresa = {
+        razao_social: response.data.nome || '',
+        nome_fantasia: response.data.fantasia || '',
+        cep: response.data.cep ? response.data.cep.replace(/^(\d{5})(\d{3})$/, '$1-$2') : '',
+        endereco: response.data.logradouro || '',
+        numero: response.data.numero || '',
+        complemento: response.data.complemento || '',
+        bairro: response.data.bairro || '',
+        cidade: response.data.municipio || '',
+        estado: response.data.uf || '',
+        telefone: response.data.telefone || '',
+        email: response.data.email || '',
+        situacao: response.data.situacao || '',
+        abertura: response.data.abertura || '',
+        natureza_juridica: response.data.natureza_juridica || '',
+        capital_social: response.data.capital_social || ''
+      };
+
+      res.json({
+        success: true,
+        data: dadosEmpresa
+      });
+    } catch (error) {
+      console.error('Erro ao consultar CNPJ:', error);
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 429) {
+          res.status(429).json({
+            success: false,
+            error: 'Limite de requisições excedido',
+            message: 'Muitas requisições. Tente novamente em alguns instantes.'
+          });
+          return;
+        }
+        
+        if (error.response?.status === 404) {
+          res.status(404).json({
+            success: false,
+            error: 'CNPJ não encontrado',
+            message: 'CNPJ não encontrado na base da Receita Federal'
+          });
+          return;
+        }
+      }
+
+      res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor',
+        message: error instanceof Error ? error.message : 'Erro ao consultar CNPJ'
       });
     }
   }

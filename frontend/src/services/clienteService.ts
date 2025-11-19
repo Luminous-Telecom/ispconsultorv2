@@ -127,6 +127,29 @@ export class ClienteService {
     return response as unknown as CepData;
   }
 
+  /**
+   * Consultar dados do CNPJ na ReceitaWS
+   */
+  static async consultarCnpj(cnpj: string): Promise<ApiResponse<{
+    razao_social: string;
+    nome_fantasia: string;
+    cep: string;
+    endereco: string;
+    numero: string;
+    complemento: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    telefone: string;
+    email: string;
+    situacao?: string;
+    abertura?: string;
+    natureza_juridica?: string;
+    capital_social?: string;
+  }>> {
+    return defaultApiClient.get(`/clientes/api/consultar-cnpj/${cnpj}`);
+  }
+
   // ============================================
   // Métodos utilitários de validação
   // ============================================

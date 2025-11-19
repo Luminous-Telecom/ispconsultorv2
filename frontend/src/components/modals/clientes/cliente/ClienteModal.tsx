@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { ClienteService } from '../../../../services/clienteService';
 import { TituloService } from '../../../../services/tituloService';
 import DocumentoSistemaService from '../../../../services/documentoSistemaService';
+import { ParametrosService } from '../../../../services/parametrosService';
 import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { Cliente, CarneParcela, CreateCliente } from '../../../../types';
 import DraggableModal from '../../../common/DraggableModal';
@@ -20,6 +21,7 @@ import { formatCurrency, formatDate, formatCNPJ, formatPhone, formatCEP } from '
 import { ensureString } from '../../../../utils/stringUtils';
 import { TituloItem } from '../../../../types/cliente';
 import { ClienteFormData, ClienteFormErrors } from '../../../../types';
+import { isValidCNPJ } from '../../../../utils/validators';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import ContatoTab from './abas/ContatoTab';
 import EnderecoTab from './abas/EnderecoTab';
@@ -78,11 +80,22 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
 
   const [errors, setErrors] = useState<ClienteFormErrors>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
+  const [isConsultingCnpj, setIsConsultingCnpj] = useState(false);
+  const lastCnpjConsulted = useRef<string>('');
   
+  // Buscar parâmetros para verificar se deve consultar CNPJ
+  const { data: parametros } = useQuery({
+    queryKey: ['parametros'],
+    queryFn: () => ParametrosService.get(),
+    staleTime: 60 * 1000,
+    enabled: show && !isEditing // Só buscar se estiver criando novo cliente
+  });
+
   // Resetar aba ativa quando modal abrir
   useEffect(() => {
     if (show) {
       setActiveTab('dados-basicos');
+      lastCnpjConsulted.current = '';
     }
   }, [show]);
   
@@ -874,7 +887,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     customData: customFormData
   });
 
-  const handleInputChange = (field: keyof ClienteFormData, value: FormValue) => {
+  const handleInputChange = async (field: keyof ClienteFormData, value: FormValue) => {
     // Aplicar formatação baseada no campo
     let formattedValue = value;
     if (field === 'cnpj' && typeof value === 'string') {
@@ -893,6 +906,66 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         ...prev,
         [field]: undefined
       }));
+    }
+
+    // Se o campo for CNPJ e estiver completo e válido, consultar dados
+    if (field === 'cnpj' && typeof formattedValue === 'string' && !isEditing) {
+      const cnpjLimpo = formattedValue.replace(/\D/g, '');
+      
+      // Verificar se CNPJ está completo (14 dígitos) e válido
+      if (cnpjLimpo.length === 14 && isValidCNPJ(formattedValue)) {
+        // Verificar se já consultou este CNPJ para evitar consultas duplicadas
+        if (lastCnpjConsulted.current === cnpjLimpo) {
+          return;
+        }
+
+        // Verificar se a opção de validar CPF/CNPJ está marcada
+        if (parametros?.data?.validar_cpf_cnpj) {
+          // Verificar se os campos já estão preenchidos (não sobrescrever se usuário já preencheu)
+          const camposVazios = !formData.razao_social && !formData.nome_fantasia && !formData.endereco;
+          
+          if (camposVazios && !isConsultingCnpj) {
+            setIsConsultingCnpj(true);
+            lastCnpjConsulted.current = cnpjLimpo;
+
+            try {
+              const response = await ClienteService.consultarCnpj(cnpjLimpo);
+              
+              if (response.success && response.data) {
+                const dados = response.data;
+                
+                // Preencher campos automaticamente
+                setFormData(prev => ({
+                  ...prev,
+                  razao_social: dados.razao_social || prev.razao_social,
+                  nome_fantasia: dados.nome_fantasia || prev.nome_fantasia,
+                  cep: dados.cep || prev.cep,
+                  endereco: dados.endereco || prev.endereco,
+                  numero: dados.numero || prev.numero,
+                  complemento: dados.complemento || prev.complemento,
+                  bairro: dados.bairro || prev.bairro,
+                  cidade: dados.cidade || prev.cidade,
+                  estado: dados.estado || prev.estado,
+                  telefone: dados.telefone || prev.telefone,
+                  email: dados.email || prev.email
+                }));
+
+                success('Dados do CNPJ preenchidos automaticamente!');
+              }
+            } catch (err) {
+              const axiosError = err as AxiosError<{ message?: string }>;
+              const errorMessage = axiosError?.response?.data?.message || 'Erro ao consultar CNPJ';
+              
+              // Só mostrar erro se não for "não encontrado" (pode ser CNPJ válido mas não na base)
+              if (axiosError?.response?.status !== 404) {
+                error(errorMessage);
+              }
+            } finally {
+              setIsConsultingCnpj(false);
+            }
+          }
+        }
+      }
     }
   };
 

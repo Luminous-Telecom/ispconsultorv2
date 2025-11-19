@@ -14,5 +14,6 @@ router.delete('/:id', ClienteController.destroy);
 
 // Rotas auxiliares
 router.get('/api/buscar-cep/:cep', ClienteController.buscarCep);
+router.get('/api/consultar-cnpj/:cnpj', ClienteController.consultarCnpj);
 
 export default router;
