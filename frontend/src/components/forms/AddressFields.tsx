@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { FormValue } from '../../types/common';
 import FormField from '../ui/FormField';
+import { ParametrosService } from '../../services/parametrosService';
+import { ClienteService } from '../../services/clienteService';
 
 interface AddressFieldsProps {
   prefix?: string;
@@ -9,16 +12,6 @@ interface AddressFieldsProps {
   formData?: Record<string, FormValue>;
   onChange?: (name: string, value: FormValue) => void;
   errors?: Record<string, string>;
-}
-
-interface ViaCEPResponse {
-  cep: string;
-  logradouro: string;
-  complemento: string;
-  bairro: string;
-  localidade: string;
-  uf: string;
-  erro?: boolean;
 }
 
 const AddressFields: React.FC<AddressFieldsProps> = ({ 
@@ -39,12 +32,24 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
     }
   };
 
+  // Buscar parâmetros para verificar se deve buscar CEP automaticamente
+  const { data: parametros } = useQuery({
+    queryKey: ['parametros'],
+    queryFn: () => ParametrosService.get(),
+    staleTime: 60 * 1000,
+  });
+
   // Buscar CEP automaticamente quando o CEP tiver 8 dígitos
   const cepValue = getFieldValue('cep');
   const lastSearchedCep = useRef<string>('');
   const isSearching = useRef<boolean>(false);
   
   useEffect(() => {
+    // Verificar se a opção de validar CEP está marcada
+    if (!parametros?.data?.validar_cep) {
+      return;
+    }
+
     const cep = typeof cepValue === 'string' ? cepValue : String(cepValue || '');
     const cepNumbers = cep.replace(/\D/g, '');
     
@@ -53,11 +58,10 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       isSearching.current = true;
       lastSearchedCep.current = cepNumbers;
       
-      // Buscar endereço via API ViaCEP
-      fetch(`https://viacep.com.br/ws/${cepNumbers}/json/`)
-        .then(response => response.json())
-        .then((data: ViaCEPResponse) => {
-          if (!data.erro && onChange) {
+      // Buscar endereço via backend (centralizado)
+      ClienteService.buscarCep(cepNumbers)
+        .then((data) => {
+          if (data && onChange) {
             // Preencher campos automaticamente
             if (data.logradouro) onChange(getFieldName('endereco'), data.logradouro);
             if (data.bairro) onChange(getFieldName('bairro'), data.bairro);
@@ -76,7 +80,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
       lastSearchedCep.current = '';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cepValue]);
+  }, [cepValue, parametros?.data?.validar_cep]);
 
   const addressFields = [
     {

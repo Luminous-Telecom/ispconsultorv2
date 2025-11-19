@@ -13,6 +13,7 @@ interface ParametrosModalProps {
 
 interface ParametrosForm {
   validar_cpf_cnpj: boolean;
+  validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
@@ -26,6 +27,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   // Dados iniciais do formulário
   const initialFormData: ParametrosForm = {
     validar_cpf_cnpj: true,
+    validar_cep: false,
     titulos_vence_sabado: false,
     titulos_vence_domingo: false,
     auto_lancamento_titulos: false,
@@ -47,6 +49,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     
     return {
       validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
+      validar_cep: parametros.data.validar_cep ?? false,
       titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
       titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
       auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
@@ -100,6 +103,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
     if (parametros?.data) {
       setFormData({
         validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
+        validar_cep: parametros.data.validar_cep ?? false,
         titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
         titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
         auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
@@ -177,6 +181,24 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
                 </label>
                 <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
                   Quando ativado, valida se CPF/CNPJ é válido ao cadastrar/editar clientes
+                </div>
+              </div>
+
+              <div className="form-check mb-3">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="validar_cep"
+                  name="validar_cep"
+                  checked={formData.validar_cep}
+                  onChange={() => handleCheckboxChange('validar_cep')}
+                  disabled={updateParametrosMutation.isPending}
+                />
+                <label className="form-check-label" htmlFor="validar_cep">
+                  Validar CEP
+                </label>
+                <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
+                  Quando ativado, busca automaticamente os dados do endereço ao digitar um CEP válido
                 </div>
               </div>
             </div>

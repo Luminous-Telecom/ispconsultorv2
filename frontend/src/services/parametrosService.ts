@@ -3,6 +3,7 @@ import { apiService } from './api';
 export interface Parametros {
   id: number;
   validar_cpf_cnpj: boolean;
+  validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;

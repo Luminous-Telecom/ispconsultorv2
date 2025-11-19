@@ -447,24 +447,49 @@ export class ClienteController {
     }
   }
 
-  // Buscar CEP (simulação)
+  // Buscar CEP usando ViaCEP
   static async buscarCep(req: Request, res: Response): Promise<void> {
     try {
       const { cep } = req.params;
 
-      // Aqui você pode integrar com uma API real de CEP como ViaCEP
-      // Por enquanto, retornando dados fictícios
+      // Remover formatação do CEP
+      const cepLimpo = cep.replace(/\D/g, '');
+      
+      if (cepLimpo.length !== 8) {
+        res.status(400).json({
+          success: false,
+          error: 'CEP inválido',
+          message: 'CEP deve ter 8 dígitos'
+        });
+        return;
+      }
+
+      // Consultar na API ViaCEP
+      const response = await axios.get(`https://viacep.com.br/ws/${cepLimpo}/json/`, {
+        timeout: 10000
+      });
+
+      if (response.data.erro) {
+        res.status(404).json({
+          success: false,
+          error: 'CEP não encontrado',
+          message: 'CEP não encontrado na base dos Correios'
+        });
+        return;
+      }
+
+      // Mapear dados da API para o formato do sistema
       const dadosCep = {
-        cep: cep.replace(/\D/g, ''),
-        logradouro: 'Rua Exemplo',
-        complemento: '',
-        bairro: 'Centro',
-        localidade: 'São Paulo',
-        uf: 'SP',
-        ibge: '3550308',
-        gia: '1004',
-        ddd: '11',
-        siafi: '7107'
+        cep: response.data.cep || cepLimpo.replace(/^(\d{5})(\d{3})$/, '$1-$2'),
+        logradouro: response.data.logradouro || '',
+        complemento: response.data.complemento || '',
+        bairro: response.data.bairro || '',
+        localidade: response.data.localidade || '',
+        uf: response.data.uf || '',
+        ibge: response.data.ibge || '',
+        gia: response.data.gia || '',
+        ddd: response.data.ddd || '',
+        siafi: response.data.siafi || ''
       };
 
       res.json({
@@ -473,10 +498,22 @@ export class ClienteController {
       });
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          res.status(404).json({
+            success: false,
+            error: 'CEP não encontrado',
+            message: 'CEP não encontrado na base dos Correios'
+          });
+          return;
+        }
+      }
+
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: error instanceof Error ? error.message : 'Erro ao buscar CEP'
       });
     }
   }

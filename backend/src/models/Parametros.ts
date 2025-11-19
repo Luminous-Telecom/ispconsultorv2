@@ -4,6 +4,7 @@ import { sequelize } from '../config/database';
 interface ParametrosAttributes {
   id: number;
   validar_cpf_cnpj: boolean;
+  validar_cep: boolean;
   titulos_vence_sabado: boolean;
   titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
@@ -17,6 +18,7 @@ type ParametrosCreationAttributes = Optional<ParametrosAttributes, 'id' | 'creat
 class Parametros extends Model<ParametrosAttributes, ParametrosCreationAttributes> implements ParametrosAttributes {
   public id!: number;
   public validar_cpf_cnpj!: boolean;
+  public validar_cep!: boolean;
   public titulos_vence_sabado!: boolean;
   public titulos_vence_domingo!: boolean;
   public auto_lancamento_titulos!: boolean;
@@ -36,6 +38,11 @@ Parametros.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true
+    },
+    validar_cep: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     },
     titulos_vence_sabado: {
       type: DataTypes.BOOLEAN,

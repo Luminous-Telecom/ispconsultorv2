@@ -81,14 +81,16 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const [errors, setErrors] = useState<ClienteFormErrors>({});
   const [activeTab, setActiveTab] = useState('dados-basicos');
   const [isConsultingCnpj, setIsConsultingCnpj] = useState(false);
+  const [isConsultingCep, setIsConsultingCep] = useState(false);
   const lastCnpjConsulted = useRef<string>('');
+  const lastCepConsulted = useRef<string>('');
   
-  // Buscar parâmetros para verificar se deve consultar CNPJ
+  // Buscar parâmetros para verificar se deve consultar CNPJ/CEP
   const { data: parametros } = useQuery({
     queryKey: ['parametros'],
     queryFn: () => ParametrosService.get(),
     staleTime: 60 * 1000,
-    enabled: show && !isEditing // Só buscar se estiver criando novo cliente
+    enabled: show // Buscar sempre que o modal abrir
   });
 
   // Resetar aba ativa quando modal abrir
@@ -96,6 +98,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     if (show) {
       setActiveTab('dados-basicos');
       lastCnpjConsulted.current = '';
+      lastCepConsulted.current = '';
     }
   }, [show]);
   
@@ -965,6 +968,61 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
             }
           }
         }
+      }
+    }
+
+    // Se o campo for CEP e estiver completo, consultar dados
+    if (field === 'cep' && typeof formattedValue === 'string') {
+      const cepLimpo = formattedValue.replace(/\D/g, '');
+      
+      // Verificar se CEP está completo (8 dígitos)
+      if (cepLimpo.length === 8) {
+        // Verificar se já consultou este CEP para evitar consultas duplicadas
+        if (lastCepConsulted.current === cepLimpo) {
+          return;
+        }
+
+        // Verificar se a opção de validar CEP está marcada
+        if (parametros?.data?.validar_cep) {
+          // Verificar se os campos de endereço já estão preenchidos (não sobrescrever se usuário já preencheu)
+          const camposEnderecoVazios = !formData.endereco && !formData.bairro && !formData.cidade && !formData.estado;
+          
+          if (camposEnderecoVazios && !isConsultingCep) {
+            setIsConsultingCep(true);
+            lastCepConsulted.current = cepLimpo;
+
+            try {
+              const dados = await ClienteService.buscarCep(cepLimpo);
+              
+              if (dados) {
+                // Preencher campos automaticamente
+                setFormData(prev => ({
+                  ...prev,
+                  endereco: dados.logradouro || prev.endereco,
+                  bairro: dados.bairro || prev.bairro,
+                  cidade: dados.localidade || prev.cidade,
+                  estado: dados.uf || prev.estado,
+                  complemento: dados.complemento || prev.complemento
+                }));
+
+                success('Dados do CEP preenchidos automaticamente!');
+              }
+            } catch (err) {
+              const axiosError = err as AxiosError<{ message?: string }>;
+              const errorMessage = axiosError?.response?.data?.message || 'Erro ao consultar CEP';
+              
+              // Só mostrar erro se não for "não encontrado" (pode ser CEP válido mas não na base)
+              if (axiosError?.response?.status !== 404) {
+                error(errorMessage);
+              }
+            } finally {
+              setIsConsultingCep(false);
+            }
+          }
+        }
+      } else if (cepLimpo.length < 8) {
+        // Resetar quando o CEP não tem 8 dígitos
+        lastCepConsulted.current = '';
       }
     }
   };
