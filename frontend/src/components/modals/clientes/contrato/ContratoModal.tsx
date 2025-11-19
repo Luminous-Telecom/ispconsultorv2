@@ -568,7 +568,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               setPdfUrl(url);
               setShowPreview(true);
             } catch (err) {
-              error('Erro ao gerar documento para impressão');
+              error(err instanceof Error ? err.message : 'Erro ao gerar documento para impressão');
             } finally {
               setIsGeneratingPdf(false);
             }

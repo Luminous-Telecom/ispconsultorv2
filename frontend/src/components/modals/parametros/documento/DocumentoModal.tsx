@@ -330,7 +330,9 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         : await service.generatePdf(currentDocumento.id);
       
       const url = window.URL.createObjectURL(blob);
-      if (pdfUrl) window.URL.revokeObjectURL(pdfUrl);
+      if (pdfUrl) {
+        window.URL.revokeObjectURL(pdfUrl);
+      }
       setPdfUrl(url);
       setShowPreview(true);
     } catch (err) {

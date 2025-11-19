@@ -4,31 +4,12 @@ import { Cliente } from '../models/Cliente';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
+import { logger } from '../utils/logger';
 import puppeteer from 'puppeteer';
 
-// Type definition for html-pdf-node
-interface HtmlPdfNodeOptions {
-  format?: string;
-  margin?: {
-    top?: string;
-    right?: string;
-    bottom?: string;
-    left?: string;
-  };
-  printBackground?: boolean;
-}
-
-interface HtmlPdfNodeFile {
-  content: string;
-}
-
-interface HtmlPdfNode {
-  generatePdf: (file: HtmlPdfNodeFile, options: HtmlPdfNodeOptions) => Promise<Buffer>;
-}
-
-// Import html-pdf-node
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const htmlPdf = require('html-pdf-node') as HtmlPdfNode;
+// @ts-ignore
+import * as htmlPdf from 'html-pdf-node';
+import type { PdfOptions } from 'html-pdf-node';
 
 export class ModeloTermoController {
   // Listar todos os modelos de termo
@@ -226,6 +207,22 @@ export class ModeloTermoController {
         return;
       }
 
+      if (modelo.tipo !== 'termo') {
+        res.status(400).json({
+          success: false,
+          message: 'O documento não é um modelo de termo'
+        });
+        return;
+      }
+
+      if (!modelo.conteudo) {
+        res.status(400).json({
+          success: false,
+          message: 'O modelo de termo não possui conteúdo'
+        });
+        return;
+      }
+
       // Prepara o HTML completo com estilos básicos
       const htmlContent = `
         <!DOCTYPE html>
@@ -360,40 +357,65 @@ export class ModeloTermoController {
       `;
 
       // Gerar PDF usando Puppeteer
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      let browser;
+      try {
+        browser = await puppeteer.launch({
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
 
-      const page = await browser.newPage();
-      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-      const pdfBuffer = await page.pdf({
-        format: 'a4',
-        printBackground: true,
-        margin: {
-          top: '1cm',
-          right: '1cm',
-          bottom: '1cm',
-          left: '1cm'
+        const pdfBuffer = await page.pdf({
+          format: 'a4',
+          printBackground: true,
+          margin: {
+            top: '1cm',
+            right: '1cm',
+            bottom: '1cm',
+            left: '1cm'
+          }
+        });
+
+        await browser.close();
+
+        if (!pdfBuffer || pdfBuffer.length === 0) {
+          res.status(500).json({
+            success: false,
+            message: 'Erro ao gerar PDF: buffer vazio'
+          });
+          return;
         }
-      });
 
-      await browser.close();
+        res.writeHead(200, {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `inline; filename="${modelo.nome}.pdf"`,
+          'Content-Length': pdfBuffer.length.toString()
+        });
+        res.end(pdfBuffer);
+      } catch (puppeteerError: unknown) {
+        if (browser) {
+          try {
+            await browser.close();
+          } catch {
+            // Ignorar erro ao fechar browser
+          }
+        }
+        const errorMessage = puppeteerError instanceof Error ? puppeteerError.message : 'Erro ao gerar PDF';
+        res.status(500).json({
+          success: false,
+          message: `Erro ao gerar PDF: ${errorMessage}`
+        });
+        return;
+      }
 
-      res.set({
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="${modelo.nome}.pdf"`,
-        'Content-Length': pdfBuffer.length.toString()
-      });
-
-      res.send(pdfBuffer);
-
-    } catch (error) {
-      console.error('Erro ao gerar PDF do modelo de termo:', error);
+    } catch (error: unknown) {
+      logger.error('Erro ao gerar PDF do modelo de termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       res.status(500).json({
         success: false,
-        message: 'Erro interno do servidor'
+        message: `Erro interno do servidor: ${errorMessage}`
       });
     }
   }
@@ -631,7 +653,22 @@ export class ModeloTermoController {
         return;
       }
 
-      // Buscar contrato com cliente e plano
+      if (modelo.tipo !== 'termo') {
+        res.status(400).json({
+          success: false,
+          message: 'O documento não é um modelo de termo'
+        });
+        return;
+      }
+
+      if (!modelo.conteudo) {
+        res.status(400).json({
+          success: false,
+          message: 'O modelo de termo não possui conteúdo'
+        });
+        return;
+      }
+
       const contrato = await Contrato.findByPk(contratoId, {
         include: [
           { model: Cliente, as: 'cliente' },
@@ -647,7 +684,6 @@ export class ModeloTermoController {
         return;
       }
 
-      // Type para Contrato com includes
       type ContratoWithIncludes = Contrato & {
         cliente?: Cliente;
         plano?: Plano;
@@ -655,7 +691,6 @@ export class ModeloTermoController {
 
       const contratoComIncludes = contrato as ContratoWithIncludes;
 
-      // Processar variáveis do documento
       const conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
         modelo.conteudo,
         {
@@ -796,24 +831,46 @@ export class ModeloTermoController {
       `;
 
       // Configurações para geração de PDF
-      const options = {
+      const options: PdfOptions = {
         format: 'A4',
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true
       };
 
       const file = { content: htmlContent };
-      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      
+      let pdfBuffer: Buffer;
+      try {
+        pdfBuffer = await htmlPdf.generatePdf(file, options);
+      } catch (pdfError: unknown) {
+        const errorMessage = pdfError instanceof Error ? pdfError.message : 'Erro ao gerar PDF';
+        res.status(500).json({
+          success: false,
+          message: `Erro ao gerar PDF: ${errorMessage}`
+        });
+        return;
+      }
 
-      // Configurar headers
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="termo-contrato-${contratoId}.pdf"`);
-      res.send(pdfBuffer);
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        res.status(500).json({
+          success: false,
+          message: 'Erro ao gerar PDF: buffer vazio'
+        });
+        return;
+      }
+
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="termo-contrato-${contratoId}.pdf"`,
+        'Content-Length': pdfBuffer.length.toString()
+      });
+      res.end(pdfBuffer);
     } catch (error: unknown) {
-      console.error('Erro ao gerar PDF do termo:', error);
+      logger.error('Erro ao gerar PDF do termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       res.status(500).json({
         success: false,
-        message: 'Erro interno do servidor'
+        message: `Erro interno do servidor: ${errorMessage}`
       });
     }
   }

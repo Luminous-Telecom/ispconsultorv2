@@ -79,14 +79,30 @@ class ModeloTermoService {
   }
 
   static async generatePdf(id: number): Promise<Blob> {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.get(`${API_CONFIG.BASE_URL}${this.baseUrl}/${id}/pdf`, {
-      responseType: 'blob',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await axios.get(`${API_CONFIG.BASE_URL}${this.baseUrl}/${id}/pdf`, {
+        responseType: 'blob',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data instanceof Blob) {
+          try {
+            const text = await error.response.data.text();
+            const errorData = JSON.parse(text);
+            throw new Error(errorData.message || 'Erro ao gerar PDF');
+          } catch {
+            throw new Error('Erro ao gerar PDF');
+          }
+        }
+        throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF');
       }
-    });
-    return response.data;
+      throw error;
+    }
   }
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
@@ -104,14 +120,30 @@ class ModeloTermoService {
   }
 
   static async generatePdfWithContrato(id: number, contratoId: number): Promise<Blob> {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.post(`${API_CONFIG.BASE_URL}${this.baseUrl}/${id}/pdf/contrato/${contratoId}`, {}, {
-      responseType: 'blob',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await axios.post(`${API_CONFIG.BASE_URL}${this.baseUrl}/${id}/pdf/contrato/${contratoId}`, {}, {
+        responseType: 'blob',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.data instanceof Blob) {
+          try {
+            const text = await error.response.data.text();
+            const errorData = JSON.parse(text);
+            throw new Error(errorData.message || 'Erro ao gerar PDF');
+          } catch {
+            throw new Error('Erro ao gerar PDF');
+          }
+        }
+        throw new Error(error.response?.data?.message || error.message || 'Erro ao gerar PDF');
       }
-    });
-    return response.data;
+      throw error;
+    }
   }
 }
 
