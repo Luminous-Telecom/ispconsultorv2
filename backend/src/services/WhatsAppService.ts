@@ -102,15 +102,16 @@ export class WhatsAppService {
 
     const titulos = await Titulo.findAll({
       where: {
-        status: 'pendente',
+        status: { [Op.in]: ['pendente', 'vencido'] },
         pago: false,
         data_vencimento: { [Op.gte]: dataVencimento, [Op.lt]: proximoDia }
       },
       include: [
-        { model: Cliente, as: 'cliente', required: true },
+        { model: Cliente, as: 'cliente', required: true, where: { ativo: true } },
         { model: Plano, as: 'plano', required: false },
         { model: Banco, as: 'banco', required: false }
-      ]
+      ],
+      order: [['data_vencimento', 'ASC'], ['id', 'ASC']]
     });
 
     let enviadas = 0;
@@ -130,8 +131,12 @@ export class WhatsAppService {
           ? ({ id: titulo.contrato_id } as Contrato)
           : undefined;
         
-        // Obter baseUrl para gerar link de pagamento
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+        const baseUrl = process.env.BASE_URL;
+        if (!baseUrl) {
+          logger.error('BASE_URL não configurada nas variáveis de ambiente');
+          erros++;
+          continue;
+        }
         
         const msg = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
           cliente,
@@ -146,9 +151,8 @@ export class WhatsAppService {
         if (servidor.tipo_api === 'whatsapp_cloud') {
           const templateInfo = WhatsAppCloudService.obterTemplateInfo(mensagem.template_mapping);
           if (templateInfo) {
-            // Preparar componentes do template com variáveis
-            // incluirPdfNoHeader = true se tipo_envio for 'pdf' OU se o template for 'fatura_pdf' (que sempre requer documento)
             const incluirPdfNoHeader = mensagem.tipo_envio === 'pdf' || templateInfo.name === 'fatura_pdf';
+            
             const components = await this.prepararComponentesTemplate({
               servidor,
               cliente,
@@ -169,7 +173,6 @@ export class WhatsAppService {
             
             if (enviouTemplate) {
               enviadas++;
-              // Para templates, não enviar interações separadas (já estão no template)
               continue;
             } else {
               erros++;
@@ -335,7 +338,11 @@ export class WhatsAppService {
       await this.delay(INTERACTION_DELAY_MS);
 
             try {
-              const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+              const baseUrl = process.env.BASE_URL;
+              if (!baseUrl) {
+                logger.warn('BASE_URL não configurada, pulando processamento de variáveis');
+                continue;
+              }
               const texto = await VariaveisDocumentoService.processarVariaveis(interacao, {
                 cliente,
                 contrato,
@@ -539,7 +546,16 @@ export class WhatsAppService {
     // O template fatura_pdf tem um botão URL com {{1}} na URL que precisa do path completo do link de pagamento
     // Gerar link de pagamento público completo e extrair o path (sem o domínio)
     try {
-      const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+      const baseUrl = process.env.BASE_URL;
+      if (!baseUrl) {
+        logger.warn('BASE_URL não configurada, não será possível gerar link de pagamento no template');
+        return components;
+      }
+      
+      if (!titulo?.id) {
+        return components;
+      }
+      
       const linkPagamento = TituloController.gerarLinkPagamentoPublico(titulo.id, baseUrl);
       // Extrair o path completo da URL (ex: /pagamento/164/c05b3b472db09c0f)
       // O template tem URL: https://luminoustelecom.com.br/{{1}}, então {{1}} deve ser o path completo

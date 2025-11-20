@@ -59,7 +59,6 @@ export class PagamentoPublicoController {
         return;
       }
 
-      // Validar token
       const secret = process.env.JWT_SECRET || 'default-secret';
       const expectedHash = crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
       
@@ -71,7 +70,6 @@ export class PagamentoPublicoController {
         return;
       }
 
-      // Buscar título com relacionamentos
       const titulo = await Titulo.findByPk(tituloId, {
         include: [
           { 
