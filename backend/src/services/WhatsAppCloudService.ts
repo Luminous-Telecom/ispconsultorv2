@@ -164,15 +164,52 @@ export class WhatsAppCloudService {
         logger.info(`Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado}`);
         return true;
       } else {
-        logger.error('Erro ao enviar template via WhatsApp Cloud API:', {
-          status: response.status,
-          data: responseData,
-          template: templateName
-        });
+        const errorObj = responseData as { error?: { message?: string; type?: string; code?: number; subcode?: number } };
+        const errorMessage = errorObj?.error?.message || 
+                            (responseData as { message?: string })?.message || 
+                            `Erro HTTP ${response.status}`;
+        const errorType = errorObj?.error?.type || 'unknown';
+        const errorCode = errorObj?.error?.code || response.status;
+        
+        // Erro 132001 = Template não existe ou não está aprovado
+        const isTemplateNotFound = errorCode === 132001 || errorMessage.includes('does not exist');
+        
+        const logMessage = `Erro ao enviar template via WhatsApp Cloud API - Status: ${response.status}, Código: ${errorCode}, Tipo: ${errorType}, Mensagem: ${errorMessage}, Template: ${templateName}, Telefone: ${telefoneFormatado}${isTemplateNotFound ? ' (Template não encontrado - será feito fallback para mensagem de texto)' : ''}`;
+        
+        if (isTemplateNotFound) {
+          logger.warn(logMessage, {
+            status: response.status,
+            errorCode: errorCode,
+            errorType: errorType,
+            errorMessage: errorMessage,
+            template: templateName,
+            telefone: telefoneFormatado,
+            responseData: JSON.stringify(responseData)
+          });
+        } else {
+          logger.error(logMessage, {
+            status: response.status,
+            errorCode: errorCode,
+            errorType: errorType,
+            errorMessage: errorMessage,
+            template: templateName,
+            telefone: telefoneFormatado,
+            responseData: JSON.stringify(responseData)
+          });
+        }
         return false;
       }
     } catch (error) {
-      logger.error('Erro ao enviar template via WhatsApp Cloud API:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      const logMessage = `Erro ao enviar template via WhatsApp Cloud API - ${errorMessage}, Template: ${templateName}, Telefone: ${telefone}`;
+      
+      logger.error(logMessage, {
+        error: errorMessage,
+        stack: errorStack,
+        template: templateName,
+        telefone: telefone
+      });
       return false;
     }
   }

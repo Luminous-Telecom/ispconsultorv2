@@ -168,10 +168,12 @@ export class WhatsAppService {
             if (enviouTemplate) {
               enviadas++;
               // Para templates, não enviar interações separadas (já estão no template)
+              continue;
             } else {
-              erros++;
+              // Se falhar ao enviar template (ex: template não existe), fazer fallback para mensagem normal
+              logger.warn(`Falha ao enviar template ${templateName}, fazendo fallback para mensagem de texto normal`);
+              // Continuar para o fluxo normal abaixo
             }
-            continue;
           }
         }
         
@@ -509,19 +511,10 @@ export class WhatsAppService {
       });
     }
 
-    // BUTTONS com URL dinâmica (opcional)
-    // Exemplo: botão de pagamento com URL que inclui ID do cliente
-    if (cliente?.id) {
-      components.push({
-        type: 'button',
-        buttons: [{
-          type: 'URL',
-          text: 'Revisar e Pagar',
-          url: `https://luminoustelecom.com.br/payment${cliente.id}`,
-          example: ['https://luminoustelecom.com.br/']
-        }]
-      });
-    }
+    // NOTA: Botões não podem ser adicionados dinamicamente via componentes
+    // Os botões devem estar pré-configurados no template no Facebook Business Manager
+    // Se o template tiver botões, eles devem ser referenciados usando sub_type e index
+    // Por enquanto, não adicionamos componentes de botão para evitar erros da API
 
     return components;
   }
