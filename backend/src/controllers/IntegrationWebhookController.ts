@@ -100,10 +100,10 @@ interface TermoContratoData {
   data_aceite: string | Date | null;
   observacoes: string | null;
   conteudo?: string;
-  modeloTermo?: {
+  modeloDocumento?: {
     id: number;
     nome: string | null;
-    tipo_termo: string | null;
+    tipo: string | null;
   } | null;
 }
 
@@ -654,8 +654,8 @@ export class IntegrationWebhookController {
                 ],
                 include: [
                   {
-                    association: 'modeloTermo',
-                    attributes: ['id', 'nome', 'tipo_termo']
+                    association: 'modeloDocumento',
+                    attributes: ['id', 'nome', 'tipo']
                   }
                 ]
               }
@@ -728,11 +728,11 @@ export class IntegrationWebhookController {
           assinado: termo.assinado === 'SIM',
           dataAceite: IntegrationWebhookController.formatDate(termo.data_aceite),
           observacoes: termo.observacoes,
-          modelo: termo.modeloTermo
+          modelo: termo.modeloDocumento
             ? {
-                id: termo.modeloTermo.id,
-                nome: termo.modeloTermo.nome,
-                tipo: termo.modeloTermo.tipo_termo
+                id: termo.modeloDocumento.id,
+                nome: termo.modeloDocumento.nome,
+                tipo: termo.modeloDocumento.tipo
               }
             : null,
           conteudo: termo.conteudo
@@ -981,6 +981,7 @@ export class IntegrationWebhookController {
           });
           return;
         }
+
 
         const pdfBase64 = await TituloController.gerarPdfBase64(titulo as unknown as Parameters<typeof TituloController.gerarPdfBase64>[0]);
 

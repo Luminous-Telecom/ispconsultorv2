@@ -260,13 +260,18 @@ app.use('/api/*', (req, res) => {
   });
 });
 
+// Variável global para armazenar referência do servidor
+let server: ReturnType<typeof app.listen> | null = null;
+
 // Inicializar servidor
 const startServer = async () => {
   try {
     await sequelize.authenticate();
     logger.info('Conexão com o banco estabelecida com sucesso');
 
-    const server = app.listen(PORT, async () => {
+    server = app.listen(PORT, async () => {
+      if (!server) return;
+      
       server.maxHeadersCount = 2000; // Aumentar limite de cabeçalhos
       
       // Aumentar limite de listeners para evitar warning de memory leak
@@ -290,29 +295,33 @@ const startServer = async () => {
   }
 };
 
-// Tratamento de sinais para graceful shutdown
-process.on('SIGTERM', async () => {
+// Função para graceful shutdown
+const gracefulShutdown = async (signal: string) => {
+  logger.info(`Recebido sinal ${signal}, iniciando encerramento gracioso...`);
+  
+  if (server) {
+    await new Promise<void>((resolve) => {
+      server!.close(() => {
+        logger.info('Servidor HTTP fechado');
+        resolve();
+      });
+      setTimeout(() => resolve(), 5000);
+    });
+    server = null;
+  }
+  
   try {
     const { SchedulerService } = await import('./services/SchedulerService');
     const schedulerService = SchedulerService.getInstance();
-    schedulerService.stop();
+    await schedulerService.stop();
   } catch (error) {
-    logger.error('Erro ao parar agendador durante SIGINT', error);
+    logger.error('Erro ao parar agendador:', error);
   }
+  
   await sequelize.close();
   process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  try {
-    const { SchedulerService } = await import('./services/SchedulerService');
-    const schedulerService = SchedulerService.getInstance();
-    schedulerService.stop();
-  } catch (error) {
-    console.error('Erro ao parar agendador:', error);
-  }
-  await sequelize.close();
-  process.exit(0);
-});
+};
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 startServer();
