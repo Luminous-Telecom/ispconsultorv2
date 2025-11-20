@@ -143,11 +143,14 @@ export class WhatsAppService {
           const templateName = WhatsAppCloudService.obterTemplateName(servidor, tipoMensagem);
           if (templateName) {
             // Preparar componentes do template com variáveis
-            const components = this.prepararComponentesTemplate({
+            // incluirPdfNoHeader = true se tipo_envio for 'pdf'
+            const components = await this.prepararComponentesTemplate({
+              servidor,
               cliente,
               contrato: contratoRef,
               titulo,
-              mensagemTexto: msg
+              mensagemTexto: msg,
+              incluirPdfNoHeader: mensagem.tipo_envio === 'pdf'
             });
             
             const enviouTemplate = await WhatsAppCloudService.enviarTemplate(
@@ -362,33 +365,81 @@ export class WhatsAppService {
 
   /**
    * Preparar componentes do template do WhatsApp Cloud API
+   * Suporta templates com HEADER (documento), BODY (variáveis posicionais) e BUTTONS (URL dinâmica)
    */
-  private static prepararComponentesTemplate(params: {
+  private static async prepararComponentesTemplate(params: {
+    servidor: ServidorWhatsApp;
     cliente?: Cliente;
     contrato?: Contrato;
     titulo: Titulo;
     mensagemTexto: string;
-  }): Array<{
+    incluirPdfNoHeader?: boolean;
+  }): Promise<Array<{
     type: 'body' | 'header' | 'button';
     parameters?: Array<{
-      type: 'text' | 'currency' | 'date_time';
+      type: 'text' | 'currency' | 'date_time' | 'document';
       text?: string;
       currency?: { fallback_value: string; code: string; amount_1000: number };
       date_time?: { fallback_value: string };
+      document?: { link?: string; filename?: string };
     }>;
-  }> {
-    const { cliente, titulo } = params;
+    buttons?: Array<{
+      type: 'URL';
+      text: string;
+      url: string;
+      example?: string[];
+    }>;
+  }>> {
+    const { servidor, cliente, titulo, incluirPdfNoHeader = false } = params;
     const components: Array<{
       type: 'body' | 'header' | 'button';
       parameters?: Array<{
-        type: 'text' | 'currency' | 'date_time';
+        type: 'text' | 'currency' | 'date_time' | 'document';
         text?: string;
         currency?: { fallback_value: string; code: string; amount_1000: number };
         date_time?: { fallback_value: string };
+        document?: { link?: string; filename?: string };
+      }>;
+      buttons?: Array<{
+        type: 'URL';
+        text: string;
+        url: string;
+        example?: string[];
       }>;
     }> = [];
 
-    // Componente body com variáveis comuns
+    // HEADER com documento (PDF) se solicitado
+    if (incluirPdfNoHeader && servidor.tipo_api === 'whatsapp_cloud') {
+      try {
+        const base64 = await TituloController.gerarPdfBase64(titulo);
+        if (base64) {
+          // Fazer upload do PDF e obter media ID
+          const mediaId = await WhatsAppCloudService.uploadMediaFromBase64(
+            servidor,
+            base64,
+            'document'
+          );
+          
+          if (mediaId) {
+            components.push({
+              type: 'header',
+              parameters: [{
+                type: 'document',
+                document: {
+                  id: mediaId, // Usar media ID do upload
+                  filename: 'boleto.pdf'
+                }
+              }]
+            });
+          }
+        }
+      } catch (error) {
+        logger.error('Erro ao preparar header com PDF para template:', error);
+      }
+    }
+
+    // BODY com variáveis posicionais
+    // Ordem: {{1}} = razao_social, {{2}} = dias_vencimento, {{3}} = valor, {{4}} = data_vencimento
     const bodyParams: Array<{
       type: 'text' | 'currency' | 'date_time';
       text?: string;
@@ -396,15 +447,34 @@ export class WhatsAppService {
       date_time?: { fallback_value: string };
     }> = [];
 
+    // {{1}} - Razão Social
     if (cliente?.razao_social) {
       bodyParams.push({ type: 'text', text: cliente.razao_social });
+    } else {
+      bodyParams.push({ type: 'text', text: 'Cliente' });
     }
 
+    // {{2}} - Dias até vencimento
     if (titulo.data_vencimento) {
-      const dataFormatada = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
-      bodyParams.push({ type: 'text', text: dataFormatada });
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const vencimento = new Date(titulo.data_vencimento);
+      vencimento.setHours(0, 0, 0, 0);
+      const diffTime = vencimento.getTime() - hoje.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays > 0) {
+        bodyParams.push({ type: 'text', text: `${diffDays} dias` });
+      } else if (diffDays === 0) {
+        bodyParams.push({ type: 'text', text: 'hoje' });
+      } else {
+        bodyParams.push({ type: 'text', text: `${Math.abs(diffDays)} dias atrás` });
+      }
+    } else {
+      bodyParams.push({ type: 'text', text: 'N/A' });
     }
 
+    // {{3}} - Valor
     if (titulo.valor_final) {
       const valor = parseFloat(String(titulo.valor_final));
       bodyParams.push({
@@ -415,12 +485,36 @@ export class WhatsAppService {
           amount_1000: Math.round(valor * 1000)
         }
       });
+    } else {
+      bodyParams.push({ type: 'text', text: 'R$ 0,00' });
+    }
+
+    // {{4}} - Data de vencimento
+    if (titulo.data_vencimento) {
+      const dataFormatada = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
+      bodyParams.push({ type: 'text', text: dataFormatada });
+    } else {
+      bodyParams.push({ type: 'text', text: 'N/A' });
     }
 
     if (bodyParams.length > 0) {
       components.push({
         type: 'body',
         parameters: bodyParams
+      });
+    }
+
+    // BUTTONS com URL dinâmica (opcional)
+    // Exemplo: botão de pagamento com URL que inclui ID do cliente
+    if (cliente?.id) {
+      components.push({
+        type: 'button',
+        buttons: [{
+          type: 'URL',
+          text: 'Revisar e Pagar',
+          url: `https://luminoustelecom.com.br/payment${cliente.id}`,
+          example: ['https://luminoustelecom.com.br/']
+        }]
       });
     }
 

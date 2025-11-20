@@ -8,12 +8,19 @@ interface WhatsAppCloudTemplateComponent {
     text?: string;
     currency?: { fallback_value: string; code: string; amount_1000: number };
     date_time?: { fallback_value: string };
-    image?: { link: string };
-    document?: { link: string; filename?: string };
-    video?: { link: string };
+    image?: { link?: string; id?: string };
+    document?: { link?: string; id?: string; filename?: string };
+    video?: { link?: string; id?: string };
   }>;
   sub_type?: 'url' | 'quick_reply';
   index?: number;
+  buttons?: Array<{
+    type: 'URL' | 'QUICK_REPLY' | 'PHONE_NUMBER';
+    text: string;
+    url?: string;
+    phone_number?: string;
+    example?: string[];
+  }>;
 }
 
 interface WhatsAppCloudTemplateMessage {
@@ -256,7 +263,7 @@ export class WhatsAppCloudService {
    * Fazer upload de mídia a partir de base64 para obter media ID
    * Usa multipart/form-data conforme documentação da API do WhatsApp
    */
-  private static async uploadMediaFromBase64(
+  static async uploadMediaFromBase64(
     servidor: ServidorWhatsApp,
     base64Data: string,
     mediaType: 'image' | 'document' | 'video' | 'audio'
