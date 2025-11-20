@@ -554,6 +554,15 @@ export class TituloController {
         return;
       }
 
+      // Verificar se o cliente está ativo
+      if (!cliente.ativo) {
+        res.status(400).json({
+          success: false,
+          message: 'Não é possível gerar título para cliente inativo'
+        });
+        return;
+      }
+
       // Selecionar contrato para referência (se informado ou o mais recente ativo)
       let contratoReferencia: Contrato | null = null;
       if (contrato_id) {

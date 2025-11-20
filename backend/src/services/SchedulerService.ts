@@ -304,6 +304,9 @@ export class SchedulerService {
       const parametros = await Parametros.findOne();
       const quantidadeMinimaTitulos = parametros?.total_titulos_financeiro || 12;
       
+      // Buscar modelo Cliente
+      const { Cliente } = await import('../models/Cliente');
+      
       // Buscar todos os contratos ativos
       const contratos = await ContratoModel.findAll({
         where: {
@@ -314,6 +317,11 @@ export class SchedulerService {
             model: Plano,
             as: 'plano',
             attributes: ['id', 'nome_plano', 'valor_mensal']
+          },
+          {
+            model: Cliente,
+            as: 'cliente',
+            attributes: ['id', 'ativo']
           }
         ]
       });
@@ -324,6 +332,12 @@ export class SchedulerService {
 
       for (const contrato of contratos) {
         try {
+          // Verificar se o cliente está ativo
+          const cliente = (contrato as any).cliente;
+          if (!cliente || !cliente.ativo) {
+            continue;
+          }
+
           // Verificar se o contrato tem banco configurado
           if (!contrato.conta_boleto) {
             continue;
