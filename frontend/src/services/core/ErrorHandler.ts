@@ -98,6 +98,19 @@ export class ErrorHandler {
           message = responseData?.message || responseData?.error || 'Sem permissão para esta ação';
           break;
         case 404:
+          // Verificar se é uma rota de consulta (não deve ser tratada como erro de autenticação)
+          const requestUrl = axiosError.config?.url || '';
+          const isConsultaRoute = requestUrl.includes('/consultar-cnpj') || 
+                                  requestUrl.includes('/consultar-cep') ||
+                                  requestUrl.includes('/consultar');
+          
+          // Se for rota de consulta, tratar como NOT_FOUND normal
+          if (isConsultaRoute) {
+            errorType = ErrorType.NOT_FOUND_ERROR;
+            message = responseData?.message || responseData?.error || 'Recurso não encontrado';
+            break;
+          }
+          
           // Se houver token no localStorage e estiver em rota protegida, 
           // provavelmente é token expirado (backend retorna 404 por segurança)
           const hasToken404 = localStorage.getItem('auth_token');

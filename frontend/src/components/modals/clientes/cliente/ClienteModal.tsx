@@ -46,7 +46,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   const isEditing = !!clienteId;
   
   const formPrefix = useFormPrefix('ClienteEditModal');
-  const { success, error } = useNotificationContext();
+  const { success, error, info } = useNotificationContext();
   const queryClient = useQueryClient();
   
   const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
@@ -956,11 +956,17 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 success('Dados do CNPJ preenchidos automaticamente!');
               }
             } catch (err) {
-              const axiosError = err as AxiosError<{ message?: string }>;
-              const errorMessage = axiosError?.response?.data?.message || 'Erro ao consultar CNPJ';
+              const axiosError = err as AxiosError<{ message?: string; error?: string }>;
+              const status = axiosError?.response?.status;
               
-              // Só mostrar erro se não for "não encontrado" (pode ser CNPJ válido mas não na base)
-              if (axiosError?.response?.status !== 404) {
+              if (status === 404) {
+                // CNPJ não encontrado na base da Receita Federal - não é erro crítico
+                info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
+              } else {
+                // Outros erros (timeout, servidor, etc.)
+                const errorMessage = axiosError?.response?.data?.message || 
+                                   axiosError?.response?.data?.error || 
+                                   'Erro ao consultar CNPJ. Tente novamente ou preencha os dados manualmente.';
                 error(errorMessage);
               }
             } finally {

@@ -147,7 +147,7 @@ export class ClienteService {
     natureza_juridica?: string;
     capital_social?: string;
   }>> {
-    return defaultApiClient.get(`/clientes/api/consultar-cnpj/${cnpj}`);
+    return defaultApiClient.get(`/clientes/consultar-cnpj/${cnpj}`);
   }
 
   // ============================================
