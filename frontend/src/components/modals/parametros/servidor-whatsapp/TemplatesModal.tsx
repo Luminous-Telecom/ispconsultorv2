@@ -67,20 +67,13 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose }) => {
   };
   
   const handleCopyMappingExample = (name: string, language: string) => {
-    // Copiar exemplo de JSON para usar no template_mapping com variáveis configuráveis
-    const example = {
-      "10_dias_antes_vencimento": { 
-        name, 
-        language,
-        variables: ["cliente.razao_social", "titulo.valor_final", "titulo.data_vencimento", "dias_vencimento"]
-      },
-      "mesmo_dia_vencimento": { 
-        name, 
-        language,
-        variables: ["cliente.razao_social", "titulo.valor_final", "titulo.data_vencimento", "dias_vencimento"]
-      }
+    // Copiar JSON do template individual para usar no template_mapping
+    const templateJson = {
+      name,
+      language,
+      variables: ["cliente.razao_social", "titulo.valor_final", "titulo.data_vencimento", "dias_vencimento"]
     };
-    navigator.clipboard.writeText(JSON.stringify(example, null, 2));
+    navigator.clipboard.writeText(JSON.stringify(templateJson, null, 2));
   };
 
   return (

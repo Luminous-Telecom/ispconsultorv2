@@ -51,5 +51,6 @@ export interface MensagensTabProps {
   }>;
   onCopyVariable?: (variable: string) => void;
   onInsertVariable?: (variable: string) => void;
+  onShowTemplates?: () => void;
 }
 

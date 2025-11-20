@@ -22,7 +22,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   isPending: _isPending,
   variaveisData,
   onCopyVariable,
-  onInsertVariable
+  onInsertVariable,
+  onShowTemplates
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -104,15 +105,25 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               {isWhatsAppCloud && onTemplateMappingChange ? (
                 <div className="row g-2 mt-3">
                   <div className="col-12">
-                    <div className="mb-2">
-                      <label className="form-label">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <label className="form-label mb-0">
                         <i className="bi bi-code-square me-2"></i>
                         Configuração de Template (JSON) - WhatsApp Cloud API
                       </label>
-                      <small className="text-muted d-block mt-1">
-                        Configure o template e variáveis para WhatsApp Cloud API. Deixe vazio para usar mensagem de texto normal.
-                      </small>
+                      {onShowTemplates && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm"
+                          onClick={onShowTemplates}
+                        >
+                          <i className="bi bi-list-ul me-1"></i>
+                          Ver Templates Ativos
+                        </button>
+                      )}
                     </div>
+                    <small className="text-muted d-block mt-1 mb-2">
+                      Configure o template e variáveis para WhatsApp Cloud API. Deixe vazio para usar mensagem de texto normal.
+                    </small>
                     <FormField
                       name="templateMapping"
                       type="textarea"

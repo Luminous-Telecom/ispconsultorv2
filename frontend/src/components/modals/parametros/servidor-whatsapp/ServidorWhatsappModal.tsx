@@ -383,6 +383,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
             variaveisData={variaveisData}
             onCopyVariable={handleCopyVariable}
             onInsertVariable={handleInsertVariable}
+            onShowTemplates={() => setShowTemplatesModal(true)}
           />
         )}
       </div>
