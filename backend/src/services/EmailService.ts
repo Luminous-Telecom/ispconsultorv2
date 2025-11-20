@@ -185,7 +185,8 @@ export class EmailService {
         from: `"${servidor.nome_remetente}" <${servidor.email_remetente}>`,
         to: emailDestino,
         subject: 'Boleto de Pagamento - BackNet',
-        html: mensagem
+        html: mensagem || '<p>Boleto em anexo.</p>',
+        text: 'Seu cliente de email não suporta HTML. Por favor, visualize o anexo PDF.'
       };
 
       if (base64Pdf) {
@@ -197,7 +198,13 @@ export class EmailService {
         }];
       }
 
-      await transporter.sendMail(mailOptions);
+      const result = await transporter.sendMail(mailOptions);
+      logger.info('Email enviado com sucesso:', { 
+        messageId: result.messageId,
+        to: emailDestino,
+        temAnexo: !!base64Pdf,
+        tamanhoMensagem: mensagem?.length || 0
+      });
       return true;
     } catch (error) {
       logger.error('Erro ao enviar email:', error);
@@ -246,9 +253,35 @@ export class EmailService {
         return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
       }
 
-      const mensagemTexto = mensagem.mensagem_manual || mensagem.mensagem_padrao;
-      if (!mensagemTexto) {
-        return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
+      // Para envio_manual, priorizar mensagem_manual, mas usar mensagem_padrao como fallback
+      let mensagemTexto = mensagem.mensagem_manual;
+      
+      // Se mensagem_manual estiver vazia ou inválida, usar mensagem_padrao
+      if (!mensagemTexto || mensagemTexto.trim() === '' || mensagemTexto.trim() === '<p></p>') {
+        mensagemTexto = mensagem.mensagem_padrao;
+      }
+      
+      if (!mensagemTexto || mensagemTexto.trim() === '' || mensagemTexto.trim() === '<p></p>') {
+        logger.warn('Mensagem de envio manual não configurada:', { 
+          tituloId,
+          temMensagemManual: !!mensagem.mensagem_manual,
+          temMensagemPadrao: !!mensagem.mensagem_padrao,
+          mensagemManualPreview: mensagem.mensagem_manual?.substring(0, 100),
+          mensagemPadraoPreview: mensagem.mensagem_padrao?.substring(0, 100)
+        });
+        return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada. Configure a mensagem manual ou a mensagem padrão.' };
+      }
+
+      // Verificar se a mensagem tem conteúdo real (não só tags HTML vazias)
+      const mensagemSemTags = mensagemTexto.replace(/<[^>]*>/g, '').trim();
+      
+      if (mensagemSemTags === '' || mensagemSemTags.length < 3) {
+        logger.warn('Mensagem contém apenas tags HTML vazias:', { 
+          tituloId,
+          mensagemOriginal: mensagemTexto.substring(0, 200),
+          mensagemSemTags: mensagemSemTags
+        });
+        return { sucesso: false, mensagem: 'Mensagem de envio manual está vazia ou contém apenas tags HTML vazias. Adicione conteúdo à mensagem.' };
       }
 
       const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id 
@@ -267,15 +300,36 @@ export class EmailService {
         dataReferencia: new Date()
       }, baseUrl);
 
+      // Verificar se após processamento a mensagem ainda tem conteúdo
+      const corpoHtmlSemTags = corpoHtml?.replace(/<[^>]*>/g, '').trim() || '';
+      
+      if (!corpoHtml || corpoHtml.trim() === '' || corpoHtmlSemTags.length < 3) {
+        logger.warn('Mensagem HTML vazia após processamento:', { 
+          tituloId, 
+          mensagemOriginal: mensagemTexto.substring(0, 200),
+          corpoHtml: corpoHtml?.substring(0, 200) || 'VAZIO',
+          corpoHtmlSemTags: corpoHtmlSemTags
+        });
+        return { sucesso: false, mensagem: 'Mensagem vazia ou inválida após processamento. Verifique se a mensagem manual está configurada corretamente.' };
+      }
+
       let base64Pdf: string | undefined = undefined;
       if (mensagem.tipo_envio === 'pdf') {
         const pdf = await TituloController.gerarPdfBase64(titulo);
         if (pdf) {
           base64Pdf = pdf;
         } else {
-          return { sucesso: false, mensagem: 'Erro ao gerar PDF do boleto' };
+          logger.warn('Erro ao gerar PDF do boleto, enviando apenas a mensagem');
         }
       }
+
+      logger.info('Enviando email manual:', { 
+        email: cliente.email, 
+        temMensagem: !!corpoHtml,
+        tamanhoMensagem: corpoHtml.length,
+        temPdf: !!base64Pdf,
+        tipoEnvio: mensagem.tipo_envio
+      });
 
       const enviou = await this.enviarEmail(servidor, cliente.email, corpoHtml, base64Pdf);
       

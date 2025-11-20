@@ -78,30 +78,12 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
       {/* Editor de Texto */}
       {mensagemType && tipoEnvio === 'pdf' && (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px' }}>
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <span id="mensagem-label" className="form-label small mb-0">Mensagem do E-mail <span className="text-danger">*</span></span>
-            </div>
-            <div style={{ flex: 1, minHeight: 0 }}>
-              <RichTextEditor
-                key={`mensagem-email-${mensagemType || 'none'}`}
-                id="mensagem_texto_email"
-                name="mensagem_texto_email"
-                ariaLabelledBy="mensagem-label"
-                value={mensagemTexto || '<p></p>'}
-                onChange={onMensagemTextoChange}
-                placeholder="Digite a mensagem padrão do e-mail..."
-                height="100%"
-              />
-            </div>
-          </div>
-          
           {/* Mensagem Manual - Apenas para tipo envio_manual */}
-          {mensagemType === 'envio_manual' && (
-            <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px', marginTop: '1rem' }}>
+          {mensagemType === 'envio_manual' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px' }}>
               <div className="d-flex justify-content-between align-items-center mb-1">
                 <span id="mensagem-manual-label" className="form-label small mb-0">
-                  Mensagem para Envio Manual
+                  Mensagem para Envio Manual <span className="text-danger">*</span>
                   <small className="text-muted d-block mt-1">Mensagem que será usada quando enviar título manualmente</small>
                 </span>
               </div>
@@ -114,6 +96,25 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   value={mensagemManual || '<p></p>'}
                   onChange={onMensagemManualChange || (() => {})}
                   placeholder="Digite a mensagem para envio manual..."
+                  height="100%"
+                />
+              </div>
+            </div>
+          ) : (
+            /* Mensagem Padrão - Para outros tipos */
+            <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px' }}>
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <span id="mensagem-label" className="form-label small mb-0">Mensagem do E-mail <span className="text-danger">*</span></span>
+              </div>
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <RichTextEditor
+                  key={`mensagem-email-${mensagemType || 'none'}`}
+                  id="mensagem_texto_email"
+                  name="mensagem_texto_email"
+                  ariaLabelledBy="mensagem-label"
+                  value={mensagemTexto || '<p></p>'}
+                  onChange={onMensagemTextoChange}
+                  placeholder="Digite a mensagem padrão do e-mail..."
                   height="100%"
                 />
               </div>
