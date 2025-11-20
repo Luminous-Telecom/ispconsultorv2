@@ -73,7 +73,6 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     next();
   } catch (error) {
     logger.warn('Falha na validação do token JWT', {
-      path: req.originalUrl,
       message: error instanceof Error ? error.message : 'Erro desconhecido',
     });
 

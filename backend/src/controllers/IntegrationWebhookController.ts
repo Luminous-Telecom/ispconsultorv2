@@ -463,9 +463,10 @@ export class IntegrationWebhookController {
   }
 
   private static async handleClientsSync(payload: IntegrationClientsPayload | undefined, res: Response): Promise<void> {
-    const limit = IntegrationWebhookController.parseLimit(payload?.limit);
-    const offset = IntegrationWebhookController.parseOffset(payload?.offset);
-    const filters: WhereOptions = {};
+    try {
+      const limit = IntegrationWebhookController.parseLimit(payload?.limit);
+      const offset = IntegrationWebhookController.parseOffset(payload?.offset);
+      const filters: WhereOptions = {};
 
     // Processar filtro de status de cliente
     const clienteStatus = payload?.clienteStatus ?? (payload?.includeInactive ? 'all' : 'ativo');
@@ -594,6 +595,8 @@ export class IntegrationWebhookController {
       }
     }
 
+    logger.info('Buscando clientes com filtros', { filters: JSON.stringify(filters) });
+    
     const [totalClientes, clientes] = await Promise.all([
       Cliente.count({ where: filters }),
       Cliente.findAll({
@@ -695,6 +698,8 @@ export class IntegrationWebhookController {
         offset
       })
     ]);
+
+    logger.info('Clientes encontrados', { total: totalClientes, retornados: clientes.length });
 
     const clientesFormatados = clientes.map((cliente) => {
       const raw = cliente.toJSON() as ClienteWithAssociations;
@@ -876,6 +881,20 @@ export class IntegrationWebhookController {
       },
       data: clientesFormatados
     });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao processar clients.sync', {
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+        payload: JSON.stringify(payload)
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno ao processar sincronização de clientes',
+        error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      });
+    }
   }
 
   private static parseNumber(value: string | number | null | undefined): number {

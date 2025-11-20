@@ -98,8 +98,30 @@ export class ErrorHandler {
           message = responseData?.message || responseData?.error || 'Sem permissão para esta ação';
           break;
         case 404:
-          errorType = ErrorType.NOT_FOUND_ERROR;
-          message = responseData?.message || responseData?.error || 'Recurso não encontrado';
+          // Se houver token no localStorage e estiver em rota protegida, 
+          // provavelmente é token expirado (backend retorna 404 por segurança)
+          const hasToken404 = localStorage.getItem('auth_token');
+          const currentPath404 = window.location.pathname;
+          
+          if (hasToken404 && currentPath404.startsWith('/adm')) {
+            // Tratar como erro de autenticação
+            errorType = ErrorType.AUTHENTICATION_ERROR;
+            message = 'Sessão expirada. Faça login novamente.';
+            const lastLoginTime404 = sessionStorage.getItem('last_login_time');
+            const timeSinceLogin404 = lastLoginTime404 ? Date.now() - parseInt(lastLoginTime404, 10) : Infinity;
+            
+            if (timeSinceLogin404 > 2000) {
+              localStorage.removeItem('auth_token');
+              setTimeout(() => {
+                if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+                  window.location.href = '/login';
+                }
+              }, 100);
+            }
+          } else {
+            errorType = ErrorType.NOT_FOUND_ERROR;
+            message = responseData?.message || responseData?.error || 'Recurso não encontrado';
+          }
           break;
         case 500:
         case 502:
