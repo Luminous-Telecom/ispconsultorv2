@@ -143,14 +143,18 @@ export class ServidorWhatsAppService {
   }
 
   static async sendTestMessage(id: number, phone: string, message: string): Promise<{ success: boolean; message: string; data?: Record<string, unknown> }> {
-    const response = await apiService.post<Record<string, unknown>>(`/servidores-whatsapp/${id}/enviar-mensagem-teste`, {
-      phone,
-      message
-    });
-    return {
-      success: response.success,
-      message: response.message ?? 'Mensagem enviada com sucesso.',
-      data: response.data,
-    };
+    try {
+      const response = await apiService.post<Record<string, unknown>>(`/servidores-whatsapp/${id}/enviar-mensagem-teste`, {
+        phone,
+        message
+      });
+      return {
+        success: response.success,
+        message: response.message ?? 'Mensagem enviada com sucesso.',
+        data: response.data,
+      };
+    } catch {
+      throw new Error('Não foi possível enviar a mensagem de teste. Verifique as configurações do servidor e tente novamente.');
+    }
   }
 }

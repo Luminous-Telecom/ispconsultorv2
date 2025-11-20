@@ -27,6 +27,9 @@ router.delete('/:id', TituloController.destroy);
 // Imprimir boleto
 router.get('/:id/boleto', TituloController.imprimirBoleto);
 
+// Gerar link público de pagamento
+router.get('/:id/link-pagamento', TituloController.gerarLinkPagamento);
+
 // Marcar como pago
 router.post('/:id/pagar', TituloController.marcarComoPago);
 

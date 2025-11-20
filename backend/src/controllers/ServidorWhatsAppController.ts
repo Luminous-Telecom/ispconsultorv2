@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response as ExpressResponse } from 'express';
 import { ValidationError } from 'sequelize';
 import { ServidorWhatsApp } from '../models/ServidorWhatsApp';
 import { MensagemWhatsApp } from '../models/MensagemWhatsApp';
@@ -8,7 +8,7 @@ export class ServidorWhatsAppController {
   /**
    * Listar todos os servidores de WhatsApp
    */
-  static async list(req: Request, res: Response): Promise<void> {
+  static async list(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const servidores = await ServidorWhatsApp.findAll({
         order: [['created_at', 'DESC']],
@@ -34,7 +34,7 @@ export class ServidorWhatsAppController {
   /**
    * Buscar servidor de WhatsApp por ID
    */
-  static async show(req: Request, res: Response): Promise<void> {
+  static async show(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -69,7 +69,7 @@ export class ServidorWhatsAppController {
   /**
    * Criar novo servidor de WhatsApp
    */
-  static async create(req: Request, res: Response): Promise<void> {
+  static async create(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const servidorData = req.body;
 
@@ -123,7 +123,7 @@ export class ServidorWhatsAppController {
   /**
    * Atualizar servidor de WhatsApp
    */
-  static async update(req: Request, res: Response): Promise<void> {
+  static async update(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
       const servidorData = req.body;
@@ -167,7 +167,7 @@ export class ServidorWhatsAppController {
   /**
    * Deletar servidor de WhatsApp
    */
-  static async delete(req: Request, res: Response): Promise<void> {
+  static async delete(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -199,7 +199,7 @@ export class ServidorWhatsAppController {
   /**
    * Testar conexão do servidor de WhatsApp
    */
-  static async testConnection(req: Request, res: Response): Promise<void> {
+  static async testConnection(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -241,7 +241,7 @@ export class ServidorWhatsAppController {
   /**
    * Buscar servidor ativo
    */
-  static async getActive(req: Request, res: Response): Promise<void> {
+  static async getActive(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const servidor = await ServidorWhatsApp.findOne({
         where: { ativo: true },
@@ -275,7 +275,7 @@ export class ServidorWhatsAppController {
   /**
    * Criar ou atualizar servidor único
    */
-  static async createOrUpdate(req: Request, res: Response): Promise<void> {
+  static async createOrUpdate(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const servidorData = req.body;
 
@@ -405,7 +405,7 @@ export class ServidorWhatsAppController {
   /**
    * Conectar instância na Evolution API
    */
-  static async connectInstance(req: Request, res: Response): Promise<void> {
+  static async connectInstance(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -451,7 +451,7 @@ export class ServidorWhatsAppController {
   /**
    * Enviar mensagem de teste
    */
-  static async sendTestMessage(req: Request, res: Response): Promise<void> {
+  static async sendTestMessage(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { id } = req.params;
       const { phone, message } = req.body;
@@ -473,7 +473,7 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      let result: any;
+      let result: Record<string, unknown> = {};
       
       // Verificar tipo de API e enviar mensagem apropriadamente
       if (servidor.tipo_api === 'whatsapp_cloud') {
@@ -497,29 +497,94 @@ export class ServidorWhatsAppController {
           text: message
         };
 
-        logger.info(`Enviando mensagem via Evolution API - URL: ${evolutionUrl}`);
+        logger.info(`Enviando mensagem via Evolution API - URL: ${evolutionUrl}`, {
+          instance: servidor.instance_name,
+          phone: phone,
+          hasApiKey: !!servidor.evolution_api_key
+        });
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-        const response = await fetch(evolutionUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': servidor.evolution_api_key
-          },
-          body: JSON.stringify(messageData),
-          signal: controller.signal
-        });
+        let response: globalThis.Response;
+        try {
+          response = await fetch(evolutionUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': servidor.evolution_api_key || ''
+            },
+            body: JSON.stringify(messageData),
+            signal: controller.signal
+          });
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          logger.error('Erro ao fazer requisição para Evolution API:', {
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            errorName: fetchError instanceof Error ? fetchError.name : 'Unknown',
+            url: evolutionUrl,
+            instance: servidor.instance_name
+          });
+          throw fetchError;
+        }
 
         clearTimeout(timeoutId);
 
-        result = await response.json() as { message?: string };
+        logger.info(`Resposta recebida da Evolution API:`, {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries())
+        });
 
-        if (!response.ok) {
-          throw new Error(result.message || 'Erro ao enviar mensagem via Evolution API');
+        // Tentar parsear JSON, mas tratar erros
+        let responseData: Record<string, unknown> = {};
+        let responseText = '';
+        try {
+          responseText = await response.text();
+          logger.info(`Corpo da resposta da Evolution API (primeiros 500 chars):`, responseText.substring(0, 500));
+          
+          if (responseText) {
+            try {
+              responseData = JSON.parse(responseText) as Record<string, unknown>;
+              logger.info('Resposta parseada com sucesso:', responseData);
+            } catch (parseError) {
+              logger.warn('Resposta da Evolution API não é JSON válido:', {
+                parseError: parseError instanceof Error ? parseError.message : String(parseError),
+                textPreview: responseText.substring(0, 200)
+              });
+              // Se não for JSON, usar o texto como mensagem de erro
+              if (!response.ok) {
+                throw new Error(`Resposta da API: ${responseText.substring(0, 200)}`);
+              }
+            }
+          }
+        } catch (textError) {
+          logger.error('Erro ao ler resposta da Evolution API:', {
+            error: textError instanceof Error ? textError.message : String(textError),
+            errorName: textError instanceof Error ? textError.name : 'Unknown',
+            status: response.status,
+            statusText: response.statusText
+          });
+          if (!response.ok) {
+            throw new Error(`Erro ao processar resposta da Evolution API: ${textError instanceof Error ? textError.message : 'Erro desconhecido'}`);
+          }
         }
 
+        if (!response.ok) {
+          const errorMsg = (responseData.message as string) || (responseData.error as string) || responseText || `Erro HTTP ${response.status}: ${response.statusText}`;
+          logger.error('Erro ao enviar mensagem via Evolution API:', {
+            status: response.status,
+            statusText: response.statusText,
+            responseData: responseData,
+            responseText: responseText.substring(0, 500),
+            url: evolutionUrl,
+            instance: servidor.instance_name
+          });
+          throw new Error(errorMsg || 'Erro ao enviar mensagem via Evolution API');
+        }
+
+        result = responseData;
         logger.info(`Mensagem de teste enviada via Evolution API para: ${phone}`);
       }
 
@@ -562,7 +627,7 @@ export class ServidorWhatsAppController {
   /**
    * Buscar mensagem por tipo
    */
-  static async getMensagemByTipo(req: Request, res: Response): Promise<void> {
+  static async getMensagemByTipo(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { tipo } = req.params;
 
@@ -594,7 +659,7 @@ export class ServidorWhatsAppController {
   /**
    * Salvar mensagem WhatsApp
    */
-  static async saveMensagem(req: Request, res: Response): Promise<void> {
+  static async saveMensagem(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { tipo, tipo_envio, mensagem_padrao, interacao1, interacao2, interacao3, ativo } = req.body;
 

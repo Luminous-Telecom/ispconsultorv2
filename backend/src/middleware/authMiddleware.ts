@@ -14,6 +14,8 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/uploads(\/.*)?$/i },
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET dados públicos da empresa (para site público)
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
+  { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+$/i }, // GET página pública de pagamento
+  { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+\/pdf$/i }, // GET PDF do boleto (público)
 ];
 
 const isPublicRoute = (req: Request): boolean => {

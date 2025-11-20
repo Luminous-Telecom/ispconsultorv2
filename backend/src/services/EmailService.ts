@@ -110,12 +110,16 @@ export class EmailService {
         let corpoHtml = '';
         if (mensagem?.mensagem_padrao) {
           const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
+          
+          // Obter baseUrl para gerar link de pagamento
+          const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+          
           corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
             cliente,
             contrato: contratoRef,
             titulo,
             dataReferencia: new Date()
-          });
+          }, baseUrl);
         } else {
           // Corpo padrão simples
           const dataVenc = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');

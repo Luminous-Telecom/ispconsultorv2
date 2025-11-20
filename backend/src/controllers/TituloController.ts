@@ -14,6 +14,7 @@ import { Op, WhereOptions, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/database';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import type htmlPdf from 'html-pdf-node';
 import type { PdfOptions } from 'html-pdf-node';
 
@@ -479,9 +480,27 @@ export class TituloController {
         return;
       }
 
+      // Construir base URL para o link de pagamento
+      let baseUrl = process.env.BASE_URL;
+      if (!baseUrl) {
+        const protocol = req.protocol || 'http';
+        const host = req.get('host') || '';
+        baseUrl = `${protocol}://${host}`;
+      }
+
+      // Gerar link de pagamento público
+      const linkPagamento = this.gerarLinkPagamentoPublico(titulo.id, baseUrl);
+
+      // Adicionar link de pagamento aos dados do título
+      const tituloData = titulo.toJSON();
+      const tituloComLink = {
+        ...tituloData,
+        link_pagamento_publico: linkPagamento
+      };
+
       res.json({
         success: true,
-        data: titulo
+        data: tituloComLink
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -1823,6 +1842,73 @@ export class TituloController {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao buscar estatísticas dos títulos', { error: errorMessage });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Gerar link público de pagamento para um título
+   */
+  static gerarLinkPagamentoPublico(tituloId: number, baseUrl?: string): string {
+    const secret = process.env.JWT_SECRET || 'default-secret';
+    const token = crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
+    
+    const url = baseUrl || process.env.BASE_URL || 'http://localhost:3001';
+    return `${url}/api/pagamento/${tituloId}/${token}`;
+  }
+
+  /**
+   * Endpoint para gerar link público de pagamento
+   */
+  static async gerarLinkPagamento(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const tituloId = parseInt(id, 10);
+
+      if (isNaN(tituloId)) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do título inválido'
+        });
+        return;
+      }
+
+      // Verificar se o título existe
+      const titulo = await Titulo.findByPk(tituloId);
+      if (!titulo) {
+        res.status(404).json({
+          success: false,
+          message: 'Título não encontrado'
+        });
+        return;
+      }
+
+      // Construir base URL
+      let baseUrl = process.env.BASE_URL;
+      if (!baseUrl) {
+        const protocol = req.protocol || 'http';
+        const host = req.get('host') || '';
+        baseUrl = `${protocol}://${host}`;
+      }
+
+      // Gerar link
+      const link = this.gerarLinkPagamentoPublico(tituloId, baseUrl);
+
+      res.json({
+        success: true,
+        data: {
+          titulo_id: tituloId,
+          link: link,
+          numero_titulo: titulo.numero_titulo
+        },
+        message: 'Link de pagamento gerado com sucesso'
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao gerar link de pagamento:', { error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

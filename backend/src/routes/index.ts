@@ -23,6 +23,7 @@ import termosContratoRoutes from './termosContrato';
 import modelosTermoRoutes from './modelosTermo';
 import atualizacoesRoutes from './atualizacoesRoutes';
 import authRoutes from './authRoutes';
+import pagamentoPublicoRoutes from './pagamentoPublicoRoutes';
 
 const router = Router();
 
@@ -55,6 +56,9 @@ const routes = [
 
     // Rotas de webhook
     { path: '/webhook', route: webhookRoutes },
+    
+    // Rotas públicas de pagamento
+    { path: '/api', route: pagamentoPublicoRoutes },
 ];
 
 routes.forEach(({ path, route }) => {

@@ -4,6 +4,7 @@ import { Titulo } from '../models/Titulo';
 import { Plano } from '../models/Plano';
 import { DiasVencimento } from '../models/DiasVencimento';
 import { DadosEmpresa } from '../models/DadosEmpresa';
+import { TituloController } from '../controllers/TituloController';
 import { Op } from 'sequelize';
 import axios from 'axios';
 import * as fs from 'fs';
@@ -124,6 +125,7 @@ export class VariaveisDocumentoService {
           { variavel: '#titulo.descricao#', descricao: 'Descrição do título' },
           { variavel: '#titulo.codigo_pix#', descricao: 'Código PIX EMV (texto para copiar e colar)' },
           { variavel: '#titulo.codigo_barras#', descricao: 'Linha digitável' },
+          { variavel: '#titulo.link_pagamento#', descricao: 'Link público para página de pagamento (baixar boleto, copiar PIX, etc)' },
         ]
       },
       sistema: {
@@ -146,7 +148,8 @@ export class VariaveisDocumentoService {
    */
   static async processarVariaveis(
     conteudo: string,
-    dados: DadosVariaveis
+    dados: DadosVariaveis,
+    baseUrl?: string
   ): Promise<string> {
     let resultado = conteudo;
     const dataRef = dados.dataReferencia || new Date();
@@ -163,7 +166,7 @@ export class VariaveisDocumentoService {
 
     // Processar variáveis do título
     if (dados.titulo) {
-      resultado = this.processarVariaveisTitulo(resultado, dados.titulo, dataRef);
+      resultado = this.processarVariaveisTitulo(resultado, dados.titulo, dataRef, baseUrl);
     }
 
     // Processar variáveis financeiras (só se houver variáveis no conteúdo)
@@ -322,7 +325,7 @@ export class VariaveisDocumentoService {
   /**
    * Processar variáveis do título
    */
-  private static processarVariaveisTitulo(conteudo: string, titulo: Titulo, dataRef: Date): string {
+  private static processarVariaveisTitulo(conteudo: string, titulo: Titulo, dataRef: Date, baseUrl?: string): string {
     let resultado = conteudo;
 
     const diasAtraso = titulo.data_vencimento && new Date(titulo.data_vencimento) < dataRef
@@ -332,6 +335,10 @@ export class VariaveisDocumentoService {
     // Calcular juros e multa (se não existir no modelo)
     const juros = (titulo.acrescimo_percentual || 0) > 0 ? (titulo.valor * (titulo.acrescimo_percentual || 0) / 100) : 0;
     const multa = (titulo.acrescimo_valor || 0) || 0;
+
+    // Gerar link de pagamento público
+    const urlFinal = baseUrl || process.env.BASE_URL || 'http://localhost:3001';
+    const linkPagamento = TituloController.gerarLinkPagamentoPublico(titulo.id, urlFinal);
 
     const substituicoes: Record<string, string> = {
       '#titulo.id#': String(titulo.id),
@@ -348,6 +355,7 @@ export class VariaveisDocumentoService {
       '#titulo.descricao#': titulo.descricao || '',
       '#titulo.codigo_pix#': titulo.qrcode || '',
       '#titulo.codigo_barras#': titulo.linha_digitavel || '',
+      '#titulo.link_pagamento#': linkPagamento,
     };
 
     for (const [variavel, valor] of Object.entries(substituicoes)) {

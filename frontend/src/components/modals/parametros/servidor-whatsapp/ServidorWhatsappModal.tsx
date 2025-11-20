@@ -133,9 +133,9 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     onSuccess: (response: { message: string }) => {
       success(response.message);
     },
-    onError: (err: unknown) => {
-      const error = err as AxiosError<{ message: string }>;
-      showError(error?.response?.data?.message || 'Erro ao enviar mensagem de teste');
+    onError: (_err: unknown) => {
+      // Sempre mostrar mensagem genérica, ignorando qualquer erro técnico
+      showError('Não foi possível enviar a mensagem de teste. Verifique as configurações do servidor e tente novamente.');
     }
   });
 
@@ -235,7 +235,9 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       return;
     }
 
-    await sendTestMessageMutation.mutateAsync({
+    // Usar mutate em vez de mutateAsync para evitar que erros não tratados sejam lançados
+    // O onError já trata o erro e mostra a mensagem genérica
+    sendTestMessageMutation.mutate({
       id: servidorAtivo.data.id,
       phone: testPhone.trim(),
       message: testMessage.trim()

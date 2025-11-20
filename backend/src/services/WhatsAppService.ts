@@ -129,12 +129,16 @@ export class WhatsAppService {
         const contratoRef: Contrato | undefined = titulo.contrato_id 
           ? ({ id: titulo.contrato_id } as Contrato)
           : undefined;
+        
+        // Obter baseUrl para gerar link de pagamento
+        const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+        
         const msg = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
           cliente,
           contrato: contratoRef,
           titulo,
           dataReferencia: new Date()
-        });
+        }, baseUrl);
 
         const telefone = this.formatarTelefone(cliente.telefone);
         
@@ -330,13 +334,14 @@ export class WhatsAppService {
 
       await this.delay(INTERACTION_DELAY_MS);
 
-      try {
-        const texto = await VariaveisDocumentoService.processarVariaveis(interacao, {
-          cliente,
-          contrato,
-          titulo,
-          dataReferencia: new Date(),
-        });
+            try {
+              const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+              const texto = await VariaveisDocumentoService.processarVariaveis(interacao, {
+                cliente,
+                contrato,
+                titulo,
+                dataReferencia: new Date(),
+              }, baseUrl);
 
         if (!texto || !texto.trim()) {
           continue;
