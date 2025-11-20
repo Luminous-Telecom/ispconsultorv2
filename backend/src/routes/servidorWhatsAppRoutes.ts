@@ -5,6 +5,7 @@ const router = Router();
 
 // Rotas CRUD básicas
 router.get('/ativo', ServidorWhatsAppController.getActive);
+router.get('/templates', ServidorWhatsAppController.getTemplates);
 router.get('/', ServidorWhatsAppController.list);
 router.get('/:id', ServidorWhatsAppController.show);
 router.post('/', ServidorWhatsAppController.create);

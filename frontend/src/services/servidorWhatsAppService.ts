@@ -55,6 +55,7 @@ export interface MensagemWhatsApp {
   interacao1?: string;
   interacao2?: string;
   interacao3?: string;
+  template_mapping?: string;
   ativo: boolean;
 }
 

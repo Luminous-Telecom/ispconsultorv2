@@ -165,24 +165,6 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                 </div>
               </div>
 
-              <div className="row g-2">
-                <div className="col-12">
-                  <FormField
-                    name="template_mapping"
-                    type="textarea"
-                    label="Mapeamento de Templates (JSON)"
-                    placeholder='{"10_dias_antes_vencimento": "nome_template_10_dias", "mesmo_dia_vencimento": "nome_template_hoje"}'
-                    required={false}
-                    rows={4}
-                    size="sm"
-                    value={formData.template_mapping || ''}
-                    onChange={(e) => onChange('template_mapping', String(e ?? ''))}
-                  />
-                  <small className="form-text text-muted d-block mt-1">
-                    JSON com mapeamento de tipos de mensagem para templates do Facebook. Exemplo: {"{"}"10_dias_antes_vencimento": "nome_template"{"}"}
-                  </small>
-                </div>
-              </div>
             </>
           )}
         </div>

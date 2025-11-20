@@ -142,26 +142,28 @@ export class WhatsAppService {
 
         const telefone = this.formatarTelefone(cliente.telefone);
         
-        // Se for WhatsApp Cloud API e houver template configurado, usar template
+        // Se for WhatsApp Cloud API, usar APENAS template (não enviar texto simples)
         if (servidor.tipo_api === 'whatsapp_cloud') {
-          const templateName = WhatsAppCloudService.obterTemplateName(servidor, tipoMensagem);
-          if (templateName) {
+          const templateInfo = WhatsAppCloudService.obterTemplateInfo(mensagem.template_mapping);
+          if (templateInfo) {
             // Preparar componentes do template com variáveis
-            // incluirPdfNoHeader = true se tipo_envio for 'pdf'
+            // incluirPdfNoHeader = true se tipo_envio for 'pdf' OU se o template for 'fatura_pdf' (que sempre requer documento)
+            const incluirPdfNoHeader = mensagem.tipo_envio === 'pdf' || templateInfo.name === 'fatura_pdf';
             const components = await this.prepararComponentesTemplate({
               servidor,
               cliente,
               contrato: contratoRef,
               titulo,
               mensagemTexto: msg,
-              incluirPdfNoHeader: mensagem.tipo_envio === 'pdf'
+              incluirPdfNoHeader,
+              variables: templateInfo.variables // Passar mapeamento de variáveis configurado
             });
             
             const enviouTemplate = await WhatsAppCloudService.enviarTemplate(
               servidor,
               telefone,
-              templateName,
-              'pt_BR',
+              templateInfo.name,
+              templateInfo.language,
               components
             );
             
@@ -170,14 +172,17 @@ export class WhatsAppService {
               // Para templates, não enviar interações separadas (já estão no template)
               continue;
             } else {
-              // Se falhar ao enviar template (ex: template não existe), fazer fallback para mensagem normal
-              logger.warn(`Falha ao enviar template ${templateName}, fazendo fallback para mensagem de texto normal`);
-              // Continuar para o fluxo normal abaixo
+              erros++;
+              continue;
             }
+          } else {
+            // WhatsApp Cloud API requer template configurado - não enviar se não houver
+            // Não contar como erro, apenas pular (mensagem pode estar desativada ou aguardando configuração)
+            continue;
           }
         }
         
-        // Fluxo normal (Evolution API ou WhatsApp Cloud sem template)
+        // Fluxo normal (apenas Evolution API)
         if (mensagem.tipo_envio === 'pdf') {
           const base64 = await TituloController.gerarPdfBase64(titulo);
           if (base64) {
@@ -267,13 +272,6 @@ export class WhatsAppService {
 
   private static async enviarMensagem(servidor: ServidorWhatsApp, telefone: string, msg: string): Promise<boolean> {
     if (servidor.tipo_api === 'whatsapp_cloud') {
-      // Tentar usar template se configurado
-      const templateName = WhatsAppCloudService.obterTemplateName(servidor, 'texto');
-      if (templateName) {
-        // Se houver template configurado, usar template
-        // Por enquanto, enviar como texto simples
-        return WhatsAppCloudService.enviarTexto(servidor, telefone, msg);
-      }
       return WhatsAppCloudService.enviarTexto(servidor, telefone, msg);
     }
     
@@ -381,6 +379,7 @@ export class WhatsAppService {
     titulo: Titulo;
     mensagemTexto: string;
     incluirPdfNoHeader?: boolean;
+    variables?: string[]; // Mapeamento de variáveis configurado pelo usuário
   }): Promise<Array<{
     type: 'body' | 'header' | 'button';
     parameters?: Array<{
@@ -388,8 +387,10 @@ export class WhatsAppService {
       text?: string;
       currency?: { fallback_value: string; code: string; amount_1000: number };
       date_time?: { fallback_value: string };
-      document?: { link?: string; filename?: string };
+      document?: { link?: string; id?: string; filename?: string };
     }>;
+    sub_type?: 'url' | 'quick_reply';
+    index?: number;
     buttons?: Array<{
       type: 'URL';
       text: string;
@@ -407,6 +408,8 @@ export class WhatsAppService {
         date_time?: { fallback_value: string };
         document?: { link?: string; id?: string; filename?: string };
       }>;
+      sub_type?: 'url' | 'quick_reply';
+      index?: number;
       buttons?: Array<{
         type: 'URL';
         text: string;
@@ -438,15 +441,18 @@ export class WhatsAppService {
                 }
               }]
             });
+          } else {
+            logger.error('Falha ao fazer upload do PDF para o header do template. O template pode falhar se o documento for obrigatório.');
           }
+        } else {
+          logger.error('Não foi possível gerar PDF para o header do template. O template pode falhar se o documento for obrigatório.');
         }
       } catch (error) {
         logger.error('Erro ao preparar header com PDF para template:', error);
       }
     }
 
-    // BODY com variáveis posicionais
-    // Ordem: {{1}} = razao_social, {{2}} = dias_vencimento, {{3}} = valor, {{4}} = data_vencimento
+    // BODY com variáveis posicionais - ordem configurável pelo usuário
     const bodyParams: Array<{
       type: 'text' | 'currency' | 'date_time';
       text?: string;
@@ -454,14 +460,11 @@ export class WhatsAppService {
       date_time?: { fallback_value: string };
     }> = [];
 
-    // {{1}} - Razão Social
-    if (cliente?.razao_social) {
-      bodyParams.push({ type: 'text', text: cliente.razao_social });
-    } else {
-      bodyParams.push({ type: 'text', text: 'Cliente' });
-    }
+    // Usar mapeamento de variáveis configurado ou ordem padrão
+    const variables = params.variables || ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento'];
 
-    // {{2}} - Dias até vencimento
+    // Calcular dias até vencimento uma vez
+    let diasVencimento: string = 'N/A';
     if (titulo.data_vencimento) {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
@@ -471,37 +474,58 @@ export class WhatsAppService {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       if (diffDays > 0) {
-        bodyParams.push({ type: 'text', text: `${diffDays} dias` });
+        diasVencimento = `${diffDays} dias`;
       } else if (diffDays === 0) {
-        bodyParams.push({ type: 'text', text: 'hoje' });
+        diasVencimento = 'hoje';
       } else {
-        bodyParams.push({ type: 'text', text: `${Math.abs(diffDays)} dias atrás` });
+        diasVencimento = `${Math.abs(diffDays)} dias atrás`;
       }
-    } else {
-      bodyParams.push({ type: 'text', text: 'N/A' });
     }
 
-    // {{3}} - Valor
-    if (titulo.valor_final) {
-      const valor = parseFloat(String(titulo.valor_final));
-      bodyParams.push({
-        type: 'currency',
-        currency: {
-          fallback_value: `R$ ${valor.toFixed(2)}`,
-          code: 'BRL',
-          amount_1000: Math.round(valor * 1000)
+    // Processar cada variável na ordem configurada
+    for (const variable of variables) {
+      if (variable === 'cliente.razao_social') {
+        bodyParams.push({ 
+          type: 'text', 
+          text: cliente?.razao_social || 'Cliente' 
+        });
+      } else if (variable === 'titulo.valor_final') {
+        // Valor como texto
+        if (titulo.valor_final) {
+          const valor = parseFloat(String(titulo.valor_final));
+          bodyParams.push({ type: 'text', text: valor.toFixed(2) });
+        } else {
+          bodyParams.push({ type: 'text', text: '0.00' });
         }
-      });
-    } else {
-      bodyParams.push({ type: 'text', text: 'R$ 0,00' });
-    }
-
-    // {{4}} - Data de vencimento
-    if (titulo.data_vencimento) {
-      const dataFormatada = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
-      bodyParams.push({ type: 'text', text: dataFormatada });
-    } else {
-      bodyParams.push({ type: 'text', text: 'N/A' });
+      } else if (variable === 'titulo.valor_final_currency') {
+        // Valor como moeda
+        if (titulo.valor_final) {
+          const valor = parseFloat(String(titulo.valor_final));
+          bodyParams.push({
+            type: 'currency',
+            currency: {
+              fallback_value: `R$ ${valor.toFixed(2)}`,
+              code: 'BRL',
+              amount_1000: Math.round(valor * 1000)
+            }
+          });
+        } else {
+          bodyParams.push({ type: 'text', text: 'R$ 0,00' });
+        }
+      } else if (variable === 'titulo.data_vencimento') {
+        if (titulo.data_vencimento) {
+          const dataFormatada = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
+          bodyParams.push({ type: 'text', text: dataFormatada });
+        } else {
+          bodyParams.push({ type: 'text', text: 'N/A' });
+        }
+      } else if (variable === 'dias_vencimento') {
+        bodyParams.push({ type: 'text', text: diasVencimento });
+      } else {
+        // Variável desconhecida, enviar como texto vazio
+        logger.warn(`Variável desconhecida no template: ${variable}`);
+        bodyParams.push({ type: 'text', text: '' });
+      }
     }
 
     if (bodyParams.length > 0) {
@@ -511,10 +535,35 @@ export class WhatsAppService {
       });
     }
 
-    // NOTA: Botões não podem ser adicionados dinamicamente via componentes
-    // Os botões devem estar pré-configurados no template no Facebook Business Manager
-    // Se o template tiver botões, eles devem ser referenciados usando sub_type e index
-    // Por enquanto, não adicionamos componentes de botão para evitar erros da API
+    // BUTTONS com URL dinâmica - se o template tiver botão URL, precisamos enviar o parâmetro
+    // O template fatura_pdf tem um botão URL com {{1}} na URL que precisa do path completo do link de pagamento
+    // Gerar link de pagamento público completo e extrair o path (sem o domínio)
+    try {
+      const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+      const linkPagamento = TituloController.gerarLinkPagamentoPublico(titulo.id, baseUrl);
+      // Extrair o path completo da URL (ex: /pagamento/164/c05b3b472db09c0f)
+      // O template tem URL: https://luminoustelecom.com.br/{{1}}, então {{1}} deve ser o path completo
+      const urlObj = new URL(linkPagamento);
+      const pathCompleto = urlObj.pathname; // Ex: /pagamento/164/c05b3b472db09c0f
+      
+      if (pathCompleto) {
+        // Remover a barra inicial se existir, pois o template já tem a barra na URL base
+        const pathParaTemplate = pathCompleto.startsWith('/') ? pathCompleto.substring(1) : pathCompleto;
+        
+        // Adicionar componente button para o primeiro botão (índice 0)
+        components.push({
+          type: 'button',
+          sub_type: 'url',
+          index: 0,
+          parameters: [{
+            type: 'text',
+            text: pathParaTemplate // Ex: pagamento/164/c05b3b472db09c0f
+          }]
+        });
+      }
+    } catch (error) {
+      logger.warn('Erro ao preparar componente button para template:', error);
+    }
 
     return components;
   }

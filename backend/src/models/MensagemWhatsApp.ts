@@ -9,6 +9,7 @@ interface MensagemWhatsAppAttributes {
   interacao1?: string;
   interacao2?: string;
   interacao3?: string;
+  template_mapping?: string; // JSON string com configuração do template (name, language, variables)
   ativo: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -24,6 +25,7 @@ export class MensagemWhatsApp extends Model<MensagemWhatsAppAttributes, Mensagem
   public interacao1?: string;
   public interacao2?: string;
   public interacao3?: string;
+  public template_mapping?: string;
   public ativo!: boolean;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
@@ -59,6 +61,10 @@ MensagemWhatsApp.init({
   },
   interacao3: {
     type: DataTypes.TEXT('long'),
+    allowNull: true
+  },
+  template_mapping: {
+    type: DataTypes.TEXT,
     allowNull: true
   },
   ativo: {

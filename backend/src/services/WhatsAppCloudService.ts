@@ -161,7 +161,7 @@ export class WhatsAppCloudService {
       const responseData = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        logger.info(`Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado}`);
+        logger.info(`Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado} (idioma: ${languageCode})`);
         return true;
       } else {
         const errorObj = responseData as { error?: { message?: string; type?: string; code?: number; subcode?: number } };
@@ -171,43 +171,30 @@ export class WhatsAppCloudService {
         const errorType = errorObj?.error?.type || 'unknown';
         const errorCode = errorObj?.error?.code || response.status;
         
-        // Erro 132001 = Template não existe ou não está aprovado
-        const isTemplateNotFound = errorCode === 132001 || errorMessage.includes('does not exist');
+        const logMessage = `Erro ao enviar template via WhatsApp Cloud API - Status: ${response.status}, Código: ${errorCode}, Tipo: ${errorType}, Mensagem: ${errorMessage}, Template: ${templateName}, Idioma: ${languageCode}, Telefone: ${telefoneFormatado}`;
         
-        const logMessage = `Erro ao enviar template via WhatsApp Cloud API - Status: ${response.status}, Código: ${errorCode}, Tipo: ${errorType}, Mensagem: ${errorMessage}, Template: ${templateName}, Telefone: ${telefoneFormatado}${isTemplateNotFound ? ' (Template não encontrado - será feito fallback para mensagem de texto)' : ''}`;
-        
-        if (isTemplateNotFound) {
-          logger.warn(logMessage, {
-            status: response.status,
-            errorCode: errorCode,
-            errorType: errorType,
-            errorMessage: errorMessage,
-            template: templateName,
-            telefone: telefoneFormatado,
-            responseData: JSON.stringify(responseData)
-          });
-        } else {
-          logger.error(logMessage, {
-            status: response.status,
-            errorCode: errorCode,
-            errorType: errorType,
-            errorMessage: errorMessage,
-            template: templateName,
-            telefone: telefoneFormatado,
-            responseData: JSON.stringify(responseData)
-          });
-        }
+        logger.error(logMessage, {
+          status: response.status,
+          errorCode: errorCode,
+          errorType: errorType,
+          errorMessage: errorMessage,
+          template: templateName,
+          language: languageCode,
+          telefone: telefoneFormatado,
+          responseData: JSON.stringify(responseData)
+        });
         return false;
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
-      const logMessage = `Erro ao enviar template via WhatsApp Cloud API - ${errorMessage}, Template: ${templateName}, Telefone: ${telefone}`;
+      const logMessage = `Erro ao enviar template via WhatsApp Cloud API - ${errorMessage}, Template: ${templateName}, Idioma: ${languageCode}, Telefone: ${telefone}`;
       
       logger.error(logMessage, {
         error: errorMessage,
         stack: errorStack,
         template: templateName,
+        language: languageCode,
         telefone: telefone
       });
       return false;
@@ -364,7 +351,10 @@ export class WhatsAppCloudService {
       if (response.ok && responseData.id) {
         return responseData.id;
       } else {
-        logger.error('Erro ao fazer upload de mídia:', responseData);
+        logger.error(`Erro ao fazer upload de ${mediaType}:`, {
+          status: response.status,
+          responseData: JSON.stringify(responseData)
+        });
         return null;
       }
     } catch (error) {
@@ -374,23 +364,70 @@ export class WhatsAppCloudService {
   }
 
   /**
-   * Obter template name baseado no tipo de mensagem e mapeamento configurado
+   * Obter template name, idioma e mapeamento de variáveis baseado no template_mapping da mensagem
+   * Formato do template_mapping (agora na mensagem, não no servidor): 
+   * "nome_template" ou
+   * { 
+   *   "name": "nome_template", 
+   *   "language": "en",
+   *   "variables": ["cliente.razao_social", "titulo.valor_final", "titulo.data_vencimento", "dias_vencimento"]
+   * }
+   * 
+   * Variáveis disponíveis:
+   * - cliente.razao_social
+   * - titulo.valor_final (texto)
+   * - titulo.valor_final_currency (moeda)
+   * - titulo.data_vencimento
+   * - dias_vencimento
    */
-  static obterTemplateName(
-    servidor: ServidorWhatsApp,
-    tipoMensagem: string
-  ): string | null {
+  static obterTemplateInfo(
+    templateMapping: string | null | undefined
+  ): { name: string; language: string; variables?: string[] } | null {
     try {
-      if (!servidor.template_mapping) {
+      if (!templateMapping) {
         return null;
       }
 
-      const mapping = JSON.parse(servidor.template_mapping) as Record<string, string>;
-      return mapping[tipoMensagem] || null;
+      const templateInfo = JSON.parse(templateMapping) as string | { 
+        name: string; 
+        language?: string;
+        variables?: string[];
+      };
+      
+      if (!templateInfo) {
+        return null;
+      }
+
+      // Se for string simples, retornar com idioma padrão pt_BR e variáveis padrão
+      if (typeof templateInfo === 'string') {
+        return { 
+          name: templateInfo, 
+          language: 'pt_BR',
+          variables: ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento']
+        };
+      }
+
+      // Se for objeto, usar name, language e variables (ou padrões)
+      return {
+        name: templateInfo.name,
+        language: templateInfo.language || 'pt_BR',
+        variables: templateInfo.variables || ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento']
+      };
     } catch (error) {
-      logger.error('Erro ao obter template name:', error);
+      logger.error('Erro ao obter template info:', error);
       return null;
     }
+  }
+
+  /**
+   * Obter template name baseado no template_mapping
+   * @deprecated Use obterTemplateInfo ao invés deste método
+   */
+  static obterTemplateName(
+    templateMapping: string | null | undefined
+  ): string | null {
+    const info = this.obterTemplateInfo(templateMapping);
+    return info?.name || null;
   }
 
   /**

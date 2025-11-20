@@ -31,12 +31,15 @@ export interface MensagensTabProps {
   mensagemType: string;
   tipoEnvio: 'desativado' | 'pdf';
   mensagemPadrao: string;
+  templateMapping?: string;
   interacao1: string;
   interacao2: string;
   interacao3: string;
+  isWhatsAppCloud?: boolean;
   onMensagemTypeChange: (value: string) => void;
   onTipoEnvioChange: (value: 'desativado' | 'pdf') => void;
   onMensagemPadraoChange: (value: string) => void;
+  onTemplateMappingChange?: (value: string) => void;
   onInteracao1Change: (value: string) => void;
   onInteracao2Change: (value: string) => void;
   onInteracao3Change: (value: string) => void;

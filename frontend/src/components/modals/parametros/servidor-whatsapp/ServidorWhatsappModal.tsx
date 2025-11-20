@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DraggableModal from '../../../common/DraggableModal';
 import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
-import { ServidorWhatsAppService } from '../../../../services/servidorWhatsAppService';
+import { ServidorWhatsAppService, MensagemWhatsApp } from '../../../../services/servidorWhatsAppService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
+import TemplatesModal from './TemplatesModal';
 import { defaultApiClient } from '../../../../services/core';
 
 interface GrupoVariaveis {
@@ -25,19 +26,20 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     instance_name: '',
     whatsapp_cloud_token: '',
     whatsapp_cloud_phone_number_id: '',
-    whatsapp_cloud_business_account_id: '',
-    template_mapping: ''
+    whatsapp_cloud_business_account_id: ''
   }), []);
 
   const [formData, setFormData] = useState<ServidorWhatsAppForm>(initialFormData);
   const [testPhone, setTestPhone] = useState<string>('');
   const [testMessage, setTestMessage] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens'>('servidor');
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   
   // Estados para mensagens
   const [mensagemType, setMensagemType] = useState<string>('');
   const [tipoEnvio, setTipoEnvio] = useState<'desativado' | 'pdf'>('pdf');
   const [mensagemPadrao, setMensagemPadrao] = useState<string>('');
+  const [templateMapping, setTemplateMapping] = useState<string>('');
   const [interacao1, setInteracao1] = useState<string>('');
   const [interacao2, setInteracao2] = useState<string>('');
   const [interacao3, setInteracao3] = useState<string>('');
@@ -80,12 +82,14 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     if (mensagemData) {
       setTipoEnvio(mensagemData.tipo_envio);
       setMensagemPadrao(mensagemData.mensagem_padrao);
+      setTemplateMapping(mensagemData.template_mapping || '');
       setInteracao1(mensagemData.interacao1 || '');
       setInteracao2(mensagemData.interacao2 || '');
       setInteracao3(mensagemData.interacao3 || '');
     } else {
       setTipoEnvio('pdf');
       setMensagemPadrao('');
+      setTemplateMapping('');
       setInteracao1('');
       setInteracao2('');
       setInteracao3('');
@@ -141,7 +145,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
 
   // Mutation para salvar mensagem
   const saveMensagemMutation = useMutation({
-    mutationFn: (data: { tipo: string; tipo_envio: 'desativado' | 'pdf'; mensagem_padrao: string; interacao1?: string; interacao2?: string; interacao3?: string; ativo: boolean }) => {
+    mutationFn: (data: MensagemWhatsApp) => {
       return ServidorWhatsAppService.saveMensagem(data);
     },
     onSuccess: () => {
@@ -164,8 +168,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         instance_name: servidor.instance_name || '',
         whatsapp_cloud_token: '', // Não carregar token por segurança
         whatsapp_cloud_phone_number_id: servidor.whatsapp_cloud_phone_number_id || '',
-        whatsapp_cloud_business_account_id: servidor.whatsapp_cloud_business_account_id || '',
-        template_mapping: servidor.template_mapping || ''
+        whatsapp_cloud_business_account_id: servidor.whatsapp_cloud_business_account_id || ''
       });
     } else {
       setFormData(initialFormData);
@@ -193,6 +196,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       tipo: mensagemType,
       tipo_envio: tipoEnvio,
       mensagem_padrao: mensagemPadrao,
+      template_mapping: templateMapping || undefined,
       interacao1: interacao1 || undefined,
       interacao2: interacao2 || undefined,
       interacao3: interacao3 || undefined,
@@ -272,6 +276,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   }
 
   return (
+    <>
     <DraggableModal
       show={show}
       onClose={handleClose}
@@ -361,12 +366,15 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
             mensagemType={mensagemType}
             tipoEnvio={tipoEnvio}
             mensagemPadrao={mensagemPadrao}
+            templateMapping={templateMapping}
             interacao1={interacao1}
             interacao2={interacao2}
             interacao3={interacao3}
+            isWhatsAppCloud={servidorAtivo?.data?.tipo_api === 'whatsapp_cloud'}
             onMensagemTypeChange={setMensagemType}
             onTipoEnvioChange={setTipoEnvio}
             onMensagemPadraoChange={setMensagemPadrao}
+            onTemplateMappingChange={setTemplateMapping}
             onInteracao1Change={setInteracao1}
             onInteracao2Change={setInteracao2}
             onInteracao3Change={setInteracao3}
@@ -379,6 +387,13 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         )}
       </div>
     </DraggableModal>
+    {showTemplatesModal && (
+      <TemplatesModal
+        show={showTemplatesModal}
+        onClose={() => setShowTemplatesModal(false)}
+      />
+    )}
+    </>
   );
 };
 

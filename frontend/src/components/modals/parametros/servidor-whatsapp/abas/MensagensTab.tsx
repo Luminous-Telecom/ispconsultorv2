@@ -6,12 +6,15 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemType,
   tipoEnvio,
   mensagemPadrao,
+  templateMapping = '',
   interacao1,
   interacao2,
   interacao3,
+  isWhatsAppCloud = false,
   onMensagemTypeChange,
   onTipoEnvioChange,
   onMensagemPadraoChange,
+  onTemplateMappingChange,
   onInteracao1Change,
   onInteracao2Change,
   onInteracao3Change,
@@ -97,136 +100,166 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 
           {mensagemType && (
             <>
-              {/* Tipo de Envio */}
-              <div className="row g-2 mt-3">
-                <div className="col-12">
-                  <label className="form-label mb-2">
-                    <i className="bi bi-send me-2"></i>
-                    Tipo de Envio
-                  </label>
-                  <div className="btn-group w-100" role="group">
-                    <input
-                      type="radio"
-                      className="btn-check"
-                      name="tipoEnvio"
-                      id="envio-desativado"
-                      value="desativado"
-                      checked={tipoEnvio === 'desativado'}
-                      onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
+              {/* Template Mapping (WhatsApp Cloud API) - Mostrar apenas para WhatsApp Cloud */}
+              {isWhatsAppCloud && onTemplateMappingChange ? (
+                <div className="row g-2 mt-3">
+                  <div className="col-12">
+                    <div className="mb-2">
+                      <label className="form-label">
+                        <i className="bi bi-code-square me-2"></i>
+                        Configuração de Template (JSON) - WhatsApp Cloud API
+                      </label>
+                      <small className="text-muted d-block mt-1">
+                        Configure o template e variáveis para WhatsApp Cloud API. Deixe vazio para usar mensagem de texto normal.
+                      </small>
+                    </div>
+                    <FormField
+                      name="templateMapping"
+                      type="textarea"
+                      label=""
+                      placeholder='{"name": "fatura_pdf", "language": "en", "variables": ["cliente.razao_social", "titulo.valor_final", "titulo.data_vencimento", "dias_vencimento"]}'
+                      rows={6}
+                      size="sm"
+                      value={templateMapping}
+                      onChange={(value) => onTemplateMappingChange(String(value ?? ''))}
                     />
-                    <label className="btn btn-outline-secondary" htmlFor="envio-desativado">
-                      <i className="bi bi-x-circle me-1"></i>
-                      Desativar
-                    </label>
-
-                    <input
-                      type="radio"
-                      className="btn-check"
-                      name="tipoEnvio"
-                      id="envio-pdf"
-                      value="pdf"
-                      checked={tipoEnvio === 'pdf'}
-                      onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
-                    />
-                    <label className="btn btn-outline-secondary" htmlFor="envio-pdf">
-                      <i className="bi bi-file-pdf me-1"></i>
-                      Anexa PDF
-                    </label>
+                    <small className="text-muted d-block mt-1">
+                      <strong>Formato:</strong> JSON com <code>name</code> (nome do template), <code>language</code> (idioma: en, pt_BR, etc) e <code>variables</code> (array com ordem das variáveis).
+                    </small>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Tipo de Envio - Apenas para Evolution API */}
+                  <div className="row g-2 mt-3">
+                    <div className="col-12">
+                      <label className="form-label mb-2">
+                        <i className="bi bi-send me-2"></i>
+                        Tipo de Envio
+                      </label>
+                      <div className="btn-group w-100" role="group">
+                        <input
+                          type="radio"
+                          className="btn-check"
+                          name="tipoEnvio"
+                          id="envio-desativado"
+                          value="desativado"
+                          checked={tipoEnvio === 'desativado'}
+                          onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
+                        />
+                        <label className="btn btn-outline-secondary" htmlFor="envio-desativado">
+                          <i className="bi bi-x-circle me-1"></i>
+                          Desativar
+                        </label>
 
-              {/* Mensagem Padrão */}
-              <div className="row g-2 mt-3">
-                <div className="col-12">
-                  <div className="mb-2">
-                    <label className="form-label">
-                      <i className="bi bi-chat-text me-2"></i>
-                      Mensagem Padrão
-                    </label>
+                        <input
+                          type="radio"
+                          className="btn-check"
+                          name="tipoEnvio"
+                          id="envio-pdf"
+                          value="pdf"
+                          checked={tipoEnvio === 'pdf'}
+                          onChange={(e) => onTipoEnvioChange(e.target.value as 'desativado' | 'pdf')}
+                        />
+                        <label className="btn btn-outline-secondary" htmlFor="envio-pdf">
+                          <i className="bi bi-file-pdf me-1"></i>
+                          Anexa PDF
+                        </label>
+                      </div>
+                    </div>
                   </div>
-                  <FormField
-                    name="mensagemPadrao"
-                    type="textarea"
-                    label=""
-                    placeholder="Digite a mensagem padrão que será enviada..."
-                    rows={10}
-                    size="sm"
-                    value={mensagemPadrao}
-                    onChange={(value) => onMensagemPadraoChange(String(value ?? ''))}
-                  />
-                </div>
-              </div>
 
-              {/* Interações (opcionais) */}
-              <div className="row g-2 mt-3">
-                <div className="col-12">
-                  <div className="mb-2">
-                    <label className="form-label">
-                      <i className="bi bi-chat-left-text me-2"></i>
-                      Interação 01
-                    </label>
-                    <small className="text-muted d-block">Mensagem opcional para primeira interação</small>
+                  {/* Mensagem Padrão - Apenas para Evolution API */}
+                  <div className="row g-2 mt-3">
+                    <div className="col-12">
+                      <div className="mb-2">
+                        <label className="form-label">
+                          <i className="bi bi-chat-text me-2"></i>
+                          Mensagem Padrão
+                        </label>
+                      </div>
+                      <FormField
+                        name="mensagemPadrao"
+                        type="textarea"
+                        label=""
+                        placeholder="Digite a mensagem padrão que será enviada..."
+                        rows={10}
+                        size="sm"
+                        value={mensagemPadrao}
+                        onChange={(value) => onMensagemPadraoChange(String(value ?? ''))}
+                      />
+                    </div>
                   </div>
-                  <FormField
-                    name="interacao1"
-                    type="textarea"
-                    label=""
-                    placeholder="Digite a primeira mensagem de interação..."
-                    rows={3}
-                    size="sm"
-                    value={interacao1}
-                    onChange={(value) => onInteracao1Change(String(value ?? ''))}
-                  />
-                </div>
-              </div>
 
-              <div className="row g-2 mt-2">
-                <div className="col-12">
-                  <div className="mb-2">
-                    <label className="form-label">
-                      <i className="bi bi-chat-left-text me-2"></i>
-                      Interação 02
-                    </label>
-                    <small className="text-muted d-block">Mensagem opcional para segunda interação</small>
+                  {/* Interações (opcionais) - Apenas para Evolution API */}
+                  <div className="row g-2 mt-3">
+                    <div className="col-12">
+                      <div className="mb-2">
+                        <label className="form-label">
+                          <i className="bi bi-chat-left-text me-2"></i>
+                          Interação 01
+                        </label>
+                        <small className="text-muted d-block">Mensagem opcional para primeira interação</small>
+                      </div>
+                      <FormField
+                        name="interacao1"
+                        type="textarea"
+                        label=""
+                        placeholder="Digite a primeira mensagem de interação..."
+                        rows={3}
+                        size="sm"
+                        value={interacao1}
+                        onChange={(value) => onInteracao1Change(String(value ?? ''))}
+                      />
+                    </div>
                   </div>
-                  <FormField
-                    name="interacao2"
-                    type="textarea"
-                    label=""
-                    placeholder="Digite a segunda mensagem de interação..."
-                    rows={3}
-                    size="sm"
-                    value={interacao2}
-                    onChange={(value) => onInteracao2Change(String(value ?? ''))}
-                  />
-                </div>
-              </div>
 
-              <div className="row g-2 mt-2">
-                <div className="col-12">
-                  <div className="mb-2">
-                    <label className="form-label">
-                      <i className="bi bi-chat-left-text me-2"></i>
-                      Interação 03
-                    </label>
-                    <small className="text-muted d-block">Mensagem opcional para terceira interação</small>
+                  <div className="row g-2 mt-2">
+                    <div className="col-12">
+                      <div className="mb-2">
+                        <label className="form-label">
+                          <i className="bi bi-chat-left-text me-2"></i>
+                          Interação 02
+                        </label>
+                        <small className="text-muted d-block">Mensagem opcional para segunda interação</small>
+                      </div>
+                      <FormField
+                        name="interacao2"
+                        type="textarea"
+                        label=""
+                        placeholder="Digite a segunda mensagem de interação..."
+                        rows={3}
+                        size="sm"
+                        value={interacao2}
+                        onChange={(value) => onInteracao2Change(String(value ?? ''))}
+                      />
+                    </div>
                   </div>
-                  <FormField
-                    name="interacao3"
-                    type="textarea"
-                    label=""
-                    placeholder="Digite a terceira mensagem de interação..."
-                    rows={3}
-                    size="sm"
-                    value={interacao3}
-                    onChange={(value) => onInteracao3Change(String(value ?? ''))}
-                  />
-                </div>
-              </div>
 
-              {/* Container de Variáveis */}
-              {variaveisData && (
+                  <div className="row g-2 mt-2">
+                    <div className="col-12">
+                      <div className="mb-2">
+                        <label className="form-label">
+                          <i className="bi bi-chat-left-text me-2"></i>
+                          Interação 03
+                        </label>
+                        <small className="text-muted d-block">Mensagem opcional para terceira interação</small>
+                      </div>
+                      <FormField
+                        name="interacao3"
+                        type="textarea"
+                        label=""
+                        placeholder="Digite a terceira mensagem de interação..."
+                        rows={3}
+                        size="sm"
+                        value={interacao3}
+                        onChange={(value) => onInteracao3Change(String(value ?? ''))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Container de Variáveis - Apenas para Evolution API */}
+                  {variaveisData && (
                 <div className="row g-2 mt-3">
                   <div className="col-12">
                     <div className="card border-primary">
@@ -306,6 +339,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                     </div>
                   </div>
                 </div>
+                  )}
+                </>
               )}
             </>
           )}

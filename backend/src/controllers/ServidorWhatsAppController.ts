@@ -4,6 +4,8 @@ import { ServidorWhatsApp } from '../models/ServidorWhatsApp';
 import { MensagemWhatsApp } from '../models/MensagemWhatsApp';
 import { logger } from '../utils/logger';
 
+import { WhatsAppCloudService } from '../services/WhatsAppCloudService';
+
 export class ServidorWhatsAppController {
   /**
    * Listar todos os servidores de WhatsApp
@@ -661,7 +663,7 @@ export class ServidorWhatsAppController {
    */
   static async saveMensagem(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const { tipo, tipo_envio, mensagem_padrao, interacao1, interacao2, interacao3, ativo } = req.body;
+      const { tipo, tipo_envio, mensagem_padrao, template_mapping, interacao1, interacao2, interacao3, ativo } = req.body;
 
       if (!tipo || !tipo_envio || !mensagem_padrao) {
         res.status(400).json({
@@ -675,6 +677,7 @@ export class ServidorWhatsAppController {
         tipo,
         tipo_envio,
         mensagem_padrao,
+        template_mapping: template_mapping || null,
         interacao1: interacao1 || null,
         interacao2: interacao2 || null,
         interacao3: interacao3 || null,
@@ -704,6 +707,168 @@ export class ServidorWhatsAppController {
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Buscar templates ativos da Meta API
+   */
+  static async getTemplates(req: Request, res: ExpressResponse): Promise<void> {
+    try {
+      const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
+
+      if (!servidor) {
+        logger.warn('Tentativa de buscar templates sem servidor ativo');
+        res.status(404).json({
+          success: false,
+          message: 'Nenhum servidor WhatsApp ativo encontrado'
+        });
+        return;
+      }
+
+      if (servidor.tipo_api !== 'whatsapp_cloud') {
+        logger.warn(`Tentativa de buscar templates com tipo de API: ${servidor.tipo_api}`);
+        res.status(400).json({
+          success: false,
+          message: 'Esta funcionalidade é apenas para WhatsApp Cloud API'
+        });
+        return;
+      }
+
+      if (!servidor.whatsapp_cloud_token) {
+        logger.warn('Tentativa de buscar templates sem token configurado');
+        res.status(400).json({
+          success: false,
+          message: 'Token não configurado'
+        });
+        return;
+      }
+
+      // Para buscar templates, precisamos do WABA ID (WhatsApp Business Account ID)
+      // Se não tiver WABA ID, tentar buscar via Phone Number ID usando query
+      let apiUrl: string;
+      
+      if (servidor.whatsapp_cloud_business_account_id) {
+        // Usar WABA ID diretamente (método preferido)
+        apiUrl = `https://graph.facebook.com/v18.0/${servidor.whatsapp_cloud_business_account_id}/message_templates`;
+      } else if (servidor.whatsapp_cloud_phone_number_id) {
+        // Tentar buscar via Phone Number ID usando query
+        // Primeiro buscar o WABA ID do Phone Number
+        const phoneUrl = `https://graph.facebook.com/v18.0/${servidor.whatsapp_cloud_phone_number_id}?fields=whatsapp_business_account`;
+        
+        const phoneResponse = await fetch(phoneUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${servidor.whatsapp_cloud_token}`
+          }
+        });
+
+        const phoneData = await phoneResponse.json().catch(() => ({}));
+        
+        if (!phoneResponse.ok) {
+          const errorMessage = (phoneData as { error?: { message?: string } })?.error?.message || 
+                              `Erro HTTP ${phoneResponse.status}`;
+          
+          logger.error('Erro ao buscar WABA ID do Phone Number:', {
+            status: phoneResponse.status,
+            error: errorMessage,
+            phoneData
+          });
+
+          res.status(400).json({
+            success: false,
+            message: `Erro ao buscar informações do Phone Number: ${errorMessage}. Configure o Business Account ID diretamente.`
+          });
+          return;
+        }
+
+        const wabaId = (phoneData as { whatsapp_business_account?: { id?: string } })?.whatsapp_business_account?.id;
+        
+        if (!wabaId) {
+          logger.error('WABA ID não encontrado na resposta do Phone Number');
+          res.status(400).json({
+            success: false,
+            message: 'Não foi possível obter o Business Account ID. Configure o Business Account ID diretamente no servidor.'
+          });
+          return;
+        }
+
+        apiUrl = `https://graph.facebook.com/v18.0/${wabaId}/message_templates`;
+      } else {
+        res.status(400).json({
+          success: false,
+          message: 'Business Account ID ou Phone Number ID não configurado'
+        });
+        return;
+      }
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${servidor.whatsapp_cloud_token}`
+        }
+      });
+
+      const responseData = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const errorObj = responseData as { error?: { message?: string; type?: string; code?: number } };
+        const errorMessage = errorObj?.error?.message || 
+                            (responseData as { message?: string })?.message || 
+                            `Erro HTTP ${response.status}`;
+        const errorCode = errorObj?.error?.code || response.status;
+        const errorType = errorObj?.error?.type || 'unknown';
+        
+        const logMessage = `Erro ao buscar templates da Meta API - Status: ${response.status}, Código: ${errorCode}, Tipo: ${errorType}, Mensagem: ${errorMessage}, PhoneNumberId: ${servidor.whatsapp_cloud_phone_number_id}`;
+        
+        logger.error(logMessage, {
+          status: response.status,
+          errorCode: errorCode,
+          errorType: errorType,
+          errorMessage: errorMessage,
+          phoneNumberId: servidor.whatsapp_cloud_phone_number_id,
+          responseData: JSON.stringify(responseData)
+        });
+
+        res.status(400).json({
+          success: false,
+          message: `Erro ao buscar templates: ${errorMessage}`,
+          errorCode: errorCode,
+          errorType: errorType,
+          data: responseData
+        });
+        return;
+      }
+
+      // Filtrar apenas templates aprovados
+      const templates = (responseData as { data?: Array<{ status?: string; [key: string]: unknown }> })?.data || [];
+      const templatesAprovados = templates.filter((template: { status?: string }) => 
+        template.status === 'APPROVED'
+      );
+
+      res.json({
+        success: true,
+        message: 'Templates buscados com sucesso',
+        data: {
+          total: templates.length,
+          aprovados: templatesAprovados.length,
+          templates: templatesAprovados
+        }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      logger.error('Erro ao buscar templates:', {
+        error: errorMessage,
+        stack: errorStack
+      });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       });
     }
   }
