@@ -25,16 +25,20 @@ export default class VariablePlugin extends Plugin {
     let currentDropdown: HTMLElement | null = null;
 
     const buscarVariaveis = async (): Promise<VariaveisData> => {
-      const { getApiBaseUrl } = await import('../../utils/urlUtils');
-      const baseUrl = getApiBaseUrl();
-      const url = `${baseUrl}/modelos-documento/variaveis`;
+      const { defaultApiClient } = await import('../../services/core');
       
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar variáveis do backend: ${response.status}`);
+      try {
+        const response = await defaultApiClient.get<VariaveisData>('/modelos-documento/variaveis');
+        
+        if (response.success && response.data) {
+          return response.data;
+        }
+        
+        throw new Error(response.message || 'Não foi possível carregar variáveis');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao buscar variáveis';
+        throw new Error(errorMessage);
       }
-      const result = await response.json();
-      return result.data; // O backend retorna { success: true, data: variaveis }
     };
 
     // Adiciona o botão de variáveis à barra de ferramentas
