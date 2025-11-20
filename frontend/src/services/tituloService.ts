@@ -140,6 +140,20 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
   }
 
   /**
+   * Enviar título via WhatsApp
+   */
+  async enviarWhatsApp(id: number): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.customPost<{ success: boolean; message: string }>(`/${id}/enviar-whatsapp`);
+  }
+
+  /**
+   * Enviar título via Email
+   */
+  async enviarEmail(id: number): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.customPost<{ success: boolean; message: string }>(`/${id}/enviar-email`);
+  }
+
+  /**
    * Gerar PDF de múltiplos boletos
    */
   async gerarPdfBoletosMultiplos(ids: number[]): Promise<Blob> {
@@ -376,6 +390,28 @@ export class TituloService {
    */
   static async gerarPdfBoletosMultiplos(ids: number[]): Promise<Blob> {
     return tituloServiceInstance.gerarPdfBoletosMultiplos(ids);
+  }
+
+  /**
+   * Enviar título via WhatsApp
+   */
+  static async enviarWhatsApp(id: number): Promise<{ success: boolean; message: string }> {
+    const response = await tituloServiceInstance.enviarWhatsApp(id);
+    return {
+      success: response.success || true,
+      message: response.message || response.data?.message || 'Mensagem enviada com sucesso'
+    };
+  }
+
+  /**
+   * Enviar título via Email
+   */
+  static async enviarEmail(id: number): Promise<{ success: boolean; message: string }> {
+    const response = await tituloServiceInstance.enviarEmail(id);
+    return {
+      success: response.success || true,
+      message: response.message || response.data?.message || 'Email enviado com sucesso'
+    };
   }
 }
 

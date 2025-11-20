@@ -32,9 +32,11 @@ export interface MensagensTabProps {
   mensagemType: string;
   tipoEnvio: 'desativado' | 'pdf';
   mensagemTexto: string;
+  mensagemManual?: string;
   onMensagemTypeChange: (value: string) => void;
   onTipoEnvioChange: (value: 'desativado' | 'pdf') => void;
   onMensagemTextoChange: (value: string) => void;
+  onMensagemManualChange?: (value: string) => void;
   onSaveMensagem: () => void;
   isPending: boolean;
 }

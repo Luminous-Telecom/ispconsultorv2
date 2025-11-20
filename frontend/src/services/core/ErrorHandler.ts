@@ -98,14 +98,16 @@ export class ErrorHandler {
           message = responseData?.message || responseData?.error || 'Sem permissão para esta ação';
           break;
         case 404:
-          // Verificar se é uma rota de consulta (não deve ser tratada como erro de autenticação)
+          // Verificar se é uma rota de consulta ou mensagens (não deve ser tratada como erro de autenticação)
           const requestUrl = axiosError.config?.url || '';
           const isConsultaRoute = requestUrl.includes('/consultar-cnpj') || 
                                   requestUrl.includes('/consultar-cep') ||
                                   requestUrl.includes('/consultar');
+          const isMensagemRoute = requestUrl.includes('/mensagens-whatsapp/tipo/') || 
+                                 requestUrl.includes('/mensagens-email/tipo/');
           
-          // Se for rota de consulta, tratar como NOT_FOUND normal
-          if (isConsultaRoute) {
+          // Se for rota de consulta ou mensagens, tratar como NOT_FOUND normal
+          if (isConsultaRoute || isMensagemRoute) {
             errorType = ErrorType.NOT_FOUND_ERROR;
             message = responseData?.message || responseData?.error || 'Recurso não encontrado';
             break;

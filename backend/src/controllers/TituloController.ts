@@ -1925,4 +1925,84 @@ export class TituloController {
       });
     }
   }
+
+  /**
+   * Enviar título manualmente via WhatsApp
+   */
+  static async enviarWhatsApp(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const tituloId = parseInt(id, 10);
+
+      if (isNaN(tituloId)) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do título inválido'
+        });
+        return;
+      }
+
+      const { WhatsAppService } = await import('../services/WhatsAppService');
+      const resultado = await WhatsAppService.enviarTituloManual(tituloId);
+
+      if (resultado.sucesso) {
+        res.json({
+          success: true,
+          message: resultado.mensagem || 'Mensagem enviada com sucesso'
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: resultado.mensagem || 'Erro ao enviar mensagem'
+        });
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao enviar título via WhatsApp:', { error: errorMessage });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Enviar título manualmente via Email
+   */
+  static async enviarEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const tituloId = parseInt(id, 10);
+
+      if (isNaN(tituloId)) {
+        res.status(400).json({
+          success: false,
+          message: 'ID do título inválido'
+        });
+        return;
+      }
+
+      const { EmailService } = await import('../services/EmailService');
+      const resultado = await EmailService.enviarTituloManual(tituloId);
+
+      if (resultado.sucesso) {
+        res.json({
+          success: true,
+          message: resultado.mensagem || 'Email enviado com sucesso'
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: resultado.mensagem || 'Erro ao enviar email'
+        });
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao enviar título via Email:', { error: errorMessage });
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
 }

@@ -45,4 +45,7 @@ router.post('/:id/consultar-recebimento', TituloController.consultarRecebimento)
 // Estatísticas
 router.get('/stats/geral', TituloController.getStats);
 
+router.post('/:id/enviar-whatsapp', TituloController.enviarWhatsApp);
+router.post('/:id/enviar-email', TituloController.enviarEmail);
+
 export default router;

@@ -29,6 +29,7 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
 
   const [formData, setFormData] = useState<ServidorEmailForm>(() => initialFormData);
   const [mensagemTexto, setMensagemTexto] = useState<string>('<p></p>');
+  const [mensagemManual, setMensagemManual] = useState<string>('<p></p>');
   const [tipoEnvio, setTipoEnvio] = useState<'desativado' | 'pdf'>('pdf');
   const [mensagemType, setMensagemType] = useState<string>('');
 
@@ -105,9 +106,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
     if (mensagemData) {
       setTipoEnvio(mensagemData.tipo_envio);
       setMensagemTexto(mensagemData.mensagem_padrao || '<p></p>');
+      setMensagemManual(mensagemData.mensagem_manual || '<p></p>');
     } else {
       setTipoEnvio('pdf');
       setMensagemTexto('<p></p>');
+      setMensagemManual('<p></p>');
     }
   }, [mensagemData]);
 
@@ -118,7 +121,13 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
 
   const handleSaveMensagem = () => {
     if (!mensagemType) return showError('Selecione um tipo');
-    saveMensagemMutation.mutate({ tipo: mensagemType, tipo_envio: tipoEnvio, mensagem_padrao: mensagemTexto, ativo: true });
+    saveMensagemMutation.mutate({ 
+      tipo: mensagemType, 
+      tipo_envio: tipoEnvio, 
+      mensagem_padrao: mensagemTexto,
+      mensagem_manual: mensagemManual || undefined,
+      ativo: true 
+    });
   };
 
   const handleReset = () => {
@@ -254,9 +263,11 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
               mensagemType={mensagemType}
               tipoEnvio={tipoEnvio}
               mensagemTexto={mensagemTexto}
+              mensagemManual={mensagemManual}
               onMensagemTypeChange={setMensagemType}
               onTipoEnvioChange={setTipoEnvio}
               onMensagemTextoChange={setMensagemTexto}
+              onMensagemManualChange={setMensagemManual}
               onSaveMensagem={handleSaveMensagem}
               isPending={saveMensagemMutation.isPending}
             />

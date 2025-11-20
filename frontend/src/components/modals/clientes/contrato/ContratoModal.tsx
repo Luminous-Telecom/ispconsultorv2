@@ -500,6 +500,98 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           action: handleImprimirTodosEmAberto
         }
       ]
+    },
+    {
+      label: 'Enviar',
+      variant: 'info',
+      disabled: (selectedItems: Titulo[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status === 'cancelado');
+      },
+      dropdown: [
+        {
+          label: 'Via WhatsApp',
+          action: async () => {
+            if (selectedItems.length > 0) {
+              try {
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const item of selectedItems) {
+                  if (item.status === 'cancelado') continue;
+                  try {
+                    const response = await TituloService.enviarWhatsApp(item.id);
+                    if (response.success) {
+                      successCount++;
+                    } else {
+                      errorCount++;
+                    }
+                  } catch (err) {
+                    errorCount++;
+                  }
+                }
+                
+                if (successCount > 0) {
+                  const message = successCount === 1 
+                    ? 'Mensagem enviada com sucesso!'
+                    : `${successCount} mensagens enviadas com sucesso!`;
+                  success(message);
+                }
+                
+                if (errorCount > 0) {
+                  const message = errorCount === 1 
+                    ? '1 mensagem não pôde ser enviada'
+                    : `${errorCount} mensagens não puderam ser enviadas`;
+                  error(message);
+                }
+              } catch (err) {
+                error('Erro ao enviar mensagens');
+              }
+            }
+          }
+        },
+        {
+          label: 'Via Email',
+          action: async () => {
+            if (selectedItems.length > 0) {
+              try {
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const item of selectedItems) {
+                  if (item.status === 'cancelado') continue;
+                  try {
+                    const response = await TituloService.enviarEmail(item.id);
+                    if (response.success) {
+                      successCount++;
+                    } else {
+                      errorCount++;
+                    }
+                  } catch (err) {
+                    errorCount++;
+                  }
+                }
+                
+                if (successCount > 0) {
+                  const message = successCount === 1 
+                    ? 'Email enviado com sucesso!'
+                    : `${successCount} emails enviados com sucesso!`;
+                  success(message);
+                }
+                
+                if (errorCount > 0) {
+                  const message = errorCount === 1 
+                    ? '1 email não pôde ser enviado'
+                    : `${errorCount} emails não puderam ser enviados`;
+                  error(message);
+                }
+              } catch (err) {
+                error('Erro ao enviar emails');
+              }
+            }
+          }
+        }
+      ]
     }
   ] : [];
 

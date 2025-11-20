@@ -6,6 +6,7 @@ interface MensagemWhatsAppAttributes {
   tipo: string;
   tipo_envio: 'desativado' | 'pdf';
   mensagem_padrao: string;
+  mensagem_manual?: string;
   interacao1?: string;
   interacao2?: string;
   interacao3?: string;
@@ -22,6 +23,7 @@ export class MensagemWhatsApp extends Model<MensagemWhatsAppAttributes, Mensagem
   public tipo!: string;
   public tipo_envio!: 'desativado' | 'pdf';
   public mensagem_padrao!: string;
+  public mensagem_manual?: string;
   public interacao1?: string;
   public interacao2?: string;
   public interacao3?: string;
@@ -50,6 +52,10 @@ MensagemWhatsApp.init({
   mensagem_padrao: {
     type: DataTypes.TEXT('long'),
     allowNull: false
+  },
+  mensagem_manual: {
+    type: DataTypes.TEXT('long'),
+    allowNull: true
   },
   interacao1: {
     type: DataTypes.TEXT('long'),

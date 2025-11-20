@@ -632,12 +632,14 @@ export class ServidorWhatsAppController {
   static async getMensagemByTipo(req: Request, res: ExpressResponse): Promise<void> {
     try {
       const { tipo } = req.params;
+      logger.info('Buscando mensagem WhatsApp por tipo:', { tipo });
 
       const mensagem = await MensagemWhatsApp.findOne({
         where: { tipo }
       });
 
       if (!mensagem) {
+        logger.info('Mensagem não encontrada para o tipo:', { tipo });
         res.status(404).json({
           success: false,
           message: 'Mensagem não encontrada'
@@ -645,12 +647,14 @@ export class ServidorWhatsAppController {
         return;
       }
 
+      logger.info('Mensagem encontrada:', { tipo, id: mensagem.id });
       res.json({
         success: true,
         data: mensagem
       });
     } catch (error) {
-      logger.error('Erro ao buscar mensagem por tipo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao buscar mensagem por tipo:', { tipo: req.params.tipo, error: errorMessage });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -663,20 +667,67 @@ export class ServidorWhatsAppController {
    */
   static async saveMensagem(req: Request, res: ExpressResponse): Promise<void> {
     try {
-      const { tipo, tipo_envio, mensagem_padrao, template_mapping, interacao1, interacao2, interacao3, ativo } = req.body;
+      const { tipo, tipo_envio, mensagem_padrao, mensagem_manual, template_mapping, interacao1, interacao2, interacao3, ativo } = req.body;
 
-      if (!tipo || !tipo_envio || !mensagem_padrao) {
+      logger.info('Salvando mensagem WhatsApp:', { 
+        tipo, 
+        tipo_envio, 
+        temMensagemPadrao: !!mensagem_padrao,
+        temMensagemManual: !!mensagem_manual,
+        temTemplateMapping: !!template_mapping,
+        ativo 
+      });
+
+      if (!tipo || !tipo_envio) {
+        logger.warn('Validação falhou: tipo ou tipo_envio ausente', { tipo, tipo_envio });
         res.status(400).json({
           success: false,
-          message: 'Tipo, tipo de envio e mensagem padrão são obrigatórios'
+          message: 'Tipo e tipo de envio são obrigatórios'
         });
         return;
       }
 
+      // Para todos os tipos, se tiver template_mapping, não precisa de mensagem_padrao
+      // Para envio_manual sem template, mensagem_manual é obrigatória
+      // Para outros tipos sem template, mensagem_padrao é obrigatória
+      if (tipo !== 'envio_manual' && !mensagem_padrao && !template_mapping) {
+        logger.warn('Validação falhou: mensagem_padrao ou template_mapping obrigatório', { tipo, temMensagemPadrao: !!mensagem_padrao, temTemplateMapping: !!template_mapping });
+        res.status(400).json({
+          success: false,
+          message: 'Mensagem padrão ou template mapping é obrigatório'
+        });
+        return;
+      }
+
+      if (tipo === 'envio_manual' && !template_mapping && !mensagem_manual) {
+        logger.warn('Validação falhou: template_mapping ou mensagem_manual obrigatório para envio_manual', { tipo, temTemplateMapping: !!template_mapping, temMensagemManual: !!mensagem_manual });
+        res.status(400).json({
+          success: false,
+          message: 'Template mapping ou mensagem manual é obrigatório para envio manual'
+        });
+        return;
+      }
+
+      // Para envio_manual, se tiver template, usar mensagem_manual no body do template (ou vazio)
+      // Se não tiver template, usar mensagem_manual como mensagem_padrao
+      // Para outros tipos, usar mensagem_padrao ou vazio se tiver template
+      const mensagemPadraoFinal = tipo === 'envio_manual' && !template_mapping && mensagem_manual
+        ? mensagem_manual 
+        : (mensagem_padrao || '');
+
+      logger.info('Dados finais para salvar:', { 
+        tipo, 
+        tipo_envio, 
+        mensagemPadraoLength: mensagemPadraoFinal.length,
+        mensagemManualLength: mensagem_manual?.length || 0,
+        temTemplateMapping: !!template_mapping
+      });
+
       const mensagemData = {
         tipo,
         tipo_envio,
-        mensagem_padrao,
+        mensagem_padrao: mensagemPadraoFinal,
+        mensagem_manual: mensagem_manual || null,
         template_mapping: template_mapping || null,
         interacao1: interacao1 || null,
         interacao2: interacao2 || null,
@@ -689,12 +740,35 @@ export class ServidorWhatsAppController {
         where: { tipo }
       });
 
-      if (mensagem) {
-        // Atualizar existente
-        await mensagem.update(mensagemData);
-      } else {
-        // Criar novo
-        mensagem = await MensagemWhatsApp.create(mensagemData);
+      logger.info('Mensagem existente encontrada:', { tipo, existe: !!mensagem, id: mensagem?.id });
+
+      try {
+        if (mensagem) {
+          // Atualizar existente
+          logger.info('Atualizando mensagem existente:', { id: mensagem.id, tipo });
+          await mensagem.update(mensagemData);
+          logger.info('Mensagem atualizada com sucesso:', { id: mensagem.id });
+        } else {
+          // Criar novo
+          logger.info('Criando nova mensagem:', { tipo });
+          mensagem = await MensagemWhatsApp.create(mensagemData);
+          logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
+        }
+      } catch (dbError) {
+        const dbErrorMessage = dbError instanceof Error ? dbError.message : 'Erro desconhecido no banco';
+        const dbErrorStack = dbError instanceof Error ? dbError.stack : undefined;
+        logger.error('Erro ao salvar/atualizar mensagem no banco:', { 
+          tipo, 
+          error: dbErrorMessage, 
+          stack: dbErrorStack,
+          mensagemData: {
+            tipo: mensagemData.tipo,
+            tipo_envio: mensagemData.tipo_envio,
+            temMensagemPadrao: !!mensagemData.mensagem_padrao,
+            temMensagemManual: !!mensagemData.mensagem_manual
+          }
+        });
+        throw new Error(`Erro ao salvar mensagem: ${dbErrorMessage}`);
       }
 
       res.json({
@@ -703,10 +777,12 @@ export class ServidorWhatsAppController {
         data: mensagem
       });
     } catch (error) {
-      logger.error('Erro ao salvar mensagem:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao salvar mensagem:', { error: errorMessage, stack: errorStack });
       res.status(500).json({
         success: false,
-        message: 'Erro interno do servidor'
+        message: errorMessage || 'Erro interno do servidor'
       });
     }
   }

@@ -365,6 +365,65 @@ const TituloModal: React.FC<TituloModalProps> = ({
       title="Título"
       headerActions={
         <div className="d-flex gap-2">
+          {isEditMode && internalTituloId && (
+            <div className="btn-group">
+              <button
+                type="button"
+                className="btn btn-info btn-sm dropdown-toggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                disabled={isPending}
+              >
+                Enviar
+              </button>
+              <ul className="dropdown-menu">
+                <li>
+                  <button
+                    className="dropdown-item"
+                    type="button"
+                    onClick={async () => {
+                      if (internalTituloId) {
+                        try {
+                          const response = await TituloService.enviarWhatsApp(internalTituloId);
+                          if (response.success) {
+                            success(response.message || 'Mensagem enviada com sucesso!');
+                          } else {
+                            error(response.message || 'Erro ao enviar mensagem');
+                          }
+                        } catch (err) {
+                          error('Erro ao enviar mensagem via WhatsApp');
+                        }
+                      }
+                    }}
+                  >
+                    Via WhatsApp
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="dropdown-item"
+                    type="button"
+                    onClick={async () => {
+                      if (internalTituloId) {
+                        try {
+                          const response = await TituloService.enviarEmail(internalTituloId);
+                          if (response.success) {
+                            success(response.message || 'Email enviado com sucesso!');
+                          } else {
+                            error(response.message || 'Erro ao enviar email');
+                          }
+                        } catch (err) {
+                          error('Erro ao enviar email');
+                        }
+                      }
+                    }}
+                  >
+                    Via Email
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
           <button
             type="button"
             className="btn btn-secondary btn-sm"

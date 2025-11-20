@@ -52,6 +52,7 @@ export interface MensagemWhatsApp {
   tipo: string;
   tipo_envio: 'desativado' | 'pdf';
   mensagem_padrao: string;
+  mensagem_manual?: string;
   interacao1?: string;
   interacao2?: string;
   interacao3?: string;

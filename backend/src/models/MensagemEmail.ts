@@ -6,6 +6,7 @@ interface MensagemEmailAttributes {
   tipo: string;
   tipo_envio: 'desativado' | 'pdf';
   mensagem_padrao: string;
+  mensagem_manual?: string;
   ativo: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -18,6 +19,7 @@ export class MensagemEmail extends Model<MensagemEmailAttributes, MensagemEmailC
   public tipo!: string;
   public tipo_envio!: 'desativado' | 'pdf';
   public mensagem_padrao!: string;
+  public mensagem_manual?: string;
   public ativo!: boolean;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
@@ -42,6 +44,10 @@ MensagemEmail.init({
   mensagem_padrao: {
     type: DataTypes.TEXT('long'),
     allowNull: false
+  },
+  mensagem_manual: {
+    type: DataTypes.TEXT('long'),
+    allowNull: true
   },
   ativo: {
     type: DataTypes.BOOLEAN,

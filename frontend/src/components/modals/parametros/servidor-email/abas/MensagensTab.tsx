@@ -7,9 +7,11 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemType,
   tipoEnvio,
   mensagemTexto,
+  mensagemManual = '<p></p>',
   onMensagemTypeChange,
   onTipoEnvioChange,
   onMensagemTextoChange,
+  onMensagemManualChange,
   onSaveMensagem: _onSaveMensagem,
   isPending: _isPending
 }) => {
@@ -32,7 +34,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
               { value: '05_dias_depois_vencimento', label: '05 dias depois do vencimento' },
               { value: '10_dias_depois_vencimento', label: '10 dias depois do vencimento' },
               { value: '15_dias_depois_vencimento', label: '15 dias depois do vencimento' },
-              { value: 'corte_cliente', label: 'Corte do cliente' }
+              { value: 'corte_cliente', label: 'Corte do cliente' },
+              { value: 'envio_manual', label: 'Envio manual de cobrança' }
             ]}
           />
         </div>
@@ -74,23 +77,49 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
 
       {/* Editor de Texto */}
       {mensagemType && tipoEnvio === 'pdf' && (
-        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px' }}>
-          <div className="d-flex justify-content-between align-items-center mb-1">
-            <span id="mensagem-label" className="form-label small mb-0">Mensagem do E-mail <span className="text-danger">*</span></span>
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px' }}>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <span id="mensagem-label" className="form-label small mb-0">Mensagem do E-mail <span className="text-danger">*</span></span>
+            </div>
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <RichTextEditor
+                key={`mensagem-email-${mensagemType || 'none'}`}
+                id="mensagem_texto_email"
+                name="mensagem_texto_email"
+                ariaLabelledBy="mensagem-label"
+                value={mensagemTexto || '<p></p>'}
+                onChange={onMensagemTextoChange}
+                placeholder="Digite a mensagem padrão do e-mail..."
+                height="100%"
+              />
+            </div>
           </div>
-          <div style={{ flex: 1, minHeight: 0 }}>
-            <RichTextEditor
-              key={`mensagem-email-${mensagemType || 'none'}`}
-              id="mensagem_texto_email"
-              name="mensagem_texto_email"
-              ariaLabelledBy="mensagem-label"
-              value={mensagemTexto || '<p></p>'}
-              onChange={onMensagemTextoChange}
-              placeholder="Digite a mensagem padrão do e-mail..."
-              height="100%"
-            />
-          </div>
-        </div>
+          
+          {/* Mensagem Manual - Apenas para tipo envio_manual */}
+          {mensagemType === 'envio_manual' && (
+            <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 300px)', minHeight: '400px', marginTop: '1rem' }}>
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <span id="mensagem-manual-label" className="form-label small mb-0">
+                  Mensagem para Envio Manual
+                  <small className="text-muted d-block mt-1">Mensagem que será usada quando enviar título manualmente</small>
+                </span>
+              </div>
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <RichTextEditor
+                  key={`mensagem-manual-email-${mensagemType || 'none'}`}
+                  id="mensagem_manual_email"
+                  name="mensagem_manual_email"
+                  ariaLabelledBy="mensagem-manual-label"
+                  value={mensagemManual || '<p></p>'}
+                  onChange={onMensagemManualChange || (() => {})}
+                  placeholder="Digite a mensagem para envio manual..."
+                  height="100%"
+                />
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -42,6 +42,7 @@ export interface MensagemEmail {
   tipo: string;
   tipo_envio: 'desativado' | 'pdf';
   mensagem_padrao: string;
+  mensagem_manual?: string;
   ativo: boolean;
 }
 

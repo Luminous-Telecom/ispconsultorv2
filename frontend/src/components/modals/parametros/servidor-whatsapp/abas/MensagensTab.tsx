@@ -6,6 +6,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   mensagemType,
   tipoEnvio,
   mensagemPadrao,
+  mensagemManual = '',
   templateMapping = '',
   interacao1,
   interacao2,
@@ -14,6 +15,7 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
   onMensagemTypeChange,
   onTipoEnvioChange,
   onMensagemPadraoChange,
+  onMensagemManualChange,
   onTemplateMappingChange,
   onInteracao1Change,
   onInteracao2Change,
@@ -55,13 +57,17 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
     return () => {
       cleanupFunctions.forEach(cleanup => cleanup());
     };
-  }, [mensagemPadrao, interacao1, interacao2, interacao3, mensagemType]);
+  }, [mensagemPadrao, mensagemManual, interacao1, interacao2, interacao3, mensagemType]);
 
   const handleVariableClick = (variable: string) => {
     if (onInsertVariable) {
       onInsertVariable(variable);
     } else {
-      onMensagemPadraoChange(mensagemPadrao + variable);
+      if (mensagemType === 'envio_manual' && onMensagemManualChange) {
+        onMensagemManualChange(mensagemManual + variable);
+      } else {
+        onMensagemPadraoChange(mensagemPadrao + variable);
+      }
     }
   };
 
@@ -93,7 +99,8 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                   { value: '05_dias_depois_vencimento', label: '05 dias depois do vencimento' },
                   { value: '10_dias_depois_vencimento', label: '10 dias depois do vencimento' },
                   { value: '15_dias_depois_vencimento', label: '15 dias depois do vencimento' },
-                  { value: 'corte_cliente', label: 'Corte do cliente' }
+                  { value: 'corte_cliente', label: 'Corte do cliente' },
+                  { value: 'envio_manual', label: 'Envio manual de cobrança' }
                 ]}
               />
             </div>
@@ -103,42 +110,45 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
             <>
               {/* Template Mapping (WhatsApp Cloud API) - Mostrar apenas para WhatsApp Cloud */}
               {isWhatsAppCloud && onTemplateMappingChange ? (
-                <div className="row g-2 mt-3">
-                  <div className="col-12">
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-                      <label className="form-label mb-0">
-                        <i className="bi bi-code-square me-2"></i>
-                        Configuração de Template (JSON) - WhatsApp Cloud API
-                      </label>
-                      {onShowTemplates && (
-                        <button
-                          type="button"
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={onShowTemplates}
-                        >
-                          <i className="bi bi-list-ul me-1"></i>
-                          Ver Templates Ativos
-                        </button>
-                      )}
+                <>
+                  <div className="row g-2 mt-3">
+                    <div className="col-12">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <label className="form-label mb-0">
+                          <i className="bi bi-code-square me-2"></i>
+                          Configuração de Template (JSON) - WhatsApp Cloud API
+                        </label>
+                        {onShowTemplates && (
+                          <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={onShowTemplates}
+                          >
+                            <i className="bi bi-list-ul me-1"></i>
+                            Ver Templates Ativos
+                          </button>
+                        )}
+                      </div>
+                      <small className="text-muted d-block mt-1 mb-2">
+                        Configure o template e variáveis para WhatsApp Cloud API. Deixe vazio para usar mensagem de texto normal.
+                      </small>
+                      <FormField
+                        name="templateMapping"
+                        type="textarea"
+                        label=""
+                        placeholder='{"name": "fatura_pdf", "language": "en", "variables": ["cliente.razao_social", "titulo.valor_final", "titulo.data_vencimento", "dias_vencimento"]}'
+                        rows={6}
+                        size="sm"
+                        value={templateMapping}
+                        onChange={(value) => onTemplateMappingChange(String(value ?? ''))}
+                      />
+                      <small className="text-muted d-block mt-1">
+                        <strong>Formato:</strong> JSON com <code>name</code> (nome do template), <code>language</code> (idioma: en, pt_BR, etc) e <code>variables</code> (array com ordem das variáveis).
+                      </small>
                     </div>
-                    <small className="text-muted d-block mt-1 mb-2">
-                      Configure o template e variáveis para WhatsApp Cloud API. Deixe vazio para usar mensagem de texto normal.
-                    </small>
-                    <FormField
-                      name="templateMapping"
-                      type="textarea"
-                      label=""
-                      placeholder='{"name": "fatura_pdf", "language": "en", "variables": ["cliente.razao_social", "titulo.valor_final", "titulo.data_vencimento", "dias_vencimento"]}'
-                      rows={6}
-                      size="sm"
-                      value={templateMapping}
-                      onChange={(value) => onTemplateMappingChange(String(value ?? ''))}
-                    />
-                    <small className="text-muted d-block mt-1">
-                      <strong>Formato:</strong> JSON com <code>name</code> (nome do template), <code>language</code> (idioma: en, pt_BR, etc) e <code>variables</code> (array com ordem das variáveis).
-                    </small>
                   </div>
-                </div>
+
+                </>
               ) : (
                 <>
                   {/* Tipo de Envio - Apenas para Evolution API */}
@@ -201,6 +211,31 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                       />
                     </div>
                   </div>
+
+                  {/* Mensagem Manual - Apenas para tipo envio_manual */}
+                  {mensagemType === 'envio_manual' && (
+                    <div className="row g-2 mt-3">
+                      <div className="col-12">
+                        <div className="mb-2">
+                          <label className="form-label">
+                            <i className="bi bi-send me-2"></i>
+                            Mensagem para Envio Manual
+                          </label>
+                          <small className="text-muted d-block">Mensagem que será usada quando enviar título manualmente</small>
+                        </div>
+                        <FormField
+                          name="mensagemManual"
+                          type="textarea"
+                          label=""
+                          placeholder="Digite a mensagem para envio manual..."
+                          rows={10}
+                          size="sm"
+                          value={mensagemManual}
+                          onChange={(value) => onMensagemManualChange?.(String(value ?? ''))}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Interações (opcionais) - Apenas para Evolution API */}
                   <div className="row g-2 mt-3">

@@ -425,41 +425,30 @@ export class WhatsAppService {
       }>;
     }> = [];
 
-    // HEADER com documento (PDF) se solicitado
     if (incluirPdfNoHeader && servidor.tipo_api === 'whatsapp_cloud') {
       try {
         const base64 = await TituloController.gerarPdfBase64(titulo);
         if (base64) {
-          // Fazer upload do PDF e obter media ID
           const mediaId = await WhatsAppCloudService.uploadMediaFromBase64(
             servidor,
             base64,
             'document'
           );
-          
           if (mediaId) {
             components.push({
               type: 'header',
               parameters: [{
                 type: 'document',
-                document: {
-                  id: mediaId, // Usar media ID do upload
-                  filename: 'boleto.pdf'
-                }
+                document: { id: mediaId, filename: 'boleto.pdf' }
               }]
             });
-          } else {
-            logger.error('Falha ao fazer upload do PDF para o header do template. O template pode falhar se o documento for obrigatório.');
           }
-        } else {
-          logger.error('Não foi possível gerar PDF para o header do template. O template pode falhar se o documento for obrigatório.');
         }
       } catch (error) {
         logger.error('Erro ao preparar header com PDF para template:', error);
       }
     }
 
-    // BODY com variáveis posicionais - ordem configurável pelo usuário
     const bodyParams: Array<{
       type: 'text' | 'currency' | 'date_time';
       text?: string;
@@ -467,47 +456,34 @@ export class WhatsAppService {
       date_time?: { fallback_value: string };
     }> = [];
 
-    // Usar mapeamento de variáveis configurado ou ordem padrão
     const variables = params.variables || ['cliente.razao_social', 'titulo.valor_final', 'titulo.data_vencimento', 'dias_vencimento'];
 
-    // Calcular dias até vencimento uma vez
-    let diasVencimento: string = 'N/A';
-    if (titulo.data_vencimento) {
+    const calcularDiasVencimento = (): string => {
+      if (!titulo.data_vencimento) return 'N/A';
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
       const vencimento = new Date(titulo.data_vencimento);
       vencimento.setHours(0, 0, 0, 0);
-      const diffTime = vencimento.getTime() - hoje.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays > 0) {
-        diasVencimento = `${diffDays} dias`;
-      } else if (diffDays === 0) {
-        diasVencimento = 'hoje';
-      } else {
-        diasVencimento = `${Math.abs(diffDays)} dias atrás`;
-      }
-    }
+      const diffDays = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) return `${diffDays} dias`;
+      if (diffDays === 0) return 'hoje';
+      return `${Math.abs(diffDays)} dias atrás`;
+    };
 
-    // Processar cada variável na ordem configurada
+    const diasVencimento = calcularDiasVencimento();
+
     for (const variable of variables) {
-      if (variable === 'cliente.razao_social') {
-        bodyParams.push({ 
-          type: 'text', 
-          text: cliente?.razao_social || 'Cliente' 
-        });
-      } else if (variable === 'titulo.valor_final') {
-        // Valor como texto
-        if (titulo.valor_final) {
-          const valor = parseFloat(String(titulo.valor_final));
+      switch (variable) {
+        case 'cliente.razao_social':
+          bodyParams.push({ type: 'text', text: cliente?.razao_social || 'Cliente' });
+          break;
+        case 'titulo.valor_final': {
+          const valor = titulo.valor_final ? parseFloat(String(titulo.valor_final)) : 0;
           bodyParams.push({ type: 'text', text: valor.toFixed(2) });
-        } else {
-          bodyParams.push({ type: 'text', text: '0.00' });
+          break;
         }
-      } else if (variable === 'titulo.valor_final_currency') {
-        // Valor como moeda
-        if (titulo.valor_final) {
-          const valor = parseFloat(String(titulo.valor_final));
+        case 'titulo.valor_final_currency': {
+          const valor = titulo.valor_final ? parseFloat(String(titulo.valor_final)) : 0;
           bodyParams.push({
             type: 'currency',
             currency: {
@@ -516,22 +492,21 @@ export class WhatsAppService {
               amount_1000: Math.round(valor * 1000)
             }
           });
-        } else {
-          bodyParams.push({ type: 'text', text: 'R$ 0,00' });
+          break;
         }
-      } else if (variable === 'titulo.data_vencimento') {
-        if (titulo.data_vencimento) {
-          const dataFormatada = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
-          bodyParams.push({ type: 'text', text: dataFormatada });
-        } else {
-          bodyParams.push({ type: 'text', text: 'N/A' });
+        case 'titulo.data_vencimento': {
+          const texto = titulo.data_vencimento 
+            ? new Date(titulo.data_vencimento).toLocaleDateString('pt-BR')
+            : 'N/A';
+          bodyParams.push({ type: 'text', text: texto });
+          break;
         }
-      } else if (variable === 'dias_vencimento') {
-        bodyParams.push({ type: 'text', text: diasVencimento });
-      } else {
-        // Variável desconhecida, enviar como texto vazio
-        logger.warn(`Variável desconhecida no template: ${variable}`);
-        bodyParams.push({ type: 'text', text: '' });
+        case 'dias_vencimento':
+          bodyParams.push({ type: 'text', text: diasVencimento });
+          break;
+        default:
+          logger.warn(`Variável desconhecida no template: ${variable}`);
+          bodyParams.push({ type: 'text', text: '' });
       }
     }
 
@@ -557,24 +532,15 @@ export class WhatsAppService {
       }
       
       const linkPagamento = TituloController.gerarLinkPagamentoPublico(titulo.id, baseUrl);
-      // Extrair o path completo da URL (ex: /pagamento/164/c05b3b472db09c0f)
-      // O template tem URL: https://luminoustelecom.com.br/{{1}}, então {{1}} deve ser o path completo
-      const urlObj = new URL(linkPagamento);
-      const pathCompleto = urlObj.pathname; // Ex: /pagamento/164/c05b3b472db09c0f
+      const pathCompleto = new URL(linkPagamento).pathname;
       
       if (pathCompleto) {
-        // Remover a barra inicial se existir, pois o template já tem a barra na URL base
         const pathParaTemplate = pathCompleto.startsWith('/') ? pathCompleto.substring(1) : pathCompleto;
-        
-        // Adicionar componente button para o primeiro botão (índice 0)
         components.push({
           type: 'button',
           sub_type: 'url',
           index: 0,
-          parameters: [{
-            type: 'text',
-            text: pathParaTemplate // Ex: pagamento/164/c05b3b472db09c0f
-          }]
+          parameters: [{ type: 'text', text: pathParaTemplate }]
         });
       }
     } catch (error) {
@@ -582,6 +548,156 @@ export class WhatsAppService {
     }
 
     return components;
+  }
+
+  /**
+   * Enviar título manualmente via WhatsApp usando mensagem_manual
+   */
+  static async enviarTituloManual(tituloId: number): Promise<{ sucesso: boolean; mensagem?: string }> {
+    try {
+      const titulo = await Titulo.findByPk(tituloId, {
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { model: Banco, as: 'banco' }
+        ]
+      });
+
+      if (!titulo) {
+        return { sucesso: false, mensagem: 'Título não encontrado' };
+      }
+
+      const tituloPlain = titulo.get({ plain: true }) as TituloPlainWithRelations;
+      const cliente = tituloPlain.cliente;
+
+      if (!cliente) {
+        return { sucesso: false, mensagem: 'Cliente não encontrado' };
+      }
+
+      if (!cliente.telefone) {
+        return { sucesso: false, mensagem: 'Cliente não possui telefone cadastrado' };
+      }
+
+      const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });
+      if (!servidor) {
+        return { sucesso: false, mensagem: 'Nenhum servidor WhatsApp ativo encontrado' };
+      }
+
+
+      const mensagem = await MensagemWhatsApp.findOne({ 
+        where: { tipo: 'envio_manual', ativo: true } 
+      });
+
+      if (!mensagem) {
+        return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
+      }
+
+      const contratoRef: Contrato | undefined = titulo.contrato_id 
+        ? ({ id: titulo.contrato_id } as Contrato)
+        : undefined;
+      
+      const baseUrl = process.env.BASE_URL;
+      if (!baseUrl) {
+        return { sucesso: false, mensagem: 'BASE_URL não configurada' };
+      }
+
+      const telefone = this.formatarTelefone(cliente.telefone);
+      
+      const mensagemTexto = mensagem.mensagem_manual || mensagem.mensagem_padrao || '';
+      
+      if (servidor.tipo_api === 'whatsapp_cloud') {
+        const templateInfo = WhatsAppCloudService.obterTemplateInfo(mensagem.template_mapping);
+        if (!templateInfo) {
+          return { sucesso: false, mensagem: 'Template não configurado para WhatsApp Cloud API' };
+        }
+
+        let msg = mensagemTexto;
+        if (mensagemTexto) {
+          msg = await VariaveisDocumentoService.processarVariaveis(mensagemTexto, {
+            cliente,
+            contrato: contratoRef,
+            titulo,
+            dataReferencia: new Date()
+          }, baseUrl);
+        }
+
+        const components = await this.prepararComponentesTemplate({
+          servidor,
+          cliente,
+          contrato: contratoRef,
+          titulo,
+          mensagemTexto: msg,
+          incluirPdfNoHeader: mensagem.tipo_envio === 'pdf' || templateInfo.name === 'fatura_pdf',
+          variables: templateInfo.variables
+        });
+
+        const enviouTemplate = await WhatsAppCloudService.enviarTemplate(
+          servidor,
+          telefone,
+          templateInfo.name,
+          templateInfo.language,
+          components
+        );
+
+        return enviouTemplate
+          ? { sucesso: true, mensagem: 'Mensagem enviada com sucesso' }
+          : { sucesso: false, mensagem: 'Erro ao enviar mensagem via template' };
+      }
+
+      if (!mensagemTexto) {
+        return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
+      }
+
+      const msg = await VariaveisDocumentoService.processarVariaveis(mensagemTexto, {
+        cliente,
+        contrato: contratoRef,
+        titulo,
+        dataReferencia: new Date()
+      }, baseUrl);
+      
+      if (mensagem.tipo_envio === 'pdf') {
+        const base64 = await TituloController.gerarPdfBase64(titulo);
+        if (!base64) {
+          return { sucesso: false, mensagem: 'Erro ao gerar PDF do boleto' };
+        }
+        const enviouPdf = await this.enviarPdfBase64(servidor, telefone, base64, msg);
+        if (!enviouPdf) {
+          return { sucesso: false, mensagem: 'Erro ao enviar PDF' };
+        }
+        await this.enviarMensagensInteracao({
+          mensagem,
+          servidor,
+          telefone,
+          cliente,
+          contrato: contratoRef,
+          titulo,
+        });
+        return { sucesso: true, mensagem: 'Mensagem enviada com sucesso' };
+      }
+
+      const enviouTexto = await this.enviarMensagem(servidor, telefone, msg);
+      if (!enviouTexto) {
+        return { sucesso: false, mensagem: 'Erro ao enviar mensagem' };
+      }
+      await this.enviarMensagensInteracao({
+        mensagem,
+        servidor,
+        telefone,
+        cliente,
+        contrato: contratoRef,
+        titulo,
+      });
+      return { sucesso: true, mensagem: 'Mensagem enviada com sucesso' };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao enviar título manual via WhatsApp:', { 
+        tituloId, 
+        error: errorMessage, 
+        stack: errorStack 
+      });
+      return { sucesso: false, mensagem: `Erro interno ao enviar mensagem: ${errorMessage}` };
+    }
   }
 }
 

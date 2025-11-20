@@ -204,5 +204,90 @@ export class EmailService {
       return false;
     }
   }
+
+  /**
+   * Enviar título manualmente via Email usando mensagem_manual
+   */
+  static async enviarTituloManual(tituloId: number): Promise<{ sucesso: boolean; mensagem?: string }> {
+    try {
+      const titulo = await Titulo.findByPk(tituloId, {
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Plano, as: 'plano' },
+          { model: Banco, as: 'banco' }
+        ]
+      });
+
+      if (!titulo) {
+        return { sucesso: false, mensagem: 'Título não encontrado' };
+      }
+
+      const tituloPlain = titulo.get({ plain: true }) as Titulo & { cliente: Cliente };
+      const cliente = tituloPlain.cliente;
+
+      if (!cliente) {
+        return { sucesso: false, mensagem: 'Cliente não encontrado' };
+      }
+
+      if (!cliente.email) {
+        return { sucesso: false, mensagem: 'Cliente não possui email cadastrado' };
+      }
+
+      const servidor = await ServidorEmail.findOne({ where: { ativo: true } });
+      if (!servidor) {
+        return { sucesso: false, mensagem: 'Nenhum servidor de email ativo encontrado' };
+      }
+
+      const mensagem = await MensagemEmail.findOne({ 
+        where: { tipo: 'envio_manual', ativo: true } 
+      });
+
+      if (!mensagem) {
+        return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
+      }
+
+      const mensagemTexto = mensagem.mensagem_manual || mensagem.mensagem_padrao;
+      if (!mensagemTexto) {
+        return { sucesso: false, mensagem: 'Mensagem de envio manual não configurada' };
+      }
+
+      const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id 
+        ? { id: titulo.contrato_id } 
+        : undefined;
+      
+      const baseUrl = process.env.BASE_URL;
+      if (!baseUrl) {
+        return { sucesso: false, mensagem: 'BASE_URL não configurada' };
+      }
+      
+      const corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagemTexto, {
+        cliente,
+        contrato: contratoRef,
+        titulo,
+        dataReferencia: new Date()
+      }, baseUrl);
+
+      let base64Pdf: string | undefined = undefined;
+      if (mensagem.tipo_envio === 'pdf') {
+        const pdf = await TituloController.gerarPdfBase64(titulo);
+        if (pdf) {
+          base64Pdf = pdf;
+        } else {
+          return { sucesso: false, mensagem: 'Erro ao gerar PDF do boleto' };
+        }
+      }
+
+      const enviou = await this.enviarEmail(servidor, cliente.email, corpoHtml, base64Pdf);
+      
+      if (enviou) {
+        return { sucesso: true, mensagem: 'Email enviado com sucesso' };
+      } else {
+        return { sucesso: false, mensagem: 'Erro ao enviar email' };
+      }
+    } catch (error) {
+      logger.error('Erro ao enviar título manual via Email:', error);
+      return { sucesso: false, mensagem: 'Erro interno ao enviar email' };
+    }
+  }
 }
 

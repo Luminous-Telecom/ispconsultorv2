@@ -39,6 +39,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const [mensagemType, setMensagemType] = useState<string>('');
   const [tipoEnvio, setTipoEnvio] = useState<'desativado' | 'pdf'>('pdf');
   const [mensagemPadrao, setMensagemPadrao] = useState<string>('');
+  const [mensagemManual, setMensagemManual] = useState<string>('');
   const [templateMapping, setTemplateMapping] = useState<string>('');
   const [interacao1, setInteracao1] = useState<string>('');
   const [interacao2, setInteracao2] = useState<string>('');
@@ -82,6 +83,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     if (mensagemData) {
       setTipoEnvio(mensagemData.tipo_envio);
       setMensagemPadrao(mensagemData.mensagem_padrao);
+      setMensagemManual(mensagemData.mensagem_manual || '');
       setTemplateMapping(mensagemData.template_mapping || '');
       setInteracao1(mensagemData.interacao1 || '');
       setInteracao2(mensagemData.interacao2 || '');
@@ -89,6 +91,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     } else {
       setTipoEnvio('pdf');
       setMensagemPadrao('');
+      setMensagemManual('');
       setTemplateMapping('');
       setInteracao1('');
       setInteracao2('');
@@ -192,10 +195,29 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       showError('Selecione um tipo de mensagem');
       return;
     }
+
+    // Para todos os tipos, se tiver template, não precisa de mensagem_padrao
+    // Para envio_manual sem template, usar mensagem_manual como mensagem_padrao
+    // Para outros tipos sem template, mensagem_padrao é obrigatória
+    const isWhatsAppCloud = servidorAtivo?.data?.tipo_api === 'whatsapp_cloud';
+    const temTemplate = !!templateMapping && templateMapping.trim() !== '';
+    
+    let mensagemPadraoFinal = mensagemPadrao;
+    
+    // Para envio_manual, se não tiver template, usar mensagem_manual como mensagem_padrao
+    if (mensagemType === 'envio_manual' && !temTemplate && mensagemManual) {
+      mensagemPadraoFinal = mensagemManual;
+    } else if (mensagemType !== 'envio_manual' && !mensagemPadraoFinal && !temTemplate && !isWhatsAppCloud) {
+      // Para Evolution API sem template (exceto envio_manual), mensagem_padrao é obrigatória
+      showError('Mensagem padrão é obrigatória');
+      return;
+    }
+
     await saveMensagemMutation.mutateAsync({
       tipo: mensagemType,
       tipo_envio: tipoEnvio,
-      mensagem_padrao: mensagemPadrao,
+      mensagem_padrao: mensagemPadraoFinal || '',
+      mensagem_manual: mensagemManual || undefined,
       template_mapping: templateMapping || undefined,
       interacao1: interacao1 || undefined,
       interacao2: interacao2 || undefined,
@@ -254,7 +276,11 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   };
 
   const handleInsertVariable = (variable: string) => {
-    setMensagemPadrao(prev => prev + variable);
+    if (mensagemType === 'envio_manual') {
+      setMensagemManual(prev => prev + variable);
+    } else {
+      setMensagemPadrao(prev => prev + variable);
+    }
   };
 
   if (isLoading) {
@@ -366,6 +392,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
             mensagemType={mensagemType}
             tipoEnvio={tipoEnvio}
             mensagemPadrao={mensagemPadrao}
+            mensagemManual={mensagemManual}
             templateMapping={templateMapping}
             interacao1={interacao1}
             interacao2={interacao2}
@@ -374,6 +401,7 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
             onMensagemTypeChange={setMensagemType}
             onTipoEnvioChange={setTipoEnvio}
             onMensagemPadraoChange={setMensagemPadrao}
+            onMensagemManualChange={setMensagemManual}
             onTemplateMappingChange={setTemplateMapping}
             onInteracao1Change={setInteracao1}
             onInteracao2Change={setInteracao2}

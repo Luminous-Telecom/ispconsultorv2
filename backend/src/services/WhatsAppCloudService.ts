@@ -164,39 +164,21 @@ export class WhatsAppCloudService {
         logger.info(`Template ${templateName} enviado via WhatsApp Cloud API para ${telefoneFormatado} (idioma: ${languageCode})`);
         return true;
       } else {
-        const errorObj = responseData as { error?: { message?: string; type?: string; code?: number; subcode?: number } };
-        const errorMessage = errorObj?.error?.message || 
-                            (responseData as { message?: string })?.message || 
-                            `Erro HTTP ${response.status}`;
-        const errorType = errorObj?.error?.type || 'unknown';
-        const errorCode = errorObj?.error?.code || response.status;
+        const errorObj = responseData as { error?: { message?: string; type?: string; code?: number } };
+        const errorMessage = errorObj?.error?.message || `Erro HTTP ${response.status}`;
         
-        const logMessage = `Erro ao enviar template via WhatsApp Cloud API - Status: ${response.status}, Código: ${errorCode}, Tipo: ${errorType}, Mensagem: ${errorMessage}, Template: ${templateName}, Idioma: ${languageCode}, Telefone: ${telefoneFormatado}`;
-        
-        logger.error(logMessage, {
+        logger.error(`Erro ao enviar template via WhatsApp Cloud API - Template: ${templateName}, Mensagem: ${errorMessage}`, {
           status: response.status,
-          errorCode: errorCode,
-          errorType: errorType,
-          errorMessage: errorMessage,
+          errorCode: errorObj?.error?.code,
+          errorType: errorObj?.error?.type,
           template: templateName,
           language: languageCode,
-          telefone: telefoneFormatado,
-          responseData: JSON.stringify(responseData)
+          telefone: telefoneFormatado
         });
         return false;
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      const logMessage = `Erro ao enviar template via WhatsApp Cloud API - ${errorMessage}, Template: ${templateName}, Idioma: ${languageCode}, Telefone: ${telefone}`;
-      
-      logger.error(logMessage, {
-        error: errorMessage,
-        stack: errorStack,
-        template: templateName,
-        language: languageCode,
-        telefone: telefone
-      });
+      logger.error('Erro ao enviar template via WhatsApp Cloud API:', error);
       return false;
     }
   }
