@@ -42,13 +42,6 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
 
   // Se não for requisição de API ou for rota pública, permitir acesso sem autenticação
   if (!isApiRequest || isPublic) {
-    // Log para debug (remover depois)
-    if (isPublic && process.env.NODE_ENV === 'development') {
-      logger.debug('Rota pública acessada sem autenticação', {
-        path: req.originalUrl,
-        method: req.method,
-      });
-    }
     next();
     return;
   }

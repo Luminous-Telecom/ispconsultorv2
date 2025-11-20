@@ -39,6 +39,7 @@ export class ApiClient {
           '/api/dados-empresa/logo',
           '/api/auth/login',
           '/api/health',
+          '/api/pagamento/',
         ];
         
         // Verificar se a URL é uma rota pública

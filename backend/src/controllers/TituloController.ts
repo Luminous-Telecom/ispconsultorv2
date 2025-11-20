@@ -1856,8 +1856,9 @@ export class TituloController {
     const secret = process.env.JWT_SECRET || 'default-secret';
     const token = crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
     
-    const url = baseUrl || process.env.BASE_URL || 'http://localhost:3001';
-    return `${url}/api/pagamento/${tituloId}/${token}`;
+    // URL do frontend (não da API)
+    const frontendUrl = process.env.FRONTEND_URL || process.env.REACT_APP_URL || 'http://localhost:3000';
+    return `${frontendUrl}/pagamento/${tituloId}/${token}`;
   }
 
   /**

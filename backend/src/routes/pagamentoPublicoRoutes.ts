@@ -3,8 +3,8 @@ import { PagamentoPublicoController } from '../controllers/PagamentoPublicoContr
 
 const router = Router();
 
-// Rota pública para página de pagamento
-router.get('/pagamento/:id/:token', PagamentoPublicoController.paginaPagamento);
+// Rota pública para buscar dados do título (API JSON)
+router.get('/pagamento/:id/:token', PagamentoPublicoController.getTituloPublico);
 
 // Rota pública para download do PDF
 router.get('/pagamento/:id/:token/pdf', PagamentoPublicoController.downloadPdf);

@@ -14,6 +14,7 @@ import Layout from './components/layout/Layout';
 import Home from './components/pages/Home';
 import Dashboard from './components/pages/Dashboard';
 import Login from './components/pages/Login';
+import PagamentoPublico from './components/pages/PagamentoPublico';
 
 // Protection
 import ProtectionLayer from './components/common/ProtectionLayer';
@@ -53,6 +54,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/pagamento/:id/:token" element={<PagamentoPublico />} />
                 <Route path="/adm" element={
                   <DashboardFiltersProvider>
                     <Layout />
