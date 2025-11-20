@@ -403,7 +403,7 @@ export class WhatsAppService {
         text?: string;
         currency?: { fallback_value: string; code: string; amount_1000: number };
         date_time?: { fallback_value: string };
-        document?: { link?: string; filename?: string };
+        document?: { link?: string; id?: string; filename?: string };
       }>;
       buttons?: Array<{
         type: 'URL';
