@@ -65,8 +65,17 @@ export class ServidorEmailService {
   }
 
   static async getActive(): Promise<ApiResponse<ServidorEmail>> {
-    const response = await apiService.get<ServidorEmail>('/servidores-email/ativo');
-    return normalizeResponse(response, {} as ServidorEmail);
+    try {
+      const response = await apiService.get<ServidorEmail>('/servidores-email/ativo');
+      return normalizeResponse(response, {} as ServidorEmail);
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string; type?: string }> & { type?: string };
+      // Se for 404, retornar resposta vazia (servidor não configurado)
+      if (axiosError.response?.status === 404 || axiosError.type === 'NOT_FOUND_ERROR') {
+        return { success: true, data: null as unknown as ServidorEmail };
+      }
+      throw error;
+    }
   }
 
   static async create(data: CreateServidorEmail): Promise<ApiResponse<ServidorEmail>> {
@@ -116,11 +125,19 @@ export class ServidorEmailService {
       const response = await apiService.get<MensagemEmail>(`/mensagens-email/tipo/${mensagemType}`);
       return response.data ?? null;
     } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      if (axiosError.response?.status === 404) {
+      const axiosError = error as AxiosError<{ message?: string; type?: string }> & { type?: string };
+      // Se for 404 ou NOT_FOUND_ERROR, retornar null (mensagem não configurada)
+      if (axiosError.response?.status === 404 || 
+          axiosError.type === 'NOT_FOUND_ERROR' ||
+          axiosError.response?.data?.message?.includes('não encontrado')) {
         return null;
       }
-      throw error;
+      // Para outros erros, verificar se é erro de autenticação antes de lançar
+      if (axiosError.response?.status === 401) {
+        throw error;
+      }
+      // Para erros diferentes de autenticação, retornar null (tratar como não configurado)
+      return null;
     }
   }
 

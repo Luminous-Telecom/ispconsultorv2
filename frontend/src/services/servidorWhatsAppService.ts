@@ -73,11 +73,19 @@ export class ServidorWhatsAppService {
       const response = await apiService.get<MensagemWhatsApp>(`/mensagens-whatsapp/tipo/${mensagemType}`);
       return response.data ?? null;
     } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      if (axiosError.response?.status === 404) {
+      const axiosError = error as AxiosError<{ message?: string; type?: string }> & { type?: string };
+      // Se for 404 ou NOT_FOUND_ERROR, retornar null (mensagem não configurada)
+      if (axiosError.response?.status === 404 || 
+          axiosError.type === 'NOT_FOUND_ERROR' ||
+          axiosError.response?.data?.message?.includes('não encontrado')) {
         return null;
       }
-      throw error;
+      // Para outros erros, verificar se é erro de autenticação antes de lançar
+      if (axiosError.response?.status === 401) {
+        throw error;
+      }
+      // Para erros diferentes de autenticação, retornar null (tratar como não configurado)
+      return null;
     }
   }
 
@@ -101,9 +109,10 @@ export class ServidorWhatsAppService {
       const response = await apiService.get<ServidorWhatsApp>('/servidores-whatsapp/ativo');
       return normalizeResponse(response, {} as ServidorWhatsApp);
     } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      if (axiosError.response?.status === 404) {
-        return null;
+      const axiosError = error as AxiosError<{ message?: string; type?: string }> & { type?: string };
+      // Se for 404, retornar resposta vazia (servidor não configurado)
+      if (axiosError.response?.status === 404 || axiosError.type === 'NOT_FOUND_ERROR') {
+        return { success: true, data: null as unknown as ServidorWhatsApp };
       }
       throw error;
     }

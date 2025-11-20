@@ -69,21 +69,13 @@ export class ErrorHandler {
         case 401:
           errorType = ErrorType.AUTHENTICATION_ERROR;
           message = responseData?.message || responseData?.error || 'Não autenticado';
-          const hasToken = localStorage.getItem('auth_token');
-          const currentPath = window.location.pathname;
-          const lastLoginTime = sessionStorage.getItem('last_login_time');
-          const timeSinceLogin = lastLoginTime ? Date.now() - parseInt(lastLoginTime, 10) : Infinity;
+          const hasToken401 = localStorage.getItem('auth_token');
+          const currentPath401 = window.location.pathname;
+          const lastLoginTime401 = sessionStorage.getItem('last_login_time');
+          const timeSinceLogin401 = lastLoginTime401 ? Date.now() - parseInt(lastLoginTime401, 10) : Infinity;
           
-          // Não redirecionar se estiver na página pública (/) ou já estiver no login
-          // Apenas redirecionar se estiver em rotas protegidas (/adm/*)
-          if (currentPath !== '/login' && currentPath !== '/' && !currentPath.startsWith('/adm')) {
-            // Se não estiver em rota protegida, não redirecionar
-            break;
-          }
-          
-          // Redirecionar apenas se estiver em rota protegida e não tiver token válido
-          if (currentPath.startsWith('/adm') && timeSinceLogin > 2000) {
-            if (hasToken) {
+          if (currentPath401.startsWith('/adm') && timeSinceLogin401 > 2000) {
+            if (hasToken401) {
               localStorage.removeItem('auth_token');
             }
             setTimeout(() => {
@@ -98,45 +90,49 @@ export class ErrorHandler {
           message = responseData?.message || responseData?.error || 'Sem permissão para esta ação';
           break;
         case 404:
-          // Verificar se é uma rota de consulta ou mensagens (não deve ser tratada como erro de autenticação)
-          const requestUrl = axiosError.config?.url || '';
-          const isConsultaRoute = requestUrl.includes('/consultar-cnpj') || 
-                                  requestUrl.includes('/consultar-cep') ||
-                                  requestUrl.includes('/consultar');
-          const isMensagemRoute = requestUrl.includes('/mensagens-whatsapp/tipo/') || 
-                                 requestUrl.includes('/mensagens-email/tipo/');
+          const requestUrl = (axiosError.config?.url || '').toLowerCase();
+          const baseURL = (axiosError.config?.baseURL || '').toLowerCase();
+          const fullUrl = `${baseURL}${requestUrl}`;
           
-          // Se for rota de consulta ou mensagens, tratar como NOT_FOUND normal
-          if (isConsultaRoute || isMensagemRoute) {
+          // Rotas que não devem ser tratadas como erro de autenticação
+          const optionalRoutes = [
+            'consultar', 'mensagens-', 'servidores-', 'servidor-', 
+            'dados-empresa', 'modelos-', 'modelo-', '/parametros'
+          ];
+          
+          const isOptionalRoute = optionalRoutes.some(route => 
+            requestUrl.includes(route) || fullUrl.includes(route)
+          );
+          
+          if (isOptionalRoute) {
             errorType = ErrorType.NOT_FOUND_ERROR;
             message = responseData?.message || responseData?.error || 'Recurso não encontrado';
             break;
           }
           
-          // Se houver token no localStorage e estiver em rota protegida, 
-          // provavelmente é token expirado (backend retorna 404 por segurança)
-          const hasToken404 = localStorage.getItem('auth_token');
-          const currentPath404 = window.location.pathname;
+          // Verificar se é erro de autenticação (token expirado)
+          const hasToken = localStorage.getItem('auth_token');
+          const currentPath = window.location.pathname;
           
-          if (hasToken404 && currentPath404.startsWith('/adm')) {
-            // Tratar como erro de autenticação
-            errorType = ErrorType.AUTHENTICATION_ERROR;
-            message = 'Sessão expirada. Faça login novamente.';
-            const lastLoginTime404 = sessionStorage.getItem('last_login_time');
-            const timeSinceLogin404 = lastLoginTime404 ? Date.now() - parseInt(lastLoginTime404, 10) : Infinity;
+          if (hasToken && currentPath.startsWith('/adm')) {
+            const lastLoginTime = sessionStorage.getItem('last_login_time');
+            const timeSinceLogin = lastLoginTime ? Date.now() - parseInt(lastLoginTime, 10) : Infinity;
             
-            if (timeSinceLogin404 > 2000) {
+            if (timeSinceLogin > 2000) {
+              errorType = ErrorType.AUTHENTICATION_ERROR;
+              message = 'Sessão expirada. Faça login novamente.';
               localStorage.removeItem('auth_token');
               setTimeout(() => {
                 if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
                   window.location.href = '/login';
                 }
               }, 100);
+              break;
             }
-          } else {
-            errorType = ErrorType.NOT_FOUND_ERROR;
-            message = responseData?.message || responseData?.error || 'Recurso não encontrado';
           }
+          
+          errorType = ErrorType.NOT_FOUND_ERROR;
+          message = responseData?.message || responseData?.error || 'Recurso não encontrado';
           break;
         case 500:
         case 502:

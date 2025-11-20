@@ -105,12 +105,8 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     queryFn: async () => {
       try {
         return await ServidorWhatsAppService.getActive();
-      } catch (err: unknown) {
-        const error = err as AxiosError<{ message?: string }>;
-        if (error?.response?.status === 404) {
-          return null;
-        }
-        throw err;
+      } catch {
+        return null;
       }
     },
     enabled: show,
