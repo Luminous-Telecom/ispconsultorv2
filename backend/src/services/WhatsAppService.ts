@@ -9,6 +9,7 @@ import { Contrato } from '../models/Contrato';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import { TituloController } from '../controllers/TituloController';
+import { WhatsAppCloudService } from './WhatsAppCloudService';
 
 const INTERACTION_DELAY_MS = 2000;
 
@@ -136,6 +137,38 @@ export class WhatsAppService {
         });
 
         const telefone = this.formatarTelefone(cliente.telefone);
+        
+        // Se for WhatsApp Cloud API e houver template configurado, usar template
+        if (servidor.tipo_api === 'whatsapp_cloud') {
+          const templateName = WhatsAppCloudService.obterTemplateName(servidor, tipoMensagem);
+          if (templateName) {
+            // Preparar componentes do template com variáveis
+            const components = this.prepararComponentesTemplate({
+              cliente,
+              contrato: contratoRef,
+              titulo,
+              mensagemTexto: msg
+            });
+            
+            const enviouTemplate = await WhatsAppCloudService.enviarTemplate(
+              servidor,
+              telefone,
+              templateName,
+              'pt_BR',
+              components
+            );
+            
+            if (enviouTemplate) {
+              enviadas++;
+              // Para templates, não enviar interações separadas (já estão no template)
+            } else {
+              erros++;
+            }
+            continue;
+          }
+        }
+        
+        // Fluxo normal (Evolution API ou WhatsApp Cloud sem template)
         if (mensagem.tipo_envio === 'pdf') {
           const base64 = await TituloController.gerarPdfBase64(titulo);
           if (base64) {
@@ -224,6 +257,18 @@ export class WhatsAppService {
   }
 
   private static async enviarMensagem(servidor: ServidorWhatsApp, telefone: string, msg: string): Promise<boolean> {
+    if (servidor.tipo_api === 'whatsapp_cloud') {
+      // Tentar usar template se configurado
+      const templateName = WhatsAppCloudService.obterTemplateName(servidor, 'texto');
+      if (templateName) {
+        // Se houver template configurado, usar template
+        // Por enquanto, enviar como texto simples
+        return WhatsAppCloudService.enviarTexto(servidor, telefone, msg);
+      }
+      return WhatsAppCloudService.enviarTexto(servidor, telefone, msg);
+    }
+    
+    // Evolution API
     const baseUrl = this.getBaseUrl(servidor);
     const url = `${baseUrl}/message/sendText/${servidor.instance_name}`;
     return this.fazerRequisicao(url, servidor, { number: telefone, text: msg });
@@ -236,6 +281,18 @@ export class WhatsAppService {
     descricao?: string
   ): Promise<boolean> {
     try {
+      if (servidor.tipo_api === 'whatsapp_cloud') {
+        // WhatsApp Cloud API - usar serviço específico
+        return WhatsAppCloudService.enviarDocumento(
+          servidor,
+          telefone,
+          base64,
+          'boleto.pdf',
+          descricao
+        );
+      }
+      
+      // Evolution API
       const baseUrl = this.getBaseUrl(servidor);
       const url = `${baseUrl}/message/sendMedia/${servidor.instance_name}`;
       
@@ -301,6 +358,73 @@ export class WhatsAppService {
 
   private static async delay(ms: number): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Preparar componentes do template do WhatsApp Cloud API
+   */
+  private static prepararComponentesTemplate(params: {
+    cliente?: Cliente;
+    contrato?: Contrato;
+    titulo: Titulo;
+    mensagemTexto: string;
+  }): Array<{
+    type: 'body' | 'header' | 'button';
+    parameters?: Array<{
+      type: 'text' | 'currency' | 'date_time';
+      text?: string;
+      currency?: { fallback_value: string; code: string; amount_1000: number };
+      date_time?: { fallback_value: string };
+    }>;
+  }> {
+    const { cliente, titulo } = params;
+    const components: Array<{
+      type: 'body' | 'header' | 'button';
+      parameters?: Array<{
+        type: 'text' | 'currency' | 'date_time';
+        text?: string;
+        currency?: { fallback_value: string; code: string; amount_1000: number };
+        date_time?: { fallback_value: string };
+      }>;
+    }> = [];
+
+    // Componente body com variáveis comuns
+    const bodyParams: Array<{
+      type: 'text' | 'currency' | 'date_time';
+      text?: string;
+      currency?: { fallback_value: string; code: string; amount_1000: number };
+      date_time?: { fallback_value: string };
+    }> = [];
+
+    if (cliente?.razao_social) {
+      bodyParams.push({ type: 'text', text: cliente.razao_social });
+    }
+
+    if (titulo.data_vencimento) {
+      const dataFormatada = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
+      bodyParams.push({ type: 'text', text: dataFormatada });
+    }
+
+    if (titulo.valor_final) {
+      const valor = parseFloat(String(titulo.valor_final));
+      bodyParams.push({
+        type: 'currency',
+        currency: {
+          fallback_value: `R$ ${valor.toFixed(2)}`,
+          code: 'BRL',
+          amount_1000: Math.round(valor * 1000)
+        }
+      });
+    }
+
+    if (bodyParams.length > 0) {
+      components.push({
+        type: 'body',
+        parameters: bodyParams
+      });
+    }
+
+    return components;
   }
 }
 

@@ -14,66 +14,177 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
   onSendTestMessage,
   isSendingTest
 }) => {
+  const isEvolution = formData.tipo_api === 'evolution';
+  const isWhatsAppCloud = formData.tipo_api === 'whatsapp_cloud';
+
   return (
     <>
       <div className="card">
         <div className="card-header py-1 px-2">
           <small className="fw-bold mb-0">
-            {servidorAtivo?.data ? 'Configurações da Evolution API' : 'Configurar Evolution API'}
+            {servidorAtivo?.data ? 'Configurações do Servidor WhatsApp' : 'Configurar Servidor WhatsApp'}
           </small>
         </div>
         <div className="card-body p-2">
-          <div className="row g-2">
+          {/* Seleção do Tipo de API */}
+          <div className="row g-2 mb-3">
             <div className="col-12">
               <FormField
-                name="evolution_api_url"
-                type="url"
-                label="Servidor"
-                placeholder="https://evo-api.example.com"
+                name="tipo_api"
+                type="select"
+                label="Tipo de API"
                 required={true}
                 size="sm"
-                value={formData.evolution_api_url}
-                onChange={(e) => onChange('evolution_api_url', String(e ?? ''))}
+                value={formData.tipo_api || 'evolution'}
+                onChange={(e) => onChange('tipo_api', String(e ?? 'evolution') as 'evolution' | 'whatsapp_cloud')}
+                options={[
+                  { value: 'evolution', label: 'Evolution API' },
+                  { value: 'whatsapp_cloud', label: 'WhatsApp Cloud API (Oficial)' }
+                ]}
               />
             </div>
           </div>
 
-          <div className="row g-2">
-            <div className="col-12">
-              <FormField
-                name="instance_name"
-                type="text"
-                label="Nome da Instância"
-                placeholder="example"
-                required={true}
-                size="sm"
-                value={formData.instance_name}
-                onChange={(e) => onChange('instance_name', String(e ?? ''))}
-                autoComplete="username"
-              />
-            </div>
-          </div>
+          {/* Campos da Evolution API */}
+          {isEvolution && (
+            <>
+              <div className="row g-2">
+                <div className="col-12">
+                  <FormField
+                    name="evolution_api_url"
+                    type="url"
+                    label="Servidor Evolution API"
+                    placeholder="https://evo-api.example.com"
+                    required={isEvolution}
+                    size="sm"
+                    value={formData.evolution_api_url}
+                    onChange={(e) => onChange('evolution_api_url', String(e ?? ''))}
+                  />
+                </div>
+              </div>
 
-          <div className="row g-2">
-            <div className="col-12">
-              <FormField
-                name="evolution_api_key"
-                type="password"
-                label={`Token da Instância ${!servidorAtivo?.data ? '*' : ''}`}
-                placeholder={servidorAtivo?.data ? "Deixe em branco para manter o token atual" : "Digite o token da instância"}
-                required={!servidorAtivo?.data}
-                size="sm"
-                value={formData.evolution_api_key}
-                onChange={(e) => onChange('evolution_api_key', String(e ?? ''))}
-                autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
-              />
-              {servidorAtivo?.data && (
-                <small className="form-text text-secondary">
-                  Deixe em branco para manter o token atual
-                </small>
-              )}
-            </div>
-          </div>
+              <div className="row g-2">
+                <div className="col-12">
+                  <FormField
+                    name="instance_name"
+                    type="text"
+                    label="Nome da Instância"
+                    placeholder="example"
+                    required={isEvolution}
+                    size="sm"
+                    value={formData.instance_name}
+                    onChange={(e) => onChange('instance_name', String(e ?? ''))}
+                    autoComplete="username"
+                  />
+                </div>
+              </div>
+
+              <div className="row g-2">
+                <div className="col-12">
+                  <FormField
+                    name="evolution_api_key"
+                    type="password"
+                    label={`Token da Instância ${!servidorAtivo?.data ? '*' : ''}`}
+                    placeholder={servidorAtivo?.data ? "Deixe em branco para manter o token atual" : "Digite o token da instância"}
+                    required={isEvolution && !servidorAtivo?.data}
+                    size="sm"
+                    value={formData.evolution_api_key}
+                    onChange={(e) => onChange('evolution_api_key', String(e ?? ''))}
+                    autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
+                  />
+                  {servidorAtivo?.data && (
+                    <small className="form-text text-secondary">
+                      Deixe em branco para manter o token atual
+                    </small>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Campos da WhatsApp Cloud API */}
+          {isWhatsAppCloud && (
+            <>
+              <div className="row g-2">
+                <div className="col-12">
+                  <FormField
+                    name="whatsapp_cloud_token"
+                    type="password"
+                    label={`Token de Acesso ${!servidorAtivo?.data ? '*' : ''}`}
+                    placeholder={servidorAtivo?.data ? "Deixe em branco para manter o token atual" : "Digite o token de acesso do WhatsApp Cloud API"}
+                    required={isWhatsAppCloud && !servidorAtivo?.data}
+                    size="sm"
+                    value={formData.whatsapp_cloud_token || ''}
+                    onChange={(e) => onChange('whatsapp_cloud_token', String(e ?? ''))}
+                    autoComplete={servidorAtivo?.data ? "current-password" : "new-password"}
+                  />
+                  {servidorAtivo?.data && (
+                    <small className="form-text text-secondary">
+                      Deixe em branco para manter o token atual
+                    </small>
+                  )}
+                  <small className="form-text text-muted d-block mt-1">
+                    Token de acesso obtido no Facebook Business Manager
+                  </small>
+                </div>
+              </div>
+
+              <div className="row g-2">
+                <div className="col-12">
+                  <FormField
+                    name="whatsapp_cloud_phone_number_id"
+                    type="text"
+                    label="Phone Number ID *"
+                    placeholder="123456789012345"
+                    required={isWhatsAppCloud}
+                    size="sm"
+                    value={formData.whatsapp_cloud_phone_number_id || ''}
+                    onChange={(e) => onChange('whatsapp_cloud_phone_number_id', String(e ?? ''))}
+                  />
+                  <small className="form-text text-muted d-block mt-1">
+                    ID do número de telefone do WhatsApp Business
+                  </small>
+                </div>
+              </div>
+
+              <div className="row g-2">
+                <div className="col-12">
+                  <FormField
+                    name="whatsapp_cloud_business_account_id"
+                    type="text"
+                    label="Business Account ID"
+                    placeholder="123456789012345"
+                    required={false}
+                    size="sm"
+                    value={formData.whatsapp_cloud_business_account_id || ''}
+                    onChange={(e) => onChange('whatsapp_cloud_business_account_id', String(e ?? ''))}
+                  />
+                  <small className="form-text text-muted d-block mt-1">
+                    ID da conta de negócios (opcional)
+                  </small>
+                </div>
+              </div>
+
+              <div className="row g-2">
+                <div className="col-12">
+                  <FormField
+                    name="template_mapping"
+                    type="textarea"
+                    label="Mapeamento de Templates (JSON)"
+                    placeholder='{"10_dias_antes_vencimento": "nome_template_10_dias", "mesmo_dia_vencimento": "nome_template_hoje"}'
+                    required={false}
+                    rows={4}
+                    size="sm"
+                    value={formData.template_mapping || ''}
+                    onChange={(e) => onChange('template_mapping', String(e ?? ''))}
+                  />
+                  <small className="form-text text-muted d-block mt-1">
+                    JSON com mapeamento de tipos de mensagem para templates do Facebook. Exemplo: {"{"}"10_dias_antes_vencimento": "nome_template"{"}"}
+                  </small>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

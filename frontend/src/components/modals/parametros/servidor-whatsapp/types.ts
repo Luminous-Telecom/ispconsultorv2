@@ -1,7 +1,12 @@
 export interface ServidorWhatsAppForm {
+  tipo_api: 'evolution' | 'whatsapp_cloud';
   evolution_api_url: string;
   evolution_api_key: string;
   instance_name: string;
+  whatsapp_cloud_token?: string;
+  whatsapp_cloud_phone_number_id?: string;
+  whatsapp_cloud_business_account_id?: string;
+  template_mapping?: string;
 }
 
 export interface ServidorWhatsappModalProps {
@@ -11,9 +16,9 @@ export interface ServidorWhatsappModalProps {
 
 export interface ServidorTabProps {
   formData: ServidorWhatsAppForm;
-  onChange: (field: keyof ServidorWhatsAppForm, value: string) => void;
+  onChange: (field: keyof ServidorWhatsAppForm, value: string | 'evolution' | 'whatsapp_cloud') => void;
   isPending: boolean;
-  servidorAtivo?: { data?: { id?: number } } | null;
+  servidorAtivo?: { data?: { id?: number; tipo_api?: 'evolution' | 'whatsapp_cloud' } } | null;
   testPhone: string;
   testMessage: string;
   onTestPhoneChange: (value: string) => void;

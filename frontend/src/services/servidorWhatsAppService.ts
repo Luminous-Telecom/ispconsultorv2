@@ -4,6 +4,7 @@ import type { ApiResponse } from '../types';
 
 export interface ServidorWhatsApp {
   id: number;
+  tipo_api: 'evolution' | 'whatsapp_cloud';
   evolution_api_url: string;
   evolution_api_key: string;
   instance_name: string;
@@ -11,6 +12,10 @@ export interface ServidorWhatsApp {
   status_conexao: 'disconnected' | 'connecting' | 'connected' | 'qr_required';
   webhook_url?: string;
   webhook_events?: string;
+  whatsapp_cloud_token?: string;
+  whatsapp_cloud_phone_number_id?: string;
+  whatsapp_cloud_business_account_id?: string;
+  template_mapping?: string;
   ativo: boolean;
   notificacoes_automaticas: boolean;
   timeout: number;
@@ -22,9 +27,14 @@ export interface ServidorWhatsApp {
 }
 
 export interface CreateServidorWhatsApp {
-  evolution_api_url: string;
-  evolution_api_key: string;
-  instance_name: string;
+  tipo_api?: 'evolution' | 'whatsapp_cloud';
+  evolution_api_url?: string;
+  evolution_api_key?: string;
+  instance_name?: string;
+  whatsapp_cloud_token?: string;
+  whatsapp_cloud_phone_number_id?: string;
+  whatsapp_cloud_business_account_id?: string;
+  template_mapping?: string;
   webhook_url?: string;
   webhook_events?: string;
   ativo?: boolean;

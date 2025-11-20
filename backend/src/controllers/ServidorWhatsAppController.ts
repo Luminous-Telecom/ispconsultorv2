@@ -13,7 +13,7 @@ export class ServidorWhatsAppController {
       const servidores = await ServidorWhatsApp.findAll({
         order: [['created_at', 'DESC']],
         attributes: {
-          exclude: ['evolution_api_key'], // Não retornar a chave da API na listagem
+          exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens na listagem
         },
       });
 
@@ -40,7 +40,7 @@ export class ServidorWhatsAppController {
 
       const servidor = await ServidorWhatsApp.findByPk(id, {
         attributes: {
-          exclude: ['evolution_api_key'], // Não retornar a chave da API
+          exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens
         },
       });
 
@@ -73,13 +73,25 @@ export class ServidorWhatsAppController {
     try {
       const servidorData = req.body;
 
-      // Validar dados obrigatórios
-      if (!servidorData.evolution_api_url || !servidorData.evolution_api_key || !servidorData.instance_name) {
-        res.status(400).json({
-          success: false,
-          message: 'URL da Evolution API, chave da API e nome da instância são obrigatórios'
-        });
-        return;
+      // Validar dados baseado no tipo de API
+      const tipoApi = servidorData.tipo_api || 'evolution';
+      
+      if (tipoApi === 'evolution') {
+        if (!servidorData.evolution_api_url || !servidorData.evolution_api_key || !servidorData.instance_name) {
+          res.status(400).json({
+            success: false,
+            message: 'Para Evolution API: URL da Evolution API, chave da API e nome da instância são obrigatórios'
+          });
+          return;
+        }
+      } else if (tipoApi === 'whatsapp_cloud') {
+        if (!servidorData.whatsapp_cloud_token || !servidorData.whatsapp_cloud_phone_number_id) {
+          res.status(400).json({
+            success: false,
+            message: 'Para WhatsApp Cloud API: Token e Phone Number ID são obrigatórios'
+          });
+          return;
+        }
       }
 
       const servidor = await ServidorWhatsApp.create(servidorData);
@@ -234,7 +246,7 @@ export class ServidorWhatsAppController {
       const servidor = await ServidorWhatsApp.findOne({
         where: { ativo: true },
         attributes: {
-          exclude: ['evolution_api_key'], // Não retornar a chave da API
+          exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens
         },
       });
 
@@ -274,18 +286,35 @@ export class ServidorWhatsAppController {
 
       if (servidor) {
         // Atualizar servidor existente
-        // Validar dados obrigatórios (evolution_api_key é opcional ao atualizar)
-        if (!servidorData.evolution_api_url || !servidorData.instance_name) {
-          res.status(400).json({
-            success: false,
-            message: 'URL da Evolution API e nome da instância são obrigatórios'
-          });
-          return;
-        }
-
-        // Se a chave da API não foi fornecida, não atualizar este campo
-        if (!servidorData.evolution_api_key || servidorData.evolution_api_key.trim() === '') {
-          delete servidorData.evolution_api_key;
+        const tipoApi = servidorData.tipo_api || servidor.tipo_api || 'evolution';
+        
+        // Validar dados baseado no tipo de API
+        if (tipoApi === 'evolution') {
+          if (!servidorData.evolution_api_url || !servidorData.instance_name) {
+            res.status(400).json({
+              success: false,
+              message: 'Para Evolution API: URL da Evolution API e nome da instância são obrigatórios'
+            });
+            return;
+          }
+          
+          // Se a chave da API não foi fornecida, não atualizar este campo
+          if (!servidorData.evolution_api_key || servidorData.evolution_api_key.trim() === '') {
+            delete servidorData.evolution_api_key;
+          }
+        } else if (tipoApi === 'whatsapp_cloud') {
+          if (!servidorData.whatsapp_cloud_phone_number_id) {
+            res.status(400).json({
+              success: false,
+              message: 'Para WhatsApp Cloud API: Phone Number ID é obrigatório'
+            });
+            return;
+          }
+          
+          // Se o token não foi fornecido, não atualizar este campo
+          if (!servidorData.whatsapp_cloud_token || servidorData.whatsapp_cloud_token.trim() === '') {
+            delete servidorData.whatsapp_cloud_token;
+          }
         }
 
         // Tratar webhook_url vazio como null
@@ -298,7 +327,7 @@ export class ServidorWhatsAppController {
         // Recarregar o servidor para pegar os dados atualizados
         await servidor.reload({
           attributes: {
-            exclude: ['evolution_api_key'], // Não retornar a chave da API
+            exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens
           },
         });
         
@@ -310,12 +339,25 @@ export class ServidorWhatsAppController {
       } else {
         // Criar novo servidor
         // Validar dados obrigatórios (evolution_api_key é obrigatória ao criar)
-        if (!servidorData.evolution_api_url || !servidorData.evolution_api_key || !servidorData.instance_name) {
-          res.status(400).json({
-            success: false,
-            message: 'URL da Evolution API, chave da API e nome da instância são obrigatórios'
-          });
-          return;
+        // Validar dados baseado no tipo de API
+        const tipoApi = servidorData.tipo_api || 'evolution';
+        
+        if (tipoApi === 'evolution') {
+          if (!servidorData.evolution_api_url || !servidorData.evolution_api_key || !servidorData.instance_name) {
+            res.status(400).json({
+              success: false,
+              message: 'Para Evolution API: URL da Evolution API, chave da API e nome da instância são obrigatórios'
+            });
+            return;
+          }
+        } else if (tipoApi === 'whatsapp_cloud') {
+          if (!servidorData.whatsapp_cloud_token || !servidorData.whatsapp_cloud_phone_number_id) {
+            res.status(400).json({
+              success: false,
+              message: 'Para WhatsApp Cloud API: Token e Phone Number ID são obrigatórios'
+            });
+            return;
+          }
         }
 
         servidorData.ativo = true;
@@ -328,10 +370,10 @@ export class ServidorWhatsAppController {
         
         const novoServidor = await ServidorWhatsApp.create(servidorData);
         
-        // Recarregar sem a chave da API
+        // Recarregar sem os tokens
         await novoServidor.reload({
           attributes: {
-            exclude: ['evolution_api_key'],
+            exclude: ['evolution_api_key', 'whatsapp_cloud_token'],
           },
         });
         
@@ -431,41 +473,55 @@ export class ServidorWhatsAppController {
         return;
       }
 
-      // Construir URL da Evolution API (remover barra final se existir)
-      const baseUrl = servidor.evolution_api_url.replace(/\/$/, '');
-      const evolutionUrl = `${baseUrl}/message/sendText/${servidor.instance_name}`;
+      let result: any;
       
-      // Dados da mensagem conforme documentação Evolution API
-      const messageData = {
-        number: phone,
-        text: message
-      };
+      // Verificar tipo de API e enviar mensagem apropriadamente
+      if (servidor.tipo_api === 'whatsapp_cloud') {
+        // WhatsApp Cloud API
+        const { WhatsAppCloudService } = await import('../services/WhatsAppCloudService');
+        const enviou = await WhatsAppCloudService.enviarTexto(servidor, phone, message);
+        
+        if (!enviou) {
+          throw new Error('Erro ao enviar mensagem via WhatsApp Cloud API');
+        }
+        
+        result = { success: true };
+        logger.info(`Mensagem de teste enviada via WhatsApp Cloud API para: ${phone}`);
+      } else {
+        // Evolution API
+        const baseUrl = servidor.evolution_api_url.replace(/\/$/, '');
+        const evolutionUrl = `${baseUrl}/message/sendText/${servidor.instance_name}`;
+        
+        const messageData = {
+          number: phone,
+          text: message
+        };
 
-      logger.info(`Enviando mensagem via Evolution API - URL: ${evolutionUrl}`);
+        logger.info(`Enviando mensagem via Evolution API - URL: ${evolutionUrl}`);
 
-      // Fazer requisição para a Evolution API com timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-      const response = await fetch(evolutionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': servidor.evolution_api_key
-        },
-        body: JSON.stringify(messageData),
-        signal: controller.signal
-      });
+        const response = await fetch(evolutionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': servidor.evolution_api_key
+          },
+          body: JSON.stringify(messageData),
+          signal: controller.signal
+        });
 
-      clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
 
-      const result = await response.json() as { message?: string };
+        result = await response.json() as { message?: string };
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Erro ao enviar mensagem via Evolution API');
+        if (!response.ok) {
+          throw new Error(result.message || 'Erro ao enviar mensagem via Evolution API');
+        }
+
+        logger.info(`Mensagem de teste enviada via Evolution API para: ${phone}`);
       }
-
-      logger.info(`Mensagem de teste enviada com sucesso para: ${phone}`);
 
       res.json({
         success: true,

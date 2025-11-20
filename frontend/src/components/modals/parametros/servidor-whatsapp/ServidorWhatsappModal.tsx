@@ -19,9 +19,14 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   const queryClient = useQueryClient();
   
   const initialFormData: ServidorWhatsAppForm = useMemo(() => ({
+    tipo_api: 'evolution',
     evolution_api_url: 'https://evo-api.example.com',
     evolution_api_key: '',
-    instance_name: ''
+    instance_name: '',
+    whatsapp_cloud_token: '',
+    whatsapp_cloud_phone_number_id: '',
+    whatsapp_cloud_business_account_id: '',
+    template_mapping: ''
   }), []);
 
   const [formData, setFormData] = useState<ServidorWhatsAppForm>(initialFormData);
@@ -151,10 +156,16 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
   // Carregar dados do servidor existente
   useEffect(() => {
     if (servidorAtivo?.data) {
+      const servidor = servidorAtivo.data;
       setFormData({
-        evolution_api_url: servidorAtivo.data.evolution_api_url,
+        tipo_api: servidor.tipo_api || 'evolution',
+        evolution_api_url: servidor.evolution_api_url || '',
         evolution_api_key: '', // Não carregar chave por segurança
-        instance_name: servidorAtivo.data.instance_name
+        instance_name: servidor.instance_name || '',
+        whatsapp_cloud_token: '', // Não carregar token por segurança
+        whatsapp_cloud_phone_number_id: servidor.whatsapp_cloud_phone_number_id || '',
+        whatsapp_cloud_business_account_id: servidor.whatsapp_cloud_business_account_id || '',
+        template_mapping: servidor.template_mapping || ''
       });
     } else {
       setFormData(initialFormData);
