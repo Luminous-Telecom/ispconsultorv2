@@ -83,6 +83,27 @@ interface AxiosErrorResponse {
   };
 }
 
+/**
+ * Serviço responsável por integrar o sistema com APIs de bancos
+ * Suporta múltiplos bancos (Efi/Gerencianet, Asaas, etc.) através de abstração
+ * 
+ * @class BancoApiService
+ * 
+ * @remarks
+ * - Gerencia autenticação e tokens de acesso
+ * - Abstrai diferenças entre APIs de diferentes bancos
+ * - Suporta operações: criar boleto, consultar status, cancelar, liquidar
+ * - Cache de tokens para reduzir chamadas de autenticação
+ * 
+ * @example
+ * ```typescript
+ * const banco = await Banco.findByPk(1);
+ * const titulo = await Titulo.findByPk(1);
+ * 
+ * // Criar boleto no banco
+ * const result = await BancoApiService.criarBoleto(banco, titulo);
+ * ```
+ */
 export class BancoApiService {
   private static readonly BANCO_CONFIGS: Record<string, BancoConfig | Partial<BancoConfig>> = {
     efi: efiConfig,
@@ -179,12 +200,21 @@ export class BancoApiService {
       // Tentar pegar api_key de várias formas
       let apiKey = banco.api_key;
       
-      if (!apiKey && (banco as any).dataValues) {
-        apiKey = (banco as any).dataValues.api_key;
+      // Banco pode vir como instância do Sequelize Model ou como objeto simples
+      // Verificar se é instância do Model e tem métodos do Sequelize
+      interface BancoModelLike {
+        dataValues?: { api_key?: string | null };
+        getDataValue?: (key: string) => string | null;
+      }
+      const bancoModel = banco as BancoModelLike;
+      
+      if (!apiKey && bancoModel.dataValues) {
+        apiKey = bancoModel.dataValues.api_key || null;
       }
       
-      if (!apiKey && typeof (banco as any).getDataValue === 'function') {
-        apiKey = (banco as any).getDataValue('api_key');
+      if (!apiKey && typeof bancoModel.getDataValue === 'function') {
+        const value = bancoModel.getDataValue('api_key');
+        apiKey = value || null;
       }
       
       if (!apiKey) {
@@ -403,8 +433,12 @@ export class BancoApiService {
 
       const isAsaas = banco.tipo_banco === 'asaas';
 
+      // Tipo para banco que pode ser instância do Model ou objeto plano
+      // Isso é necessário porque Sequelize pode retornar tanto Model quanto objeto simples
+      type BancoLike = Banco | (Banco & { webhook_secret?: string | null });
+      
       // Verificar credenciais usando banco recarregado
-      if (!this.verificarCredenciais(bancoComCredenciais as any, config)) {
+      if (!this.verificarCredenciais(bancoComCredenciais as BancoLike, config)) {
         return {
           success: false,
           message: 'Credenciais do banco não configuradas'
@@ -412,7 +446,7 @@ export class BancoApiService {
       }
       
       // Obter token usando banco recarregado
-      const token = await this.obterToken(bancoComCredenciais as any, config);
+      const token = await this.obterToken(bancoComCredenciais as BancoLike, config);
       if (!token) {
         return {
           success: false,
@@ -429,11 +463,11 @@ export class BancoApiService {
       }
       
       if (isAsaas) {
-        return this.asaasService.gerarTitulo(titulo, bancoComCredenciais as any, token);
+        return this.asaasService.gerarTitulo(titulo, bancoComCredenciais as BancoLike, token);
       }
 
       if (banco.tipo_banco === 'efi') {
-        return this.efiService.gerarTitulo(titulo, bancoComCredenciais as any, token);
+        return this.efiService.gerarTitulo(titulo, bancoComCredenciais as BancoLike, token);
       }
 
       // Fallback para outros bancos (não deveria chegar aqui)

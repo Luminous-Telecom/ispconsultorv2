@@ -4,6 +4,7 @@ import { BancoApiService } from '../services/BancoApiService';
 import { logger } from '../utils/logger';
 import { Op, WhereOptions } from 'sequelize';
 import { randomBytes } from 'crypto';
+import { cache } from '../utils/cache';
 
 export class BancoController {
   /**
@@ -11,6 +12,15 @@ export class BancoController {
    */
   static async findAtivos(req: Request, res: Response): Promise<void> {
     try {
+      // Cache para bancos ativos (dados raramente mudam)
+      const cacheKey = 'bancos:ativos';
+      const cached = cache.get(cacheKey);
+      
+      if (cached) {
+        res.json(cached);
+        return;
+      }
+
       const bancos = await Banco.findAll({
         where: { ativo: true },
         include: [
@@ -19,10 +29,15 @@ export class BancoController {
         order: [['nome', 'ASC']]
       });
 
-      res.json({
+      const response = {
         success: true,
         data: bancos
-      });
+      };
+
+      // Cachear por 10 minutos (bancos raramente mudam)
+      cache.set(cacheKey, response, 600000);
+
+      res.json(response);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao buscar bancos ativos', { error: errorMessage });
@@ -215,6 +230,11 @@ export class BancoController {
       }
       
       await banco.update(dadosBanco);
+      
+      // Invalidar cache de bancos ativos se o status mudou
+      if (dadosBanco.ativo !== undefined) {
+        cache.delete('bancos:ativos');
+      }
       
       logger.info('Banco atualizado com sucesso', {
         banco_id: banco.id,

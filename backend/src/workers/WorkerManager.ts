@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import SchedulerWorker from './SchedulerWorker';
 import ScheduledRoutine from '../models/ScheduledRoutine';
 import { Op } from 'sequelize';
+import { logger } from '../utils/logger';
 
 export interface WorkerManagerConfig {
   maxWorkers?: number;
@@ -64,7 +65,14 @@ export class WorkerManager extends EventEmitter {
       try {
         await this.processScheduledRoutines();
       } catch (error) {
-        console.error('Erro na verificação periódica de rotinas:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        logger.error('Erro na verificação periódica de rotinas', {
+          context: 'WorkerManager',
+          action: 'start',
+          error: errorMessage,
+          stack: errorStack
+        });
         this.emit('error', error);
       }
     }, this.config.checkInterval);
@@ -122,7 +130,15 @@ export class WorkerManager extends EventEmitter {
       try {
         await this.executeRoutine(routine);
       } catch (error) {
-        console.error(`Erro ao executar rotina ${routine.id}:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        logger.error('Erro ao executar rotina', {
+          context: 'WorkerManager',
+          action: 'processScheduledRoutines',
+          rotinaId: routine.id,
+          error: errorMessage,
+          stack: errorStack
+        });
         this.emit('routineError', { routine, error });
       }
     }
@@ -147,7 +163,15 @@ export class WorkerManager extends EventEmitter {
         try {
           await this.executeRoutine(routine);
         } catch (error) {
-          console.error(`Erro ao processar rotina pendente ${routine.id}:`, error);
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          const errorStack = error instanceof Error ? error.stack : undefined;
+          logger.error('Erro ao processar rotina pendente', {
+            context: 'WorkerManager',
+            action: 'processPendingRoutines',
+            rotinaId: routine.id,
+            error: errorMessage,
+            stack: errorStack
+          });
         }
       }
     }

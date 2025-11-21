@@ -6,6 +6,7 @@ import { Titulo } from '../models/Titulo';
 import { Contrato } from '../models/Contrato';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/database';
+import { logger } from '../utils/logger';
 
 interface TituloWithCliente extends Titulo {
   cliente?: Cliente | null;
@@ -163,11 +164,18 @@ export class DashboardController {
         data: dashboardData
       });
     } catch (error) {
-      console.error('Erro ao obter dados do dashboard:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter dados do dashboard', {
+        context: 'DashboardController',
+        action: 'index',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -435,11 +443,18 @@ export class DashboardController {
         data: stats
       });
     } catch (error) {
-      console.error('Erro ao obter estatísticas do dashboard:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter estatísticas do dashboard', {
+        context: 'DashboardController',
+        action: 'estatisticas',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -464,11 +479,18 @@ export class DashboardController {
         data: titulos
       });
     } catch (error) {
-      console.error('Erro ao obter títulos recentes:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter títulos recentes', {
+        context: 'DashboardController',
+        action: 'titulosRecentes',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -499,11 +521,18 @@ export class DashboardController {
         data: titulos
       });
     } catch (error) {
-      console.error('Erro ao obter títulos vencidos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter títulos vencidos', {
+        context: 'DashboardController',
+        action: 'titulosVencidos',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -535,11 +564,18 @@ export class DashboardController {
         data: titulos
       });
     } catch (error) {
-      console.error('Erro ao obter títulos próximos do vencimento:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter títulos próximos do vencimento', {
+        context: 'DashboardController',
+        action: 'titulosProximosVencimento',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -578,11 +614,18 @@ export class DashboardController {
         data: dados
       });
     } catch (error) {
-      console.error('Erro ao obter gráfico de títulos por status:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter gráfico de títulos por status', {
+        context: 'DashboardController',
+        action: 'graficoTitulosPorStatus',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -628,11 +671,18 @@ export class DashboardController {
         data: dados
       });
     } catch (error) {
-      console.error('Erro ao obter gráfico de clientes por cidade:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter gráfico de clientes por cidade', {
+        context: 'DashboardController',
+        action: 'graficoClientesPorCidade',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -703,11 +753,19 @@ export class DashboardController {
         data: resumo
       });
     } catch (error) {
-      console.error('Erro ao obter resumo mensal:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter resumo mensal', {
+        context: 'DashboardController',
+        action: 'resumoMensal',
+        error: errorMessage,
+        stack: errorStack,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -935,11 +993,27 @@ export class DashboardController {
     let valorTotalPlanos = 0;
     const clientesComPlanos = new Set<number>();
 
+    interface ClienteJson {
+      id?: number;
+      ativo?: boolean;
+    }
+    
+    interface PlanoJson {
+      id?: number;
+      nome_plano?: string;
+      valor_mensal?: number | string;
+    }
+    
+    interface ContratoJson extends Record<string, unknown> {
+      cliente?: ClienteJson;
+      plano?: PlanoJson;
+    }
+    
     for (const contrato of contratosAtivos) {
-      const contratoJson = contrato.toJSON() as any;
+      const contratoJson = contrato.toJSON() as ContratoJson;
       const cliente = contratoJson.cliente;
       
-      if (cliente && cliente.ativo) {
+      if (cliente && cliente.ativo === true) {
         const clienteId = contrato.cliente_id;
         if (clienteId) {
           clientesComPlanos.add(clienteId);
@@ -948,7 +1022,10 @@ export class DashboardController {
           if (contrato.valor_final && parseFloat(contrato.valor_final.toString()) > 0) {
             valorTotalPlanos += parseFloat(contrato.valor_final.toString());
           } else if (contratoJson.plano && contratoJson.plano.valor_mensal) {
-            valorTotalPlanos += parseFloat(contratoJson.plano.valor_mensal.toString());
+            const valorMensal = typeof contratoJson.plano.valor_mensal === 'string' 
+              ? parseFloat(contratoJson.plano.valor_mensal) 
+              : contratoJson.plano.valor_mensal;
+            valorTotalPlanos += valorMensal || 0;
           }
         }
       }

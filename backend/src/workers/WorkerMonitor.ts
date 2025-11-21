@@ -3,6 +3,7 @@ import { WorkerManager } from './WorkerManager';
 import RoutineExecutionLog from '../models/RoutineExecutionLog';
 import ScheduledRoutine from '../models/ScheduledRoutine';
 import { Op } from 'sequelize';
+import { logger } from '../utils/logger';
 
 export interface MonitorConfig {
   healthCheckInterval?: number; // em milissegundos
@@ -99,7 +100,14 @@ export class WorkerMonitor extends EventEmitter {
       try {
         await this.performHealthCheck();
       } catch (error) {
-        console.error('Erro na verificação de saúde:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        logger.error('Erro na verificação de saúde', {
+          context: 'WorkerMonitor',
+          action: 'start',
+          error: errorMessage,
+          stack: errorStack
+        });
         this.emit('healthCheckError', error);
       }
     }, this.config.healthCheckInterval);
@@ -291,7 +299,14 @@ export class WorkerMonitor extends EventEmitter {
         this.emit('logsCleaned', { deletedCount });
       }
     } catch (error) {
-      console.error('Erro na limpeza de logs:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro na limpeza de logs', {
+        context: 'WorkerMonitor',
+        action: 'cleanupOldLogs',
+        error: errorMessage,
+        stack: errorStack
+      });
       this.emit('cleanupError', error);
     }
   }

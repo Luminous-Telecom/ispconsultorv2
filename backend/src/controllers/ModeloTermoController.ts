@@ -27,7 +27,14 @@ export class ModeloTermoController {
         data: modelos
       });
     } catch (error) {
-      console.error('Erro ao listar modelos de termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao listar modelos de termo', {
+        context: 'ModeloTermoController',
+        action: 'index',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -54,7 +61,15 @@ export class ModeloTermoController {
         data: modelo
       });
     } catch (error) {
-      console.error('Erro ao buscar modelo de termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar modelo de termo', {
+        context: 'ModeloTermoController',
+        action: 'show',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -94,7 +109,15 @@ export class ModeloTermoController {
         data: modelo
       });
     } catch (error) {
-      console.error('Erro ao criar modelo de termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao criar modelo de termo', {
+        context: 'ModeloTermoController',
+        action: 'create',
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -131,7 +154,16 @@ export class ModeloTermoController {
         data: modelo
       });
     } catch (error) {
-      console.error('Erro ao atualizar modelo de termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar modelo de termo', {
+        context: 'ModeloTermoController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -160,7 +192,15 @@ export class ModeloTermoController {
         message: 'Modelo de termo excluído com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao excluir modelo de termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao excluir modelo de termo', {
+        context: 'ModeloTermoController',
+        action: 'delete',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -185,7 +225,15 @@ export class ModeloTermoController {
         data: modelos
       });
     } catch (error) {
-      console.error('Erro ao buscar modelos por tipo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar modelos por tipo', {
+        context: 'ModeloTermoController',
+        action: 'getByTipo',
+        error: errorMessage,
+        stack: errorStack,
+        tipo: req.params.tipo
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -630,7 +678,16 @@ export class ModeloTermoController {
       res.send(pdfBuffer);
 
     } catch (error) {
-      console.error('Erro ao gerar PDF de teste do modelo de termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao gerar PDF de teste do modelo de termo', {
+        context: 'ModeloTermoController',
+        action: 'generateTestPdf',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id,
+        clienteId: req.body?.cliente_id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

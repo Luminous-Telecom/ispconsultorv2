@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
+import { logger } from '../utils/logger';
 
 /**
  * Middleware para servir arquivos estáticos do frontend
@@ -14,7 +15,10 @@ export const frontendMiddleware = (): express.RequestHandler => {
   const frontendExists = fs.existsSync(frontendBuildPath);
 
   if (!frontendExists) {
-    console.warn('Frontend build não encontrado. Servindo apenas API.');
+    logger.warn('Frontend build não encontrado. Servindo apenas API.', {
+      context: 'frontendMiddleware',
+      frontendBuildPath
+    });
     return (req: Request, res: Response, next: NextFunction) => {
       next();
     };
@@ -66,7 +70,15 @@ export const frontendMiddleware = (): express.RequestHandler => {
     if (fs.existsSync(indexPath)) {
       fs.readFile(indexPath, 'utf8', (err, data) => {
         if (err) {
-          console.error('Erro ao ler index.html:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+          const errorStack = err instanceof Error ? err.stack : undefined;
+          logger.error('Erro ao ler index.html', {
+            context: 'frontendMiddleware',
+            action: 'serveIndex',
+            indexPath,
+            error: errorMessage,
+            stack: errorStack
+          });
           return next();
         }
 

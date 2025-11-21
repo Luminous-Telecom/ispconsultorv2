@@ -3,6 +3,7 @@ import { Cliente } from '../models/Cliente';
 import { Op, WhereOptions } from 'sequelize';
 import Joi from 'joi';
 import axios from 'axios';
+import { logger } from '../utils/logger';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -158,11 +159,19 @@ export class ClienteController {
         }
       });
     } catch (error) {
-      console.error('Erro ao listar clientes:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao listar clientes', {
+        context: 'ClienteController',
+        action: 'list',
+        error: errorMessage,
+        stack: errorStack,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -205,7 +214,15 @@ export class ClienteController {
         data: cliente
       });
     } catch (error) {
-      console.error('Erro ao buscar cliente:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar cliente', {
+        context: 'ClienteController',
+        action: 'show',
+        error: errorMessage,
+        stack: errorStack,
+        clienteId: req.params.id
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -260,11 +277,19 @@ export class ClienteController {
         message: 'Cliente criado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao criar cliente:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao criar cliente', {
+        context: 'ClienteController',
+        action: 'create',
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -334,11 +359,20 @@ export class ClienteController {
         message: 'Cliente atualizado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao atualizar cliente:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar cliente', {
+        context: 'ClienteController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        clienteId: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -390,11 +424,19 @@ export class ClienteController {
         message: 'Cliente excluído com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao excluir cliente:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao excluir cliente', {
+        context: 'ClienteController',
+        action: 'delete',
+        error: errorMessage,
+        stack: errorStack,
+        clienteId: req.params.id
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -419,11 +461,19 @@ export class ClienteController {
         data: cliente
       });
     } catch (error) {
-      console.error('Erro ao buscar cliente por CNPJ:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar cliente por CNPJ', {
+        context: 'ClienteController',
+        action: 'findByCnpj',
+        error: errorMessage,
+        stack: errorStack,
+        cnpj: req.params.cnpj
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -438,11 +488,18 @@ export class ClienteController {
         data: clientes
       });
     } catch (error) {
-      console.error('Erro ao listar clientes ativos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao listar clientes ativos', {
+        context: 'ClienteController',
+        action: 'listAtivos',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }
@@ -497,10 +554,16 @@ export class ClienteController {
         data: dadosCep
       });
     } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 404) {
+          logger.warn('CEP não encontrado', {
+            context: 'ClienteController',
+            action: 'buscarCep',
+            cep: req.params.cep
+          });
           res.status(404).json({
             success: false,
             error: 'CEP não encontrado',
@@ -510,10 +573,18 @@ export class ClienteController {
         }
       }
 
+      logger.error('Erro ao buscar CEP', {
+        context: 'ClienteController',
+        action: 'buscarCep',
+        error: errorMessage,
+        stack: errorStack,
+        cep: req.params.cep
+      });
+
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro ao buscar CEP'
+        message: errorMessage
       });
     }
   }
@@ -573,10 +644,16 @@ export class ClienteController {
         data: dadosEmpresa
       });
     } catch (error) {
-      console.error('Erro ao consultar CNPJ:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 429) {
+          logger.warn('Limite de requisições excedido ao consultar CNPJ', {
+            context: 'ClienteController',
+            action: 'consultarCnpj',
+            cnpj: req.params.cnpj
+          });
           res.status(429).json({
             success: false,
             error: 'Limite de requisições excedido',
@@ -586,6 +663,11 @@ export class ClienteController {
         }
         
         if (error.response?.status === 404) {
+          logger.warn('CNPJ não encontrado', {
+            context: 'ClienteController',
+            action: 'consultarCnpj',
+            cnpj: req.params.cnpj
+          });
           res.status(404).json({
             success: false,
             error: 'CNPJ não encontrado',
@@ -595,10 +677,18 @@ export class ClienteController {
         }
       }
 
+      logger.error('Erro ao consultar CNPJ', {
+        context: 'ClienteController',
+        action: 'consultarCnpj',
+        error: errorMessage,
+        stack: errorStack,
+        cnpj: req.params.cnpj
+      });
+
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro ao consultar CNPJ'
+        message: errorMessage
       });
     }
   }

@@ -3,6 +3,8 @@ import { Plano } from '../models/Plano';
 import { Contrato } from '../models/Contrato';
 import { Op, WhereOptions, Order } from 'sequelize';
 import { sequelize } from '../config/database';
+import { logger } from '../utils/logger';
+import { cache } from '../utils/cache';
 
 export class PlanoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -16,6 +18,18 @@ export class PlanoController {
       const sortDirection = req.query.sortDirection as string;
 
       const offset = (page - 1) * limit;
+
+      // Cache key para planos ativos sem filtros (dados mais consultados)
+      const cacheKey = `planos:list:${page}:${limit}:${status || 'all'}:${tipo_servico || 'all'}:${search || ''}:${sortColumn || 'id'}:${sortDirection || 'DESC'}`;
+      
+      // Verificar cache apenas para listagem simples (sem busca)
+      if (!search && !sortColumn) {
+        const cached = cache.get(cacheKey);
+        if (cached) {
+          res.json(cached);
+          return;
+        }
+      }
 
       // Construir filtros
       const whereConditions: Array<WhereOptions<Plano>> = [];
@@ -99,13 +113,26 @@ export class PlanoController {
         raw: true
       });
 
-      const quantidadeClientesMap = contratosAtivosPorPlano.reduce((acc, item: any) => {
-        acc[item.plano_id] = parseInt(item.total as string, 10);
+      // Quando raw: true, Sequelize retorna objetos simples, não Models
+      interface ContratoCountResult {
+        plano_id: number;
+        total: string | number;
+      }
+      const quantidadeClientesMap = (contratosAtivosPorPlano as unknown as ContratoCountResult[]).reduce((acc, item) => {
+        acc[item.plano_id] = typeof item.total === 'string' ? parseInt(item.total, 10) : item.total;
         return acc;
       }, {} as Record<number, number>);
 
-      const planosProcessados = planos.map(plano => {
-        const planoData = plano.toJSON();
+      // Interface para plano com quantidade de clientes adicionada
+      interface PlanoWithCount extends Record<string, unknown> {
+        quantidade_clientes: number;
+        servicos_inclusos?: string | string[];
+      }
+      
+      const planosProcessados: PlanoWithCount[] = planos.map(plano => {
+        const planoJson = plano.toJSON();
+        const planoData = { ...planoJson, quantidade_clientes: 0 } as PlanoWithCount;
+        
         if (typeof planoData.servicos_inclusos === 'string') {
           try {
             planoData.servicos_inclusos = JSON.parse(planoData.servicos_inclusos);
@@ -113,7 +140,8 @@ export class PlanoController {
             planoData.servicos_inclusos = [];
           }
         }
-        (planoData as any).quantidade_clientes = quantidadeClientesMap[plano.id] || 0;
+        const planoId = Number(plano.id);
+        planoData.quantidade_clientes = quantidadeClientesMap[planoId] || 0;
         return planoData;
       });
 
@@ -129,7 +157,15 @@ export class PlanoController {
         }
       });
     } catch (error) {
-      console.error('Erro ao listar planos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao listar planos', {
+        context: 'PlanoController',
+        action: 'list',
+        error: errorMessage,
+        stack: errorStack,
+        query: req.query
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -164,7 +200,15 @@ export class PlanoController {
 
       res.json(planoData);
     } catch (error) {
-      console.error('Erro ao buscar plano:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar plano', {
+        context: 'PlanoController',
+        action: 'getById',
+        error: errorMessage,
+        stack: errorStack,
+        planoId: req.params.id
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -187,9 +231,21 @@ export class PlanoController {
       }
       
       const plano = await Plano.create(body);
+      
+      // Invalidar cache de planos após criar
+      cache.deletePattern('planos:list:.*');
+      
       res.status(201).json(plano);
     } catch (error) {
-      console.error('Erro ao criar plano:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao criar plano', {
+        context: 'PlanoController',
+        action: 'create',
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -295,28 +351,37 @@ export class PlanoController {
       }
 
       const plano = await Plano.findByPk(id);
+      
+      // Invalidar cache de planos após atualizar
+      cache.deletePattern('planos:list:.*');
+      
       res.json({
         success: true,
         message: 'Plano atualizado com sucesso!',
         data: plano
       });
     } catch (error) {
-      console.error('Erro ao atualizar plano:', error);
-      console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      const errorName = error instanceof Error ? error.name : undefined;
       
-      // Log mais detalhado para debugging
-      if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-      }
+      logger.error('Erro ao atualizar plano', {
+        context: 'PlanoController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        name: errorName,
+        planId: req.params.id,
+        body: req.body
+      });
       
       res.status(500).json({ 
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        message: errorMessage,
         details: process.env.NODE_ENV === 'development' ? {
-          stack: error instanceof Error ? error.stack : undefined,
-          name: error instanceof Error ? error.name : undefined
+          stack: errorStack,
+          name: errorName
         } : undefined
       });
     }
@@ -367,22 +432,26 @@ export class PlanoController {
         message: 'Plano excluído com sucesso!'
       });
     } catch (error) {
-      console.error('Erro ao deletar plano:', error);
-      console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      const errorName = error instanceof Error ? error.name : undefined;
       
-      // Log mais detalhado para debugging
-      if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-      }
+      logger.error('Erro ao deletar plano', {
+        context: 'PlanoController',
+        action: 'delete',
+        error: errorMessage,
+        stack: errorStack,
+        name: errorName,
+        planoId: req.params.id
+      });
       
       res.status(500).json({ 
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        message: errorMessage,
         details: process.env.NODE_ENV === 'development' ? {
-          stack: error instanceof Error ? error.stack : undefined,
-          name: error instanceof Error ? error.name : undefined
+          stack: errorStack,
+          name: errorName
         } : undefined
       });
     }
@@ -397,7 +466,14 @@ export class PlanoController {
 
       res.json(planos);
     } catch (error) {
-      console.error('Erro ao buscar planos ativos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar planos ativos', {
+        context: 'PlanoController',
+        action: 'getAtivos',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -441,11 +517,20 @@ export class PlanoController {
         }
       });
     } catch (error) {
-      console.error('Erro ao alterar status do plano:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao alterar status do plano', {
+        context: 'PlanoController',
+        action: 'toggleStatus',
+        error: errorMessage,
+        stack: errorStack,
+        planoId: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
-        message: error instanceof Error ? error.message : 'Erro desconhecido'
+        message: errorMessage
       });
     }
   }

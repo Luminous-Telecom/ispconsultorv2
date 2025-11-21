@@ -7,10 +7,14 @@ import { TituloController } from './TituloController';
 import { logger } from '../utils/logger';
 import crypto from 'crypto';
 
+// Interface compatível com TituloController.gerarPdfBase64
 interface TituloComRelacoes extends Titulo {
   cliente?: Cliente;
   plano?: Plano;
-  banco?: Banco;
+  banco?: Banco & {
+    logo?: string | null;
+    agencia_codigo?: string | null;
+  };
 }
 
 export class PagamentoPublicoController {
@@ -168,8 +172,8 @@ export class PagamentoPublicoController {
         return;
       }
 
-      // Gerar PDF
-      const pdfBase64 = await TituloController.gerarPdfBase64(titulo as any);
+      // Gerar PDF - titulo já tem os relacionamentos incluídos
+      const pdfBase64 = await TituloController.gerarPdfBase64(titulo as TituloComRelacoes);
       
       if (!pdfBase64) {
         res.status(500).json({

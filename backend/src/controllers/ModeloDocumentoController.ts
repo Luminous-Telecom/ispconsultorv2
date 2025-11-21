@@ -202,7 +202,10 @@ export class ModeloDocumentoController {
       const { tipo } = req.params;
 
       const documentos = await ModeloDocumento.findAll({
-        where: { tipo: tipo as any, ativo: true },
+        where: { 
+          tipo: tipo as 'contrato' | 'recibo' | 'carta' | 'boleto' | 'comprovante' | 'outro' | 'termo', 
+          ativo: true 
+        },
         order: [['nome', 'ASC']],
       });
 
@@ -228,7 +231,10 @@ export class ModeloDocumentoController {
       const { tipo } = req.params;
 
       const documento = await ModeloDocumento.findOne({
-        where: { tipo: tipo as any, ativo: true },
+        where: { 
+          tipo: tipo as 'contrato' | 'recibo' | 'carta' | 'boleto' | 'comprovante' | 'outro' | 'termo', 
+          ativo: true 
+        },
         order: [['created_at', 'ASC']], // Pega o primeiro criado como padrão
       });
 

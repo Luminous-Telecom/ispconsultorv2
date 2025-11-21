@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { TermoContrato } from '../models/TermoContrato';
 import { Contrato } from '../models/Contrato';
 import { ModeloDocumento } from '../models/ModeloDocumento';
+import { logger } from '../utils/logger';
 
 export class TermoContratoController {
   // Listar termos de um contrato específico
@@ -24,11 +25,19 @@ export class TermoContratoController {
         data: termos
       });
     } catch (error: unknown) {
-      console.error('Erro ao buscar termos do contrato:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar termos do contrato', {
+        context: 'TermoContratoController',
+        action: 'getByContrato',
+        error: errorMessage,
+        stack: errorStack,
+        contratoId: req.params.contratoId
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage
       });
     }
   }
@@ -53,7 +62,15 @@ export class TermoContratoController {
         data: termo
       });
     } catch (error) {
-      console.error('Erro ao buscar termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar termo', {
+        context: 'TermoContratoController',
+        action: 'show',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -124,7 +141,15 @@ export class TermoContratoController {
         data: termo
       });
     } catch (error) {
-      console.error('Erro ao criar termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao criar termo', {
+        context: 'TermoContratoController',
+        action: 'create',
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -161,7 +186,16 @@ export class TermoContratoController {
         data: termo
       });
     } catch (error) {
-      console.error('Erro ao atualizar termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar termo', {
+        context: 'TermoContratoController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -201,7 +235,16 @@ export class TermoContratoController {
         data: termo
       });
     } catch (error) {
-      console.error('Erro ao marcar termo como aceito:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao marcar termo como aceito', {
+        context: 'TermoContratoController',
+        action: 'markAccepted',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -232,7 +275,15 @@ export class TermoContratoController {
         message: 'Termo desativado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao desativar termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao desativar termo', {
+        context: 'TermoContratoController',
+        action: 'deactivate',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -262,7 +313,15 @@ export class TermoContratoController {
         message: 'Termo deletado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao deletar termo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao deletar termo', {
+        context: 'TermoContratoController',
+        action: 'delete',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -292,7 +351,14 @@ export class TermoContratoController {
         data: termos
       });
     } catch (error) {
-      console.error('Erro ao buscar termos ativos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar termos ativos', {
+        context: 'TermoContratoController',
+        action: 'getAtivos',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

@@ -162,6 +162,15 @@ export class Titulo extends Model<
       status: novoStatus
     });
 
+    // Incrementar métrica de boletos pagos se métricas estiverem habilitadas
+    // Apenas quando o título é totalmente pago (não parcial)
+    if (estaPago && novoStatus === 'pago') {
+      const { metrics, isMetricsEnabled } = await import('../utils/metrics');
+      if (isMetricsEnabled() && metrics) {
+        metrics.businessBoletosPagos.inc();
+      }
+    }
+
     // Integrar com banco externo se tiver charge_id
     if (this.charge_id) {
       try {

@@ -24,6 +24,7 @@ import modelosTermoRoutes from './modelosTermo';
 import atualizacoesRoutes from './atualizacoesRoutes';
 import authRoutes from './authRoutes';
 import pagamentoPublicoRoutes from './pagamentoPublicoRoutes';
+import healthRoutes from './healthRoutes';
 
 const router = Router();
 
@@ -59,6 +60,9 @@ const routes = [
     
     // Rotas públicas de pagamento
     { path: '/api', route: pagamentoPublicoRoutes },
+    
+    // Rotas de health check (sem /api para facilitar monitoramento)
+    { path: '', route: healthRoutes },
 ];
 
 routes.forEach(({ path, route }) => {

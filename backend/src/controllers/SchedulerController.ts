@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Op, WhereOptions } from 'sequelize';
 import { SchedulerService } from '../services/SchedulerService';
 import { ScheduledRoutine } from '../models';
+import { logger } from '../utils/logger';
 
 export class SchedulerController {
   private schedulerService: SchedulerService;
@@ -48,7 +49,13 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao listar rotinas:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao listar rotinas', {
+        context: 'SchedulerController',
+        action: 'index',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -77,7 +84,14 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter rotina:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter rotina', {
+        context: 'SchedulerController',
+        action: 'show',
+        error: errorMessage,
+        stack: errorStack,
+        rotinaId: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -109,7 +123,14 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao criar rotina:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao criar rotina', {
+        context: 'SchedulerController',
+        action: 'create',
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -135,7 +156,15 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao atualizar rotina:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar rotina', {
+        context: 'SchedulerController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        rotinaId: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -157,7 +186,14 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao deletar rotina:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao deletar rotina', {
+        context: 'SchedulerController',
+        action: 'delete',
+        error: errorMessage,
+        stack: errorStack,
+        rotinaId: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -189,7 +225,15 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao alterar status da rotina:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao alterar status da rotina', {
+        context: 'SchedulerController',
+        action: 'toggleStatus',
+        error: errorMessage,
+        stack: errorStack,
+        rotinaId: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -212,7 +256,14 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao executar rotina:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao executar rotina', {
+        context: 'SchedulerController',
+        action: 'execute',
+        error: errorMessage,
+        stack: errorStack,
+        rotinaId: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -233,7 +284,13 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter status do scheduler:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter status do scheduler', {
+        context: 'SchedulerController',
+        action: 'getStatus',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -264,7 +321,15 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter logs de execução:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter logs de execução', {
+        context: 'SchedulerController',
+        action: 'getLogsByRoutine',
+        error: errorMessage,
+        stack: errorStack,
+        rotinaId: req.params.id,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -284,7 +349,14 @@ export class SchedulerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter logs de execução:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter logs de execução', {
+        context: 'SchedulerController',
+        action: 'getAllLogs',
+        error: errorMessage,
+        stack: errorStack,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',

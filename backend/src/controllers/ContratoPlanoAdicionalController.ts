@@ -4,6 +4,8 @@ import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { Op } from 'sequelize';
 import * as Joi from 'joi';
+import { logger } from '../utils/logger';
+import { isJoiError, getErrorMessage, getErrorStack } from '../utils/errorUtils';
 //
 export class ContratoPlanoAdicionalController {
   // Schema de validação para criação
@@ -50,9 +52,13 @@ export class ContratoPlanoAdicionalController {
       });
 
       // Calcular valor_final para cada serviço
+      interface ServicoJson extends ReturnType<typeof servicos[0]['toJSON']> {
+        valor_final?: number;
+      }
+      
       const servicosComValorFinal = await Promise.all(
         servicos.map(async (servico) => {
-          const servicoJson = servico.toJSON() as any;
+          const servicoJson = servico.toJSON() as ServicoJson;
           const valorFinal = await servico.getValorFinal();
           return {
             ...servicoJson,
@@ -66,7 +72,15 @@ export class ContratoPlanoAdicionalController {
         data: servicosComValorFinal
       });
     } catch (error) {
-      console.error('Erro ao listar serviços adicionais:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao listar serviços adicionais', {
+        context: 'ContratoPlanoAdicionalController',
+        action: 'index',
+        error: errorMessage,
+        stack: errorStack,
+        contratoId: req.params.contratoId
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -150,15 +164,24 @@ export class ContratoPlanoAdicionalController {
         message: 'Serviço adicional vinculado com sucesso',
         data: servicoComPlano
       });
-    } catch (error: any) {
-      if (error.isJoi) {
+    } catch (error: unknown) {
+      if (isJoiError(error)) {
         res.status(400).json({
           success: false,
-          message: error.details[0].message
+          message: getErrorMessage(error)
         });
         return;
       }
-      console.error('Erro ao adicionar serviço adicional:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao adicionar serviço adicional', {
+        context: 'ContratoPlanoAdicionalController',
+        action: 'create',
+        error: errorMessage,
+        stack: errorStack,
+        contratoId: req.params.contratoId,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -239,15 +262,24 @@ export class ContratoPlanoAdicionalController {
         message: 'Serviço adicional atualizado com sucesso',
         data: servicoAtualizado
       });
-    } catch (error: any) {
-      if (error.isJoi) {
+    } catch (error: unknown) {
+      if (isJoiError(error)) {
         res.status(400).json({
           success: false,
-          message: error.details[0].message
+          message: getErrorMessage(error)
         });
         return;
       }
-      console.error('Erro ao atualizar serviço adicional:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar serviço adicional', {
+        context: 'ContratoPlanoAdicionalController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -285,9 +317,16 @@ export class ContratoPlanoAdicionalController {
         success: true,
         message: 'Serviço adicional removido com sucesso'
       });
-    } catch (error: any) {
-      console.error('Erro ao remover serviço adicional:', error);
-      const errorMessage = error?.message || 'Erro interno do servidor';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao remover serviço adicional', {
+        context: 'ContratoPlanoAdicionalController',
+        action: 'delete',
+        error: errorMessage,
+        stack: errorStack,
+        id: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: errorMessage

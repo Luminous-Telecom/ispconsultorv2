@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import Parametros from '../models/Parametros';
 import Joi from 'joi';
+import { logger } from '../utils/logger';
+import { cache } from '../utils/cache';
 
 export class ParametrosController {
   // Schema de validação
@@ -16,6 +18,14 @@ export class ParametrosController {
   // Obter parâmetros (sempre retorna o primeiro registro)
   static async get(req: Request, res: Response): Promise<Response> {
     try {
+      // Cache para parâmetros (dados raramente mudam)
+      const cacheKey = 'parametros:sistema';
+      const cached = cache.get(cacheKey);
+      
+      if (cached) {
+        return res.json(cached);
+      }
+
       let parametros = await Parametros.findOne();
 
       // Se não existir, criar com valores padrão
@@ -30,12 +40,24 @@ export class ParametrosController {
         });
       }
 
-      return res.json({
+      const response = {
         success: true,
         data: parametros
-      });
+      };
+
+      // Cachear por 15 minutos (parâmetros raramente mudam)
+      cache.set(cacheKey, response, 900000);
+
+      return res.json(response);
     } catch (error) {
-      console.error('Erro ao obter parâmetros:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter parâmetros', {
+        context: 'ParametrosController',
+        action: 'get',
+        error: errorMessage,
+        stack: errorStack
+      });
       return res.status(500).json({
         success: false,
         message: 'Erro ao obter parâmetros do sistema'
@@ -72,13 +94,24 @@ export class ParametrosController {
         await parametros.update(req.body);
       }
 
+      // Invalidar cache após atualização
+      cache.delete('parametros:sistema');
+
       return res.json({
         success: true,
         message: 'Parâmetros atualizados com sucesso',
         data: parametros
       });
     } catch (error) {
-      console.error('Erro ao atualizar parâmetros:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar parâmetros', {
+        context: 'ParametrosController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
+      });
       return res.status(500).json({
         success: false,
         message: 'Erro ao atualizar parâmetros do sistema'

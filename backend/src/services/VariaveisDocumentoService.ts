@@ -9,6 +9,7 @@ import { Op } from 'sequelize';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
+import { logger } from '../utils/logger';
 
 interface DadosVariaveis {
   cliente?: Cliente;
@@ -517,7 +518,14 @@ export class VariaveisDocumentoService {
         return base64Result;
       }
     } catch (error) {
-      console.error('Erro ao converter logo para base64:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao converter logo para base64', {
+        context: 'VariaveisDocumentoService',
+        action: 'convertLogoToBase64',
+        error: errorMessage,
+        stack: errorStack
+      });
     }
     return '';
   }

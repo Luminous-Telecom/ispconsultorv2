@@ -2,11 +2,21 @@ import * as cron from 'node-cron';
 import { ScheduledRoutine, RoutineExecutionLog } from '../models';
 import { DiasVencimento } from '../models/DiasVencimento';
 import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
+import { Contrato } from '../models/Contrato';
 import { logger } from '../utils/logger';
 import { BarcodeService } from './BarcodeService';
 import { ajustarDataVencimento } from '../utils/dateUtils';
+import { withTransaction } from '../utils/transaction';
+import { metrics, isMetricsEnabled } from '../utils/metrics';
 import type { JsonValue } from '../types';
+import type { Transaction } from 'sequelize';
 
+/**
+ * Serviço responsável por agendar e executar rotinas automáticas do sistema.
+ * Gerencia cron jobs para geração de títulos, envio de boletos e remessas bancárias.
+ * 
+ * @class SchedulerService
+ */
 interface RoutineResult {
   success?: boolean;
   message?: string;
@@ -54,6 +64,21 @@ interface ContratoWithPlano {
   plano?: {
     valor_mensal: number;
     nome_plano?: string;
+  };
+}
+
+interface ContratoWithCliente extends Contrato {
+  cliente?: {
+    id: number;
+    ativo: boolean;
+  };
+}
+
+interface ContratoPlanoAdicionalWithPlano extends ContratoPlanoAdicional {
+  plano?: {
+    id: number;
+    nome_plano?: string;
+    valor_mensal: number;
   };
 }
 
@@ -150,7 +175,14 @@ export class SchedulerService {
         await this.scheduleRoutine(routine);
       }
     } catch (error) {
-      console.error('Erro ao carregar rotinas do banco de dados:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao carregar rotinas do banco de dados', {
+        context: 'SchedulerService',
+        action: 'loadRoutines',
+        error: errorMessage,
+        stack: errorStack
+      });
     }
   }
 
@@ -167,14 +199,27 @@ export class SchedulerService {
     const cronExpression = this.buildCronExpression(routine);
     
     if (!cron.validate(cronExpression)) {
-      console.error(`Expressão cron inválida para rotina ${routine.id}: ${cronExpression}`);
+      logger.error('Expressão cron inválida para rotina', {
+        context: 'SchedulerService',
+        action: 'scheduleRoutine',
+        rotinaId: routine.id,
+        cronExpression
+      });
       return;
     }
 
     const job = cron.schedule(cronExpression, () => {
       // Executar em background sem aguardar
       this.runRoutine(routine).catch((error) => {
-        console.error(`Erro ao executar rotina ${routine.id} em background:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        logger.error('Erro ao executar rotina em background', {
+          context: 'SchedulerService',
+          action: 'scheduleRoutine',
+          rotinaId: routine.id,
+          error: errorMessage,
+          stack: errorStack
+        });
       });
     });
 
@@ -256,11 +301,19 @@ export class SchedulerService {
       await routine.update({ ultima_execucao: endTime });
 
     } catch (error) {
-      console.error(`Erro ao executar rotina ${routine.nome}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao executar rotina', {
+        context: 'SchedulerService',
+        action: 'runRoutine',
+        rotinaId: routine.id,
+        rotinaNome: routine.nome,
+        error: errorMessage,
+        stack: errorStack
+      });
 
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
 
       if (executionLog) {
         await executionLog.update({
@@ -333,7 +386,8 @@ export class SchedulerService {
       for (const contrato of contratos) {
         try {
           // Verificar se o cliente está ativo
-          const cliente = (contrato as any).cliente;
+          const contratoWithCliente = contrato as unknown as ContratoWithCliente;
+          const cliente = contratoWithCliente.cliente;
           if (!cliente || !cliente.ativo) {
             continue;
           }
@@ -393,10 +447,12 @@ export class SchedulerService {
               anoAtual = hoje.getFullYear();
             }
             
-            let tentativas = 0;
-            let títulosCriadosNoContrato = 0;
+            // Usar transação para garantir que todos os títulos sejam criados ou nenhum
+            await withTransaction(async (transaction: Transaction) => {
+              let tentativas = 0;
+              let títulosCriadosNoContrato = 0;
 
-            while (títulosCriadosNoContrato < titulosGerar && tentativas < 100) {
+              while (títulosCriadosNoContrato < titulosGerar && tentativas < 100) {
               tentativas++;
               
               // Criar data de vencimento com o dia correto
@@ -485,6 +541,7 @@ export class SchedulerService {
                 }
 
                 // Somar valores dos serviços adicionais ativos do contrato
+                // Buscar serviços dentro da transação para garantir consistência
                 const { Plano: PlanoModel } = await import('../models/Plano');
                 const servicosAdicionais = await ContratoPlanoAdicional.findAll({
                   where: {
@@ -497,7 +554,8 @@ export class SchedulerService {
                       as: 'plano',
                       attributes: ['id', 'nome_plano', 'valor_mensal']
                     }
-                  ]
+                  ],
+                  transaction
                 });
 
                 let valorServicosAdicionais = 0;
@@ -505,9 +563,9 @@ export class SchedulerService {
                   // Usar valor_final se existir, senão calcular
                   let valorServico = Number(servico.valor_final) || 0;
                   
-                  // Acessar plano através do get() para obter os dados incluídos
-                  const servicoPlain = servico.get({ plain: true }) as any;
-                  const planoAdicional = servicoPlain.plano;
+                  // Acessar plano através do relacionamento
+                  const servicoWithPlano = servico as unknown as ContratoPlanoAdicionalWithPlano;
+                  const planoAdicional = servicoWithPlano.plano;
                   
                   if (valorServico <= 0 && planoAdicional?.valor_mensal) {
                     valorServico = Number(planoAdicional.valor_mensal);
@@ -534,37 +592,58 @@ export class SchedulerService {
                 const timestamp = Date.now();
                 const numeroTitulo = `T${contrato.id}-${timestamp}`;
 
-                // Criar título
+                // Criar título dentro da transação
                 // dataVencimento já é um Date local, mas garantimos que está correto
+                // Garantir que banco_id não seja null (já validado antes do loop, mas TypeScript precisa da verificação)
+                if (!contrato.conta_boleto) {
+                  throw new Error(`Contrato ${contrato.id} não possui banco configurado`);
+                }
+                
+                const bancoId = contrato.conta_boleto; // TypeScript agora sabe que não é null
+                
                 await Titulo.create({
                   contrato_id: contrato.id,
                   cliente_id: contrato.cliente_id,
                   plano_id: contrato.plano_id,
-                  banco_id: contrato.conta_boleto,
+                  banco_id: bancoId,
                   valor: valorTitulo,
                   data_vencimento: dataVencimento instanceof Date ? dataVencimento : new Date(dataVencimento),
                   status: 'pendente',
                   pago: false,
                   descricao: `${plano?.nome_plano || 'Mensalidade'}\n${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
                   numero_titulo: numeroTitulo
-                });
+                }, { transaction });
+
+                // Incrementar métrica de título gerado se métricas estiverem habilitadas
+                if (isMetricsEnabled() && metrics) {
+                  metrics.businessTitulosGerados.inc();
+                }
 
                 titulosGerados++;
                 títulosCriadosNoContrato++;
               }
 
-              // Avançar para o próximo mês
-              mesAtual++;
-              if (mesAtual > 11) {
-                mesAtual = 0;
-                anoAtual++;
+                // Avançar para o próximo mês
+                mesAtual++;
+                if (mesAtual > 11) {
+                  mesAtual = 0;
+                  anoAtual++;
+                }
               }
-            }
+            });
 
             contratosProcessados++;
           }
         } catch (error) {
-          console.error(`Erro ao processar contrato ${contrato.id}:`, error);
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          const errorStack = error instanceof Error ? error.stack : undefined;
+          logger.error('Erro ao processar contrato na geração de títulos', {
+            context: 'SchedulerService',
+            action: 'gerarTitulosAutomaticos',
+            contratoId: contrato.id,
+            error: errorMessage,
+            stack: errorStack
+          });
           erros++;
         }
       }
@@ -578,7 +657,14 @@ export class SchedulerService {
         message: `Geração de títulos concluída. ${titulosGerados} títulos gerados em ${contratosProcessados} contratos.`
       };
     } catch (error) {
-      console.error('Erro na execução da rotina de geração de títulos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro na execução da rotina de geração de títulos', {
+        context: 'SchedulerService',
+        action: 'gerarTitulosAutomaticos',
+        error: errorMessage,
+        stack: errorStack
+      });
       return {
         success: false,
         titulos_gerados: 0,
@@ -731,7 +817,14 @@ export class SchedulerService {
         } catch (error) {
           erros++;
           const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
-          console.error(`Erro ao processar título ${titulo.id}:`, errorMsg);
+          const errorStack = error instanceof Error ? error.stack : undefined;
+          logger.error('Erro ao processar título na recriação de boletos', {
+            context: 'SchedulerService',
+            action: 'recriarBoletos',
+            tituloId: titulo.id,
+            error: errorMsg,
+            stack: errorStack
+          });
           
           const tituloComBanco = titulo as InstanceType<typeof TituloModel> & TituloWithRelations;
           detalhes.push({
@@ -842,7 +935,15 @@ export class SchedulerService {
 
     // Executar em background sem aguardar
     this.runRoutine(routine).catch((error) => {
-      console.error(`Erro ao executar rotina ${id} em background:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao executar rotina em background', {
+        context: 'SchedulerService',
+        action: 'executeRoutineManually',
+        rotinaId: id,
+        error: errorMessage,
+        stack: errorStack
+      });
     });
     
     return { message: 'Rotina iniciada em background' };
@@ -969,7 +1070,15 @@ export class SchedulerService {
 
       return logs;
     } catch (error) {
-      console.error('Erro ao buscar logs:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar logs', {
+        context: 'SchedulerService',
+        action: 'getExecutionLogs',
+        rotinaId: routineId,
+        error: errorMessage,
+        stack: errorStack
+      });
       throw error;
     }
   }

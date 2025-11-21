@@ -1,4 +1,5 @@
 import { Parametro } from '../models/Parametro';
+import { logger } from '../utils/logger';
 
 export class ParametroService {
   /**
@@ -12,7 +13,15 @@ export class ParametroService {
       
       return parametro ? parametro.valor : null;
     } catch (error) {
-      console.error('Erro ao obter parâmetro:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter parâmetro', {
+        context: 'ParametroService',
+        action: 'getParametro',
+        chave,
+        error: errorMessage,
+        stack: errorStack
+      });
       return null;
     }
   }

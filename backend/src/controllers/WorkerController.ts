@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { SchedulerService } from '../services/SchedulerService';
+import { logger } from '../utils/logger';
 
 export class WorkerController {
   /**
@@ -16,7 +17,13 @@ export class WorkerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter status dos workers:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter status dos workers', {
+        context: 'WorkerController',
+        action: 'getStatus',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -39,7 +46,13 @@ export class WorkerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter status de saúde:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter status de saúde', {
+        context: 'WorkerController',
+        action: 'getHealth',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -73,7 +86,14 @@ export class WorkerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter estatísticas:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter estatísticas', {
+        context: 'WorkerController',
+        action: 'getStats',
+        error: errorMessage,
+        stack: errorStack,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -107,7 +127,14 @@ export class WorkerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao executar rotina:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao executar rotina', {
+        context: 'WorkerController',
+        action: 'executeRoutine',
+        error: errorMessage,
+        stack: errorStack,
+        rotinaId: req.params.id
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -152,7 +179,15 @@ export class WorkerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter logs de execução:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter logs de execução', {
+        context: 'WorkerController',
+        action: 'getExecutionLogs',
+        error: errorMessage,
+        stack: errorStack,
+        rotinaId: req.params.id,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
@@ -186,7 +221,14 @@ export class WorkerController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter logs recentes:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter logs recentes', {
+        context: 'WorkerController',
+        action: 'getRecentLogs',
+        error: errorMessage,
+        stack: errorStack,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',

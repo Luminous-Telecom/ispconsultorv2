@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Parametro } from '../models/Parametro';
+import { logger } from '../utils/logger';
 
 export class ParametroController {
   
@@ -34,7 +35,14 @@ export class ParametroController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao listar parâmetros:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao listar parâmetros', {
+        context: 'ParametroController',
+        action: 'index',
+        error: errorMessage,
+        stack: errorStack,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -66,7 +74,14 @@ export class ParametroController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter parâmetro:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter parâmetro', {
+        context: 'ParametroController',
+        action: 'getByChave',
+        error: errorMessage,
+        stack: errorStack,
+        chave: req.params.chave
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -123,7 +138,15 @@ export class ParametroController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao atualizar parâmetro:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar parâmetro', {
+        context: 'ParametroController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        chave: req.params.chave,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -199,7 +222,14 @@ export class ParametroController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao atualizar múltiplos parâmetros:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar múltiplos parâmetros', {
+        context: 'ParametroController',
+        action: 'updateMultiple',
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -227,7 +257,14 @@ export class ParametroController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao obter parâmetros por categoria:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao obter parâmetros por categoria', {
+        context: 'ParametroController',
+        action: 'getByCategoria',
+        error: errorMessage,
+        stack: errorStack,
+        categoria: req.params.categoria
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -281,7 +318,13 @@ export class ParametroController {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('Erro ao resetar parâmetros:', error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao resetar parâmetros', {
+        context: 'ParametroController',
+        action: 'resetDefaults',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',

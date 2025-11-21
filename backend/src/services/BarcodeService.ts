@@ -1,5 +1,6 @@
 import JsBarcode from 'jsbarcode';
 import { createCanvas } from 'canvas';
+import { logger } from '../utils/logger';
 
 export class BarcodeService {
 
@@ -129,7 +130,15 @@ export class BarcodeService {
                 </div>
             `;
         } catch (error) {
-            console.error('Erro ao gerar código de barras:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+            const errorStack = error instanceof Error ? error.stack : undefined;
+            logger.error('Erro ao gerar código de barras', {
+              context: 'BarcodeService',
+              action: 'generateBarcode',
+              codigoBarras,
+              error: errorMessage,
+              stack: errorStack
+            });
             return '<div class="barcode-wrap" style="color: #a00; padding: 10px;">Erro ao gerar código de barras</div>';
         }
     }

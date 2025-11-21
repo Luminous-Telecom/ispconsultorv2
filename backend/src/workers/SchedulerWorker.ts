@@ -5,6 +5,7 @@ import { EnvioBoletosRoutine } from '../services/routines/EnvioBoletosRoutine';
 import { RemessaBancariaRoutine } from '../services/routines/RemessaBancariaRoutine';
 import { IRoutine } from '../interfaces/IRoutine';
 import type { WorkersStatus } from './WorkerManager';
+import { logger } from '../utils/logger';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
@@ -95,14 +96,30 @@ class SchedulerWorker {
             }
           }
         } catch (error) {
-          console.error('Erro ao processar mensagem do worker:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          const errorStack = error instanceof Error ? error.stack : undefined;
+          logger.error('Erro ao processar mensagem do worker', {
+            context: 'SchedulerWorker',
+            action: 'executeRoutine',
+            executionLogId: executionLog.id,
+            error: errorMessage,
+            stack: errorStack
+          });
           this.cleanupWorker(executionLog.id);
           reject(error);
         }
       });
 
       worker.on('error', async (error) => {
-        console.error('Erro no worker:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        logger.error('Erro no worker', {
+          context: 'SchedulerWorker',
+          action: 'executeRoutine',
+          executionLogId: executionLog.id,
+          error: errorMessage,
+          stack: errorStack
+        });
         await this.logExecutionError(executionLog.id, error.message);
         this.cleanupWorker(executionLog.id);
         reject(error);
@@ -110,7 +127,12 @@ class SchedulerWorker {
 
       worker.on('exit', (code) => {
         if (code !== 0) {
-          console.error(`Worker parou com código ${code}`);
+          logger.error('Worker parou com código de saída', {
+            context: 'SchedulerWorker',
+            action: 'executeRoutine',
+            executionLogId: executionLog.id,
+            exitCode: code
+          });
         }
         this.cleanupWorker(executionLog.id);
       });
@@ -118,7 +140,12 @@ class SchedulerWorker {
       // Timeout de 30 minutos
       setTimeout(() => {
         if (this.workers.has(executionLog.id)) {
-          console.warn(`Worker ${executionLog.id} atingiu timeout`);
+          logger.warn('Worker atingiu timeout', {
+            context: 'SchedulerWorker',
+            action: 'executeRoutine',
+            executionLogId: executionLog.id,
+            timeoutMinutes: 30
+          });
           worker.terminate();
           this.cleanupWorker(executionLog.id);
         }
@@ -195,7 +222,15 @@ class SchedulerWorker {
         });
       }
     } catch (err) {
-      console.error('Erro ao registrar falha de execução:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      const errorStack = err instanceof Error ? err.stack : undefined;
+      logger.error('Erro ao registrar falha de execução', {
+        context: 'SchedulerWorker',
+        action: 'logExecutionError',
+        executionId,
+        error: errorMessage,
+        stack: errorStack
+      });
     }
   }
 
@@ -334,7 +369,15 @@ if (!isMainThread && workerData) {
           });
         }
       } catch (updateError) {
-        console.error('Erro ao atualizar contadores da rotina:', updateError);
+        const errorMessage = updateError instanceof Error ? updateError.message : 'Erro desconhecido';
+        const errorStack = updateError instanceof Error ? updateError.stack : undefined;
+        logger.error('Erro ao atualizar contadores da rotina', {
+          context: 'SchedulerWorker',
+          action: 'workerExecution',
+          rotinaId: workerData.routineId,
+          error: errorMessage,
+          stack: errorStack
+        });
       }
 
       // Enviar erro

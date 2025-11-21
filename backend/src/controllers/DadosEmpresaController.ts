@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import { logger } from '../utils/logger';
-
-interface AuthenticatedRequest extends Request {
-  user?: any;
-}
+import type { AuthenticatedRequest } from '../types/auth';
+import { getErrorMessage, getErrorStack } from '../utils/errorUtils';
 
 export class DadosEmpresaController {
   // Dados padrão para criação de empresa
@@ -79,7 +77,14 @@ export class DadosEmpresaController {
       
       res.json(publicData);
     } catch (error) {
-      console.error('Erro ao buscar dados públicos da empresa:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar dados públicos da empresa', {
+        context: 'DadosEmpresaController',
+        action: 'getPublic',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -89,7 +94,8 @@ export class DadosEmpresaController {
     try {
       // Verificar autenticação - se não houver token válido, bloquear
       const authHeader = req.get('Authorization');
-      const hasValidToken = authHeader?.startsWith('Bearer ') && (req as AuthenticatedRequest).user;
+      const authenticatedReq = req as AuthenticatedRequest;
+      const hasValidToken = authHeader?.startsWith('Bearer ') && authenticatedReq.user;
       
       if (!hasValidToken) {
         res.status(404).end();
@@ -108,7 +114,14 @@ export class DadosEmpresaController {
       // Retornar dados completos apenas para requisições autenticadas do sistema
       res.json(dadosEmpresaJson);
     } catch (error) {
-      console.error('Erro ao buscar dados da empresa:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar dados da empresa', {
+        context: 'DadosEmpresaController',
+        action: 'get',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -132,7 +145,15 @@ export class DadosEmpresaController {
 
       res.json(dadosEmpresaJson);
     } catch (error) {
-      console.error('Erro ao atualizar dados da empresa:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar dados da empresa', {
+        context: 'DadosEmpresaController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
@@ -141,10 +162,14 @@ export class DadosEmpresaController {
     try {
       if (!req.file) {
         // Verificar se é erro do multer
-        if (req.body && (req.body as any).error) {
+        interface MulterErrorBody {
+          error?: string;
+        }
+        const body = req.body as MulterErrorBody;
+        if (body && body.error) {
           res.status(400).json({ 
             success: false,
-            message: (req.body as any).error 
+            message: body.error 
           });
           return;
         }
@@ -201,8 +226,14 @@ export class DadosEmpresaController {
       const logoUrl = DadosEmpresaController.buildLogoUrl(req, filePath);
       res.json({ success: true, logo: logoUrl });
     } catch (error) {
-      logger.error('Erro ao fazer upload da logo:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao fazer upload da logo', {
+        context: 'DadosEmpresaController',
+        action: 'uploadLogo',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({ 
         success: false,
         message: errorMessage 
@@ -222,7 +253,14 @@ export class DadosEmpresaController {
       // Redirecionar para o arquivo de upload
       res.redirect(dadosEmpresa.logo);
     } catch (error) {
-      console.error('Erro ao buscar logo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar logo', {
+        context: 'DadosEmpresaController',
+        action: 'getLogo',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
