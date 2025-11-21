@@ -16,12 +16,20 @@ export class AsaasService implements IBancoService {
   async obterToken(banco: Banco): Promise<string | null> {
     let apiKey = banco.api_key;
 
-    if (!apiKey && (banco as any).dataValues) {
-      apiKey = (banco as any).dataValues.api_key;
+    // Banco pode vir como instância do Sequelize Model ou como objeto simples
+    interface BancoModelLike {
+      dataValues?: { api_key?: string | null };
+      getDataValue?: (key: string) => string | null;
+    }
+    const bancoModel = banco as BancoModelLike;
+
+    if (!apiKey && bancoModel.dataValues) {
+      apiKey = bancoModel.dataValues.api_key || null;
     }
 
-    if (!apiKey && typeof (banco as any).getDataValue === 'function') {
-      apiKey = (banco as any).getDataValue('api_key');
+    if (!apiKey && typeof bancoModel.getDataValue === 'function') {
+      const value = bancoModel.getDataValue('api_key');
+      apiKey = value || null;
     }
 
     if (!apiKey) {
