@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
 
 // Importar configurações
 import { sequelize } from './config/database';
@@ -18,6 +20,9 @@ import {
   configProtectionMiddleware 
 } from './middleware/copyProtection';
 import { ddosProtectionMiddleware } from './middleware/ddosProtectionMiddleware';
+import { rateLimitMiddleware } from './middleware/rateLimitMiddleware';
+import { defaultSanitizeMiddleware } from './middleware/sanitizeMiddleware';
+import { metricsMiddleware } from './middleware/metricsMiddleware';
 
 // Importar middleware do frontend
 import { frontendMiddleware } from './middleware/frontendMiddleware';
@@ -123,9 +128,73 @@ app.use(cors({
 // Servir arquivos estáticos de uploads
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
+// Cookie parser (necessário para CSRF e outras funcionalidades)
+app.use(cookieParser());
+
+// Configurar sessão (necessário para CSRF com token baseado em sessão)
+app.use(session({
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'default-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+  }
+}));
+
 // Middleware de parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Middleware de sanitização de inputs
+// Deve vir depois do parsing de JSON mas antes das rotas
+app.use(defaultSanitizeMiddleware);
+
+// Middleware de CSRF Protection (opcional - apenas se ENABLE_CSRF=true)
+const ENABLE_CSRF = process.env.ENABLE_CSRF === 'true';
+if (ENABLE_CSRF) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { csrfTokenMiddleware, csrfProtectionMiddleware } = require('./middleware/csrfMiddleware');
+    
+    // Gerar token CSRF para rotas GET (deve vir antes das rotas)
+    app.use(csrfTokenMiddleware);
+    
+    // Proteger rotas mutáveis (POST, PUT, DELETE, PATCH)
+    app.use('/api', csrfProtectionMiddleware);
+    
+    logger.info('Middleware de CSRF Protection habilitado', {
+      context: 'index',
+      action: 'middleware'
+    });
+  } catch (error) {
+    logger.warn('Erro ao carregar middleware de CSRF', {
+      context: 'index',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+}
+
+// Middleware de métricas Prometheus (opcional - apenas se ENABLE_METRICS=true)
+// Importação condicional para não carregar módulo se desabilitado
+const ENABLE_METRICS = process.env.ENABLE_METRICS === 'true';
+if (ENABLE_METRICS) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { metricsMiddleware } = require('./middleware/metricsMiddleware');
+    app.use(metricsMiddleware);
+    logger.info('Middleware de métricas Prometheus habilitado', {
+      context: 'index',
+      action: 'middleware'
+    });
+  } catch (error) {
+    logger.warn('Erro ao carregar middleware de métricas', {
+      context: 'index',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+  }
+}
 
 // Middleware de proteção DDoS (Layer 7)
 // Configuração via variáveis de ambiente ou valores padrão
@@ -148,6 +217,10 @@ logger.info('Middleware de proteção DDoS habilitado', {
   maxProcessingTime: `${ddosMaxProcessingTime}ms`,
   maxConcurrentRequests: ddosMaxConcurrentRequests
 });
+
+// Aplicar rate limiting nas rotas da API
+// Deve vir antes das rotas mas depois do parsing de JSON
+app.use('/api', rateLimitMiddleware());
 
 app.get('/config.js', (req, res) => {
   let apiUrl = process.env.REACT_APP_API_URL;
@@ -212,41 +285,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Middleware de tratamento de erros
-interface ErrorWithDetails extends Error {
-  details?: string | string[];
-  errors?: Array<{ message: string }>;
-}
-
-app.use((err: ErrorWithDetails, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Erro:', err);
-  
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      error: 'Dados inválidos',
-      details: err.details || err.message
-    });
-  }
-  
-  if (err.name === 'SequelizeValidationError') {
-    return res.status(400).json({
-      error: 'Dados inválidos',
-      details: err.errors?.map((e) => e.message) || [err.message]
-    });
-  }
-  
-  if (err.name === 'SequelizeUniqueConstraintError') {
-    return res.status(409).json({
-      error: 'Registro já existe',
-      details: 'Este registro já existe no sistema'
-    });
-  }
-  
-  return res.status(500).json({
-    error: 'Erro interno do servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Algo deu errado'
-  });
-});
+// Middleware global de tratamento de erros
+// Deve ser o último middleware antes do frontend
+import { errorHandlerMiddleware } from './middleware/errorHandlerMiddleware';
+app.use(errorHandlerMiddleware);
 
 // Middleware do frontend (deve vir depois das rotas da API)
 // Serve arquivos estáticos e faz fallback para index.html (SPA routing)

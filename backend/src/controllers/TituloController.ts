@@ -10,8 +10,10 @@ import { BarcodeService } from '../services/BarcodeService';
 import { ajustarDataVencimento } from '../utils/dateUtils';
 import { logger } from '../utils/logger';
 import puppeteer from 'puppeteer';
-import { Op, WhereOptions, QueryTypes } from 'sequelize';
+import { Op, WhereOptions, QueryTypes, Transaction } from 'sequelize';
 import { sequelize } from '../config/database';
+import { withTransaction } from '../utils/transaction';
+import { tituloCreateSchema, titulosBulkCreateSchema } from '../validators/titulo.validator';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -21,14 +23,39 @@ import type { PdfOptions } from 'html-pdf-node';
 // Interface para Titulo com relações carregadas
 interface TituloComRelacoes extends Titulo {
   cliente?: Cliente & { nome?: string; cpf?: string; cnpj?: string };
-  banco?: Banco & { logo?: string; agencia_codigo?: string };
+  banco?: Banco; // Banco completo, aceita logo: string | null
   contrato?: Contrato;
   plano?: Plano;
 }
 
+/**
+ * Controller responsável por gerenciar títulos (boletos) do sistema
+ * Inclui operações de CRUD, geração de PDF, processamento HTML e integração com bancos
+ * 
+ * @class TituloController
+ */
 export class TituloController {
   
-  // Método estático para gerar PDF em base64
+  /**
+   * Gera PDF do boleto em formato base64
+   * Usa Puppeteer para renderizar HTML em PDF com alta qualidade
+   * 
+   * @param titulo - Título completo com relações carregadas (cliente, banco, contrato, plano)
+   * @returns Promise com PDF em base64 ou null em caso de erro
+   * 
+   * @remarks
+   * - Requer Puppeteer instalado e configurado
+   * - HTML é gerado via processarBoletoHtml antes da conversão
+   * - PDF é gerado em formato A4 com margens de 0.5cm
+   * - Browser é fechado automaticamente após geração
+   * 
+   * @example
+   * ```typescript
+   * const titulo = await Titulo.findByPk(1, { include: ['cliente', 'banco'] });
+   * const pdfBase64 = await TituloController.gerarPdfBase64(titulo);
+   * // Retorna: "JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMi..."
+   * ```
+   */
   static async gerarPdfBase64(titulo: TituloComRelacoes): Promise<string | null> {
     try {
       const html = await this.processarBoletoHtml(titulo);
@@ -61,7 +88,28 @@ export class TituloController {
     }
   }
 
-  // Método auxiliar para processar um único boleto
+  /**
+   * Processa template HTML do boleto substituindo variáveis pelos dados reais
+   * Carrega dados da empresa, formata valores e datas, e substitui placeholders
+   * 
+   * @param titulo - Título completo com relações carregadas
+   * @returns Promise com HTML processado pronto para conversão em PDF
+   * 
+   * @remarks
+   * - Carrega dados da empresa automaticamente
+   * - Formata valores monetários para padrão brasileiro (R$ 1.234,56)
+   * - Converte datas para formato brasileiro (DD/MM/YYYY)
+   * - Processa variáveis do template como {{valor_boleto}}, {{data_vencimento}}, etc.
+   * 
+   * @throws {Error} Se dados da empresa não estiverem configurados
+   * 
+   * @example
+   * ```typescript
+   * const titulo = await Titulo.findByPk(1, { include: ['cliente', 'banco'] });
+   * const html = await TituloController['processarBoletoHtml'](titulo);
+   * // Retorna HTML completo com todos os dados substituídos
+   * ```
+   */
   private static async processarBoletoHtml(titulo: TituloComRelacoes): Promise<string> {
     // Carregar dados da empresa
     const { DadosEmpresa } = await import('../models/DadosEmpresa');
@@ -143,7 +191,7 @@ export class TituloController {
       LOGOBANCO: logoBanco,
       CODIGO_BANCO_COM_DV: titulo.banco?.codigo ? `${titulo.banco.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
       LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
-      AGENCIA_CODIGO: titulo.banco?.agencia_codigo || 'Não configurado',
+      AGENCIA_CODIGO: titulo.banco?.codigo || 'Não configurado',
       
       // Dados do boleto - FEBRABAN
       LOCAL_PAGAMENTO: 'Pagável em qualquer banco até o vencimento',
@@ -512,9 +560,29 @@ export class TituloController {
     }
   }
 
-  // Criar novo título
+  // Criar novo título (suporta criação de múltiplos títulos em lote)
   static async create(req: Request, res: Response): Promise<void> {
     try {
+      // Verificar se é criação em lote (array de títulos)
+      if (Array.isArray(req.body.titulos) || req.body.titulos) {
+        return await TituloController.createBulk(req, res);
+      }
+
+      // Validação usando validador centralizado
+      const { error, value } = tituloCreateSchema.validate(req.body, {
+        abortEarly: false,
+        stripUnknown: true
+      });
+
+      if (error) {
+        res.status(400).json({
+          success: false,
+          message: 'Dados inválidos',
+          errors: error.details.map(detail => detail.message)
+        });
+        return;
+      }
+
       const { 
         cliente_id, 
         plano_id, 
@@ -525,8 +593,9 @@ export class TituloController {
         desconto_valor: descontoValorRaw,
         acrescimo_percentual: acrescimoPercentualRaw,
         acrescimo_valor: acrescimoValorRaw,
-        descricao
-      } = req.body;
+        descricao,
+        banco_id
+      } = value;
 
       // Converter strings para números
       const desconto_percentual = descontoPercentualRaw ? parseFloat(descontoPercentualRaw.toString()) : null;
@@ -695,32 +764,34 @@ export class TituloController {
       // Garantir que o valor final seja pelo menos R$ 0,01 (valor mínimo permitido)
       valorFinal = Math.max(0.01, valorFinal);
 
-      // Criar título
-      // Garantir que data_vencimento é um objeto Date para evitar problemas de fuso horário
-      let dataVencimentoParaSalvar = dataVencimentoFinal instanceof Date 
-        ? dataVencimentoFinal 
-        : new Date(dataVencimentoFinal);
-      
-      // Ajustar data de vencimento baseado nos parâmetros (sábado/domingo)
-      dataVencimentoParaSalvar = await ajustarDataVencimento(dataVencimentoParaSalvar);
-      
-      const titulo = await Titulo.create({
-        cliente_id,
-        plano_id: plano.id,
-        banco_id: banco.id,
-        contrato_id: contratoReferencia?.id || contrato_id || null,
-        numero_titulo: gerarNumeroTitulo(),
-        valor: valorFinal, // Usar valorFinal (com descontos) ao invés do plano.valor_mensal
-        valor_final: valorFinal,
-        data_vencimento: dataVencimentoParaSalvar,
-        observacoes: observacoes || '',
-        desconto_percentual: desconto_percentual || null,
-        desconto_valor: desconto_valor || null,
-        acrescimo_percentual: acrescimo_percentual || null,
-        acrescimo_valor: acrescimo_valor || null,
-        descricao: descricao || null,
-        status: 'pendente',
-        pago: false
+      // Criar título dentro de transação para garantir atomicidade
+      const titulo = await withTransaction(async (transaction: Transaction) => {
+        // Garantir que data_vencimento é um objeto Date para evitar problemas de fuso horário
+        let dataVencimentoParaSalvar = dataVencimentoFinal instanceof Date 
+          ? dataVencimentoFinal 
+          : new Date(dataVencimentoFinal);
+        
+        // Ajustar data de vencimento baseado nos parâmetros (sábado/domingo)
+        dataVencimentoParaSalvar = await ajustarDataVencimento(dataVencimentoParaSalvar);
+        
+        return await Titulo.create({
+          cliente_id,
+          plano_id: plano.id,
+          banco_id: banco_id || banco.id,
+          contrato_id: contratoReferencia?.id || contrato_id || null,
+          numero_titulo: gerarNumeroTitulo(),
+          valor: valorFinal, // Usar valorFinal (com descontos) ao invés do plano.valor_mensal
+          valor_final: valorFinal,
+          data_vencimento: dataVencimentoParaSalvar,
+          observacoes: observacoes || '',
+          desconto_percentual: desconto_percentual || null,
+          desconto_valor: desconto_valor || null,
+          acrescimo_percentual: acrescimo_percentual || null,
+          acrescimo_valor: acrescimo_valor || null,
+          descricao: descricao || null,
+          status: 'pendente',
+          pago: false
+        }, { transaction });
       });
 
       res.status(201).json({
@@ -734,6 +805,134 @@ export class TituloController {
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Criar múltiplos títulos em lote dentro de uma transação
+   * Garante que todos os títulos sejam criados ou nenhum
+   */
+  private static async createBulk(req: Request, res: Response): Promise<void> {
+    try {
+      // Validação usando validador centralizado
+      const { error, value } = titulosBulkCreateSchema.validate(req.body, {
+        abortEarly: false,
+        stripUnknown: true
+      });
+
+      if (error) {
+        res.status(400).json({
+          success: false,
+          message: 'Dados inválidos',
+          errors: error.details.map(detail => detail.message)
+        });
+        return;
+      }
+
+      const { titulos } = value;
+
+      // Criar todos os títulos dentro de uma transação
+      const titulosCriados = await withTransaction(async (transaction: Transaction) => {
+        const resultados: Titulo[] = [];
+
+        for (const dadosTitulo of titulos) {
+          // Validar e buscar entidades relacionadas
+          const cliente = await Cliente.findByPk(dadosTitulo.cliente_id, { transaction });
+          if (!cliente || !cliente.ativo) {
+            throw new Error(`Cliente ${dadosTitulo.cliente_id} não encontrado ou inativo`);
+          }
+
+          const plano = await Plano.findByPk(dadosTitulo.plano_id, { transaction });
+          if (!plano) {
+            throw new Error(`Plano ${dadosTitulo.plano_id} não encontrado`);
+          }
+
+          const banco = await Banco.findByPk(dadosTitulo.banco_id, { transaction });
+          if (!banco || !banco.ativo) {
+            throw new Error(`Banco ${dadosTitulo.banco_id} não encontrado ou inativo`);
+          }
+
+          // Processar data de vencimento
+          let dataVencimento: Date;
+          if (typeof dadosTitulo.data_vencimento === 'string') {
+            const [year, month, day] = dadosTitulo.data_vencimento.split('-').map(Number);
+            dataVencimento = new Date(year, month - 1, day);
+          } else {
+            dataVencimento = dadosTitulo.data_vencimento;
+          }
+
+          // Ajustar data de vencimento baseado nos parâmetros
+          dataVencimento = await ajustarDataVencimento(dataVencimento);
+
+          // Calcular valor final
+          let valorFinal = Number(dadosTitulo.valor);
+          if (dadosTitulo.desconto_valor) {
+            valorFinal -= Number(dadosTitulo.desconto_valor);
+          } else if (dadosTitulo.desconto_percentual) {
+            valorFinal -= valorFinal * (Number(dadosTitulo.desconto_percentual) / 100);
+          }
+
+          if (dadosTitulo.acrescimo_valor) {
+            valorFinal += Number(dadosTitulo.acrescimo_valor);
+          } else if (dadosTitulo.acrescimo_percentual) {
+            valorFinal += valorFinal * (Number(dadosTitulo.acrescimo_percentual) / 100);
+          }
+
+          valorFinal = Math.max(0.01, valorFinal);
+
+          // Gerar número único do título
+          const timestamp = Date.now();
+          const random = Math.floor(Math.random() * 1000);
+          const numeroTitulo = dadosTitulo.numero_titulo || `TIT-${timestamp}-${random}`;
+
+          // Criar título dentro da transação
+          const titulo = await Titulo.create({
+            cliente_id: dadosTitulo.cliente_id,
+            plano_id: dadosTitulo.plano_id,
+            banco_id: dadosTitulo.banco_id,
+            contrato_id: dadosTitulo.contrato_id || null,
+            numero_titulo: numeroTitulo,
+            valor: valorFinal,
+            valor_final: valorFinal,
+            data_vencimento: dataVencimento,
+            observacoes: dadosTitulo.observacoes || null,
+            desconto_percentual: dadosTitulo.desconto_percentual || null,
+            desconto_valor: dadosTitulo.desconto_valor || null,
+            acrescimo_percentual: dadosTitulo.acrescimo_percentual || null,
+            acrescimo_valor: dadosTitulo.acrescimo_valor || null,
+            descricao: dadosTitulo.descricao || null,
+            status: dadosTitulo.status || 'pendente',
+            pago: dadosTitulo.pago || false
+          }, { transaction });
+
+          resultados.push(titulo);
+        }
+
+        return resultados;
+      });
+
+      // Incrementar métricas se habilitadas
+      const { metrics, isMetricsEnabled } = await import('../utils/metrics');
+      if (isMetricsEnabled() && metrics && titulosCriados.length > 0) {
+        metrics.businessTitulosGerados.inc(titulosCriados.length);
+      }
+
+      res.status(201).json({
+        success: true,
+        message: `${titulosCriados.length} título(s) criado(s) com sucesso`,
+        data: titulosCriados
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao criar títulos em lote', { 
+        context: 'TituloController',
+        action: 'createBulk',
+        error: errorMessage 
+      });
+      res.status(500).json({
+        success: false,
+        message: errorMessage
       });
     }
   }
@@ -1106,7 +1305,7 @@ export class TituloController {
         LOGOBANCO: titulo.banco?.logo || TituloController.getLogoBancoPadrao(titulo.banco?.tipo_banco || '') || dadosEmpresa.logo || '',
         CODIGO_BANCO_COM_DV: titulo.banco?.codigo ? `${titulo.banco?.codigo}-${BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo)}` : '364-9',
         LINHA_DIGITAVEL: titulo.linha_digitavel || titulo.codigo_barras || '',
-        AGENCIA_CODIGO: titulo.banco?.agencia_codigo || 'Não configurado',
+        AGENCIA_CODIGO: titulo.banco?.codigo || 'Não configurado',
         NOSSO_NUMERO: titulo.nosso_numero || titulo.charge_id || '',
         
         // Dados do boleto - FEBRABAN

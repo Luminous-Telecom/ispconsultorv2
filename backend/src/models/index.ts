@@ -15,6 +15,7 @@ import { TermoContrato } from './TermoContrato';
 import { ModeloTermo } from './ModeloTermo';
 import { Usuario } from './Usuario';
 import { ContratoPlanoAdicional } from './ContratoPlanoAdicional';
+import { Auditoria } from './Auditoria';
 //
 // Importar associações específicas
 import './associations';
@@ -154,6 +155,17 @@ RoutineExecutionLog.belongsTo(ScheduledRoutine, {
   as: 'routine'
 });
 
+// Auditoria
+Usuario.hasMany(Auditoria, {
+  foreignKey: 'usuario_id',
+  as: 'auditorias'
+});
+
+Auditoria.belongsTo(Usuario, {
+  foreignKey: 'usuario_id',
+  as: 'usuario'
+});
+
 // Exportar todos os modelos
 export {
   Cliente,
@@ -171,5 +183,6 @@ export {
   DiasVencimento,
   TermoContrato,
   ModeloTermo,
-  Usuario
+  Usuario,
+  Auditoria
 };

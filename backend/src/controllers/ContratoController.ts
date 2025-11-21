@@ -4,8 +4,12 @@ import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { ModeloDocumento } from '../models/ModeloDocumento';
-import { Op, WhereOptions } from 'sequelize';
+import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
+import { Op, WhereOptions, Transaction } from 'sequelize';
 import * as Joi from 'joi';
+import { logger } from '../utils/logger';
+import { withTransaction } from '../utils/transaction';
+import { contratoCreateSchema } from '../validators/contrato.validator';
 
 export class ContratoController {
   // Função auxiliar para normalizar data (evitar problemas de timezone)
@@ -106,7 +110,15 @@ export class ContratoController {
         totalPages: Math.ceil(count / limitNum)
       });
     } catch (error) {
-      console.error('Erro ao listar contratos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao listar contratos', {
+        context: 'ContratoController',
+        action: 'index',
+        error: errorMessage,
+        stack: errorStack,
+        query: req.query
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -130,7 +142,15 @@ export class ContratoController {
 
       res.json(contratos);
     } catch (error) {
-      console.error('Erro ao buscar contratos do cliente:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar contratos do cliente', {
+        context: 'ContratoController',
+        action: 'getByCliente',
+        error: errorMessage,
+        stack: errorStack,
+        clienteId: req.params.clienteId
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -161,7 +181,15 @@ export class ContratoController {
 
       res.json(contrato);
     } catch (error) {
-      console.error('Erro ao buscar contrato:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar contrato', {
+        context: 'ContratoController',
+        action: 'show',
+        error: errorMessage,
+        stack: errorStack,
+        contratoId: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -264,18 +292,73 @@ export class ContratoController {
         }
       }
 
-      const contrato = await Contrato.create(value);
+      // Verificar se há serviços adicionais para criar junto
+      const servicosAdicionais = req.body.servicos_adicionais;
+      const temServicosAdicionais = Array.isArray(servicosAdicionais) && servicosAdicionais.length > 0;
+
+      // Criar contrato e serviços adicionais dentro de uma transação
+      const resultado = await withTransaction(async (transaction: Transaction) => {
+        // Criar contrato
+        const contrato = await Contrato.create(value, { transaction });
+
+        // Criar serviços adicionais se fornecidos
+        const servicosCriados = [];
+        if (temServicosAdicionais) {
+          for (const servicoData of servicosAdicionais) {
+            // Validar plano do serviço adicional
+            const planoAdicional = await Plano.findByPk(servicoData.plano_id, { transaction });
+            if (!planoAdicional) {
+              throw new Error(`Plano adicional ${servicoData.plano_id} não encontrado`);
+            }
+
+            // Calcular valor final do serviço
+            let valorFinal = parseFloat(planoAdicional.valor_mensal.toString());
+            if (servicoData.desconto_valor && servicoData.desconto_valor > 0) {
+              valorFinal = Math.max(0, valorFinal - parseFloat(servicoData.desconto_valor.toString()));
+            } else if (servicoData.desconto_percentual && servicoData.desconto_percentual > 0) {
+              const descontoValor = valorFinal * (parseFloat(servicoData.desconto_percentual.toString()) / 100);
+              valorFinal = Math.max(0, valorFinal - descontoValor);
+            }
+            valorFinal = Math.round(valorFinal * 100) / 100;
+
+            // Criar serviço adicional
+            const servico = await ContratoPlanoAdicional.create({
+              contrato_id: contrato.id,
+              plano_id: servicoData.plano_id,
+              desconto_percentual: servicoData.desconto_percentual || null,
+              desconto_valor: servicoData.desconto_valor || null,
+              valor_final: valorFinal,
+              status: servicoData.status || 'ativo',
+              observacoes: servicoData.observacoes || null
+            }, { transaction });
+
+            servicosCriados.push(servico);
+          }
+        }
+
+        return { contrato, servicosAdicionais: servicosCriados };
+      });
 
       res.status(201).json({
         success: true,
-        message: 'Contrato criado com sucesso',
-        data: contrato
+        message: `Contrato criado com sucesso${temServicosAdicionais ? ` e ${resultado.servicosAdicionais.length} serviço(s) adicional(is) vinculado(s)` : ''}`,
+        data: {
+          ...resultado.contrato.toJSON(),
+          servicos_adicionais: resultado.servicosAdicionais
+        }
       });
     } catch (error: unknown) {
-      console.error('Erro ao criar contrato:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      const errorName = error instanceof Error ? error.name : undefined;
       
       // Tratar erro de constraint de unicidade
       if (error instanceof Error && error.name === 'SequelizeUniqueConstraintError') {
+        logger.warn('Erro de constraint de unicidade ao criar contrato', {
+          context: 'ContratoController',
+          action: 'create',
+          error: errorMessage
+        });
         res.status(409).json({
           success: false,
           message: 'Erro de constraint de unicidade no banco de dados'
@@ -291,6 +374,12 @@ export class ContratoController {
         }
         const fkError = error as ForeignKeyError;
         if (fkError.table === 'modelo_documento' || fkError.fields?.includes('modelo_documento_id')) {
+          logger.warn('Modelo de documento não encontrado ao criar contrato', {
+            context: 'ContratoController',
+            action: 'create',
+            table: fkError.table,
+            fields: fkError.fields
+          });
           res.status(404).json({
             success: false,
             message: 'Modelo de documento não encontrado'
@@ -298,6 +387,15 @@ export class ContratoController {
           return;
         }
       }
+      
+      logger.error('Erro ao criar contrato', {
+        context: 'ContratoController',
+        action: 'create',
+        error: errorMessage,
+        stack: errorStack,
+        name: errorName,
+        body: req.body
+      });
       
       res.status(500).json({
         success: false,
@@ -316,7 +414,11 @@ export class ContratoController {
       });
       
       if (error) {
-        console.error('Erro de validação do contrato:', error.details);
+        logger.warn('Erro de validação do contrato', {
+          context: 'ContratoController',
+          action: 'create',
+          details: error.details
+        });
         res.status(400).json({
           success: false,
           message: 'Dados inválidos',
@@ -384,7 +486,16 @@ export class ContratoController {
         data: contrato
       });
     } catch (error) {
-      console.error('Erro ao atualizar contrato:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao atualizar contrato', {
+        context: 'ContratoController',
+        action: 'update',
+        error: errorMessage,
+        stack: errorStack,
+        contratoId: req.params.id,
+        body: req.body
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -430,7 +541,15 @@ export class ContratoController {
         message: 'Contrato excluído com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao excluir contrato:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao excluir contrato', {
+        context: 'ContratoController',
+        action: 'delete',
+        error: errorMessage,
+        stack: errorStack,
+        contratoId: req.params.id
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -453,7 +572,14 @@ export class ContratoController {
 
       res.json(contratos);
     } catch (error) {
-      console.error('Erro ao buscar contratos ativos:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao buscar contratos ativos', {
+        context: 'ContratoController',
+        action: 'getAtivos',
+        error: errorMessage,
+        stack: errorStack
+      });
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
