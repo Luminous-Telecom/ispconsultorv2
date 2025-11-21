@@ -24,6 +24,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   onSelectTitulo
 }) => {
   const [search, setSearch] = useState('');
+  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('id');
@@ -51,10 +52,20 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   
+  // Debounce da busca para evitar muitas requisições
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParam(search || undefined);
+      setPage(1); // Resetar para primeira página ao buscar
+    }, 300); // 300ms de debounce
+    
+    return () => clearTimeout(timer);
+  }, [search]);
+  
   const filters: TituloFilters = {
     page,
     limit,
-    search: search || undefined,
+    search: searchParam,
     // Aplicar filtro de status no backend quando não mostrar cancelados
     ...(showCancelados ? {} : { status: '!cancelado' }),
     // Aplicar filtros de data de vencimento se preenchidos
@@ -100,7 +111,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
 
   const sortedData = useSorting(titulos as unknown as Record<string, unknown>[], sortColumn, sortDirection) as unknown as Titulo[];
 
-  // Resetar página quando o filtro mudar
+  // Resetar página quando o filtro mudar (exceto search que já é tratado no debounce)
   useEffect(() => {
     setPage(1);
   }, [showCancelados, dataVencimentoInicio, dataVencimentoFim]);
@@ -111,6 +122,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       setDataVencimentoInicio('');
       setDataVencimentoFim('');
       setSearch('');
+      setSearchParam(undefined);
       setPage(1);
       setSelectedItems([]);
     }

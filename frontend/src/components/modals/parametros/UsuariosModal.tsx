@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUsuarios, useDeleteUsuario } from '../../../hooks/useUsuarios';
 import { Usuario } from '../../../types';
 import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
@@ -23,6 +23,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
   const [, setSelectedItems] = useState<Usuario[]>([]);
   const [search, setSearch] = useState('');
+  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const [sortColumn, setSortColumn] = useState<string>('id');
@@ -30,10 +31,20 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   
   const { success, error } = useNotificationContext();
   
+  // Debounce da busca para evitar muitas requisições
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParam(search || undefined);
+      setPage(1); // Resetar para primeira página ao buscar
+    }, 300); // 300ms de debounce
+    
+    return () => clearTimeout(timer);
+  }, [search]);
+  
   const { data: usuariosData, isLoading, refetch } = useUsuarios({
     page,
     limit,
-    search
+    search: searchParam
   });
 
   const usuarios = usuariosData?.data || [];
