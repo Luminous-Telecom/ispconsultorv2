@@ -184,7 +184,7 @@ export class EmailService {
       const mailOptions: SendMailOptions = {
         from: `"${servidor.nome_remetente}" <${servidor.email_remetente}>`,
         to: emailDestino,
-        subject: 'Boleto de Pagamento - BackNet',
+        subject: `${servidor.nome_remetente} - Boleto de Pagamento`,
         html: mensagem || '<p>Boleto em anexo.</p>',
         text: 'Seu cliente de email não suporta HTML. Por favor, visualize o anexo PDF.'
       };
