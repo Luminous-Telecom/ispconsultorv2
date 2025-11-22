@@ -183,7 +183,6 @@ export const useTituloForm = ({
   const createTituloMutation = useMutation({
     mutationFn: (data: CreateCarneParcela) => TituloService.create(data),
     onSuccess: (response) => {
-      console.log('[useTituloForm] Título criado com sucesso:', response);
       const mensagem = response?.message || 'Título criado com sucesso!';
       success(mensagem);
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
