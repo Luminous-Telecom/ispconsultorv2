@@ -11,8 +11,8 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 **Problema**: Alguns services estão em `PascalCase` enquanto outros estão em `camelCase`.
 
 **Arquivos em PascalCase:**
-- `ContratoService.ts` ❌ (deveria ser `contratoService.ts`)
-- `TermoContratoService.ts` ❌ (deveria ser `termoContratoService.ts`)
+- ~~`ContratoService.ts`~~ ✅ **CORRIGIDO** → `contratoService.ts`
+- ~~`TermoContratoService.ts`~~ ✅ **CORRIGIDO** → `termoContratoService.ts`
 
 **Arquivos em camelCase (correto):**
 - `clienteService.ts` ✅
@@ -21,8 +21,10 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 - `tituloService.ts` ✅
 - `authService.ts` ✅
 - `dashboardService.ts` ✅
+- `contratoService.ts` ✅
+- `termoContratoService.ts` ✅
 
-**Solução**: Renomear para `camelCase` seguindo o padrão estabelecido.
+**Status**: ✅ **RESOLVIDO** - Todos os services agora seguem o padrão `camelCase`.
 
 ---
 
@@ -80,19 +82,22 @@ import { useTitulosFinanceiro } from '@hooks/useTitulosFinanceiro';
 
 ## 🔧 Ações Recomendadas
 
-### Prioridade Baixa (Opcional)
+### Status das Correções
 
-1. **Renomear services inconsistentes**:
-   - `ContratoService.ts` → `contratoService.ts`
-   - `TermoContratoService.ts` → `termoContratoService.ts`
+1. ✅ **Renomear services inconsistentes** - **CONCLUÍDO**:
+   - ✅ `ContratoService.ts` → `contratoService.ts`
+   - ✅ `TermoContratoService.ts` → `termoContratoService.ts`
+   - ✅ Todos os imports atualizados (8 arquivos)
 
-2. **Configurar path aliases**:
+2. ⏳ **Configurar path aliases** - **PENDENTE** (opcional):
    - Adicionar paths no `tsconfig.json` do frontend
    - Atualizar imports gradualmente
 
-3. **Verificar duplicações**:
-   - Verificar se `parametroService.ts` e `parametrosService.ts` são necessários
-   - Consolidar se houver duplicação
+3. ✅ **Verificar duplicações** - **VERIFICADO**:
+   - `parametroService.ts` e `parametrosService.ts` são services diferentes:
+     - `parametroService.ts`: Parâmetros individuais (chave-valor) - não está sendo usado
+     - `parametrosService.ts`: Parâmetros gerais do sistema (validar_cpf_cnpj, etc.) - em uso
+   - Não há duplicação, são propósitos diferentes
 
 ---
 
