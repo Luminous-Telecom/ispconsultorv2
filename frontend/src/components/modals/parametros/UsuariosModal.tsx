@@ -216,13 +216,10 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
             onSelectionChange={(items) => {
               setSelectedItems(items);
             }}
-            onSort={(column, direction) => {
-              setSortColumn(column);
-              setSortDirection(direction);
-            }}
-            onSearch={setSearch}
-            onPageChange={setPage}
-            onPageSizeChange={setLimit}
+            onSort={tableFilters.setSort}
+            onSearch={tableFilters.setSearch}
+            onPageChange={tableFilters.setPage}
+            onPageSizeChange={tableFilters.setLimit}
             onRefresh={refetch}
           />
         </div>
