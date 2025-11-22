@@ -1,9 +1,13 @@
 /**
  * Hook para gerenciar formulário de cliente
  * Centraliza toda a lógica de estado, validação, consultas e mutations
+ * 
+ * Refatorado para usar React Hook Form + Zod internamente
  */
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { ClienteService } from '../services/clienteService';
@@ -14,8 +18,8 @@ import { ClienteFormData, ClienteFormErrors } from '../types';
 import { FormValue } from '../types/common';
 import { formatCNPJ, formatPhone, formatCEP } from '../utils/formatters';
 import { isValidCNPJ } from '../utils/validators';
-import { validateClienteForm } from '../schemas/cliente.schemas';
-import { useFormReset } from './useFormReset';
+import { clienteSchema } from '../schemas/cliente.schema';
+import type { ClienteFormData as ZodClienteFormData } from '../schemas/cliente.schema';
 
 interface UseClienteFormParams {
   clienteId: number | null;
@@ -24,7 +28,7 @@ interface UseClienteFormParams {
 }
 
 interface UseClienteFormReturn {
-  // Estado do formulário
+  // Estado do formulário (mantido para compatibilidade)
   formData: ClienteFormData;
   errors: ClienteFormErrors;
   
@@ -34,7 +38,7 @@ interface UseClienteFormReturn {
   isConsultingCnpj: boolean;
   isConsultingCep: boolean;
   
-  // Handlers
+  // Handlers (mantidos para compatibilidade)
   handleInputChange: (field: keyof ClienteFormData, value: FormValue) => Promise<void>;
   handleSubmit: (e: React.FormEvent) => void;
   validateForm: () => boolean;
@@ -81,14 +85,48 @@ export const useClienteForm = ({
   const { success, error, info } = useNotificationContext();
   const queryClient = useQueryClient();
   
-  const [formData, setFormData] = useState<ClienteFormData>(initialFormData);
-  const [errors, setErrors] = useState<ClienteFormErrors>({});
   const [isConsultingCnpj, setIsConsultingCnpj] = useState(false);
   const [isConsultingCep, setIsConsultingCep] = useState(false);
   const [createdClienteId, setCreatedClienteId] = useState<number | null>(null);
   
   const lastCnpjConsulted = useRef<string>('');
   const lastCepConsulted = useRef<string>('');
+
+  // React Hook Form com Zod
+  const {
+    handleSubmit: rhfHandleSubmit,
+    formState: { errors: rhfErrors },
+    watch,
+    setValue,
+    reset,
+    trigger
+  } = useForm<ZodClienteFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(clienteSchema) as any,
+    defaultValues: initialFormData as ZodClienteFormData,
+    mode: 'onChange'
+  });
+
+  // Observar todos os campos para re-renderizar quando mudarem
+  const watchedValues = watch();
+  
+  // Converter dados do React Hook Form para o formato esperado pelos componentes
+  const formData = useMemo(() => {
+    return watchedValues as ClienteFormData;
+  }, [watchedValues]);
+  
+  // Converter erros do React Hook Form para o formato esperado
+  const errors: ClienteFormErrors = useMemo(() => {
+    const convertedErrors: ClienteFormErrors = {};
+    Object.keys(rhfErrors).forEach((key) => {
+      const field = key as keyof ClienteFormErrors;
+      const error = rhfErrors[field as keyof typeof rhfErrors];
+      if (error?.message) {
+        convertedErrors[field] = String(error.message);
+      }
+    });
+    return convertedErrors;
+  }, [rhfErrors]);
 
   // Buscar parâmetros para verificar se deve consultar CNPJ/CEP
   const { data: parametros } = useQuery({
@@ -138,17 +176,23 @@ export const useClienteForm = ({
       recebe_sms: cliente.recebe_sms ?? false,
       recebe_whatsapp: cliente.recebe_whatsapp ?? true,
       observacoes: cliente.observacoes || ''
-    };
+    } as ZodClienteFormData;
   }, [cliente]);
 
-  // Usar hook personalizado para reset do formulário
-  useFormReset({
-    show,
-    initialData: initialFormData,
-    setFormData,
-    setErrors,
-    customData: customFormData
-  });
+  // Resetar formulário quando modal abrir/fechar ou quando cliente carregar
+  useEffect(() => {
+    if (!show) {
+      reset(initialFormData as ZodClienteFormData);
+      setCreatedClienteId(null);
+      return;
+    }
+
+    if (isEditing && customFormData) {
+      reset(customFormData);
+    } else if (!isEditing) {
+      reset(initialFormData as ZodClienteFormData);
+    }
+  }, [show, customFormData, isEditing, reset]);
 
   // Mutation para atualizar cliente
   const updateClienteMutation = useMutation({
@@ -182,6 +226,7 @@ export const useClienteForm = ({
 
   const isSubmitting = updateClienteMutation.isPending || createClienteMutation.isPending;
 
+  // Handler de mudança de input (mantido para compatibilidade)
   const handleInputChange = async (field: keyof ClienteFormData, value: FormValue) => {
     // Aplicar formatação baseada no campo
     let formattedValue = value;
@@ -193,15 +238,13 @@ export const useClienteForm = ({
       formattedValue = formatCEP(value);
     }
 
-    setFormData(prev => ({ ...prev, [field]: formattedValue }));
+    // Atualizar React Hook Form
+    setValue(field as keyof ZodClienteFormData, formattedValue as never, { shouldValidate: true });
     
-    // Limpar erro do campo quando o usuário começar a digitar
-    if (errors[field as keyof ClienteFormErrors]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined
-      }));
-    }
+    // Trigger validação do campo (assíncrono mas não bloqueia)
+    trigger(field as keyof ZodClienteFormData).catch(() => {
+      // Ignorar erros de validação
+    });
 
     // Se o campo for CNPJ e estiver completo e válido, consultar dados
     if (field === 'cnpj' && typeof formattedValue === 'string' && !isEditing) {
@@ -229,21 +272,18 @@ export const useClienteForm = ({
               if (response.success && response.data) {
                 const dados = response.data;
                 
-                // Preencher campos automaticamente
-                setFormData(prev => ({
-                  ...prev,
-                  razao_social: dados.razao_social || prev.razao_social,
-                  nome_fantasia: dados.nome_fantasia || prev.nome_fantasia,
-                  cep: dados.cep || prev.cep,
-                  endereco: dados.endereco || prev.endereco,
-                  numero: dados.numero || prev.numero,
-                  complemento: dados.complemento || prev.complemento,
-                  bairro: dados.bairro || prev.bairro,
-                  cidade: dados.cidade || prev.cidade,
-                  estado: dados.estado || prev.estado,
-                  telefone: dados.telefone || prev.telefone,
-                  email: dados.email || prev.email
-                }));
+                // Preencher campos automaticamente usando setValue
+                setValue('razao_social', dados.razao_social || '', { shouldValidate: false });
+                setValue('nome_fantasia', dados.nome_fantasia || '', { shouldValidate: false });
+                setValue('cep', dados.cep || '', { shouldValidate: false });
+                setValue('endereco', dados.endereco || '', { shouldValidate: false });
+                setValue('numero', dados.numero || '', { shouldValidate: false });
+                setValue('complemento', dados.complemento || '', { shouldValidate: false });
+                setValue('bairro', dados.bairro || '', { shouldValidate: false });
+                setValue('cidade', dados.cidade || '', { shouldValidate: false });
+                setValue('estado', dados.estado || '', { shouldValidate: false });
+                setValue('telefone', dados.telefone || '', { shouldValidate: false });
+                setValue('email', dados.email || '', { shouldValidate: false });
 
                 success('Dados do CNPJ preenchidos automaticamente!');
               }
@@ -252,10 +292,8 @@ export const useClienteForm = ({
               const status = axiosError?.response?.status;
               
               if (status === 404) {
-                // CNPJ não encontrado na base da Receita Federal - não é erro crítico
                 info('CNPJ não encontrado na base da Receita Federal. Você pode preencher os dados manualmente.');
               } else {
-                // Outros erros (timeout, servidor, etc.)
                 const errorMessage = axiosError?.response?.data?.message || 
                                    axiosError?.response?.data?.error || 
                                    'Erro ao consultar CNPJ. Tente novamente ou preencha os dados manualmente.';
@@ -293,15 +331,12 @@ export const useClienteForm = ({
               const dados = await ClienteService.buscarCep(cepLimpo);
               
               if (dados) {
-                // Preencher campos automaticamente
-                setFormData(prev => ({
-                  ...prev,
-                  endereco: dados.logradouro || prev.endereco,
-                  bairro: dados.bairro || prev.bairro,
-                  cidade: dados.localidade || prev.cidade,
-                  estado: dados.uf || prev.estado,
-                  complemento: dados.complemento || prev.complemento
-                }));
+                // Preencher campos automaticamente usando setValue
+                setValue('endereco', dados.logradouro || '', { shouldValidate: false });
+                setValue('bairro', dados.bairro || '', { shouldValidate: false });
+                setValue('cidade', dados.localidade || '', { shouldValidate: false });
+                setValue('estado', dados.uf || '', { shouldValidate: false });
+                setValue('complemento', dados.complemento || '', { shouldValidate: false });
 
                 success('Dados do CEP preenchidos automaticamente!');
               }
@@ -325,42 +360,40 @@ export const useClienteForm = ({
     }
   };
 
+  // Validação usando React Hook Form (mantida para compatibilidade)
   const validateForm = (): boolean => {
-    const validationErrors = validateClienteForm(formData);
-    setErrors(validationErrors);
-    return Object.keys(validationErrors).length === 0;
+    return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-
-    // Preparar dados para envio com conversão de tipos correta
+  // Handler de submit usando React Hook Form
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onSubmit = (data: any) => {
+    const typedData = data as ZodClienteFormData;
+    // Preparar dados para envio
     const dataToSend: Partial<CreateCliente> = {
-      cnpj: formData.cnpj,
-      razao_social: formData.razao_social,
-      nome_fantasia: formData.nome_fantasia,
-      email: formData.email,
-      telefone: formData.telefone,
-      whatsapp: formData.whatsapp,
-      cep: formData.cep,
-      endereco: formData.endereco,
-      numero: formData.numero,
-      complemento: formData.complemento,
-      bairro: formData.bairro,
-      cidade: formData.cidade,
-      estado: formData.estado,
-      ativo: formData.ativo,
-      tipo_cobranca: formData.tipo_cobranca,
-      valor_primeiro_titulo: formData.valor_primeiro_titulo,
-      recebe_email: formData.recebe_email,
-      recebe_sms: formData.recebe_sms,
-      recebe_whatsapp: formData.recebe_whatsapp,
-      observacoes: formData.observacoes
+      cnpj: typedData.cnpj,
+      razao_social: typedData.razao_social,
+      nome_fantasia: typedData.nome_fantasia || undefined,
+      email: typedData.email,
+      telefone: typedData.telefone || undefined,
+      whatsapp: typedData.whatsapp || undefined,
+      cep: typedData.cep,
+      endereco: typedData.endereco,
+      numero: typedData.numero,
+      complemento: typedData.complemento || undefined,
+      bairro: typedData.bairro,
+      cidade: typedData.cidade,
+      estado: typedData.estado,
+      ativo: typedData.ativo,
+      tipo_cobranca: typedData.tipo_cobranca as 'titulo' | 'boleto' | 'carne',
+      valor_primeiro_titulo: typedData.valor_primeiro_titulo as 'total' | 'proporcional',
+      recebe_email: typedData.recebe_email,
+      recebe_sms: typedData.recebe_sms,
+      recebe_whatsapp: typedData.recebe_whatsapp,
+      observacoes: typedData.observacoes || undefined
     };
 
-    // Remover apenas campos undefined
+    // Remover campos undefined
     Object.keys(dataToSend).forEach(key => {
       const value = (dataToSend as Record<string, unknown>)[key];
       if (value === undefined) {
@@ -373,6 +406,13 @@ export const useClienteForm = ({
     } else {
       createClienteMutation.mutate(dataToSend);
     }
+  };
+
+  // Handler de submit mantido para compatibilidade
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rhfHandleSubmit(onSubmit as any)(e);
   };
 
   return {
@@ -390,4 +430,3 @@ export const useClienteForm = ({
     isEditing
   };
 };
-

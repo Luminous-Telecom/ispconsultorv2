@@ -46,7 +46,7 @@ export interface ClienteForm {
 export interface ClienteTabProps {
   formData: ClienteFormData;
   errors: ClienteFormErrors;
-  handleInputChange: (field: keyof ClienteFormData, value: string | number | boolean) => void;
+  handleInputChange: (field: keyof ClienteFormData, value: string | number | boolean) => void | Promise<void>;
   isSubmitting: boolean;
   formPrefix: string;
 }

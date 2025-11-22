@@ -5,6 +5,7 @@ import { FormValue } from '../../../../../types/common';
 
 const DadosBasicosTab: React.FC<ClienteTabProps> = ({
   formData,
+  errors,
   handleInputChange,
   isSubmitting,
   formPrefix
@@ -23,6 +24,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
           onChange={(value: FormValue) => handleInputChange('cnpj', value as string)}
           disabled={isSubmitting}
           formPrefix={formPrefix}
+          error={errors.cnpj}
         />
       </div>
       <div className="col-md-8">
@@ -37,6 +39,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
           onChange={(value: FormValue) => handleInputChange('razao_social', value as string)}
           disabled={isSubmitting}
           formPrefix={formPrefix}
+          error={errors.razao_social}
         />
       </div>
       <div className="col-md-6">
@@ -50,6 +53,7 @@ const DadosBasicosTab: React.FC<ClienteTabProps> = ({
           onChange={(value: FormValue) => handleInputChange('nome_fantasia', value as string)}
           disabled={isSubmitting}
           formPrefix={formPrefix}
+          error={errors.nome_fantasia}
         />
       </div>
       <div className="col-md-6">
