@@ -95,7 +95,7 @@ export const useDeleteTermoContrato = () => {
     },
     onError: (err) => {
       const axiosError = err as AxiosError<{ message: string }>;
-      console.error('Erro ao deletar termo:', axiosError);
+      // Erro tratado pelo useNotificationContext
     }
   });
 };

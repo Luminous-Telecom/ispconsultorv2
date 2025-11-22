@@ -207,7 +207,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       await deletePlanoMutation.mutateAsync(planoId);
       refetch();
     } catch (error: unknown) {
-      console.error('Erro ao excluir plano:', error);
+      // Erro tratado pelo useNotificationContext
     }
   };
 

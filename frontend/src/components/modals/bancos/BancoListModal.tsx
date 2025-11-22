@@ -164,7 +164,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       await deleteBancoMutation.mutateAsync(bancoId);
       refetch();
     } catch (error) {
-      console.error('Erro ao excluir banco:', error);
+      // Erro tratado pelo useNotificationContext
     }
   };
 

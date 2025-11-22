@@ -665,7 +665,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   successCount++;
                 } catch (err: unknown) {
                   errorCount++;
-                  console.error('Erro ao deletar serviço adicional:', err);
                   const errorMessage = extractApiErrorMessageSync(err, {
                     defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_DELETE_ERROR
                   });
