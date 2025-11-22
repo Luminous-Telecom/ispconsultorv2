@@ -402,8 +402,8 @@ export class SchedulerService {
             continue;
           }
 
-          // Buscar títulos existentes para este contrato (apenas em aberto - não pagos/não cancelados)
-          const titulosExistentes = await Titulo.findAll({
+          // Buscar títulos em aberto para contar quantos precisamos gerar
+          const titulosEmAberto = await Titulo.findAll({
             where: {
               contrato_id: contrato.id,
               status: ['pendente', 'vencido'], // Apenas títulos em aberto
@@ -411,8 +411,16 @@ export class SchedulerService {
             }
           });
 
-          // Verificar se precisa gerar mais títulos
-          const titulosGerar = quantidadeMinimaTitulos - titulosExistentes.length;
+          // Buscar TODOS os títulos (incluindo pagos) para verificar se já existe título para um mês específico
+          // Isso evita gerar novo título para um mês que já teve título gerado (mesmo que tenha sido pago)
+          const todosTitulos = await Titulo.findAll({
+            where: {
+              contrato_id: contrato.id
+            }
+          });
+
+          // Verificar se precisa gerar mais títulos (baseado apenas nos títulos em aberto)
+          const titulosGerar = quantidadeMinimaTitulos - titulosEmAberto.length;
 
           if (titulosGerar > 0) {
             // Buscar data inicial do contrato ou usar data atual
@@ -493,9 +501,10 @@ export class SchedulerService {
               // Ajustar data de vencimento baseado nos parâmetros (sábado/domingo)
               dataVencimento = await ajustarDataVencimento(dataVencimento, parametros);
 
-              // Verificar se já existe título para este mês
+              // Verificar se já existe título para este mês (incluindo pagos)
+              // Se já existe título para este mês/ano (mesmo que pago), não gerar novo
               const mesAno = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
-              const tituloExistente = titulosExistentes.find(t => {
+              const tituloExistente = todosTitulos.find(t => {
                 const dataTitulo = new Date(t.data_vencimento);
                 return `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}` === mesAno;
               });
