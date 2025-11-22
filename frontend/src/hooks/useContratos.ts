@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ContratoService } from '../services/ContratoService';
+import { ContratoService } from '../services/contratoService';
 
 export interface Contrato {
   id: number;

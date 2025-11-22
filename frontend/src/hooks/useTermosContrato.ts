@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TermoContratoService, CreateTermoContratoData, UpdateTermoContratoData } from '../services/TermoContratoService';
+import { TermoContratoService, CreateTermoContratoData, UpdateTermoContratoData } from '../services/termoContratoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
 

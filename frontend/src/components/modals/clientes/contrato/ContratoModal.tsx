@@ -6,7 +6,7 @@ import { useBancos } from '../../../../hooks/useBancos';
 import { useSelectedEntity } from '../../../../hooks/useSelectedEntity';
 import { useContratoForm } from '../../../../hooks/useContratoForm';
 import { useTermosContrato, useDeleteTermoContrato } from '../../../../hooks/useTermosContrato';
-import { TermoContrato } from '../../../../services/TermoContratoService';
+import { TermoContrato } from '../../../../services/termoContratoService';
 import { TituloService } from '../../../../services/tituloService';
 import { Titulo, Plano } from '../../../../types';
 import DraggableModal from '../../../common/DraggableModal';

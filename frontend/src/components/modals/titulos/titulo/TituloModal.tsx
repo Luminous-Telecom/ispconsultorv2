@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { TituloService } from '../../../../services/tituloService';
 import { PlanoService } from '../../../../services/planoService';
 import { ClienteService } from '../../../../services/clienteService';
-import { ContratoService } from '../../../../services/ContratoService';
+import { ContratoService } from '../../../../services/contratoService';
 import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { Contrato, Plano, CarneParcela } from '../../../../types';
 import { FormValue } from '../../../../types/common';

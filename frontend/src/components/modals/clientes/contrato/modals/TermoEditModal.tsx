@@ -1,7 +1,7 @@
 import React from 'react';
 import DraggableModal from '../../../../common/DraggableModal';
 import { useNotificationContext } from '../../../../../components/notifications/NotificationProvider';
-import { TermoContrato } from '../../../../../services/TermoContratoService';
+import { TermoContrato } from '../../../../../services/termoContratoService';
 import { useCreateTermoContrato, useUpdateTermoContrato } from '../../../../../hooks/useTermosContrato';
 import { useModelosTermo } from '../../../../../hooks/useModelosTermo';
 import { TermoFormData } from '../types';

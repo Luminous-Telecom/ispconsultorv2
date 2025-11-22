@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { ContratoService } from '../services/ContratoService';
+import { ContratoService } from '../services/contratoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { Contrato } from '../hooks/useContratos';
 import { ContratoForm } from '../components/modals/clientes/contrato/types';
