@@ -539,7 +539,7 @@ export class TituloPDFController {
       for (const titulo of titulos) {
         try {
           // Usar título já carregado com relações (otimização N+1)
-          const tituloComRelacoes = titulo as TituloComRelacoes;
+          let tituloComRelacoes = titulo as TituloComRelacoes;
           
           // Validar relações essenciais antes de continuar
           if (!tituloComRelacoes.cliente) {
