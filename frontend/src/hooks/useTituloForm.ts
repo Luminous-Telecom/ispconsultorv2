@@ -128,17 +128,6 @@ export const useTituloForm = ({
       ? new Date(titulo.data_vencimento).toISOString().split('T')[0]
       : '';
 
-    // Extrair cliente_id do título
-    const tituloWithRelations = titulo as CarneParcela & { 
-      cliente?: { id: number };
-      carne?: { cliente_id?: number; cliente?: { id: number } };
-    };
-    
-    const clienteIdFromTitulo = tituloWithRelations.cliente?.id
-      || tituloWithRelations.carne?.cliente_id
-      || tituloWithRelations.carne?.cliente?.id
-      || undefined;
-    
     return {
       plano_id: titulo.plano_id || 0,
       contrato_id: undefined, // CarneParcela não tem contrato_id
