@@ -32,7 +32,6 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
 
   // React Hook Form com Zod
   const {
-    register,
     handleSubmit: rhfHandleSubmit,
     formState: { errors },
     watch,

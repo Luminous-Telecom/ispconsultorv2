@@ -177,15 +177,13 @@ export const useBancoForm = ({
   }, [rhfErrors]);
 
   // Buscar dados do banco (apenas se estiver editando)
-  const { data: bancoResponse, isLoading: isLoadingBanco } = useQuery({
+  const { data: banco, isLoading: isLoadingBanco } = useQuery({
     queryKey: ['banco', bancoId],
     queryFn: () => BancoService.getById(bancoId!),
     enabled: isEditing && !!bancoId,
     staleTime: 60 * 1000,
     refetchOnMount: false,
   });
-
-  const banco = bancoResponse?.success ? bancoResponse.data : undefined;
 
   // Dados customizados do banco (quando editando)
   const customFormData = useMemo(() => {

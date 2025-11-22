@@ -6,7 +6,6 @@ import { useNotificationContext } from '../../../components/notifications/Notifi
 import DraggableModal from '../../common/DraggableModal';
 import { useFormPrefix } from '../../../hooks/useFormId';
 import { useBancoForm } from '../../../hooks/useBancoForm';
-import { FormValue } from '../../../types/common';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { Banco } from '../../../types';
 import { BancoForm } from './banco/types';
@@ -39,7 +38,6 @@ const BancoModal: React.FC<BancoModalProps> = ({
   // Usar dados do hook
   const formData = formHook.formData;
   const errors = formHook.errors;
-  const banco = formHook.banco;
   const isLoading = formHook.isLoadingBanco;
 
   // Estados locais para funcionalidades específicas do modal
