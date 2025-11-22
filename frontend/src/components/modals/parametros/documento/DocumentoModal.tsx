@@ -15,8 +15,8 @@ import ContratoTab from './abas/ContratoTab';
 import AdesaoTab from './abas/AdesaoTab';
 import PermanenciaTab from './abas/PermanenciaTab';
 import ConteudoTab from './abas/ConteudoTab';
+import { useCliente, useClientes } from '@/hooks/useClientes';
 import ClienteListModal from '../../clientes/ClienteListModal';
-import { useCliente, useClientes } from '../../../../hooks/useClientes';
 
 const emptyForm: DocumentoForm = {
   nome: '',
