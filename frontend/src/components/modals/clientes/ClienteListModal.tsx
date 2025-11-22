@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
+import { useTableFilters } from '../../../hooks/useTableFilters';
 import ListModal from '../../common/ListModal';
 import ClienteModal from './cliente/ClienteModal';
 import { formatDateTime } from '../../../utils/formatters';
@@ -29,12 +30,18 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   onSelectClient,
   title = "Selecionar Cliente"
 }) => {
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
+  
+  // Hook unificado para filtros, busca e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
   
   // Usar hook customizado para gerenciar seleção
   const {
@@ -129,24 +136,11 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     multiSelect: false // Sempre permitir apenas 1 seleção
   });
 
-  // Hooks para gerenciar clientes
-  // Usar useEffect para atualizar busca sem recriar o hook
-  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
-  
-  // Debounce da busca para evitar muitas requisições
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchParam(search || undefined);
-      setPage(1); // Resetar para primeira página ao buscar
-    }, 300); // 300ms de debounce
-    
-    return () => clearTimeout(timer);
-  }, [search]);
-  
+  // Hook para buscar clientes usando parâmetros do useTableFilters
   const { data: clientesData, isLoading, refetch } = useClientes({
-    search: searchParam,
-    page,
-    limit
+    search: tableFilters.debouncedSearch || undefined,
+    page: tableFilters.page,
+    limit: tableFilters.limit
   });
 
   const deleteClienteMutation = useDeleteCliente();
@@ -178,9 +172,9 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     from: clientesData.pagination.from,
     to: clientesData.pagination.to
   } : {
-    current_page: page,
+    current_page: tableFilters.page,
     last_page: 1,
-    per_page: limit,
+    per_page: tableFilters.limit,
     total: 0,
     from: 0,
     to: 0
@@ -244,12 +238,12 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
-        search={search}
-        onSearchChange={setSearch}
+        search={tableFilters.search}
+        onSearchChange={tableFilters.setSearch}
         pagination={pagination}
-        onPageChange={setPage}
-        limit={limit}
-        onLimitChange={setLimit}
+        onPageChange={tableFilters.setPage}
+        limit={tableFilters.limit}
+        onLimitChange={tableFilters.setLimit}
         refreshQueryKeys={['clientes']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}

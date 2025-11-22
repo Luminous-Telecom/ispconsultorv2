@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
+import { useTableFilters } from '../../../hooks/useTableFilters';
 import ListModal from '../../common/ListModal';
 import PlanoModal from './PlanoModal';
 import { Plano } from '../../../types';
@@ -22,13 +23,18 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   title = "Selecionar Plano"
 }) => {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [status] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
+  
+  // Hook unificado para filtros, busca e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
   
   // Usar hook customizado para gerenciar seleção
   const {
@@ -138,24 +144,11 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     multiSelect: false
   });
 
-  // Debounce da busca para evitar muitas requisições
-  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
-  
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchParam(search || undefined);
-      setPage(1); // Resetar para primeira página ao buscar
-    }, 300); // 300ms de debounce
-    
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  // Query para buscar planos no backend com paginação
+  // Hook para buscar planos usando parâmetros do useTableFilters
   const { data: planosData, isLoading, refetch } = usePlanos({
-    search: searchParam,
-    status: status || undefined,
-    page,
-    limit
+    search: tableFilters.debouncedSearch || undefined,
+    page: tableFilters.page,
+    limit: tableFilters.limit
   });
 
   const deletePlanoMutation = useDeletePlano();
@@ -276,12 +269,12 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
-        search={search}
-        onSearchChange={setSearch}
+        search={tableFilters.search}
+        onSearchChange={tableFilters.setSearch}
         pagination={pagination}
-        onPageChange={setPage}
-        limit={limit}
-        onLimitChange={setLimit}
+        onPageChange={tableFilters.setPage}
+        limit={tableFilters.limit}
+        onLimitChange={tableFilters.setLimit}
         refreshQueryKeys={['planos']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}
