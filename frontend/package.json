@@ -30,9 +30,9 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "react-scripts start",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' react-scripts build",
-    "test": "react-scripts test",
+    "dev": "craco start",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' craco build",
+    "test": "craco test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix"
@@ -56,6 +56,7 @@
     ]
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "webpack-bundle-analyzer": "^4.10.2"
   }
 }
