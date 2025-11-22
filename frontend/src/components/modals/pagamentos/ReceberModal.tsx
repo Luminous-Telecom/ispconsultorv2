@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMarcarTituloPago } from '../../../hooks/useTitulos';
 import { formatDate } from '../../../utils/formatters';
 import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
+import { receberSchema, ReceberFormData } from '../../../schemas/receber.schema';
 
 interface ReceberModalProps {
   isOpen: boolean;
@@ -25,69 +28,49 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
   parcela,
   onSuccess
 }) => {
-  const [formData, setFormData] = useState({
-    data_pagamento: new Date().toISOString().split('T')[0],
-    valor_pago: '',
-    observacoes: ''
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   const marcarPagoMutation = useMarcarTituloPago();
 
+  // React Hook Form com Zod
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    formState: { errors },
+    watch,
+    setValue,
+    reset
+  } = useForm<ReceberFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(receberSchema) as any,
+    defaultValues: {
+      data_pagamento: new Date().toISOString().split('T')[0],
+      valor_pago: '',
+      observacoes: ''
+    },
+    mode: 'onChange'
+  });
+
+  const formData = watch();
+
+  // Resetar formulário quando modal abrir
   useEffect(() => {
     if (isOpen && parcela) {
-      setFormData({
+      reset({
         data_pagamento: new Date().toISOString().split('T')[0],
         valor_pago: (parcela.valor_parcela || 0).toString(),
         observacoes: ''
       });
-      setErrors({});
     }
-  }, [isOpen, parcela]);
+  }, [isOpen, parcela, reset]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.data_pagamento) {
-      newErrors.data_pagamento = 'Data de pagamento é obrigatória';
-    } else {
-      const dataPagamento = new Date(formData.data_pagamento);
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      
-      if (dataPagamento > hoje) {
-        newErrors.data_pagamento = 'Data de pagamento não pode ser futura';
-      }
-    }
-
-    if (!formData.valor_pago) {
-      newErrors.valor_pago = 'Valor pago é obrigatório';
-    } else {
-      const valor = parseFloat(formData.valor_pago);
-      if (isNaN(valor) || valor <= 0) {
-        newErrors.valor_pago = 'Valor deve ser maior que zero';
-      }
-    }
-
-    if (formData.observacoes && formData.observacoes.length > 500) {
-      newErrors.observacoes = 'Observações devem ter no máximo 500 caracteres';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm() || !parcela) return;
+  const handleSubmit = async (data: ReceberFormData) => {
+    if (!parcela) return;
 
     try {
       await marcarPagoMutation.mutateAsync({
         id: parcela.id,
-        dataPagamento: formData.data_pagamento,
-        valorPago: parseFloat(formData.valor_pago),
-        observacoes: formData.observacoes
+        dataPagamento: data.data_pagamento,
+        valorPago: parseFloat(data.valor_pago),
+        observacoes: data.observacoes || ''
       });
 
       onSuccess?.();
@@ -96,18 +79,10 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    const normalizedValue = value ?? '';
-    setFormData(prev => ({ ...prev, [field]: normalizedValue }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
   const handleValorChange = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
     const floatValue = parseFloat(numericValue) / 100;
-    handleInputChange('valor_pago', floatValue.toFixed(2));
+    setValue('valor_pago', floatValue.toFixed(2), { shouldValidate: true });
   };
 
   if (!parcela) return null;
@@ -119,7 +94,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
       title={`Receber - Título ${parcela.numero_titulo}`}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="p-3">
+      <form onSubmit={rhfHandleSubmit(handleSubmit)} className="p-3">
         <div className="card mb-3">
           <div className="card-header py-2">
             <h6 className="mb-0">Informações da Parcela</h6>
@@ -154,8 +129,8 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                 required={true}
                 size="md"
                 value={formData.data_pagamento || ''}
-                onChange={(value) => handleInputChange('data_pagamento', String(value ?? ''))}
-                error={errors.data_pagamento}
+                onChange={(value) => setValue('data_pagamento', String(value ?? ''), { shouldValidate: true })}
+                error={errors.data_pagamento?.message}
                 isInvalid={!!errors.data_pagamento}
                 disabled={marcarPagoMutation.isPending}
               />
@@ -182,7 +157,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
                 />
                 {errors.valor_pago && (
                   <div className="invalid-feedback">
-                    {errors.valor_pago}
+                    {errors.valor_pago.message}
                   </div>
                 )}
               </div>
@@ -198,8 +173,8 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
             placeholder="Observações sobre o pagamento (opcional)"
             size="md"
             value={formData.observacoes || ''}
-            onChange={(value) => handleInputChange('observacoes', String(value ?? ''))}
-            error={errors.observacoes}
+            onChange={(value) => setValue('observacoes', String(value ?? ''), { shouldValidate: true })}
+            error={errors.observacoes?.message}
             isInvalid={!!errors.observacoes}
             disabled={marcarPagoMutation.isPending}
             rows={3}

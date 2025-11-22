@@ -180,17 +180,17 @@ const BancoModal: React.FC<BancoModalProps> = ({
         return (
           <EfiForm
             formData={formData}
-            isPending={isPending}
-            handleInputChange={handleInputChange}
+            isPending={formHook.isSubmitting}
+            handleInputChange={formHook.handleInputChange}
           />
         );
       case 'asaas':
         return (
           <AsaasForm
             formData={formData}
-            isPending={isPending}
+            isPending={formHook.isSubmitting}
             formPrefix={formPrefix}
-            handleInputChange={handleInputChange}
+            handleInputChange={formHook.handleInputChange}
             onGenerateWebhookSecret={handleGenerateWebhookSecret}
             onCopyWebhookSecret={handleCopyWebhookSecret}
             isGeneratingSecret={isGeneratingSecret}
