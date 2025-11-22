@@ -35,7 +35,7 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 - Melhor autocomplete e IntelliSense
 - Código mais fácil de manter
 
-**Nota:** Alguns usos de `any` em `csrfMiddleware.ts` são intencionais (comentados com eslint-disable) devido à tipagem incompleta do Express Session. Mensagens `'any.required'` em validadores Joi são strings literais, não tipos TypeScript.
+**Nota:** Mensagens `'any.required'` em validadores Joi são strings literais, não tipos TypeScript. Todos os usos reais de `any` foram removidos, incluindo `csrfMiddleware.ts` que agora usa interfaces específicas para CSRF e Session.
 
 **Prioridade:** 🟡 Média
 
