@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMarcarTituloPago } from '../../../hooks/useTitulos';
-import { formatDate } from '../../../utils/formatters';
+import { useMarcarTituloPago } from '@/hooks/useTitulos';
+import { formatDate } from '@/utils/formatters';
+import { receberSchema, ReceberFormData } from '@/schemas/receber.schema';
 import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
-import { receberSchema, ReceberFormData } from '../../../schemas/receber.schema';
 
 interface ReceberModalProps {
   isOpen: boolean;

@@ -1,8 +1,8 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { formatDate } from '@/utils/formatters';
+import { apiService } from '@/services/api';
 import DraggableModal from '../../common/DraggableModal';
-import { formatDate } from '../../../utils/formatters';
-import { apiService } from '../../../services/api';
 
 interface Atualizacao {
   versao: string;

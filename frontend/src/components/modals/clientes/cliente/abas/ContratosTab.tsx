@@ -1,8 +1,8 @@
 import React from 'react';
+import { Contrato } from '@/hooks/useContratos';
+import { formatDate, formatDateTime } from '@/utils/formatters';
 import Table from '../../../../tables/Table';
-import { Contrato } from '../../../../../hooks/useContratos';
 import { ContratosTabProps } from '../types';
-import { formatDate, formatDateTime } from '../../../../../utils/formatters';
 
 const ContratosTab: React.FC<ContratosTabProps> = ({
   isLoadingContratos,

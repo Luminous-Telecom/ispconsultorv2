@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useListModal } from '../../../../../hooks/useListModal';
-import { useModalSelect } from '../../../../../hooks/useModalSelect';
-import { useTableFilters } from '../../../../../hooks/useTableFilters';
+import { useListModal } from '@/hooks/useListModal';
+import { useModalSelect } from '@/hooks/useModalSelect';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { useModelosTermo } from '@/hooks/useModelosTermo';
 import ListModal from '../../../../common/ListModal';
-import { useModelosTermo } from '../../../../../hooks/useModelosTermo';
 
 interface Termo {
   id: number;

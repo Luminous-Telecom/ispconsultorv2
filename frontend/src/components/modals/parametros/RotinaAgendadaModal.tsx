@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import DraggableModal from '../../common/DraggableModal';
-import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '../../../services/schedulerService';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
-import FormField from '../../ui/FormField';
 import { AxiosError } from 'axios';
+import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '@/services/schedulerService';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import DraggableModal from '../../common/DraggableModal';
+import FormField from '../../ui/FormField';
 
 interface RotinaAgendadaModalProps {
   show: boolean;

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { BancoService } from '../../../services/bancoService';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
+import { BancoService } from '@/services/bancoService';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useFormPrefix } from '@/hooks/useFormId';
+import { useBancoForm } from '@/hooks/useBancoForm';
+import { Banco } from '@/types';
 import DraggableModal from '../../common/DraggableModal';
-import { useFormPrefix } from '../../../hooks/useFormId';
-import { useBancoForm } from '../../../hooks/useBancoForm';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
-import { Banco } from '../../../types';
 import { BancoForm } from './banco/types';
 import AsaasForm from './banco/especificos/AsaasForm';
 import EfiForm from './banco/especificos/EfiForm';

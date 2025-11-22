@@ -1,6 +1,5 @@
-import { ClienteFormData, ClienteFormErrors, TituloItem } from '../../../../types';
-import { Contrato } from '../../../../hooks/useContratos';
-import { CarneParcela } from '../../../../types';
+import { ClienteFormData, ClienteFormErrors, TituloItem, CarneParcela } from '@/types';
+import { Contrato } from '@/hooks/useContratos';
 
 export interface BulkAction<T = Record<string, unknown>> {
   key: string;

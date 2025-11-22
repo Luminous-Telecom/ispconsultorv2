@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import ListModal from '../../common/ListModal';
-import { useModalSelect } from '../../../hooks/useModalSelect';
-import { useListModal } from '../../../hooks/useListModal';
-import { useTableFilters } from '../../../hooks/useTableFilters';
-import { SchedulerService, RotinaAgendada } from '../../../services/schedulerService';
-import RotinaAgendadaModal from './RotinaAgendadaModal';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
-import { formatDateTime } from '../../../utils/formatters';
+import { useModalSelect } from '@/hooks/useModalSelect';
+import { useListModal } from '@/hooks/useListModal';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { SchedulerService, RotinaAgendada } from '@/services/schedulerService';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { formatDateTime } from '@/utils/formatters';
+import ListModal from '../../common/ListModal';
+import RotinaAgendadaModal from './RotinaAgendadaModal';
 
 interface AgendadorTarefasModalProps {
   show: boolean;

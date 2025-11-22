@@ -1,7 +1,7 @@
 import React from 'react';
+import { FormValue } from '@/types/common';
 import FormField from '../../../../ui/FormField';
 import { ClienteTabProps } from '../types';
-import { FormValue } from '../../../../../types/common';
 
 const DadosBasicosTab: React.FC<ClienteTabProps> = ({
   formData,

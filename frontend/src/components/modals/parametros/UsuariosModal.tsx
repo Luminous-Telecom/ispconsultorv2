@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { useUsuarios, useDeleteUsuario } from '../../../hooks/useUsuarios';
-import { Usuario } from '../../../types';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
+import { AxiosError } from 'axios';
+import { useUsuarios, useDeleteUsuario } from '@/hooks/useUsuarios';
+import { Usuario } from '@/types';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useSorting } from '@/hooks/useSorting';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { formatDateTime } from '@/utils/formatters';
 import DraggableModal from '../../common/DraggableModal';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import UsuarioFormModal from './UsuarioFormModal';
-import { AxiosError } from 'axios';
-import { useSorting } from '../../../hooks/useSorting';
-import { useTableFilters } from '../../../hooks/useTableFilters';
-import { formatDateTime } from '../../../utils/formatters';
 
 interface UsuariosModalProps {
   show: boolean;

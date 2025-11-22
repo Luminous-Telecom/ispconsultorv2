@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { usePlanoForm } from '@/hooks/usePlanoForm';
 import DraggableModal from '../../common/DraggableModal';
 import { InformacoesBasicasTab, DescontosConfiguracoesTab, ServicosObservacoesTab } from './plano';
-import { usePlanoForm } from '../../../hooks/usePlanoForm';
 
 interface PlanoModalProps {
   show: boolean;

@@ -1,10 +1,10 @@
 import React from 'react';
+import { Plano, Banco, PaginatedResponse } from '@/types';
+import { FormValue } from '@/types/common';
+import { DocumentoSistema } from '@/services/documentoSistemaService';
+import { DiasVencimento } from '@/services/diasVencimentoService';
 import FormField from '../../../../ui/FormField';
 import EntitySelectField from '../../../../../components/ui/EntitySelectField';
-import { Plano, Banco, PaginatedResponse } from '../../../../../types';
-import { DocumentoSistema } from '../../../../../services/documentoSistemaService';
-import { DiasVencimento } from '../../../../../services/diasVencimentoService';
-import { FormValue } from '../../../../../types/common';
 
 interface ContratoForm {
   plano_id: number;
