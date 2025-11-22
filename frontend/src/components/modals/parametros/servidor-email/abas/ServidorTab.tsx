@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, Checkbox } from '../../../../ui';
+import { FormField, Checkbox } from '@/components/ui';
 import { ServidorTabProps } from '../types';
 
 const ServidorTab: React.FC<ServidorTabProps> = ({

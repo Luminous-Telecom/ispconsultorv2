@@ -1,6 +1,6 @@
 import React from 'react';
-import { FormField } from '../../../../ui';
-import RichTextEditor from '../../../../common/RichTextEditor';
+import { FormField } from '@/components/ui';
+import RichTextEditor from '@/components/common/RichTextEditor';
 import { MensagensTabProps } from '../types';
 
 const MensagensTab: React.FC<MensagensTabProps> = ({

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
-import AddressFields from '../../../../forms/AddressFields';
+import AddressFields from '@/components/forms/AddressFields';
 import { ClienteTabProps } from '../types';
 
 const EnderecoTab: React.FC<ClienteTabProps> = ({

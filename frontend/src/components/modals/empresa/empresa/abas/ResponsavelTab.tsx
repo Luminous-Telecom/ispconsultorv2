@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCPF } from '@/utils/formatters';
-import { FormField } from '../../../../ui';
+import { FormField } from '@/components/ui';
 import { DadosEmpresaTabProps } from '../types';
 
 const ResponsavelTab: React.FC<DadosEmpresaTabProps> = ({

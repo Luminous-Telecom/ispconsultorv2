@@ -4,9 +4,9 @@ import { ContratoPlanoAdicional, CreateContratoPlanoAdicional, UpdateContratoPla
 import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from '@/hooks/useContratoPlanosAdicionais';
 import { usePlanos } from '@/hooks/usePlanos';
 import { Plano } from '@/types/entities';
-import DraggableModal from '../../../../common/DraggableModal';
-import FormField from '../../../../ui/FormField';
-import EntitySelectField from '../../../../ui/EntitySelectField';
+import DraggableModal from '@/components/common/DraggableModal';
+import FormField from '@/components/ui/FormField';
+import EntitySelectField from '@/components/ui/EntitySelectField';
 import PlanoListModal from '../../../planos/PlanoListModal';
 
 interface ServicoAdicionalModalProps {

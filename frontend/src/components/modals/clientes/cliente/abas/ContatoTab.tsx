@@ -1,7 +1,7 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
-import FormField from '../../../../ui/FormField';
-import ContactFields from '../../../../forms/ContactFields';
+import FormField from '@/components/ui/FormField';
+import ContactFields from '@/components/forms/ContactFields';
 import { ClienteTabProps } from '../types';
 
 const ContatoTab: React.FC<ClienteTabProps> = ({

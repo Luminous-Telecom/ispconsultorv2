@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCNPJ } from '@/utils/formatters';
-import { FormField } from '../../../../ui';
+import { FormField } from '@/components/ui';
 import { DadosEmpresaTabProps } from '../types';
 
 const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: File | null) => void }> = ({

@@ -1,5 +1,5 @@
 import React from 'react';
-import FormField from '../../../../ui/FormField';
+import FormField from '@/components/ui/FormField';
 import { BancoTabProps } from '../types';
 
 const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({

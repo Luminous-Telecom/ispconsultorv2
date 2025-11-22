@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FormField } from '../../../../ui';
+import { FormField } from '@/components/ui';
 import { MensagensTabProps } from '../types';
 
 const MensagensTab: React.FC<MensagensTabProps> = ({
