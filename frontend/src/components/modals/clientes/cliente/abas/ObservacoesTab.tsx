@@ -3,6 +3,7 @@ import { ClienteTabProps } from '../types';
 
 const ObservacoesTab: React.FC<ClienteTabProps> = ({
   formData,
+  errors,
   handleInputChange,
   formPrefix
 }) => {
@@ -12,7 +13,7 @@ const ObservacoesTab: React.FC<ClienteTabProps> = ({
         <div className="mb-3">
           <label htmlFor={`${formPrefix}-observacoes`} className="form-label">Observações</label>
           <textarea
-            className="form-control"
+            className={`form-control ${errors.observacoes ? 'is-invalid' : ''}`}
             id={`${formPrefix}-observacoes`}
             name="observacoes"
             rows={8}
@@ -20,6 +21,11 @@ const ObservacoesTab: React.FC<ClienteTabProps> = ({
             onChange={(e) => handleInputChange('observacoes', e.target.value)}
             placeholder="Observações sobre o cliente..."
           />
+          {errors.observacoes && (
+            <div className="invalid-feedback">
+              {errors.observacoes}
+            </div>
+          )}
         </div>
       </div>
     </div>

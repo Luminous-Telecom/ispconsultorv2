@@ -57,6 +57,7 @@ export interface ClienteFormErrors {
   endereco?: string;
   cidade?: string;
   estado?: string;
+  observacoes?: string;
 }
 
 /**
