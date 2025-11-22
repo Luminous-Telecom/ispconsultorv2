@@ -236,20 +236,18 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       render: (item: Titulo) => <span>{item.id}</span>
     },
     {
-      key: 'numero_titulo',
-      label: 'Número',
+      key: 'contrato_id',
+      label: 'Contrato',
       sortable: true,
       searchable: true,
-      render: (item: Titulo) => <div className="fw-bold">{item.numero_titulo}</div>
+      render: (item: Titulo) => item.contrato_id || '-'
     },
     {
-      key: 'cliente_razao_social',
-      label: 'Cliente',
+      key: 'status',
+      label: 'Status',
       sortable: true,
       searchable: true,
-      render: (item: Titulo) => (
-        <div>{item.cliente?.razao_social || item.cliente?.nome_fantasia || '-'}</div>
-      )
+      render: (item: Titulo) => getStatusBadge(item.status)
     },
     {
       key: 'plano_nome',
@@ -259,18 +257,11 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       render: (item: Titulo) => item.plano?.nome_plano || '-'
     },
     {
-      key: 'valor',
-      label: 'Valor',
+      key: 'numero_titulo',
+      label: 'Nº Título',
       sortable: true,
-      searchable: false,
-      render: (item: Titulo) => formatCurrency(item.valor_final || item.valor)
-    },
-    {
-      key: 'valor_pago',
-      label: 'Valor Pago',
-      sortable: true,
-      searchable: false,
-      render: (item: Titulo) => formatCurrency(item.valor_pago)
+      searchable: true,
+      render: (item: Titulo) => <div className="fw-bold">{item.numero_titulo || '-'}</div>
     },
     {
       key: 'data_vencimento',
@@ -280,8 +271,33 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       render: (item: Titulo) => formatDate(item.data_vencimento)
     },
     {
+      key: 'valor',
+      label: 'Valor',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => formatCurrency(item.valor_final || item.valor)
+    },
+    {
+      key: 'valor_pago',
+      label: 'Valor baixado',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => {
+        return item.status === 'pago' ? formatCurrency(item.valor_pago || item.valor || 0) : formatCurrency(0);
+      }
+    },
+    {
+      key: 'valor_aberto',
+      label: 'Valor aberto',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => {
+        return (item.status === 'pago' || item.status === 'cancelado') ? formatCurrency(0) : formatCurrency(item.valor_final || item.valor || 0);
+      }
+    },
+    {
       key: 'data_pagamento',
-      label: 'Pagamento',
+      label: 'Data Pagamento',
       sortable: true,
       searchable: false,
       render: (item: Titulo) => {
@@ -294,11 +310,18 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       }
     },
     {
-      key: 'status',
-      label: 'Status',
+      key: 'charge_id',
+      label: 'Charge ID',
       sortable: true,
       searchable: true,
-      render: (item: Titulo) => getStatusBadge(item.status)
+      render: (item: Titulo) => item.charge_id || '-'
+    },
+    {
+      key: 'nosso_numero',
+      label: 'Nosso Número',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.nosso_numero || '-'
     },
     {
       key: 'created_at',
