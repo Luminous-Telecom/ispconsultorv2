@@ -130,9 +130,15 @@ export class RoutineExecutionService {
         ]
       });
 
-      // Otimização N+1: Buscar todos os títulos de uma vez antes do loop
+      // Otimização N+1: Buscar todos os dados relacionados de uma vez antes do loop
       const contratoIds = contratos.map(c => c.id);
-      const [titulosEmAbertoTodos, todosTitulosTodos] = await Promise.all([
+      
+      // Coletar IDs únicos de dia_vencimento_id dos contratos válidos
+      const diaVencimentoIds = contratos
+        .map(c => (c as unknown as ContratoWithCliente).dia_vencimento_id)
+        .filter((id): id is number => id !== null && id !== undefined);
+      
+      const [titulosEmAbertoTodos, todosTitulosTodos, diasVencimentoTodos, servicosAdicionaisTodos] = await Promise.all([
         // Buscar todos os títulos em aberto de todos os contratos
         Titulo.findAll({
           where: {
@@ -148,27 +154,71 @@ export class RoutineExecutionService {
             contrato_id: { [Op.in]: contratoIds }
           },
           attributes: ['id', 'contrato_id', 'data_vencimento']
+        }),
+        // Buscar todas as configurações de dia de vencimento de uma vez
+        DiasVencimento.findAll({
+          where: {
+            id: { [Op.in]: diaVencimentoIds }
+          },
+          attributes: ['id', 'dia']
+        }),
+        // Buscar todos os serviços adicionais ativos de todos os contratos
+        ContratoPlanoAdicional.findAll({
+          where: {
+            contrato_id: { [Op.in]: contratoIds },
+            status: 'ativo'
+          },
+          include: [
+            {
+              model: Plano,
+              as: 'plano',
+              attributes: ['id', 'nome_plano', 'valor_mensal']
+            }
+          ],
+          attributes: ['id', 'contrato_id', 'status']
         })
       ]);
 
       // Agrupar títulos por contrato_id para acesso rápido
-      const titulosEmAbertoPorContrato = new Map<number, typeof titulosEmAbertoTodos>();
-      const todosTitulosPorContrato = new Map<number, typeof todosTitulosTodos>();
+      const titulosEmAbertoPorContrato = new Map<number, Array<typeof titulosEmAbertoTodos[0]>>();
+      const todosTitulosPorContrato = new Map<number, Array<typeof todosTitulosTodos[0]>>();
+      const diasVencimentoPorId = new Map<number, typeof diasVencimentoTodos[0]>();
+      const servicosAdicionaisPorContrato = new Map<number, Array<typeof servicosAdicionaisTodos[0]>>();
 
       titulosEmAbertoTodos.forEach(titulo => {
         const contratoId = titulo.contrato_id;
-        if (!titulosEmAbertoPorContrato.has(contratoId)) {
-          titulosEmAbertoPorContrato.set(contratoId, []);
+        if (contratoId !== null && contratoId !== undefined) {
+          if (!titulosEmAbertoPorContrato.has(contratoId)) {
+            titulosEmAbertoPorContrato.set(contratoId, []);
+          }
+          titulosEmAbertoPorContrato.get(contratoId)!.push(titulo);
         }
-        titulosEmAbertoPorContrato.get(contratoId)!.push(titulo);
       });
 
       todosTitulosTodos.forEach(titulo => {
         const contratoId = titulo.contrato_id;
-        if (!todosTitulosPorContrato.has(contratoId)) {
-          todosTitulosPorContrato.set(contratoId, []);
+        if (contratoId !== null && contratoId !== undefined) {
+          if (!todosTitulosPorContrato.has(contratoId)) {
+            todosTitulosPorContrato.set(contratoId, []);
+          }
+          todosTitulosPorContrato.get(contratoId)!.push(titulo);
         }
-        todosTitulosPorContrato.get(contratoId)!.push(titulo);
+      });
+
+      // Agrupar dias de vencimento por ID
+      diasVencimentoTodos.forEach(diaVenc => {
+        diasVencimentoPorId.set(diaVenc.id, diaVenc);
+      });
+
+      // Agrupar serviços adicionais por contrato_id
+      servicosAdicionaisTodos.forEach(servico => {
+        const contratoId = servico.contrato_id;
+        if (contratoId !== null && contratoId !== undefined) {
+          if (!servicosAdicionaisPorContrato.has(contratoId)) {
+            servicosAdicionaisPorContrato.set(contratoId, []);
+          }
+          servicosAdicionaisPorContrato.get(contratoId)!.push(servico);
+        }
       });
 
       let titulosGerados = 0;
@@ -211,8 +261,8 @@ export class RoutineExecutionService {
               dataInicioContrato.setHours(0, 0, 0, 0);
             }
             
-            // Buscar configuração de dia de vencimento (já validado que não é null)
-            const diaVencimentoConfig = await DiasVencimento.findByPk(contratoValidado.dia_vencimento_id);
+            // Usar configuração de dia de vencimento já carregada (otimização N+1)
+            const diaVencimentoConfig = diasVencimentoPorId.get(contratoValidado.dia_vencimento_id);
             const diaVencimento = diaVencimentoConfig?.dia || 15;
 
             // Começar sempre do mês atual (não do próximo mês)
@@ -273,8 +323,11 @@ export class RoutineExecutionService {
                 if (podeGerar) {
                   // Calcular valor do título incluindo serviços adicionais
                   const contratoWithPlano = contratoValidado as unknown as ContratoWithPlano;
+                  // Usar serviços adicionais já carregados (otimização N+1)
+                  const servicosAdicionais = servicosAdicionaisPorContrato.get(contratoValidado.id) || [];
                   const valorTitulo = await this.calculateValorTitulo(
                     contratoWithPlano,
+                    servicosAdicionais,
                     transaction
                   );
                   
@@ -452,11 +505,13 @@ export class RoutineExecutionService {
   /**
    * Calcula o valor do título incluindo serviços adicionais
    * @param contrato - Contrato com plano
-   * @param transaction - Transação do banco de dados
+   * @param servicosAdicionais - Serviços adicionais já carregados (otimização N+1)
+   * @param transaction - Transação do banco de dados (mantido para compatibilidade)
    * @returns Valor total do título
    */
   private async calculateValorTitulo(
     contrato: ContratoWithPlano,
+    servicosAdicionais: Array<ContratoPlanoAdicional & { plano?: { valor_mensal: number } }>,
     transaction: Transaction
   ): Promise<number> {
     const plano = contrato.plano;
@@ -478,22 +533,7 @@ export class RoutineExecutionService {
     }
 
     // Somar valores dos serviços adicionais ativos do contrato
-    // Buscar serviços dentro da transação para garantir consistência
-    const { Plano: PlanoModel } = await import('../models/Plano');
-    const servicosAdicionais = await ContratoPlanoAdicional.findAll({
-      where: {
-        contrato_id: contrato.id,
-        status: 'ativo'
-      },
-      include: [
-        {
-          model: PlanoModel,
-          as: 'plano',
-          attributes: ['id', 'nome_plano', 'valor_mensal']
-        }
-      ],
-      transaction
-    });
+    // Usar serviços já carregados (otimização N+1)
 
     let valorServicosAdicionais = 0;
     for (const servico of servicosAdicionais) {
