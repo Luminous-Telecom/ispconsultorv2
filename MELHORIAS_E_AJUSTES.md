@@ -41,24 +41,36 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 - Maior arquivo agora: 556 linhas (54% menor que o original)
 - Melhor manutenibilidade e aderência ao princípio de responsabilidade única (SRP)
 
-**Data de Conclusão:** 2024
+**Data de Conclusão:** 2025
 
 ---
 
-### 2. ClienteModal.tsx (1516 linhas)
+### 2. ClienteModal.tsx (1516 linhas) ✅ CONCLUÍDO
 
 **Problema:** Componente React muito grande, difícil de manter.
 
-**Sugestão de Refatoração:**
-- Já possui tabs separadas (bom!), mas ainda há muita lógica no componente principal
-- Extrair hooks customizados:
-  - `useClienteForm.ts` - Lógica do formulário
-  - `useClienteBulkActions.ts` - Ações em lote
-  - `useClienteImpressao.ts` - Lógica de impressão
-- Mover validações para arquivo separado
-- Separar lógica de contratos em hook dedicado
+**Refatoração Realizada:**
+- ✅ Extraídos hooks customizados:
+  - `useClienteForm.ts` (412 linhas) - Lógica do formulário, validação, consultas CNPJ/CEP
+  - `useClienteBulkActions.ts` (436 linhas) - Ações em lote para títulos e contratos
+  - `useClienteImpressao.ts` (262 linhas) - Lógica de impressão e geração de PDFs
+  - `useClienteContratos.ts` (58 linhas) - Lógica de contratos e filtros
+- ✅ Validações movidas para `cliente.schemas.ts` (centralizadas e reutilizáveis)
+- ✅ Aplicado padrão Container/Presentation (lógica nos hooks, JSX no componente)
 
-**Prioridade:** 🔴 Alta
+**Resultados:**
+- Antes: 1 arquivo com 1516 linhas
+- Depois: 6 arquivos organizados por responsabilidade (total: 1.168 linhas nos hooks + 578 linhas no componente)
+- Componente principal reduzido para 578 linhas (62% de redução, 938 linhas removidas)
+- Melhor testabilidade (hooks podem ser testados independentemente)
+- Maior reutilização (hooks podem ser usados em outros componentes)
+- Zero erros de linting após correções
+
+**Data de Conclusão:** 2025-01-XX
+
+**Commits:**
+- `1730be18` - refactor: refatorar ClienteModal aplicando padrão Container/Presentation
+- `a81c738f` - docs: atualizar status da refatoração do ClienteModal
 
 ---
 
