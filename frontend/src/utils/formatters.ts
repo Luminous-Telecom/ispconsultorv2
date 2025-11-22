@@ -24,43 +24,16 @@ export const formatDate = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
-    let resultado: string;
-    
     if (typeof date === 'string') {
-      // Se for string ISO com hora (ex: 2026-02-15T03:00:00.000Z), extrair apenas a data
-      // Isso evita problemas de timezone - sempre mostra a data que está na string
-      if (date.includes('T')) {
-        const datePart = date.split('T')[0]; // Pega apenas YYYY-MM-DD
-        const [year, month, day] = datePart.split('-').map(Number);
-        // Criar data local (sem conversão de timezone) para garantir que mostre a data correta
-        const localDate = new Date(year, month - 1, day);
-        resultado = localDate.toLocaleDateString('pt-BR');
-      } else if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        // Se for apenas YYYY-MM-DD, criar data local diretamente
-        const [year, month, day] = date.split('-').map(Number);
-        const localDate = new Date(year, month - 1, day);
-        resultado = localDate.toLocaleDateString('pt-BR');
-      } else {
-        // Outros formatos, tentar criar Date normalmente
-        const d = new Date(date);
-        if (isNaN(d.getTime())) return '-';
-        // Para outros formatos, também extrair apenas a data para evitar problemas de timezone
-        const year = d.getFullYear();
-        const month = d.getMonth();
-        const day = d.getDate();
-        resultado = new Date(year, month, day).toLocaleDateString('pt-BR');
+      const datePart = date.split('T')[0];
+      const [year, month, day] = datePart.split('-').map(Number);
+      if (year && month && day) {
+        return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
       }
+      return '-';
     } else {
-      // Se for Date object, extrair apenas ano, mês e dia para criar data local
-      // Isso garante que sempre mostra a data correta, independente do timezone
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      const day = date.getDate();
-      const localDate = new Date(year, month, day);
-      resultado = localDate.toLocaleDateString('pt-BR');
+      return date.toLocaleDateString('pt-BR');
     }
-    
-    return resultado;
   } catch {
     return '-';
   }
@@ -69,43 +42,28 @@ export const formatDate = (date: string | Date): string => {
 /**
  * Formata uma data e hora para o padrão brasileiro
  * @param date - Data como string ou objeto Date
- * @returns String formatada como dd/mm/aaaa hh:mm
+ * @returns String formatada como dd/mm/aaaa hh:mm:ss
  */
 export const formatDateTime = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
-    let dateStr = date;
-    let d: Date;
-    
-    if (typeof date === 'string' && date.includes('T')) {
-      // Se for string ISO UTC (termina com Z), verificar se precisa ajustar
-      if (date.endsWith('Z')) {
-        const tempDate = new Date(date);
-        const hours = tempDate.getUTCHours();
-        
-        // Se a hora UTC for 03:xx, provavelmente é uma data local convertida para UTC
-        // Subtrair 3 horas para obter o horário local real
-        if (hours >= 3 && hours < 6) {
-          d = new Date(tempDate.getTime() - (3 * 60 * 60 * 1000));
-        } else {
-          d = tempDate;
-        }
-      } else if ((date.includes('T') || date.includes(' ')) && !date.includes('+') && !date.match(/-\d\d:?\d\d$/)) {
-        // Se não tem timezone, assumir UTC e adicionar Z
-        dateStr = `${date}Z`;
-        d = new Date(dateStr);
-      } else {
-        d = new Date(date);
+    if (typeof date === 'string') {
+      const match = date.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
+      if (match) {
+        const [, year, month, day, hour, minute, second] = match;
+        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
       }
+      return '-';
     } else {
-      d = new Date(date);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      const second = String(date.getSeconds()).padStart(2, '0');
+      return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
     }
-    
-    if (isNaN(d.getTime())) return '-';
-    
-    // Para DateTime completo, geralmente queremos a conversão para o horário local do usuário
-    return d.toLocaleString('pt-BR');
   } catch {
     return '-';
   }

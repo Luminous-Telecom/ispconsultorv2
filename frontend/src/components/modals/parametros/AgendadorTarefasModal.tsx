@@ -7,6 +7,7 @@ import { SchedulerService, RotinaAgendada } from '../../../services/schedulerSer
 import RotinaAgendadaModal from './RotinaAgendadaModal';
 import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import { AxiosError } from 'axios';
+import { formatDateTime } from '../../../utils/formatters';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -61,7 +62,7 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       {
         key: 'proxima_execucao',
         label: 'Próxima Execução',
-        render: (item: RotinaAgendada) => item.proxima_execucao ? new Date(item.proxima_execucao).toLocaleString('pt-BR') : '-'
+        render: (item: RotinaAgendada) => item.proxima_execucao ? formatDateTime(item.proxima_execucao) : '-'
       },
       {
         key: 'ativo',

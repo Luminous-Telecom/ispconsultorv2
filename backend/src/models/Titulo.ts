@@ -371,20 +371,18 @@ export class Titulo extends Model<
   }
 
   /**
-   * Formata data de pagamento para exibição (lê exatamente como está no banco)
-   * Usa componentes UTC do Date para preservar o valor original do banco
+   * Formata data de pagamento para exibição
    */
   getDataPagamentoFormatada(): string | null {
     if (!this.data_pagamento) return null;
     
     try {
-      const dateValue = this.getDataValue('data_pagamento');
+      const dateValue: unknown = this.getDataValue('data_pagamento');
       if (!dateValue) return null;
       
-      // Se for string, formatar diretamente
+      // Se for string, extrair componentes diretamente
       if (typeof dateValue === 'string') {
-        const dateStr = String(dateValue);
-        const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
+        const match = dateValue.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
         if (match) {
           const [, year, month, day, hour, minute, second] = match;
           return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
@@ -392,14 +390,14 @@ export class Titulo extends Model<
         return null;
       }
       
-      // Se for Date, usar componentes UTC (preserva valor do banco)
+      // Se for Date, usar componentes locais
       if (dateValue instanceof Date) {
-        const day = String(dateValue.getUTCDate()).padStart(2, '0');
-        const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
-        const year = dateValue.getUTCFullYear();
-        const hour = String(dateValue.getUTCHours()).padStart(2, '0');
-        const minute = String(dateValue.getUTCMinutes()).padStart(2, '0');
-        const second = String(dateValue.getUTCSeconds()).padStart(2, '0');
+        const day = String(dateValue.getDate()).padStart(2, '0');
+        const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+        const year = dateValue.getFullYear();
+        const hour = String(dateValue.getHours()).padStart(2, '0');
+        const minute = String(dateValue.getMinutes()).padStart(2, '0');
+        const second = String(dateValue.getSeconds()).padStart(2, '0');
         
         return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
       }

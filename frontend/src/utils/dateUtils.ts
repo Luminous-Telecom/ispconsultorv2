@@ -54,18 +54,30 @@ export const toBrazilianDate = (date: string | Date | null | undefined): string 
 };
 
 /**
- * Converte uma data para o formato brasileiro com hora (DD/MM/YYYY HH:MM)
+ * Converte uma data para o formato brasileiro com hora (DD/MM/YYYY HH:MM:SS)
  * @param date - Data como string, Date ou null/undefined
- * @returns String formatada como dd/mm/aaaa hh:mm ou '-'
+ * @returns String formatada como dd/mm/aaaa hh:mm:ss ou '-'
  */
 export const toBrazilianDateTime = (date: string | Date | null | undefined): string => {
   if (!date) return '-';
   
   try {
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '-';
-    
-    return d.toLocaleString('pt-BR');
+    if (typeof date === 'string') {
+      const match = date.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
+      if (match) {
+        const [, year, month, day, hour, minute, second] = match;
+        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+      }
+      return '-';
+    } else {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      const second = String(date.getSeconds()).padStart(2, '0');
+      return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+    }
   } catch {
     return '-';
   }

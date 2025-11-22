@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
 import { API_CONFIG } from '../../config/api';
+import { formatDateTime } from '../../utils/formatters';
 
 interface LogsModalProps {
   show: boolean;
@@ -126,7 +127,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
       const statusMatch = log.status.toLowerCase().includes(searchLower);
       const errorMatch = log.erro?.toLowerCase().includes(searchLower) || false;
       const resultMatch = log.resultado?.toLowerCase().includes(searchLower) || false;
-      const dateMatch = log.data_inicio ? new Date(log.data_inicio).toLocaleString('pt-BR').includes(search) : false;
+      const dateMatch = log.data_inicio ? formatDateTime(log.data_inicio).includes(search) : false;
       
       return statusMatch || errorMatch || resultMatch || dateMatch;
     });
@@ -211,7 +212,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
                   key: 'data_inicio',
                   label: 'Data/Hora',
                   sortable: true,
-                  render: (log: LogEntry) => log.data_inicio ? new Date(log.data_inicio).toLocaleString('pt-BR') : '-'
+                  render: (log: LogEntry) => log.data_inicio ? formatDateTime(log.data_inicio) : '-'
                 },
                 {
                   key: 'duracao_ms',
