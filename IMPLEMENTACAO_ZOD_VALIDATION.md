@@ -119,18 +119,16 @@ const onSubmit = (data: ClienteFormData) => {
 - ✅ Gerencia criação e atualização de contrato
 - ✅ Mantém compatibilidade com termos, títulos e serviços adicionais
 
-### 4. Schemas para Outras Entidades - CRIADOS ✅
-
-#### `frontend/src/schemas/titulo.schema.ts` ✅
-- ✅ Schema completo para validação de Títulos
-- ✅ Validações para valores, descontos e acréscimos
-- ✅ Validação de datas e status
-- ✅ Tipos TypeScript inferidos
-- ⏳ Aguardando refatoração do formulário
+### 4. Título - COMPLETO ✅
+- ✅ `useTituloForm.ts` criado e refatorado com React Hook Form + Zod
+- ✅ `TituloModal.tsx` refatorado para usar o novo hook
+- ✅ Schema completo e funcional
+- ✅ Validação em tempo real implementada
+- ✅ Gerencia criação e atualização de título
+- ✅ Mantém preenchimento automático com dados do contrato
 
 **Status:** 
-- ✅ Cliente, Plano e Contrato completamente refatorados
-- ⏳ Título tem schema pronto, aguardando refatoração do formulário
+- ✅ Cliente, Plano, Contrato e Título completamente refatorados
 
 ## 📚 Documentação Adicional
 
@@ -232,12 +230,18 @@ const MyForm = () => {
 
 **Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA CONTRATO**
 
-### Outras Entidades - SCHEMAS CRIADOS ✅
+### Título - COMPLETO ✅
 - [x] Criar `titulo.schema.ts` com validações completas
+- [x] Criar `useTituloForm.ts` com React Hook Form + Zod
+- [x] Refatorar `TituloModal.tsx` para usar o novo hook
+- [x] Remover validação manual duplicada
+- [x] Implementar validação em tempo real
+- [x] Gerenciar criação e atualização de título
+- [x] Manter preenchimento automático com dados do contrato
 
-**Status:** ✅ **SCHEMAS CRIADOS E PRONTOS PARA USO**
+**Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA TÍTULO**
 
-**Próximo Passo:** Refatorar formulário de Título para usar React Hook Form + Zod (opcional)
+**Status Geral:** ✅ **TODAS AS ENTIDADES PRINCIPAIS REFATORADAS**
 
 ## 🎯 Próximas Implementações (Opcional)
 
