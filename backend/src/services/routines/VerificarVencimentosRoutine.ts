@@ -38,12 +38,14 @@ export class VerificarVencimentosRoutine implements IRoutine {
           await titulo.marcarComoVencida();
           titulosMarcadosVencidos++;
 
+          // Usar dados já carregados via include (otimização N+1)
+          const tituloComRelacoes = titulo as unknown as { cliente?: { razao_social?: string }; plano?: { nome_plano?: string } };
           logger.info('Título marcado como vencido', {
             titulo_id: titulo.id,
             numero_titulo: titulo.numero_titulo,
             data_vencimento: titulo.data_vencimento,
-            cliente: titulo.getCliente ? (await titulo.getCliente())?.razao_social : 'N/A',
-            plano: titulo.getPlano ? (await titulo.getPlano())?.nome_plano : 'N/A'
+            cliente: tituloComRelacoes.cliente?.razao_social || 'N/A',
+            plano: tituloComRelacoes.plano?.nome_plano || 'N/A'
           });
 
         } catch (error) {
