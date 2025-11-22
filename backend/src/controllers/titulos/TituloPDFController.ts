@@ -13,7 +13,7 @@ import type { PdfOptions } from 'html-pdf-node';
 import { DadosEmpresa } from '../../models/DadosEmpresa';
 import { BarcodeService } from '../../services/BarcodeService';
 import { BancoApiService } from '../../services/BancoApiService';
-import { parseDateFromDb } from '../../utils/dateUtils';
+import { parseDateFromDb, formatDate } from '../../utils/dateUtils';
 import { TituloComRelacoes } from './types';
 import { converterLogoParaBase64, getLogoBancoPadrao, processarInstrucao } from './TituloHelpers';
 
@@ -85,8 +85,8 @@ export class TituloPDFController {
       }
 
       // Preparar variáveis para o template
-      const dataVencimento = parseDateFromDb(titulo.data_vencimento)?.toLocaleDateString('pt-BR') || '';
-      const dataProcessamento = new Date().toLocaleDateString('pt-BR');
+      const dataVencimento = formatDate(parseDateFromDb(titulo.data_vencimento)) || '';
+      const dataProcessamento = formatDate(new Date()) || '';
       const valorBoleto = Number(titulo.valor || 0).toFixed(2).replace('.', ',');
       
       // Carregar templates

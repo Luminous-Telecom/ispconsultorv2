@@ -10,6 +10,7 @@ import { Usuario } from '../models/Usuario';
 import { TituloPDFController } from './titulos/TituloPDFController';
 import { TituloComRelacoes } from './titulos/types';
 import { logger } from '../utils/logger';
+import { formatDateISO } from '../utils/dateUtils';
 import crypto from 'crypto';
 
 // Armazenamento temporário de PDFs em memória
@@ -727,7 +728,7 @@ export class IntegrationWebhookController {
           id: termo.id,
           tipo: termo.tipo_termo,
           assinado: termo.assinado === 'SIM',
-          dataAceite: IntegrationWebhookController.formatDate(termo.data_aceite),
+          dataAceite: formatDateISO(termo.data_aceite),
           observacoes: termo.observacoes,
           modelo: termo.modeloDocumento
             ? {
@@ -743,8 +744,8 @@ export class IntegrationWebhookController {
           id: contrato.id,
           status: contrato.status,
           valorFinal,
-          dataInicio: IntegrationWebhookController.formatDate(contrato.data_inicio),
-          dataFim: IntegrationWebhookController.formatDate(contrato.data_fim),
+          dataInicio: formatDateISO(contrato.data_inicio),
+          dataFim: formatDateISO(contrato.data_fim),
           observacoes: contrato.observacoes,
           plano,
           termos
@@ -798,8 +799,8 @@ export class IntegrationWebhookController {
           numero: titulo.numero_titulo,
           valor,
           status: titulo.status,
-          dataVencimento: IntegrationWebhookController.formatDate(titulo.data_vencimento) ?? '',
-          dataPagamento: IntegrationWebhookController.formatDate(titulo.data_pagamento),
+          dataVencimento: formatDateISO(titulo.data_vencimento) ?? '',
+          dataPagamento: formatDateISO(titulo.data_pagamento),
           valorPago,
           valorAberto,
           descricao: titulo.descricao,
@@ -835,8 +836,8 @@ export class IntegrationWebhookController {
         razaoSocial: raw.razao_social,
         nomeFantasia: raw.nome_fantasia,
         status: raw.ativo ? 'ativo' : 'inativo',
-        cadastradoEm: IntegrationWebhookController.formatDate(raw.created_at) ?? undefined,
-        atualizadoEm: IntegrationWebhookController.formatDate(raw.updated_at) ?? undefined,
+        cadastradoEm: formatDateISO(raw.created_at) ?? undefined,
+        atualizadoEm: formatDateISO(raw.updated_at) ?? undefined,
         contatos: {
           email: raw.email,
           telefone: raw.telefone,
@@ -924,18 +925,6 @@ export class IntegrationWebhookController {
     return parsed;
   }
 
-  private static formatDate(value: string | Date | null | undefined): string | null {
-    if (!value) {
-      return null;
-    }
-
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-
-    return date.toISOString();
-  }
 
   private static async handleTituloGet(payload: IntegrationTituloPayload | undefined, req: Request, res: Response): Promise<void> {
     try {
@@ -1083,7 +1072,7 @@ export class IntegrationWebhookController {
           } else if (normalizedField === 'status') {
             filteredData.status = tituloData.status;
           } else if (normalizedField === 'data_vencimento') {
-            filteredData.data_vencimento = IntegrationWebhookController.formatDate(tituloData.data_vencimento as string | Date | null | undefined);
+            filteredData.data_vencimento = formatDateISO(tituloData.data_vencimento as string | Date | null | undefined);
           }
         }
 
@@ -1104,7 +1093,7 @@ export class IntegrationWebhookController {
             numero_titulo: tituloData.numero_titulo,
             valor: IntegrationWebhookController.parseNumber(tituloData.valor as string | number | null | undefined),
             status: tituloData.status,
-            data_vencimento: IntegrationWebhookController.formatDate(tituloData.data_vencimento as string | Date | null | undefined),
+            data_vencimento: formatDateISO(tituloData.data_vencimento as string | Date | null | undefined),
             qrcode: tituloData.qrcode,
             linha_digitavel: tituloData.linha_digitavel,
             codigo_barras: tituloData.codigo_barras,

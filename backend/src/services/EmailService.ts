@@ -10,7 +10,7 @@ import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import nodemailer, { SendMailOptions } from 'nodemailer';
 import { TituloPDFController } from '../controllers/titulos/TituloPDFController';
-import { parseDateFromDb } from '../utils/dateUtils';
+import { parseDateFromDb, formatDate } from '../utils/dateUtils';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -123,7 +123,7 @@ export class EmailService {
           }, baseUrl);
         } else {
           // Corpo padrão simples
-          const dataVenc = parseDateFromDb(titulo.data_vencimento)?.toLocaleDateString('pt-BR') || '';
+          const dataVenc = formatDate(parseDateFromDb(titulo.data_vencimento)) || '';
           const valor = Number(titulo.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
           corpoHtml = `
             <div style="font-family: Arial, sans-serif; font-size: 14px;">

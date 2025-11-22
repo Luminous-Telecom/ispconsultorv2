@@ -5,6 +5,7 @@ import { Plano } from '../../models/Plano';
 import { Banco } from '../../models/Banco';
 import { Transaction } from 'sequelize';
 import { logger } from '../../utils/logger';
+import { normalizeDateForDb } from '../../utils/dateUtils';
 import { titulosBulkCreateSchema } from '../../validators/titulo.validator';
 import { withTransaction } from '../../utils/transaction';
 
@@ -75,7 +76,7 @@ export class TituloBulkController {
             numero_titulo: numeroTitulo,
             valor: valorFinal,
             valor_final: valorFinal,
-            data_vencimento: new Date(dadosTitulo.data_vencimento),
+            data_vencimento: normalizeDateForDb(dadosTitulo.data_vencimento) || new Date(dadosTitulo.data_vencimento),
             observacoes: dadosTitulo.observacoes || null,
             desconto_percentual: dadosTitulo.desconto_percentual || null,
             desconto_valor: dadosTitulo.desconto_valor || null,

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ServidorEmail } from '../models/ServidorEmail';
 import { MensagemEmail } from '../models/MensagemEmail';
 import { logger } from '../utils/logger';
+import { formatDateTime } from '../utils/dateUtils';
 import nodemailer from 'nodemailer';
 import { Op } from 'sequelize';
 import { ValidationError } from 'sequelize';
@@ -298,7 +299,7 @@ export class ServidorEmailController {
                 <li><strong>Porta:</strong> ${servidor.porta}</li>
                 <li><strong>SSL:</strong> ${servidor.ssl ? 'Habilitado' : 'Desabilitado'}</li>
                 <li><strong>TLS:</strong> ${servidor.tls ? 'Habilitado' : 'Desabilitado'}</li>
-                <li><strong>Data/Hora:</strong> ${new Date().toLocaleString('pt-BR')}</li>
+                <li><strong>Data/Hora:</strong> ${formatDateTime(new Date()) || 'N/A'}</li>
               </ul>
             </div>
             <p style="color: #28a745; font-weight: bold;">✅ Configuração funcionando corretamente!</p>

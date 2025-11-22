@@ -7,7 +7,7 @@ import { Contrato } from '../models/Contrato';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/database';
 import { logger } from '../utils/logger';
-import { parseDateFromDb } from '../utils/dateUtils';
+import { parseDateFromDb, formatDate } from '../utils/dateUtils';
 
 interface TituloWithCliente extends Titulo {
   cliente?: Cliente | null;
@@ -341,7 +341,7 @@ export class DashboardController {
         cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
         valor: titulo.valor,
         status: titulo.status,
-        data: new Date(titulo.created_at).toLocaleDateString('pt-BR')
+        data: formatDate(new Date(titulo.created_at)) || 'N/A'
       };
     });
   }
@@ -850,7 +850,7 @@ export class DashboardController {
     const labels = valoresPorDia.map((_, index) => {
       const data = new Date(inicio);
       data.setDate(inicio.getDate() + index);
-      return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      return formatDate(data) || '';
     });
 
     return {
@@ -907,7 +907,7 @@ export class DashboardController {
     const labels = valoresPorDia.map((_, index) => {
       const data = new Date(inicio);
       data.setDate(inicio.getDate() + index);
-      return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      return formatDate(data) || '';
     });
 
     return {

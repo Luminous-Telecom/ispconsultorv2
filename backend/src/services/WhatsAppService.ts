@@ -11,7 +11,7 @@ import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import { TituloPDFController } from '../controllers/titulos/TituloPDFController';
 import { gerarLinkPagamentoPublico } from '../controllers/titulos/TituloHelpers';
 import { WhatsAppCloudService } from './WhatsAppCloudService';
-import { parseDateFromDb } from '../utils/dateUtils';
+import { parseDateFromDb, formatDate } from '../utils/dateUtils';
 
 const INTERACTION_DELAY_MS = 2000;
 
@@ -498,7 +498,7 @@ export class WhatsAppService {
         }
         case 'titulo.data_vencimento': {
           const texto = titulo.data_vencimento 
-            ? parseDateFromDb(titulo.data_vencimento)?.toLocaleDateString('pt-BR') || 'N/A'
+            ? formatDate(parseDateFromDb(titulo.data_vencimento)) || 'N/A'
             : 'N/A';
           bodyParams.push({ type: 'text', text: texto });
           break;

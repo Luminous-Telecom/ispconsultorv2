@@ -6,6 +6,7 @@ import { Plano } from '../../models/Plano';
 import { Banco } from '../../models/Banco';
 import { Op, WhereOptions } from 'sequelize';
 import { logger } from '../../utils/logger';
+import { normalizeDateForDb } from '../../utils/dateUtils';
 import { gerarLinkPagamentoPublico } from './TituloHelpers';
 import { TituloBulkController } from './TituloBulkController';
 import type { TituloComRelacoes } from './types';
@@ -265,8 +266,8 @@ export class TituloCRUDController {
           numero_titulo: gerarNumeroTitulo(),
           valor: valorFinal,
           valor_final: valorFinal,
-          // Usar data normal do JS, Sequelize configurado com timezone cuidará disso
-          data_vencimento: new Date(data_vencimento),
+          // Normalizar data para evitar problemas de timezone (garante meia-noite local)
+          data_vencimento: normalizeDateForDb(data_vencimento) || new Date(data_vencimento),
           observacoes: observacoes || '',
           desconto_percentual,
           desconto_valor,
@@ -349,7 +350,8 @@ export class TituloCRUDController {
           }
           
           // Lógica de alteração de vencimento
-          dataVencimentoParaUpdate = new Date(data_vencimento);
+          // Normalizar data para evitar problemas de timezone
+          dataVencimentoParaUpdate = normalizeDateForDb(data_vencimento) || new Date(data_vencimento);
           
           logger.info('Alteração de vencimento detectada', { titulo_id: titulo.id, data_original: titulo.data_vencimento, data_nova: data_vencimento });
           

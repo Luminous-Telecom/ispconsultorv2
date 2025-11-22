@@ -10,6 +10,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import { logger } from '../utils/logger';
+import { formatDate } from '../utils/dateUtils';
 
 interface DadosVariaveis {
   cliente?: Cliente;
@@ -609,7 +610,7 @@ export class VariaveisDocumentoService {
    * Formatar data
    */
   private static formatarData(data: Date): string {
-    return data.toLocaleDateString('pt-BR');
+    return formatDate(data) || '';
   }
 
   /**

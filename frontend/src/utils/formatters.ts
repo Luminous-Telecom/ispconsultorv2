@@ -1,4 +1,5 @@
 // Utilitários de formatação centralizados
+// Este arquivo contém APENAS funções que retornam strings para exibição humana
 
 /**
  * Formata um valor numérico como moeda brasileira
@@ -16,69 +17,56 @@ export const formatCurrency = (value: number | string, showCurrency: boolean = t
 };
 
 /**
- * Formata uma data para o padrão brasileiro
- * @param date - Data como string ou objeto Date
- * @returns String formatada como dd/mm/aaaa
+ * Formata uma data para o padrão brasileiro (DD/MM/YYYY)
+ * Usa o timezone local do navegador para exibição
+ * @param date - Data como string, Date ou null/undefined
+ * @returns String formatada como dd/mm/aaaa ou '-' se nula
  */
-export const formatDate = (date: string | Date): string => {
+export const formatDate = (date: string | Date | null | undefined): string => {
   if (!date) return '-';
   
   try {
-    if (typeof date === 'string') {
-      const datePart = date.split('T')[0];
-      const [year, month, day] = datePart.split('-').map(Number);
-      if (year && month && day) {
-        return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
-      }
-      return '-';
-    } else {
-      return date.toLocaleDateString('pt-BR');
-    }
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) return '-';
+    
+    // Usa Intl.DateTimeFormat com timezone local para formatação consistente
+    return new Intl.DateTimeFormat('pt-BR', {
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(dateObj);
   } catch {
     return '-';
   }
 };
 
 /**
- * Formata uma data e hora para o padrão brasileiro
- * Extrai diretamente da string ISO sem conversão de timezone
- * @param date - Data como string ou objeto Date
- * @returns String formatada como dd/mm/aaaa hh:mm:ss
+ * Formata uma data e hora para o padrão brasileiro (DD/MM/YYYY HH:MM:SS)
+ * Usa o timezone local do navegador para exibição
+ * @param date - Data como string, Date ou null/undefined
+ * @returns String formatada como dd/mm/aaaa hh:mm:ss ou '-' se nula
  */
-export const formatDateTime = (date: string | Date): string => {
+export const formatDateTime = (date: string | Date | null | undefined): string => {
   if (!date) return '-';
   
   try {
-    if (typeof date === 'string') {
-      // Extrair diretamente da string ISO sem conversão de timezone
-      // Suporta formatos: "2025-11-22T01:36:41.000Z" ou "2025-11-22 01:36:41"
-      const match = date.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
-      if (match) {
-        const [, year, month, day, hour, minute, second] = match;
-        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
-      }
-      // Se não encontrou padrão, tentar criar Date e usar UTC
-      const d = new Date(date);
-      if (!isNaN(d.getTime())) {
-        const day = String(d.getUTCDate()).padStart(2, '0');
-        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-        const year = d.getUTCFullYear();
-        const hour = String(d.getUTCHours()).padStart(2, '0');
-        const minute = String(d.getUTCMinutes()).padStart(2, '0');
-        const second = String(d.getUTCSeconds()).padStart(2, '0');
-        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
-      }
-      return '-';
-    } else {
-      // Se for Date object, usar componentes UTC para preservar valor do banco
-      const day = String(date.getUTCDate()).padStart(2, '0');
-      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const year = date.getUTCFullYear();
-      const hour = String(date.getUTCHours()).padStart(2, '0');
-      const minute = String(date.getUTCMinutes()).padStart(2, '0');
-      const second = String(date.getUTCSeconds()).padStart(2, '0');
-      return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
-    }
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) return '-';
+    
+    // Usa Intl.DateTimeFormat com timezone local para formatação consistente
+    return new Intl.DateTimeFormat('pt-BR', {
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(dateObj);
   } catch {
     return '-';
   }

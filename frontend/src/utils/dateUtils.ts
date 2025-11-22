@@ -1,9 +1,12 @@
 // Utilitários de data centralizados
+// Este arquivo contém funções de cálculo, comparação e conversão para ISO (API)
+// Tipos estritos: não retorna '-' para null, retorna valores apropriados ou lança erros
 
 /**
- * Converte uma data para o formato ISO (YYYY-MM-DD) usado em inputs type="date"
+ * Converte uma data para o formato ISO (YYYY-MM-DD) usado em inputs type="date" e para API
+ * Usa componentes locais para evitar problemas de timezone
  * @param date - Data como string, Date ou null/undefined
- * @returns String no formato YYYY-MM-DD ou string vazia
+ * @returns String no formato YYYY-MM-DD ou string vazia se inválida
  */
 export const toISODateString = (date: string | Date | null | undefined): string => {
   if (!date) return '';
@@ -14,7 +17,7 @@ export const toISODateString = (date: string | Date | null | undefined): string 
       return date;
     }
 
-    const d = new Date(date);
+    const d = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(d.getTime())) return '';
     
     // Usa getFullYear, getMonth, getDate locais para evitar conversão para UTC que muda o dia
@@ -29,57 +32,21 @@ export const toISODateString = (date: string | Date | null | undefined): string 
 };
 
 /**
- * Converte uma data para o formato brasileiro (DD/MM/YYYY)
+ * Converte uma data para formato ISO completo (YYYY-MM-DDTHH:mm:ss.sssZ) para API
+ * Usa timezone local do navegador
  * @param date - Data como string, Date ou null/undefined
- * @returns String formatada como dd/mm/aaaa ou '-'
+ * @returns String no formato ISO ou string vazia se inválida
  */
-export const toBrazilianDate = (date: string | Date | null | undefined): string => {
-  if (!date) return '-';
+export const toISOString = (date: string | Date | null | undefined): string => {
+  if (!date) return '';
   
   try {
-    // Se for string YYYY-MM-DD, tratar manualmente para evitar timezone
-    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      const [year, month, day] = date.split('-').map(Number);
-      const d = new Date(year, month - 1, day);
-      return d.toLocaleDateString('pt-BR');
-    }
-
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '-';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '';
     
-    return d.toLocaleDateString('pt-BR');
+    return d.toISOString();
   } catch {
-    return '-';
-  }
-};
-
-/**
- * Converte uma data para o formato brasileiro com hora (DD/MM/YYYY HH:MM:SS)
- * @param date - Data como string, Date ou null/undefined
- * @returns String formatada como dd/mm/aaaa hh:mm:ss ou '-'
- */
-export const toBrazilianDateTime = (date: string | Date | null | undefined): string => {
-  if (!date) return '-';
-  
-  try {
-    if (typeof date === 'string') {
-      const match = date.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
-      if (match) {
-        const [, year, month, day, hour, minute, second] = match;
-        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
-      }
-      return '-';
-    } else {
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      const hour = String(date.getHours()).padStart(2, '0');
-      const minute = String(date.getMinutes()).padStart(2, '0');
-      const second = String(date.getSeconds()).padStart(2, '0');
-      return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
-    }
-  } catch {
-    return '-';
+    return '';
   }
 };
 
@@ -88,12 +55,16 @@ export const toBrazilianDateTime = (date: string | Date | null | undefined): str
  * @returns String no formato YYYY-MM-DD
  */
 export const getTodayISO = (): string => {
-  return new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 /**
  * Obtém a data atual como objeto Date com hora zerada
- * @returns Objeto Date com hora 00:00:00
+ * @returns Objeto Date com hora 00:00:00 no timezone local
  */
 export const getToday = (): Date => {
   const today = new Date();
@@ -110,7 +81,7 @@ export const isValidDate = (date: string | Date | null | undefined): boolean => 
   if (!date) return false;
   
   try {
-    const d = new Date(date);
+    const d = typeof date === 'string' ? new Date(date) : date;
     return !isNaN(d.getTime());
   } catch {
     return false;
@@ -125,7 +96,7 @@ export const isValidDate = (date: string | Date | null | undefined): boolean => 
 export const isFutureDate = (date: string | Date | null | undefined): boolean => {
   if (!date || !isValidDate(date)) return false;
   
-  const d = new Date(date);
+  const d = typeof date === 'string' ? new Date(date) : date;
   const today = getToday();
   
   return d > today;
@@ -139,7 +110,7 @@ export const isFutureDate = (date: string | Date | null | undefined): boolean =>
 export const isPastDate = (date: string | Date | null | undefined): boolean => {
   if (!date || !isValidDate(date)) return false;
   
-  const d = new Date(date);
+  const d = typeof date === 'string' ? new Date(date) : date;
   const today = getToday();
   
   return d < today;
@@ -153,8 +124,8 @@ export const isPastDate = (date: string | Date | null | undefined): boolean => {
  */
 export const daysDifference = (date1: string | Date, date2: string | Date): number => {
   try {
-    const d1 = new Date(date1);
-    const d2 = new Date(date2);
+    const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+    const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
     
     if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
     
@@ -169,15 +140,20 @@ export const daysDifference = (date1: string | Date, date2: string | Date): numb
  * Adiciona dias a uma data
  * @param date - Data base
  * @param days - Número de dias a adicionar (pode ser negativo)
- * @returns Nova data como string ISO
+ * @returns Nova data como string ISO (YYYY-MM-DD)
  */
 export const addDays = (date: string | Date, days: number): string => {
   try {
-    const d = new Date(date);
+    const d = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(d.getTime())) return '';
     
     d.setDate(d.getDate() + days);
-    return d.toISOString().split('T')[0];
+    
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
   } catch {
     return '';
   }
@@ -187,15 +163,20 @@ export const addDays = (date: string | Date, days: number): string => {
  * Adiciona meses a uma data
  * @param date - Data base
  * @param months - Número de meses a adicionar (pode ser negativo)
- * @returns Nova data como string ISO
+ * @returns Nova data como string ISO (YYYY-MM-DD)
  */
 export const addMonths = (date: string | Date, months: number): string => {
   try {
-    const d = new Date(date);
+    const d = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(d.getTime())) return '';
     
     d.setMonth(d.getMonth() + months);
-    return d.toISOString().split('T')[0];
+    
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
   } catch {
     return '';
   }
@@ -209,8 +190,8 @@ export const addMonths = (date: string | Date, months: number): string => {
  */
 export const compareDates = (date1: string | Date, date2: string | Date): number => {
   try {
-    const d1 = new Date(date1);
-    const d2 = new Date(date2);
+    const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+    const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
     
     if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
     
@@ -221,4 +202,3 @@ export const compareDates = (date1: string | Date, date2: string | Date): number
     return 0;
   }
 };
-

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { logger } from '../../utils/logger';
-import { parseDateFromDb } from '../../utils/dateUtils';
+import { parseDateFromDb, formatDate } from '../../utils/dateUtils';
 import { TituloComRelacoes } from './types';
 
 /**
@@ -83,7 +83,7 @@ export function processarInstrucao(instrucao: string, titulo: TituloComRelacoes)
     .replace(/%valor_plano%/g, Number(titulo.plano?.valor_mensal || 0).toFixed(2).replace('.', ','))
     .replace(/%cliente_nome%/g, titulo.cliente?.razao_social || '')
     .replace(/%cliente_cnpj%/g, titulo.cliente?.cnpj || '')
-    .replace(/%data_vencimento%/g, parseDateFromDb(titulo.data_vencimento)?.toLocaleDateString('pt-BR') || '')
+    .replace(/%data_vencimento%/g, formatDate(parseDateFromDb(titulo.data_vencimento)) || '')
     .replace(/%valor_boleto%/g, Number(titulo.valor).toFixed(2).replace('.', ','));
 }
 

@@ -3,7 +3,7 @@ import { DiasVencimento } from '../models/DiasVencimento';
 import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
 import { logger } from '../utils/logger';
 import { BarcodeService } from './BarcodeService';
-import { ajustarDataVencimento } from '../utils/dateUtils';
+import { ajustarDataVencimento, formatDate, normalizeDateForDb } from '../utils/dateUtils';
 import { withTransaction } from '../utils/transaction';
 import { metrics, isMetricsEnabled } from '../utils/metrics';
 import type { Transaction } from 'sequelize';
@@ -260,15 +260,8 @@ export class RoutineExecutionService {
                   // banco_id já foi validado antes do loop
                   const bancoId = contratoValidado.conta_boleto;
                   
-                  // Normalizar data de vencimento para meia-noite (00:00:00) - apenas data, sem hora
-                  // Criar data local (GMT-3) que será salva como está no banco
-                  // dataVencimento já foi normalizado com setHours(0,0,0,0) na linha anterior
-                  const dataVencimentoNormalizada = new Date(
-                    dataVencimento.getFullYear(),
-                    dataVencimento.getMonth(),
-                    dataVencimento.getDate(),
-                    0, 0, 0, 0
-                  );
+                  // Normalizar data de vencimento para evitar problemas de timezone
+                  const dataVencimentoNormalizada = normalizeDateForDb(dataVencimento) || dataVencimento;
                   
                   await Titulo.create({
                     contrato_id: contratoValidado.id,
@@ -276,10 +269,10 @@ export class RoutineExecutionService {
                     plano_id: contratoValidado.plano_id,
                     banco_id: bancoId,
                     valor: valorTitulo,
-                    data_vencimento: dataVencimentoNormalizada as any,
+                    data_vencimento: dataVencimentoNormalizada,
                     status: 'pendente',
                     pago: false,
-                    descricao: `${plano?.nome_plano || 'Mensalidade'}\n${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
+                    descricao: `${plano?.nome_plano || 'Mensalidade'}\n${formatDate(dataVencimento) || ''}`,
                     numero_titulo: numeroTitulo
                   }, { transaction });
 
