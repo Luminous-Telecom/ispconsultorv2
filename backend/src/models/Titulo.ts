@@ -15,7 +15,6 @@ import { logger } from '../utils/logger';
 import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
-import { normalizeDateForDb } from '../utils/dateForDb';
 
 export class Titulo extends Model<
   InferAttributes<Titulo>,
@@ -165,7 +164,7 @@ export class Titulo extends Model<
     // Formatar data para salvar no banco usando utilitário centralizado
     // Aqui não ajustamos vencimento (sábado/domingo) pois é a data efetiva do pagamento
     // E mantemos a hora para registro preciso (true)
-    const dataPagamentoLiteral = await normalizeDateForDb(data, false, true);
+    const dataPagamentoLiteral = data;
 
     await this.update({
       pago: estaPago,

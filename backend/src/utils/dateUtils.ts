@@ -45,26 +45,12 @@ export async function ajustarDataVencimento(
 }
 
 /**
- * Converte uma string de data do banco (que pode vir como string devido ao dateStrings: true)
- * para um objeto Date JavaScript corretamente, respeitando o timezone local.
- * 
- * - Se for YYYY-MM-DD (DATE), cria a data no fuso local (meia-noite).
- * - Se for YYYY-MM-DD HH:mm:ss (DATETIME), cria a data com hora no fuso local.
+ * Converte uma string de data do banco para um objeto Date.
+ * Mantida por compatibilidade, mas agora retorna a data diretamente se já for Date.
  */
 export function parseDateFromDb(dateInput: string | Date | null | undefined): Date | null {
   if (!dateInput) return null;
   if (dateInput instanceof Date) return dateInput;
 
-  const dateStr = String(dateInput);
-  
-  // Se for apenas data (YYYY-MM-DD), cria usando componentes locais para evitar conversão UTC->Local
-  // Ex: "2025-11-22" -> new Date(2025, 10, 22) -> 22/11/2025 00:00 Local
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-  
-  // Para DateTime (YYYY-MM-DD HH:mm:ss), o construtor padrão do JS parseia como local
-  // quando usamos o formato do MySQL (espaço entre data e hora) na maioria dos ambientes Node/Browser modernos.
-  return new Date(dateStr);
+  return new Date(dateInput);
 }

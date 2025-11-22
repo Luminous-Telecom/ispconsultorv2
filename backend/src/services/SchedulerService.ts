@@ -7,7 +7,6 @@ import { logger } from '../utils/logger';
 import { BarcodeService } from './BarcodeService';
 import { ajustarDataVencimento } from '../utils/dateUtils';
 import { withTransaction } from '../utils/transaction';
-import { normalizeDateForDb } from '../utils/dateForDb';
 import { metrics, isMetricsEnabled } from '../utils/metrics';
 import type { JsonValue } from '../types';
 import type { Transaction } from 'sequelize';

@@ -6,12 +6,11 @@ import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
 import { BancoApiService } from '../services/BancoApiService';
 import { BarcodeService } from '../services/BarcodeService';
-import { ajustarDataVencimento, parseDateFromDb } from '../utils/dateUtils';
+import { ajustarDataVencimento } from '../utils/dateUtils';
 import { logger } from '../utils/logger';
 import puppeteer from 'puppeteer';
 import { Op, WhereOptions, QueryTypes, Transaction, Sequelize } from 'sequelize';
 import { withTransaction } from '../utils/transaction';
-import { normalizeDateForDb } from '../utils/dateForDb';
 import { tituloCreateSchema, titulosBulkCreateSchema } from '../validators/titulo.validator';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -32,7 +31,7 @@ export class TituloController {
   
   // --- Funções Auxiliares (Simplificadas e com Fuso Horário Corrigido) ---
 
-  static async gerarPdfBase64(titulo: TituloComRelacoes): Promise<string | null> {
+  public static async gerarPdfBase64(titulo: TituloComRelacoes): Promise<string | null> {
     try {
       const html = await this.processarBoletoHtml(titulo);
       
@@ -248,7 +247,7 @@ export class TituloController {
 
   // --- Endpoints CRUD ---
 
-  static async list(req: Request, res: Response): Promise<void> {
+  public static async list(req: Request, res: Response): Promise<void> {
     try {
       const { page = 1, limit = 10, status, cliente_id, data_vencimento_inicio, data_vencimento_fim, search } = req.query;
 
@@ -329,7 +328,7 @@ export class TituloController {
     }
   }
 
-  static async show(req: Request, res: Response): Promise<void> {
+  public static async show(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -361,7 +360,7 @@ export class TituloController {
     }
   }
 
-  static async create(req: Request, res: Response): Promise<void> {
+  public static async create(req: Request, res: Response): Promise<void> {
     try {
       logger.info('Iniciando criação de título', { body: req.body });
 
@@ -479,9 +478,6 @@ export class TituloController {
       }
       valorFinal = Math.max(0.01, valorFinal);
 
-      // Normaliza data para string e usa literal para evitar conversão de timezone do Sequelize
-      const dataVencimentoLiteral = await normalizeDateForDb(data_vencimento);
-      
       const titulo = await withTransaction(async (transaction: Transaction) => {
         
         return await Titulo.create({
@@ -492,8 +488,8 @@ export class TituloController {
           numero_titulo: gerarNumeroTitulo(),
           valor: valorFinal,
           valor_final: valorFinal,
-          // Usar literal retornado pelo utilitário
-          data_vencimento: dataVencimentoLiteral as unknown as Date,
+          // Usar data normal do JS, Sequelize configurado com timezone cuidará disso
+          data_vencimento: new Date(data_vencimento),
           observacoes: observacoes || '',
           desconto_percentual,
           desconto_valor,
@@ -549,21 +545,6 @@ export class TituloController {
             throw new Error(`Banco ${dadosTitulo.banco_id} não encontrado ou inativo`);
           }
 
-          // Normaliza data para string e usa literal para evitar conversão de timezone do Sequelize
-          const dataVencimentoLiteral = await normalizeDateForDb(dadosTitulo.data_vencimento);
-
-          // Cálculo de valor final (mantido original)
-          let valorFinal = Number(dadosTitulo.valor);
-          valorFinal -= dadosTitulo.desconto_valor ? Number(dadosTitulo.desconto_valor) : 0;
-          valorFinal -= dadosTitulo.desconto_percentual ? valorFinal * (Number(dadosTitulo.desconto_percentual) / 100) : 0;
-          valorFinal += dadosTitulo.acrescimo_valor ? Number(dadosTitulo.acrescimo_valor) : 0;
-          valorFinal += dadosTitulo.acrescimo_percentual ? valorFinal * (Number(dadosTitulo.acrescimo_percentual) / 100) : 0;
-          valorFinal = Math.max(0.01, valorFinal);
-
-          const timestamp = Date.now();
-          const random = Math.floor(Math.random() * 1000);
-          const numeroTitulo = dadosTitulo.numero_titulo || `TIT-${timestamp}-${random}`;
-
           const titulo = await Titulo.create({
             cliente_id: dadosTitulo.cliente_id,
             plano_id: dadosTitulo.plano_id,
@@ -572,8 +553,7 @@ export class TituloController {
             numero_titulo: numeroTitulo,
             valor: valorFinal,
             valor_final: valorFinal,
-            // Usar literal retornado pelo utilitário
-            data_vencimento: dataVencimentoLiteral as unknown as Date,
+            data_vencimento: new Date(dadosTitulo.data_vencimento),
             observacoes: dadosTitulo.observacoes || null,
             desconto_percentual: dadosTitulo.desconto_percentual || null,
             desconto_valor: dadosTitulo.desconto_valor || null,
@@ -603,7 +583,7 @@ export class TituloController {
     }
   }
 
-  static async update(req: Request, res: Response): Promise<void> {
+  public static async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const { status, data_vencimento, observacoes } = req.body;
@@ -655,9 +635,8 @@ export class TituloController {
             return;
           }
           
-          // CORREÇÃO DE FUSO HORÁRIO APLICADA AQUI
-          // Normaliza data para string e usa literal
-          dataVencimentoParaUpdate = await normalizeDateForDb(data_vencimento) as unknown as Date;
+          // Lógica de alteração de vencimento
+          dataVencimentoParaUpdate = new Date(data_vencimento);
           
           logger.info('Alteração de vencimento detectada', { titulo_id: titulo.id, data_original: titulo.data_vencimento, data_nova: data_vencimento });
           
@@ -680,7 +659,7 @@ export class TituloController {
     }
   }
 
-  static async destroy(req: Request, res: Response): Promise<void> {
+  public static async destroy(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -713,7 +692,7 @@ export class TituloController {
   
   // --- Endpoints de Impressão e Envio ---
 
-  static async imprimirBoleto(req: Request, res: Response): Promise<void> {
+  public static async imprimirBoleto(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -780,7 +759,7 @@ export class TituloController {
     }
   }
 
-  static async imprimirBoletosMultiplos(req: Request, res: Response): Promise<void> {
+  public static async imprimirBoletosMultiplos(req: Request, res: Response): Promise<void> {
     try {
       let ids = req.body.ids || req.query.ids;
       
@@ -856,7 +835,7 @@ export class TituloController {
     }
   }
 
-  static async gerarPdfBoletosMultiplos(req: Request, res: Response): Promise<void> {
+  public static async gerarPdfBoletosMultiplos(req: Request, res: Response): Promise<void> {
     try {
       let ids: number[] = [];
       const idsParam = req.query.ids as string;
@@ -942,7 +921,7 @@ export class TituloController {
 
   // --- Endpoints de Pagamento e Status ---
 
-  static async marcarComoPago(req: Request, res: Response): Promise<void> {
+  public static async marcarComoPago(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const { valor_pago, data_pagamento } = req.body;
@@ -973,7 +952,7 @@ export class TituloController {
     }
   }
 
-  static async desmarcarPago(req: Request, res: Response): Promise<void> {
+  public static async desmarcarPago(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -992,7 +971,7 @@ export class TituloController {
     }
   }
 
-  static async consultarRecebimento(req: Request, res: Response): Promise<void> {
+  public static async consultarRecebimento(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -1039,7 +1018,7 @@ export class TituloController {
     }
   }
 
-  static async estornar(req: Request, res: Response): Promise<void> {
+  public static async estornar(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 
@@ -1065,7 +1044,7 @@ export class TituloController {
 
   // --- Endpoints de Busca e Estatísticas ---
 
-  static async getByContrato(req: Request, res: Response): Promise<void> {
+  public static async getByContrato(req: Request, res: Response): Promise<void> {
     try {
       const { contratoId } = req.params;
 
@@ -1092,7 +1071,7 @@ export class TituloController {
     }
   }
 
-  static async getStats(req: Request, res: Response): Promise<void> {
+  public static async getStats(req: Request, res: Response): Promise<void> {
     try {
       const { cliente_id } = req.query;
 
@@ -1130,7 +1109,7 @@ export class TituloController {
 
   // --- Outros Endpoints ---
 
-  static gerarLinkPagamentoPublico(tituloId: number, baseUrl?: string): string {
+  public static gerarLinkPagamentoPublico(tituloId: number, baseUrl?: string): string {
     const secret = process.env.JWT_SECRET || 'default-secret';
     const token = crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
     
@@ -1138,7 +1117,7 @@ export class TituloController {
     return `${frontendUrl}/pagamento/${tituloId}/${token}`;
   }
 
-  static async gerarLinkPagamento(req: Request, res: Response): Promise<void> {
+  public static async gerarLinkPagamento(req: Request, res: Response): Promise<void> {
     try {
       const tituloId = parseInt(req.params.id, 10);
       if (isNaN(tituloId)) {
@@ -1162,7 +1141,7 @@ export class TituloController {
     }
   }
 
-  static async enviarWhatsApp(req: Request, res: Response): Promise<void> {
+  public static async enviarWhatsApp(req: Request, res: Response): Promise<void> {
     try {
       const tituloId = parseInt(req.params.id, 10);
       if (isNaN(tituloId)) {
@@ -1184,7 +1163,7 @@ export class TituloController {
     }
   }
 
-  static async enviarEmail(req: Request, res: Response): Promise<void> {
+  public static async enviarEmail(req: Request, res: Response): Promise<void> {
     try {
       const tituloId = parseInt(req.params.id, 10);
       if (isNaN(tituloId)) {

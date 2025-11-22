@@ -25,11 +25,6 @@ const sequelize = new Sequelize({
     acquire: 30000,
     idle: 10000
   },
-  dialectOptions: {
-    // Garante que datas sejam tratadas como strings para evitar conversões indesejadas do driver
-    dateStrings: true,
-    typeCast: true
-  },
   define: {
     timestamps: true,
     underscored: true,
