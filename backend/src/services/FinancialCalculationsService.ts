@@ -63,7 +63,7 @@ export class FinancialCalculationsService {
   /**
    * Arredonda valor para 2 casas decimais
    */
-  private static round(value: number): number {
+  static round(value: number): number {
     return Math.round(value * 100) / 100;
   }
 
