@@ -14,41 +14,29 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-### 3. Tipos de Retorno de Funções ✅ CONCLUÍDO
-
-**Problema:** Algumas funções sem tipo de retorno explícito.
-
-**Solução Implementada:**
-- ✅ Criada interface `RoutineValidationResult` para padronizar retorno de validações
-- ✅ Adicionados tipos de retorno explícitos em `validateRoutineData` e `validateRoutineUpdate`
-- ✅ Verificadas e confirmadas tipagens explícitas em funções utilitárias principais:
-  - Funções de formatação (`formatCurrency`, `formatDate`, `formatDateTime`, etc.)
-  - Funções de data (`toISODateString`, `addDays`, `compareDates`, etc.)
-  - Funções de sanitização (`sanitizeString`, `sanitizeEmail`, `sanitizeNumber`, etc.)
-  - Hooks customizados (`usePagination`, `useSorting`, `useFilters`, etc.)
-
-**Benefícios:**
-- Melhor type safety e inferência de tipos
-- Código mais claro e autodocumentado
-- Facilita refatoração e manutenção
-- Reduz erros em tempo de compilação
-
-**Nota:** A maioria das funções públicas já possuía tipos de retorno explícitos. As melhorias focaram em padronizar interfaces de retorno complexas e garantir consistência.
-
-**Prioridade:** 🟢 Baixa
-
----
-
 ## ⚡ Otimizações de Performance
 
-### 1. Queries N+1
+### 1. Queries N+1 ✅ CONCLUÍDO
 
 **Problema:** Possíveis queries N+1 em alguns lugares.
 
-**Sugestão:**
-- Usar `include` do Sequelize para eager loading
-- Revisar queries que fazem loops
-- Implementar cache quando apropriado
+**Solução Implementada:**
+- ✅ Otimizado `RoutineExecutionService.executeGeracaoTitulos()`:
+  - Busca todos os títulos de uma vez antes do loop sobre contratos
+  - Agrupa títulos por `contrato_id` em Maps para acesso O(1)
+  - Elimina 2 queries por contrato (de N*2 para 2 queries totais)
+- ✅ Otimizado `TituloPDFController.gerarPdfBoletosMultiplos()`:
+  - Garantido que relações são sempre carregadas na query inicial com `required: false`
+  - Removida verificação que causava `findByPk` dentro do loop
+  - Elimina queries adicionais quando relações já estão carregadas
+
+**Benefícios:**
+- Redução drástica no número de queries ao banco
+- Melhor performance em operações em lote
+- Menor carga no banco de dados
+- Tempo de resposta mais rápido para rotinas agendadas
+
+**Nota:** Outras queries já estavam otimizadas com `include` e `Promise.all`. As melhorias focaram nos casos onde queries eram executadas dentro de loops.
 
 **Prioridade:** 🟡 Média
 

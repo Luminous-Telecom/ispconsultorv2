@@ -6,6 +6,7 @@ import { BarcodeService } from './BarcodeService';
 import { ajustarDataVencimento, formatDate, normalizeDateForDb } from '../utils/dateUtils';
 import { withTransaction } from '../utils/transaction';
 import { metrics, isMetricsEnabled } from '../utils/metrics';
+import { Op } from 'sequelize';
 import type { Transaction } from 'sequelize';
 import type Parametros from '../models/Parametros';
 import type {
@@ -129,6 +130,47 @@ export class RoutineExecutionService {
         ]
       });
 
+      // Otimização N+1: Buscar todos os títulos de uma vez antes do loop
+      const contratoIds = contratos.map(c => c.id);
+      const [titulosEmAbertoTodos, todosTitulosTodos] = await Promise.all([
+        // Buscar todos os títulos em aberto de todos os contratos
+        Titulo.findAll({
+          where: {
+            contrato_id: { [Op.in]: contratoIds },
+            status: ['pendente', 'vencido'],
+            pago: false
+          },
+          attributes: ['id', 'contrato_id', 'data_vencimento']
+        }),
+        // Buscar TODOS os títulos (incluindo pagos) de todos os contratos
+        Titulo.findAll({
+          where: {
+            contrato_id: { [Op.in]: contratoIds }
+          },
+          attributes: ['id', 'contrato_id', 'data_vencimento']
+        })
+      ]);
+
+      // Agrupar títulos por contrato_id para acesso rápido
+      const titulosEmAbertoPorContrato = new Map<number, typeof titulosEmAbertoTodos>();
+      const todosTitulosPorContrato = new Map<number, typeof todosTitulosTodos>();
+
+      titulosEmAbertoTodos.forEach(titulo => {
+        const contratoId = titulo.contrato_id;
+        if (!titulosEmAbertoPorContrato.has(contratoId)) {
+          titulosEmAbertoPorContrato.set(contratoId, []);
+        }
+        titulosEmAbertoPorContrato.get(contratoId)!.push(titulo);
+      });
+
+      todosTitulosTodos.forEach(titulo => {
+        const contratoId = titulo.contrato_id;
+        if (!todosTitulosPorContrato.has(contratoId)) {
+          todosTitulosPorContrato.set(contratoId, []);
+        }
+        todosTitulosPorContrato.get(contratoId)!.push(titulo);
+      });
+
       let titulosGerados = 0;
       let contratosProcessados = 0;
       let erros = 0;
@@ -147,22 +189,9 @@ export class RoutineExecutionService {
             conta_boleto: number;
           };
 
-          // Buscar títulos em aberto para contar quantos precisamos gerar
-          const titulosEmAberto = await Titulo.findAll({
-            where: {
-              contrato_id: contratoValidado.id,
-              status: ['pendente', 'vencido'], // Apenas títulos em aberto
-              pago: false
-            }
-          });
-
-          // Buscar TODOS os títulos (incluindo pagos) para verificar se já existe título para um mês específico
-          // Isso evita gerar novo título para um mês que já teve título gerado (mesmo que tenha sido pago)
-          const todosTitulos = await Titulo.findAll({
-            where: {
-              contrato_id: contratoValidado.id
-            }
-          });
+          // Usar títulos já carregados (otimização N+1)
+          const titulosEmAberto = titulosEmAbertoPorContrato.get(contratoValidado.id) || [];
+          const todosTitulos = todosTitulosPorContrato.get(contratoValidado.id) || [];
 
           // Verificar se precisa gerar mais títulos (baseado apenas nos títulos em aberto)
           const titulosGerar = quantidadeMinimaTitulos - titulosEmAberto.length;

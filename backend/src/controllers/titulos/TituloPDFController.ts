@@ -515,7 +515,17 @@ export class TituloPDFController {
         return;
       }
 
-      const titulos = await Titulo.findAll({ where: { id: { [Op.in]: ids } }, include: [{ model: Cliente, as: 'cliente' }, { model: Plano, as: 'plano' }, { model: Banco, as: 'banco' }] });
+      // Otimização N+1: Carregar todas as relações de uma vez na query inicial
+      // Usar required: false para garantir que relações sejam sempre carregadas (mesmo que null)
+      const titulos = await Titulo.findAll({ 
+        where: { id: { [Op.in]: ids } }, 
+        include: [
+          { model: Cliente, as: 'cliente', required: false },
+          { model: Plano, as: 'plano', required: false },
+          { model: Banco, as: 'banco', required: false }
+        ]
+      });
+      
       if (titulos.length === 0) {
         res.status(404).json({ success: false, message: 'Nenhum título encontrado' });
         return;
@@ -528,28 +538,8 @@ export class TituloPDFController {
 
       for (const titulo of titulos) {
         try {
-          // Garantir que título tem todas as relações carregadas
-          let tituloComRelacoes = titulo as TituloComRelacoes;
-          
-          // Verificar se precisa recarregar com relações
-          if (!tituloComRelacoes.cliente || !tituloComRelacoes.banco) {
-            const tituloRecarregado = await Titulo.findByPk(titulo.id, {
-              include: [
-                { model: Cliente, as: 'cliente' },
-                { model: Plano, as: 'plano' },
-                { model: Banco, as: 'banco' }
-              ]
-            }) as TituloComRelacoes | null;
-            
-            if (!tituloRecarregado) {
-              logger.warn('Título não encontrado ao recarregar', { titulo_id: titulo.id });
-              titulosComErro++;
-              errosDetalhados.push({ titulo_id: titulo.id, motivo: 'Título não encontrado ao recarregar' });
-              continue;
-            }
-            
-            tituloComRelacoes = tituloRecarregado;
-          }
+          // Usar título já carregado com relações (otimização N+1)
+          const tituloComRelacoes = titulo as TituloComRelacoes;
           
           // Validar relações essenciais antes de continuar
           if (!tituloComRelacoes.cliente) {
