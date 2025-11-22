@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { ServidorWhatsAppService, MensagemWhatsApp } from '@/services/servidorWhatsAppService';
 import { defaultApiClient } from '@/services/core';
-import DraggableModal from '../../../common/DraggableModal';
+import DraggableModal from '@/components/common/DraggableModal';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';

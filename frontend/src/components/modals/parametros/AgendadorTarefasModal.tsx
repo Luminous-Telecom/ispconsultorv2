@@ -7,7 +7,7 @@ import { useTableFilters } from '@/hooks/useTableFilters';
 import { SchedulerService, RotinaAgendada } from '@/services/schedulerService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { formatDateTime } from '@/utils/formatters';
-import ListModal from '../../common/ListModal';
+import ListModal from '@/components/common/ListModal';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
 
 interface AgendadorTarefasModalProps {

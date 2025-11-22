@@ -5,7 +5,7 @@ import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '@/service
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { ApiError } from '@/services/core/ErrorHandler';
 import { useFormReset } from '@/hooks/useFormReset';
-import DraggableModal from '../../../common/DraggableModal';
+import DraggableModal from '@/components/common/DraggableModal';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';

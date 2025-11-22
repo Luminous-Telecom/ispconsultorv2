@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSelectedEntity } from '@/hooks/useSelectedEntity';
-import DraggableModal from '../../../common/DraggableModal';
+import DraggableModal from '@/components/common/DraggableModal';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';

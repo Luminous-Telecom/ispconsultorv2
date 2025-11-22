@@ -6,7 +6,7 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { useFormPrefix } from '@/hooks/useFormId';
 import { useBancoForm } from '@/hooks/useBancoForm';
 import { Banco } from '@/types';
-import DraggableModal from '../../common/DraggableModal';
+import DraggableModal from '@/components/common/DraggableModal';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { BancoForm } from './banco/types';
 import AsaasForm from './banco/especificos/AsaasForm';

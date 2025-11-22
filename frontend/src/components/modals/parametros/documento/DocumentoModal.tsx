@@ -6,17 +6,17 @@ import ModeloReciboService from '@/services/modeloReciboService';
 import ModeloCartaService from '@/services/modeloCartaService';
 import ModeloTermoService from '@/services/modeloTermoService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import DraggableModal from '../../../common/DraggableModal';
-import ImprimirModal from '../../../common/ImprimirModal';
-import FormField from '../../../ui/FormField';
-import EntitySelectField from '../../../ui/EntitySelectField';
+import DraggableModal from '@/components/common/DraggableModal';
+import ImprimirModal from '@/components/common/ImprimirModal';
+import FormField from '@/components/ui/FormField';
+import EntitySelectField from '@/components/ui/EntitySelectField';
 import { DocumentoForm, DocumentoModalProps, DocumentoUnion } from './types';
 import ContratoTab from './abas/ContratoTab';
 import AdesaoTab from './abas/AdesaoTab';
 import PermanenciaTab from './abas/PermanenciaTab';
 import ConteudoTab from './abas/ConteudoTab';
 import { useCliente, useClientes } from '@/hooks/useClientes';
-import ClienteListModal from '../../clientes/ClienteListModal';
+import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
 
 const emptyForm: DocumentoForm = {
   nome: '',

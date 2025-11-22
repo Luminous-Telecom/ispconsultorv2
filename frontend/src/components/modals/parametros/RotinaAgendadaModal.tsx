@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '@/services/schedulerService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import DraggableModal from '../../common/DraggableModal';
-import FormField from '../../ui/FormField';
+import DraggableModal from '@/components/common/DraggableModal';
+import FormField from '@/components/ui/FormField';
 
 interface RotinaAgendadaModalProps {
   show: boolean;

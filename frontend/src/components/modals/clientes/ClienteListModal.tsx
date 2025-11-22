@@ -4,7 +4,7 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { formatDateTime } from '@/utils/formatters';
-import ListModal from '../../common/ListModal';
+import ListModal from '@/components/common/ListModal';
 import ClienteModal from './cliente/ClienteModal';
 
 interface Cliente {

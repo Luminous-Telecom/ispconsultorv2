@@ -7,7 +7,7 @@ import { Plano } from '@/types/entities';
 import DraggableModal from '@/components/common/DraggableModal';
 import FormField from '@/components/ui/FormField';
 import EntitySelectField from '@/components/ui/EntitySelectField';
-import PlanoListModal from '../../../planos/PlanoListModal';
+import PlanoListModal from '@/components/modals/planos/PlanoListModal';
 
 interface ServicoAdicionalModalProps {
   show: boolean;

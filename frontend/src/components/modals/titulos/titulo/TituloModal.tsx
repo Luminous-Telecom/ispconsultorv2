@@ -9,11 +9,11 @@ import { Contrato, Plano, CarneParcela } from '@/types';
 import { FormValue } from '@/types/common';
 import { useEntitySelectField } from '@/hooks/useEntitySelectField';
 import { useTituloForm } from '@/hooks/useTituloForm';
-import DraggableModal from '../../../common/DraggableModal';
-import FormField from '../../../ui/FormField';
-import EntitySelectField from '../../../ui/EntitySelectField';
-import ClienteListModal from '../../clientes/ClienteListModal';
-import PlanoListModal from '../../planos/PlanoListModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import FormField from '@/components/ui/FormField';
+import EntitySelectField from '@/components/ui/EntitySelectField';
+import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
+import PlanoListModal from '@/components/modals/planos/PlanoListModal';
 import { TituloModalProps } from './types';
 
 const TituloModal: React.FC<TituloModalProps> = ({ 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { defaultApiClient } from '@/services/core';
-import DraggableModal from '../../../common/DraggableModal';
+import DraggableModal from '@/components/common/DraggableModal';
 
 interface Template {
   name: string;

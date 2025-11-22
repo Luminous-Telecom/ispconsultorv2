@@ -7,12 +7,12 @@ import { useSorting } from '@/hooks/useSorting';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { TituloService } from '@/services/tituloService';
 import { formatDate, formatDateTime } from '@/utils/formatters';
-import DraggableModal from '../../common/DraggableModal';
-import Table from '../../tables/Table';
-import { TableConfig } from '../../tables/types';
-import { TituloModal } from '../titulos';
-import ReceberModal from '../pagamentos/ReceberModal';
-import ImprimirModal from '../../common/ImprimirModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
+import { TituloModal } from '@/components/modals/titulos';
+import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
+import ImprimirModal from '@/components/common/ImprimirModal';
 
 interface FinanceiroModalProps {
   show: boolean;

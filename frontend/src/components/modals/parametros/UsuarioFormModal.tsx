@@ -4,8 +4,8 @@ import { UsuarioService } from '@/services/usuarioService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useFormReset } from '@/hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from '@/hooks/useUsuarios';
-import DraggableModal from '../../common/DraggableModal';
-import FormField from '../../ui/FormField';
+import DraggableModal from '@/components/common/DraggableModal';
+import FormField from '@/components/ui/FormField';
 
 interface UsuarioForm {
   nome: string;

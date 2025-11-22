@@ -7,11 +7,11 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import DocumentoSistemaService from '@/services/documentoSistemaService';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 import { useImpressaoContrato } from '@/hooks/useImpressaoContrato';
-import DraggableModal from '../../common/DraggableModal';
-import Table from '../../tables/Table';
-import { TableConfig } from '../../tables/types';
-import ContratoModal from '../clientes/contrato/ContratoModal';
-import ImprimirModal from '../../common/ImprimirModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
+import ContratoModal from '@/components/modals/clientes/contrato/ContratoModal';
+import ImprimirModal from '@/components/common/ImprimirModal';
 
 interface ContratoListModalProps {
   show: boolean;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { DiasVencimentoService, DiasVencimento } from '@/services/diasVencimentoService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
-import DraggableModal from '../../common/DraggableModal';
+import DraggableModal from '@/components/common/DraggableModal';
 
 interface DiasVencimentoModalProps {
   show: boolean;

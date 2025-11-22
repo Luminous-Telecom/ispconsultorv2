@@ -9,10 +9,10 @@ import { useClienteBulkActions } from '@/hooks/useClienteBulkActions';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
 import { CarneParcela } from '@/types';
 import { TituloItem } from '@/types/cliente';
-import DraggableModal from '../../../common/DraggableModal';
-import ImprimirModal from '../../../common/ImprimirModal';
-import { TituloModal } from '../../titulos/titulo';
-import ReceberModal from '../../pagamentos/ReceberModal';
+import DraggableModal from '@/components/common/DraggableModal';
+import ImprimirModal from '@/components/common/ImprimirModal';
+import { TituloModal } from '@/components/modals/titulos/titulo';
+import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import ContratoModal from '../contrato/ContratoModal';
 // Componentes de abas
 import DadosBasicosTab from './abas/DadosBasicosTab';

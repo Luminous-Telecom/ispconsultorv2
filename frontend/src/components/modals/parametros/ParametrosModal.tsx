@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { ParametrosService } from '@/services/parametrosService';
 import { useFormReset } from '@/hooks/useFormReset';
-import DraggableModal from '../../common/DraggableModal';
+import DraggableModal from '@/components/common/DraggableModal';
 
 interface ParametrosModalProps {
   show: boolean;

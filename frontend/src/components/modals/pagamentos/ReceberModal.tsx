@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMarcarTituloPago } from '@/hooks/useTitulos';
 import { formatDate } from '@/utils/formatters';
 import { receberSchema, ReceberFormData } from '@/schemas/receber.schema';
-import DraggableModal from '../../common/DraggableModal';
-import FormField from '../../ui/FormField';
+import DraggableModal from '@/components/common/DraggableModal';
+import FormField from '@/components/ui/FormField';
 
 interface ReceberModalProps {
   isOpen: boolean;

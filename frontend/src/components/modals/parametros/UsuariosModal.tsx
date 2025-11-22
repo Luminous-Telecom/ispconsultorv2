@@ -6,9 +6,9 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { useSorting } from '@/hooks/useSorting';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { formatDateTime } from '@/utils/formatters';
-import DraggableModal from '../../common/DraggableModal';
-import Table from '../../tables/Table';
-import { TableConfig } from '../../tables/types';
+import DraggableModal from '@/components/common/DraggableModal';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import UsuarioFormModal from './UsuarioFormModal';
 
 interface UsuariosModalProps {

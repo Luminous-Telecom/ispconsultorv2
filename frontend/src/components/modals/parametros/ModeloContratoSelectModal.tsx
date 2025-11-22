@@ -5,7 +5,7 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { formatDate } from '@/utils/formatters';
 import DocumentoSistemaService, { DocumentoSistema } from '@/services/documentoSistemaService';
-import ListModal from '../../common/ListModal';
+import ListModal from '@/components/common/ListModal';
 
 interface ModeloContratoSelectModalProps {
   show: boolean;
