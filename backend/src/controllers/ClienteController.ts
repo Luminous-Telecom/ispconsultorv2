@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Cliente } from '../models/Cliente';
+import { Titulo } from '../models/Titulo';
 import { Op, WhereOptions } from 'sequelize';
 import Joi from 'joi';
 import axios from 'axios';
@@ -213,7 +214,12 @@ export class ClienteController {
       // Os títulos relacionados precisam ser serializados explicitamente
       // pois o Sequelize não chama toJSON() customizado em relacionamentos
       // Primeiro, obter as instâncias dos títulos ANTES de serializar o cliente
-      const titulosInstances = (cliente as any).titulos as Array<any> | undefined;
+      interface ClienteWithTitulos extends Cliente {
+        titulos?: Titulo[];
+      }
+      
+      const clienteWithTitulos = cliente as ClienteWithTitulos;
+      const titulosInstances = clienteWithTitulos.titulos;
       
       // Serializar o cliente
       const clienteData = cliente.toJSON() as Record<string, unknown>;
@@ -221,7 +227,7 @@ export class ClienteController {
       // Serializar títulos relacionados explicitamente usando toJSON()
       // Se temos instâncias de modelo, usar toJSON() customizado
       if (titulosInstances && Array.isArray(titulosInstances)) {
-        clienteData.titulos = titulosInstances.map((titulo: any) => {
+        clienteData.titulos = titulosInstances.map((titulo: Titulo) => {
           if (titulo && typeof titulo.toJSON === 'function') {
             return titulo.toJSON();
           }
@@ -491,7 +497,12 @@ export class ClienteController {
 
       // Serializar títulos relacionados usando toJSON()
       // Primeiro, obter as instâncias dos títulos ANTES de serializar o cliente
-      const titulosInstances = (clienteAtualizado as any).titulos as Array<any> | undefined;
+      interface ClienteWithTitulos extends Cliente {
+        titulos?: Titulo[];
+      }
+      
+      const clienteWithTitulos = clienteAtualizado as ClienteWithTitulos;
+      const titulosInstances = clienteWithTitulos.titulos;
       
       // Serializar o cliente
       const clienteData = clienteAtualizado.toJSON() as Record<string, unknown>;
@@ -499,7 +510,7 @@ export class ClienteController {
       // Serializar títulos relacionados explicitamente usando toJSON()
       // Se temos instâncias de modelo, usar toJSON() customizado
       if (titulosInstances && Array.isArray(titulosInstances) && clienteData) {
-        clienteData.titulos = titulosInstances.map((titulo: any) => {
+        clienteData.titulos = titulosInstances.map((titulo: Titulo) => {
           if (titulo && typeof titulo.toJSON === 'function') {
             return titulo.toJSON();
           }

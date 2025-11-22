@@ -302,7 +302,7 @@ export class RoutineExecutionService {
           logger.error('Erro ao processar contrato na geração de títulos', {
             context: 'RoutineExecutionService',
             action: 'executeGeracaoTitulos',
-            contratoId: (contrato as any).id,
+            contratoId: contrato.id,
             error: errorMessage,
             stack: errorStack
           });

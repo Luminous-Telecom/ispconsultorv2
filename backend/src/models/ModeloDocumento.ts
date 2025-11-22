@@ -41,9 +41,18 @@ export class ModeloDocumento extends Model<ModeloDocumentoAttributes, ModeloDocu
 
   // Métodos estáticos
   static async findByTipo(tipo: string): Promise<ModeloDocumento[]> {
+    // Validar que o tipo é um dos valores permitidos
+    const tiposValidos: Array<ModeloDocumentoAttributes['tipo']> = [
+      'contrato', 'recibo', 'carta', 'boleto', 'comprovante', 'outro', 'termo'
+    ];
+    
+    if (!tiposValidos.includes(tipo as ModeloDocumentoAttributes['tipo'])) {
+      return [];
+    }
+    
     return this.findAll({
       where: { 
-        tipo: tipo as any,
+        tipo: tipo as ModeloDocumentoAttributes['tipo'],
         ativo: true 
       },
       order: [['nome', 'ASC']]

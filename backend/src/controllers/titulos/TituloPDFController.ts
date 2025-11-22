@@ -50,7 +50,16 @@ export class TituloPDFController {
       return Buffer.from(pdfBuffer).toString('base64');
       
     } catch (error: unknown) {
-      const errorMessage = (error as any)?.response?.data?.message || (error instanceof Error ? error.message : 'Erro desconhecido');
+      let errorMessage = 'Erro desconhecido';
+      
+      // Verificar se é erro do Axios
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        errorMessage = axiosError.response?.data?.message || 'Erro ao gerar PDF';
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       logger.error('Erro ao gerar PDF do boleto:', errorMessage);
       return null;
     }
