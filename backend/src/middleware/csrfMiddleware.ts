@@ -12,19 +12,46 @@
  * - Desabilitado por padrão para não interferir com APIs REST
  */
 import { Request, Response, NextFunction } from 'express';
+import { SessionData } from 'express-session';
 import { logger } from '../utils/logger';
 
 // Verificar se CSRF está habilitado
 const ENABLE_CSRF = process.env.ENABLE_CSRF === 'true';
 
+/**
+ * Interface para o módulo csrf
+ */
+interface CsrfTokens {
+  secretSync(): string;
+  create(secret: string): string;
+  verify(secret: string, token: string): boolean;
+}
+
+interface CsrfModule {
+  Tokens: new () => CsrfTokens;
+}
+
+/**
+ * Interface para sessão com dados CSRF
+ */
+interface SessionWithCsrf extends SessionData {
+  csrfSecret?: string;
+}
+
+/**
+ * Interface para Request com sessão tipada
+ */
+interface RequestWithCsrfSession extends Request {
+  session?: SessionWithCsrf;
+}
+
 // Importação condicional do csrf
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let csrfInstance: any = null;
+let csrfInstance: CsrfTokens | null = null;
 
 try {
   if (ENABLE_CSRF) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const csrfModule = require('csrf');
+    const csrfModule = require('csrf') as CsrfModule;
     csrfInstance = new csrfModule.Tokens();
   }
 } catch {
@@ -59,14 +86,15 @@ export function csrfTokenMiddleware(req: Request, res: Response, next: NextFunct
     res.locals.csrfToken = token;
   } else {
     // Usar sessão se disponível
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sessionData = req.session as any;
-    if (!sessionData.csrfSecret) {
-      sessionData.csrfSecret = csrfInstance.secretSync();
+    const requestWithSession = req as RequestWithCsrfSession;
+    if (requestWithSession.session) {
+      if (!requestWithSession.session.csrfSecret) {
+        requestWithSession.session.csrfSecret = csrfInstance.secretSync();
+      }
+      
+      const token = csrfInstance.create(requestWithSession.session.csrfSecret);
+      res.locals.csrfToken = token;
     }
-    
-    const token = csrfInstance.create(sessionData.csrfSecret);
-    res.locals.csrfToken = token;
     
     res.cookie('XSRF-TOKEN', token, {
       httpOnly: false,
@@ -132,12 +160,8 @@ export function csrfProtectionMiddleware(req: Request, res: Response, next: Next
     }
 
     // Obter secret da sessão ou criar temporário
-    let secret: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sessionData = req.session as any;
-    if (req.session && sessionData.csrfSecret) {
-      secret = sessionData.csrfSecret;
-    } else {
+    const requestWithSession = req as RequestWithCsrfSession;
+    if (!requestWithSession.session || !requestWithSession.session.csrfSecret) {
       // Se não há sessão, não podemos validar adequadamente
       // Neste caso, vamos permitir mas logar um aviso
       logger.warn('CSRF sem sessão - validação limitada', {
@@ -147,6 +171,8 @@ export function csrfProtectionMiddleware(req: Request, res: Response, next: Next
       next();
       return;
     }
+    
+    const secret = requestWithSession.session.csrfSecret;
 
     // Validar token
     if (!csrfInstance.verify(secret, token)) {
