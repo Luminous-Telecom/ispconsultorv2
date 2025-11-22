@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { TituloService } from '../../../../services/tituloService';
 import { PlanoService } from '../../../../services/planoService';
 import { ClienteService } from '../../../../services/clienteService';
@@ -57,7 +57,6 @@ const TituloModal: React.FC<TituloModalProps> = ({
   const formData = formHook.formData;
   const errors = formHook.errors;
   const { success, error } = useNotificationContext();
-  const queryClient = useQueryClient();
   
   // Hook para gerenciar seleção de plano
   const planoSelect = useEntitySelectField<{ id: number }>();

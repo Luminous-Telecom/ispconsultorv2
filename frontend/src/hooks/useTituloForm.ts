@@ -5,7 +5,7 @@
  * Refatorado para usar React Hook Form + Zod internamente
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -140,10 +140,11 @@ export const useTituloForm = ({
       || undefined;
     
     return {
-      cliente_id: clienteIdFromTitulo,
       plano_id: titulo.plano_id || 0,
       contrato_id: undefined, // CarneParcela não tem contrato_id
       data_vencimento: dataVencimento,
+      status: titulo.status || 'pendente',
+      pago: titulo.pago || false,
       observacoes: titulo.observacoes || '',
       desconto_percentual: titulo.desconto_percentual || 0,
       desconto_valor: titulo.desconto_valor || 0,
