@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
@@ -6,10 +6,11 @@ import { useTheme } from '../../contexts/ThemeContext';
 import DropdownMenu from '../common/DropdownMenu';
 import { Button } from '../ui';
 import { useDashboardFilters } from '../../contexts/DashboardFiltersContext';
-// Modais com lazy loading (code splitting) - carregados apenas quando necessário
-import { lazy, Suspense } from 'react';
 import Loading from '../common/Loading';
+import { authService, CurrentUser } from '../../services/authService';
+import { getAuthToken } from '../../services/core';
 
+// Modais com lazy loading (code splitting) - carregados apenas quando necessário
 // Named exports
 const ClienteListModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteListModal })));
 const PlanoListModal = lazy(() => import('../modals/planos').then(m => ({ default: m.PlanoListModal })));
@@ -27,8 +28,6 @@ const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSis
 const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
 const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
 const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
-import { authService, CurrentUser } from '../../services/authService';
-import { getAuthToken } from '../../services/core';
 
 const Layout: React.FC = () => {
   const location = useLocation();

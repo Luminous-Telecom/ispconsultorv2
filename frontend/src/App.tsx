@@ -5,20 +5,16 @@ import { NotificationProvider } from './components/notifications/NotificationPro
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import Loading from './components/common/Loading';
+import ProtectionLayer from './components/common/ProtectionLayer';
+import Layout from './components/layout/Layout';
 import './styles/themes.css';
 import './styles/protection.css';
-
-// Layout (carregado normalmente pois é sempre necessário)
-import Layout from './components/layout/Layout';
 
 // Pages com lazy loading (code splitting)
 const Home = lazy(() => import('./components/pages/Home'));
 const Dashboard = lazy(() => import('./components/pages/Dashboard'));
 const Login = lazy(() => import('./components/pages/Login'));
 const PagamentoPublico = lazy(() => import('./components/pages/PagamentoPublico'));
-
-// Protection
-import ProtectionLayer from './components/common/ProtectionLayer';
 // teste
 // Query Client
 const queryClient = new QueryClient({
