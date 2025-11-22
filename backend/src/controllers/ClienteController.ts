@@ -86,7 +86,7 @@ export class ClienteController {
     observacoes: Joi.string().allow(null, ''),
     ativo: Joi.boolean(),
     tipo_cobranca: Joi.string().valid('titulo', 'carne').allow(null),
-    valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').required(),
+    valor_primeiro_titulo: Joi.string().valid('total', 'proporcional').allow(null, ''),
     recebe_email: Joi.boolean(),
     recebe_sms: Joi.boolean(),
     recebe_whatsapp: Joi.boolean()
@@ -209,9 +209,29 @@ export class ClienteController {
         return;
       }
 
+      // Serializar cliente e títulos relacionados usando toJSON()
+      // Os títulos relacionados precisam ser serializados explicitamente
+      // pois o Sequelize não chama toJSON() customizado em relacionamentos
+      // Primeiro, obter as instâncias dos títulos ANTES de serializar o cliente
+      const titulosInstances = (cliente as any).titulos as Array<any> | undefined;
+      
+      // Serializar o cliente
+      const clienteData = cliente.toJSON() as Record<string, unknown>;
+      
+      // Serializar títulos relacionados explicitamente usando toJSON()
+      // Se temos instâncias de modelo, usar toJSON() customizado
+      if (titulosInstances && Array.isArray(titulosInstances)) {
+        clienteData.titulos = titulosInstances.map((titulo: any) => {
+          if (titulo && typeof titulo.toJSON === 'function') {
+            return titulo.toJSON();
+          }
+          return titulo;
+        });
+      }
+
       res.json({
         success: true,
-        data: cliente
+        data: clienteData
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -234,8 +254,18 @@ export class ClienteController {
   // Criar novo cliente
   static async store(req: Request, res: Response): Promise<void> {
     try {
+      // Normalizar CNPJ (remover HTML entities se houver)
+      const bodyNormalizado = { ...req.body };
+      if (bodyNormalizado.cnpj && typeof bodyNormalizado.cnpj === 'string') {
+        // Decodificar HTML entities (ex: &#x2F; -> /)
+        bodyNormalizado.cnpj = bodyNormalizado.cnpj
+          .replace(/&#x2F;/g, '/')
+          .replace(/&#47;/g, '/')
+          .replace(/&sol;/g, '/');
+      }
+
       // Validar dados
-      const { error, value } = ClienteController.createSchema.validate(req.body);
+      const { error, value } = ClienteController.createSchema.validate(bodyNormalizado);
       
       if (error) {
         res.status(400).json({
@@ -299,10 +329,47 @@ export class ClienteController {
     try {
       const { id } = req.params;
       
+      logger.info('Iniciando atualização de cliente', {
+        context: 'ClienteController',
+        action: 'update',
+        clienteId: id,
+        bodyKeys: Object.keys(req.body || {}),
+        bodySize: JSON.stringify(req.body || {}).length
+      });
+
+      // Normalizar CNPJ (remover HTML entities se houver)
+      const bodyNormalizado = { ...req.body };
+      if (bodyNormalizado.cnpj && typeof bodyNormalizado.cnpj === 'string') {
+        // Decodificar HTML entities (ex: &#x2F; -> /)
+        bodyNormalizado.cnpj = bodyNormalizado.cnpj
+          .replace(/&#x2F;/g, '/')
+          .replace(/&#47;/g, '/')
+          .replace(/&sol;/g, '/');
+      }
+
       // Validar dados
-      const { error, value } = ClienteController.updateSchema.validate(req.body);
+      logger.debug('Validando dados do cliente', {
+        context: 'ClienteController',
+        action: 'update',
+        clienteId: id,
+        body: bodyNormalizado
+      });
+
+      const { error, value } = ClienteController.updateSchema.validate(bodyNormalizado);
       
       if (error) {
+        logger.warn('Validação falhou ao atualizar cliente', {
+          context: 'ClienteController',
+          action: 'update',
+          clienteId: id,
+          validationErrors: error.details.map(d => ({
+            message: d.message,
+            path: d.path,
+            type: d.type
+          })),
+          body: req.body
+        });
+        
         res.status(400).json({
           success: false,
           error: 'Dados inválidos',
@@ -310,12 +377,30 @@ export class ClienteController {
         });
         return;
       }
-      
+
+      logger.debug('Validação passou, dados validados', {
+        context: 'ClienteController',
+        action: 'update',
+        clienteId: id,
+        validatedKeys: Object.keys(value)
+      });
 
       // Buscar cliente
+      logger.debug('Buscando cliente no banco de dados', {
+        context: 'ClienteController',
+        action: 'update',
+        clienteId: id
+      });
+
       const cliente = await Cliente.findByPk(id);
       
       if (!cliente) {
+        logger.warn('Cliente não encontrado para atualização', {
+          context: 'ClienteController',
+          action: 'update',
+          clienteId: id
+        });
+        
         res.status(404).json({
           success: false,
           error: 'Cliente não encontrado'
@@ -323,8 +408,23 @@ export class ClienteController {
         return;
       }
 
+      logger.debug('Cliente encontrado', {
+        context: 'ClienteController',
+        action: 'update',
+        clienteId: id,
+        cnpjAtual: cliente.cnpj,
+        cnpjNovo: value.cnpj
+      });
+
       // Verificar se CNPJ já existe em outro cliente
       if (value.cnpj && value.cnpj !== cliente.cnpj) {
+        logger.debug('Verificando se CNPJ já existe em outro cliente', {
+          context: 'ClienteController',
+          action: 'update',
+          clienteId: id,
+          cnpj: value.cnpj
+        });
+
         const clienteExistente = await Cliente.findOne({
           where: { 
             cnpj: value.cnpj,
@@ -333,6 +433,14 @@ export class ClienteController {
         });
 
         if (clienteExistente) {
+          logger.warn('CNPJ já cadastrado em outro cliente', {
+            context: 'ClienteController',
+            action: 'update',
+            clienteId: id,
+            cnpj: value.cnpj,
+            clienteExistenteId: clienteExistente.id
+          });
+          
           res.status(409).json({
             success: false,
             error: 'CNPJ já cadastrado',
@@ -343,7 +451,20 @@ export class ClienteController {
       }
 
       // Atualizar cliente
+      logger.debug('Atualizando cliente no banco de dados', {
+        context: 'ClienteController',
+        action: 'update',
+        clienteId: id,
+        camposAtualizados: Object.keys(value)
+      });
+
       await cliente.update(value);
+
+      logger.debug('Cliente atualizado com sucesso, buscando dados atualizados com relacionamentos', {
+        context: 'ClienteController',
+        action: 'update',
+        clienteId: id
+      });
 
       // Buscar cliente atualizado com relacionamentos
       const clienteAtualizado = await Cliente.findByPk(id, {
@@ -353,14 +474,54 @@ export class ClienteController {
         ]
       });
 
+      if (!clienteAtualizado) {
+        logger.error('Cliente não encontrado após atualização', {
+          context: 'ClienteController',
+          action: 'update',
+          clienteId: id
+        });
+        
+        res.status(500).json({
+          success: false,
+          error: 'Erro interno do servidor',
+          message: 'Cliente não encontrado após atualização'
+        });
+        return;
+      }
+
+      // Serializar títulos relacionados usando toJSON()
+      // Primeiro, obter as instâncias dos títulos ANTES de serializar o cliente
+      const titulosInstances = (clienteAtualizado as any).titulos as Array<any> | undefined;
+      
+      // Serializar o cliente
+      const clienteData = clienteAtualizado.toJSON() as Record<string, unknown>;
+      
+      // Serializar títulos relacionados explicitamente usando toJSON()
+      // Se temos instâncias de modelo, usar toJSON() customizado
+      if (titulosInstances && Array.isArray(titulosInstances) && clienteData) {
+        clienteData.titulos = titulosInstances.map((titulo: any) => {
+          if (titulo && typeof titulo.toJSON === 'function') {
+            return titulo.toJSON();
+          }
+          return titulo;
+        });
+      }
+
+      logger.info('Cliente atualizado com sucesso', {
+        context: 'ClienteController',
+        action: 'update',
+        clienteId: id
+      });
+
       res.json({
         success: true,
-        data: clienteAtualizado,
+        data: clienteData || clienteAtualizado,
         message: 'Cliente atualizado com sucesso'
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
+      
       logger.error('Erro ao atualizar cliente', {
         context: 'ClienteController',
         action: 'update',
@@ -369,6 +530,7 @@ export class ClienteController {
         clienteId: req.params.id,
         body: req.body
       });
+      
       res.status(500).json({
         success: false,
         error: 'Erro interno do servidor',
