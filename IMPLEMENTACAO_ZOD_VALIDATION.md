@@ -127,8 +127,23 @@ const onSubmit = (data: ClienteFormData) => {
 - ✅ Gerencia criação e atualização de título
 - ✅ Mantém preenchimento automático com dados do contrato
 
+### 5. Banco - COMPLETO ✅
+- ✅ `banco.schema.ts` criado com validações completas
+- ✅ `useBancoForm.ts` criado e refatorado com React Hook Form + Zod
+- ✅ `BancoModal.tsx` refatorado para usar o novo hook
+- ✅ Schema completo e funcional
+- ✅ Validação em tempo real implementada
+- ✅ Mantém funcionalidades especiais (teste de conexão, geração de secret)
+
+### 6. ReceberModal - COMPLETO ✅
+- ✅ `receber.schema.ts` criado com validações completas
+- ✅ `ReceberModal.tsx` refatorado para usar React Hook Form + Zod diretamente
+- ✅ Schema completo e funcional
+- ✅ Validação em tempo real implementada
+- ✅ Validação de data não futura e valor maior que zero
+
 **Status:** 
-- ✅ Cliente, Plano, Contrato e Título completamente refatorados
+- ✅ **TODAS AS ENTIDADES REFATORADAS** - Cliente, Plano, Contrato, Título, Banco e ReceberModal
 
 ## 📚 Documentação Adicional
 
@@ -241,26 +256,37 @@ const MyForm = () => {
 
 **Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA TÍTULO**
 
-**Status Geral:** ✅ **TODAS AS ENTIDADES PRINCIPAIS REFATORADAS**
+### Banco - COMPLETO ✅
+- [x] Criar `banco.schema.ts` com validações completas
+- [x] Criar `useBancoForm.ts` com React Hook Form + Zod
+- [x] Refatorar `BancoModal.tsx` para usar o novo hook
+- [x] Remover validação manual duplicada
+- [x] Implementar validação em tempo real
+- [x] Manter funcionalidades especiais (teste de conexão, geração de secret)
 
-## 🎯 Próximas Implementações (Opcional)
+**Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA BANCO**
 
-Para aplicar o mesmo padrão em outras entidades:
+### ReceberModal - COMPLETO ✅
+- [x] Criar `receber.schema.ts` com validações completas
+- [x] Refatorar `ReceberModal.tsx` para usar React Hook Form + Zod diretamente
+- [x] Remover validação manual duplicada
+- [x] Implementar validação em tempo real
+- [x] Validação de data não futura e valor maior que zero
 
-1. **Plano**
-   - Criar `frontend/src/schemas/plano.schema.ts`
-   - Refatorar hook/formulário de Plano
-   - Atualizar componentes relacionados
+**Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA RECEBERMODAL**
 
-2. **Contrato**
-   - Criar `frontend/src/schemas/contrato.schema.ts`
-   - Refatorar hook/formulário de Contrato
-   - Atualizar componentes relacionados
+**Status Geral:** ✅ **TODAS AS ENTIDADES REFATORADAS** - Cliente, Plano, Contrato, Título, Banco e ReceberModal
 
-3. **Título**
-   - Criar `frontend/src/schemas/titulo.schema.ts`
-   - Refatorar hook/formulário de Título
-   - Atualizar componentes relacionados
+## ✅ Implementação Completa
 
-**Padrão a seguir:** Use `cliente.schema.ts` como referência e siga a mesma estrutura.
+Todas as entidades principais e secundárias foram refatoradas:
+
+1. ✅ **Cliente** - Hook `useClienteForm.ts` + Schema `cliente.schema.ts`
+2. ✅ **Plano** - Hook `usePlanoForm.ts` + Schema `plano.schema.ts`
+3. ✅ **Contrato** - Hook `useContratoForm.ts` + Schema `contrato.schema.ts`
+4. ✅ **Título** - Hook `useTituloForm.ts` + Schema `titulo.schema.ts`
+5. ✅ **Banco** - Hook `useBancoForm.ts` + Schema `banco.schema.ts`
+6. ✅ **ReceberModal** - React Hook Form direto + Schema `receber.schema.ts`
+
+**Padrão estabelecido:** Use `cliente.schema.ts` e `useClienteForm.ts` como referência para novas entidades.
 
