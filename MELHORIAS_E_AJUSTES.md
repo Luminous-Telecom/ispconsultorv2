@@ -14,27 +14,6 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-### 3. Lógica de Filtros e Busca ✅ CONCLUÍDO
-
-**Problema:** Lógica de filtros repetida em vários componentes.
-
-**Solução Implementada:**
-- ✅ Criado hook `useTableFilters` reutilizável (`frontend/src/hooks/useTableFilters.ts`)
-- ✅ Centralizada lógica de busca, filtros, ordenação e paginação
-- ✅ Padronizada interface de filtros com TypeScript genérico
-- ✅ Refatorados componentes `ClienteListModal` e `PlanoListModal` como exemplo
-
-**Benefícios:**
-- Redução de código duplicado
-- Debounce automático para busca
-- Reset automático de página ao filtrar/buscar
-- Interface unificada e tipada
-- Parâmetros prontos para API (`apiParams`)
-
-**Prioridade:** 🟢 Baixa
-
----
-
 ### 4. Cálculos Financeiros
 
 **Problema:** Cálculos espalhados em vários lugares.

@@ -437,17 +437,15 @@ export class RoutineExecutionService {
     let valorTitulo: number = Number(contrato.valor_final) || 0;
     
     if (valorTitulo <= 0 && plano?.valor_mensal) {
-      valorTitulo = Number(plano.valor_mensal);
+      const { FinancialCalculationsService } = await import('./FinancialCalculationsService');
       
-      // Sempre usar desconto em valor quando disponível (mais preciso)
-      // Se não houver desconto em valor, calcular a partir do percentual
-      if (contrato.desconto_valor && contrato.desconto_valor > 0) {
-        valorTitulo = valorTitulo - Number(contrato.desconto_valor);
-      } else if (contrato.desconto_percentual && contrato.desconto_percentual > 0) {
-        // Calcular valor do desconto a partir do percentual
-        const descontoValor = valorTitulo * (Number(contrato.desconto_percentual) / 100);
-        valorTitulo = valorTitulo - descontoValor;
-      }
+      valorTitulo = FinancialCalculationsService.calcularValorFinal(
+        Number(plano.valor_mensal),
+        {
+          desconto_valor: contrato.desconto_valor,
+          desconto_percentual: contrato.desconto_percentual
+        }
+      );
     }
 
     // Somar valores dos serviços adicionais ativos do contrato
@@ -478,15 +476,15 @@ export class RoutineExecutionService {
       const planoAdicional = servicoWithPlano.plano;
       
       if (valorServico <= 0 && planoAdicional?.valor_mensal) {
-        valorServico = Number(planoAdicional.valor_mensal);
+        const { FinancialCalculationsService } = await import('./FinancialCalculationsService');
         
-        // Aplicar descontos do serviço adicional
-        if (servico.desconto_valor && servico.desconto_valor > 0) {
-          valorServico = valorServico - Number(servico.desconto_valor);
-        } else if (servico.desconto_percentual && servico.desconto_percentual > 0) {
-          const descontoValor = valorServico * (Number(servico.desconto_percentual) / 100);
-          valorServico = valorServico - descontoValor;
-        }
+        valorServico = FinancialCalculationsService.calcularValorFinal(
+          Number(planoAdicional.valor_mensal),
+          {
+            desconto_valor: servico.desconto_valor,
+            desconto_percentual: servico.desconto_percentual
+          }
+        );
       }
       
       valorServicosAdicionais += Math.max(0, valorServico);
@@ -496,9 +494,8 @@ export class RoutineExecutionService {
     valorTitulo = valorTitulo + valorServicosAdicionais;
 
     // Garantir valor mínimo de 0.01
-    valorTitulo = Math.max(0.01, valorTitulo);
-
-    return valorTitulo;
+    const { FinancialCalculationsService } = await import('./FinancialCalculationsService');
+    return Math.max(0.01, FinancialCalculationsService.round(valorTitulo));
   }
 
   /**

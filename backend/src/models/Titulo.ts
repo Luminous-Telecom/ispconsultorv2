@@ -300,7 +300,7 @@ export class Titulo extends Model<
   }
 
   async calcularValorComMultaJuros(banco?: Banco | null): Promise<number> {
-    let valor = parseFloat(this.valor.toString());
+    const valor = parseFloat(this.valor.toString());
     
     if (this.status === 'pago') {
       return valor;
@@ -312,21 +312,15 @@ export class Titulo extends Model<
     
     const diasAtraso = await this.getDiasAtraso();
     
-    if (diasAtraso > 0) {
-      // Calcular multa
-      if (banco.percentual_multa) {
-        const multa = valor * (banco.percentual_multa / 100);
-        valor += multa;
-      }
-      
-      // Calcular juros
-      if (banco.percentual_juros) {
-        const juros = valor * (banco.percentual_juros / 100) * diasAtraso;
-        valor += juros;
-      }
-    }
+    const { FinancialCalculationsService } = await import('../services/FinancialCalculationsService');
     
-    return Math.round(valor * 100) / 100; // Arredondar para 2 casas decimais
+    const resultado = FinancialCalculationsService.calcularJurosEMulta(valor, {
+      percentual_multa: banco.percentual_multa,
+      percentual_juros: banco.percentual_juros,
+      diasAtraso
+    });
+    
+    return resultado.valorFinal;
   }
 
   async gerarCodigoBarras(): Promise<string> {

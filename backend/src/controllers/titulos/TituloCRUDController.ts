@@ -227,27 +227,24 @@ export class TituloCRUDController {
 
       const gerarNumeroTitulo = () => `TIT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-      let valorFinal = parseFloat(plano.valor_mensal.toString());
+      const { FinancialCalculationsService } = await import('../../services/FinancialCalculationsService');
       
-      if (desconto_valor && desconto_valor > 0) {
-        valorFinal = valorFinal - desconto_valor;
-      } else if (desconto_percentual && desconto_percentual > 0) {
-        valorFinal = valorFinal * (1 - (desconto_percentual / 100));
-      }
+      const valorFinal = FinancialCalculationsService.calcularValorFinal(
+        parseFloat(plano.valor_mensal.toString()),
+        {
+          desconto_valor,
+          desconto_percentual
+        },
+        {
+          acrescimo_valor,
+          acrescimo_percentual
+        }
+      );
       
-      if (acrescimo_percentual && acrescimo_percentual > 0) {
-        valorFinal = valorFinal * (1 + (acrescimo_percentual / 100));
-      }
-      
-      if (acrescimo_valor && acrescimo_valor > 0) {
-        valorFinal = valorFinal + acrescimo_valor;
-      }
-      
-      if (isNaN(valorFinal) || valorFinal < 0.01) {
+      if (!FinancialCalculationsService.validarValor(valorFinal)) {
         res.status(400).json({ success: false, message: 'Valor inválido (R$ ' + valorFinal.toFixed(2) + '). Valor mínimo R$ 0,01.' });
         return;
       }
-      valorFinal = Math.max(0.01, valorFinal);
 
       const { withTransaction } = await import('../../utils/transaction');
       const titulo = await withTransaction(async (transaction) => {

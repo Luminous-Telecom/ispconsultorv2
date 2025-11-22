@@ -139,14 +139,24 @@ export class FinanceiroVariableHandler implements IVariableHandler {
 
   /**
    * Adiciona juros e multa aos cálculos
+   * Nota: Este método usa acrescimo_percentual e acrescimo_valor do título,
+   * não os juros e multa padrão do banco
    */
   private adicionarJurosEMulta(
     titulo: Titulo,
     valor: number,
     calculos: CalculosFinanceiros
   ): void {
+    const { FinancialCalculationsService } = require('../FinancialCalculationsService');
+    
+    const acrescimoResult = FinancialCalculationsService.calcularAcrescimo(valor, {
+      acrescimo_percentual: titulo.acrescimo_percentual,
+      acrescimo_valor: titulo.acrescimo_valor
+    });
+
+    // Separar juros (percentual) e multa (valor fixo) para compatibilidade
     const juros = titulo.acrescimo_percentual && titulo.acrescimo_percentual > 0
-      ? (valor * titulo.acrescimo_percentual) / 100
+      ? acrescimoResult.valorAcrescimo - (titulo.acrescimo_valor || 0)
       : 0;
     
     const multa = titulo.acrescimo_valor || 0;

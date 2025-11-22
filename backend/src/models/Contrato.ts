@@ -93,20 +93,16 @@ export class Contrato extends Model<
 
     // Se não existe, calcular baseado no plano atual
     const plano = await this.getPlano();
-    let valor = parseFloat(plano.valor_mensal.toString());
+    const valorOriginal = parseFloat(plano.valor_mensal.toString());
 
-    // Sempre usar desconto em valor quando disponível (mais preciso)
-    // Se não houver desconto em valor, calcular a partir do percentual
-    if (this.desconto_valor && this.desconto_valor > 0) {
-      valor = Math.max(0, valor - parseFloat(this.desconto_valor.toString()));
-    } else if (this.desconto_percentual && this.desconto_percentual > 0) {
-      // Calcular valor do desconto a partir do percentual
-      const descontoValor = valor * (parseFloat(this.desconto_percentual.toString()) / 100);
-      valor = Math.max(0, valor - descontoValor);
-    }
+    const { FinancialCalculationsService } = await import('../services/FinancialCalculationsService');
+    
+    const resultado = FinancialCalculationsService.calcularDesconto(valorOriginal, {
+      desconto_valor: this.desconto_valor,
+      desconto_percentual: this.desconto_percentual
+    });
 
-    // Arredondar para 2 casas decimais para evitar problemas de precisão
-    return Math.round(valor * 100) / 100;
+    return resultado.valorFinal;
   }
 
   async isVigente(): Promise<boolean> {
