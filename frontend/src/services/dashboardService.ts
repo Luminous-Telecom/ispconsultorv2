@@ -80,7 +80,6 @@ export class DashboardService {
       }
       throw new Error(response.message || 'Erro ao carregar dados do dashboard');
     } catch (error) {
-      console.error('Erro ao buscar dados do dashboard:', error);
       throw error;
     }
   }
@@ -98,7 +97,6 @@ export class DashboardService {
       }
       throw new Error(response.message || 'Erro ao carregar estatísticas do dashboard');
     } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error);
       throw error;
     }
   }
@@ -112,7 +110,6 @@ export class DashboardService {
       }
       return [];
     } catch (error) {
-      console.error('Erro ao buscar carnês recentes:', error);
       throw error;
     }
   }
@@ -126,7 +123,6 @@ export class DashboardService {
       }
       return [];
     } catch (error) {
-      console.error('Erro ao buscar parcelas vencidas:', error);
       throw error;
     }
   }
@@ -140,7 +136,6 @@ export class DashboardService {
       }
       throw new Error(response.message || 'Erro ao carregar receita dos últimos meses');
     } catch (error) {
-      console.error('Erro ao buscar receita dos últimos meses:', error);
       throw error;
     }
   }
@@ -154,7 +149,6 @@ export class DashboardService {
       }
       throw new Error(response.message || 'Erro ao carregar clientes por status');
     } catch (error) {
-      console.error('Erro ao buscar clientes por status:', error);
       throw error;
     }
   }
@@ -168,7 +162,6 @@ export class DashboardService {
       }
       throw new Error(response.message || 'Erro ao carregar relatório de vendas');
     } catch (error) {
-      console.error('Erro ao buscar relatório de vendas:', error);
       throw error;
     }
   }

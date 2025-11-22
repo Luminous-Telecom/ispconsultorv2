@@ -51,7 +51,6 @@ export class CepService {
         siafi: data.siafi,
       };
     } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
       throw error;
     }
   }
@@ -72,7 +71,6 @@ export class CepService {
 
       throw new Error(response.message || 'Erro ao buscar CEP');
     } catch (error) {
-      console.error('Erro ao buscar CEP na API:', error);
       throw error;
     }
   }

@@ -73,8 +73,8 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
       });
 
       onSuccess?.();
-    } catch (error) {
-      console.error('Erro ao marcar como pago:', error);
+    } catch {
+      // Erro já tratado pelo hook useMarcarTituloPago
     }
   };
 

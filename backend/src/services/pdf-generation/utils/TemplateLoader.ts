@@ -78,13 +78,6 @@ export class TemplateLoader {
     const stylePath = path.join(this.STYLES_DIR, `${styleName}.css`);
     
     if (!fs.existsSync(stylePath)) {
-      // Log de debug para ajudar a identificar o problema
-      console.error(`[TemplateLoader] Tentando carregar estilo: ${styleName}`);
-      console.error(`[TemplateLoader] BASE_DIR: ${this.BASE_DIR}`);
-      console.error(`[TemplateLoader] STYLES_DIR: ${this.STYLES_DIR}`);
-      console.error(`[TemplateLoader] stylePath: ${stylePath}`);
-      console.error(`[TemplateLoader] process.cwd(): ${process.cwd()}`);
-      console.error(`[TemplateLoader] __dirname: ${typeof __dirname !== 'undefined' ? __dirname : 'undefined'}`);
       throw new Error(`Estilo não encontrado: ${styleName} (caminho: ${stylePath})`);
     }
 

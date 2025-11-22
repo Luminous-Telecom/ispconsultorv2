@@ -14,19 +14,6 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-### 3. Comentários e Documentação
-
-**Problema:** Falta de documentação em alguns lugares complexos.
-
-**Sugestão:**
-- Adicionar JSDoc em funções complexas
-- Documentar lógica de negócio importante
-- Manter README atualizado
-
-**Prioridade:** 🟢 Baixa
-
----
-
 ## 🗑️ Limpeza de Código
 
 ### 1. Código Morto

@@ -74,7 +74,6 @@ export class VariaveisDocumentoService {
    * @example
    * ```typescript
    * const variaveis = VariaveisDocumentoService.getVariaveisDisponiveis();
-   * console.log(variaveis.cliente.variaveis); // Lista de variáveis do cliente
    * ```
    */
   static getVariaveisDisponiveis(): Record<string, GrupoVariaveis> {
@@ -132,7 +131,7 @@ export class VariaveisDocumentoService {
         const processResult = handler.process(resultado, context);
         resultado = await Promise.resolve(processResult);
       } catch (error) {
-        console.error(`Erro ao processar variáveis com handler ${handler.constructor.name}:`, error);
+        // Erro silenciosamente tratado - handler específico já registrou o erro
         // Continua processamento mesmo em caso de erro em um handler
       }
     }

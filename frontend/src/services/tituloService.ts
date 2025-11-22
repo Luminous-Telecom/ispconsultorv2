@@ -184,7 +184,6 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
 
       return blob;
     } catch (error) {
-      console.error('Erro ao gerar PDF de múltiplos boletos:', error);
       throw error;
     }
   }

@@ -108,8 +108,7 @@ export class ParametroService {
         default:
           return valor as T;
       }
-    } catch (error) {
-      console.error(`Erro ao obter parâmetro ${chave}:`, error);
+    } catch {
       return null;
     }
   }

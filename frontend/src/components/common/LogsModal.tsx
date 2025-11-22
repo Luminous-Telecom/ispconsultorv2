@@ -100,7 +100,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
         setLogs(data.data);
       }
     } catch (error) {
-      console.error('Erro ao buscar logs:', error);
+      // Erro silenciosamente tratado - componente já mostra estado de loading
     } finally {
       setLoading(false);
     }

@@ -97,8 +97,7 @@ export default class VariablePlugin extends Plugin {
         let variaveisData: VariaveisData;
         try {
           variaveisData = await buscarVariaveis();
-        } catch (error) {
-          console.error('Erro ao buscar variáveis:', error);
+        } catch {
           buttonView.isOn = false;
           return;
         }

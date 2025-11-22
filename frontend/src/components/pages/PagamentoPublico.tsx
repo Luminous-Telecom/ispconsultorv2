@@ -40,7 +40,6 @@ const PagamentoPublico: React.FC = () => {
         return response.data;
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar título';
-        console.error('Erro ao buscar título público:', err);
         throw new Error(errorMessage);
       }
     },

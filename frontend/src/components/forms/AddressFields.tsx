@@ -70,8 +70,7 @@ const AddressFields: React.FC<AddressFieldsProps> = ({
           }
           isSearching.current = false;
         })
-        .catch(error => {
-          console.error('Erro ao buscar CEP:', error);
+        .catch(() => {
           isSearching.current = false;
           lastSearchedCep.current = '';
         });
