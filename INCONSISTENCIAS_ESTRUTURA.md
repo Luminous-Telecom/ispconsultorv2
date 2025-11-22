@@ -15,12 +15,12 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 - ✅ Webpack configurado para resolver aliases através do CRACO
 - ✅ Scripts atualizados para usar `craco` em vez de `react-scripts`
 - ✅ ESLint configurado com `parserOptions.project` para suportar regras TypeScript
-- ✅ 21 arquivos principais já refatorados
+- ✅ 41 arquivos principais já refatorados
 
 **Estatísticas:**
-- ✅ 21 arquivos principais refatorados
-- ⏳ ~36 arquivos ainda com imports profundos (`../../../` ou `../../../../`)
-- 📊 Total de imports profundos encontrados: ~133 ocorrências restantes
+- ✅ 41 arquivos principais refatorados
+- ⏳ ~16 arquivos ainda com imports profundos (`../../../` ou `../../../../`)
+- 📊 Total de imports profundos encontrados: ~90 ocorrências restantes
 
 **Observação**: A refatoração pode continuar gradualmente nos demais arquivos conforme necessário.
 
@@ -32,7 +32,7 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 
 **Status**: ⏳ **EM ANDAMENTO**
 
-- ⏳ Refatorar ~36 arquivos restantes que ainda usam imports profundos
+- ⏳ Refatorar ~16 arquivos restantes que ainda usam imports profundos
 - ⏳ Priorizar arquivos mais críticos ou frequentemente modificados
 - ⏳ A refatoração pode ser feita gradualmente conforme necessário
 
