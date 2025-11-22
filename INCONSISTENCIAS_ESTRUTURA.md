@@ -7,9 +7,23 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 *Nenhuma inconsistência pendente no momento.*
 
 **Refatorações concluídas:**
-- ✅ Todos os imports profundos (`../../../../` e `../../../`) refatorados para path aliases
-- ✅ 89 arquivos refatorados no total
-- ✅ Todos os imports críticos agora usam path aliases (`@/hooks`, `@/services`, `@/types`, `@/utils`, `@/components/*`)
+- ✅ **Todos os imports relativos profundos eliminados** (`../../../../`, `../../../`, `../../`)
+- ✅ **106 arquivos refatorados** no total
+- ✅ Todos os imports críticos agora usam path aliases:
+  - `@/hooks` - hooks personalizados
+  - `@/services` - serviços de API
+  - `@/types` - tipos TypeScript
+  - `@/utils` - utilitários
+  - `@/components/*` - componentes (ui, common, tables, forms, modals, etc.)
+  - `@/contexts` - contextos React
+  - `@/config` - configurações
+  - `@/schemas` - schemas de validação
+  - `@/constants` - constantes
+
+**Resultado:**
+- ✅ 0 imports relativos profundos restantes
+- ✅ Código mais legível e manutenível
+- ✅ Imports consistentes em todo o projeto
 
 ---
 
@@ -36,4 +50,4 @@ O projeto usa **CRACO** (Create React App Configuration Override) para permitir 
 ---
 
 **Última atualização:** 2025-01-22
-**Versão:** 5.0
+**Versão:** 6.0
