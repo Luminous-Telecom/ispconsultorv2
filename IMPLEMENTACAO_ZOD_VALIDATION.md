@@ -104,27 +104,32 @@ const onSubmit = (data: ClienteFormData) => {
 - ✅ Schema completo e funcional
 - ✅ Validação em tempo real implementada
 
-### 2. Schemas para Outras Entidades - CRIADOS ✅
+### 2. Plano - COMPLETO ✅
+- ✅ `usePlanoForm.ts` criado e refatorado com React Hook Form + Zod
+- ✅ `PlanoModal.tsx` refatorado para usar o novo hook
+- ✅ Schema completo e funcional
+- ✅ Validação em tempo real implementada
+- ✅ Todos os componentes de aba funcionando corretamente
 
-#### `frontend/src/schemas/plano.schema.ts` ✅
-- ✅ Schema completo para validação de Planos
-- ✅ Validações para valores, descontos, periodicidade
-- ✅ Validação de datas e status
-- ✅ Tipos TypeScript inferidos
+### 3. Schemas para Outras Entidades - CRIADOS ✅
 
 #### `frontend/src/schemas/contrato.schema.ts` ✅
 - ✅ Schema completo para validação de Contratos
 - ✅ Validações para relacionamentos obrigatórios
 - ✅ Validação de descontos e datas
 - ✅ Tipos TypeScript inferidos
+- ⏳ Aguardando refatoração do formulário
 
 #### `frontend/src/schemas/titulo.schema.ts` ✅
 - ✅ Schema completo para validação de Títulos
 - ✅ Validações para valores, descontos e acréscimos
 - ✅ Validação de datas e status
 - ✅ Tipos TypeScript inferidos
+- ⏳ Aguardando refatoração do formulário
 
-**Status:** Schemas criados e prontos para uso. Podem ser integrados aos formulários seguindo o mesmo padrão usado em `cliente.schema.ts`
+**Status:** 
+- ✅ Cliente e Plano completamente refatorados
+- ⏳ Contrato e Título têm schemas prontos, aguardando refatoração dos formulários
 
 ## 📚 Documentação Adicional
 
@@ -207,14 +212,22 @@ const MyForm = () => {
 
 **Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA CLIENTE**
 
-### Outras Entidades - SCHEMAS CRIADOS ✅
+### Plano - COMPLETO ✅
 - [x] Criar `plano.schema.ts` com validações completas
+- [x] Criar `usePlanoForm.ts` com React Hook Form + Zod
+- [x] Refatorar `PlanoModal.tsx` para usar o novo hook
+- [x] Remover validação manual duplicada
+- [x] Implementar validação em tempo real
+
+**Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA PLANO**
+
+### Outras Entidades - SCHEMAS CRIADOS ✅
 - [x] Criar `contrato.schema.ts` com validações completas
 - [x] Criar `titulo.schema.ts` com validações completas
 
 **Status:** ✅ **SCHEMAS CRIADOS E PRONTOS PARA USO**
 
-**Próximo Passo:** Refatorar formulários de Plano, Contrato e Título para usar React Hook Form + Zod (opcional)
+**Próximo Passo:** Refatorar formulários de Contrato e Título para usar React Hook Form + Zod (opcional)
 
 ## 🎯 Próximas Implementações (Opcional)
 
