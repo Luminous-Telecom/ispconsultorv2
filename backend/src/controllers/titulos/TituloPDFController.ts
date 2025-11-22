@@ -60,19 +60,13 @@ export class TituloPDFController {
    * Processa HTML do boleto substituindo variáveis do template
    */
   private static async processarBoletoHtml(titulo: TituloComRelacoes): Promise<string> {
-    const tituloId = titulo?.id;
-    logger.info(`[processarBoletoHtml] INÍCIO - Título ID: ${tituloId}`);
-    
     try {
-      logger.info(`[processarBoletoHtml] Validando título - ID: ${tituloId}, Has Título: ${!!titulo}`);
 
       // Validar título e relações essenciais
       if (!titulo) {
         logger.error('Título não fornecido ao processar HTML');
         throw new Error('Título não fornecido');
       }
-      
-      logger.info(`[processarBoletoHtml] Validando relações - ID: ${titulo.id}, Cliente: ${!!titulo.cliente} (${titulo.cliente?.id}), Banco: ${!!titulo.banco} (${titulo.banco?.id})`);
       
       if (!titulo.cliente) {
         logger.error(`[processarBoletoHtml] ERRO: Cliente não encontrado - Título ID: ${titulo.id}`);
@@ -85,83 +79,40 @@ export class TituloPDFController {
       }
       
       // Carregar dados da empresa
-      logger.info(`[processarBoletoHtml] Carregando dados da empresa - Título ID: ${tituloId}`);
       const dadosEmpresa = await DadosEmpresa.findOne();
       if (!dadosEmpresa) {
-        logger.error(`[processarBoletoHtml] ERRO: Dados da empresa não configurados - Título ID: ${tituloId}`);
         throw new Error('Dados da empresa não configurados');
       }
-      logger.info(`[processarBoletoHtml] Dados da empresa carregados - Empresa ID: ${dadosEmpresa.id}, Título ID: ${tituloId}`);
 
       // Preparar variáveis para o template
-      logger.info('Preparando variáveis do template', {
-        titulo_id: titulo.id,
-        data_vencimento: titulo.data_vencimento,
-        valor: titulo.valor
-      });
-      
-      // Usa toLocaleDateString para exibição, o que está correto (deve ser local)
       const dataVencimento = parseDateFromDb(titulo.data_vencimento)?.toLocaleDateString('pt-BR') || '';
       const dataProcessamento = new Date().toLocaleDateString('pt-BR');
       const valorBoleto = Number(titulo.valor || 0).toFixed(2).replace('.', ',');
       
-      logger.info('Variáveis preparadas', {
-        data_vencimento: dataVencimento,
-        data_processamento: dataProcessamento,
-        valor_boleto: valorBoleto
-      });
-      
       // Carregar templates
-      logger.info('Carregando templates HTML');
       const templatesPath = path.join(__dirname, '../../templates');
       const topoTemplatePath = path.join(templatesPath, 'boleto-topo-inner.html');
       const corpoTemplatePath = path.join(templatesPath, 'boleto-corpo-inner.html');
       
-      logger.info('Caminhos dos templates', {
-        templates_path: templatesPath,
-        topo_template: topoTemplatePath,
-        corpo_template: corpoTemplatePath,
-        topo_exists: fs.existsSync(topoTemplatePath),
-        corpo_exists: fs.existsSync(corpoTemplatePath)
-      });
-      
       // Verificar se os arquivos de template existem
       if (!fs.existsSync(topoTemplatePath)) {
-        logger.error('Template de topo não encontrado', { path: topoTemplatePath });
         throw new Error(`Template não encontrado: ${topoTemplatePath}`);
       }
       
       if (!fs.existsSync(corpoTemplatePath)) {
-        logger.error('Template de corpo não encontrado', { path: corpoTemplatePath });
         throw new Error(`Template não encontrado: ${corpoTemplatePath}`);
       }
       
-      logger.info('Lendo arquivos de template');
       const topoTemplate = fs.readFileSync(topoTemplatePath, 'utf8');
       const corpoTemplate = fs.readFileSync(corpoTemplatePath, 'utf8');
-      
-      logger.info('Templates carregados', {
-        topo_length: topoTemplate.length,
-        corpo_length: corpoTemplate.length
-      });
 
     // Lógica simplificada de logo (mantida a original para não quebrar referências)
-      logger.info('Processando logos');
     let logoBanco = '';
     let logoEmpresa = '';
     try {
       logoBanco = titulo.banco?.logo || getLogoBancoPadrao(titulo.banco?.tipo_banco || '') || dadosEmpresa.logo || '';
-      logger.info('Logo do banco obtido', {
-        has_logo_banco: !!logoBanco,
-        logo_length: logoBanco.length,
-        tipo_banco: titulo.banco?.tipo_banco
-      });
       logoBanco = converterLogoParaBase64(logoBanco);
       logoEmpresa = converterLogoParaBase64(dadosEmpresa.logo || '');
-      logger.info('Logos convertidos para base64', {
-        logo_banco_length: logoBanco.length,
-        logo_empresa_length: logoEmpresa.length
-      });
     } catch (error) {
       logger.warn('Erro ao converter logos para base64', {
         titulo_id: titulo.id,
@@ -173,16 +124,11 @@ export class TituloPDFController {
     }
 
     // Calcular código do banco com DV de forma segura
-    logger.info('Calculando código do banco com DV');
     let codigoBancoComDV = '364-9';
     try {
       if (titulo.banco?.codigo) {
-        logger.info('Código do banco encontrado', { codigo: titulo.banco.codigo });
         const dv = BarcodeService.calcularDVCodigoBanco(titulo.banco.codigo);
         codigoBancoComDV = `${titulo.banco.codigo}-${dv}`;
-        logger.info('DV calculado', { codigo_completo: codigoBancoComDV });
-      } else {
-        logger.info('Código do banco não encontrado, usando padrão');
       }
     } catch (error) {
       logger.warn('Erro ao calcular DV do código do banco', {
@@ -194,13 +140,9 @@ export class TituloPDFController {
     }
 
     // Processar instruções de forma segura
-    logger.info('Preparando função de processamento de instruções');
     const processarInstrucaoSegura = (instrucao: string | null | undefined): string => {
       try {
-        logger.info('Processando instrução', { instrucao, titulo_id: titulo.id });
-        const resultado = processarInstrucao(instrucao || '', titulo);
-        logger.info('Instrução processada', { resultado_length: resultado.length });
-        return resultado;
+        return processarInstrucao(instrucao || '', titulo);
       } catch (error) {
         logger.warn('Erro ao processar instrução', {
           titulo_id: titulo.id,
@@ -213,18 +155,10 @@ export class TituloPDFController {
     };
 
     // Gerar código de barras SVG de forma segura
-    logger.info('Gerando código de barras SVG');
     let boletoBarcode2 = '';
     try {
       if (titulo.codigo_barras) {
-        logger.info('Código de barras encontrado', {
-          codigo_barras: titulo.codigo_barras,
-          codigo_length: titulo.codigo_barras.length
-        });
         boletoBarcode2 = BarcodeService.generateFebrabanBarcodeSvg(titulo.codigo_barras);
-        logger.info('Código de barras SVG gerado', { svg_length: boletoBarcode2.length });
-      } else {
-        logger.info('Código de barras não encontrado, usando string vazia');
       }
     } catch (error) {
       logger.warn('Erro ao gerar código de barras SVG', {
@@ -305,57 +239,26 @@ export class TituloPDFController {
     };
 
       // Processar templates
-      logger.info('Iniciando substituição de variáveis no template', {
-        total_variaveis: Object.keys(templateVars).length
-      });
-      
       let topoProcessado = topoTemplate;
       let corpoProcessado = corpoTemplate;
       
       // Substituir variáveis no template de forma segura
-      let variaveisSubstituidas = 0;
       Object.entries(templateVars).forEach(([key, value]) => {
         try {
           const regex = new RegExp(`{{${key}}}`, 'g');
           const valorSeguro = value !== null && value !== undefined ? String(value) : '';
-          const ocorrenciasTopo = (topoProcessado.match(regex) || []).length;
-          const ocorrenciasCorpo = (corpoProcessado.match(regex) || []).length;
-          
           topoProcessado = topoProcessado.replace(regex, valorSeguro);
           corpoProcessado = corpoProcessado.replace(regex, valorSeguro);
-          
-          if (ocorrenciasTopo > 0 || ocorrenciasCorpo > 0) {
-            variaveisSubstituidas++;
-            logger.info('Variável substituída', {
-              key,
-              ocorrencias_topo: ocorrenciasTopo,
-              ocorrencias_corpo: ocorrenciasCorpo,
-              valor_length: valorSeguro.length
-            });
-          }
         } catch (error) {
           logger.warn('Erro ao substituir variável no template', {
             key,
             titulo_id: titulo.id,
-            error: error instanceof Error ? error.message : 'Erro desconhecido',
-            stack: error instanceof Error ? error.stack : undefined
+            error: error instanceof Error ? error.message : 'Erro desconhecido'
           });
         }
       });
 
-      logger.info('Substituição de variáveis concluída', {
-        variaveis_substituidas: variaveisSubstituidas,
-        topo_final_length: topoProcessado.length,
-        corpo_final_length: corpoProcessado.length
-      });
-
-      const htmlFinal = `${topoProcessado}${corpoProcessado}`;
-      logger.info('HTML final gerado', {
-        html_length: htmlFinal.length,
-        titulo_id: titulo.id
-      });
-
-      return htmlFinal;
+      return `${topoProcessado}${corpoProcessado}`;
     } catch (error: unknown) {
       // Log imediato do erro capturado
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -420,7 +323,6 @@ export class TituloPDFController {
 
       // Registrar no banco se não tiver charge_id
       if (!titulo.charge_id) {
-        logger.info('Registrando título no banco antes de imprimir...', { titulo_id: titulo.id });
 
         const resultado = await BancoApiService.gerarTitulo(titulo as TituloComRelacoes);
         
@@ -501,16 +403,9 @@ export class TituloPDFController {
         try {
           const tituloComRelacoes = titulo as TituloComRelacoes;
           const tituloComRelacoesInicio = titulo as TituloComRelacoes;
-          logger.info('=== INICIANDO PROCESSAMENTO DO TÍTULO ===', {
-            titulo_id: titulo.id,
-            has_cliente: !!tituloComRelacoesInicio.cliente,
-            has_banco: !!tituloComRelacoesInicio.banco,
-            has_charge_id: !!titulo.charge_id
-          });
 
           if (!titulo.charge_id) {
             try {
-              logger.info('Título sem charge_id, registrando no banco', { titulo_id: titulo.id });
               const resultado = await BancoApiService.gerarTitulo(titulo as TituloComRelacoes);
               
               if (resultado.success && resultado.data) {
@@ -523,7 +418,6 @@ export class TituloPDFController {
                     { model: Banco, as: 'banco' }
                   ]
                 });
-                logger.info('Título registrado com sucesso', { titulo_id: titulo.id });
               } else {
                 logger.error('Falha ao registrar título', { titulo_id: titulo.id, message: resultado.message });
               }
@@ -537,16 +431,9 @@ export class TituloPDFController {
             }
           }
 
-          logger.info('Chamando processarBoletoHtml', { titulo_id: titulo.id });
           const boletoHtml = await TituloPDFController.processarBoletoHtml(titulo as TituloComRelacoes);
           
-          logger.info('HTML do boleto gerado com sucesso', {
-            titulo_id: titulo.id,
-            html_length: boletoHtml.length
-          });
-          
           boletosHtml.push(`<div style="page-break-after: always;">${boletoHtml}</div>`);
-          logger.info('=== TÍTULO PROCESSADO COM SUCESSO ===', { titulo_id: titulo.id });
         } catch (error: unknown) {
           const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
           const errorStack = error instanceof Error ? error.stack : undefined;
@@ -601,11 +488,9 @@ export class TituloPDFController {
    * Gera PDF de múltiplos boletos
    */
   public static async gerarPdfBoletosMultiplos(req: Request, res: Response): Promise<void> {
-    logger.info('=== INICIANDO geração de PDF de múltiplos boletos ===');
     let ids: number[] = [];
     try {
       const idsParam = req.query.ids as string;
-      logger.info('IDs recebidos', { ids_param: idsParam });
       
       if (idsParam) {
         try {
@@ -621,12 +506,8 @@ export class TituloPDFController {
         return;
       }
 
-      logger.info('Buscando títulos no banco', { ids });
       const titulos = await Titulo.findAll({ where: { id: { [Op.in]: ids } }, include: [{ model: Cliente, as: 'cliente' }, { model: Plano, as: 'plano' }, { model: Banco, as: 'banco' }] });
-      logger.info('Títulos encontrados', { total: titulos.length });
-      
       if (titulos.length === 0) {
-        logger.warn('Nenhum título encontrado para os IDs fornecidos', { ids });
         res.status(404).json({ success: false, message: 'Nenhum título encontrado' });
         return;
       }
@@ -636,24 +517,13 @@ export class TituloPDFController {
       let titulosComErro = 0;
       const errosDetalhados: Array<{ titulo_id: number; motivo: string }> = [];
 
-      logger.info('Iniciando processamento de títulos', { total: titulos.length });
       for (const titulo of titulos) {
         try {
-          const tituloComRelacoesLog = titulo as TituloComRelacoes;
-          logger.info('=== PROCESSANDO TÍTULO ===', {
-            titulo_id: titulo.id,
-            has_cliente: !!tituloComRelacoesLog.cliente,
-            has_banco: !!tituloComRelacoesLog.banco,
-            has_plano: !!tituloComRelacoesLog.plano,
-            cliente_id: tituloComRelacoesLog.cliente?.id,
-            banco_id: tituloComRelacoesLog.banco?.id
-          });
           // Garantir que título tem todas as relações carregadas
           let tituloComRelacoes = titulo as TituloComRelacoes;
           
           // Verificar se precisa recarregar com relações
           if (!tituloComRelacoes.cliente || !tituloComRelacoes.banco) {
-            logger.info('Recarregando título com relações', { titulo_id: titulo.id });
             const tituloRecarregado = await Titulo.findByPk(titulo.id, {
               include: [
                 { model: Cliente, as: 'cliente' },
@@ -690,7 +560,6 @@ export class TituloPDFController {
           // Registrar no banco se não tiver charge_id
           if (!tituloComRelacoes.charge_id) {
             try {
-              logger.info('Registrando título no banco antes de gerar PDF', { titulo_id: titulo.id });
               const resultado = await BancoApiService.gerarTitulo(tituloComRelacoes);
               
               if (resultado.success && resultado.data) {
@@ -733,19 +602,7 @@ export class TituloPDFController {
           
           // Processar HTML do boleto
           try {
-            logger.info('Chamando processarBoletoHtml', {
-              titulo_id: titulo.id,
-              has_cliente: !!tituloComRelacoes.cliente,
-              has_banco: !!tituloComRelacoes.banco
-            });
-            
             const boletoHtml = await TituloPDFController.processarBoletoHtml(tituloComRelacoes);
-            
-            logger.info('processarBoletoHtml retornou', {
-              titulo_id: titulo.id,
-              html_length: boletoHtml?.length || 0,
-              html_type: typeof boletoHtml
-            });
             
             // Validar que o HTML foi gerado corretamente
             if (!boletoHtml || typeof boletoHtml !== 'string' || boletoHtml.trim().length === 0) {
@@ -759,19 +616,8 @@ export class TituloPDFController {
               continue;
             }
             
-            // Verificar se há placeholders não substituídos que podem causar problemas
-            const placeholdersNaoSubstituidos = boletoHtml.match(/\{\{[^}]+\}\}/g);
-            if (placeholdersNaoSubstituidos && placeholdersNaoSubstituidos.length > 0) {
-              logger.warn('HTML contém placeholders não substituídos', {
-                titulo_id: titulo.id,
-                placeholders: placeholdersNaoSubstituidos
-              });
-              // Continuar mesmo assim, será limpo depois
-            }
-            
             boletosHtml.push(`<div style="page-break-after: always;">${boletoHtml}</div>`);
             titulosProcessados++;
-            logger.info('=== TÍTULO PROCESSADO COM SUCESSO ===', { titulo_id: titulo.id });
           } catch (htmlError: unknown) {
             const htmlErrorMessage = htmlError instanceof Error ? htmlError.message : 'Erro desconhecido';
             const htmlErrorStack = htmlError instanceof Error ? htmlError.stack : undefined;
@@ -808,12 +654,6 @@ export class TituloPDFController {
         }
       }
 
-      logger.info('Processamento de títulos concluído', {
-        total_titulos: titulos.length,
-        processados_com_sucesso: titulosProcessados,
-        com_erro: titulosComErro,
-        boletos_html_gerados: boletosHtml.length
-      });
 
       const template = `
         <!DOCTYPE html>
@@ -853,10 +693,6 @@ export class TituloPDFController {
         return;
       }
       
-      logger.info('Boletos processados com sucesso', {
-        total_titulos: titulos.length,
-        boletos_processados: boletosHtml.length
-      });
 
       // Limpar variáveis não processadas (remover placeholders handlebars não substituídos)
       const templateLimpo = template.replace(/\{\{[^}]+\}\}/g, '');
@@ -873,16 +709,7 @@ export class TituloPDFController {
           displayHeaderFooter: false
         };
         
-        logger.info('Iniciando geração de PDF', {
-          boletos_count: boletosHtml.length,
-          template_length: templateLimpo.length
-        });
-        
         pdfBuffer = await htmlPdfModule.generatePdf(file, options);
-        
-        logger.info('PDF gerado com sucesso', {
-          buffer_size: pdfBuffer.length
-        });
       } catch (pdfError: unknown) {
         const pdfErrorMessage = pdfError instanceof Error ? pdfError.message : 'Erro desconhecido';
         logger.error('Erro ao gerar PDF com html-pdf-node', {
