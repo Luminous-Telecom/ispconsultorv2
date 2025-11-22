@@ -4,19 +4,6 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 
 ## 📋 Inconsistências Encontradas
 
-### Backend - Services
-
-#### Nomenclatura Inconsistente
-
-**Status**: ✅ **VERIFICADO** - Todos os services estão em `PascalCase` conforme o padrão do backend.
-
-**Verificação realizada:**
-- ✅ Todos os 19 services verificados estão em `PascalCase`
-- ✅ Não há inconsistências de nomenclatura
-- ✅ `parametroService.ts` e `parametrosService.ts` são services diferentes (sem duplicação)
-
----
-
 ### Imports com Caminhos Profundos
 
 **Problema**: Alguns arquivos têm imports com muitos níveis (`../../../`).
@@ -49,15 +36,6 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 - ⏳ Priorizar arquivos mais críticos ou frequentemente modificados
 - ⏳ A refatoração pode ser feita gradualmente conforme necessário
 
-### Verificação de Duplicações
-
-**Status**: ✅ **VERIFICADO**
-
-- `parametroService.ts` e `parametrosService.ts` são services diferentes:
-  - `parametroService.ts`: Parâmetros individuais (chave-valor) - não está sendo usado
-  - `parametrosService.ts`: Parâmetros gerais do sistema (validar_cpf_cnpj, etc.) - em uso
-- Não há duplicação, são propósitos diferentes
-
 ---
 
 ## ⚠️ Nota Importante
@@ -69,7 +47,7 @@ A correção pode ser feita gradualmente, arquivo por arquivo, testando após ca
 ---
 
 **Última atualização:** 2025-01-22
-**Versão:** 2.1
+**Versão:** 2.2
 
 ---
 
