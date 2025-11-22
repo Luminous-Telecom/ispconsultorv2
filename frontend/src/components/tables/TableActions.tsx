@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { TableAction, BulkAction } from './types';
 import Button from '../ui/Button';
 
@@ -23,25 +23,66 @@ const TableActions = <T extends { id: number | string }>({
   onBulkActionClick,
   className = '',
 }: TableActionsProps<T>) => {
-  // Renderizar ações individuais
-  const renderItemActions = () => {
-    if (!item || actions.length === 0) return null;
-
-    const visibleActions = actions.filter(action => {
+  // Memoizar ações visíveis para evitar recálculo desnecessário
+  const visibleActions = useMemo(() => {
+    if (!item || actions.length === 0) return [];
+    
+    return actions.filter(action => {
       if (action.hidden === true) return false;
       if (typeof action.hidden === 'function') {
         return !action.hidden(item);
       }
       return true;
     });
+  }, [item, actions]);
 
+  const visibleBulkActions = useMemo(() => {
+    if (bulkActions.length === 0 || selectedItems.length === 0) return [];
+    
+    return bulkActions.filter(action => {
+      if (action.hidden === true) return false;
+      if (typeof action.hidden === 'function') {
+        return !action.hidden(selectedItems);
+      }
+      return true;
+    });
+  }, [bulkActions, selectedItems]);
+
+  // Callback memoizado para ações individuais
+  const handleActionClick = useCallback((action: TableAction<T>) => {
+    if (!item || index === undefined) return;
+    
+    if (action.confirm) {
+      // TODO: Implementar modal de confirmação
+      if (window.confirm(action.confirm.message)) {
+        onActionClick?.(action, item, index);
+      }
+    } else {
+      onActionClick?.(action, item, index);
+    }
+  }, [item, index, onActionClick]);
+
+  // Callback memoizado para ações em massa
+  const handleBulkActionClick = useCallback((action: BulkAction<T>) => {
+    if (action.confirm) {
+      // TODO: Implementar modal de confirmação
+      if (window.confirm(action.confirm.message)) {
+        onBulkActionClick?.(action, selectedItems);
+      }
+    } else {
+      onBulkActionClick?.(action, selectedItems);
+    }
+  }, [selectedItems, onBulkActionClick]);
+
+  // Renderizar ações individuais
+  const renderItemActions = () => {
     if (visibleActions.length === 0) return null;
 
     return (
       <div className="table-actions d-flex gap-1">
         {visibleActions.map((action) => {
           const isDisabled = typeof action.disabled === 'function' 
-            ? action.disabled(item) 
+            ? action.disabled(item!) 
             : action.disabled;
 
           return (
@@ -51,16 +92,7 @@ const TableActions = <T extends { id: number | string }>({
               size="sm"
               icon={action.icon}
               disabled={isDisabled}
-              onClick={() => {
-                if (action.confirm) {
-                  // TODO: Implementar modal de confirmação
-                  if (window.confirm(action.confirm.message)) {
-                    onActionClick?.(action, item, index);
-                  }
-                } else {
-                  onActionClick?.(action, item, index);
-                }
-              }}
+              onClick={() => handleActionClick(action)}
               tooltip={action.label}
             >
               {action.label}
@@ -73,16 +105,6 @@ const TableActions = <T extends { id: number | string }>({
 
   // Renderizar ações em massa
   const renderBulkActions = () => {
-    if (bulkActions.length === 0 || selectedItems.length === 0) return null;
-
-    const visibleBulkActions = bulkActions.filter(action => {
-      if (action.hidden === true) return false;
-      if (typeof action.hidden === 'function') {
-        return !action.hidden(selectedItems);
-      }
-      return true;
-    });
-
     if (visibleBulkActions.length === 0) return null;
 
     return (
@@ -103,16 +125,7 @@ const TableActions = <T extends { id: number | string }>({
               size="sm"
               icon={action.icon}
               disabled={isDisabled}
-              onClick={() => {
-                if (action.confirm) {
-                  // TODO: Implementar modal de confirmação
-                  if (window.confirm(action.confirm.message)) {
-                    onBulkActionClick?.(action, selectedItems);
-                  }
-                } else {
-                  onBulkActionClick?.(action, selectedItems);
-                }
-              }}
+              onClick={() => handleBulkActionClick(action)}
             >
               {action.label}
             </Button>
@@ -123,7 +136,7 @@ const TableActions = <T extends { id: number | string }>({
   };
 
   // Se não há ações para renderizar
-  if ((!item || actions.length === 0) && (bulkActions.length === 0 || selectedItems.length === 0)) {
+  if ((!item || visibleActions.length === 0) && (visibleBulkActions.length === 0)) {
     return null;
   }
 
@@ -135,4 +148,5 @@ const TableActions = <T extends { id: number | string }>({
   );
 };
 
-export default TableActions;
+// Memoizar componente para evitar re-renderizações desnecessárias
+export default React.memo(TableActions) as typeof TableActions;

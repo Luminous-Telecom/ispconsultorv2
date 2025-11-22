@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { TableConfig, TableAction, BulkAction, SortDirection } from './types';
 import { FilterValue } from '../../types/common';
 import { useTable } from './useTable';
@@ -79,6 +79,13 @@ function Table<T extends { id: number | string }>({
     if (!customFilters) return data;
     return customFilters(data);
   }, [data, customFilters]);
+
+  // Callback memoizado para mudanças de seleção
+  const handleSelectionChange = useCallback((selectedItems: T[]) => {
+    // Atualizar estado local e chamar callback externo
+    onSelectionChange?.(selectedItems);
+  }, [onSelectionChange]);
+
   const {
     state,
     actions: tableActions,
@@ -97,10 +104,7 @@ function Table<T extends { id: number | string }>({
     sortable,
     selectable,
     multiSelect,
-    onSelectionChange: (selectedItems) => {
-      // Atualizar estado local e chamar callback externo
-      onSelectionChange?.(selectedItems);
-    },
+    onSelectionChange: handleSelectionChange,
     onSort,
     onFilter,
     onSearch,
@@ -123,14 +127,17 @@ function Table<T extends { id: number | string }>({
     }
   }, [searchTerm, onSearch, state.searchTerm]);
 
-  // Fechar dropdown quando clicar fora
+  // Fechar dropdown quando clicar fora (callback memoizado)
+  const handleClickOutside = useCallback(() => {
+    setOpenDropdown(null);
+  }, []);
+
   useEffect(() => {
-    const handleClickOutside = () => setOpenDropdown(null);
     if (openDropdown !== null) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [openDropdown]);
+  }, [openDropdown, handleClickOutside]);
 
   // Construir classes da tabela
   const _getTableClasses = () => {

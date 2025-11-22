@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { TableColumn as TableColumnType, SortDirection } from './types';
 
 interface TableColumnProps<T = Record<string, unknown>> {
@@ -19,8 +19,8 @@ const TableColumn = <T extends { id: number | string }>({
   const isSorted = sortColumn === column.key;
   const isSortable = column.sortable && onSort;
 
-  const handleSort = () => {
-    if (!isSortable) return;
+  const handleSort = useCallback(() => {
+    if (!isSortable || !onSort) return;
     
     let direction: SortDirection = 'asc';
     if (isSorted && sortDirection === 'asc') {
@@ -28,7 +28,7 @@ const TableColumn = <T extends { id: number | string }>({
     }
     
     onSort(column.key, direction);
-  };
+  }, [isSortable, isSorted, sortDirection, onSort, column.key]);
 
   const getSortIcon = () => {
     if (!isSortable) return null;
@@ -78,7 +78,7 @@ const TableColumn = <T extends { id: number | string }>({
     );
   };
 
-  const getColumnStyles = () => {
+  const columnStyles = useMemo(() => {
     const styles: React.CSSProperties = {
       textTransform: 'none',
       padding: '0.5rem',
@@ -98,9 +98,9 @@ const TableColumn = <T extends { id: number | string }>({
     }
     
     return styles;
-  };
+  }, [column.width, column.minWidth, column.maxWidth]);
 
-  const getColumnClasses = () => {
+  const columnClasses = useMemo(() => {
     const classes = ['table-column'];
     
     if (column.className) {
@@ -129,12 +129,12 @@ const TableColumn = <T extends { id: number | string }>({
     }
     
     return classes.join(' ');
-  };
+  }, [column.className, column.align, column.headerAlign, column.fixed, isSortable, isSorted, className]);
 
   return (
     <th
-      className={getColumnClasses()}
-      style={getColumnStyles()}
+      className={columnClasses}
+      style={columnStyles}
       onClick={handleSort}
       title={column.tooltip}
       data-sortable={isSortable ? 'true' : 'false'}
@@ -156,4 +156,5 @@ const TableColumn = <T extends { id: number | string }>({
   );
 };
 
-export default TableColumn;
+// Memoizar componente para evitar re-renderizações desnecessárias
+export default React.memo(TableColumn) as typeof TableColumn;

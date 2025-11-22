@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import DraggableModal from './DraggableModal';
 import { Table } from '../tables';
 import { ListModalProps } from '../../types/modal';
@@ -28,15 +28,17 @@ function ListModal<T extends { id: number | string }>({
     multiSelect = false
   } = config;
 
-  // Converter colunas para o formato da Table
-  const tableColumns = columns.map(col => ({
-    key: col.key,
-    label: col.label,
-    sortable: col.sortable,
-    searchable: col.searchable !== false, // Por padrão, todas as colunas são pesquisáveis, exceto se explicitamente definido como false
-    width: col.width,
-    render: col.render
-  }));
+  // Converter colunas para o formato da Table (memoizado para evitar recriação)
+  const tableColumns = useMemo(() => {
+    return columns.map(col => ({
+      key: col.key,
+      label: col.label,
+      sortable: col.sortable,
+      searchable: col.searchable !== false, // Por padrão, todas as colunas são pesquisáveis, exceto se explicitamente definido como false
+      width: col.width,
+      render: col.render
+    }));
+  }, [columns]);
 
   // Se há paginação do servidor, a busca é feita no servidor via onSearchChange
   // Se não há paginação, permite busca local no Table
@@ -61,12 +63,14 @@ function ListModal<T extends { id: number | string }>({
             searchPlaceholder,
             emptyMessage,
             className: 'no-padding',
-            bulkActions: bulkActions.map(action => ({
-              key: action.label.toLowerCase().replace(/\s+/g, '-'),
-              label: action.label,
-              onClick: action.action,
-              disabled: action.disabled
-            }))
+            bulkActions: useMemo(() => {
+              return bulkActions.map(action => ({
+                key: action.label.toLowerCase().replace(/\s+/g, '-'),
+                label: action.label,
+                onClick: action.action,
+                disabled: action.disabled
+              }));
+            }, [bulkActions])
           }}
           onSelectionChange={onSelectionChange}
           onSearch={onSearchChange}

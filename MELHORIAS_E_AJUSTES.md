@@ -14,46 +14,25 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-## ⚡ Otimizações de Performance
-
-### 1. Queries N+1 ✅ CONCLUÍDO
-
-**Problema:** Possíveis queries N+1 em alguns lugares.
-
-**Solução Implementada:**
-- ✅ Otimizado `RoutineExecutionService.executeGeracaoTitulos()`:
-  - Busca todos os títulos de uma vez antes do loop sobre contratos
-  - Busca todas as configurações de `DiasVencimento` de uma vez
-  - Busca todos os `ContratoPlanoAdicional` de uma vez
-  - Agrupa dados por IDs em Maps para acesso O(1)
-  - Elimina 3 queries por contrato (de N*3 para 4 queries totais)
-  - Remove `findByPk` de `DiasVencimento` dentro do loop
-  - Remove `findAll` de `ContratoPlanoAdicional` dentro de `calculateValorTitulo`
-- ✅ Otimizado `TituloPDFController.gerarPdfBoletosMultiplos()`:
-  - Garantido que relações são sempre carregadas na query inicial com `required: false`
-  - Removida verificação que causava `findByPk` dentro do loop
-  - Elimina queries adicionais quando relações já estão carregadas
-
-**Benefícios:**
-- Redução drástica no número de queries ao banco
-- Melhor performance em operações em lote
-- Menor carga no banco de dados
-- Tempo de resposta mais rápido para rotinas agendadas
-
-**Nota:** Outras queries já estavam otimizadas com `include` e `Promise.all`. As melhorias focaram nos casos onde queries eram executadas dentro de loops.
-
-**Prioridade:** 🟡 Média
-
----
-
-### 2. Re-renderizações Desnecessárias
+### 2. Re-renderizações Desnecessárias ✅
 
 **Problema:** Componentes React podem estar re-renderizando desnecessariamente.
 
-**Sugestão:**
-- Usar `React.memo` em componentes pesados
-- Otimizar `useMemo` e `useCallback`
-- Revisar dependências de hooks
+**Solução Implementada:**
+- ✅ Otimizado `ListModal.tsx`:
+  - Adicionado `useMemo` para `tableColumns` e `bulkActions`
+  - Evita recriação de arrays/objetos a cada render
+- ✅ Otimizado `TableColumn.tsx`:
+  - Adicionado `React.memo` para evitar re-renderizações desnecessárias
+  - Memoizado `handleSort`, `columnStyles` e `columnClasses` com `useMemo`/`useCallback`
+- ✅ Otimizado `TableActions.tsx`:
+  - Adicionado `React.memo` para evitar re-renderizações desnecessárias
+  - Memoizado `visibleActions` e `visibleBulkActions` com `useMemo`
+  - Memoizado callbacks `handleActionClick` e `handleBulkActionClick` com `useCallback`
+- ✅ Otimizado `Table.tsx`:
+  - Memoizado `handleSelectionChange` com `useCallback`
+  - Memoizado `handleClickOutside` com `useCallback`
+  - Melhorado gerenciamento de dependências de hooks
 
 **Prioridade:** 🟢 Baixa
 
