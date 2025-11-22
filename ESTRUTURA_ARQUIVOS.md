@@ -192,6 +192,8 @@ frontend/src/
     └── ...
 ```
 
+**Nota:** O projeto não possui uma pasta `routes/` separada. As rotas são definidas diretamente em `App.tsx` usando React Router.
+
 ### Convenções de Organização
 
 #### Componentes Modais
