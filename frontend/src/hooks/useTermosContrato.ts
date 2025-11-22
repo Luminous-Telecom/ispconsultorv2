@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TermoContratoService, CreateTermoContratoData, UpdateTermoContratoData } from '../services/termoContratoService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
-import { AxiosError } from 'axios';
 
 export const useTermosContrato = (contratoId?: number) => {
   return useQuery({
@@ -93,8 +92,7 @@ export const useDeleteTermoContrato = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['termos-contrato'] });
     },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
+    onError: () => {
       // Erro tratado pelo useNotificationContext
     }
   });

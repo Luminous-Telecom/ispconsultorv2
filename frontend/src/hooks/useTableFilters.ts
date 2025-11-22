@@ -144,7 +144,7 @@ export interface UseTableFiltersReturn<
  *   initialFilters: { status: 'ativo' },
  *   initialSortColumn: 'id',
  *   initialSortDirection: 'desc',
- *   onSearchChange: (search) => { /* callback opcional */ },
+ *   onSearchChange: (search) => void, // callback opcional
  *   resetPageOnFilterChange: true
  * });
  * 
