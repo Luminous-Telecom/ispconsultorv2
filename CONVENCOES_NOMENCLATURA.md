@@ -391,53 +391,6 @@ enum StatusTitulo {
 
 ---
 
-## Ferramentas de Validação
-
-### ESLint
-
-As convenções de nomenclatura são automaticamente validadas pelo ESLint através da regra `@typescript-eslint/naming-convention` configurada em `frontend/.eslintrc.json`.
-
-**Regras configuradas:**
-- ✅ Interfaces e Types em `PascalCase`
-- ✅ Classes em `PascalCase`
-- ✅ Variáveis e funções em `camelCase`
-- ✅ Constantes em `UPPER_SNAKE_CASE`
-- ✅ Componentes React em `PascalCase`
-
-**Como usar:**
-```bash
-# Verificar erros de nomenclatura
-npm run lint
-
-# Corrigir automaticamente quando possível
-npm run lint:fix
-```
-
-### Path Aliases
-
-Path aliases foram configurados no `tsconfig.json` para facilitar imports e manter consistência:
-
-```typescript
-// ✅ Usando path aliases (recomendado)
-import { useClientes } from '@/hooks/useClientes';
-import { ClienteModal } from '@/components/modals/clientes/ClienteModal';
-
-// ❌ Imports relativos profundos (evitar)
-import { useClientes } from '../../../hooks/useClientes';
-```
-
-**Aliases disponíveis:**
-- `@/*` → `src/*`
-- `@/components/*` → `src/components/*`
-- `@/hooks/*` → `src/hooks/*`
-- `@/services/*` → `src/services/*`
-- `@/types/*` → `src/types/*`
-- `@/utils/*` → `src/utils/*`
-- `@/contexts/*` → `src/contexts/*`
-- `@/constants/*` → `src/constants/*`
-
----
-
 ## Checklist de Verificação
 
 Ao criar ou modificar código, verifique:
@@ -453,11 +406,9 @@ Ao criar ou modificar código, verifique:
 - [ ] Hooks com prefixo `use`
 - [ ] Classes em `PascalCase`
 - [ ] Arquivos seguindo convenções de nomenclatura
-- [ ] ESLint não reporta erros de nomenclatura
-- [ ] Imports usando path aliases quando apropriado
 
 ---
 
 **Última atualização:** 2025-01-22
-**Versão:** 1.1
+**Versão:** 1.0
 
