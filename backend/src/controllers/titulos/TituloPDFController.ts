@@ -720,10 +720,13 @@ export class TituloPDFController {
         throw new Error(`Erro ao gerar PDF: ${pdfErrorMessage}`);
       }
       
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulos.length}-titulos.pdf"`);
-      res.setHeader('Content-Length', pdfBuffer.length);
-      res.send(pdfBuffer);
+      // Verificar se a resposta já foi enviada antes de tentar enviar
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="boletos-${titulos.length}-titulos.pdf"`);
+        res.setHeader('Content-Length', pdfBuffer.length);
+        res.send(pdfBuffer);
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -732,11 +735,15 @@ export class TituloPDFController {
         stack: errorStack,
         ids: ids.length > 0 ? ids : 'não fornecidos'
       });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor ao gerar PDF de múltiplos boletos',
-        error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
-      });
+      
+      // Verificar se a resposta já foi enviada antes de tentar enviar erro
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: 'Erro interno do servidor ao gerar PDF de múltiplos boletos',
+          error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+        });
+      }
     }
   }
 }

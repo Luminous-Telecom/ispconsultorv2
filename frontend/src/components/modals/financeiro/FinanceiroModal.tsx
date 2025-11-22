@@ -11,7 +11,7 @@ import { TituloService } from '../../../services/tituloService';
 import { TituloModal } from '../titulos';
 import ReceberModal from '../pagamentos/ReceberModal';
 import ImprimirModal from '../../common/ImprimirModal';
-import { formatDateTime } from '../../../utils/formatters';
+import { formatDate, formatDateTime } from '../../../utils/formatters';
 
 interface FinanceiroModalProps {
   show: boolean;
@@ -138,15 +138,6 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     return `R$ ${numValue.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
   };
 
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('pt-BR');
-    } catch {
-      return '-';
-    }
-  };
 
 
   const getStatusBadge = (status: string) => {

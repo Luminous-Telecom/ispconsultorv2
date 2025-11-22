@@ -186,12 +186,94 @@ export function useImpressaoContrato({
 
 ### 2. Formatação de Datas
 
-**Problema:** Múltiplas funções de formatação espalhadas.
+**Problema:** Múltiplas funções de formatação de datas espalhadas pelo projeto com duplicação de código e inconsistências.
 
-**Sugestão:**
-- Centralizar todas as funções de formatação em `utils/formatters.ts`
-- Remover duplicações
-- Criar funções utilitárias reutilizáveis
+**Análise do Problema:**
+
+**Frontend:**
+- `frontend/src/utils/formatters.ts` possui:
+  - `formatDate()` - formata data para DD/MM/YYYY
+  - `formatDateTime()` - formata data e hora para DD/MM/YYYY HH:MM:SS (usa UTC)
+- `frontend/src/utils/dateUtils.ts` possui:
+  - `toBrazilianDate()` - formata data para DD/MM/YYYY (similar ao formatDate)
+  - `toBrazilianDateTime()` - formata data e hora para DD/MM/YYYY HH:MM:SS (usa local)
+  - `toISODateString()` - converte para YYYY-MM-DD
+- `frontend/src/components/modals/financeiro/FinanceiroModal.tsx` possui função local `formatDate()` duplicada
+- Múltiplos componentes usando `toLocaleDateString('pt-BR')` diretamente em vez de funções utilitárias
+
+**Backend:**
+- `backend/src/utils/dateUtils.ts` possui:
+  - `formatCreatedAt()` - formata created_at para DD/MM/YYYY HH:MM:SS
+  - `parseDateFromDb()` - converte string/Date do banco para Date
+- `backend/src/controllers/IntegrationWebhookController.ts` possui método privado `formatDate()` que retorna ISO
+- Múltiplos controllers/services usando `toLocaleDateString('pt-BR')` diretamente
+
+**Inconsistências Identificadas:**
+1. Duplicação entre `formatDate` e `toBrazilianDate` (ambas fazem a mesma coisa)
+2. Duplicação entre `formatDateTime` e `toBrazilianDateTime` (comportamento diferente: UTC vs Local)
+3. Função local duplicada em `FinanceiroModal.tsx`
+4. Uso direto de `toLocaleDateString` em ~50+ lugares em vez de funções utilitárias
+5. Inconsistência no tratamento de timezone (algumas funções usam UTC, outras local)
+6. Método privado `formatDate` em `IntegrationWebhookController` que retorna ISO (diferente das outras)
+
+**Refatoração Proposta:**
+
+**1. Consolidar funções no Frontend:**
+- Manter apenas `frontend/src/utils/formatters.ts` para formatação de exibição
+- Unificar `formatDate` e `toBrazilianDate` em uma única função `formatDate`
+- Unificar `formatDateTime` e `toBrazilianDateTime` em uma única função `formatDateTime` (padronizar comportamento de timezone)
+- Manter `dateUtils.ts` apenas para manipulação/conversão (não formatação de exibição):
+  - `toISODateString()` - para inputs type="date"
+  - `isValidDate()`, `isFutureDate()`, `isPastDate()` - validações
+  - `daysDifference()`, `addDays()`, `addMonths()` - cálculos
+  - `compareDates()` - comparações
+- Remover função local `formatDate` de `FinanceiroModal.tsx` e usar a função centralizada
+
+**2. Consolidar funções no Backend:**
+- Expandir `backend/src/utils/dateUtils.ts` com funções de formatação padronizadas:
+  - `formatDate()` - formata para DD/MM/YYYY (retorna string ou null)
+  - `formatDateTime()` - formata para DD/MM/YYYY HH:MM:SS (retorna string ou null)
+  - `formatDateISO()` - formata para ISO (YYYY-MM-DDTHH:mm:ss.sssZ) quando necessário
+- Manter `parseDateFromDb()` para conversão
+- Manter `formatCreatedAt()` mas refatorar internamente para usar `formatDateTime()`
+- Remover método privado `formatDate` de `IntegrationWebhookController` e usar função centralizada
+
+**3. Substituir usos diretos:**
+- Buscar todos os usos de `toLocaleDateString('pt-BR')` e `toLocaleString('pt-BR')` no código
+- Substituir por chamadas às funções centralizadas apropriadas
+- Garantir tratamento consistente de valores null/undefined (retornar '-' ou null conforme padrão)
+
+**4. Padronização de Comportamento:**
+- **Timezone:** Padronizar tratamento de timezone (decidir se sempre UTC, sempre local, ou baseado no contexto)
+- **Valores nulos:** Padronizar retorno para valores null/undefined:
+  - Frontend: retornar '-' para exibição em tabelas
+  - Backend: retornar null para APIs
+- **Tipos de entrada:** Suportar `string | Date | null | undefined` de forma consistente
+
+**Checklist de Implementação:**
+- [x] Auditar todos os arquivos que usam formatação de datas (grep por `toLocaleDateString`, `formatDate`, `formatDateTime`)
+- [x] Consolidar funções duplicadas em `frontend/src/utils/formatters.ts`
+- [x] Refatorar `frontend/src/utils/dateUtils.ts` removendo formatação de exibição
+- [x] Expandir `backend/src/utils/dateUtils.ts` com funções de formatação padronizadas
+- [x] Remover função local de `FinanceiroModal.tsx`
+- [x] Remover método privado de `IntegrationWebhookController.ts`
+- [x] Substituir todos os usos diretos de `toLocaleDateString` por funções centralizadas (backend completo, frontend parcial - 8 arquivos restantes)
+- [x] Atualizar imports em todos os arquivos afetados
+- [ ] Testar formatação em diferentes contextos (tabelas, modais, PDFs, emails)
+- [x] Verificar comportamento de timezone em diferentes cenários (corrigido problema de data sendo salva com dia anterior)
+- [x] Garantir que valores null/undefined são tratados consistentemente
+- [x] Executar linter e corrigir erros
+- [ ] Testar funcionalidades críticas: Dashboard, Títulos, Contratos, Clientes
+
+**Status:** ✅ **ETAPA 1 e 2 CONCLUÍDAS** - Refatoração principal finalizada. Restam 8 arquivos no frontend com `toLocaleDateString` que podem ser substituídos posteriormente (não crítico).
+
+**Arquivos Principais Afetados:**
+- `frontend/src/utils/formatters.ts` (consolidar)
+- `frontend/src/utils/dateUtils.ts` (refatorar)
+- `backend/src/utils/dateUtils.ts` (expandir)
+- `frontend/src/components/modals/financeiro/FinanceiroModal.tsx` (remover função local)
+- `backend/src/controllers/IntegrationWebhookController.ts` (remover método privado)
+- ~50+ arquivos com uso direto de `toLocaleDateString`
 
 **Prioridade:** 🟡 Média
 

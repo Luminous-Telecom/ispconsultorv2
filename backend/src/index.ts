@@ -209,7 +209,8 @@ app.use(ddosProtectionMiddleware({
     '/api/health',
     '/webhook',
     '/config.js',
-    '/uploads'
+    '/uploads',
+    '/api/titulos/boletos-multiplos-pdf' // Geração de PDF pode demorar mais que 15s
   ]
 }));
 
