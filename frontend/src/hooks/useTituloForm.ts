@@ -267,7 +267,7 @@ export const useTituloForm = ({
   };
   
   // Handler para quando há erros de validação
-  const onError = (errors: Record<string, { message?: string }>) => {
+  const onError = (_errors: Record<string, { message?: string }>) => {
     // Erros são tratados pelo React Hook Form e exibidos no formulário
   };
 
