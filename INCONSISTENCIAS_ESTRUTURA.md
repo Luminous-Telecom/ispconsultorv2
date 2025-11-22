@@ -18,7 +18,7 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 - ✅ 41 arquivos principais já refatorados
 
 **Estatísticas:**
-- ✅ 41 arquivos principais refatorados
+- ✅ 41 arquivos principais refatorados (72% do total)
 - ⏳ ~16 arquivos ainda com imports profundos (`../../../` ou `../../../../`)
 - 📊 Total de imports profundos encontrados: ~90 ocorrências restantes
 
@@ -47,7 +47,7 @@ A correção pode ser feita gradualmente, arquivo por arquivo, testando após ca
 ---
 
 **Última atualização:** 2025-01-22
-**Versão:** 2.2
+**Versão:** 2.3
 
 ---
 
