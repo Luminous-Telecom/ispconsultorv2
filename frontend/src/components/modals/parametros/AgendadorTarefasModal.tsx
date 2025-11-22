@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ListModal from '../../common/ListModal';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
+import { useTableFilters } from '../../../hooks/useTableFilters';
 import { SchedulerService, RotinaAgendada } from '../../../services/schedulerService';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
 import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
@@ -20,9 +21,15 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
+  
+  // Hook unificado para filtros, busca e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
 
   const {
     selectedItem,
@@ -112,28 +119,28 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
 
   const filteredRotinas = useMemo(() => {
     if (!rotinasData?.data) return [];
-    if (!search) return rotinasData.data;
+    if (!tableFilters.debouncedSearch) return rotinasData.data;
     
-    const searchLower = search.toLowerCase();
+    const searchLower = tableFilters.debouncedSearch.toLowerCase();
     return rotinasData.data.filter(r => 
       r.id?.toString().includes(searchLower) ||
       r.tipo?.toLowerCase().includes(searchLower) ||
       r.descricao?.toLowerCase().includes(searchLower)
     );
-  }, [rotinasData, search]);
+  }, [rotinasData, tableFilters.debouncedSearch]);
 
   const paginatedRotinas = useMemo(() => {
-    const startIndex = (page - 1) * limit;
-    return filteredRotinas.slice(startIndex, startIndex + limit);
-  }, [filteredRotinas, page, limit]);
+    const startIndex = (tableFilters.page - 1) * tableFilters.limit;
+    return filteredRotinas.slice(startIndex, startIndex + tableFilters.limit);
+  }, [filteredRotinas, tableFilters.page, tableFilters.limit]);
 
   const pagination = {
-    from: (page - 1) * limit + 1,
-    to: Math.min(page * limit, filteredRotinas.length),
+    from: (tableFilters.page - 1) * tableFilters.limit + 1,
+    to: Math.min(tableFilters.page * tableFilters.limit, filteredRotinas.length),
     total: filteredRotinas.length,
-    current_page: page,
-    last_page: Math.ceil(filteredRotinas.length / limit),
-    per_page: limit
+    current_page: tableFilters.page,
+    last_page: Math.ceil(filteredRotinas.length / tableFilters.limit),
+    per_page: tableFilters.limit
   };
 
   const handleToggle = async (rotina: RotinaAgendada) => {
@@ -250,12 +257,12 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
-        search={search}
-        onSearchChange={setSearch}
+        search={tableFilters.search}
+        onSearchChange={tableFilters.setSearch}
         pagination={pagination}
-        onPageChange={setPage}
-        limit={limit}
-        onLimitChange={setLimit}
+        onPageChange={tableFilters.setPage}
+        limit={tableFilters.limit}
+        onLimitChange={tableFilters.setLimit}
         refreshQueryKeys={['agendador-tarefas']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}

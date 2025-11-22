@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useListModal } from '../../../../../hooks/useListModal';
 import { useModalSelect } from '../../../../../hooks/useModalSelect';
+import { useTableFilters } from '../../../../../hooks/useTableFilters';
 import ListModal from '../../../../common/ListModal';
 import { useModelosTermo } from '../../../../../hooks/useModelosTermo';
 
@@ -23,9 +24,15 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
   onSelect
 }) => {
   const queryClient = useQueryClient();
-  const [searchTermosModal, setSearchTermosModal] = useState('');
-  const [limitTermosModal, setLimitTermosModal] = useState(15);
-  const [pageTermosModal, setPageTermosModal] = useState(1);
+  
+  // Hook unificado para filtros, busca e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
   
   const { data: termosSistema, isLoading: isLoadingTermos } = useModelosTermo();
 
@@ -78,8 +85,8 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     
     let filtered = [...termosSistema];
     
-    if (searchTermosModal) {
-      const searchLower = searchTermosModal.toLowerCase();
+    if (tableFilters.debouncedSearch) {
+      const searchLower = tableFilters.debouncedSearch.toLowerCase();
       filtered = filtered.filter(t => 
         t.nome?.toLowerCase().includes(searchLower) ||
         t.id?.toString().includes(searchLower)
@@ -87,22 +94,22 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     }
     
     return filtered;
-  }, [termosSistema, searchTermosModal]);
+  }, [termosSistema, tableFilters.debouncedSearch]);
 
   // Paginar termos
   const paginatedTermos = useMemo(() => {
-    const startIndex = (pageTermosModal - 1) * limitTermosModal;
-    return filteredTermos.slice(startIndex, startIndex + limitTermosModal);
-  }, [filteredTermos, pageTermosModal, limitTermosModal]);
+    const startIndex = (tableFilters.page - 1) * tableFilters.limit;
+    return filteredTermos.slice(startIndex, startIndex + tableFilters.limit);
+  }, [filteredTermos, tableFilters.page, tableFilters.limit]);
 
   // Criar paginação manual
   const paginationTermos = {
-    from: (pageTermosModal - 1) * limitTermosModal + 1,
-    to: Math.min(pageTermosModal * limitTermosModal, filteredTermos.length),
+    from: (tableFilters.page - 1) * tableFilters.limit + 1,
+    to: Math.min(tableFilters.page * tableFilters.limit, filteredTermos.length),
     total: filteredTermos.length,
-    current_page: pageTermosModal,
-    last_page: Math.ceil(filteredTermos.length / limitTermosModal),
-    per_page: limitTermosModal
+    current_page: tableFilters.page,
+    last_page: Math.ceil(filteredTermos.length / tableFilters.limit),
+    per_page: tableFilters.limit
   };
 
   const handleInsert = () => {
@@ -142,12 +149,12 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
       loading={isLoadingTermos}
       selectedItems={termoSelecionado ? [termoSelecionado] : []}
       onSelectionChange={handleSelectionChange}
-      search={searchTermosModal}
-      onSearchChange={setSearchTermosModal}
+      search={tableFilters.search}
+      onSearchChange={tableFilters.setSearch}
       pagination={paginationTermos}
-      onPageChange={setPageTermosModal}
-      limit={limitTermosModal}
-      onLimitChange={setLimitTermosModal}
+      onPageChange={tableFilters.setPage}
+      limit={tableFilters.limit}
+      onLimitChange={tableFilters.setLimit}
       onRefresh={() => {
         queryClient.invalidateQueries({ queryKey: ['modelos-termo'] });
       }}

@@ -7,6 +7,7 @@ import DraggableModal from '../../common/DraggableModal';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import { useSorting } from '../../../hooks/useSorting';
+import { useTableFilters } from '../../../hooks/useTableFilters';
 import { TituloService } from '../../../services/tituloService';
 import { TituloModal } from '../titulos';
 import ReceberModal from '../pagamentos/ReceberModal';
@@ -24,12 +25,17 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   onClose,
   onSelectTitulo
 }) => {
-  const [search, setSearch] = useState('');
-  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  // Hook unificado para filtros, busca, ordenação e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc',
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
+  
   const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
   const [showCancelados, setShowCancelados] = useState(false);
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
@@ -53,20 +59,15 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
   
-  // Debounce da busca para evitar muitas requisições
+  // Resetar página quando filtros específicos mudarem
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchParam(search || undefined);
-      setPage(1); // Resetar para primeira página ao buscar
-    }, 300); // 300ms de debounce
-    
-    return () => clearTimeout(timer);
-  }, [search]);
+    tableFilters.setPage(1);
+  }, [showCancelados, dataVencimentoInicio, dataVencimentoFim, tableFilters]);
   
   const filters: TituloFilters = {
-    page,
-    limit,
-    search: searchParam,
+    page: tableFilters.page,
+    limit: tableFilters.limit,
+    search: tableFilters.debouncedSearch || undefined,
     // Aplicar filtro de status no backend quando não mostrar cancelados
     ...(showCancelados ? {} : { status: '!cancelado' }),
     // Aplicar filtros de data de vencimento se preenchidos
@@ -88,9 +89,9 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     const pag = titulosData.pagination;
     
     // Garantir que todos os valores são números válidos
-    const currentPage = typeof pag.current_page === 'number' ? pag.current_page : page;
+    const currentPage = typeof pag.current_page === 'number' ? pag.current_page : tableFilters.page;
     // Usar o limite atual do estado, não o do backend (pode estar desatualizado)
-    const perPage = limit;
+    const perPage = tableFilters.limit;
     // Usar total do backend
     const total = typeof pag.total === 'number' ? pag.total : 0;
     
@@ -108,26 +109,20 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       from: from,
       to: to
     };
-  }, [titulosData, limit, page]);
+  }, [titulosData, tableFilters.limit, tableFilters.page]);
 
-  const sortedData = useSorting(titulos as unknown as Record<string, unknown>[], sortColumn, sortDirection) as unknown as Titulo[];
-
-  // Resetar página quando o filtro mudar (exceto search que já é tratado no debounce)
-  useEffect(() => {
-    setPage(1);
-  }, [showCancelados, dataVencimentoInicio, dataVencimentoFim]);
+  const sortedData = useSorting(titulos as unknown as Record<string, unknown>[], tableFilters.sortColumn, tableFilters.sortDirection) as unknown as Titulo[];
 
   // Limpar filtros quando o modal fechar
   useEffect(() => {
     if (!show) {
       setDataVencimentoInicio('');
       setDataVencimentoFim('');
-      setSearch('');
-      setSearchParam(undefined);
-      setPage(1);
+      tableFilters.clearSearch();
+      tableFilters.setPage(1);
       setSelectedItems([]);
     }
-  }, [show]);
+  }, [show, tableFilters]);
 
   // Dados filtrados para usar no resumo financeiro (já filtrados pelo backend)
   const filteredData = sortedData;
@@ -565,16 +560,10 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                   onClose();
                 }
               }}
-              onSort={(column, direction) => {
-                setSortColumn(column);
-                setSortDirection(direction);
-              }}
-              onSearch={setSearch}
-              onPageChange={setPage}
-              onPageSizeChange={(newLimit) => {
-                setLimit(newLimit);
-                setPage(1); // Resetar página ao mudar limite
-              }}
+              onSort={tableFilters.setSort}
+              onSearch={tableFilters.setSearch}
+              onPageChange={tableFilters.setPage}
+              onPageSizeChange={tableFilters.setLimit}
               onRefresh={refetch}
             />
           </div>

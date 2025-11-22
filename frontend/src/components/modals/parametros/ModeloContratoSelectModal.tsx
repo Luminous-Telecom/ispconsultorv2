@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useListModal } from '../../../hooks/useListModal';
 import { useModalSelect } from '../../../hooks/useModalSelect';
+import { useTableFilters } from '../../../hooks/useTableFilters';
 import ListModal from '../../common/ListModal';
 import { formatDate } from '../../../utils/formatters';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
@@ -19,8 +20,14 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
   onSelect,
   title = "Selecionar Modelo de Contrato"
 }) => {
-  const [search, setSearch] = useState('');
-  const [limit, setLimit] = useState(15);
+  // Hook unificado para filtros, busca e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
 
   // Usar hook customizado para gerenciar seleção
   const {
@@ -122,10 +129,10 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         loading={isLoading}
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
-        search={search}
-        onSearchChange={setSearch}
-        limit={limit}
-        onLimitChange={setLimit}
+        search={tableFilters.search}
+        onSearchChange={tableFilters.setSearch}
+        limit={tableFilters.limit}
+        onLimitChange={tableFilters.setLimit}
       onRefresh={refetch}
       bulkActions={bulkActions}
     />
