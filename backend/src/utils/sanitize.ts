@@ -169,13 +169,21 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   const { allowHtml = false, deep = true } = options;
   const sanitized = { ...obj } as T;
 
+  // Campos que são URLs e não devem ter / escapado
+  const urlFields = ['url_retorno', 'url_boleto', 'api_url', 'url', 'webhook_url', 'notification_url', 'redirect_url', 'callback_url'];
+
   for (const key in sanitized) {
     if (Object.prototype.hasOwnProperty.call(sanitized, key)) {
       const value = sanitized[key];
 
       if (typeof value === 'string') {
-        // Sanitizar strings
-        (sanitized as Record<string, unknown>)[key] = sanitizeString(value, allowHtml);
+        // Para campos de URL, usar sanitizeUrl que não escapa barras
+        if (urlFields.includes(key.toLowerCase())) {
+          (sanitized as Record<string, unknown>)[key] = sanitizeUrl(value);
+        } else {
+          // Sanitizar outras strings normalmente
+          (sanitized as Record<string, unknown>)[key] = sanitizeString(value, allowHtml);
+        }
       } else if (typeof value === 'number') {
         // Validar números
         (sanitized as Record<string, unknown>)[key] = isNaN(value) ? null : value;
@@ -189,6 +197,10 @@ export function sanitizeObject<T extends Record<string, unknown>>(
         // Sanitizar arrays
         (sanitized as Record<string, unknown>)[key] = value.map((item) => {
           if (typeof item === 'string') {
+            // Verificar se é campo de URL
+            if (urlFields.includes(key.toLowerCase())) {
+              return sanitizeUrl(item);
+            }
             return sanitizeString(item, allowHtml);
           } else if (typeof item === 'object' && item !== null) {
             return sanitizeObject(item as Record<string, unknown>, options);

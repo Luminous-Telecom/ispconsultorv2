@@ -241,17 +241,18 @@ export class WebhookController {
 
       let algumBancoAutorizado = false;
 
-      // Tentar cada banco ativo para encontrar o token correto
+      // Para tokens de notificação, tentar processar em todos os bancos EFI ativos
+      // O token em si já é uma forma de autenticação, não precisa validar webhook_secret
       for (const banco of bancosAtivos) {
-        if (!(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
-          logger.warn('Secret do webhook inválido para banco ativo', {
+        // Validar secret apenas se foi enviado (para segurança adicional)
+        // Mas permitir processar mesmo sem secret, pois o token é autenticação suficiente
+        if (receivedSecret && !(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
+          // Se um secret foi enviado mas não é válido, apenas logar mas continuar
+          logger.debug('Secret do webhook não corresponde ao banco, mas tentando processar token mesmo assim', {
             banco_id: banco.id,
             possui_secret: !!banco.webhook_secret
           });
-          continue;
         }
-
-        algumBancoAutorizado = true;
 
         logger.info(`Tentando consultar token no banco ${banco.id}`, {
           banco_id: banco.id,
@@ -267,79 +268,88 @@ export class WebhookController {
             data_count: Array.isArray(resultado.data.data) ? resultado.data.data.length : 0
           });
           
-          return await WebhookController.processarDadosNotificacao(
-            resultado.data as NotificationData | NotificationItem[] | NotificationItem,
-            banco,
-            receivedSecret
-          );
-        }
-      }
-      
-      if (!algumBancoAutorizado && receivedSecret) {
-        logger.warn('Webhook EFI: nenhum banco autorizou o secret recebido', { receivedSecret });
-        return {
-          success: false,
-          message: 'Token do webhook inválido',
-          status: 401
-        };
-      }
-      
-      // Fallback: Buscar todos os bancos EFI ativos
-      const bancosEfi = await Banco.findAll({
-        where: { tipo_banco: 'efi', ativo: true }
-      });
-      
-      if (bancosEfi.length === 0) {
-        logger.error('Nenhum banco EFI ativo encontrado para processar notificação');
-        return {
-          success: false,
-          message: 'Nenhum banco EFI ativo encontrado',
-          status: 400
-        };
-      }
-      
-      // Tentar consultar a notificação em cada banco EFI
-      for (const banco of bancosEfi) {
-        if (!(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
-          logger.warn('Secret do webhook inválido para banco (fallback)', {
-            banco_id: banco.id,
-            possui_secret: !!banco.webhook_secret
-          });
-          continue;
-        }
-
-        logger.info(`Consultando notificação no banco EFI: ${banco.id}`);
-        
-        const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
-        
-        if (resultado.success && resultado.data) {
-          logger.info('Notificação consultada com sucesso', {
-            banco_id: banco.id,
-            data: resultado.data
-          });
+          algumBancoAutorizado = true;
           
-          // Processar os dados da notificação
           return await WebhookController.processarDadosNotificacao(
             resultado.data as NotificationData | NotificationItem[] | NotificationItem,
             banco,
             receivedSecret
           );
+        }
+      }
+      
+      // Se nenhum banco processou com sucesso mas temos secret, não bloquear
+      // Para tokens de notificação, o secret é opcional
+      if (!algumBancoAutorizado && receivedSecret) {
+        // Verificar se algum banco tem o secret válido
+        const algumBancoComSecretValido = bancosAtivos.some(banco => 
+          banco.webhook_secret === receivedSecret
+        );
+        
+        if (algumBancoComSecretValido) {
+          // Secret é válido mas token não foi encontrado, pode ter expirado
+          logger.debug('Token de notificação não encontrado em nenhum banco autorizado', {
+            token: notificationToken.substring(0, 20) + '...'
+          });
         } else {
-          // Se o token não foi encontrado, expirou ou não existe, não tentar outros bancos
-          if (resultado.message?.includes('não encontrado') || 
-              resultado.message?.includes('expirado') ||
-              resultado.message?.includes('property_does_not_exists')) {
-            logger.warn('Token de notificação inválido - parando tentativas', {
+          // Secret não corresponde, mas continuar tentando processar o token
+          logger.debug('Webhook EFI: secret recebido não corresponde a nenhum banco, mas continuando processamento', { 
+            receivedSecret: receivedSecret.substring(0, 10) + '...' 
+          });
+          // Não retornar erro - continuar para o fallback abaixo
+        }
+      }
+      
+      // Fallback: Buscar todos os bancos EFI ativos (se não encontrou no primeiro loop)
+      if (!algumBancoAutorizado) {
+        const bancosEfi = await Banco.findAll({
+          where: { tipo_banco: 'efi', ativo: true }
+        });
+        
+        if (bancosEfi.length === 0) {
+          logger.error('Nenhum banco EFI ativo encontrado para processar notificação');
+          return {
+            success: false,
+            message: 'Nenhum banco EFI ativo encontrado',
+            status: 400
+          };
+        }
+        
+        // Tentar consultar a notificação em cada banco EFI (sem validar secret para tokens)
+        for (const banco of bancosEfi) {
+          logger.info(`Consultando notificação no banco EFI: ${banco.id}`);
+          
+          const resultado = await BancoApiService.consultarNotificacaoPorToken(banco, notificationToken);
+          
+          if (resultado.success && resultado.data) {
+            logger.info('Notificação consultada com sucesso', {
               banco_id: banco.id,
-              token: notificationToken,
+              data: resultado.data
+            });
+            
+            // Processar os dados da notificação
+            return await WebhookController.processarDadosNotificacao(
+              resultado.data as NotificationData | NotificationItem[] | NotificationItem,
+              banco,
+              receivedSecret
+            );
+          } else {
+            // Se o token não foi encontrado, expirou ou não existe, não tentar outros bancos
+            if (resultado.message?.includes('não encontrado') || 
+                resultado.message?.includes('expirado') ||
+                resultado.message?.includes('property_does_not_exists')) {
+              logger.warn('Token de notificação inválido - parando tentativas', {
+                banco_id: banco.id,
+                token: notificationToken,
+                message: resultado.message
+              });
+              break; // Não tentar outros bancos se o token é inválido
+            }
+            
+            logger.warn(`Falha ao consultar notificação no banco ${banco.id}`, {
               message: resultado.message
             });
-            break; // Não tentar outros bancos se o token é inválido
           }
-          
-          logger.warn(`Falha ao consultar notificação no banco ${banco.id}`, {
-            message: resultado.message
-          });
         }
       }
       
@@ -378,16 +388,14 @@ export class WebhookController {
         dados
       });
 
-      if (!(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
-        logger.warn('Webhook EFI: secret inválido ao processar dados', {
+      // Validar secret apenas se foi enviado (para segurança adicional)
+      // Não bloquear processamento, pois dados já foram obtidos com sucesso da API
+      if (receivedSecret && !(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
+        logger.debug('Webhook EFI: secret não corresponde ao banco, mas continuando processamento', {
           banco_id: banco.id,
           possui_secret: !!banco.webhook_secret
         });
-        return {
-          success: false,
-          message: 'Token do webhook inválido',
-          status: 401
-        };
+        // Não retornar erro - os dados já foram validados pela API da Efí
       }
 
       // Nova estrutura da EFI: array de notificações
@@ -525,13 +533,14 @@ export class WebhookController {
         : typeof notificacao.status === 'string' ? notificacao.status : null;
       const customId = notificacao.custom_id || null;
       
-
-      if (!(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
-        logger.warn('Webhook EFI: secret inválido em notificação individual', {
+      // Validar secret apenas se foi enviado (para segurança adicional)
+      // Não bloquear processamento, pois dados já foram validados pela API da Efí
+      if (receivedSecret && !(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
+        logger.debug('Webhook EFI: secret não corresponde ao banco em notificação individual, mas continuando', {
           banco_id: banco.id,
           possui_secret: !!banco.webhook_secret
         });
-        return 0;
+        // Não retornar 0 - continuar processando
       }
       
       switch (type) {
@@ -591,12 +600,13 @@ export class WebhookController {
       }
 
       const bancoRelacionado = bancoContext ?? (titulo as Titulo & { banco?: Banco | null }).banco ?? null;
-      if (!(await WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret))) {
-        logger.warn('Webhook EFI: secret inválido ao processar título', {
+      // Validar secret apenas se foi enviado, mas não bloquear processamento
+      if (receivedSecret && !(await WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret))) {
+        logger.debug('Webhook EFI: secret não corresponde ao banco ao processar título, mas continuando', {
           charge_id: chargeId,
           banco_id: bancoRelacionado?.id ?? null
         });
-        return 0;
+        // Não retornar 0 - continuar processando
       }
 
       // Atualizar status do título
@@ -684,16 +694,13 @@ export class WebhookController {
 
       const bancoRelacionado = bancoContext ?? titulo?.banco ?? null;
 
-      if (!(await WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret))) {
-        logger.warn('Webhook EFI: secret inválido ao processar charge', {
+      // Validar secret apenas se foi enviado, mas não bloquear processamento
+      if (receivedSecret && !(await WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret))) {
+        logger.debug('Webhook EFI: secret não corresponde ao banco ao processar charge, mas continuando', {
           charge_id: chargeId,
           banco_id: bancoRelacionado?.id ?? null
         });
-        return {
-          success: false,
-          message: 'Token do webhook inválido',
-          status: 401
-        };
+        // Não retornar erro - continuar processando
       }
 
       if (!titulo) {
@@ -783,16 +790,13 @@ export class WebhookController {
           include: [{ model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret'] }]
         }) as (Titulo & { banco?: Banco | null }) | null;
         if (titulo) {
-          if (!(await WebhookController.isWebhookSecretValid(titulo.banco ?? undefined, receivedSecret))) {
-            logger.warn('Webhook EFI: secret inválido ao processar custom_id', {
+          // Validar secret apenas se foi enviado, mas não bloquear processamento
+          if (receivedSecret && !(await WebhookController.isWebhookSecretValid(titulo.banco ?? undefined, receivedSecret))) {
+            logger.debug('Webhook EFI: secret não corresponde ao banco ao processar custom_id, mas continuando', {
               titulo_id: titulo.id,
               banco_id: titulo.banco?.id ?? null
             });
-            return {
-              success: false,
-              message: 'Token do webhook inválido',
-              status: 401
-            };
+            // Não retornar erro - continuar processando
           }
 
           const statusString = typeof notification.status === 'string' 

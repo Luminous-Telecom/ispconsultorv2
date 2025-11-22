@@ -229,7 +229,42 @@ export class BancoController {
         }
       }
       
-      await banco.update(dadosBanco);
+      // Preparar dados para atualização
+      // Remover campos sensíveis que não foram enviados para não sobrescrever valores existentes
+      const dadosParaAtualizar: Record<string, unknown> = { ...dadosBanco };
+      
+      // Campos sensíveis que devem ser preservados se não enviados
+      const camposSensiveis = [
+        'api_key',
+        'api_secret',
+        'client_id_producao',
+        'client_secret_producao',
+        'webhook_secret'
+      ];
+      
+      // Preservar também identificador_conta que pode ser sensível
+      if (!('identificador_conta' in dadosBanco) || dadosBanco.identificador_conta === null || dadosBanco.identificador_conta === '') {
+        delete dadosParaAtualizar.identificador_conta;
+      }
+      
+      // Se um campo sensível não foi enviado no body, manter o valor atual
+      for (const campo of camposSensiveis) {
+        // Se o campo não está presente no body (undefined), não incluir na atualização
+        // Isso preserva o valor existente no banco
+        if (!(campo in dadosBanco)) {
+          delete dadosParaAtualizar[campo];
+        } else if (dadosBanco[campo] === null || dadosBanco[campo] === '') {
+          // Se o campo foi enviado como null ou string vazia, também remover para preservar
+          delete dadosParaAtualizar[campo];
+        }
+      }
+      
+      // Remover campos auxiliares que não devem ser salvos
+      delete dadosParaAtualizar.has_api_key;
+      delete dadosParaAtualizar.has_api_secret;
+      delete dadosParaAtualizar.has_client_secret_producao;
+      
+      await banco.update(dadosParaAtualizar);
       
       // Invalidar cache de bancos ativos se o status mudou
       if (dadosBanco.ativo !== undefined) {

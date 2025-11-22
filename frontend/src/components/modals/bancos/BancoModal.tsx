@@ -266,6 +266,11 @@ const BancoModal: React.FC<BancoModalProps> = ({
         delete (dataToSave as Partial<BancoForm>).api_key;
       }
       
+      // Se client_id_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
+      if (!dataToSave.client_id_producao || dataToSave.client_id_producao.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).client_id_producao;
+      }
+      
       // Se client_secret_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
       if (!dataToSave.client_secret_producao || dataToSave.client_secret_producao.trim() === '') {
         delete (dataToSave as Partial<BancoForm>).client_secret_producao;
@@ -316,6 +321,11 @@ const BancoModal: React.FC<BancoModalProps> = ({
       // Se api_key estiver vazio, não enviar (para não sobrescrever o valor existente)
       if (!dataToSave.api_key || dataToSave.api_key.trim() === '') {
         delete (dataToSave as Partial<BancoForm>).api_key;
+      }
+      
+      // Se client_id_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
+      if (!dataToSave.client_id_producao || dataToSave.client_id_producao.trim() === '') {
+        delete (dataToSave as Partial<BancoForm>).client_id_producao;
       }
       
       // Se client_secret_producao estiver vazio, não enviar (para não sobrescrever o valor existente)

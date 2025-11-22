@@ -24,7 +24,6 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   type="text"
                   label={formData.tipo_banco === 'efi' ? 'Client ID Produção' : 'Client ID'}
                   placeholder="Client ID para produção"
-                  required={formData.tipo_banco === 'efi'}
                   size="sm"
                   value={formData.client_id_producao}
                   onChange={(value) => handleInputChange('client_id_producao', value)}
@@ -32,6 +31,11 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   autoComplete="off"
                   formPrefix={formPrefix}
                 />
+                {!formData.client_id_producao && (
+                  <small className="text-secondary d-block mt-1">
+                    Campo opcional. Preencha apenas se desejar atualizar o Client ID.
+                  </small>
+                )}
               </div>
             </div>
 
@@ -42,7 +46,6 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   type="password"
                   label={formData.tipo_banco === 'efi' ? 'Client Secret Produção' : 'Client Secret'}
                   placeholder="Preencha o Client Secret"
-                  required={formData.tipo_banco === 'efi'}
                   size="sm"
                   value={formData.client_secret_producao}
                   onChange={(value) => handleInputChange('client_secret_producao', value)}
@@ -51,8 +54,8 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
                   formPrefix={formPrefix}
                 />
                 {!formData.client_secret_producao && (
-                  <small className="text-warning d-block mt-1">
-                    ⚠️ Campo vazio. Preencha para testar a conexão.
+                  <small className="text-secondary d-block mt-1">
+                    Campo opcional. Preencha apenas se desejar atualizar o Client Secret.
                   </small>
                 )}
               </div>
