@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react';
 import { formatDate } from '../../utils/formatters';
 import { useDashboard } from '../../hooks/useDashboard';
 import { useDashboardFilters } from '../../contexts/DashboardFiltersContext';
@@ -257,10 +257,138 @@ const formatPieValue = (value: number, title: string): string | number => {
   return value.toLocaleString('pt-BR');
 };
 
-const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hiddenItems, onToggleItem }) => {
+// Componente memoizado para itens da legenda
+interface PieLegendItemProps {
+  item: ChartDataItem;
+  index: number;
+  title: string;
+  isHidden: boolean;
+  onToggle: (index: number) => void;
+}
+
+const PieLegendItem = memo<PieLegendItemProps>(({ item, index, title, isHidden, onToggle }) => {
+  const isProcessingRef = useRef(false);
+
+  // Handler otimizado para resposta imediata
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Prevenir múltiplos cliques rápidos
+    if (isProcessingRef.current) {
+      e.preventDefault();
+      return;
+    }
+    
+    isProcessingRef.current = true;
+    
+    // Usar startTransition diretamente para resposta mais rápida
+    startTransition(() => {
+      onToggle(index);
+    });
+    
+    // Resetar flag após um pequeno delay (fora do startTransition)
+    setTimeout(() => {
+      isProcessingRef.current = false;
+    }, 150);
+  }, [index, onToggle]);
+
+  return (
+    <div
+      className="pie-legend-item"
+      style={{
+        cursor: 'pointer',
+        opacity: isHidden ? 0.5 : 1,
+        textDecoration: isHidden ? 'line-through' : 'none',
+      }}
+      onClick={handleClick}
+    >
+      <div className="pie-legend-color" style={{ backgroundColor: item.color || '#6c757d' }}></div>
+      <span className="pie-legend-text">
+        {item.label}: {formatPieValue(item.value || 0, title)}
+      </span>
+    </div>
+  );
+});
+
+PieLegendItem.displayName = 'PieLegendItem';
+
+const ResponsivePieChart: React.FC<ResponsivePieChartProps> = memo(({ data, title, hiddenItems, onToggleItem }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+
+  // Todos os hooks devem ser chamados antes de qualquer early return
+  const visibleData = useMemo(() => 
+    data && data.length > 0 ? data.filter((_, index) => !hiddenItems.has(index)) : [],
+    [data, hiddenItems]
+  );
+  
+  const total = useMemo(() => 
+    visibleData.reduce((sum, item) => sum + (item.value || 0), 0),
+    [visibleData]
+  );
+
+  const chartData = useMemo(() => 
+    data && data.length > 0 ? data.map((item) => ({
+      name: item.label,
+      value: item.value || 0,
+      color: item.color,
+    })) : [],
+    [data]
+  );
+
+  const filteredChartData = useMemo(() => 
+    chartData.filter((_, index) => !hiddenItems.has(index)),
+    [chartData, hiddenItems]
+  );
+
+  const renderCustomizedLabel = useCallback(({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }: PieLabelRenderProps) => {
+    const safeInnerRadius = (innerRadius ?? 0) as number;
+    const safeOuterRadius = (outerRadius ?? safeInnerRadius) as number;
+    const safeCx = (cx ?? 0) as number;
+    const safeCy = (cy ?? 0) as number;
+    const safeMidAngle = (midAngle ?? 0) as number;
+    const safePercent = (percent ?? 0) as number;
+
+    const radius = safeInnerRadius + (safeOuterRadius - safeInnerRadius) * 0.38;
+    const x = safeCx + radius * Math.cos(-safeMidAngle * Math.PI / 180);
+    const y = safeCy + radius * Math.sin(-safeMidAngle * Math.PI / 180);
+
+    if (safePercent * 100 > 3) {
+      return (
+        <text
+          x={x}
+          y={y}
+          fill="#ffffff"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={8}
+          fontWeight={400}
+        >
+          {`${(safePercent * 100).toFixed(0)}%`}
+        </text>
+      );
+    }
+    return null;
+  }, []);
+
+  // Calcular raios baseado no tamanho do container (proporcional)
+  const radii = useMemo(() => {
+    if (!dimensions) return { inner: 22, outer: 45 };
+    const size = Math.min(dimensions.width, dimensions.height);
+    // Interpolação linear: 80px -> 16/32, 110px -> 22/45
+    const ratio = (size - 80) / (110 - 80); // 0 a 1
+    const inner = Math.round(16 + (22 - 16) * ratio);
+    const outer = Math.round(32 + (45 - 32) * ratio);
+    return { inner, outer };
+  }, [dimensions]);
 
   useLayoutEffect(() => {
     // Verificar dimensões antes da renderização visual
@@ -320,67 +448,6 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
     );
   }
 
-  const visibleData = data.filter((_, index) => !hiddenItems.has(index));
-  const total = visibleData.reduce((sum, item) => sum + (item.value || 0), 0);
-
-  const chartData = data.map((item) => ({
-    name: item.label,
-    value: item.value || 0,
-    color: item.color,
-  }));
-
-  const filteredChartData = chartData.filter((_, index) => !hiddenItems.has(index));
-
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }: PieLabelRenderProps) => {
-    const safeInnerRadius = (innerRadius ?? 0) as number;
-    const safeOuterRadius = (outerRadius ?? safeInnerRadius) as number;
-    const safeCx = (cx ?? 0) as number;
-    const safeCy = (cy ?? 0) as number;
-    const safeMidAngle = (midAngle ?? 0) as number;
-    const safePercent = (percent ?? 0) as number;
-
-    const radius = safeInnerRadius + (safeOuterRadius - safeInnerRadius) * 0.38;
-    const x = safeCx + radius * Math.cos(-safeMidAngle * Math.PI / 180);
-    const y = safeCy + radius * Math.sin(-safeMidAngle * Math.PI / 180);
-
-    if (safePercent * 100 > 3) {
-      return (
-        <text
-          x={x}
-          y={y}
-          fill="#ffffff"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={8}
-          fontWeight={400}
-        >
-          {`${(safePercent * 100).toFixed(0)}%`}
-        </text>
-      );
-    }
-    return null;
-  };
-
-  // Calcular raios baseado no tamanho do container (proporcional)
-  const getRadii = () => {
-    if (!dimensions) return { inner: 22, outer: 45 };
-    const size = Math.min(dimensions.width, dimensions.height);
-    // Interpolação linear: 80px -> 16/32, 110px -> 22/45
-    const ratio = (size - 80) / (110 - 80); // 0 a 1
-    const inner = Math.round(16 + (22 - 16) * ratio);
-    const outer = Math.round(32 + (45 - 32) * ratio);
-    return { inner, outer };
-  };
-
-  const radii = getRadii();
-
   return (
     <div className="chart-container-pie">
       <h6 className="chart-title-pie">
@@ -427,27 +494,22 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = ({ data, title, hi
         </div>
         <div className="pie-legend-box">
           {data.map((item, index) => (
-            <div
+            <PieLegendItem
               key={index}
-              className="pie-legend-item"
-              style={{
-                cursor: 'pointer',
-                opacity: hiddenItems.has(index) ? 0.5 : 1,
-                textDecoration: hiddenItems.has(index) ? 'line-through' : 'none',
-              }}
-              onClick={() => onToggleItem(index)}
-            >
-              <div className="pie-legend-color" style={{ backgroundColor: item.color || '#6c757d' }}></div>
-              <span className="pie-legend-text">
-                {item.label}: {formatPieValue(item.value || 0, title)}
-              </span>
-            </div>
+              item={item}
+              index={index}
+              title={title}
+              isHidden={hiddenItems.has(index)}
+              onToggle={onToggleItem}
+            />
           ))}
         </div>
       </div>
     </div>
   );
-};
+});
+
+ResponsivePieChart.displayName = 'ResponsivePieChart';
 
 const Dashboard: React.FC = () => {
   const {
@@ -465,48 +527,60 @@ const Dashboard: React.FC = () => {
   const [hiddenTaxaPagamento, setHiddenTaxaPagamento] = useState<Set<number>>(new Set());
   const [hiddenContratos, setHiddenContratos] = useState<Set<number>>(new Set());
 
-  // Funções de toggle para cada gráfico
-  const toggleCliente = (index: number) => {
-    const newHidden = new Set(hiddenClientes);
-    if (newHidden.has(index)) newHidden.delete(index);
-    else newHidden.add(index);
-    setHiddenClientes(newHidden);
-  };
+  // Funções de toggle para cada gráfico (memoizadas)
+  const toggleCliente = useCallback((index: number) => {
+    setHiddenClientes(prev => {
+      const newHidden = new Set(prev);
+      if (newHidden.has(index)) newHidden.delete(index);
+      else newHidden.add(index);
+      return newHidden;
+    });
+  }, []);
 
-  const togglePlano = (index: number) => {
-    const newHidden = new Set(hiddenPlanos);
-    if (newHidden.has(index)) newHidden.delete(index);
-    else newHidden.add(index);
-    setHiddenPlanos(newHidden);
-  };
+  const togglePlano = useCallback((index: number) => {
+    setHiddenPlanos(prev => {
+      const newHidden = new Set(prev);
+      if (newHidden.has(index)) newHidden.delete(index);
+      else newHidden.add(index);
+      return newHidden;
+    });
+  }, []);
 
-  const togglePagamento = (index: number) => {
-    const newHidden = new Set(hiddenPagamentos);
-    if (newHidden.has(index)) newHidden.delete(index);
-    else newHidden.add(index);
-    setHiddenPagamentos(newHidden);
-  };
+  const togglePagamento = useCallback((index: number) => {
+    setHiddenPagamentos(prev => {
+      const newHidden = new Set(prev);
+      if (newHidden.has(index)) newHidden.delete(index);
+      else newHidden.add(index);
+      return newHidden;
+    });
+  }, []);
 
-  const toggleDistribuicao = (index: number) => {
-    const newHidden = new Set(hiddenDistribuicao);
-    if (newHidden.has(index)) newHidden.delete(index);
-    else newHidden.add(index);
-    setHiddenDistribuicao(newHidden);
-  };
+  const toggleDistribuicao = useCallback((index: number) => {
+    setHiddenDistribuicao(prev => {
+      const newHidden = new Set(prev);
+      if (newHidden.has(index)) newHidden.delete(index);
+      else newHidden.add(index);
+      return newHidden;
+    });
+  }, []);
 
-  const toggleTaxaPagamento = (index: number) => {
-    const newHidden = new Set(hiddenTaxaPagamento);
-    if (newHidden.has(index)) newHidden.delete(index);
-    else newHidden.add(index);
-    setHiddenTaxaPagamento(newHidden);
-  };
+  const toggleTaxaPagamento = useCallback((index: number) => {
+    setHiddenTaxaPagamento(prev => {
+      const newHidden = new Set(prev);
+      if (newHidden.has(index)) newHidden.delete(index);
+      else newHidden.add(index);
+      return newHidden;
+    });
+  }, []);
 
-  const toggleContratos = (index: number) => {
-    const newHidden = new Set(hiddenContratos);
-    if (newHidden.has(index)) newHidden.delete(index);
-    else newHidden.add(index);
-    setHiddenContratos(newHidden);
-  };
+  const toggleContratos = useCallback((index: number) => {
+    setHiddenContratos(prev => {
+      const newHidden = new Set(prev);
+      if (newHidden.has(index)) newHidden.delete(index);
+      else newHidden.add(index);
+      return newHidden;
+    });
+  }, []);
 
   const formatCurrency = (valor: number): string => valor.toLocaleString('pt-BR', {
     style: 'currency',

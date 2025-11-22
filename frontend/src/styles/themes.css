@@ -1151,6 +1151,15 @@ body {
   overflow: hidden;
   visibility: visible !important;
   opacity: 1 !important;
+  /* Otimizações de performance */
+  transform: translateZ(0);
+  will-change: opacity, background-color;
+  contain: layout style paint;
+  touch-action: manipulation;
+  pointer-events: auto;
+  transition: opacity 0.1s ease-out, background-color 0.1s ease-out;
+  /* Reduzir latência de entrada */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .pie-legend-item:hover {
@@ -1175,6 +1184,9 @@ body {
   font-size: 0.6875rem;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Otimizações de performance */
+  transform: translateZ(0);
+  contain: layout style paint;
 }
 
 /* Telas grandes - Layout horizontal com texto em uma linha */
