@@ -14,37 +14,26 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-
-### 2. Melhorar Tipagem de Props ✅ CONCLUÍDO
-
-**Problema:** Alguns componentes com props mal tipadas.
-
-**Solução Implementada:**
-- ✅ Criadas interfaces específicas para props do Dashboard:
-  - `RechartsNestedPayload` - substitui `Record<string, unknown>` no payload do tooltip
-  - `RechartsTooltipPayloadItem` - interface específica para itens do payload
-  - `CustomTooltipProps` - melhorada com tipos específicos ao invés de genéricos
-- ✅ Melhorada tipagem de `ChartDataItem` com documentação e propriedades conhecidas
-- ✅ Criada interface `SelectedParcela` no `FinanceiroModal` para substituir tipo inline
-- ✅ Adicionada documentação JSDoc nas interfaces criadas
-
-**Benefícios:**
-- Melhor type safety e autocomplete
-- Código mais legível e manutenível
-- Redução de erros em tempo de execução
-- Melhor suporte do TypeScript para refatoração
-
-**Prioridade:** 🟢 Baixa
-
----
-
-### 3. Tipos de Retorno de Funções
+### 3. Tipos de Retorno de Funções ✅ CONCLUÍDO
 
 **Problema:** Algumas funções sem tipo de retorno explícito.
 
-**Sugestão:**
-- Adicionar tipos de retorno explícitos em funções públicas
-- Melhorar inferência de tipos em funções complexas
+**Solução Implementada:**
+- ✅ Criada interface `RoutineValidationResult` para padronizar retorno de validações
+- ✅ Adicionados tipos de retorno explícitos em `validateRoutineData` e `validateRoutineUpdate`
+- ✅ Verificadas e confirmadas tipagens explícitas em funções utilitárias principais:
+  - Funções de formatação (`formatCurrency`, `formatDate`, `formatDateTime`, etc.)
+  - Funções de data (`toISODateString`, `addDays`, `compareDates`, etc.)
+  - Funções de sanitização (`sanitizeString`, `sanitizeEmail`, `sanitizeNumber`, etc.)
+  - Hooks customizados (`usePagination`, `useSorting`, `useFilters`, etc.)
+
+**Benefícios:**
+- Melhor type safety e inferência de tipos
+- Código mais claro e autodocumentado
+- Facilita refatoração e manutenção
+- Reduz erros em tempo de compilação
+
+**Nota:** A maioria das funções públicas já possuía tipos de retorno explícitos. As melhorias focaram em padronizar interfaces de retorno complexas e garantir consistência.
 
 **Prioridade:** 🟢 Baixa
 

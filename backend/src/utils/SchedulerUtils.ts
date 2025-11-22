@@ -100,14 +100,19 @@ export async function normalizeDateToString(date: Date): Promise<string> {
 }
 
 /**
+ * Resultado da validação de dados de rotina
+ */
+export interface RoutineValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+/**
  * Valida dados para criar uma rotina
  * @param data - Dados da rotina
  * @returns Objeto com isValid e errors
  */
-export function validateRoutineData(data: CreateRoutineData): {
-  isValid: boolean;
-  errors: string[];
-} {
+export function validateRoutineData(data: CreateRoutineData): RoutineValidationResult {
   const errors: string[] = [];
 
   if (!data.nome || data.nome.trim().length === 0) {
@@ -163,10 +168,7 @@ export function validateRoutineData(data: CreateRoutineData): {
  * @param data - Dados da rotina
  * @returns Objeto com isValid e errors
  */
-export function validateRoutineUpdate(data: UpdateRoutineData): {
-  isValid: boolean;
-  errors: string[];
-} {
+export function validateRoutineUpdate(data: UpdateRoutineData): RoutineValidationResult {
   const errors: string[] = [];
 
   if (data.hora_execucao !== undefined) {
