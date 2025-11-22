@@ -7,7 +7,8 @@ import { Titulo } from '../models/Titulo';
 import { TermoContrato } from '../models/TermoContrato';
 import { Banco } from '../models/Banco';
 import { Usuario } from '../models/Usuario';
-import { TituloController } from './TituloController';
+import { TituloPDFController } from './titulos/TituloPDFController';
+import { TituloComRelacoes } from './titulos/types';
 import { logger } from '../utils/logger';
 import crypto from 'crypto';
 
@@ -983,7 +984,7 @@ export class IntegrationWebhookController {
         }
 
 
-        const pdfBase64 = await TituloController.gerarPdfBase64(titulo as unknown as Parameters<typeof TituloController.gerarPdfBase64>[0]);
+        const pdfBase64 = await TituloPDFController.gerarPdfBase64(titulo as TituloComRelacoes);
 
         if (!pdfBase64) {
           res.status(500).json({

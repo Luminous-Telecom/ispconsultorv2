@@ -1,51 +1,53 @@
 import { Router } from 'express';
-import { TituloController } from '../controllers/TituloController';
+import { TituloCRUDController } from '../controllers/titulos/TituloCRUDController';
+import { TituloPDFController } from '../controllers/titulos/TituloPDFController';
+import { TituloBoletoController } from '../controllers/titulos/TituloBoletoController';
 
 const router = Router();
 
 // Listar títulos
-router.get('/', TituloController.list);
+router.get('/', TituloCRUDController.list);
 
 // Gerar PDF de múltiplos boletos (DEVE VIR ANTES DE /:id)
-router.get('/boletos-multiplos-pdf', TituloController.gerarPdfBoletosMultiplos);
+router.get('/boletos-multiplos-pdf', TituloPDFController.gerarPdfBoletosMultiplos);
 
 // Buscar título por ID
-router.get('/:id', TituloController.show);
+router.get('/:id', TituloCRUDController.show);
 
 // Criar novo título
-router.post('/', TituloController.create);
+router.post('/', TituloCRUDController.create);
 
 // Atualizar título
-router.put('/:id', TituloController.update);
+router.put('/:id', TituloCRUDController.update);
 
 // Buscar títulos por contrato
-router.get('/contrato/:contratoId', TituloController.getByContrato);
+router.get('/contrato/:contratoId', TituloCRUDController.getByContrato);
 
 // Deletar título
-router.delete('/:id', TituloController.destroy);
+router.delete('/:id', TituloCRUDController.destroy);
 
 // Imprimir boleto
-router.get('/:id/boleto', TituloController.imprimirBoleto);
+router.get('/:id/boleto', TituloPDFController.imprimirBoleto);
 
 // Gerar link público de pagamento
-router.get('/:id/link-pagamento', TituloController.gerarLinkPagamento);
+router.get('/:id/link-pagamento', TituloCRUDController.gerarLinkPagamento);
 
 // Marcar como pago
-router.post('/:id/pagar', TituloController.marcarComoPago);
+router.post('/:id/pagar', TituloBoletoController.marcarComoPago);
 
 // Desmarcar como pago
-router.post('/:id/desmarcar-pago', TituloController.desmarcarPago);
+router.post('/:id/desmarcar-pago', TituloBoletoController.desmarcarPago);
 
 // Estornar título
-router.post('/:id/estornar', TituloController.estornar);
+router.post('/:id/estornar', TituloBoletoController.estornar);
 
 // Consultar recebimento na API do banco
-router.post('/:id/consultar-recebimento', TituloController.consultarRecebimento);
+router.post('/:id/consultar-recebimento', TituloBoletoController.consultarRecebimento);
 
 // Estatísticas
-router.get('/stats/geral', TituloController.getStats);
+router.get('/stats/geral', TituloCRUDController.getStats);
 
-router.post('/:id/enviar-whatsapp', TituloController.enviarWhatsApp);
-router.post('/:id/enviar-email', TituloController.enviarEmail);
+router.post('/:id/enviar-whatsapp', TituloCRUDController.enviarWhatsApp);
+router.post('/:id/enviar-email', TituloCRUDController.enviarEmail);
 
 export default router;

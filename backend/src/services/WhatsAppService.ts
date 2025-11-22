@@ -8,7 +8,8 @@ import { Banco } from '../models/Banco';
 import { Contrato } from '../models/Contrato';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
-import { TituloController } from '../controllers/TituloController';
+import { TituloPDFController } from '../controllers/titulos/TituloPDFController';
+import { gerarLinkPagamentoPublico } from '../controllers/titulos/TituloHelpers';
 import { WhatsAppCloudService } from './WhatsAppCloudService';
 import { parseDateFromDb } from '../utils/dateUtils';
 
@@ -188,7 +189,7 @@ export class WhatsAppService {
         
         // Fluxo normal (apenas Evolution API)
         if (mensagem.tipo_envio === 'pdf') {
-          const base64 = await TituloController.gerarPdfBase64(titulo);
+          const base64 = await TituloPDFController.gerarPdfBase64(titulo);
           if (base64) {
             const enviouPdf = await this.enviarPdfBase64(servidor, telefone, base64, msg);
             if (enviouPdf) {
@@ -428,7 +429,7 @@ export class WhatsAppService {
 
     if (incluirPdfNoHeader && servidor.tipo_api === 'whatsapp_cloud') {
       try {
-        const base64 = await TituloController.gerarPdfBase64(titulo);
+        const base64 = await TituloPDFController.gerarPdfBase64(titulo);
         if (base64) {
           const mediaId = await WhatsAppCloudService.uploadMediaFromBase64(
             servidor,
@@ -532,7 +533,7 @@ export class WhatsAppService {
         return components;
       }
       
-      const linkPagamento = TituloController.gerarLinkPagamentoPublico(titulo.id, baseUrl);
+      const linkPagamento = gerarLinkPagamentoPublico(titulo.id, baseUrl);
       const pathCompleto = new URL(linkPagamento).pathname;
       
       if (pathCompleto) {
@@ -657,7 +658,7 @@ export class WhatsAppService {
       }, baseUrl);
       
       if (mensagem.tipo_envio === 'pdf') {
-        const base64 = await TituloController.gerarPdfBase64(titulo);
+        const base64 = await TituloPDFController.gerarPdfBase64(titulo);
         if (!base64) {
           return { sucesso: false, mensagem: 'Erro ao gerar PDF do boleto' };
         }

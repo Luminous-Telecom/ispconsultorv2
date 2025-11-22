@@ -9,7 +9,7 @@ import { Contrato } from '../models/Contrato';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import nodemailer, { SendMailOptions } from 'nodemailer';
-import { TituloController } from '../controllers/TituloController';
+import { TituloPDFController } from '../controllers/titulos/TituloPDFController';
 import { parseDateFromDb } from '../utils/dateUtils';
 
 interface ConfiguracoesEnvios {
@@ -139,7 +139,7 @@ export class EmailService {
 
         let base64Pdf: string | undefined = undefined;
         if ((mensagem && mensagem.tipo_envio === 'pdf') || !mensagem) {
-          const pdf = await TituloController.gerarPdfBase64(titulo);
+          const pdf = await TituloPDFController.gerarPdfBase64(titulo);
           if (pdf) {
             base64Pdf = pdf;
           } else {
@@ -316,7 +316,7 @@ export class EmailService {
 
       let base64Pdf: string | undefined = undefined;
       if (mensagem.tipo_envio === 'pdf') {
-        const pdf = await TituloController.gerarPdfBase64(titulo);
+        const pdf = await TituloPDFController.gerarPdfBase64(titulo);
         if (pdf) {
           base64Pdf = pdf;
         } else {

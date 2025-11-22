@@ -4,7 +4,7 @@ import { Titulo } from '../models/Titulo';
 import { Plano } from '../models/Plano';
 import { DiasVencimento } from '../models/DiasVencimento';
 import { DadosEmpresa } from '../models/DadosEmpresa';
-import { TituloController } from '../controllers/TituloController';
+import { gerarLinkPagamentoPublico } from '../controllers/titulos/TituloHelpers';
 import { Op } from 'sequelize';
 import axios from 'axios';
 import * as fs from 'fs';
@@ -339,7 +339,7 @@ export class VariaveisDocumentoService {
 
     // Gerar link de pagamento público
     const urlFinal = baseUrl || process.env.BASE_URL || 'http://localhost:3001';
-    const linkPagamento = TituloController.gerarLinkPagamentoPublico(titulo.id, urlFinal);
+    const linkPagamento = gerarLinkPagamentoPublico(titulo.id, urlFinal);
 
     const substituicoes: Record<string, string> = {
       '#titulo.id#': String(titulo.id),

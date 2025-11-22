@@ -3,19 +3,10 @@ import { Titulo } from '../models/Titulo';
 import { Cliente } from '../models/Cliente';
 import { Plano } from '../models/Plano';
 import { Banco } from '../models/Banco';
-import { TituloController } from './TituloController';
+import { TituloPDFController } from './titulos/TituloPDFController';
+import { TituloComRelacoes } from './titulos/types';
 import { logger } from '../utils/logger';
 import crypto from 'crypto';
-
-// Interface compatível com TituloController.gerarPdfBase64
-interface TituloComRelacoes extends Titulo {
-  cliente?: Cliente;
-  plano?: Plano;
-  banco?: Banco & {
-    logo?: string | null;
-    agencia_codigo?: string | null;
-  };
-}
 
 export class PagamentoPublicoController {
   /**
@@ -173,7 +164,7 @@ export class PagamentoPublicoController {
       }
 
       // Gerar PDF - titulo já tem os relacionamentos incluídos
-      const pdfBase64 = await TituloController.gerarPdfBase64(titulo as TituloComRelacoes);
+      const pdfBase64 = await TituloPDFController.gerarPdfBase64(titulo as TituloComRelacoes);
       
       if (!pdfBase64) {
         res.status(500).json({
