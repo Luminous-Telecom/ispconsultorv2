@@ -35,10 +35,15 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 - `frontend/src/services/parametroService.ts`
 - `frontend/src/services/tituloService.ts`
 - `frontend/src/components/common/VariablePlugin.ts`
-- `frontend/src/services/dashboardService.ts` (7 ocorrências)
+- `frontend/src/services/dashboardService.ts` (7 ocorrências + export não utilizado removido)
 - `frontend/src/services/cepService.ts` (2 ocorrências)
 - `backend/src/services/VariaveisDocumentoService.ts`
 - `backend/src/services/pdf-generation/utils/TemplateLoader.ts`
+
+**Limpeza Adicional:**
+- ✅ Removido export `dashboardService` não utilizado (apenas classe estática é usada)
+- ✅ Verificado código comentado - apenas comentários explicativos legítimos encontrados
+- ✅ Verificado imports não utilizados - ESLint não reportou problemas
 
 **Status:** ✅ Concluído
 
