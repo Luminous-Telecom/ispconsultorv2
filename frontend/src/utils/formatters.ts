@@ -24,13 +24,6 @@ export const formatDate = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
-    // Log para debug
-    console.log('DEBUG - formatDate - Entrada:', {
-      date_raw: date,
-      date_type: typeof date,
-      date_string: String(date),
-    });
-    
     let resultado: string;
     
     if (typeof date === 'string') {
@@ -67,12 +60,6 @@ export const formatDate = (date: string | Date): string => {
       resultado = localDate.toLocaleDateString('pt-BR');
     }
     
-    // Log para debug
-    console.log('DEBUG - formatDate - Saída:', {
-      date_raw: date,
-      resultado_formatado: resultado,
-    });
-    
     return resultado;
   } catch {
     return '-';
@@ -88,13 +75,6 @@ export const formatDateTime = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
-    // Log para debug
-    console.log('DEBUG - formatDateTime - Entrada:', {
-      date_raw: date,
-      date_type: typeof date,
-      date_string: String(date),
-    });
-    
     let dateStr = date;
     let d: Date;
     
@@ -124,20 +104,8 @@ export const formatDateTime = (date: string | Date): string => {
     
     if (isNaN(d.getTime())) return '-';
     
-    const resultado = d.toLocaleString('pt-BR');
-    
-    // Log para debug
-    console.log('DEBUG - formatDateTime - Saída:', {
-      date_raw: date,
-      date_str_processado: dateStr,
-      date_object: d,
-      date_iso: d.toISOString(),
-      date_utc_string: d.toUTCString(),
-      resultado_formatado: resultado,
-    });
-    
     // Para DateTime completo, geralmente queremos a conversão para o horário local do usuário
-    return resultado;
+    return d.toLocaleString('pt-BR');
   } catch {
     return '-';
   }
