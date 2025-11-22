@@ -111,14 +111,15 @@ const onSubmit = (data: ClienteFormData) => {
 - ✅ Validação em tempo real implementada
 - ✅ Todos os componentes de aba funcionando corretamente
 
-### 3. Schemas para Outras Entidades - CRIADOS ✅
+### 3. Contrato - COMPLETO ✅
+- ✅ `useContratoForm.ts` criado e refatorado com React Hook Form + Zod
+- ✅ `ContratoModal.tsx` refatorado para usar o novo hook
+- ✅ Schema completo e funcional
+- ✅ Validação em tempo real implementada
+- ✅ Gerencia criação e atualização de contrato
+- ✅ Mantém compatibilidade com termos, títulos e serviços adicionais
 
-#### `frontend/src/schemas/contrato.schema.ts` ✅
-- ✅ Schema completo para validação de Contratos
-- ✅ Validações para relacionamentos obrigatórios
-- ✅ Validação de descontos e datas
-- ✅ Tipos TypeScript inferidos
-- ⏳ Aguardando refatoração do formulário
+### 4. Schemas para Outras Entidades - CRIADOS ✅
 
 #### `frontend/src/schemas/titulo.schema.ts` ✅
 - ✅ Schema completo para validação de Títulos
@@ -128,8 +129,8 @@ const onSubmit = (data: ClienteFormData) => {
 - ⏳ Aguardando refatoração do formulário
 
 **Status:** 
-- ✅ Cliente e Plano completamente refatorados
-- ⏳ Contrato e Título têm schemas prontos, aguardando refatoração dos formulários
+- ✅ Cliente, Plano e Contrato completamente refatorados
+- ⏳ Título tem schema pronto, aguardando refatoração do formulário
 
 ## 📚 Documentação Adicional
 
@@ -221,13 +222,22 @@ const MyForm = () => {
 
 **Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA PLANO**
 
-### Outras Entidades - SCHEMAS CRIADOS ✅
+### Contrato - COMPLETO ✅
 - [x] Criar `contrato.schema.ts` com validações completas
+- [x] Criar `useContratoForm.ts` com React Hook Form + Zod
+- [x] Refatorar `ContratoModal.tsx` para usar o novo hook
+- [x] Remover validação manual duplicada
+- [x] Implementar validação em tempo real
+- [x] Gerenciar criação e atualização de contrato
+
+**Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA CONTRATO**
+
+### Outras Entidades - SCHEMAS CRIADOS ✅
 - [x] Criar `titulo.schema.ts` com validações completas
 
 **Status:** ✅ **SCHEMAS CRIADOS E PRONTOS PARA USO**
 
-**Próximo Passo:** Refatorar formulários de Contrato e Título para usar React Hook Form + Zod (opcional)
+**Próximo Passo:** Refatorar formulário de Título para usar React Hook Form + Zod (opcional)
 
 ## 🎯 Próximas Implementações (Opcional)
 
