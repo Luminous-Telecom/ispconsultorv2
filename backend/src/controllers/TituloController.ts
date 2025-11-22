@@ -317,20 +317,26 @@ export class TituloController {
       const from = total > 0 ? offset + 1 : 0;
       const to = total > 0 ? Math.min(offset + perPage, total) : 0;
 
-      // Log para debug: verificar datas sendo enviadas
+      // Log para debug: verificar datas lidas do banco
       if (rows.length > 0) {
         const primeiroTitulo = rows[0];
-        logger.info('DEBUG - TituloController.list - Datas sendo enviadas:', {
+        logger.info('DEBUG - TituloController.list - Datas LIDAS DO BANCO:', {
           titulo_id: primeiroTitulo.id,
           data_vencimento_raw: primeiroTitulo.data_vencimento,
           data_vencimento_type: typeof primeiroTitulo.data_vencimento,
-          data_vencimento_toISO: primeiroTitulo.data_vencimento ? new Date(primeiroTitulo.data_vencimento).toISOString() : null,
+          data_vencimento_toISOString: primeiroTitulo.data_vencimento ? new Date(primeiroTitulo.data_vencimento).toISOString() : null,
+          data_vencimento_toUTCString: primeiroTitulo.data_vencimento ? new Date(primeiroTitulo.data_vencimento).toUTCString() : null,
+          data_vencimento_local_string: primeiroTitulo.data_vencimento ? new Date(primeiroTitulo.data_vencimento).toLocaleString('pt-BR') : null,
           created_at_raw: primeiroTitulo.created_at,
           created_at_type: typeof primeiroTitulo.created_at,
-          created_at_toISO: primeiroTitulo.created_at ? new Date(primeiroTitulo.created_at).toISOString() : null,
+          created_at_toISOString: primeiroTitulo.created_at ? new Date(primeiroTitulo.created_at).toISOString() : null,
+          created_at_toUTCString: primeiroTitulo.created_at ? new Date(primeiroTitulo.created_at).toUTCString() : null,
+          created_at_local_string: primeiroTitulo.created_at ? new Date(primeiroTitulo.created_at).toLocaleString('pt-BR') : null,
           updated_at_raw: primeiroTitulo.updated_at,
           updated_at_type: typeof primeiroTitulo.updated_at,
-          updated_at_toISO: primeiroTitulo.updated_at ? new Date(primeiroTitulo.updated_at).toISOString() : null,
+          updated_at_toISOString: primeiroTitulo.updated_at ? new Date(primeiroTitulo.updated_at).toISOString() : null,
+          updated_at_toUTCString: primeiroTitulo.updated_at ? new Date(primeiroTitulo.updated_at).toUTCString() : null,
+          updated_at_local_string: primeiroTitulo.updated_at ? new Date(primeiroTitulo.updated_at).toLocaleString('pt-BR') : null,
         });
       }
 
@@ -495,6 +501,18 @@ export class TituloController {
       }
       valorFinal = Math.max(0.01, valorFinal);
 
+      // Log antes de salvar - verificar data que será enviada ao banco
+      const dataVencimentoParaSalvar = new Date(data_vencimento);
+      logger.info('DEBUG - TituloController.create - ANTES de salvar no banco:', {
+        data_vencimento_input: data_vencimento,
+        data_vencimento_input_type: typeof data_vencimento,
+        data_vencimento_date_object: dataVencimentoParaSalvar,
+        data_vencimento_toISOString: dataVencimentoParaSalvar.toISOString(),
+        data_vencimento_toUTCString: dataVencimentoParaSalvar.toUTCString(),
+        data_vencimento_getTime: dataVencimentoParaSalvar.getTime(),
+        data_vencimento_local_string: dataVencimentoParaSalvar.toLocaleString('pt-BR'),
+      });
+
       const titulo = await withTransaction(async (transaction: Transaction) => {
         
         return await Titulo.create({
@@ -506,7 +524,7 @@ export class TituloController {
           valor: valorFinal,
           valor_final: valorFinal,
           // Usar data normal do JS, Sequelize configurado com timezone cuidará disso
-          data_vencimento: new Date(data_vencimento),
+          data_vencimento: dataVencimentoParaSalvar,
           observacoes: observacoes || '',
           desconto_percentual,
           desconto_valor,
@@ -516,6 +534,20 @@ export class TituloController {
           status: 'pendente',
           pago: false
         }, { transaction });
+      });
+
+      // Log após salvar - verificar o que foi salvo no banco
+      logger.info('DEBUG - TituloController.create - DEPOIS de salvar no banco:', {
+        titulo_id: titulo.id,
+        data_vencimento_salva_raw: titulo.data_vencimento,
+        data_vencimento_salva_type: typeof titulo.data_vencimento,
+        data_vencimento_salva_toISOString: titulo.data_vencimento ? new Date(titulo.data_vencimento).toISOString() : null,
+        data_vencimento_salva_toUTCString: titulo.data_vencimento ? new Date(titulo.data_vencimento).toUTCString() : null,
+        data_vencimento_salva_local_string: titulo.data_vencimento ? new Date(titulo.data_vencimento).toLocaleString('pt-BR') : null,
+        created_at_raw: titulo.created_at,
+        created_at_toISOString: titulo.created_at ? new Date(titulo.created_at).toISOString() : null,
+        updated_at_raw: titulo.updated_at,
+        updated_at_toISOString: titulo.updated_at ? new Date(titulo.updated_at).toISOString() : null,
       });
 
       res.status(201).json({ success: true, message: 'Título criado com sucesso', data: titulo });
@@ -586,6 +618,18 @@ export class TituloController {
 
           valorFinal = Math.max(0.01, valorFinal);
 
+          // Log antes de salvar - verificar data que será enviada ao banco
+          const dataVencimentoParaSalvar = new Date(dadosTitulo.data_vencimento);
+          logger.info('DEBUG - TituloController.createBulk - ANTES de salvar no banco:', {
+            cliente_id: dadosTitulo.cliente_id,
+            data_vencimento_input: dadosTitulo.data_vencimento,
+            data_vencimento_input_type: typeof dadosTitulo.data_vencimento,
+            data_vencimento_date_object: dataVencimentoParaSalvar,
+            data_vencimento_toISOString: dataVencimentoParaSalvar.toISOString(),
+            data_vencimento_toUTCString: dataVencimentoParaSalvar.toUTCString(),
+            data_vencimento_local_string: dataVencimentoParaSalvar.toLocaleString('pt-BR'),
+          });
+
           const titulo = await Titulo.create({
             cliente_id: dadosTitulo.cliente_id,
             plano_id: dadosTitulo.plano_id,
@@ -594,7 +638,7 @@ export class TituloController {
             numero_titulo: numeroTitulo,
             valor: valorFinal,
             valor_final: valorFinal,
-            data_vencimento: new Date(dadosTitulo.data_vencimento),
+            data_vencimento: dataVencimentoParaSalvar,
             observacoes: dadosTitulo.observacoes || null,
             desconto_percentual: dadosTitulo.desconto_percentual || null,
             desconto_valor: dadosTitulo.desconto_valor || null,
@@ -604,6 +648,21 @@ export class TituloController {
             status: dadosTitulo.status || 'pendente',
             pago: dadosTitulo.pago || false
           }, { transaction });
+
+          // Log após salvar - verificar o que foi salvo no banco
+          logger.info('DEBUG - TituloController.createBulk - DEPOIS de salvar no banco:', {
+            titulo_id: titulo.id,
+            cliente_id: titulo.cliente_id,
+            data_vencimento_salva_raw: titulo.data_vencimento,
+            data_vencimento_salva_type: typeof titulo.data_vencimento,
+            data_vencimento_salva_toISOString: titulo.data_vencimento ? new Date(titulo.data_vencimento).toISOString() : null,
+            data_vencimento_salva_toUTCString: titulo.data_vencimento ? new Date(titulo.data_vencimento).toUTCString() : null,
+            data_vencimento_salva_local_string: titulo.data_vencimento ? new Date(titulo.data_vencimento).toLocaleString('pt-BR') : null,
+            created_at_raw: titulo.created_at,
+            created_at_toISOString: titulo.created_at ? new Date(titulo.created_at).toISOString() : null,
+            updated_at_raw: titulo.updated_at,
+            updated_at_toISOString: titulo.updated_at ? new Date(titulo.updated_at).toISOString() : null,
+          });
 
           resultados.push(titulo);
         }
@@ -679,7 +738,17 @@ export class TituloController {
           // Lógica de alteração de vencimento
           dataVencimentoParaUpdate = new Date(data_vencimento);
           
-          logger.info('Alteração de vencimento detectada', { titulo_id: titulo.id, data_original: titulo.data_vencimento, data_nova: data_vencimento });
+          logger.info('DEBUG - TituloController.update - ANTES de atualizar no banco:', {
+            titulo_id: titulo.id,
+            data_vencimento_original_raw: titulo.data_vencimento,
+            data_vencimento_original_toISOString: titulo.data_vencimento ? new Date(titulo.data_vencimento).toISOString() : null,
+            data_vencimento_nova_input: data_vencimento,
+            data_vencimento_nova_input_type: typeof data_vencimento,
+            data_vencimento_nova_date_object: dataVencimentoParaUpdate,
+            data_vencimento_nova_toISOString: dataVencimentoParaUpdate.toISOString(),
+            data_vencimento_nova_toUTCString: dataVencimentoParaUpdate.toUTCString(),
+            data_vencimento_nova_local_string: dataVencimentoParaUpdate.toLocaleString('pt-BR'),
+          });
           
           // TODO: Implementar remarcação na API do banco (BancoApiService.remarcarVencimento)
           // ...
@@ -691,6 +760,19 @@ export class TituloController {
         status: status || titulo.status,
         data_vencimento: dataVencimentoParaUpdate ?? titulo.data_vencimento, // <<--- USO DA DATA NORMALIZADA PARA UTC
         observacoes: observacoes !== undefined ? observacoes : titulo.observacoes
+      });
+
+      // Log após atualizar - verificar o que foi salvo no banco
+      await titulo.reload();
+      logger.info('DEBUG - TituloController.update - DEPOIS de atualizar no banco:', {
+        titulo_id: titulo.id,
+        data_vencimento_atualizada_raw: titulo.data_vencimento,
+        data_vencimento_atualizada_type: typeof titulo.data_vencimento,
+        data_vencimento_atualizada_toISOString: titulo.data_vencimento ? new Date(titulo.data_vencimento).toISOString() : null,
+        data_vencimento_atualizada_toUTCString: titulo.data_vencimento ? new Date(titulo.data_vencimento).toUTCString() : null,
+        data_vencimento_atualizada_local_string: titulo.data_vencimento ? new Date(titulo.data_vencimento).toLocaleString('pt-BR') : null,
+        updated_at_raw: titulo.updated_at,
+        updated_at_toISOString: titulo.updated_at ? new Date(titulo.updated_at).toISOString() : null,
       });
 
       res.json({ success: true, message: 'Título atualizado com sucesso', data: titulo });
