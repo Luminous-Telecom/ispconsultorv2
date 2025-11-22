@@ -8,7 +8,6 @@ import { useContratoForm } from '../../../../hooks/useContratoForm';
 import { useTermosContrato, useDeleteTermoContrato } from '../../../../hooks/useTermosContrato';
 import { TermoContrato } from '../../../../services/TermoContratoService';
 import { TituloService } from '../../../../services/tituloService';
-import { ContratoService } from '../../../../services/ContratoService';
 import { Titulo, Plano } from '../../../../types';
 import DraggableModal from '../../../common/DraggableModal';
 import ImprimirModal from '../../../common/ImprimirModal';
@@ -26,11 +25,9 @@ import ContratoTab from './abas/ContratoTab';
 import TermosTab from './abas/TermosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
 import ServicosAdicionaisTab from './abas/ServicosAdicionaisTab';
-import { ContratoForm } from './types';
 import { TermoEditModal, SelecionarTermoModal, ServicoAdicionalModal } from './modals';
 import { useContratoPlanosAdicionais, useDeleteContratoPlanoAdicional } from '../../../../hooks/useContratoPlanosAdicionais';
 import { ContratoPlanoAdicional } from '../../../../services/contratoPlanoAdicionalService';
-import { ensureString } from '../../../../utils/stringUtils';
 import { BulkAction } from './types';
 import { formatDate, formatDateTime } from '../../../../utils/formatters';
 import { useImpressaoContrato } from '../../../../hooks/useImpressaoContrato';
@@ -232,8 +229,6 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     setShowModeloContratoModal(false);
   };
 
-  // validateForm é gerenciado pelo hook
-  const validateForm = formHook.validateForm;
 
   // Função para obter a cor do status
   const getStatusColor = (status: string) => {
