@@ -271,6 +271,17 @@ const TituloModal: React.FC<TituloModalProps> = ({
       }
     >
       <form id="titulo-form" onSubmit={handleSubmit} style={{ padding: '16px' }}>
+        {/* Mostrar erros de validação se houver */}
+        {Object.keys(errors).length > 0 && (
+          <div className="alert alert-danger mb-3" role="alert">
+            <strong>Erros de validação:</strong>
+            <ul className="mb-0 mt-2">
+              {Object.entries(errors).map(([field, message]) => (
+                <li key={field}>{field}: {message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="row">
           {isEditMode && (
             <>

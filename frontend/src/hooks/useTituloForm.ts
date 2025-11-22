@@ -183,6 +183,7 @@ export const useTituloForm = ({
   const createTituloMutation = useMutation({
     mutationFn: (data: CreateCarneParcela) => TituloService.create(data),
     onSuccess: (response) => {
+      console.log('[useTituloForm] Título criado com sucesso:', response);
       const mensagem = response?.message || 'Título criado com sucesso!';
       success(mensagem);
       queryClient.invalidateQueries({ queryKey: ['carne-parcelas'] });
@@ -193,10 +194,16 @@ export const useTituloForm = ({
       onSuccess?.();
     },
     onError: (err) => {
-      const axiosError = err as AxiosError<{ message?: string; error?: string }>;
-      const errorMessage = axiosError.response?.data?.message || 
-                          axiosError.response?.data?.error || 
-                          'Erro ao criar título';
+      const axiosError = err as AxiosError<{ message?: string; error?: string; errors?: string[] }>;
+      const responseData = axiosError.response?.data;
+      let errorMessage = 'Erro ao criar título';
+      if (responseData?.message) {
+        errorMessage = responseData.message;
+      } else if (responseData?.error) {
+        errorMessage = responseData.error;
+      } else if (responseData?.errors && Array.isArray(responseData.errors) && responseData.errors.length > 0) {
+        errorMessage = responseData.errors.join(', ');
+      }
       error(errorMessage);
     },
   });
@@ -225,6 +232,7 @@ export const useTituloForm = ({
   // Handler de submit usando React Hook Form
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = (data: any) => {
+    // O schema Zod já converte strings para números automaticamente
     const typedData = data as Omit<ZodTituloFormData, 'cliente_id'>;
     
     if (isEditing && tituloId) {
@@ -257,12 +265,19 @@ export const useTituloForm = ({
       createTituloMutation.mutate(payload as CreateCarneParcela);
     }
   };
+  
+  // Handler para quando há erros de validação
+  const onError = (errors: Record<string, { message?: string }>) => {
+    // Erros são tratados pelo React Hook Form e exibidos no formulário
+  };
 
   // Handler de submit mantido para compatibilidade
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rhfHandleSubmit(onSubmit as any)(e);
+    rhfHandleSubmit(
+      onSubmit as (data: Omit<ZodTituloFormData, 'cliente_id'>) => void,
+      onError as (errors: Record<string, { message?: string }>) => void
+    )(e);
   };
 
   return {

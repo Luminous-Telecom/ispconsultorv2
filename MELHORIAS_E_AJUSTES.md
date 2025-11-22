@@ -14,20 +14,6 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-### 2. Geração de PDFs
-
-**Problema:** Lógica de geração de PDF duplicada e complexa.
-
-**Sugestão:**
-- Criar service centralizado `PDFGenerationService.ts`
-- Unificar lógica de geração de PDFs
-- Extrair templates HTML para arquivos separados
-- Simplificar estilos CSS inline
-
-**Prioridade:** 🟡 Média
-
----
-
 ### 3. Lógica de Filtros e Busca
 
 **Problema:** Lógica de filtros repetida em vários componentes.

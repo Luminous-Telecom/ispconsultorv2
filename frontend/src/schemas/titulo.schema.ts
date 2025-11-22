@@ -47,28 +47,50 @@ export const tituloSchema = z.object({
     .optional(),
   
   desconto_percentual: z
-    .number()
-    .min(0, 'Desconto percentual não pode ser negativo')
-    .max(100, 'Desconto percentual não pode ser maior que 100')
+    .preprocess((val: unknown) => {
+      if (val === undefined || val === null || val === '') return 0;
+      if (typeof val === 'string') {
+        const num = parseFloat(val);
+        return isNaN(num) ? 0 : num;
+      }
+      return typeof val === 'number' ? val : 0;
+    }, z.number().min(0, 'Desconto percentual não pode ser negativo').max(100, 'Desconto percentual não pode ser maior que 100'))
     .default(0)
     .optional(),
   
   desconto_valor: z
-    .number()
-    .min(0, 'Desconto valor não pode ser negativo')
+    .preprocess((val: unknown) => {
+      if (val === undefined || val === null || val === '') return 0;
+      if (typeof val === 'string') {
+        const num = parseFloat(val);
+        return isNaN(num) ? 0 : num;
+      }
+      return typeof val === 'number' ? val : 0;
+    }, z.number().min(0, 'Desconto valor não pode ser negativo'))
     .default(0)
     .optional(),
   
   acrescimo_percentual: z
-    .number()
-    .min(0, 'Acréscimo percentual não pode ser negativo')
-    .max(100, 'Acréscimo percentual não pode ser maior que 100')
+    .preprocess((val: unknown) => {
+      if (val === undefined || val === null || val === '') return 0;
+      if (typeof val === 'string') {
+        const num = parseFloat(val);
+        return isNaN(num) ? 0 : num;
+      }
+      return typeof val === 'number' ? val : 0;
+    }, z.number().min(0, 'Acréscimo percentual não pode ser negativo').max(100, 'Acréscimo percentual não pode ser maior que 100'))
     .default(0)
     .optional(),
   
   acrescimo_valor: z
-    .number()
-    .min(0, 'Acréscimo valor não pode ser negativo')
+    .preprocess((val: unknown) => {
+      if (val === undefined || val === null || val === '') return 0;
+      if (typeof val === 'string') {
+        const num = parseFloat(val);
+        return isNaN(num) ? 0 : num;
+      }
+      return typeof val === 'number' ? val : 0;
+    }, z.number().min(0, 'Acréscimo valor não pode ser negativo'))
     .default(0)
     .optional(),
   

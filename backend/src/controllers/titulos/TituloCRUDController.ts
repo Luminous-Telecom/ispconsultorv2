@@ -138,8 +138,6 @@ export class TituloCRUDController {
    */
   public static async create(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('Iniciando criação de título', { body: req.body });
-
       if (Array.isArray(req.body.titulos) || req.body.titulos) {
         return await TituloBulkController.createBulk(req, res);
       }
@@ -253,7 +251,6 @@ export class TituloCRUDController {
 
       const { withTransaction } = await import('../../utils/transaction');
       const titulo = await withTransaction(async (transaction) => {
-        
         return await Titulo.create({
           cliente_id,
           plano_id: plano.id,
