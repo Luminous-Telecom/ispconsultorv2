@@ -11,7 +11,9 @@ Este documento define as convenções de nomenclatura utilizadas no projeto Back
 5. [Tipos e Interfaces](#tipos-e-interfaces)
 6. [Hooks](#hooks)
 7. [Classes](#classes)
-8. [Constantes](#constantes)
+8. [Constantes e Enums](#constantes-e-enums)
+9. [Regras Especiais](#regras-especiais)
+10. [Checklist de Verificação](#checklist-de-verificação)
 
 ---
 
@@ -19,34 +21,93 @@ Este documento define as convenções de nomenclatura utilizadas no projeto Back
 
 ### Frontend
 
-- **Componentes React**: `PascalCase.tsx`
-  - Exemplo: `ClienteModal.tsx`, `TableColumn.tsx`, `Dashboard.tsx`
+#### Componentes React
+- **Formato**: `PascalCase.tsx`
+- **Localização**: `src/components/`
+- **Exemplos do projeto**:
+  - `ClienteModal.tsx`
+  - `TableColumn.tsx`
+  - `Dashboard.tsx`
+  - `BancoListModal.tsx`
 
-- **Hooks**: `camelCase.ts` com prefixo `use`
-  - Exemplo: `useClientes.ts`, `useDashboard.ts`, `useTable.ts`
+#### Hooks Customizados
+- **Formato**: `camelCase.ts` com prefixo `use`
+- **Localização**: `src/hooks/`
+- **Exemplos do projeto**:
+  - `useClientes.ts`
+  - `useDashboard.ts`
+  - `useTableFilters.ts`
+  - `useClienteForm.ts`
 
-- **Services**: `camelCase.ts`
-  - Exemplo: `clienteService.ts`, `tituloService.ts`, `authService.ts`
+#### Services
+- **Formato**: `camelCase.ts`
+- **Localização**: `src/services/`
+- **Exemplos do projeto**:
+  - `clienteService.ts`
+  - `tituloService.ts`
+  - `authService.ts`
+  - `contratoService.ts`
+  - `termoContratoService.ts`
 
-- **Types/Interfaces**: `camelCase.ts` ou `kebab-case.ts`
-  - Exemplo: `entities.ts`, `api.ts`, `common.ts`
+#### Types e Interfaces
+- **Formato**: `camelCase.ts` ou `kebab-case.ts`
+- **Localização**: `src/types/`
+- **Exemplos do projeto**:
+  - `entities.ts`
+  - `api.ts`
+  - `common.ts`
 
-- **Utils**: `camelCase.ts`
-  - Exemplo: `formatters.ts`, `validators.ts`, `dateUtils.ts`
+#### Utils
+- **Formato**: `camelCase.ts`
+- **Localização**: `src/utils/`
+- **Exemplos do projeto**:
+  - `formatters.ts`
+  - `validators.ts`
+
+#### Schemas (Validação)
+- **Formato**: `camelCase.schema.ts` ou `kebab-case.schema.ts`
+- **Localização**: `src/schemas/`
+- **Exemplos do projeto**:
+  - `brazilian-documents.schema.ts`
+
+#### Contexts
+- **Formato**: `PascalCase.tsx` ou `PascalCase.ts`
+- **Localização**: `src/contexts/`
+- **Exemplos do projeto**:
+  - `ThemeContext.tsx`
+  - `DashboardFiltersContext.tsx`
 
 ### Backend
 
-- **Controllers**: `PascalCase.ts`
-  - Exemplo: `ClienteController.ts`, `TituloController.ts`
+#### Controllers
+- **Formato**: `PascalCase.ts`
+- **Localização**: `src/controllers/`
+- **Exemplos do projeto**:
+  - `ClienteController.ts`
+  - `TituloController.ts`
 
-- **Services**: `PascalCase.ts`
-  - Exemplo: `ClienteService.ts`, `VariaveisDocumentoService.ts`
+#### Services
+- **Formato**: `PascalCase.ts`
+- **Localização**: `src/services/`
+- **Exemplos do projeto**:
+  - `ClienteService.ts`
+  - `VariaveisDocumentoService.ts`
+  - `FinancialCalculationsService.ts`
+  - `RoutineExecutionService.ts`
 
-- **Models**: `PascalCase.ts`
-  - Exemplo: `Cliente.ts`, `Titulo.ts`, `Contrato.ts`
+#### Models
+- **Formato**: `PascalCase.ts`
+- **Localização**: `src/models/`
+- **Exemplos do projeto**:
+  - `Cliente.ts`
+  - `Titulo.ts`
+  - `Contrato.ts`
 
-- **Migrations**: `YYYYMMDDHHMMSS-description.js` (sempre JavaScript)
-  - Exemplo: `20240101120000-create-clientes.js`
+#### Migrations
+- **Formato**: `YYYYMMDDHHMMSS-description.js` (sempre JavaScript)
+- **Localização**: `src/migrations/`
+- **Exemplos do projeto**:
+  - `20240101120000-create-clientes.js`
 
 ---
 
@@ -54,13 +115,15 @@ Este documento define as convenções de nomenclatura utilizadas no projeto Back
 
 ### Variáveis
 
-- **Formato**: `camelCase`
-- **Nomes descritivos**: Evite abreviações desnecessárias
-- **Booleans**: Use prefixos `is`, `has`, `should`, `can`
-- **Arrays**: Use plural ou sufixo `List`
-- **Objetos**: Use substantivos no singular
+**Formato**: `camelCase`
 
-**Exemplos:**
+**Regras**:
+- Use nomes descritivos (evite abreviações desnecessárias)
+- Booleans: Use prefixos `is`, `has`, `should`, `can`
+- Arrays: Use plural ou sufixo `List`
+- Objetos: Use substantivos no singular
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 const cliente = { id: 1, nome: 'João' };
@@ -69,31 +132,37 @@ const isActive = true;
 const hasPermission = false;
 const shouldValidate = true;
 const canEdit = false;
-const titulosList = [];
-const selectedItems = [];
+const titulosList: Titulo[] = [];
+const selectedItems: Cliente[] = [];
+const isLoading = false;
+const showModal = true;
 
 // ❌ Incorreto
 const cli = { id: 1 }; // Abreviação
 const active = true; // Sem prefixo para boolean
 const titulos_array = []; // snake_case
 const SelectedItems = []; // PascalCase para variável
+const loading = false; // Sem prefixo is/has
 ```
 
 ### Constantes
 
-- **Formato**: `UPPER_SNAKE_CASE`
-- **Use para valores que não mudam durante a execução**
+**Formato**: `UPPER_SNAKE_CASE`
 
-**Exemplos:**
+**Uso**: Valores que não mudam durante a execução
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 const MAX_RETRIES = 3;
 const API_BASE_URL = 'https://api.example.com';
 const DEFAULT_PAGE_SIZE = 15;
+const API_TIMEOUT = 30000;
 
 // ❌ Incorreto
 const maxRetries = 3; // camelCase para constante
 const apiBaseUrl = 'https://api.example.com';
+const defaultPageSize = 15;
 ```
 
 ---
@@ -102,39 +171,55 @@ const apiBaseUrl = 'https://api.example.com';
 
 ### Funções
 
-- **Formato**: `camelCase`
-- **Verbos no infinitivo**: `get`, `create`, `update`, `delete`, `validate`
-- **Handlers**: Prefixo `handle`
-- **Callbacks**: Prefixo `on` quando apropriado
+**Formato**: `camelCase`
 
-**Exemplos:**
+**Regras**:
+- Verbos no infinitivo: `get`, `create`, `update`, `delete`, `validate`
+- Handlers: Prefixo `handle`
+- Callbacks: Prefixo `on` quando apropriado
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 function getClienteById(id: number): Cliente { }
-function createTitulo(data: CreateTituloDTO): Promise<Titulo> { }
+function createTitulo(data: CreateTituloData): Promise<Titulo> { }
+function updateContrato(id: number, data: UpdateContratoData): Promise<Contrato> { }
+function deletePlano(id: number): Promise<void> { }
+function validateForm(data: FormData): boolean { }
 function handleSubmit(event: FormEvent): void { }
 function onSelectionChange(items: Cliente[]): void { }
-function validateForm(data: FormData): boolean { }
+function formatDate(date: Date): string { }
+function extractApiErrorMessage(error: unknown): string { }
 
 // ❌ Incorreto
 function GetClienteById(id: number) { } // PascalCase
-function criar_titulo(data: CreateTituloDTO) { } // snake_case
+function criar_titulo(data: CreateTituloData) { } // snake_case
 function submit(event: FormEvent) { } // Sem prefixo handle
+function SubmitHandler(event: FormEvent) { } // PascalCase + sem prefixo
 ```
 
 ### Métodos de Classe
 
-- **Formato**: `camelCase`
-- **Mesmas regras das funções**
+**Formato**: `camelCase`
 
-**Exemplos:**
+**Mesmas regras das funções**
+
+**Exemplos**:
 ```typescript
+// ✅ Correto
 class ClienteService {
   async list(filters?: ClienteFilters): Promise<PaginatedResponse<Cliente>> { }
   async getById(id: number): Promise<Cliente> { }
   async create(data: CreateCliente): Promise<Cliente> { }
   async update(id: number, data: UpdateCliente): Promise<Cliente> { }
   async delete(id: number): Promise<void> { }
+  private validateData(data: CreateCliente): boolean { }
+}
+
+// ❌ Incorreto
+class ClienteService {
+  async List(filters?: ClienteFilters) { } // PascalCase
+  async criar_cliente(data: CreateCliente) { } // snake_case
 }
 ```
 
@@ -144,27 +229,35 @@ class ClienteService {
 
 ### Componentes Funcionais
 
-- **Formato**: `PascalCase`
-- **Nomes descritivos**: Use substantivos que descrevam o propósito
+**Formato**: `PascalCase`
 
-**Exemplos:**
+**Regras**:
+- Use substantivos que descrevam o propósito
+- Use `React.FC<Props>` ou tipagem explícita
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 const ClienteModal: React.FC<ClienteModalProps> = ({ show, onClose }) => { };
 const TableColumn = <T>({ column }: TableColumnProps<T>) => { };
 const Dashboard: React.FC = () => { };
+const Loading: React.FC<LoadingProps> = ({ message }) => { };
 
 // ❌ Incorreto
 const clienteModal = () => { }; // camelCase
 const table_column = () => { }; // snake_case
+const Cliente_Modal = () => { }; // snake_case com PascalCase
 ```
 
 ### Props de Componentes
 
-- **Formato**: `PascalCase` com sufixo `Props`
-- **Interface ou type**: `PascalCase`
+**Formato**: `PascalCase` com sufixo `Props`
 
-**Exemplos:**
+**Regras**:
+- Interface ou type em `PascalCase`
+- Sempre use sufixo `Props` para props de componentes
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 interface ClienteModalProps {
@@ -178,8 +271,13 @@ type TableColumnProps<T> = {
   onSort?: (column: string) => void;
 };
 
+interface LoadingProps {
+  message?: string;
+}
+
 // ❌ Incorreto
 interface clienteModalProps { } // camelCase
+interface ClienteModal { } // Sem sufixo Props
 type table_column_props = { }; // snake_case
 ```
 
@@ -189,12 +287,16 @@ type table_column_props = { }; // snake_case
 
 ### Interfaces
 
-- **Formato**: `PascalCase`
-- **Sem prefixo `I`**: Não use `ICliente`, use `Cliente`
-- **Props**: Sufixo `Props`
-- **Config**: Sufixo `Config`
+**Formato**: `PascalCase`
 
-**Exemplos:**
+**Regras**:
+- Sem prefixo `I` (não use `ICliente`, use `Cliente`)
+- Props: Sufixo `Props`
+- Config: Sufixo `Config`
+- Filters: Sufixo `Filters`
+- DTOs: Prefixo `Create`, `Update` ou sufixo `Data`
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 interface Cliente {
@@ -211,18 +313,34 @@ interface TableConfig<T> {
   data: T[];
 }
 
+interface ClienteFilters {
+  search?: string;
+  status?: string;
+}
+
+interface CreateClienteData {
+  razao_social: string;
+  cnpj: string;
+}
+
+interface UpdateClienteData {
+  razao_social?: string;
+}
+
 // ❌ Incorreto
 interface ICliente { } // Prefixo I
 interface cliente { } // camelCase
 interface cliente_modal_props { } // snake_case
+interface ClienteDTO { } // Sufixo DTO (use CreateClienteData)
 ```
 
 ### Types
 
-- **Formato**: `PascalCase`
-- **Mesmas regras das interfaces**
+**Formato**: `PascalCase`
 
-**Exemplos:**
+**Mesmas regras das interfaces**
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 type StatusTitulo = 'pendente' | 'vencido' | 'pago';
@@ -230,6 +348,11 @@ type ApiResponse<T> = {
   success: boolean;
   data?: T;
   message?: string;
+};
+
+type PaginatedResponse<T> = {
+  data: T[];
+  pagination: Pagination;
 };
 
 // ❌ Incorreto
@@ -243,38 +366,51 @@ type apiResponse<T> = { }; // camelCase
 
 ### Custom Hooks
 
-- **Formato**: `camelCase` com prefixo `use`
-- **Nomes descritivos**: Descreva o que o hook faz
+**Formato**: `camelCase` com prefixo `use`
 
-**Exemplos:**
+**Regras**:
+- Sempre comece com `use`
+- Descreva o que o hook faz
+- Retorne objetos nomeados, não arrays (quando possível)
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 function useClientes(filters?: ClienteFilters) { }
 function useDashboard() { }
 function useTable<T>(options: UseTableOptions<T>) { }
 function useClienteForm(clienteId?: number) { }
+function useTableFilters(options: UseTableFiltersOptions) { }
+function useSorting<T>(data: T[], column: string, direction: 'asc' | 'desc') { }
 
 // ❌ Incorreto
 function use_clientes() { } // snake_case
 function UseClientes() { } // PascalCase
 function useClients() { } // Inglês inconsistente (se projeto é em português)
+function getClientes() { } // Sem prefixo use
 ```
 
 ### Hooks de Estado
 
-- **Formato**: `camelCase` com prefixo `use`
-- **Seguir convenções do React**
+**Formato**: `camelCase` com prefixo `use`
 
-**Exemplos:**
+**Regras**:
+- Seguir convenções do React
+- Use prefixos `is`, `has`, `should`, `can` para booleans
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 const [clientes, setClientes] = useState<Cliente[]>([]);
 const [isLoading, setIsLoading] = useState(false);
 const [selectedItems, setSelectedItems] = useState<Cliente[]>([]);
+const [hasError, setHasError] = useState(false);
+const [showModal, setShowModal] = useState(false);
 
 // ❌ Incorreto
 const [Clientes, setClientes] = useState([]); // PascalCase
 const [is_loading, setIsLoading] = useState(false); // snake_case
+const [loading, setLoading] = useState(false); // Sem prefixo is/has
 ```
 
 ---
@@ -283,54 +419,76 @@ const [is_loading, setIsLoading] = useState(false); // snake_case
 
 ### Classes
 
-- **Formato**: `PascalCase`
-- **Nomes descritivos**: Substantivos que descrevam a responsabilidade
+**Formato**: `PascalCase`
 
-**Exemplos:**
+**Regras**:
+- Use substantivos que descrevam a responsabilidade
+- Services: Sufixo `Service`
+- Controllers: Sufixo `Controller`
+- Handlers: Sufixo `Handler`
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 class ClienteService { }
 class VariaveisDocumentoService { }
 class RoutineExecutionService { }
+class FinancialCalculationsService { }
+class ErrorHandler { }
 
 // ❌ Incorreto
 class clienteService { } // camelCase
 class variaveis_documento_service { } // snake_case
+class Cliente_Service { } // snake_case com PascalCase
 ```
 
 ### Propriedades de Classe
 
-- **Formato**: `camelCase`
-- **Mesmas regras das variáveis**
+**Formato**: `camelCase`
 
-**Exemplos:**
+**Mesmas regras das variáveis**
+
+**Exemplos**:
 ```typescript
+// ✅ Correto
 class ClienteService {
   private baseUrl: string;
   private maxRetries: number;
+  private isInitialized: boolean;
   
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     this.maxRetries = 3;
+    this.isInitialized = false;
   }
+}
+
+// ❌ Incorreto
+class ClienteService {
+  private BaseUrl: string; // PascalCase
+  private max_retries: number; // snake_case
 }
 ```
 
 ---
 
-## Constantes
+## Constantes e Enums
 
 ### Constantes Globais
 
-- **Formato**: `UPPER_SNAKE_CASE`
-- **Valores imutáveis**
+**Formato**: `UPPER_SNAKE_CASE`
 
-**Exemplos:**
+**Regras**:
+- Valores imutáveis
+- Use para configurações e valores constantes
+
+**Exemplos**:
 ```typescript
 // ✅ Correto
 const MAX_RETRIES = 3;
 const DEFAULT_PAGE_SIZE = 15;
 const API_TIMEOUT = 30000;
+const DEFAULT_DATE_FORMAT = 'DD/MM/YYYY';
 
 // ❌ Incorreto
 const maxRetries = 3; // camelCase
@@ -339,16 +497,21 @@ const defaultPageSize = 15;
 
 ### Enums
 
-- **Formato**: `PascalCase`
-- **Valores**: `UPPER_SNAKE_CASE` ou `PascalCase`
+**Formato**: `PascalCase` para o enum, `UPPER_SNAKE_CASE` ou `PascalCase` para valores
 
-**Exemplos:**
+**Exemplos**:
 ```typescript
 // ✅ Correto
 enum StatusTitulo {
   PENDENTE = 'pendente',
   VENCIDO = 'vencido',
   PAGO = 'pago'
+}
+
+enum ErrorType {
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR'
 }
 
 enum UserRole {
@@ -369,25 +532,53 @@ enum StatusTitulo {
 
 ### Prefixos Comuns
 
-- **Handlers**: `handle` (ex: `handleSubmit`, `handleClick`)
-- **Callbacks**: `on` (ex: `onClose`, `onChange`, `onSuccess`)
-- **Booleans**: `is`, `has`, `should`, `can` (ex: `isActive`, `hasPermission`)
-- **Getters**: `get` (ex: `getClienteById`)
-- **Setters**: `set` (ex: `setCliente`)
-- **Validators**: `validate` (ex: `validateForm`)
-- **Formatters**: `format` (ex: `formatDate`, `formatCurrency`)
+| Prefixo | Uso | Exemplos |
+|---------|-----|----------|
+| `handle` | Handlers de eventos | `handleSubmit`, `handleClick`, `handleChange` |
+| `on` | Callbacks e props | `onClose`, `onChange`, `onSuccess`, `onError` |
+| `is` | Booleans (estado) | `isActive`, `isLoading`, `isOpen`, `isValid` |
+| `has` | Booleans (posse) | `hasPermission`, `hasError`, `hasData` |
+| `should` | Booleans (condição) | `shouldValidate`, `shouldRender` |
+| `can` | Booleans (capacidade) | `canEdit`, `canDelete`, `canView` |
+| `get` | Getters | `getClienteById`, `getFormattedDate` |
+| `set` | Setters | `setCliente`, `setIsLoading` |
+| `validate` | Validações | `validateForm`, `validateEmail` |
+| `format` | Formatação | `formatDate`, `formatCurrency`, `formatCnpj` |
+| `create` | Criação | `createCliente`, `createTitulo` |
+| `update` | Atualização | `updateCliente`, `updateTitulo` |
+| `delete` | Remoção | `deleteCliente`, `deleteTitulo` |
+
+### Sufixos Comuns
+
+| Sufixo | Uso | Exemplos |
+|--------|-----|----------|
+| `Props` | Props de componentes | `ClienteModalProps`, `TableColumnProps` |
+| `Config` | Configurações | `TableConfig`, `ApiConfig` |
+| `Filters` | Filtros | `ClienteFilters`, `TituloFilters` |
+| `Data` | DTOs de criação/atualização | `CreateClienteData`, `UpdateTituloData` |
+| `Service` | Services | `ClienteService`, `TituloService` |
+| `Controller` | Controllers | `ClienteController`, `TituloController` |
+| `Handler` | Handlers | `ErrorHandler`, `VariableHandler` |
 
 ### Convenções de Banco de Dados
 
-- **Tabelas**: `snake_case` plural (ex: `clientes`, `titulos`)
-- **Colunas**: `snake_case` (ex: `razao_social`, `data_vencimento`)
-- **Foreign Keys**: `{tabela}_id` (ex: `cliente_id`, `plano_id`)
+- **Tabelas**: `snake_case` plural
+  - Exemplo: `clientes`, `titulos`, `contratos`
+- **Colunas**: `snake_case`
+  - Exemplo: `razao_social`, `data_vencimento`, `created_at`
+- **Foreign Keys**: `{tabela}_id`
+  - Exemplo: `cliente_id`, `plano_id`, `banco_id`
+- **Timestamps**: `created_at`, `updated_at`
 
 ### Convenções de API
 
-- **Endpoints**: `kebab-case` ou `snake_case` (ex: `/api/clientes`, `/api/titulos`)
-- **Query Parameters**: `snake_case` (ex: `cliente_id`, `data_inicio`)
+- **Endpoints**: `kebab-case` ou `snake_case`
+  - Exemplo: `/api/clientes`, `/api/titulos`, `/api/termos-contrato`
+- **Query Parameters**: `snake_case`
+  - Exemplo: `cliente_id`, `data_inicio`, `data_fim`, `page`, `limit`
 - **Request/Response**: Seguir convenções de tipos TypeScript
+  - Request: `CreateClienteData`, `UpdateTituloData`
+  - Response: `ApiResponse<T>`, `PaginatedResponse<T>`
 
 ---
 
@@ -395,20 +586,52 @@ enum StatusTitulo {
 
 Ao criar ou modificar código, verifique:
 
+### Arquivos
+- [ ] Nome do arquivo segue a convenção (`PascalCase` para componentes, `camelCase` para hooks/services)
+- [ ] Extensão correta (`.tsx` para componentes React, `.ts` para outros)
+
+### Variáveis e Constantes
 - [ ] Variáveis em `camelCase`
 - [ ] Constantes em `UPPER_SNAKE_CASE`
-- [ ] Componentes em `PascalCase`
+- [ ] Booleans com prefixo `is`, `has`, `should` ou `can`
+- [ ] Arrays em plural ou com sufixo `List`
+
+### Funções e Métodos
 - [ ] Funções em `camelCase` com verbos descritivos
 - [ ] Handlers com prefixo `handle`
-- [ ] Booleans com prefixo `is`, `has`, `should` ou `can`
-- [ ] Interfaces/Types em `PascalCase`
+- [ ] Callbacks com prefixo `on`
+- [ ] Métodos de classe seguem as mesmas regras
+
+### Componentes React
+- [ ] Componentes em `PascalCase`
 - [ ] Props com sufixo `Props`
+- [ ] Props tipadas corretamente
+
+### Tipos e Interfaces
+- [ ] Interfaces/Types em `PascalCase`
+- [ ] Sem prefixo `I` em interfaces
+- [ ] Props com sufixo `Props`
+- [ ] Configs com sufixo `Config`
+- [ ] Filters com sufixo `Filters`
+- [ ] DTOs com prefixo `Create`/`Update` ou sufixo `Data`
+
+### Hooks
 - [ ] Hooks com prefixo `use`
+- [ ] Hooks em `camelCase`
+- [ ] Estado com prefixos apropriados (`is`, `has`, etc.)
+
+### Classes
 - [ ] Classes em `PascalCase`
-- [ ] Arquivos seguindo convenções de nomenclatura
+- [ ] Propriedades em `camelCase`
+- [ ] Services com sufixo `Service`
+- [ ] Controllers com sufixo `Controller`
+
+### Constantes e Enums
+- [ ] Constantes em `UPPER_SNAKE_CASE`
+- [ ] Enums em `PascalCase`
+- [ ] Valores de enum em `UPPER_SNAKE_CASE` ou `PascalCase`
 
 ---
 
-**Última atualização:** 2025-01-22
-**Versão:** 1.0
-
+**Última atualização:** 2025-01-22  
+**Versão:** 2.0
