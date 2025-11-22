@@ -31,28 +31,39 @@ export const formatDate = (date: string | Date): string => {
       date_string: String(date),
     });
     
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return '-';
-
-    // Ajustar para UTC antes de formatar para evitar conversão de fuso horário local
-    // Assumindo que a data do banco vem como string ISO ou Date em UTC
     let resultado: string;
-    if (typeof date === 'string' && date.includes('T')) {
-       resultado = d.toLocaleDateString('pt-BR'); // Se tem hora, deixa o navegador converter para local
-    } else if (typeof date === 'string') {
-       // Se for apenas data YYYY-MM-DD, força interpretação como UTC meio-dia para evitar problemas de timezone
-       const [year, month, day] = date.split('-').map(Number);
-       const utcDate = new Date(year, month - 1, day);
-       resultado = utcDate.toLocaleDateString('pt-BR');
+    
+    if (typeof date === 'string') {
+      // Se for string ISO com hora (ex: 2026-02-15T03:00:00.000Z), extrair apenas a data
+      if (date.includes('T')) {
+        const datePart = date.split('T')[0]; // Pega apenas YYYY-MM-DD
+        const [year, month, day] = datePart.split('-').map(Number);
+        // Criar data local (sem conversão de timezone) para garantir que mostre a data correta
+        const localDate = new Date(year, month - 1, day);
+        resultado = localDate.toLocaleDateString('pt-BR');
+      } else if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // Se for apenas YYYY-MM-DD, criar data local diretamente
+        const [year, month, day] = date.split('-').map(Number);
+        const localDate = new Date(year, month - 1, day);
+        resultado = localDate.toLocaleDateString('pt-BR');
+      } else {
+        // Outros formatos, tentar criar Date normalmente
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '-';
+        resultado = d.toLocaleDateString('pt-BR');
+      }
     } else {
-       resultado = d.toLocaleDateString('pt-BR');
+      // Se for Date object, extrair apenas ano, mês e dia para criar data local
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const day = date.getDate();
+      const localDate = new Date(year, month, day);
+      resultado = localDate.toLocaleDateString('pt-BR');
     }
     
     // Log para debug
     console.log('DEBUG - formatDate - Saída:', {
       date_raw: date,
-      date_object: d,
-      date_iso: d.toISOString(),
       resultado_formatado: resultado,
     });
     
