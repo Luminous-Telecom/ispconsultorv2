@@ -7,8 +7,9 @@ Este documento define a estrutura padrão de organização de arquivos do projet
 1. [Estrutura Geral do Projeto](#estrutura-geral-do-projeto)
 2. [Frontend](#frontend)
 3. [Backend](#backend)
-4. [Convenções de Organização](#convenções-de-organização)
-5. [Padrões de Agrupamento](#padrões-de-agrupamento)
+4. [Path Aliases e Imports](#path-aliases-e-imports)
+5. [Convenções de Organização](#convenções-de-organização)
+6. [Padrões de Agrupamento](#padrões-de-agrupamento)
 
 ---
 
@@ -379,6 +380,95 @@ backend/src/
 
 ---
 
+## Path Aliases e Imports
+
+### Configuração
+
+O projeto usa **path aliases** para simplificar imports e evitar caminhos relativos profundos (`../../../../`).
+
+**Configuração:**
+- **TypeScript**: `tsconfig.json` - Define os aliases para o compilador TypeScript
+- **Webpack**: `craco.config.js` - Configura o webpack através do CRACO para resolver os aliases em runtime
+
+### Aliases Disponíveis
+
+```typescript
+@/*              → src/*
+@/components/*   → src/components/*
+@/hooks/*        → src/hooks/*
+@/services/*     → src/services/*
+@/types/*        → src/types/*
+@/utils/*        → src/utils/*
+@/contexts/*     → src/contexts/*
+@/constants/*    → src/constants/*
+@/config/*       → src/config/*
+@/schemas/*      → src/schemas/*
+```
+
+### Convenções de Imports
+
+**✅ Sempre use path aliases para:**
+- Hooks: `@/hooks/useClientes`
+- Services: `@/services/clienteService`
+- Types: `@/types`, `@/types/common`
+- Utils: `@/utils/formatters`
+- Components: `@/components/ui/FormField`, `@/components/common/DraggableModal`
+- Contexts: `@/contexts/ThemeContext`
+- Config: `@/config/api`
+- Constants: `@/constants/ErrorMessages`
+- Schemas: `@/schemas/cliente.schema`
+
+**✅ Use imports relativos apenas para:**
+- Componentes próximos na mesma estrutura (ex: `./abas/DadosBasicosTab`)
+- Arquivos no mesmo diretório (ex: `./types`)
+
+**❌ Evite:**
+- Imports relativos profundos (`../../../../`)
+- Imports relativos quando há path alias disponível
+
+### Exemplos
+
+```typescript
+// ✅ Correto - Usando path aliases
+import { useClientes } from '@/hooks/useClientes';
+import { ClienteService } from '@/services/clienteService';
+import { Cliente } from '@/types/entities';
+import { formatDate } from '@/utils/formatters';
+import FormField from '@/components/ui/FormField';
+import DraggableModal from '@/components/common/DraggableModal';
+
+// ✅ Correto - Import relativo para componente próximo
+import DadosBasicosTab from './abas/DadosBasicosTab';
+import { ClienteTabProps } from './types';
+
+// ❌ Incorreto - Import relativo profundo
+import { useClientes } from '../../../hooks/useClientes';
+import FormField from '../../../../ui/FormField';
+```
+
+### CRACO Configuration
+
+O projeto usa **CRACO** (Create React App Configuration Override) para configurar o webpack sem fazer `eject`:
+
+**Arquivo:** `frontend/craco.config.js`
+```javascript
+const path = require('path');
+
+module.exports = {
+  webpack: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
+};
+```
+
+**Importante:**
+- Sempre use `npm run dev` para desenvolvimento (não `react-scripts start`)
+- O CRACO é necessário porque o TypeScript entende os aliases, mas o webpack precisa de configuração adicional
+
+---
+
 ## Convenções de Organização
 
 ### Agrupamento por Funcionalidade
@@ -419,12 +509,15 @@ export { default as ClienteModal } from './cliente/ClienteModal';
 
 **Import:**
 ```typescript
-// ✅ Correto
+// ✅ Correto - Usando path alias
+import { ClienteListModal, ClienteModal } from '@/components/modals/clientes';
+
+// ✅ Alternativa - Import relativo para componente próximo
 import { ClienteListModal, ClienteModal } from '../modals/clientes';
 
-// ❌ Incorreto
-import ClienteListModal from '../modals/clientes/ClienteListModal';
-import ClienteModal from '../modals/clientes/cliente/ClienteModal';
+// ❌ Incorreto - Caminho completo quando há alias disponível
+import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
+import ClienteModal from '@/components/modals/clientes/cliente/ClienteModal';
 ```
 
 ### Separação de Responsabilidades
@@ -503,7 +596,7 @@ Ao criar ou mover arquivos, verifique:
 - [ ] Arquivo está na pasta correta segundo a estrutura padrão?
 - [ ] Nome do arquivo segue convenções de nomenclatura?
 - [ ] Arquivo `index.ts` existe e exporta corretamente?
-- [ ] Imports estão usando caminhos relativos corretos?
+- [ ] Imports estão usando path aliases (`@/`) quando possível?
 - [ ] Não há mais de 4 níveis de aninhamento?
 - [ ] Arquivos relacionados estão agrupados?
 - [ ] Estrutura está consistente com o resto do projeto?
@@ -523,7 +616,7 @@ Ao criar ou mover arquivos, verifique:
 
 1. **Identificar arquivos fora do padrão**
 2. **Planejar nova estrutura**
-3. **Atualizar imports** (usar busca e substituição)
+3. **Atualizar imports** (usar path aliases quando possível)
 4. **Mover arquivos** (git mv para preservar histórico)
 5. **Testar** todas as funcionalidades
 6. **Atualizar documentação**
@@ -543,6 +636,23 @@ tree -L 3 src/
 
 ---
 
+---
+
+## Arquivos de Configuração Importantes
+
+### Frontend
+
+- **`tsconfig.json`**: Configuração TypeScript e path aliases
+- **`craco.config.js`**: Configuração CRACO para webpack aliases
+- **`package.json`**: Dependências e scripts (usa `craco` em vez de `react-scripts`)
+
+### Backend
+
+- **`tsconfig.json`**: Configuração TypeScript
+- **`package.json`**: Dependências e scripts
+
+---
+
 **Última atualização:** 2025-01-22
-**Versão:** 1.0
+**Versão:** 2.0
 
