@@ -14,10 +14,6 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-## 🎨 Padronização de Código
-
----
-
 ### 3. Comentários e Documentação
 
 **Problema:** Falta de documentação em alguns lugares complexos.

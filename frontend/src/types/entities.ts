@@ -338,10 +338,10 @@ export type Periodicidade = NonNullable<Plano['periodicidade']>;
 export type TipoBanco = Banco['tipo_banco'];
 
 // ============================================
-// DTOs (Data Transfer Objects)
+// DTOs (Data Transfer Objects) - Usar sufixo Data conforme convenções
 // ============================================
 
-export interface CreateTituloDTO {
+export interface CreateTituloData {
   cliente_id: number;
   plano_id: number;
   contrato_id?: number;
@@ -354,14 +354,14 @@ export interface CreateTituloDTO {
   descricao?: string;
 }
 
-export interface UpdateTituloDTO extends Partial<CreateTituloDTO> {
+export interface UpdateTituloData extends Partial<CreateTituloData> {
   valor?: number;
   status?: StatusTitulo;
   data_pagamento?: string;
   valor_pago?: number;
 }
 
-export interface CreateContratoDTO {
+export interface CreateContratoData {
   cliente_id: number;
   plano_id: number;
   desconto_percentual?: number;
@@ -374,7 +374,7 @@ export interface CreateContratoDTO {
   conta_boleto?: number;
 }
 
-export interface UpdateContratoDTO extends Partial<CreateContratoDTO> {
+export interface UpdateContratoData extends Partial<CreateContratoData> {
   status?: StatusContrato;
 }
 

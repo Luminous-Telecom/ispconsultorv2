@@ -7,7 +7,7 @@
  * 
  * - entities.ts
  *   - Entidades do domínio (Cliente, Plano, Banco, Contrato, Titulo, Carne, CarneParcela)
- *   - DTOs (CreateTituloDTO, UpdateTituloDTO, CreateContratoDTO, UpdateContratoDTO)
+ *   - DTOs (CreateTituloData, UpdateTituloData, CreateContratoData, UpdateContratoData)
  *   - Tipos auxiliares (StatusTitulo, StatusContrato, etc.)
  *   - Tipos de tabela (Column, BulkAction)
  *   - Outros tipos relacionados a entidades (RotinaAgendada, ValidationError)
@@ -47,7 +47,7 @@
  * 
  * - Para DTOs específicos do backend, use os DTOs de entities.ts:
  *   ```typescript
- *   import { CreateTituloDTO, UpdateTituloDTO } from '../types';
+ *   import { CreateTituloData, UpdateTituloData } from '../types';
  *   ```
  * 
  * - Para filtros de API, use os tipos de api.ts:

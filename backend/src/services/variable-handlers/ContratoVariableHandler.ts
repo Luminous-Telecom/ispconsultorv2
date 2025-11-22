@@ -1,4 +1,4 @@
-import { IVariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
+import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
 import { Contrato } from '../../models/Contrato';
 import { Plano } from '../../models/Plano';
 import { DiasVencimento } from '../../models/DiasVencimento';
@@ -12,7 +12,7 @@ interface ContratoWithPlano extends Contrato {
 /**
  * Handler para processamento de variáveis relacionadas ao Contrato
  */
-export class ContratoVariableHandler implements IVariableHandler {
+export class ContratoVariableHandler implements VariableHandler {
   private static readonly VARIABLES = [
     '#contrato.id#',
     '#contrato.plano#',

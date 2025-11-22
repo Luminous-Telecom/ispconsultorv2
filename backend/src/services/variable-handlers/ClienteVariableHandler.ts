@@ -1,4 +1,4 @@
-import { IVariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
+import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
 import { Cliente } from '../../models/Cliente';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
@@ -6,7 +6,7 @@ import { VariableReplacer } from './utils/VariableReplacer';
 /**
  * Handler para processamento de variáveis relacionadas ao Cliente
  */
-export class ClienteVariableHandler implements IVariableHandler {
+export class ClienteVariableHandler implements VariableHandler {
   private static readonly VARIABLES = [
     '#cliente.id#',
     '#cliente.razao_social#',

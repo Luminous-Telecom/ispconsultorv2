@@ -1,4 +1,4 @@
-import { IVariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
+import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
 import { DadosEmpresa } from '../../models/DadosEmpresa';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
@@ -7,7 +7,7 @@ import { ImageConverter } from './utils/ImageConverter';
 /**
  * Handler para processamento de variáveis da empresa
  */
-export class EmpresaVariableHandler implements IVariableHandler {
+export class EmpresaVariableHandler implements VariableHandler {
   private static readonly VARIABLES = [
     '#empresa.razao_social#',
     '#empresa.nome_fantasia#',

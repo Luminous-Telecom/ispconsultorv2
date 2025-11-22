@@ -1,11 +1,11 @@
-import { IVariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
+import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
 
 /**
  * Handler para processamento de variáveis do sistema
  */
-export class SistemaVariableHandler implements IVariableHandler {
+export class SistemaVariableHandler implements VariableHandler {
   private static readonly VARIABLES = [
     '#sistema.data_atual#',
     '#sistema.hora_atual#',

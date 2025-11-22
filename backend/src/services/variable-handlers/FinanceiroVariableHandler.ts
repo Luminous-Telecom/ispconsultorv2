@@ -1,4 +1,4 @@
-import { IVariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
+import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
 import { Cliente } from '../../models/Cliente';
 import { Titulo } from '../../models/Titulo';
 import { Op } from 'sequelize';
@@ -21,7 +21,7 @@ interface CalculosFinanceiros {
 /**
  * Handler para processamento de variáveis financeiras
  */
-export class FinanceiroVariableHandler implements IVariableHandler {
+export class FinanceiroVariableHandler implements VariableHandler {
   private static readonly VARIABLES = [
     '#financeiro.total_aberto#',
     '#financeiro.total_vencido#',

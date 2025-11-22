@@ -21,7 +21,7 @@ export interface GrupoVariaveis {
 /**
  * Interface base para handlers de variáveis
  */
-export interface IVariableHandler {
+export interface VariableHandler {
   /**
    * Processa variáveis no conteúdo e retorna o texto substituído
    */

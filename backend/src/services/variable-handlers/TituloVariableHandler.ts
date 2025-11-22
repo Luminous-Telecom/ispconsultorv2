@@ -1,4 +1,4 @@
-import { IVariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
+import { VariableHandler, VariableContext, VariableSubstitutions, GrupoVariaveis } from './types';
 import { Titulo } from '../../models/Titulo';
 import { gerarLinkPagamentoPublico } from '../../controllers/titulos/TituloHelpers';
 import { Formatter } from './utils/Formatter';
@@ -7,7 +7,7 @@ import { VariableReplacer } from './utils/VariableReplacer';
 /**
  * Handler para processamento de variáveis relacionadas ao Título
  */
-export class TituloVariableHandler implements IVariableHandler {
+export class TituloVariableHandler implements VariableHandler {
   private static readonly VARIABLES = [
     '#titulo.id#',
     '#titulo.numero#',
