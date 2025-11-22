@@ -71,6 +71,40 @@ export class ApiClient {
         if (response.config.responseType === 'blob') {
           return response.data;
         }
+        
+        // Log para debug: verificar dados recebidos do backend
+        if (response.config.url && (response.config.url.includes('/titulos') || response.config.url.includes('/dashboard'))) {
+          const data = response.data?.data;
+          if (data && Array.isArray(data) && data.length > 0) {
+            const primeiroItem = data[0];
+            if (primeiroItem.data_vencimento || primeiroItem.created_at) {
+              console.log('DEBUG - ApiClient - Dados recebidos do backend:', {
+                url: response.config.url,
+                primeiro_item_id: primeiroItem.id,
+                data_vencimento_raw: primeiroItem.data_vencimento,
+                data_vencimento_type: typeof primeiroItem.data_vencimento,
+                created_at_raw: primeiroItem.created_at,
+                created_at_type: typeof primeiroItem.created_at,
+                updated_at_raw: primeiroItem.updated_at,
+                updated_at_type: typeof primeiroItem.updated_at,
+              });
+            }
+          } else if (data && typeof data === 'object' && !Array.isArray(data)) {
+            // Para dashboard que retorna objeto
+            if (data.titulosRecentes && data.titulosRecentes.length > 0) {
+              const primeiroTitulo = data.titulosRecentes[0];
+              console.log('DEBUG - ApiClient - Dashboard recebido:', {
+                url: response.config.url,
+                titulo_id: primeiroTitulo.id,
+                data_vencimento_raw: primeiroTitulo.data_vencimento,
+                data_vencimento_type: typeof primeiroTitulo.data_vencimento,
+                created_at_raw: primeiroTitulo.created_at,
+                created_at_type: typeof primeiroTitulo.created_at,
+              });
+            }
+          }
+        }
+        
         return response.data ?? {};
       },
       (error) => Promise.reject(error)

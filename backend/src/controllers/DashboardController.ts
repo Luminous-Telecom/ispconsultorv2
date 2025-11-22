@@ -160,6 +160,20 @@ export class DashboardController {
         resumoPeriodo
       };
 
+      // Log para debug: verificar datas sendo enviadas
+      if (titulosRecentes.length > 0) {
+        const primeiroTitulo = titulosRecentes[0];
+        logger.info('DEBUG - DashboardController.getDashboardData - Datas sendo enviadas:', {
+          titulo_id: primeiroTitulo.id,
+          data_vencimento_raw: primeiroTitulo.data_vencimento,
+          data_vencimento_type: typeof primeiroTitulo.data_vencimento,
+          data_vencimento_toISO: primeiroTitulo.data_vencimento ? new Date(primeiroTitulo.data_vencimento).toISOString() : null,
+          created_at_raw: primeiroTitulo.created_at,
+          created_at_type: typeof primeiroTitulo.created_at,
+          created_at_toISO: primeiroTitulo.created_at ? new Date(primeiroTitulo.created_at).toISOString() : null,
+        });
+      }
+
       res.json({
         success: true,
         data: dashboardData

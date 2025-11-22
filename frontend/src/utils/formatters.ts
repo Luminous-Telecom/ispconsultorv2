@@ -24,21 +24,39 @@ export const formatDate = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
+    // Log para debug
+    console.log('DEBUG - formatDate - Entrada:', {
+      date_raw: date,
+      date_type: typeof date,
+      date_string: String(date),
+    });
+    
     const d = new Date(date);
     if (isNaN(d.getTime())) return '-';
 
     // Ajustar para UTC antes de formatar para evitar conversão de fuso horário local
     // Assumindo que a data do banco vem como string ISO ou Date em UTC
+    let resultado: string;
     if (typeof date === 'string' && date.includes('T')) {
-       return d.toLocaleDateString('pt-BR'); // Se tem hora, deixa o navegador converter para local
+       resultado = d.toLocaleDateString('pt-BR'); // Se tem hora, deixa o navegador converter para local
     } else if (typeof date === 'string') {
        // Se for apenas data YYYY-MM-DD, força interpretação como UTC meio-dia para evitar problemas de timezone
        const [year, month, day] = date.split('-').map(Number);
        const utcDate = new Date(year, month - 1, day);
-       return utcDate.toLocaleDateString('pt-BR');
+       resultado = utcDate.toLocaleDateString('pt-BR');
+    } else {
+       resultado = d.toLocaleDateString('pt-BR');
     }
     
-    return d.toLocaleDateString('pt-BR');
+    // Log para debug
+    console.log('DEBUG - formatDate - Saída:', {
+      date_raw: date,
+      date_object: d,
+      date_iso: d.toISOString(),
+      resultado_formatado: resultado,
+    });
+    
+    return resultado;
   } catch {
     return '-';
   }
@@ -53,6 +71,13 @@ export const formatDateTime = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
+    // Log para debug
+    console.log('DEBUG - formatDateTime - Entrada:', {
+      date_raw: date,
+      date_type: typeof date,
+      date_string: String(date),
+    });
+    
     let dateStr = date;
     
     // Se for string e parecer ISO mas sem timezone, assume UTC (append Z)
@@ -61,15 +86,31 @@ export const formatDateTime = (date: string | Date): string => {
     if (typeof date === 'string') {
       if ((date.includes('T') || date.includes(' ')) && !date.endsWith('Z') && !date.includes('+') && !date.match(/-\d\d:?\d\d$/)) {
         // Verifica se já não tem offset no final (ex: -03:00)
-        dateStr = `${date}Z`; 
+        dateStr = `${date}Z`;
+        console.log('DEBUG - formatDateTime - Adicionado Z:', {
+          original: date,
+          com_Z: dateStr,
+        });
       }
     }
 
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return '-';
     
+    const resultado = d.toLocaleString('pt-BR');
+    
+    // Log para debug
+    console.log('DEBUG - formatDateTime - Saída:', {
+      date_raw: date,
+      date_str_processado: dateStr,
+      date_object: d,
+      date_iso: d.toISOString(),
+      date_utc_string: d.toUTCString(),
+      resultado_formatado: resultado,
+    });
+    
     // Para DateTime completo, geralmente queremos a conversão para o horário local do usuário
-    return d.toLocaleString('pt-BR');
+    return resultado;
   } catch {
     return '-';
   }

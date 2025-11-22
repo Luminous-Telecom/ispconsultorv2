@@ -317,6 +317,23 @@ export class TituloController {
       const from = total > 0 ? offset + 1 : 0;
       const to = total > 0 ? Math.min(offset + perPage, total) : 0;
 
+      // Log para debug: verificar datas sendo enviadas
+      if (rows.length > 0) {
+        const primeiroTitulo = rows[0];
+        logger.info('DEBUG - TituloController.list - Datas sendo enviadas:', {
+          titulo_id: primeiroTitulo.id,
+          data_vencimento_raw: primeiroTitulo.data_vencimento,
+          data_vencimento_type: typeof primeiroTitulo.data_vencimento,
+          data_vencimento_toISO: primeiroTitulo.data_vencimento ? new Date(primeiroTitulo.data_vencimento).toISOString() : null,
+          created_at_raw: primeiroTitulo.created_at,
+          created_at_type: typeof primeiroTitulo.created_at,
+          created_at_toISO: primeiroTitulo.created_at ? new Date(primeiroTitulo.created_at).toISOString() : null,
+          updated_at_raw: primeiroTitulo.updated_at,
+          updated_at_type: typeof primeiroTitulo.updated_at,
+          updated_at_toISO: primeiroTitulo.updated_at ? new Date(primeiroTitulo.updated_at).toISOString() : null,
+        });
+      }
+
       res.json({
         success: true,
         data: rows,
