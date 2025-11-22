@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useBancos, useDeleteBanco } from '../../../hooks/useBancos';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
+import { useTableFilters } from '../../../hooks/useTableFilters';
 import ListModal from '../../common/ListModal';
 import BancoModal from './BancoModal';
 import { Banco } from '../../../types';
@@ -19,11 +20,17 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
   onSelectBanco,
   title = "Selecionar Banco"
 }) => {
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
+  
+  // Hook unificado para filtros, busca e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
   
   // Usar hook customizado para gerenciar seleção
   const {
@@ -115,24 +122,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     multiSelect: false
   });
 
-  // Debounce da busca para evitar muitas requisições
-  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
-  
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchParam(search || undefined);
-      setPage(1); // Resetar para primeira página ao buscar
-    }, 300); // 300ms de debounce
-    
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  // Query para buscar bancos no backend com paginação
+  // Hook para buscar bancos usando parâmetros do useTableFilters
   const { data: bancosData, isLoading, refetch } = useBancos({
-    search: searchParam,
+    search: tableFilters.debouncedSearch || undefined,
     tipo_banco: undefined,
-    page,
-    limit
+    page: tableFilters.page,
+    limit: tableFilters.limit
   });
 
   const deleteBancoMutation = useDeleteBanco();
@@ -146,9 +141,9 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     from: bancosData.pagination.from,
     to: bancosData.pagination.to
   } : {
-    current_page: page,
+    current_page: tableFilters.page,
     last_page: 1,
-    per_page: limit,
+    per_page: tableFilters.limit,
     total: 0,
     from: 0,
     to: 0
@@ -234,12 +229,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         loading={isLoading}
         selectedItems={selectedBanco ? [selectedBanco] : []}
         onSelectionChange={handleSelectionChange}
-        search={search}
-        onSearchChange={setSearch}
+        search={tableFilters.search}
+        onSearchChange={tableFilters.setSearch}
         pagination={pagination}
-        onPageChange={setPage}
-        limit={limit}
-        onLimitChange={setLimit}
+        onPageChange={tableFilters.setPage}
+        limit={tableFilters.limit}
+        onLimitChange={tableFilters.setLimit}
         refreshQueryKeys={['bancos']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}

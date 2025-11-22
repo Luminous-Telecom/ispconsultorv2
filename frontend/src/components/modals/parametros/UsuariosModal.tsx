@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useUsuarios, useDeleteUsuario } from '../../../hooks/useUsuarios';
 import { Usuario } from '../../../types';
 import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
@@ -8,6 +8,7 @@ import { TableConfig } from '../../tables/types';
 import UsuarioFormModal from './UsuarioFormModal';
 import { AxiosError } from 'axios';
 import { useSorting } from '../../../hooks/useSorting';
+import { useTableFilters } from '../../../hooks/useTableFilters';
 import { formatDateTime } from '../../../utils/formatters';
 
 interface UsuariosModalProps {
@@ -23,29 +24,24 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<number | null>(null);
   const [, setSelectedItems] = useState<Usuario[]>([]);
-  const [search, setSearch] = useState('');
-  const [searchParam, setSearchParam] = useState<string | undefined>(undefined);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
-  const [sortColumn, setSortColumn] = useState<string>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   const { success, error } = useNotificationContext();
   
-  // Debounce da busca para evitar muitas requisições
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchParam(search || undefined);
-      setPage(1); // Resetar para primeira página ao buscar
-    }, 300); // 300ms de debounce
-    
-    return () => clearTimeout(timer);
-  }, [search]);
+  // Hook unificado para filtros, busca, ordenação e paginação
+  const tableFilters = useTableFilters({
+    initialSearch: '',
+    initialPage: 1,
+    initialLimit: 15,
+    initialSortColumn: 'id',
+    initialSortDirection: 'desc',
+    searchDebounceMs: 300,
+    resetPageOnFilterChange: true,
+  });
   
   const { data: usuariosData, isLoading, refetch } = useUsuarios({
-    page,
-    limit,
-    search: searchParam
+    page: tableFilters.page,
+    limit: tableFilters.limit,
+    search: tableFilters.debouncedSearch || undefined
   });
 
   const usuarios = usuariosData?.data || [];
@@ -78,7 +74,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     }
   };
 
-  const sortedData = useSorting(usuarios as unknown as Record<string, unknown>[], sortColumn, sortDirection) as unknown as Usuario[];
+  const sortedData = useSorting(usuarios as unknown as Record<string, unknown>[], tableFilters.sortColumn, tableFilters.sortDirection) as unknown as Usuario[];
 
   const columns: TableConfig<Usuario>['columns'] = [
     {
