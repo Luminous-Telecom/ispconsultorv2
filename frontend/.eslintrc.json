@@ -43,6 +43,15 @@
         "format": ["PascalCase"]
       },
       {
+        // Permitir nomes que começam com _ (parâmetros não utilizados)
+        "selector": ["variable", "parameter"],
+        "filter": {
+          "regex": "^_",
+          "match": true
+        },
+        "format": null
+      },
+      {
         // Variáveis e funções em camelCase
         "selector": ["variable", "function", "parameter"],
         "format": ["camelCase", "PascalCase", "UPPER_CASE"],
