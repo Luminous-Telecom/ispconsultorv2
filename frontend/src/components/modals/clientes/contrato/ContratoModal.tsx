@@ -28,6 +28,8 @@ import ServicosAdicionaisTab from './abas/ServicosAdicionaisTab';
 import { TermoEditModal, SelecionarTermoModal, ServicoAdicionalModal } from './modals';
 import { useContratoPlanosAdicionais, useDeleteContratoPlanoAdicional } from '../../../../hooks/useContratoPlanosAdicionais';
 import { ContratoPlanoAdicional } from '../../../../services/contratoPlanoAdicionalService';
+import { extractApiErrorMessageSync } from '../../../../utils/apiErrorHelper';
+import { CONTEXT_ERROR_MESSAGES } from '../../../../constants/ErrorMessages';
 import { BulkAction } from './types';
 import { formatDate, formatDateTime } from '../../../../utils/formatters';
 import { useImpressaoContrato } from '../../../../hooks/useImpressaoContrato';
@@ -664,9 +666,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 } catch (err: unknown) {
                   errorCount++;
                   console.error('Erro ao deletar serviço adicional:', err);
-                  const errorMessage = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || 
-                    (err as { message?: string })?.message || 
-                    'Erro ao deletar serviço adicional';
+                  const errorMessage = extractApiErrorMessageSync(err, {
+                    defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICO_ADICIONAL_DELETE_ERROR
+                  });
                   if (selectedItems.length === 1) {
                     error(errorMessage);
                   }
@@ -686,9 +688,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               
               queryClient.invalidateQueries({ queryKey: ['contrato-planos-adicionais', internalContratoId] });
             } catch (err: unknown) {
-              const errorMessage = (err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || 
-                (err as { message?: string })?.message || 
-                'Erro ao deletar serviço(s) adicional(is)';
+              const errorMessage = extractApiErrorMessageSync(err, {
+                defaultMessage: CONTEXT_ERROR_MESSAGES.SERVICOS_ADICIONAIS_DELETE_ERROR
+              });
               error(errorMessage);
             }
           }

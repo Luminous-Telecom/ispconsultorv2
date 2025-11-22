@@ -1,7 +1,8 @@
 import { apiService } from './api';
 import { API_CONFIG } from '../config/api';
-import { AxiosError } from 'axios';
 import type { ApiResponse } from '../types';
+import { extractApiErrorMessage } from '../utils/apiErrorHelper';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 export interface DocumentoSistema {
   id: number;
@@ -133,8 +134,11 @@ class DocumentoSistemaService {
 
       return blob;
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF');
+      const errorMessage = await extractApiErrorMessage(error, {
+        defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR,
+        handleBlobResponse: true
+      });
+      throw new Error(errorMessage);
     }
   }
 
@@ -192,51 +196,18 @@ class DocumentoSistemaService {
       return blob;
     } catch (error) {
       // Se já é um Error com mensagem, apenas relançar
-      if (error instanceof Error) {
+      if (error instanceof Error && !('isAxiosError' in error)) {
         throw error;
       }
       
-      // Tentar extrair mensagem de erro do Axios
-      const axiosError = error as AxiosError<{ message?: string }>;
-      
-      // Se a resposta é um Blob mas pode conter erro JSON
-      if (axiosError.response && axiosError.response.data instanceof Blob) {
-        try {
-          const text = await axiosError.response.data.text();
-          const errorData = JSON.parse(text);
-          throw new Error(errorData.message || 'Erro ao gerar PDF de teste');
-        } catch {
-          // Se não conseguir fazer parse, usar mensagem padrão
+      const errorMessage = await extractApiErrorMessage(error, {
+        defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR,
+        handleBlobResponse: true,
+        customStatusMessages: {
+          404: CONTEXT_ERROR_MESSAGES.CONTRACT_MODEL_NOT_FOUND,
+          500: CONTEXT_ERROR_MESSAGES.PDF_SERVER_ERROR,
         }
-      }
-      
-      // Tentar extrair mensagem de erro de diferentes formatos
-      let errorMessage = 'Erro ao gerar PDF de teste';
-      
-      if (axiosError.response) {
-        const responseData = axiosError.response.data;
-        
-        if (typeof responseData === 'string') {
-          try {
-            const parsed = JSON.parse(responseData);
-            errorMessage = parsed.message || errorMessage;
-          } catch {
-            errorMessage = responseData || errorMessage;
-          }
-        } else if (typeof responseData === 'object' && responseData !== null) {
-          errorMessage = (responseData as { message?: string }).message || axiosError.response.statusText || errorMessage;
-        } else {
-          errorMessage = axiosError.response.statusText || errorMessage;
-        }
-        
-        if (axiosError.response.status === 404) {
-          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
-        } else if (axiosError.response.status === 500) {
-          errorMessage = 'Erro interno do servidor ao gerar PDF. Tente novamente.';
-        }
-      } else if (axiosError.message) {
-        errorMessage = axiosError.message;
-      }
+      });
       
       throw new Error(errorMessage);
     }
@@ -256,8 +227,17 @@ class DocumentoSistemaService {
 
       return blob;
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF com conteúdo');
+      // Se já é um Error com mensagem, apenas relançar
+      if (error instanceof Error && !('isAxiosError' in error)) {
+        throw error;
+      }
+      
+      const errorMessage = await extractApiErrorMessage(error, {
+        defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_GENERATE_ERROR,
+        handleBlobResponse: true
+      });
+      
+      throw new Error(errorMessage);
     }
   }
 
@@ -353,50 +333,18 @@ class DocumentoSistemaService {
       return blob;
     } catch (error) {
       // Se já é um Error com mensagem, apenas relançar
-      if (error instanceof Error) {
+      if (error instanceof Error && !('isAxiosError' in error)) {
         throw error;
       }
       
-      // Verificar se é um ApiError do ErrorHandler (objeto com type e message)
-      if (error && typeof error === 'object' && 'type' in error && 'message' in error) {
-        const apiError = error as { type?: string; message?: string; statusCode?: number };
-        throw new Error(apiError.message || 'Erro ao gerar PDF de teste com conteúdo');
-      }
-      
-      const axiosError = error as AxiosError<{ message?: string }>;
-      
-      // Tentar extrair mensagem de erro de diferentes formatos
-      let errorMessage = 'Erro ao gerar PDF de teste com conteúdo';
-      
-      if (axiosError.response) {
-        // Se a resposta é um Blob mas pode conter erro JSON
-        if (axiosError.response.data instanceof Blob) {
-          try {
-            const text = await axiosError.response.data.text();
-            const errorData = JSON.parse(text);
-            errorMessage = errorData.message || errorMessage;
-          } catch {
-            errorMessage = `Erro ${axiosError.response.status}: ${axiosError.response.statusText}`;
-          }
-        } else if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
-          errorMessage = (axiosError.response.data as { message?: string }).message || errorMessage;
-        } else if (typeof axiosError.response.data === 'string') {
-          try {
-            const parsed = JSON.parse(axiosError.response.data);
-            errorMessage = parsed.message || errorMessage;
-          } catch {
-            errorMessage = axiosError.response.data || errorMessage;
-          }
+      const errorMessage = await extractApiErrorMessage(error, {
+        defaultMessage: CONTEXT_ERROR_MESSAGES.PDF_TEST_ERROR,
+        handleBlobResponse: true,
+        customStatusMessages: {
+          404: CONTEXT_ERROR_MESSAGES.CONTRACT_MODEL_NOT_FOUND,
+          500: CONTEXT_ERROR_MESSAGES.PDF_SERVER_ERROR,
         }
-        
-        if (axiosError.response.status === 404) {
-          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
-        } else if (axiosError.response.status === 500) {
-          errorMessage = 'Erro interno do servidor ao gerar PDF. Tente novamente.';
-        }
-      } else if (axiosError.message) {
-        errorMessage = axiosError.message;
-      }
+      });
       
       throw new Error(errorMessage);
     }

@@ -315,12 +315,21 @@ export function useImpressaoContrato({
 
 **Problema:** Padrões diferentes de tratamento de erro em vários lugares.
 
-**Sugestão:**
-- Padronizar tratamento de erros usando `ErrorHandler` existente
-- Criar helpers para tratamento específico de erros de API
-- Centralizar mensagens de erro
+**Solução Implementada:**
+- ✅ Criado `frontend/src/constants/ErrorMessages.ts` - Constantes centralizadas para mensagens de erro
+- ✅ Criado `frontend/src/utils/apiErrorHelper.ts` - Helper padronizado para extrair mensagens de erro
+- ✅ Documentação completa em `REFATORACAO_TRATAMENTO_ERROS.md` com exemplos práticos
 
-**Prioridade:** 🟢 Baixa
+**Arquivos Criados:**
+- `frontend/src/constants/ErrorMessages.ts` - Mensagens genéricas e específicas por contexto
+- `frontend/src/utils/apiErrorHelper.ts` - Helpers `extractApiErrorMessage()` e `extractApiErrorMessageSync()`
+- `REFATORACAO_TRATAMENTO_ERROS.md` - Guia completo de refatoração
+
+**Status:** ✅ **COMPLETO** - Pronto para refatoração gradual do código legado
+
+**Próximos Passos:**
+- Refatorar arquivos identificados usando os novos helpers
+- Adicionar novas mensagens em `ErrorMessages.ts` conforme necessário
 
 ---
 

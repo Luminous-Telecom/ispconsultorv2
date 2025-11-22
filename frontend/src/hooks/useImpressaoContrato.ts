@@ -4,9 +4,10 @@
  */
 
 import { useState } from 'react';
-import { AxiosError } from 'axios';
 import DocumentoSistemaService from '../services/documentoSistemaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
+import { extractApiErrorMessage } from '../utils/apiErrorHelper';
+import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
 
 interface UseImpressaoContratoParams {
   /**
@@ -85,34 +86,15 @@ export const useImpressaoContrato = ({
   /**
    * Função auxiliar para tratar erros de forma consistente
    */
-  const handleError = async (err: unknown, defaultMessage: string): Promise<void> => {
-    const axiosError = err as AxiosError<{ message?: string }>;
-    let errorMessage = defaultMessage;
-    
-    if (axiosError.response) {
-      // Tentar extrair mensagem de erro do response
-      if (axiosError.response.data instanceof Blob) {
-        try {
-          const text = await axiosError.response.data.text();
-          const errorData = JSON.parse(text);
-          errorMessage = errorData.message || errorMessage;
-        } catch {
-          errorMessage = `Erro ${axiosError.response.status}: ${axiosError.response.statusText}`;
-        }
-      } else if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
-        errorMessage = (axiosError.response.data as { message?: string }).message || errorMessage;
+  const handleError = async (err: unknown): Promise<void> => {
+    const errorMessage = await extractApiErrorMessage(err, {
+      defaultMessage: CONTEXT_ERROR_MESSAGES.CONTRACT_GENERATE_ERROR,
+      handleBlobResponse: true,
+      customStatusMessages: {
+        404: CONTEXT_ERROR_MESSAGES.CONTRACT_MODEL_NOT_FOUND,
+        500: CONTEXT_ERROR_MESSAGES.CONTRACT_GENERATE_ERROR,
       }
-      
-      if (axiosError.response.status === 404) {
-        errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
-      } else if (axiosError.response.status === 500) {
-        errorMessage = 'Erro interno do servidor ao gerar contrato. Tente novamente.';
-      }
-    } else if (axiosError.message) {
-      errorMessage = axiosError.message;
-    } else if (err instanceof Error) {
-      errorMessage = err.message;
-    }
+    });
     
     error(errorMessage);
   };
@@ -171,7 +153,7 @@ export const useImpressaoContrato = ({
         onPdfGenerated(url);
       }
     } catch (err) {
-      await handleError(err, 'Erro ao gerar contrato');
+      await handleError(err);
     } finally {
       setIsGeneratingPdf(false);
     }
