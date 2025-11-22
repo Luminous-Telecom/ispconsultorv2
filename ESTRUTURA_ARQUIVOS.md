@@ -8,8 +8,10 @@ Este documento define a estrutura padrão de organização de arquivos do projet
 2. [Frontend](#frontend)
 3. [Backend](#backend)
 4. [Path Aliases e Imports](#path-aliases-e-imports)
-5. [Convenções de Organização](#convenções-de-organização)
-6. [Padrões de Agrupamento](#padrões-de-agrupamento)
+5. [Rotas e Navegação](#rotas-e-navegação)
+6. [Convenções de Organização](#convenções-de-organização)
+7. [Padrões de Agrupamento](#padrões-de-agrupamento)
+8. [Arquivos de Configuração](#arquivos-de-configuração-importantes)
 
 ---
 
@@ -636,6 +638,49 @@ tree -L 3 src/
 
 ---
 
+## Rotas e Navegação
+
+### Estrutura de Rotas
+
+O projeto usa **React Router** para gerenciamento de rotas. As rotas são definidas em `App.tsx`:
+
+**Rotas Principais:**
+- `/` - Página inicial (Home)
+- `/login` - Página de login
+- `/pagamento/:id/:token` - Página pública de pagamento
+- `/adm` - Área administrativa (com Layout)
+  - `/adm` ou `/adm/dashboard` - Dashboard
+
+### Lazy Loading e Code Splitting
+
+O projeto usa **lazy loading** para otimizar o bundle size:
+
+```typescript
+// ✅ Correto - Lazy loading de páginas
+const Home = lazy(() => import('./components/pages/Home'));
+const Dashboard = lazy(() => import('./components/pages/Dashboard'));
+const Login = lazy(() => import('./components/pages/Login'));
+
+// ✅ Correto - Lazy loading de modais
+const ClienteListModal = lazy(() => 
+  import('@/components/modals/clientes').then(m => ({ default: m.ClienteListModal }))
+);
+```
+
+**Benefícios:**
+- Reduz tamanho do bundle inicial
+- Carrega componentes apenas quando necessário
+- Melhora performance da aplicação
+
+### Modais como Rotas Virtuais
+
+Alguns modais são abertos através de handlers no Layout, simulando rotas virtuais:
+- `/clientes` → Abre `ClienteListModal`
+- `/planos` → Abre `PlanoListModal`
+- `/bancos` → Abre `BancoListModal`
+- `/contratos` → Abre `ContratoListModal`
+- `/financeiro` → Abre `FinanceiroModal`
+
 ---
 
 ## Arquivos de Configuração Importantes
@@ -653,6 +698,8 @@ tree -L 3 src/
 
 ---
 
+---
+
 **Última atualização:** 2025-01-22
-**Versão:** 2.0
+**Versão:** 2.1
 
