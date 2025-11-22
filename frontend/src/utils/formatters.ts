@@ -53,7 +53,19 @@ export const formatDateTime = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
-    const d = new Date(date);
+    let dateStr = date;
+    
+    // Se for string e parecer ISO mas sem timezone, assume UTC (append Z)
+    // Isso corrige o problema onde o backend envia UTC (ex: 13:00) sem Z, 
+    // e o navegador interpreta como Local (13:00), exibindo 3h a mais que o real (10:00)
+    if (typeof date === 'string') {
+      if ((date.includes('T') || date.includes(' ')) && !date.endsWith('Z') && !date.includes('+') && !date.match(/-\d\d:?\d\d$/)) {
+        // Verifica se já não tem offset no final (ex: -03:00)
+        dateStr = `${date}Z`; 
+      }
+    }
+
+    const d = new Date(dateStr);
     if (isNaN(d.getTime())) return '-';
     
     // Para DateTime completo, geralmente queremos a conversão para o horário local do usuário
