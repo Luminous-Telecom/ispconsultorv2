@@ -35,6 +35,7 @@ export const formatDate = (date: string | Date): string => {
     
     if (typeof date === 'string') {
       // Se for string ISO com hora (ex: 2026-02-15T03:00:00.000Z), extrair apenas a data
+      // Isso evita problemas de timezone - sempre mostra a data que está na string
       if (date.includes('T')) {
         const datePart = date.split('T')[0]; // Pega apenas YYYY-MM-DD
         const [year, month, day] = datePart.split('-').map(Number);
@@ -50,10 +51,15 @@ export const formatDate = (date: string | Date): string => {
         // Outros formatos, tentar criar Date normalmente
         const d = new Date(date);
         if (isNaN(d.getTime())) return '-';
-        resultado = d.toLocaleDateString('pt-BR');
+        // Para outros formatos, também extrair apenas a data para evitar problemas de timezone
+        const year = d.getFullYear();
+        const month = d.getMonth();
+        const day = d.getDate();
+        resultado = new Date(year, month, day).toLocaleDateString('pt-BR');
       }
     } else {
       // Se for Date object, extrair apenas ano, mês e dia para criar data local
+      // Isso garante que sempre mostra a data correta, independente do timezone
       const year = date.getFullYear();
       const month = date.getMonth();
       const day = date.getDate();
@@ -90,22 +96,32 @@ export const formatDateTime = (date: string | Date): string => {
     });
     
     let dateStr = date;
+    let d: Date;
     
-    // Se for string e parecer ISO mas sem timezone, assume UTC (append Z)
-    // Isso corrige o problema onde o backend envia UTC (ex: 13:00) sem Z, 
-    // e o navegador interpreta como Local (13:00), exibindo 3h a mais que o real (10:00)
-    if (typeof date === 'string') {
-      if ((date.includes('T') || date.includes(' ')) && !date.endsWith('Z') && !date.includes('+') && !date.match(/-\d\d:?\d\d$/)) {
-        // Verifica se já não tem offset no final (ex: -03:00)
+    if (typeof date === 'string' && date.includes('T')) {
+      // Se for string ISO UTC (termina com Z), verificar se precisa ajustar
+      if (date.endsWith('Z')) {
+        const tempDate = new Date(date);
+        const hours = tempDate.getUTCHours();
+        
+        // Se a hora UTC for 03:xx, provavelmente é uma data local convertida para UTC
+        // Subtrair 3 horas para obter o horário local real
+        if (hours >= 3 && hours < 6) {
+          d = new Date(tempDate.getTime() - (3 * 60 * 60 * 1000));
+        } else {
+          d = tempDate;
+        }
+      } else if ((date.includes('T') || date.includes(' ')) && !date.includes('+') && !date.match(/-\d\d:?\d\d$/)) {
+        // Se não tem timezone, assumir UTC e adicionar Z
         dateStr = `${date}Z`;
-        console.log('DEBUG - formatDateTime - Adicionado Z:', {
-          original: date,
-          com_Z: dateStr,
-        });
+        d = new Date(dateStr);
+      } else {
+        d = new Date(date);
       }
+    } else {
+      d = new Date(date);
     }
-
-    const d = new Date(dateStr);
+    
     if (isNaN(d.getTime())) return '-';
     
     const resultado = d.toLocaleString('pt-BR');
