@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useRef } from 'react';
+import { formatDate } from '../../utils/formatters';
 import { useDashboard } from '../../hooks/useDashboard';
 import { useDashboardFilters } from '../../contexts/DashboardFiltersContext';
 import {
@@ -564,9 +565,10 @@ const Dashboard: React.FC = () => {
   const taxaPagamento = totalTitulosTodos > 0 ? (titulosPagosTodos / totalTitulosTodos) * 100 : 0;
 
   const agora = new Date();
-  const lastUpdatedDate = agora.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
+  // Formatar data como "15 de janeiro" usando formatDate e ajustando formato
+  const lastUpdatedDate = formatDate(agora).replace(/(\d{2})\/(\d{2})\/(\d{4})/, (_, dia, mes) => {
+    const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    return `${dia} de ${meses[parseInt(mes) - 1]}`;
   });
   const lastUpdatedTime = agora.toLocaleTimeString('pt-BR', {
     hour: '2-digit',

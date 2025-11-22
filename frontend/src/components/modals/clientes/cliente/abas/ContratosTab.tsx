@@ -2,7 +2,7 @@ import React from 'react';
 import Table from '../../../../tables/Table';
 import { Contrato } from '../../../../../hooks/useContratos';
 import { ContratosTabProps } from '../types';
-import { formatDateTime } from '../../../../../utils/formatters';
+import { formatDate, formatDateTime } from '../../../../../utils/formatters';
 
 const ContratosTab: React.FC<ContratosTabProps> = ({
   isLoadingContratos,
@@ -86,7 +86,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 sortable: true, 
                 searchable: false,
                 render: (contrato: Contrato) => {
-                  return contrato.data_inicio ? new Date(contrato.data_inicio).toLocaleDateString('pt-BR') : '-';
+                  return formatDate(contrato.data_inicio);
                 }
               },
               { 
@@ -95,7 +95,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 sortable: true, 
                 searchable: false,
                 render: (contrato: Contrato) => {
-                  return contrato.data_fim ? new Date(contrato.data_fim).toLocaleDateString('pt-BR') : '-';
+                  return formatDate(contrato.data_fim);
                 }
               },
               {

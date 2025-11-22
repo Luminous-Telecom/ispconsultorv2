@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { defaultApiClient } from '../../services/core';
+import { formatDate } from '../../utils/formatters';
 import './PagamentoPublico.css';
 
 interface TituloPublico {
@@ -75,7 +76,7 @@ const PagamentoPublico: React.FC = () => {
   };
 
   const formatarData = (data: string) => {
-    return new Date(data).toLocaleDateString('pt-BR');
+    return formatDate(data);
   };
 
   const getStatusClass = (status: string) => {

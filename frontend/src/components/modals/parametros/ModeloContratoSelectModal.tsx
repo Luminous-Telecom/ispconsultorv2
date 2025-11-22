@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useListModal } from '../../../hooks/useListModal';
 import { useModalSelect } from '../../../hooks/useModalSelect';
 import ListModal from '../../common/ListModal';
+import { formatDate } from '../../../utils/formatters';
 import DocumentoSistemaService, { DocumentoSistema } from '../../../services/documentoSistemaService';
 
 interface ModeloContratoSelectModalProps {
@@ -65,7 +66,7 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
         sortable: true,
         width: '150px',
         render: (item: DocumentoSistema) => (
-          <span>{new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
+          <span>{formatDate(item.created_at)}</span>
         )
       }
     ],

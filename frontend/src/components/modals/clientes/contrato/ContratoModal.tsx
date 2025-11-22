@@ -825,7 +825,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Vencimento',
       sortable: true,
       searchable: false,
-      render: (item: Titulo) => new Date(item.data_vencimento).toLocaleDateString('pt-BR')
+      render: (item: Titulo) => formatDate(item.data_vencimento)
     },
     {
       key: 'valor',
@@ -989,7 +989,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       key: 'data_aceite',
       label: 'Data Aceite',
       sortable: true,
-      render: (item: TermoContrato) => item.data_aceite ? new Date(item.data_aceite).toLocaleDateString('pt-BR') : '-'
+      render: (item: TermoContrato) => formatDate(item.data_aceite)
     },
     { key: 'aceito_por', label: 'Aceito Por', sortable: true, render: (item: TermoContrato) => item.aceito_por || '-' },
     {
@@ -1004,7 +1004,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       key: 'created_at',
       label: 'Criado em',
       sortable: true,
-      render: (item: TermoContrato) => new Date(item.created_at).toLocaleDateString('pt-BR')
+      render: (item: TermoContrato) => formatDate(item.created_at)
     }
   ];
 

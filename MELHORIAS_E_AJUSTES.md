@@ -257,7 +257,7 @@ export function useImpressaoContrato({
 - [x] Expandir `backend/src/utils/dateUtils.ts` com funções de formatação padronizadas
 - [x] Remover função local de `FinanceiroModal.tsx`
 - [x] Remover método privado de `IntegrationWebhookController.ts`
-- [x] Substituir todos os usos diretos de `toLocaleDateString` por funções centralizadas (backend completo, frontend parcial - 8 arquivos restantes)
+- [x] Substituir todos os usos diretos de `toLocaleDateString` por funções centralizadas (backend e frontend completos)
 - [x] Atualizar imports em todos os arquivos afetados
 - [ ] Testar formatação em diferentes contextos (tabelas, modais, PDFs, emails)
 - [x] Verificar comportamento de timezone em diferentes cenários (corrigido problema de data sendo salva com dia anterior)
@@ -265,7 +265,7 @@ export function useImpressaoContrato({
 - [x] Executar linter e corrigir erros
 - [ ] Testar funcionalidades críticas: Dashboard, Títulos, Contratos, Clientes
 
-**Status:** ✅ **ETAPA 1 e 2 CONCLUÍDAS** - Refatoração principal finalizada. Restam 8 arquivos no frontend com `toLocaleDateString` que podem ser substituídos posteriormente (não crítico).
+**Status:** ✅ **ETAPA 1 e 2 CONCLUÍDAS** - Refatoração completa finalizada. Todos os usos diretos de `toLocaleDateString` foram substituídos por funções centralizadas.
 
 **Arquivos Principais Afetados:**
 - `frontend/src/utils/formatters.ts` (consolidar)

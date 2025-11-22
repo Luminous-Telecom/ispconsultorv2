@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DraggableModal from '../../common/DraggableModal';
+import { formatDate } from '../../../utils/formatters';
 import { apiService } from '../../../services/api';
 
 interface Atualizacao {
@@ -125,11 +126,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                             </h6>
                             <small className="text-muted d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
                               <i className="bi bi-calendar3 me-1" style={{ fontSize: '0.7rem' }}></i>
-                              {new Date(atualizacao.data).toLocaleDateString('pt-BR', { 
-                                day: '2-digit', 
-                                month: 'short', 
-                                year: 'numeric' 
-                              })}
+                              {formatDate(atualizacao.data)}
                             </small>
                           </div>
                           <div className="d-flex align-items-center gap-2">

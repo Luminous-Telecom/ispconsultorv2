@@ -10,7 +10,7 @@ import { TableConfig } from '../../tables/types';
 import ContratoModal from '../clientes/contrato/ContratoModal';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import ImprimirModal from '../../common/ImprimirModal';
-import { formatDateTime } from '../../../utils/formatters';
+import { formatDate, formatDateTime } from '../../../utils/formatters';
 import { useImpressaoContrato } from '../../../hooks/useImpressaoContrato';
 
 interface ContratoListModalProps {
@@ -230,7 +230,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       sortable: true,
       searchable: false,
       render: (item: Contrato) => 
-        item.data_inicio ? new Date(item.data_inicio).toLocaleDateString('pt-BR') : '-'
+        formatDate(item.data_inicio)
     },
     {
       key: 'created_at',

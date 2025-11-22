@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMarcarTituloPago } from '../../../hooks/useTitulos';
+import { formatDate } from '../../../utils/formatters';
 import DraggableModal from '../../common/DraggableModal';
 import FormField from '../../ui/FormField';
 
@@ -131,7 +132,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
               </div>
               <div className="col-md-6">
                 <small className="text-muted">Vencimento:</small><br />
-                <span className="text-secondary">{new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')}</span>
+                <span className="text-secondary">{formatDate(parcela.data_vencimento)}</span>
               </div>
             </div>
             <div className="row g-2 mt-2">
