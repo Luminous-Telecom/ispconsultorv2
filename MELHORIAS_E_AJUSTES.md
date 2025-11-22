@@ -16,40 +16,6 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ## 🎨 Padronização de Código
 
-### 2. Estrutura de Arquivos ✅
-
-**Problema:** Alguns arquivos fora do padrão estabelecido.
-
-**Solução Implementada:**
-- ✅ Criado documento `ESTRUTURA_ARQUIVOS.md` com estrutura completa:
-  - Estrutura detalhada do frontend (components, hooks, services, types, etc.)
-  - Estrutura detalhada do backend (controllers, services, models, routes, etc.)
-  - Convenções de organização por funcionalidade
-  - Padrões de agrupamento de componentes modais
-  - Convenções para arquivos de índice (index.ts)
-  - Regras de níveis de aninhamento (máximo 4 níveis)
-  - Checklist de verificação para novos arquivos
-  - Processo de migração e reorganização documentado
-- ✅ Criado documento `INCONSISTENCIAS_ESTRUTURA.md`:
-  - Lista inconsistências de nomenclatura identificadas
-  - Documenta imports com caminhos profundos
-  - Sugere uso de path aliases no tsconfig.json
-  - Define ações recomendadas para correção futura
-- ✅ Documentação de padrões híbridos atuais:
-  - Components agrupados por tipo e entidade
-  - Hooks agrupados por tipo
-  - Services agrupados por tipo
-  - Types centralizados
-
-**Benefícios:**
-- Estrutura clara e consistente
-- Facilita localização de arquivos
-- Melhora manutenibilidade
-- Documentação para novos desenvolvedores
-- Base para futuras reorganizações
-
-**Prioridade:** 🟢 Baixa
-
 ---
 
 ### 3. Comentários e Documentação
@@ -67,60 +33,7 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ## 🗑️ Limpeza de Código
 
-### 1. Código Comentado
-
-**Problema:** Código comentado encontrado em alguns arquivos.
-
-**Sugestão:**
-- Remover código comentado não utilizado
-- Se necessário para referência, mover para documentação
-- Usar versionamento (git) para histórico
-
-**Status:** ✅ **PARCIALMENTE CONCLUÍDO**
-- Removido comentário de teste em `App.tsx`
-- Comentários explicativos mantidos (são úteis para documentação)
-- TODOs identificados e mantidos para futuras implementações
-
-**Prioridade:** 🟢 Baixa
-
----
-
-### 2. Imports Não Utilizados
-
-**Problema:** Possíveis imports não utilizados.
-
-**Sugestão:**
-- Configurar ESLint para detectar imports não utilizados
-- Remover imports desnecessários
-- Manter imports organizados
-
-**Status:** ✅ **CONCLUÍDO**
-- ESLint já detecta imports não utilizados através de `@typescript-eslint/no-unused-vars`
-- Configuração mantida para alertar sobre imports não utilizados
-
-**Prioridade:** 🟢 Baixa
-
----
-
-### 3. Console.logs
-
-**Problema:** Possíveis console.logs esquecidos no código.
-
-**Sugestão:**
-- Usar logger centralizado
-- Remover console.logs de debug
-- Configurar ESLint para alertar sobre console.logs
-
-**Status:** ✅ **CONCLUÍDO**
-- ESLint configurado para alertar sobre console.logs (`no-console: "warn"`)
-- Removidos console.logs desnecessários de `parametroService.ts` e `Layout.tsx`
-- Mantidos apenas em componentes de debug (ex: `LogsModal.tsx`)
-
-**Prioridade:** 🟢 Baixa
-
----
-
-### 4. Código Morto
+### 1. Código Morto
 
 **Problema:** Possível código não utilizado.
 
