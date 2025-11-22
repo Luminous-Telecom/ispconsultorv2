@@ -13,32 +13,6 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 7. [Limpeza de Código](#limpeza-de-código)
 
 ---
-### 3. Bundle Size ✅
-
-**Problema:** Possível bundle grande do frontend.
-
-**Solução Implementada:**
-- ✅ Implementado code splitting nas rotas principais:
-  - `Home`, `Dashboard`, `Login`, `PagamentoPublico` agora são carregados sob demanda
-  - Reduz tamanho do bundle inicial significativamente
-- ✅ Implementado lazy loading para todos os modais:
-  - Modais são carregados apenas quando abertos
-  - 14 modais otimizados (Clientes, Planos, Bancos, Contratos, Financeiro, etc.)
-  - Cada modal é um chunk separado, melhorando cache do navegador
-- ✅ Criado componente `Loading.tsx` para feedback durante carregamento
-- ✅ Instalado `webpack-bundle-analyzer` como dev dependency:
-  - Pode ser usado manualmente quando necessário para análise do bundle
-  - Permite identificar oportunidades de otimização futuras
-
-**Benefícios:**
-- Bundle inicial menor (apenas código essencial carregado)
-- Melhor performance de carregamento inicial
-- Melhor experiência do usuário (carregamento progressivo)
-- Melhor cache do navegador (chunks separados)
-
-**Prioridade:** 🟢 Baixa
-
----
 
 ## 🎨 Padronização de Código
 

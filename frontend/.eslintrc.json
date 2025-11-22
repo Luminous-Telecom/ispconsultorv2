@@ -18,6 +18,49 @@
     ],
     
     // 4. Hook Deps incompletas (erro clássico do React, deve ser 'error' para ser seguro)
-    "react-hooks/exhaustive-deps": "error"
+    "react-hooks/exhaustive-deps": "error",
+    
+    // 5. Convenções de nomenclatura
+    "@typescript-eslint/naming-convention": [
+      "warn",
+      {
+        // Interfaces e Types em PascalCase
+        "selector": ["interface", "typeAlias"],
+        "format": ["PascalCase"]
+      },
+      {
+        // Classes em PascalCase
+        "selector": "class",
+        "format": ["PascalCase"]
+      },
+      {
+        // Variáveis e funções em camelCase
+        "selector": ["variable", "function", "parameter"],
+        "format": ["camelCase", "PascalCase", "UPPER_CASE"],
+        "filter": {
+          "regex": "^(handle|on|is|has|should|can|get|set|validate|format)",
+          "match": false
+        }
+      },
+      {
+        // Handlers e callbacks com prefixos específicos
+        "selector": ["variable", "function"],
+        "modifiers": ["exported"],
+        "format": ["camelCase", "PascalCase"]
+      },
+      {
+        // Constantes em UPPER_SNAKE_CASE
+        "selector": "variable",
+        "modifiers": ["const"],
+        "types": ["boolean", "string", "number"],
+        "format": ["UPPER_CASE", "camelCase", "PascalCase"]
+      },
+      {
+        // Componentes React em PascalCase
+        "selector": "variable",
+        "types": ["function"],
+        "format": ["PascalCase", "camelCase"]
+      }
+    ]
   }
 }
