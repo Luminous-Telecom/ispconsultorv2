@@ -16,18 +16,26 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ## 📝 Melhorias de TypeScript
 
-### 1. Reduzir Uso de `any`
+### 1. Reduzir Uso de `any` ✅ CONCLUÍDO
 
 **Problema:** Alguns usos de `any` encontrados.
 
-**Sugestão:**
-- Substituir `any` por tipos específicos
-- Criar interfaces/tipos para objetos dinâmicos
-- Usar `unknown` quando o tipo não é conhecido e fazer type guards
+**Solução Implementada:**
+- ✅ Substituídos `any` por tipos específicos em 4 arquivos:
+  - `RoutineExecutionService.ts` - removido `(contrato as any).id`
+  - `TituloPDFController.ts` - substituído `(error as any)` por type guard
+  - `ClienteController.ts` - criada interface `ClienteWithTitulos` para relacionamentos
+  - `ModeloDocumento.ts` - adicionada validação de tipo em `findByTipo()`
+- ✅ Criadas interfaces específicas para objetos dinâmicos
+- ✅ Implementados type guards para erros do Axios
 
-**Arquivos a revisar:**
-- `backend/src/models/Banco.ts` - Tipos de associações
-- Verificar outros arquivos com `as any`
+**Benefícios:**
+- Melhor type safety em todo o código
+- Redução de erros em tempo de execução
+- Melhor autocomplete e IntelliSense
+- Código mais fácil de manter
+
+**Nota:** Alguns usos de `any` em `csrfMiddleware.ts` são intencionais (comentados com eslint-disable) devido à tipagem incompleta do Express Session. Mensagens `'any.required'` em validadores Joi são strings literais, não tipos TypeScript.
 
 **Prioridade:** 🟡 Média
 
