@@ -4,7 +4,7 @@ import { useNotificationContext } from '../../../../components/notifications/Not
 import { usePlanos } from '../../../../hooks/usePlanos';
 import { useBancos } from '../../../../hooks/useBancos';
 import { useSelectedEntity } from '../../../../hooks/useSelectedEntity';
-import { useCreateContrato, useUpdateContrato, CreateContratoData } from '../../../../hooks/useContratos';
+import { useContratoForm } from '../../../../hooks/useContratoForm';
 import { useTermosContrato, useDeleteTermoContrato } from '../../../../hooks/useTermosContrato';
 import { TermoContrato } from '../../../../services/TermoContratoService';
 import { TituloService } from '../../../../services/tituloService';
@@ -72,22 +72,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Determina se é modo criação ou edição
   const isEditMode = !!internalContratoId;
   
-  const [formData, setFormData] = useState<ContratoForm>({
-    plano_id: 0,
-    desconto_percentual: 0,
-    desconto_valor: 0,
-    data_inicio: new Date().toISOString().split('T')[0],
-    data_fim: '',
-    status: 'ativo',
-    observacoes: '',
-    isento_mensalidade: false,
-    dia_vencimento_id: 0,
-    conta_boleto: 0,
-    data_validade_desconto: '',
-    modelo_documento_id: 0
+  // Hook de formulário com React Hook Form + Zod
+  const formHook = useContratoForm({
+    contratoId: internalContratoId,
+    clienteId,
+    show,
+    onSuccess: () => {
+      onSuccess?.();
+    }
   });
 
-  const [errors, setErrors] = useState<Partial<ContratoForm>>({});
+  // Usar dados do hook
+  const formData = formHook.formData;
+  const errors = formHook.errors;
   const [activeTab, setActiveTab] = useState('contrato');
   const [showTermoModal, setShowTermoModal] = useState(false);
   const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
@@ -149,6 +146,34 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [bancoSelecionado, setBancoSelecionado] = useSelectedEntity<Banco>(formData.conta_boleto, bancos);
   const [modeloContratoSelecionado, setModeloContratoSelecionado] = useSelectedEntity<DocumentoSistema>(formData.modelo_documento_id, modelosContrato);
 
+  // Sincronizar formData do hook com os selects quando mudar
+  useEffect(() => {
+    if (formData.plano_id && planos.length > 0) {
+      const plano = planos.find(p => p.id === formData.plano_id);
+      if (plano && planoSelecionado?.id !== plano.id) {
+        setPlanoSelecionado(plano);
+      }
+    }
+  }, [formData.plano_id, planos, planoSelecionado, setPlanoSelecionado]);
+
+  useEffect(() => {
+    if (formData.conta_boleto && bancos.length > 0) {
+      const banco = bancos.find(b => b.id === formData.conta_boleto);
+      if (banco && bancoSelecionado?.id !== banco.id) {
+        setBancoSelecionado(banco);
+      }
+    }
+  }, [formData.conta_boleto, bancos, bancoSelecionado, setBancoSelecionado]);
+
+  useEffect(() => {
+    if (formData.modelo_documento_id && modelosContrato.length > 0) {
+      const modelo = modelosContrato.find(m => m.id === formData.modelo_documento_id);
+      if (modelo && modeloContratoSelecionado?.id !== modelo.id) {
+        setModeloContratoSelecionado(modelo);
+      }
+    }
+  }, [formData.modelo_documento_id, modelosContrato, modeloContratoSelecionado, setModeloContratoSelecionado]);
+
   // Hooks para termos (apenas no modo edição)
   const { data: termosData, isLoading: isLoadingTermosContrato, refetch: refetchTermos } = useTermosContrato(isEditMode ? (internalContratoId || 0) : 0);
   const deleteTermoMutation = useDeleteTermoContrato();
@@ -160,13 +185,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Garantir que termosData seja sempre um array
   const termosArray = Array.isArray(termosData) ? termosData : [];
   
-  // Buscar dados do contrato (apenas no modo edição)
-  const { data: contratoData, isLoading } = useQuery({
-    queryKey: ['contrato', internalContratoId],
-    queryFn: () => ContratoService.getById(internalContratoId!),
-    enabled: isEditMode && !!internalContratoId,
-    staleTime: 60 * 1000,
-  });
+  // Usar dados do contrato do hook
+  const contratoData = formHook.contrato;
+  const isLoading = formHook.isLoadingContrato;
 
   // Buscar títulos/financeiros do contrato (apenas no modo edição)
   const { data: titulosData, isLoading: isLoadingTitulos, refetch: refetchTitulos } = useQuery({
@@ -179,9 +200,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     staleTime: 30 * 1000,
   });
 
-  // Mutations para criar e atualizar
-  const createContratoMutation = useCreateContrato();
-  const updateContratoMutation = useUpdateContrato();
+  // Mutations são gerenciadas pelo hook useContratoForm
 
   // Hook para impressão de contratos
   const impressaoHook = useImpressaoContrato({
@@ -191,127 +210,30 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   });
 
-  // Função auxiliar para normalizar data (evitar problemas de timezone)
-  const normalizeDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      // Usar apenas ano, mês e dia (sem hora/timezone) para evitar problemas de conversão
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch {
-      return '';
-    }
-  };
-
-  // Carregar dados do contrato quando entrar em modo edição
-  useEffect(() => {
-    if (isEditMode && contratoData) {
-      setFormData({
-        plano_id: contratoData.plano_id || 0,
-        desconto_percentual: parseFloat(String(contratoData.desconto_percentual || 0)) || 0,
-        desconto_valor: parseFloat(String(contratoData.desconto_valor || 0)) || 0,
-        data_inicio: normalizeDate(contratoData.data_inicio) || new Date().toISOString().split('T')[0],
-        data_fim: normalizeDate(contratoData.data_fim),
-        status: contratoData.status || 'ativo',
-        observacoes: ensureString(contratoData.observacoes),
-        isento_mensalidade: contratoData.isento_mensalidade || false,
-        dia_vencimento_id: contratoData.dia_vencimento_id || 0,
-        conta_boleto: contratoData.conta_boleto || 0,
-        data_validade_desconto: normalizeDate(contratoData.data_validade_desconto),
-        modelo_documento_id: contratoData.modelo_documento_id || 0
-      });
-      setErrors({});
-    } else if (!isEditMode && show) {
-      // Resetar formulário quando abrir em modo criação
-      setFormData({
-        plano_id: 0,
-        desconto_percentual: 0,
-        desconto_valor: 0,
-        data_inicio: new Date().toISOString().split('T')[0],
-        data_fim: '',
-        status: 'ativo',
-        observacoes: '',
-        isento_mensalidade: false,
-        dia_vencimento_id: 0,
-        conta_boleto: 0,
-        data_validade_desconto: '',
-        modelo_documento_id: 0
-      });
-      setErrors({});
-    }
-  }, [isEditMode, contratoData, show]);
-
-  const handleInputChange = (field: keyof ContratoForm, value: string | number | boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined
-      }));
-    }
-  };
+  // handleInputChange é gerenciado pelo hook
+  const handleInputChange = formHook.handleInputChange;
 
   // Callbacks para seleção nos modais
   const handlePlanoSelect = (plano: Plano) => {
     setPlanoSelecionado(plano);
-    setFormData(prev => ({ ...prev, plano_id: plano.id }));
+    handleInputChange('plano_id', plano.id);
     setShowPlanoModal(false);
   };
 
   const handleBancoSelect = (banco: Banco) => {
     setBancoSelecionado(banco);
-    setFormData(prev => ({ ...prev, conta_boleto: banco.id }));
+    handleInputChange('conta_boleto', banco.id);
     setShowBancoModal(false);
   };
 
   const handleModeloContratoSelect = (modelo: DocumentoSistema) => {
     setModeloContratoSelecionado(modelo);
-    setFormData(prev => ({ ...prev, modelo_documento_id: modelo.id }));
+    handleInputChange('modelo_documento_id', modelo.id);
     setShowModeloContratoModal(false);
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.plano_id) {
-      newErrors.plano_id = 'Plano é obrigatório';
-    }
-
-    if (!formData.modelo_documento_id || formData.modelo_documento_id === 0) {
-      newErrors.modelo_documento_id = 'Modelo de contrato é obrigatório';
-    }
-
-    if (!formData.dia_vencimento_id || formData.dia_vencimento_id === 0) {
-      newErrors.dia_vencimento_id = 'Dia de vencimento é obrigatório';
-    }
-
-    if (!formData.conta_boleto || formData.conta_boleto === 0) {
-      newErrors.conta_boleto = 'Banco para boleto é obrigatório';
-    }
-
-    if (formData.desconto_percentual < 0 || formData.desconto_percentual > 100) {
-      newErrors.desconto_percentual = 'Desconto percentual deve estar entre 0 e 100';
-    }
-
-    if (formData.desconto_valor < 0) {
-      newErrors.desconto_valor = 'Desconto valor não pode ser negativo';
-    }
-
-    if (!formData.data_inicio) {
-      newErrors.data_inicio = 'Data de início é obrigatória';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // validateForm é gerenciado pelo hook
+  const validateForm = formHook.validateForm;
 
   // Função para obter a cor do status
   const getStatusColor = (status: string) => {
@@ -1026,63 +948,15 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const servicosAdicionaisArray = servicosAdicionaisData?.data || [];
   const sortedServicosAdicionaisData = [...servicosAdicionaisArray].sort((a: ContratoPlanoAdicional, b: ContratoPlanoAdicional) => (b.id || 0) - (a.id || 0));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
+  // Atualizar internalContratoId quando contrato for criado
+  useEffect(() => {
+    if (!isEditMode && formHook.createdContratoId && formHook.createdContratoId !== internalContratoId) {
+      setInternalContratoId(formHook.createdContratoId);
     }
+  }, [formHook.createdContratoId, isEditMode, internalContratoId]);
 
-    try {
-      if (isEditMode && internalContratoId) {
-        // Modo edição
-        await updateContratoMutation.mutateAsync({
-          id: internalContratoId,
-          ...formData
-        });
-
-        success('Contrato atualizado com sucesso!');
-        queryClient.invalidateQueries({ queryKey: ['contratos'] });
-        queryClient.invalidateQueries({ queryKey: ['cliente', contratoData?.cliente_id] });
-      } else if (!isEditMode && clienteId) {
-        // Modo criação
-        const contratoData: CreateContratoData = {
-          cliente_id: clienteId,
-          plano_id: formData.plano_id,
-          desconto_percentual: formData.desconto_percentual || undefined,
-          desconto_valor: formData.desconto_valor || undefined,
-          data_inicio: formData.data_inicio || undefined,
-          data_fim: formData.data_fim || undefined,
-          status: formData.status,
-          observacoes: formData.observacoes || undefined,
-          isento_mensalidade: formData.isento_mensalidade,
-          dia_vencimento_id: formData.dia_vencimento_id,
-          conta_boleto: formData.conta_boleto,
-          data_validade_desconto: formData.data_validade_desconto || undefined,
-          modelo_documento_id: formData.modelo_documento_id
-        };
-
-        const novoContrato = await createContratoMutation.mutateAsync(contratoData);
-        success('Contrato criado com sucesso!');
-        
-        // Atualizar para modo edição usando o ID do contrato criado
-        setInternalContratoId(novoContrato.id);
-        // Não limpar formulário - manter dados para adicionar termos e financeiro
-        // Invalidar queries para recarregar dados do contrato criado
-        queryClient.invalidateQueries({ queryKey: ['contrato', novoContrato.id] });
-        queryClient.invalidateQueries({ queryKey: ['termos-contrato', novoContrato.id] });
-        queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', novoContrato.id] });
-      }
-
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (err) {
-      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 
-        (isEditMode ? 'Erro ao atualizar contrato' : 'Erro ao criar contrato');
-      error(errorMessage);
-    }
-  };
+  // handleSubmit é gerenciado pelo hook
+  const handleSubmit = formHook.handleSubmit;
 
   if (isEditMode && isLoading) {
     return (
@@ -1137,7 +1011,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             type="submit" 
             form="contrato-form"
             className="btn btn-primary btn-sm"
-            disabled={isEditMode ? updateContratoMutation.isPending : createContratoMutation.isPending}
+            disabled={formHook.isSubmitting}
           >
             {isEditMode ? 'Salvar' : 'Criar Contrato'}
           </button>
