@@ -6,21 +6,26 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 
 ### Imports com Caminhos Profundos
 
-**Status**: ✅ **PRINCIPALMENTE RESOLVIDO** - Todos os imports críticos refatorados. Imports restantes são relativos para componentes próximos.
+**Status**: ✅ **RESOLVIDO** - Todos os imports profundos refatorados para usar path aliases.
 
 **Solução implementada:**
 - ✅ Path aliases configurados no `tsconfig.json` e `craco.config.js`
 - ✅ Webpack configurado para resolver aliases através do CRACO
 - ✅ Scripts atualizados para usar `craco` em vez de `react-scripts`
 - ✅ ESLint configurado com `parserOptions.project` para suportar regras TypeScript
-- ✅ 43 arquivos principais refatorados
+- ✅ **71 arquivos refatorados** (todos os imports profundos eliminados)
 
 **Estatísticas:**
-- ✅ **Todos os imports críticos refatorados** (hooks/services/types/utils/components)
-- ✅ Imports de hooks/services/types/utils/components agora usam path aliases (`@/hooks`, `@/services`, etc.)
-- ⏳ Imports restantes são apenas relativos para componentes UI/tables próximos (`../../../../ui/FormField`) - aceitáveis e não problemáticos
-
-**Observação**: Os imports relativos restantes são para componentes que estão na mesma estrutura de pastas (UI, tables, forms) e são aceitáveis. A refatoração principal está completa.
+- ✅ **Todos os imports profundos refatorados** (`../../../../` eliminados)
+- ✅ Imports agora usam path aliases:
+  - `@/hooks` - hooks personalizados
+  - `@/services` - serviços de API
+  - `@/types` - tipos TypeScript
+  - `@/utils` - utilitários
+  - `@/components/ui` - componentes UI
+  - `@/components/common` - componentes comuns
+  - `@/components/tables` - componentes de tabela
+  - `@/components/forms` - componentes de formulário
 
 ---
 
