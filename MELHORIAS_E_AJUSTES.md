@@ -14,14 +14,27 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-### 4. Cálculos Financeiros
+### 4. Cálculos Financeiros ✅ CONCLUÍDO
 
 **Problema:** Cálculos espalhados em vários lugares.
 
-**Sugestão:**
-- Criar `FinancialCalculationsService.ts`
-- Centralizar cálculos de juros, multas, descontos
-- Criar funções utilitárias reutilizáveis
+**Solução Implementada:**
+- ✅ Criado `FinancialCalculationsService.ts` (`backend/src/services/FinancialCalculationsService.ts`)
+- ✅ Centralizados cálculos de juros, multas, descontos e acréscimos
+- ✅ Criadas funções utilitárias reutilizáveis com tipagem forte
+- ✅ Refatorados 6 arquivos para usar o serviço centralizado:
+  - `Titulo.calcularValorComMultaJuros()`
+  - `Contrato.getValorFinal()`
+  - `RoutineExecutionService.calculateValorTitulo()`
+  - `TituloCRUDController.create()`
+  - `FinanceiroVariableHandler.adicionarJurosEMulta()`
+
+**Benefícios:**
+- Redução de código duplicado
+- Padronização de cálculos financeiros
+- Arredondamento consistente (2 casas decimais)
+- Validação centralizada de valores
+- Facilita manutenção e testes
 
 **Prioridade:** 🟡 Média
 
