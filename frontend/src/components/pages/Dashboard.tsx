@@ -16,29 +16,66 @@ import {
   PieLabelRenderProps
 } from 'recharts';
 
+/**
+ * Interface para dados de gráfico
+ * Suporta propriedades conhecidas e permite propriedades adicionais para flexibilidade
+ */
 interface ChartDataItem {
   valor?: number;
   value?: number;
   label?: string;
   color?: string;
   mes?: string;
+  name?: string;
+  // Propriedades adicionais permitidas para compatibilidade com diferentes formatos de dados
   [key: string]: string | number | undefined;
 }
 
+/**
+ * Props para o componente ResponsiveLineChart
+ */
 interface ResponsiveLineChartProps {
   data: ChartDataItem[];
   title: string;
   format?: 'currency' | 'number';
 }
 
+/**
+ * Interface para o payload aninhado do Recharts
+ * Representa os dados do ponto do gráfico
+ */
+interface RechartsNestedPayload {
+  value?: number;
+  valor?: number;
+  name?: string;
+  mes?: string;
+  label?: string;
+  // Propriedades dinâmicas podem existir devido à obfuscação
+  // Usamos unknown para manter type safety enquanto permitimos acesso dinâmico
+  [key: string]: string | number | undefined | unknown;
+}
+
+/**
+ * Interface para um item do payload do tooltip do Recharts
+ */
+interface RechartsTooltipPayloadItem {
+  value?: number;
+  dataKey?: string;
+  name?: string;
+  color?: string;
+  fill?: string;
+  stroke?: string;
+  payload?: RechartsNestedPayload;
+  // Propriedades adicionais podem existir após obfuscação
+  [key: string]: string | number | RechartsNestedPayload | undefined | unknown;
+}
+
+/**
+ * Props para o componente CustomTooltip
+ */
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: Array<{ 
-    value?: number; 
-    dataKey?: string;
-    payload?: Record<string, unknown>;
-    [key: string]: unknown;
-  }>;
+  payload?: RechartsTooltipPayloadItem[];
   label?: string | number;
   format: 'currency' | 'number';
 }
@@ -63,7 +100,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, f
       // 2. Tentar acessar via payload aninhado (estrutura padrão do Recharts)
       // O Recharts geralmente passa: payload[0].payload.value ou payload[0].value
       if (value === null && firstPayload.payload && typeof firstPayload.payload === 'object') {
-        const nestedPayload = firstPayload.payload as Record<string, unknown>;
+        const nestedPayload = firstPayload.payload as RechartsNestedPayload;
         // Tentar acessar via dataKey primeiro (mais confiável)
         if (firstPayload.dataKey && typeof firstPayload.dataKey === 'string') {
           const dataKeyValue = nestedPayload[firstPayload.dataKey];
@@ -71,11 +108,17 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, f
             value = dataKeyValue;
           }
         }
-        // Se não encontrou via dataKey, tentar 'value'
-        if (value === null && 'value' in nestedPayload) {
+        // Se não encontrou via dataKey, tentar propriedades conhecidas
+        if (value === null && nestedPayload.value !== undefined) {
           const nestedValue = nestedPayload.value;
           if (typeof nestedValue === 'number' && !isNaN(nestedValue) && isFinite(nestedValue)) {
             value = nestedValue;
+          }
+        }
+        if (value === null && nestedPayload.valor !== undefined) {
+          const nestedValor = nestedPayload.valor;
+          if (typeof nestedValor === 'number' && !isNaN(nestedValor) && isFinite(nestedValor)) {
+            value = nestedValor;
           }
         }
       }
@@ -83,7 +126,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, f
       // 3. Iterar sobre todas as propriedades do payload aninhado para encontrar valores numéricos
       // Isso funciona mesmo após obfuscação, pois não depende do nome da propriedade
       if (value === null && firstPayload.payload && typeof firstPayload.payload === 'object') {
-        const nestedPayload = firstPayload.payload as Record<string, unknown>;
+        const nestedPayload = firstPayload.payload as RechartsNestedPayload;
         const nestedEntries = Object.entries(nestedPayload);
         // Ignorar propriedades que não são números (objetos, arrays, strings, etc)
         for (const [, val] of nestedEntries) {

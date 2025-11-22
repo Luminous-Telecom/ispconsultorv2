@@ -14,41 +14,25 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ---
 
-## 📝 Melhorias de TypeScript
 
-### 1. Reduzir Uso de `any` ✅ CONCLUÍDO
-
-**Problema:** Alguns usos de `any` encontrados.
-
-**Solução Implementada:**
-- ✅ Substituídos `any` por tipos específicos em 4 arquivos:
-  - `RoutineExecutionService.ts` - removido `(contrato as any).id`
-  - `TituloPDFController.ts` - substituído `(error as any)` por type guard
-  - `ClienteController.ts` - criada interface `ClienteWithTitulos` para relacionamentos
-  - `ModeloDocumento.ts` - adicionada validação de tipo em `findByTipo()`
-- ✅ Criadas interfaces específicas para objetos dinâmicos
-- ✅ Implementados type guards para erros do Axios
-
-**Benefícios:**
-- Melhor type safety em todo o código
-- Redução de erros em tempo de execução
-- Melhor autocomplete e IntelliSense
-- Código mais fácil de manter
-
-**Nota:** Mensagens `'any.required'` em validadores Joi são strings literais, não tipos TypeScript. Todos os usos reais de `any` foram removidos, incluindo `csrfMiddleware.ts` que agora usa interfaces específicas para CSRF e Session.
-
-**Prioridade:** 🟡 Média
-
----
-
-### 2. Melhorar Tipagem de Props
+### 2. Melhorar Tipagem de Props ✅ CONCLUÍDO
 
 **Problema:** Alguns componentes com props mal tipadas.
 
-**Sugestão:**
-- Criar interfaces específicas para props
-- Evitar usar tipos genéricos demais
-- Usar tipos union quando apropriado
+**Solução Implementada:**
+- ✅ Criadas interfaces específicas para props do Dashboard:
+  - `RechartsNestedPayload` - substitui `Record<string, unknown>` no payload do tooltip
+  - `RechartsTooltipPayloadItem` - interface específica para itens do payload
+  - `CustomTooltipProps` - melhorada com tipos específicos ao invés de genéricos
+- ✅ Melhorada tipagem de `ChartDataItem` com documentação e propriedades conhecidas
+- ✅ Criada interface `SelectedParcela` no `FinanceiroModal` para substituir tipo inline
+- ✅ Adicionada documentação JSDoc nas interfaces criadas
+
+**Benefícios:**
+- Melhor type safety e autocomplete
+- Código mais legível e manutenível
+- Redução de erros em tempo de execução
+- Melhor suporte do TypeScript para refatoração
 
 **Prioridade:** 🟢 Baixa
 

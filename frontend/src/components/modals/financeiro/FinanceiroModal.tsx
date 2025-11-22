@@ -43,7 +43,11 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [showReceberModal, setShowReceberModal] = useState(false);
-  const [selectedParcela, setSelectedParcela] = useState<{
+  
+  /**
+   * Interface para parcela selecionada no modal de recebimento
+   */
+  interface SelectedParcela {
     id: number;
     numero_titulo: string;
     valor_parcela: number;
@@ -51,7 +55,9 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     cliente?: {
       razao_social: string;
     };
-  } | null>(null);
+  }
+  
+  const [selectedParcela, setSelectedParcela] = useState<SelectedParcela | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [showImprimirModal, setShowImprimirModal] = useState(false);
