@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import RichTextEditor, { type RichTextEditorRef } from '../../../../common/RichTextEditor';
+import RichTextEditor, { type RichTextEditorRef } from '@/components/common/RichTextEditor';
 import { DocumentoTabProps } from '../types';
 
 const ContratoTab: React.FC<DocumentoTabProps> = ({

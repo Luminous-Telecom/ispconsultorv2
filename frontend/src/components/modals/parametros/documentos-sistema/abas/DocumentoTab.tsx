@@ -7,8 +7,8 @@ import ModeloReciboService from '@/services/modeloReciboService';
 import ModeloCartaService from '@/services/modeloCartaService';
 import ModeloTermoService from '@/services/modeloTermoService';
 import { formatDateTime } from '@/utils/formatters';
-import Table from '../../../../tables/Table';
-import { TableConfig } from '../../../../tables/types';
+import Table from '@/components/tables/Table';
+import { TableConfig } from '@/components/tables/types';
 import { DocumentoUnion } from '../types';
 import { DocumentoTabProps } from '../types';
 

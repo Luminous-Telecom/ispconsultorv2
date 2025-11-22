@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
 import { Titulo } from '@/types/entities';
-import Table from '../../../../tables/Table';
+import Table from '@/components/tables/Table';
 import { BulkAction } from '../types';
-import { TableColumn } from '../../../../tables/types';
-import { SortDirection } from '../../../../tables/types';
+import { TableColumn } from '@/components/tables/types';
+import { SortDirection } from '@/components/tables/types';
 
 interface FinanceiroTabProps {
   isLoading: boolean;

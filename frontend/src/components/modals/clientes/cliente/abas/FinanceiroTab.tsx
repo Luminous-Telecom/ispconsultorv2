@@ -1,9 +1,9 @@
 import React from 'react';
 import { CarneParcela } from '@/types';
 import { TituloItem } from '@/types/cliente';
-import Table from '../../../../tables/Table';
+import Table from '@/components/tables/Table';
 import { FinanceiroTabProps } from '../types';
-import { TableColumn } from '../../../../tables/types';
+import { TableColumn } from '@/components/tables/types';
 
 const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   sortedData,

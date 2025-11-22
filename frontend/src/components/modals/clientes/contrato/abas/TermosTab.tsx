@@ -1,8 +1,8 @@
 import React from 'react';
 import { TermoContrato } from '@/services/termoContratoService';
-import Table from '../../../../tables/Table';
+import Table from '@/components/tables/Table';
 import { BulkAction } from '../types';
-import { TableColumn } from '../../../../tables/types';
+import { TableColumn } from '@/components/tables/types';
 
 interface TermosTabProps {
   isLoading: boolean;

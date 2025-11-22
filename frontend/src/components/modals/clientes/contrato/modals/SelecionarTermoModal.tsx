@@ -4,7 +4,7 @@ import { useListModal } from '@/hooks/useListModal';
 import { useModalSelect } from '@/hooks/useModalSelect';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { useModelosTermo } from '@/hooks/useModelosTermo';
-import ListModal from '../../../../common/ListModal';
+import ListModal from '@/components/common/ListModal';
 
 interface Termo {
   id: number;

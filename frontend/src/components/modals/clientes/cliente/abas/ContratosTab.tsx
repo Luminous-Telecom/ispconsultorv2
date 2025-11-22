@@ -1,7 +1,7 @@
 import React from 'react';
 import { Contrato } from '@/hooks/useContratos';
 import { formatDate, formatDateTime } from '@/utils/formatters';
-import Table from '../../../../tables/Table';
+import Table from '@/components/tables/Table';
 import { ContratosTabProps } from '../types';
 
 const ContratosTab: React.FC<ContratosTabProps> = ({
