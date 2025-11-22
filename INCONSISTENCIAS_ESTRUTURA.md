@@ -8,13 +8,12 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 
 #### Nomenclatura Inconsistente
 
-**Problema**: Alguns services podem ter nomenclatura inconsistente.
+**Status**: ✅ **VERIFICADO** - Todos os services estão em `PascalCase` conforme o padrão do backend.
 
-**Verificar:**
-- Todos os services devem estar em `PascalCase` (padrão do backend)
-- Verificar se há duplicações (ex: `parametroService.ts` vs `parametrosService.ts`)
-
-**Status**: ⏳ **PENDENTE** - Verificação ainda não realizada.
+**Verificação realizada:**
+- ✅ Todos os 19 services verificados estão em `PascalCase`
+- ✅ Não há inconsistências de nomenclatura
+- ✅ `parametroService.ts` e `parametrosService.ts` são services diferentes (sem duplicação)
 
 ---
 
