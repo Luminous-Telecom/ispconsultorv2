@@ -266,21 +266,139 @@ class DocumentoSistemaService {
       const url = `/modelos-documento/${id}/pdf-teste-conteudo`;
       const data = { cliente_id: clienteId, conteudo };
       
-      const response = await apiService.post<Blob>(url, data, {
-        responseType: 'blob'
-      });
+      let response: unknown;
+      try {
+        response = await apiService.post<Blob>(url, data, {
+          responseType: 'blob'
+        });
+      } catch (err) {
+        // Se for um ApiError do ErrorHandler, extrair mensagem
+        if (err && typeof err === 'object' && 'message' in err) {
+          const apiError = err as { message?: string; type?: string };
+          throw new Error(apiError.message || 'Erro ao gerar PDF de teste com conteúdo');
+        }
+        // Se for um Error, relançar
+        if (err instanceof Error) {
+          throw err;
+        }
+        throw new Error('Erro desconhecido ao gerar PDF');
+      }
+
+      // Verificar se é um erro (ApiError do ErrorHandler)
+      if (response && typeof response === 'object' && 'type' in response && 'message' in response) {
+        const apiError = response as { type?: string; message?: string };
+        throw new Error(apiError.message || 'Erro ao gerar PDF de teste com conteúdo');
+      }
 
       // O interceptador retorna o blob diretamente quando responseType é 'blob'
-      const blob = response as unknown as Blob;
-
-      if (!blob || !(blob instanceof Blob)) {
+      let blob: Blob;
+      
+      if (response instanceof Blob) {
+        blob = response;
+      } else if (response && typeof response === 'object' && 'data' in response) {
+        // Se for um objeto ApiResponse, tentar extrair o blob
+        const responseObj = response as { data?: unknown; success?: boolean; message?: string };
+        
+        // Se for um ApiResponse com success: false, é um erro
+        if (responseObj.success === false) {
+          throw new Error(responseObj.message || 'Erro ao gerar PDF de teste com conteúdo');
+        }
+        
+        const responseData = responseObj.data;
+        
+        if (responseData instanceof Blob) {
+          blob = responseData;
+        } else {
+          // Tentar parsear como JSON para obter mensagem de erro
+          if (typeof responseData === 'string') {
+            try {
+              const errorData = JSON.parse(responseData);
+              throw new Error(errorData.message || 'Resposta do servidor não é um Blob válido');
+            } catch {
+              throw new Error('Resposta do servidor não é um Blob válido');
+            }
+          }
+          
+          // Se for um objeto com mensagem, usar a mensagem
+          if (responseData && typeof responseData === 'object' && 'message' in responseData) {
+            const errorObj = responseData as { message?: string };
+            throw new Error(errorObj.message || 'Resposta do servidor não é um Blob válido');
+          }
+          
+          throw new Error('Resposta do servidor não é um Blob válido');
+        }
+      } else {
         throw new Error('Resposta do servidor não é um Blob válido');
+      }
+
+      // Verificar se o blob é muito pequeno (pode ser uma mensagem de erro JSON)
+      if (blob.size < 1000) {
+        try {
+          const text = await blob.text();
+          // Se conseguir fazer parse como JSON, é um erro
+          const errorData = JSON.parse(text);
+          throw new Error(errorData.message || 'Erro ao gerar PDF de teste com conteúdo');
+        } catch (parseError) {
+          // Se não for JSON, verificar se é um PDF válido
+          if (blob.type && !blob.type.includes('application/pdf')) {
+            throw new Error('Resposta do servidor não é um PDF válido');
+          }
+          // Se não tiver tipo definido mas for pequeno, pode ser um erro
+          if (blob.size < 100) {
+            throw new Error('Resposta do servidor muito pequena para ser um PDF válido');
+          }
+        }
       }
 
       return blob;
     } catch (error) {
+      // Se já é um Error com mensagem, apenas relançar
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      // Verificar se é um ApiError do ErrorHandler (objeto com type e message)
+      if (error && typeof error === 'object' && 'type' in error && 'message' in error) {
+        const apiError = error as { type?: string; message?: string; statusCode?: number };
+        throw new Error(apiError.message || 'Erro ao gerar PDF de teste com conteúdo');
+      }
+      
       const axiosError = error as AxiosError<{ message?: string }>;
-      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF de teste com conteúdo');
+      
+      // Tentar extrair mensagem de erro de diferentes formatos
+      let errorMessage = 'Erro ao gerar PDF de teste com conteúdo';
+      
+      if (axiosError.response) {
+        // Se a resposta é um Blob mas pode conter erro JSON
+        if (axiosError.response.data instanceof Blob) {
+          try {
+            const text = await axiosError.response.data.text();
+            const errorData = JSON.parse(text);
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            errorMessage = `Erro ${axiosError.response.status}: ${axiosError.response.statusText}`;
+          }
+        } else if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
+          errorMessage = (axiosError.response.data as { message?: string }).message || errorMessage;
+        } else if (typeof axiosError.response.data === 'string') {
+          try {
+            const parsed = JSON.parse(axiosError.response.data);
+            errorMessage = parsed.message || errorMessage;
+          } catch {
+            errorMessage = axiosError.response.data || errorMessage;
+          }
+        }
+        
+        if (axiosError.response.status === 404) {
+          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
+        } else if (axiosError.response.status === 500) {
+          errorMessage = 'Erro interno do servidor ao gerar PDF. Tente novamente.';
+        }
+      } else if (axiosError.message) {
+        errorMessage = axiosError.message;
+      }
+      
+      throw new Error(errorMessage);
     }
   }
 

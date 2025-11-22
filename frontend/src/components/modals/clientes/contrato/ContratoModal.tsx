@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { usePlanos } from '../../../../hooks/usePlanos';
 import { useBancos } from '../../../../hooks/useBancos';
@@ -34,6 +33,7 @@ import { ContratoPlanoAdicional } from '../../../../services/contratoPlanoAdicio
 import { ensureString } from '../../../../utils/stringUtils';
 import { BulkAction } from './types';
 import { formatDate, formatDateTime } from '../../../../utils/formatters';
+import { useImpressaoContrato } from '../../../../hooks/useImpressaoContrato';
 
 interface ContratoModalProps {
   show: boolean;
@@ -105,10 +105,12 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [selectedTermosItems, setSelectedTermosItems] = useState<TermoContrato[]>([]);
   const [selectedServicosAdicionaisItems, setSelectedServicosAdicionaisItems] = useState<ContratoPlanoAdicional[]>([]);
   
-  // Estados para modal de impressão
+  // Estado para modal de impressão
   const [showPreview, setShowPreview] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  
+  // Estados locais para impressão de títulos e termos (não contratos)
+  const [pdfUrlLocal, setPdfUrlLocal] = useState<string | null>(null);
+  const [isGeneratingPdfLocal, setIsGeneratingPdfLocal] = useState(false);
   
   // Estados dos modais de seleção
   const [showPlanoModal, setShowPlanoModal] = useState(false);
@@ -180,6 +182,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Mutations para criar e atualizar
   const createContratoMutation = useCreateContrato();
   const updateContratoMutation = useUpdateContrato();
+
+  // Hook para impressão de contratos
+  const impressaoHook = useImpressaoContrato({
+    clienteId: contratoData?.cliente_id || undefined,
+    onPdfGenerated: (_url) => {
+      setShowPreview(true);
+    }
+  });
 
   // Função auxiliar para normalizar data (evitar problemas de timezone)
   const normalizeDate = (dateString: string | null | undefined): string => {
@@ -326,20 +336,24 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   // Funções para impressão (apenas no modo edição)
   const handleImprimirSelecionados = async () => {
     if (selectedItems.length === 0) return;
-    setIsGeneratingPdf(true);
+    setIsGeneratingPdfLocal(true);
     try {
       const ids = selectedItems.map(item => item.id);
       const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
       
       const url = window.URL.createObjectURL(pdfBlob);
-      setPdfUrl(url);
+      // Limpar URL anterior se existir
+      if (pdfUrlLocal) {
+        window.URL.revokeObjectURL(pdfUrlLocal);
+      }
+      setPdfUrlLocal(url);
       setShowPreview(true);
       
       success('Boletos selecionados gerados com sucesso!');
     } catch (err) {
       error('Erro ao gerar boletos selecionados');
     } finally {
-      setIsGeneratingPdf(false);
+      setIsGeneratingPdfLocal(false);
     }
   };
 
@@ -349,67 +363,10 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       return;
     }
     
-    setIsGeneratingPdf(true);
-    try {
-      await new Promise(resolve => {
-        if (window.requestIdleCallback) {
-          window.requestIdleCallback(resolve);
-        } else {
-          setTimeout(resolve, 0);
-        }
-      });
-      
-      const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
-      
-      if (modeloContrato.success && modeloContrato.data) {
-        // Passar contrato_id para usar o contrato específico sendo visualizado
-        const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-          modeloContrato.data.id, 
-          contratoData.cliente_id,
-          internalContratoId || undefined
-        );
-        
-        const url = window.URL.createObjectURL(pdfBlob);
-        setPdfUrl(url);
-        setShowPreview(true);
-        
-        success('Contrato gerado com sucesso!');
-      } else {
-        error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
-      }
-    } catch (err) {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      let errorMessage = 'Erro ao gerar contrato';
-      
-      if (axiosError.response) {
-        // Tentar extrair mensagem de erro do response
-        if (axiosError.response.data instanceof Blob) {
-          try {
-            const text = await axiosError.response.data.text();
-            const errorData = JSON.parse(text);
-            errorMessage = errorData.message || errorMessage;
-          } catch {
-            errorMessage = `Erro ${axiosError.response.status}: ${axiosError.response.statusText}`;
-          }
-        } else if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
-          errorMessage = (axiosError.response.data as { message?: string }).message || errorMessage;
-        }
-        
-        if (axiosError.response.status === 404) {
-          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
-        } else if (axiosError.response.status === 500) {
-          errorMessage = 'Erro interno do servidor ao gerar contrato. Tente novamente.';
-        }
-      } else if (axiosError.message) {
-        errorMessage = axiosError.message;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      
-      error(errorMessage);
-    } finally {
-      setIsGeneratingPdf(false);
-    }
+    await impressaoHook.imprimirContrato(
+      internalContratoId || undefined,
+      contratoData.cliente_id
+    );
   };
 
   const handleImprimirTodosEmAberto = async () => {
@@ -424,20 +381,24 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       success('Nenhum título em aberto encontrado');
       return;
     }
-    setIsGeneratingPdf(true);
+    setIsGeneratingPdfLocal(true);
     try {
       const ids = titulosEmAberto.map((titulo: Titulo) => titulo.id);
       const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
       
       const url = window.URL.createObjectURL(pdfBlob);
-      setPdfUrl(url);
+      // Limpar URL anterior se existir
+      if (pdfUrlLocal) {
+        window.URL.revokeObjectURL(pdfUrlLocal);
+      }
+      setPdfUrlLocal(url);
       setShowPreview(true);
       
       success('Boletos em aberto gerados com sucesso!');
     } catch (err) {
       error('Erro ao gerar boletos em aberto');
     } finally {
-      setIsGeneratingPdf(false);
+      setIsGeneratingPdfLocal(false);
     }
   };
 
@@ -558,9 +519,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       }
     },
     {
-      label: isGeneratingPdf ? 'Gerando...' : 'Imprimir',
+      label: (impressaoHook.isGeneratingPdf || isGeneratingPdfLocal) ? 'Gerando...' : 'Imprimir',
       variant: 'primary',
-      disabled: () => isGeneratingPdf,
+      disabled: () => impressaoHook.isGeneratingPdf || isGeneratingPdfLocal,
       dropdown: [
         {
           label: 'Selecionados',
@@ -724,16 +685,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         if (selectedTermosItems.length > 0 && internalContratoId) {
           const termo = selectedTermosItems[0];
           if (termo.modelo_documento_id && internalContratoId) {
-            setIsGeneratingPdf(true);
+            setIsGeneratingPdfLocal(true);
             try {
               const blob = await ModeloTermoService.generatePdfWithContrato(termo.modelo_documento_id, internalContratoId);
               const url = window.URL.createObjectURL(blob);
-              setPdfUrl(url);
+              // Limpar URL anterior se existir
+              if (pdfUrlLocal) {
+                window.URL.revokeObjectURL(pdfUrlLocal);
+              }
+              setPdfUrlLocal(url);
               setShowPreview(true);
             } catch (err) {
               error(err instanceof Error ? err.message : 'Erro ao gerar documento para impressão');
             } finally {
-              setIsGeneratingPdf(false);
+              setIsGeneratingPdfLocal(false);
             }
           }
         }
@@ -1156,9 +1121,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 e.stopPropagation();
                 handleImprimirContrato();
               }}
-              disabled={isGeneratingPdf}
+              disabled={impressaoHook.isGeneratingPdf}
             >
-              {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
+              {impressaoHook.isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
             </button>
           )}
           <button 
@@ -1288,7 +1253,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   selectedTermosItems={selectedTermosItems}
                   setSelectedTermosItems={setSelectedTermosItems}
                   columns={termosColumns}
-                  isGeneratingPdf={isGeneratingPdf}
+                  isGeneratingPdf={impressaoHook.isGeneratingPdf || isGeneratingPdfLocal}
                   onRefresh={refetchTermos}
                 />
               ) : (
@@ -1314,7 +1279,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   selectedItems={selectedItems}
                   setSelectedItems={setSelectedItems}
                   columns={columns}
-                  isGeneratingPdf={isGeneratingPdf}
+                  isGeneratingPdf={impressaoHook.isGeneratingPdf || isGeneratingPdfLocal}
                   onRefresh={refetchTitulos}
                   showCancelados={showCancelados}
                   setShowCancelados={setShowCancelados}
@@ -1455,13 +1420,15 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             show={showPreview}
             onClose={() => {
               setShowPreview(false);
-              if (pdfUrl) {
-                window.URL.revokeObjectURL(pdfUrl);
+              impressaoHook.limparPdfUrl();
+              // Limpar URL local também
+              if (pdfUrlLocal) {
+                window.URL.revokeObjectURL(pdfUrlLocal);
+                setPdfUrlLocal(null);
               }
-              setPdfUrl(null);
             }}
-            pdfUrl={pdfUrl}
-            title="Visualizar Contrato"
+            pdfUrl={impressaoHook.pdfUrl || pdfUrlLocal}
+            title="Visualizar Documento"
             modalId="contrato-imprimir-modal"
           />
         </>

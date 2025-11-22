@@ -126,30 +126,61 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ## 🔄 Eliminação de Duplicação de Código
 
-### 1. Lógica de Impressão de Contratos
+### 1. Lógica de Impressão de Contratos ✅ CONCLUÍDO
 
 **Problema:** Código duplicado em múltiplos lugares:
 - `ContratoModal.tsx` - `handleImprimirContrato`
 - `ContratoListModal.tsx` - Bulk action de impressão
 - `ClienteModal.tsx` - `handleImprimirTodosEmAberto`
 
-**Sugestão:**
+**Solução Implementada:**
 ```typescript
-// Criar hook reutilizável
+// Hook reutilizável criado
 // frontend/src/hooks/useImpressaoContrato.ts
-export function useImpressaoContrato() {
+export function useImpressaoContrato({
+  clienteId?: number | null,
+  onPdfGenerated?: (pdfUrl: string) => void
+}) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   
-  const imprimirContrato = async (clienteId: number, contratoId?: number) => {
-    // Lógica centralizada
+  const imprimirContrato = async (contratoId?: number, clienteIdParam?: number) => {
+    // Lógica centralizada com tratamento de erros aprimorado
   };
   
-  return { imprimirContrato, isGeneratingPdf, pdfUrl };
+  const imprimirContratosCliente = async (clienteIdParam: number) => {
+    // Wrapper para impressão por cliente
+  };
+  
+  const limparPdfUrl = () => {
+    // Limpeza de recursos
+  };
+  
+  return { 
+    imprimirContrato, 
+    imprimirContratosCliente,
+    limparPdfUrl,
+    isGeneratingPdf, 
+    pdfUrl 
+  };
 }
 ```
 
-**Prioridade:** 🔴 Alta
+**Status:** ✅ **Concluído**
+- ✅ Hook `useImpressaoContrato.ts` criado e funcionando
+- ✅ `ContratoModal.tsx` refatorado
+- ✅ `ContratoListModal.tsx` refatorado
+- ✅ `useClienteImpressao.ts` refatorado internamente
+- ✅ Tratamento de erros aprimorado com mensagens específicas
+- ✅ Logs de debug removidos para produção
+- ✅ Todas as funcionalidades testadas e validadas
+
+**Benefícios Alcançados:**
+- ✅ Redução de ~40 linhas de código duplicado
+- ✅ Lógica centralizada e reutilizável
+- ✅ Manutenibilidade melhorada
+- ✅ Consistência entre componentes
+- ✅ Mensagens de erro específicas do servidor
 
 ---
 

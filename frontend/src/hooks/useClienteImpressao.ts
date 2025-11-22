@@ -10,6 +10,7 @@ import DocumentoSistemaService from '../services/documentoSistemaService';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
 import { TituloItem } from '../types/cliente';
 import { CarneParcela, PaginatedResponse } from '../types';
+import { useImpressaoContrato } from './useImpressaoContrato';
 
 interface UseClienteImpressaoParams {
   clienteId: number | null;
@@ -45,8 +46,20 @@ export const useClienteImpressao = ({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
+  // Hook para impressão de contratos (usado internamente)
+  const impressaoContratoHook = useImpressaoContrato({
+    clienteId: clienteId || undefined,
+    onPdfGenerated: (url) => {
+      setPdfUrl(url);
+      setShowImprimirModal(true);
+    }
+  });
+
   const handleCloseImprimirModal = () => {
     setShowImprimirModal(false);
+    // Limpar URL do hook de impressão de contratos
+    impressaoContratoHook.limparPdfUrl();
+    // Limpar URL local (para outros documentos)
     if (pdfUrl) {
       window.URL.revokeObjectURL(pdfUrl);
       setPdfUrl(null);
@@ -108,42 +121,9 @@ export const useClienteImpressao = ({
       return;
     }
 
-    setIsGeneratingPdf(true);
-    try {
-      await new Promise(resolve => {
-        if (window.requestIdleCallback) {
-          window.requestIdleCallback(resolve);
-        } else {
-          setTimeout(resolve, 0);
-        }
-      });
-      
-      const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
-      
-      if (modeloContrato.success && modeloContrato.data) {
-        const pdfBlob = await DocumentoSistemaService.generateTestPdf(
-          modeloContrato.data.id, 
-          clienteId || 0
-        );
-        
-        const url = window.URL.createObjectURL(pdfBlob);
-        setPdfUrl(url);
-        setShowImprimirModal(true);
-        
-        success('Contrato gerado com sucesso!');
-      } else {
-        error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
-      }
-    } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      if (axiosError.response?.status === 404) {
-        error('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.');
-      } else {
-        error('Erro ao gerar contrato');
-      }
-    } finally {
-      setIsGeneratingPdf(false);
-    }
+    // Usar o hook centralizado para impressão de contratos
+    // O hook já gerencia o estado isGeneratingPdf internamente
+    await impressaoContratoHook.imprimirContratosCliente(clienteId);
   };
 
   const handleImprimirTermoAdesao = async (_contratoId: number) => {
@@ -154,11 +134,11 @@ export const useClienteImpressao = ({
 
     setIsGeneratingPdf(true);
     try {
-      await new Promise(resolve => {
+      await new Promise<void>(resolve => {
         if (window.requestIdleCallback) {
-          window.requestIdleCallback(resolve);
+          window.requestIdleCallback(() => resolve());
         } else {
-          setTimeout(resolve, 0);
+          setTimeout(() => resolve(), 0);
         }
       });
       
@@ -167,6 +147,12 @@ export const useClienteImpressao = ({
       if (modeloTermo.success && modeloTermo.data) {
         const modelosData = await DocumentoSistemaService.getModelosByModeloContrato(modeloTermo.data.id);
         const conteudoAdesao = modelosData.data?.modelo_termo_adesao || modeloTermo.data.conteudo;
+        
+        if (!conteudoAdesao || conteudoAdesao.trim() === '') {
+          error('Conteúdo do termo de adesão não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
+          return;
+        }
+        
         const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
           modeloTermo.data.id, 
           clienteId || 0,
@@ -182,12 +168,22 @@ export const useClienteImpressao = ({
         error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
       }
     } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      if (axiosError.response?.status === 404) {
-        error('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.');
+      let errorMessage = 'Erro ao gerar termo de adesão';
+      
+      // Se já é um Error com mensagem (lançado pelo service), usar diretamente
+      if (err instanceof Error) {
+        errorMessage = err.message;
       } else {
-        error('Erro ao gerar termo de adesão');
+        // Tentar extrair de AxiosError como fallback
+        const axiosError = err as AxiosError<{ message?: string }>;
+        if (axiosError.response?.status === 404) {
+          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
+        } else if (axiosError.message) {
+          errorMessage = axiosError.message;
+        }
       }
+      
+      error(errorMessage);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -201,11 +197,11 @@ export const useClienteImpressao = ({
 
     setIsGeneratingPdf(true);
     try {
-      await new Promise(resolve => {
+      await new Promise<void>(resolve => {
         if (window.requestIdleCallback) {
-          window.requestIdleCallback(resolve);
+          window.requestIdleCallback(() => resolve());
         } else {
-          setTimeout(resolve, 0);
+          setTimeout(() => resolve(), 0);
         }
       });
       
@@ -214,6 +210,12 @@ export const useClienteImpressao = ({
       if (modeloPermanencia.success && modeloPermanencia.data) {
         const modelosData = await DocumentoSistemaService.getModelosByModeloContrato(modeloPermanencia.data.id);
         const conteudoPermanencia = modelosData.data?.modelo_contrato_permanencia || modeloPermanencia.data.conteudo;
+        
+        if (!conteudoPermanencia || conteudoPermanencia.trim() === '') {
+          error('Conteúdo do contrato de permanência não encontrado. Verifique se o modelo possui conteúdo cadastrado.');
+          return;
+        }
+        
         const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
           modeloPermanencia.data.id, 
           clienteId || 0,
@@ -229,22 +231,37 @@ export const useClienteImpressao = ({
         error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
       }
     } catch (err) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      if (axiosError.response?.status === 404) {
-        error('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.');
+      let errorMessage = 'Erro ao gerar contrato de permanência';
+      
+      // Se já é um Error com mensagem (lançado pelo service), usar diretamente
+      if (err instanceof Error) {
+        errorMessage = err.message;
       } else {
-        error('Erro ao gerar contrato de permanência');
+        // Tentar extrair de AxiosError como fallback
+        const axiosError = err as AxiosError<{ message?: string }>;
+        if (axiosError.response?.status === 404) {
+          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
+        } else if (axiosError.message) {
+          errorMessage = axiosError.message;
+        }
       }
+      
+      error(errorMessage);
     } finally {
       setIsGeneratingPdf(false);
     }
   };
 
+  // Combinar pdfUrl do hook de contratos com pdfUrl local (outros documentos)
+  const combinedPdfUrl = impressaoContratoHook.pdfUrl || pdfUrl;
+  // Combinar isGeneratingPdf do hook de contratos com estado local (títulos)
+  const combinedIsGeneratingPdf = impressaoContratoHook.isGeneratingPdf || isGeneratingPdf;
+
   return {
     showImprimirModal,
     setShowImprimirModal,
-    pdfUrl,
-    isGeneratingPdf,
+    pdfUrl: combinedPdfUrl,
+    isGeneratingPdf: combinedIsGeneratingPdf,
     handleImprimirTitulosSelecionados,
     handleImprimirTodosEmAberto,
     handleImprimirContrato,
