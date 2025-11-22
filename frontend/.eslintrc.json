@@ -1,5 +1,14 @@
 {
   "extends": ["react-app"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
   "rules": {
     // 1. Desabilitar no-unused-vars padrão porque @typescript-eslint/no-unused-vars já cobre
     "no-unused-vars": "off",
