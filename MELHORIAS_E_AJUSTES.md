@@ -23,8 +23,12 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 **Solução Implementada:**
 - ✅ Otimizado `RoutineExecutionService.executeGeracaoTitulos()`:
   - Busca todos os títulos de uma vez antes do loop sobre contratos
-  - Agrupa títulos por `contrato_id` em Maps para acesso O(1)
-  - Elimina 2 queries por contrato (de N*2 para 2 queries totais)
+  - Busca todas as configurações de `DiasVencimento` de uma vez
+  - Busca todos os `ContratoPlanoAdicional` de uma vez
+  - Agrupa dados por IDs em Maps para acesso O(1)
+  - Elimina 3 queries por contrato (de N*3 para 4 queries totais)
+  - Remove `findByPk` de `DiasVencimento` dentro do loop
+  - Remove `findAll` de `ContratoPlanoAdicional` dentro de `calculateValorTitulo`
 - ✅ Otimizado `TituloPDFController.gerarPdfBoletosMultiplos()`:
   - Garantido que relações são sempre carregadas na query inicial com `required: false`
   - Removida verificação que causava `findByPk` dentro do loop
