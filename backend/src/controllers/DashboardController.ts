@@ -161,9 +161,10 @@ export class DashboardController {
       };
 
       // Log para debug: verificar datas sendo enviadas
-      if (titulosRecentes.length > 0) {
-        const primeiroTitulo = titulosRecentes[0];
-        logger.info('DEBUG - DashboardController.getDashboardData - Datas sendo enviadas:', {
+      // Log dos títulos do período (que têm estrutura completa)
+      if (titulosPeriodo.length > 0) {
+        const primeiroTitulo = titulosPeriodo[0];
+        logger.info('DEBUG - DashboardController.getDashboardData - Datas sendo enviadas (titulosPeriodo):', {
           titulo_id: primeiroTitulo.id,
           data_vencimento_raw: primeiroTitulo.data_vencimento,
           data_vencimento_type: typeof primeiroTitulo.data_vencimento,
@@ -171,6 +172,13 @@ export class DashboardController {
           created_at_raw: primeiroTitulo.created_at,
           created_at_type: typeof primeiroTitulo.created_at,
           created_at_toISO: primeiroTitulo.created_at ? new Date(primeiroTitulo.created_at).toISOString() : null,
+        });
+      }
+      
+      // Log dos títulos recentes (estrutura transformada)
+      if (titulosRecentes.length > 0) {
+        logger.info('DEBUG - DashboardController.getDashboardData - titulosRecentes (transformado):', {
+          primeiro_item: titulosRecentes[0],
         });
       }
 
