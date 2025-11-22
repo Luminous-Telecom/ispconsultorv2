@@ -18,7 +18,8 @@ const sequelize = new Sequelize({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   logging: false,
-  timezone: '-03:00', // Fuso horário de Brasília (GMT-3)
+  timezone: '+00:00', // Usar UTC para evitar conversões indesejadas
+  // As datas são criadas e salvas como estão, sem conversão de timezone
   pool: {
     max: 10,
     min: 0,

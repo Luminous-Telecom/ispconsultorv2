@@ -1761,7 +1761,12 @@ export class TituloController {
         return;
       }
 
-      await titulo.marcarComoPago(valor_pago, data_pagamento ? new Date(data_pagamento) : undefined);
+      // Normalizar data de pagamento (o método marcarComoPago já faz toda a lógica)
+      const dataPagamentoNormalizada = data_pagamento 
+        ? (typeof data_pagamento === 'string' ? new Date(data_pagamento) : data_pagamento)
+        : undefined;
+      
+      await titulo.marcarComoPago(valor_pago, dataPagamentoNormalizada);
 
       res.json({
         success: true,

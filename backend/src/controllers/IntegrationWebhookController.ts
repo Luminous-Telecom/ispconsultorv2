@@ -1082,7 +1082,7 @@ export class IntegrationWebhookController {
           } else if (normalizedField === 'status') {
             filteredData.status = tituloData.status;
           } else if (normalizedField === 'data_vencimento') {
-            filteredData.data_vencimento = IntegrationWebhookController.formatDate(tituloData.data_vencimento);
+            filteredData.data_vencimento = IntegrationWebhookController.formatDate(tituloData.data_vencimento as string | Date | null | undefined);
           }
         }
 
@@ -1101,9 +1101,9 @@ export class IntegrationWebhookController {
           data: {
             id: tituloData.id,
             numero_titulo: tituloData.numero_titulo,
-            valor: IntegrationWebhookController.parseNumber(tituloData.valor),
+            valor: IntegrationWebhookController.parseNumber(tituloData.valor as string | number | null | undefined),
             status: tituloData.status,
-            data_vencimento: IntegrationWebhookController.formatDate(tituloData.data_vencimento),
+            data_vencimento: IntegrationWebhookController.formatDate(tituloData.data_vencimento as string | Date | null | undefined),
             qrcode: tituloData.qrcode,
             linha_digitavel: tituloData.linha_digitavel,
             codigo_barras: tituloData.codigo_barras,

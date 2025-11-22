@@ -32,6 +32,7 @@ import { useContratoPlanosAdicionais, useDeleteContratoPlanoAdicional } from '..
 import { ContratoPlanoAdicional } from '../../../../services/contratoPlanoAdicionalService';
 import { ensureString } from '../../../../utils/stringUtils';
 import { BulkAction } from './types';
+import { formatDate } from '../../../../utils/formatters';
 
 interface ContratoModalProps {
   show: boolean;
@@ -817,7 +818,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Data Pagamento',
       sortable: true,
       searchable: false,
-      render: (item: Titulo) => item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : '-'
+      render: (item: Titulo) => {
+        // Usar data_pagamento_formatada se disponível (vem do backend já formatada com hora)
+        if (item.data_pagamento_formatada) {
+          return item.data_pagamento_formatada;
+        }
+        // Fallback para formatDate se não tiver formato do backend
+        return item.data_pagamento ? formatDate(item.data_pagamento) : '-';
+      }
     },
     { 
       key: 'charge_id', 

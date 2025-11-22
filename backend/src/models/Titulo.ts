@@ -7,7 +7,8 @@ import {
   BelongsToGetAssociationMixin,
   BelongsToSetAssociationMixin,
   BelongsToCreateAssociationMixin,
-  Op
+  Op,
+  Sequelize
 } from 'sequelize';
 import { sequelize } from '../config/database';
 import { logger } from '../utils/logger';
@@ -119,44 +120,53 @@ export class Titulo extends Model<
     });
   }
 
-  async marcarComoPago(valorPago?: number, dataPagamento?: Date): Promise<void> {
+  async marcarComoPago(valorPago?: number, dataPagamento?: Date, skipLiquidacaoBanco: boolean = false): Promise<void> {
     const valor = valorPago || this.valor;
-    const data = dataPagamento || new Date();
+    const agora = new Date();
+    
+    // Normalizar data de pagamento
+    let data: Date;
+    if (dataPagamento) {
+      const dp = new Date(dataPagamento);
+      // Se for meia-noite, usar hora atual
+      if (dp.getHours() === 0 && dp.getMinutes() === 0 && dp.getSeconds() === 0 && dp.getMilliseconds() === 0) {
+        data = new Date(dp.getFullYear(), dp.getMonth(), dp.getDate(), agora.getHours(), agora.getMinutes(), agora.getSeconds(), agora.getMilliseconds());
+      } else {
+        data = new Date(dp.getFullYear(), dp.getMonth(), dp.getDate(), dp.getHours(), dp.getMinutes(), dp.getSeconds(), dp.getMilliseconds());
+      }
+    } else {
+      data = new Date(agora);
+    }
+    
     const valorTotal = Number(this.valor);
     const valorPagoNum = Number(valor);
     
-    // Determinar status baseado no valor pago e data de pagamento
+    // Determinar status
     let novoStatus: 'pago' | 'parcial' | 'pago_atraso';
     let valorAberto: number | null = null;
     let estaPago = false;
     
-    // Verificar se é pagamento parcial
     if (valorPagoNum < valorTotal) {
       novoStatus = 'parcial';
       valorAberto = valorTotal - valorPagoNum;
       estaPago = false;
     } else {
-      // Pagamento total - verificar se foi em atraso
-      const dataVencimento = new Date(this.data_vencimento);
-      const dataPagamentoDate = new Date(data);
+      const vencDia = new Date(this.data_vencimento);
+      vencDia.setHours(0, 0, 0, 0);
+      const pagDia = new Date(data);
+      pagDia.setHours(0, 0, 0, 0);
       
-      // Comparar apenas as datas (sem horário) para determinar se foi pago em dia
-      const dataVencimentoSemHora = new Date(dataVencimento.getFullYear(), dataVencimento.getMonth(), dataVencimento.getDate());
-      const dataPagamentoSemHora = new Date(dataPagamentoDate.getFullYear(), dataPagamentoDate.getMonth(), dataPagamentoDate.getDate());
-      
-      if (dataPagamentoSemHora > dataVencimentoSemHora) {
-        novoStatus = 'pago_atraso';
-      } else {
-        novoStatus = 'pago';
-      }
+      novoStatus = pagDia > vencDia ? 'pago_atraso' : 'pago';
       estaPago = true;
       valorAberto = null;
     }
     
-    // Atualizar no banco de dados local
+    // Formatar data para salvar no banco
+    const dataFormatada = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')} ${String(data.getHours()).padStart(2, '0')}:${String(data.getMinutes()).padStart(2, '0')}:${String(data.getSeconds()).padStart(2, '0')}.${String(data.getMilliseconds()).padStart(3, '0')}`;
+    
     await this.update({
       pago: estaPago,
-      data_pagamento: data,
+      data_pagamento: Sequelize.literal(`'${dataFormatada}'`) as unknown as Date,
       valor_pago: valor,
       valor_aberto: valorAberto,
       status: novoStatus
@@ -171,8 +181,9 @@ export class Titulo extends Model<
       }
     }
 
-    // Integrar com banco externo se tiver charge_id
-    if (this.charge_id) {
+    // Integrar com banco externo se tiver charge_id e não for pagamento via webhook
+    // (webhooks já indicam que o banco sabe do pagamento, não precisa liquidar novamente)
+    if (this.charge_id && !skipLiquidacaoBanco) {
       try {
         logger.info('Iniciando liquidação no banco externo', {
           titulo_id: this.id,
@@ -354,7 +365,59 @@ export class Titulo extends Model<
     // Atualizar o campo nosso_numero
     await this.update({ nosso_numero: nossoNumero });
     
-    return nossoNumero;
+      return nossoNumero;
+    }
+
+  /**
+   * Formata data de pagamento para exibição (lê exatamente como está no banco)
+   * Usa componentes UTC do Date para preservar o valor original do banco
+   */
+  getDataPagamentoFormatada(): string | null {
+    if (!this.data_pagamento) return null;
+    
+    try {
+      const dateValue = this.getDataValue('data_pagamento');
+      if (!dateValue) return null;
+      
+      // Se for string, formatar diretamente
+      if (typeof dateValue === 'string') {
+        const dateStr = String(dateValue);
+        const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
+        if (match) {
+          const [, year, month, day, hour, minute, second] = match;
+          return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+        }
+        return null;
+      }
+      
+      // Se for Date, usar componentes UTC (preserva valor do banco)
+      if (dateValue instanceof Date) {
+        const day = String(dateValue.getUTCDate()).padStart(2, '0');
+        const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
+        const year = dateValue.getUTCFullYear();
+        const hour = String(dateValue.getUTCHours()).padStart(2, '0');
+        const minute = String(dateValue.getUTCMinutes()).padStart(2, '0');
+        const second = String(dateValue.getUTCSeconds()).padStart(2, '0');
+        
+        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+      }
+      
+      return null;
+    } catch (error) {
+      logger.error('Erro ao formatar data de pagamento', { 
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Sobrescrever toJSON para incluir data_pagamento_formatada
+   */
+  toJSON(): Record<string, unknown> {
+    const json = this.get({ plain: true }) as Record<string, unknown>;
+    json.data_pagamento_formatada = this.getDataPagamentoFormatada();
+    return json;
   }
 
   async getResumo(): Promise<{

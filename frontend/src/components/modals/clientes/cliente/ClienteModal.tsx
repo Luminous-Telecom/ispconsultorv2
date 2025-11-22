@@ -842,6 +842,11 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       sortable: true,
       searchable: false,
       render: (item: CarneParcela) => {
+        // Usar data_pagamento_formatada se disponível (vem do backend já formatada com hora)
+        if (item.data_pagamento_formatada) {
+          return item.data_pagamento_formatada;
+        }
+        // Fallback para formatDate se não tiver formato do backend
         return item.data_pagamento ? formatDate(item.data_pagamento) : '-';
       }
     },

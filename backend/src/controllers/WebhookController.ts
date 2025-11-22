@@ -92,6 +92,9 @@ interface TituloWithBanco {
 }
 
 export class WebhookController {
+  /**
+   * Normaliza data removendo hora (apenas para data de vencimento)
+   */
   private static normalizeDate(value: string | Date | null | undefined): Date | null {
     if (!value) return null;
     
@@ -110,6 +113,20 @@ export class WebhookController {
     }
     
     return null;
+  }
+
+  /**
+   * Normaliza data de pagamento preservando hora (para webhooks)
+   */
+  private static normalizePaymentDate(value: string | Date | null | undefined): Date | null {
+    if (!value) return null;
+    
+    if (typeof value === 'string') {
+      const date = new Date(value);
+      return !isNaN(date.getTime()) ? date : null;
+    }
+    
+    return value instanceof Date ? value : null;
   }
 
   /**
@@ -621,11 +638,22 @@ export class WebhookController {
 
       
       if (isPago && !titulo.pago) {
-        const dataWebhook = dadosCompletos?.created_at?.split(' ')[0];
-        updateData.data_pagamento = dataWebhook && /^\d{4}-\d{2}-\d{2}$/.test(dataWebhook) 
-          ? dataWebhook 
-          : new Date().toISOString().split('T')[0];
-        updateData.valor_pago = titulo.valor;
+        // Buscar data de pagamento do webhook (com hora se disponível)
+        // Tentar created_at completo primeiro (pode ter hora), depois paid_at, depois confirm_at
+        const dataPagamentoWebhook = dadosCompletos?.created_at 
+          || (dadosCompletos as any)?.paid_at 
+          || (dadosCompletos as any)?.confirmed_at
+          || (dadosCompletos as any)?.payment_date;
+        
+        // Normalizar data de pagamento preservando hora
+        const dataPagamentoNormalizada = dataPagamentoWebhook 
+          ? WebhookController.normalizePaymentDate(dataPagamentoWebhook)
+          : new Date();
+        
+        // Usar método marcarComoPago para garantir lógica consistente
+        // skipLiquidacaoBanco = true pois o webhook já indica que o banco sabe do pagamento
+        await titulo.marcarComoPago(titulo.valor, dataPagamentoNormalizada || undefined, true);
+        // Não adicionar data_pagamento e valor_pago ao updateData, pois já foi salvo pelo marcarComoPago
       }
       
       if (!isPago && titulo.pago) {
@@ -1005,9 +1033,23 @@ export class WebhookController {
           : undefined;
 
       if (novoStatus === 'pago') {
-        updates.data_pagamento = paymentDate ? WebhookController.normalizeDate(paymentDate) || new Date() : new Date();
-        updates.valor_pago = typeof payment.value === 'number' ? Number(payment.value) : 
-                             typeof payment.netValue === 'number' ? Number(payment.netValue) : undefined;
+        // Normalizar data de pagamento preservando hora
+        const dataPagamentoNormalizada = paymentDate 
+          ? WebhookController.normalizePaymentDate(paymentDate)
+          : new Date();
+        
+        const valorPago = typeof payment.value === 'number' ? Number(payment.value) : 
+                          typeof payment.netValue === 'number' ? Number(payment.netValue) : 
+                          titulo.valor;
+        
+        // Usar método marcarComoPago para garantir lógica consistente
+        // skipLiquidacaoBanco = true pois o webhook já indica que o banco sabe do pagamento
+        await titulo.marcarComoPago(valorPago, dataPagamentoNormalizada || undefined, true);
+        
+        // Não adicionar data_pagamento e valor_pago ao updates, pois já foi salvo pelo marcarComoPago
+        // Apenas atualizar status se necessário
+        delete updates.data_pagamento;
+        delete updates.valor_pago;
       }
 
       if (typeof payment.nossoNumero === 'string') {

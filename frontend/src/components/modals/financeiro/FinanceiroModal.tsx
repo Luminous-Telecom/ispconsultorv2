@@ -274,7 +274,14 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Pagamento',
       sortable: true,
       searchable: false,
-      render: (item: Titulo) => formatDate(item.data_pagamento)
+      render: (item: Titulo) => {
+        // Usar data_pagamento_formatada se disponível (vem do backend já formatada)
+        if (item.data_pagamento_formatada) {
+          return item.data_pagamento_formatada;
+        }
+        // Fallback para formatDate se não tiver formato do backend
+        return item.data_pagamento ? formatDate(item.data_pagamento) : '-';
+      }
     },
     {
       key: 'status',
