@@ -412,11 +412,53 @@ export class Titulo extends Model<
   }
 
   /**
-   * Sobrescrever toJSON para incluir data_pagamento_formatada
+   * Formata created_at para exibição (sem conversão de timezone)
+   */
+  getCreatedAtFormatada(): string | null {
+    if (!this.created_at) return null;
+    
+    try {
+      const dateValue: unknown = this.getDataValue('created_at');
+      if (!dateValue) return null;
+      
+      // Se for string, extrair componentes diretamente
+      if (typeof dateValue === 'string') {
+        const match = dateValue.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
+        if (match) {
+          const [, year, month, day, hour, minute, second] = match;
+          return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+        }
+        return null;
+      }
+      
+      // Se for Date, usar componentes locais (já convertido pelo Sequelize)
+      if (dateValue instanceof Date) {
+        const day = String(dateValue.getDate()).padStart(2, '0');
+        const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+        const year = dateValue.getFullYear();
+        const hour = String(dateValue.getHours()).padStart(2, '0');
+        const minute = String(dateValue.getMinutes()).padStart(2, '0');
+        const second = String(dateValue.getSeconds()).padStart(2, '0');
+        
+        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+      }
+      
+      return null;
+    } catch (error) {
+      logger.error('Erro ao formatar created_at', { 
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Sobrescrever toJSON para incluir data_pagamento_formatada e created_at_formatada
    */
   toJSON(): Record<string, unknown> {
     const json = this.get({ plain: true }) as Record<string, unknown>;
     json.data_pagamento_formatada = this.getDataPagamentoFormatada();
+    json.created_at_formatada = this.getCreatedAtFormatada();
     return json;
   }
 

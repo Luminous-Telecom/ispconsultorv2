@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 import type { JsonValue } from '../types';
+import { formatCreatedAt } from '../utils/dateUtils';
 
 export interface ScheduledRoutineAttributes {
   id: number;
@@ -44,6 +45,23 @@ export class ScheduledRoutine extends Model<ScheduledRoutineAttributes, Schedule
   public execucoes_com_erro!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
+
+  /**
+   * Formata created_at para exibição (sem conversão de timezone)
+   */
+  getCreatedAtFormatada(): string | null {
+    if (!this.created_at) return null;
+    return formatCreatedAt(this.getDataValue('created_at'));
+  }
+
+  /**
+   * Sobrescrever toJSON para incluir created_at_formatada
+   */
+  toJSON(): Record<string, unknown> {
+    const json = this.get({ plain: true }) as unknown as Record<string, unknown>;
+    json.created_at_formatada = this.getCreatedAtFormatada();
+    return json;
+  }
 }
 
 ScheduledRoutine.init({

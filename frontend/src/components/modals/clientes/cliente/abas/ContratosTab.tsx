@@ -2,6 +2,7 @@ import React from 'react';
 import Table from '../../../../tables/Table';
 import { Contrato } from '../../../../../hooks/useContratos';
 import { ContratosTabProps } from '../types';
+import { formatDateTime } from '../../../../../utils/formatters';
 
 const ContratosTab: React.FC<ContratosTabProps> = ({
   isLoadingContratos,
@@ -121,6 +122,20 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
                 sortable: true, 
                 searchable: true,
                 render: (contrato: Contrato & { banco_nome?: string }) => contrato.bancoBoleto?.nome || contrato.banco_nome || '-' 
+              },
+              {
+                key: 'created_at',
+                label: 'Criado em',
+                sortable: true,
+                searchable: false,
+                render: (contrato: Contrato & { created_at?: string; created_at_formatada?: string | null }) => {
+                  // Usar created_at_formatada se disponível (vem do backend já formatada)
+                  if (contrato.created_at_formatada) {
+                    return contrato.created_at_formatada;
+                  }
+                  // Fallback para formatDateTime se não tiver formato do backend
+                  return contrato.created_at ? formatDateTime(contrato.created_at) : '-';
+                }
               }
             ],
             data: (sortedContratosData || []).map((contrato: Contrato) => ({

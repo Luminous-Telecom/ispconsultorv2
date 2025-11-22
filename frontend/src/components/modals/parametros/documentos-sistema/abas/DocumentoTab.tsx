@@ -10,6 +10,7 @@ import ModeloReciboService from '../../../../../services/modeloReciboService';
 import ModeloCartaService from '../../../../../services/modeloCartaService';
 import ModeloTermoService from '../../../../../services/modeloTermoService';
 import { DocumentoTabProps } from '../types';
+import { formatDateTime } from '../../../../../utils/formatters';
 
 const DocumentoTab: React.FC<DocumentoTabProps> = ({
   tipo,
@@ -140,7 +141,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
         try {
           return (
             <span className="text-secondary">
-              {new Date(item.created_at).toLocaleString('pt-BR')}
+              {formatDateTime(item.created_at)}
             </span>
           );
         } catch {

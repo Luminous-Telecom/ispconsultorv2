@@ -54,3 +54,39 @@ export function parseDateFromDb(dateInput: string | Date | null | undefined): Da
 
   return new Date(dateInput);
 }
+
+/**
+ * Formata created_at para exibição (sem conversão de timezone)
+ * Função utilitária para ser usada nos modelos
+ */
+export function formatCreatedAt(dateValue: unknown): string | null {
+  if (!dateValue) return null;
+  
+  try {
+    // Se for string, extrair componentes diretamente
+    if (typeof dateValue === 'string') {
+      const match = dateValue.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
+      if (match) {
+        const [, year, month, day, hour, minute, second] = match;
+        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+      }
+      return null;
+    }
+    
+    // Se for Date, usar componentes locais (já convertido pelo Sequelize)
+    if (dateValue instanceof Date) {
+      const day = String(dateValue.getDate()).padStart(2, '0');
+      const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+      const year = dateValue.getFullYear();
+      const hour = String(dateValue.getHours()).padStart(2, '0');
+      const minute = String(dateValue.getMinutes()).padStart(2, '0');
+      const second = String(dateValue.getSeconds()).padStart(2, '0');
+      
+      return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+}

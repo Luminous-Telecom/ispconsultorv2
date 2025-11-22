@@ -24,6 +24,7 @@ import { Plano } from './Plano';
 import { Banco } from './Banco';
 import { TermoContrato } from './TermoContrato';
 import { ModeloDocumento } from './ModeloDocumento';
+import { formatCreatedAt } from '../utils/dateUtils';
 
 export class Contrato extends Model<
   InferAttributes<Contrato>,
@@ -153,6 +154,23 @@ export class Contrato extends Model<
       assinado: assinado,
       ativo: true
     });
+  }
+
+  /**
+   * Formata created_at para exibição (sem conversão de timezone)
+   */
+  getCreatedAtFormatada(): string | null {
+    if (!this.created_at) return null;
+    return formatCreatedAt(this.getDataValue('created_at'));
+  }
+
+  /**
+   * Sobrescrever toJSON para incluir created_at_formatada
+   */
+  toJSON(): Record<string, unknown> {
+    const json = this.get({ plain: true }) as Record<string, unknown>;
+    json.created_at_formatada = this.getCreatedAtFormatada();
+    return json;
   }
 }
 

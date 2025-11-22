@@ -90,8 +90,14 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         key: 'created_at',
         label: 'Criado em',
         sortable: true,
-        render: (item: RotinaAgendada & { created_at?: string }) => 
-          item.created_at ? formatDateTime(item.created_at) : '-'
+        render: (item: RotinaAgendada & { created_at?: string; created_at_formatada?: string | null }) => {
+          // Usar created_at_formatada se disponível (vem do backend já formatada)
+          if (item.created_at_formatada) {
+            return item.created_at_formatada;
+          }
+          // Fallback para formatDateTime se não tiver formato do backend
+          return item.created_at ? formatDateTime(item.created_at) : '-';
+        }
       }
     ],
     searchPlaceholder: 'Buscar por tipo ou descrição...',

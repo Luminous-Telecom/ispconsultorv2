@@ -19,6 +19,7 @@ import { sequelize } from '../config/database';
 import { Cliente } from './Cliente';
 import { Contrato } from './Contrato';
 import { Titulo } from './Titulo';
+import { formatCreatedAt } from '../utils/dateUtils';
 
 export class Plano extends Model<
   InferAttributes<Plano>,
@@ -77,6 +78,23 @@ export class Plano extends Model<
   declare hasContratos: HasManyHasAssociationsMixin<Contrato, number>;
   declare countContratos: HasManyCountAssociationsMixin;
   declare createContrato: HasManyCreateAssociationMixin<Contrato>;
+
+  /**
+   * Formata created_at para exibição (sem conversão de timezone)
+   */
+  getCreatedAtFormatada(): string | null {
+    if (!this.created_at) return null;
+    return formatCreatedAt(this.getDataValue('created_at'));
+  }
+
+  /**
+   * Sobrescrever toJSON para incluir created_at_formatada
+   */
+  toJSON(): Record<string, unknown> {
+    const json = this.get({ plain: true }) as Record<string, unknown>;
+    json.created_at_formatada = this.getCreatedAtFormatada();
+    return json;
+  }
 
   // Métodos de instância
   static async findAtivos(): Promise<Plano[]> {

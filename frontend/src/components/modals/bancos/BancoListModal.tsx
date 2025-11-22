@@ -5,6 +5,7 @@ import { useListModal } from '../../../hooks/useListModal';
 import ListModal from '../../common/ListModal';
 import BancoModal from './BancoModal';
 import { Banco } from '../../../types';
+import { formatDateTime } from '../../../utils/formatters';
 interface BancoListModalProps {
   show: boolean;
   onClose: () => void;
@@ -100,8 +101,14 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         key: 'created_at',
         label: 'Criado em',
         sortable: true,
-        render: (item: Banco & { created_at?: string }) => 
-          item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'
+        render: (item: Banco & { created_at?: string; created_at_formatada?: string | null }) => {
+          // Usar created_at_formatada se disponível (vem do backend já formatada)
+          if (item.created_at_formatada) {
+            return item.created_at_formatada;
+          }
+          // Fallback para formatDateTime se não tiver formato do backend
+          return item.created_at ? formatDateTime(item.created_at) : '-';
+        }
       }
     ],
     searchPlaceholder: 'Buscar por nome do banco...',

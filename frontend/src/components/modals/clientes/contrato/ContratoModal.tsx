@@ -846,7 +846,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       label: 'Criado em',
       sortable: true,
       searchable: false,
-      render: (item: Titulo) => item.created_at ? formatDateTime(item.created_at) : '-'
+      render: (item: Titulo) => {
+        // Usar created_at_formatada se disponível (vem do backend já formatada)
+        if (item.created_at_formatada) {
+          return item.created_at_formatada;
+        }
+        // Fallback para formatDateTime se não tiver formato do backend
+        return item.created_at ? formatDateTime(item.created_at) : '-';
+      }
     }
   ];
 

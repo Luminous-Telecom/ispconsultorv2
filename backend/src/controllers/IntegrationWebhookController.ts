@@ -702,7 +702,7 @@ export class IntegrationWebhookController {
     logger.info('Clientes encontrados', { total: totalClientes, retornados: clientes.length });
 
     const clientesFormatados = clientes.map((cliente) => {
-      const raw = cliente.toJSON() as ClienteWithAssociations;
+      const raw = cliente.toJSON() as unknown as ClienteWithAssociations;
 
       const planos = (raw.planos ?? []).map((plano) => ({
         id: plano.id,

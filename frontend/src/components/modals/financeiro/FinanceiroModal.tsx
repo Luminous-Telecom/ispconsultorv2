@@ -11,6 +11,7 @@ import { TituloService } from '../../../services/tituloService';
 import { TituloModal } from '../titulos';
 import ReceberModal from '../pagamentos/ReceberModal';
 import ImprimirModal from '../../common/ImprimirModal';
+import { formatDateTime } from '../../../utils/formatters';
 
 interface FinanceiroModalProps {
   show: boolean;
@@ -147,15 +148,6 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     }
   };
 
-  const formatDateTime = (dateString: string | Date | null | undefined): string => {
-    if (!dateString) return '-';
-    try {
-      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-      return date.toLocaleString('pt-BR');
-    } catch {
-      return '-';
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; className: string }> = {
@@ -328,7 +320,14 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       label: 'Criado em',
       sortable: true,
       searchable: false,
-      render: (item: Titulo) => item.created_at ? formatDateTime(item.created_at) : '-'
+      render: (item: Titulo) => {
+        // Usar created_at_formatada se disponível (vem do backend já formatada)
+        if (item.created_at_formatada) {
+          return item.created_at_formatada;
+        }
+        // Fallback para formatDateTime se não tiver formato do backend
+        return item.created_at ? formatDateTime(item.created_at) : '-';
+      }
     }
   ];
 

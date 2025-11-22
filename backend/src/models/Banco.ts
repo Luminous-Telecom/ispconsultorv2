@@ -21,6 +21,7 @@ import {
 import { sequelize } from '../config/database';
 import { Cliente } from './Cliente';
 import { Titulo } from './Titulo';
+import { formatCreatedAt } from '../utils/dateUtils';
 
 interface DadosTesteConexao {
   sandbox: boolean;
@@ -102,6 +103,14 @@ export class Banco extends Model<
 
 
 
+  /**
+   * Formata created_at para exibição (sem conversão de timezone)
+   */
+  getCreatedAtFormatada(): string | null {
+    if (!this.created_at) return null;
+    return formatCreatedAt(this.getDataValue('created_at'));
+  }
+
   toJSON(): Record<string, unknown> {
     const {
       api_key: _apiKey,
@@ -115,7 +124,8 @@ export class Banco extends Model<
       api_key: this.getDataValue('api_key'),
       has_api_key: !!this.getDataValue('api_key'),
       has_api_secret: !!this.getDataValue('api_secret'),
-      has_client_secret_producao: !!this.getDataValue('client_secret_producao')
+      has_client_secret_producao: !!this.getDataValue('client_secret_producao'),
+      created_at_formatada: this.getCreatedAtFormatada()
     };
   }
 

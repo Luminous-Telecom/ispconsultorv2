@@ -10,6 +10,7 @@ import ContratoModal from '../clientes/contrato/ContratoModal';
 import { AxiosError } from 'axios';
 import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import ImprimirModal from '../../common/ImprimirModal';
+import { formatDateTime } from '../../../utils/formatters';
 
 interface ContratoListModalProps {
   show: boolean;
@@ -227,8 +228,14 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       label: 'Criado em',
       sortable: true,
       searchable: false,
-      render: (item: Contrato & { created_at?: string }) => 
-        item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'
+      render: (item: Contrato & { created_at?: string; created_at_formatada?: string | null }) => {
+        // Usar created_at_formatada se disponível (vem do backend já formatada)
+        if (item.created_at_formatada) {
+          return item.created_at_formatada;
+        }
+        // Fallback para formatDateTime se não tiver formato do backend
+        return item.created_at ? formatDateTime(item.created_at) : '-';
+      }
     }
   ];
 

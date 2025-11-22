@@ -35,6 +35,7 @@ export interface Cliente {
   conta_boleto?: number;
   data_validade_desconto?: string;
   created_at?: string;
+  created_at_formatada?: string | null;
   updated_at?: string;
   
   // Relacionamentos
@@ -65,6 +66,7 @@ export interface Plano {
   data_fim?: string;
   observacoes?: string;
   created_at: string;
+  created_at_formatada?: string | null;
   updated_at?: string;
   quantidade_clientes?: number; // Quantidade de clientes associados ao plano
   clientes?: Cliente[]; // Lista de clientes associados (quando incluído no backend)
@@ -87,6 +89,7 @@ export interface Titulo {
   data_vencimento: string;
   data_pagamento?: string;
   data_pagamento_formatada?: string | null;
+  created_at_formatada?: string | null;
   status: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'parcial' | 'pago_atraso';
   pago: boolean;
   desconto_percentual?: number;
@@ -141,6 +144,7 @@ export interface Contrato {
   data_validade_desconto?: string;
   modelo_documento_id?: number;
   created_at: string;
+  created_at_formatada?: string | null;
   updated_at?: string;
   
   // Relacionamentos
@@ -198,8 +202,6 @@ export interface Banco {
   instrucao_linha_5?: string;
   configuracoes_json?: Record<string, unknown>;
   logo?: string;
-  created_at?: string;
-  updated_at?: string;
   
   // Relacionamentos
   clientes?: Cliente[];
@@ -298,6 +300,7 @@ export interface DadosEmpresa {
   estado?: string;
   logo?: string;
   created_at?: string;
+  created_at_formatada?: string | null;
   updated_at?: string;
 }
 
@@ -319,6 +322,7 @@ export interface ModeloDocumento {
   auto_backup: boolean;
   criptografia: boolean;
   created_at?: string;
+  created_at_formatada?: string | null;
   updated_at?: string;
 }
 
@@ -416,6 +420,7 @@ export interface RotinaAgendada {
   execucoes_com_sucesso: number;
   execucoes_com_erro: number;
   created_at: string;
+  created_at_formatada?: string | null;
 }
 
 export interface RoutineExecutionLog {
@@ -453,6 +458,7 @@ export interface Usuario {
   ultimo_login?: string | null;
   webhook_secret?: string | null;
   created_at?: string;
+  created_at_formatada?: string | null;
   updated_at?: string;
 }
 

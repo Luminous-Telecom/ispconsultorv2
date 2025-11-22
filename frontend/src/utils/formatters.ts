@@ -41,6 +41,7 @@ export const formatDate = (date: string | Date): string => {
 
 /**
  * Formata uma data e hora para o padrão brasileiro
+ * Extrai diretamente da string ISO sem conversão de timezone
  * @param date - Data como string ou objeto Date
  * @returns String formatada como dd/mm/aaaa hh:mm:ss
  */
@@ -49,19 +50,33 @@ export const formatDateTime = (date: string | Date): string => {
   
   try {
     if (typeof date === 'string') {
+      // Extrair diretamente da string ISO sem conversão de timezone
+      // Suporta formatos: "2025-11-22T01:36:41.000Z" ou "2025-11-22 01:36:41"
       const match = date.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})/);
       if (match) {
         const [, year, month, day, hour, minute, second] = match;
         return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
       }
+      // Se não encontrou padrão, tentar criar Date e usar UTC
+      const d = new Date(date);
+      if (!isNaN(d.getTime())) {
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const year = d.getUTCFullYear();
+        const hour = String(d.getUTCHours()).padStart(2, '0');
+        const minute = String(d.getUTCMinutes()).padStart(2, '0');
+        const second = String(d.getUTCSeconds()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
+      }
       return '-';
     } else {
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      const hour = String(date.getHours()).padStart(2, '0');
-      const minute = String(date.getMinutes()).padStart(2, '0');
-      const second = String(date.getSeconds()).padStart(2, '0');
+      // Se for Date object, usar componentes UTC para preservar valor do banco
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const year = date.getUTCFullYear();
+      const hour = String(date.getUTCHours()).padStart(2, '0');
+      const minute = String(date.getUTCMinutes()).padStart(2, '0');
+      const second = String(date.getUTCSeconds()).padStart(2, '0');
       return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
     }
   } catch {

@@ -4,6 +4,7 @@ import { useModalSelect } from '../../../hooks/useModalSelect';
 import { useListModal } from '../../../hooks/useListModal';
 import ListModal from '../../common/ListModal';
 import ClienteModal from './cliente/ClienteModal';
+import { formatDateTime } from '../../../utils/formatters';
 
 interface Cliente {
   id: number;
@@ -114,8 +115,14 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         key: 'created_at',
         label: 'Criado em',
         sortable: true,
-        render: (item: Cliente & { created_at?: string }) => 
-          item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'
+        render: (item: Cliente & { created_at?: string; created_at_formatada?: string | null }) => {
+          // Usar created_at_formatada se disponível (vem do backend já formatada)
+          if (item.created_at_formatada) {
+            return item.created_at_formatada;
+          }
+          // Fallback para formatDateTime se não tiver formato do backend
+          return item.created_at ? formatDateTime(item.created_at) : '-';
+        }
       }
     ],
     searchPlaceholder: 'Buscar por CNPJ, razão social...',
