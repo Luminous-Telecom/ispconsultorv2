@@ -154,10 +154,6 @@ export class TituloCRUDController {
           type: detail.type,
           context: detail.context
         }));
-        
-        console.log('!!! ERRO DE VALIDAÇÃO DETALHADO !!!');
-        console.log(JSON.stringify(errorDetails, null, 2));
-        console.log('BODY RECEBIDO:', JSON.stringify(req.body, null, 2));
 
         logger.warn('Erro de validação na criação de título', { 
           errors: errorDetails,

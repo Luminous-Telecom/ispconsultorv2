@@ -2,7 +2,6 @@
 
 // Hooks base unificados
 export * from './useApi';
-export * from './useCrud';
 export * from './usePagination';
 export * from './useFilters';
 export * from './useSearch';
