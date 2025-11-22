@@ -1,6 +1,6 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
-import FormField from '../../../../ui/FormField';
+import FormField from '@/components/ui/FormField';
 import { PlanoTabProps } from '../types';
 
 const DescontosConfiguracoesTab: React.FC<PlanoTabProps> = ({
