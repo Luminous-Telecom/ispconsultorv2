@@ -32,7 +32,7 @@ import { useContratoPlanosAdicionais, useDeleteContratoPlanoAdicional } from '..
 import { ContratoPlanoAdicional } from '../../../../services/contratoPlanoAdicionalService';
 import { ensureString } from '../../../../utils/stringUtils';
 import { BulkAction } from './types';
-import { formatDate } from '../../../../utils/formatters';
+import { formatDate, formatDateTime } from '../../../../utils/formatters';
 
 interface ContratoModalProps {
   show: boolean;
@@ -840,6 +840,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       sortable: true,
       searchable: true,
       render: (item: Titulo) => item.nosso_numero || '-' 
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      searchable: false,
+      render: (item: Titulo) => item.created_at ? formatDateTime(item.created_at) : '-'
     }
   ];
 

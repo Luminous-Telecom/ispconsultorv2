@@ -147,6 +147,16 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     }
   };
 
+  const formatDateTime = (dateString: string | Date | null | undefined): string => {
+    if (!dateString) return '-';
+    try {
+      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+      return date.toLocaleString('pt-BR');
+    } catch {
+      return '-';
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; className: string }> = {
       'pendente': { label: 'Pendente', className: 'bg-warning' },
@@ -289,6 +299,13 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       sortable: true,
       searchable: true,
       render: (item: Titulo) => getStatusBadge(item.status)
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      searchable: false,
+      render: (item: Titulo) => item.created_at ? formatDateTime(item.created_at) : '-'
     }
   ];
 

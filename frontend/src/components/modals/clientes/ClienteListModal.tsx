@@ -109,6 +109,13 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
             {item.ativo ? 'Ativo' : 'Inativo'}
           </span>
         )
+      },
+      {
+        key: 'created_at',
+        label: 'Criado em',
+        sortable: true,
+        render: (item: Cliente & { created_at?: string }) => 
+          item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'
       }
     ],
     searchPlaceholder: 'Buscar por CNPJ, razão social...',

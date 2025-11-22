@@ -118,6 +118,13 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
             {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
           </span>
         )
+      },
+      {
+        key: 'created_at',
+        label: 'Criado em',
+        sortable: true,
+        render: (item: Plano & { created_at?: string }) => 
+          item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'
       }
     ],
     searchPlaceholder: 'Buscar por nome do plano...',

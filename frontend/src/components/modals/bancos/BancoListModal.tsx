@@ -95,6 +95,13 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
             {item.ativo ? 'Ativo' : 'Inativo'}
           </span>
         )
+      },
+      {
+        key: 'created_at',
+        label: 'Criado em',
+        sortable: true,
+        render: (item: Banco & { created_at?: string }) => 
+          item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'
       }
     ],
     searchPlaceholder: 'Buscar por nome do banco...',

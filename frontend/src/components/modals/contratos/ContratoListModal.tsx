@@ -221,6 +221,14 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       searchable: false,
       render: (item: Contrato) => 
         item.data_inicio ? new Date(item.data_inicio).toLocaleDateString('pt-BR') : '-'
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      searchable: false,
+      render: (item: Contrato & { created_at?: string }) => 
+        item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'
     }
   ];
 

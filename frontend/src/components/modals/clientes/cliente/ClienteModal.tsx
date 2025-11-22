@@ -17,7 +17,7 @@ import ContratoModal from '../contrato/ContratoModal';
 import { useFormReset } from '../../../../hooks/useFormReset';
 import ConfirmModal from '../../../common/ConfirmModal';
 // Utilitários centralizados
-import { formatCurrency, formatDate, formatCNPJ, formatPhone, formatCEP } from '../../../../utils/formatters';
+import { formatCurrency, formatDate, formatDateTime, formatCNPJ, formatPhone, formatCEP } from '../../../../utils/formatters';
 import { ensureString } from '../../../../utils/stringUtils';
 import { TituloItem } from '../../../../types/cliente';
 import { ClienteFormData, ClienteFormErrors } from '../../../../types';
@@ -865,6 +865,14 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       sortable: true,
       searchable: true,
       render: (item: CarneParcela) => item.nosso_numero || '-'
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      searchable: false,
+      render: (item: CarneParcela & { created_at?: string }) => 
+        item.created_at ? formatDateTime(item.created_at) : '-'
     }
   ];
 
