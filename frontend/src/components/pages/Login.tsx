@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useNotificationContext } from '../../components/notifications/NotificationProvider';
-import { authService } from '../../services/authService';
-import { removeAuthToken } from '../../services/core';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { authService } from '@/services/authService';
+import { removeAuthToken } from '@/services/core';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');

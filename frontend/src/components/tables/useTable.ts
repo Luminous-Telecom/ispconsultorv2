@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { UseTableOptions, UseTableReturn, TableState, TableActions, SortDirection } from './types';
-import { FilterValue } from '../../types/common';
+import { FilterValue } from '@/types/common';
 
 export const useTable = <T extends { id: number | string }>(options: UseTableOptions<T>): UseTableReturn<T> => {
   const {

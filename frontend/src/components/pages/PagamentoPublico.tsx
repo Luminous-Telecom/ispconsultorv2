@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { defaultApiClient } from '../../services/core';
-import { formatDate } from '../../utils/formatters';
+import { defaultApiClient } from '@/services/core';
+import { formatDate } from '@/utils/formatters';
 import './PagamentoPublico.css';
 
 interface TituloPublico {

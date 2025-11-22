@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { TableConfig, TableAction, BulkAction, SortDirection } from './types';
-import { FilterValue } from '../../types/common';
+import { FilterValue } from '@/types/common';
 import { useTable } from './useTable';
 import TableColumn from './TableColumn';
 import TableActions from './TableActions';

@@ -2,13 +2,13 @@ import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import DropdownMenu from '../common/DropdownMenu';
 import { Button } from '../ui';
-import { useDashboardFilters } from '../../contexts/DashboardFiltersContext';
+import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
 import Loading from '../common/Loading';
-import { authService, CurrentUser } from '../../services/authService';
-import { getAuthToken } from '../../services/core';
+import { authService, CurrentUser } from '@/services/authService';
+import { getAuthToken } from '@/services/core';
 
 // Modais com lazy loading (code splitting) - carregados apenas quando necessário
 // Named exports

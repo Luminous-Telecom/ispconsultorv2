@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormValue } from '../../types/common';
+import { FormValue } from '@/types/common';
 import FormField from '../ui/FormField';
 
 interface ContactFieldsProps {

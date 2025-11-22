@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react';
-import { formatDate } from '../../utils/formatters';
-import { useDashboard } from '../../hooks/useDashboard';
-import { useDashboardFilters } from '../../contexts/DashboardFiltersContext';
+import { formatDate } from '@/utils/formatters';
+import { useDashboard } from '@/hooks/useDashboard';
+import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
 import {
   LineChart as RLineChart,
   Line,

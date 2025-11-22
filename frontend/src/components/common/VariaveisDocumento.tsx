@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { API_CONFIG } from '../../config/api';
+import { API_CONFIG } from '@/config/api';
 
 interface Variavel {
   variavel: string;

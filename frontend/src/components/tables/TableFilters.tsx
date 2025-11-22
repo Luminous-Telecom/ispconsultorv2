@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TableFilter } from './types';
-import { FilterValue } from '../../types/common';
+import { FilterValue } from '@/types/common';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';
 

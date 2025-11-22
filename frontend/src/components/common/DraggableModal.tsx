@@ -5,7 +5,7 @@
  */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ReactDOM from 'react-dom';
-import { modalStack } from '../../utils/modalStack';
+import { modalStack } from '@/utils/modalStack';
 
 interface DraggableModalProps {
   show: boolean;

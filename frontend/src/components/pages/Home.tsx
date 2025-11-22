@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { DadosEmpresaService, type DadosEmpresa } from '../../services/dadosEmpresaService';
-import { getBrandLogo } from '../../utils/brandLogos';
-import { useTheme } from '../../contexts/ThemeContext';
+import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaService';
+import { getBrandLogo } from '@/utils/brandLogos';
+import { useTheme } from '@/contexts/ThemeContext';
 import './Home.css';
 
 // Throttle function para otimizar scroll handler

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
-import { API_CONFIG } from '../../config/api';
-import { formatDateTime } from '../../utils/formatters';
+import { API_CONFIG } from '@/config/api';
+import { formatDateTime } from '@/utils/formatters';
 
 interface LogsModalProps {
   show: boolean;

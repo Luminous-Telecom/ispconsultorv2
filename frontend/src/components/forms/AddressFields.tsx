@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { FormValue } from '../../types/common';
+import { FormValue } from '@/types/common';
 import FormField from '../ui/FormField';
-import { ParametrosService } from '../../services/parametrosService';
-import { ClienteService } from '../../services/clienteService';
+import { ParametrosService } from '@/services/parametrosService';
+import { ClienteService } from '@/services/clienteService';
 
 interface AddressFieldsProps {
   prefix?: string;

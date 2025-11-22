@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import DraggableModal from './DraggableModal';
 import { Table } from '../tables';
-import { ListModalProps } from '../../types/modal';
+import { ListModalProps } from '@/types/modal';
 
 function ListModal<T extends { id: number | string }>({
   show,
