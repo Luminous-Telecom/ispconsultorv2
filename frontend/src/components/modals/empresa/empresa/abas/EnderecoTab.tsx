@@ -1,8 +1,8 @@
 import React from 'react';
+import { FormValue } from '@/types/common';
+import { formatCEP } from '@/utils/formatters';
 import { AddressFields } from '../../../../forms';
 import { DadosEmpresaTabProps } from '../types';
-import { FormValue } from '../../../../../types/common';
-import { formatCEP } from '../../../../../utils/formatters';
 
 const EnderecoTab: React.FC<DadosEmpresaTabProps> = ({
   dados,

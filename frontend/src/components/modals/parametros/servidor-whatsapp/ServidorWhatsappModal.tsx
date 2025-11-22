@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import DraggableModal from '../../../common/DraggableModal';
-import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
-import { ServidorWhatsAppService, MensagemWhatsApp } from '../../../../services/servidorWhatsAppService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { ServidorWhatsAppService, MensagemWhatsApp } from '@/services/servidorWhatsAppService';
+import { defaultApiClient } from '@/services/core';
+import DraggableModal from '../../../common/DraggableModal';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
 import TemplatesModal from './TemplatesModal';
-import { defaultApiClient } from '../../../../services/core';
 
 interface GrupoVariaveis {
   titulo: string;

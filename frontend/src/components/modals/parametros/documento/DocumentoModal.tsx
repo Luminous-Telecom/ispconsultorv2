@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+import DocumentoSistemaService from '@/services/documentoSistemaService';
+import ModeloReciboService from '@/services/modeloReciboService';
+import ModeloCartaService from '@/services/modeloCartaService';
+import ModeloTermoService from '@/services/modeloTermoService';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import DraggableModal from '../../../common/DraggableModal';
 import ImprimirModal from '../../../common/ImprimirModal';
-import DocumentoSistemaService from '../../../../services/documentoSistemaService';
-import ModeloReciboService from '../../../../services/modeloReciboService';
-import ModeloCartaService from '../../../../services/modeloCartaService';
-import ModeloTermoService from '../../../../services/modeloTermoService';
-import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import FormField from '../../../ui/FormField';
 import EntitySelectField from '../../../ui/EntitySelectField';
 import { DocumentoForm, DocumentoModalProps, DocumentoUnion } from './types';

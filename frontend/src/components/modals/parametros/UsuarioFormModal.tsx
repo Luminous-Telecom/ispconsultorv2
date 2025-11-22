@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { UsuarioService } from '../../../services/usuarioService';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
+import { UsuarioService } from '@/services/usuarioService';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useFormReset } from '@/hooks/useFormReset';
+import { useUsuario, useGerarWebhookSecret } from '@/hooks/useUsuarios';
 import DraggableModal from '../../common/DraggableModal';
-import { useFormReset } from '../../../hooks/useFormReset';
 import FormField from '../../ui/FormField';
-import { useUsuario, useGerarWebhookSecret } from '../../../hooks/useUsuarios';
 
 interface UsuarioForm {
   nome: string;

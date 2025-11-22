@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { ContratoPlanoAdicional, CreateContratoPlanoAdicional, UpdateContratoPlanoAdicional } from '@/services/contratoPlanoAdicionalService';
+import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from '@/hooks/useContratoPlanosAdicionais';
+import { usePlanos } from '@/hooks/usePlanos';
+import { Plano } from '@/types/entities';
 import DraggableModal from '../../../../common/DraggableModal';
-import { useNotificationContext } from '../../../../../components/notifications/NotificationProvider';
-import { ContratoPlanoAdicional, CreateContratoPlanoAdicional, UpdateContratoPlanoAdicional } from '../../../../../services/contratoPlanoAdicionalService';
-import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from '../../../../../hooks/useContratoPlanosAdicionais';
-import { usePlanos } from '../../../../../hooks/usePlanos';
 import FormField from '../../../../ui/FormField';
 import EntitySelectField from '../../../../ui/EntitySelectField';
 import PlanoListModal from '../../../planos/PlanoListModal';
-import { Plano } from '../../../../../types/entities';
 
 interface ServicoAdicionalModalProps {
   show: boolean;

@@ -1,4 +1,4 @@
-import { FormValue } from '../../../../types/common';
+import { FormValue } from '@/types/common';
 
 export interface BancoForm {
   nome: string;

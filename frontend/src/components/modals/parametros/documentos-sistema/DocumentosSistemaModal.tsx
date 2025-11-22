@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { useSelectedEntity } from '@/hooks/useSelectedEntity';
 import DraggableModal from '../../../common/DraggableModal';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';
-import { useSelectedEntity } from '../../../../hooks/useSelectedEntity';
 
 const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose }) => {
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');

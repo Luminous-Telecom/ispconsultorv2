@@ -1,6 +1,6 @@
 import React from 'react';
+import { FormValue } from '@/types/common';
 import FormField from '../../../../ui/FormField';
-import { FormValue } from '../../../../../types/common';
 import { BancoForm } from '../types';
 
 interface EfiFormProps {

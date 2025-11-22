@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
+import { Titulo } from '@/types/entities';
 import Table from '../../../../tables/Table';
 import { BulkAction } from '../types';
-import { Titulo } from '../../../../../types/entities';
 import { TableColumn } from '../../../../tables/types';
 import { SortDirection } from '../../../../tables/types';
 

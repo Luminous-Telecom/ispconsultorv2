@@ -1,7 +1,7 @@
 import React from 'react';
+import { CarneParcela } from '@/types';
+import { TituloItem } from '@/types/cliente';
 import Table from '../../../../tables/Table';
-import { CarneParcela } from '../../../../../types';
-import { TituloItem } from '../../../../../types/cliente';
 import { FinanceiroTabProps } from '../types';
 import { TableColumn } from '../../../../tables/types';
 

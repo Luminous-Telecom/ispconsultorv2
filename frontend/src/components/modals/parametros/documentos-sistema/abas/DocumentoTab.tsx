@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import DocumentoSistemaService from '@/services/documentoSistemaService';
+import ModeloReciboService from '@/services/modeloReciboService';
+import ModeloCartaService from '@/services/modeloCartaService';
+import ModeloTermoService from '@/services/modeloTermoService';
+import { formatDateTime } from '@/utils/formatters';
 import Table from '../../../../tables/Table';
 import { TableConfig } from '../../../../tables/types';
 import { DocumentoUnion } from '../types';
-import { useNotificationContext } from '../../../../../components/notifications/NotificationProvider';
-import DocumentoSistemaService from '../../../../../services/documentoSistemaService';
-import ModeloReciboService from '../../../../../services/modeloReciboService';
-import ModeloCartaService from '../../../../../services/modeloCartaService';
-import ModeloTermoService from '../../../../../services/modeloTermoService';
 import { DocumentoTabProps } from '../types';
-import { formatDateTime } from '../../../../../utils/formatters';
 
 const DocumentoTab: React.FC<DocumentoTabProps> = ({
   tipo,
