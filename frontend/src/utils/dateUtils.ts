@@ -9,11 +9,20 @@ export const toISODateString = (date: string | Date | null | undefined): string 
   if (!date) return '';
   
   try {
+    // Se já for string no formato YYYY-MM-DD, retorna ela mesma
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
+
     const d = new Date(date);
     if (isNaN(d.getTime())) return '';
     
-    // Extrair apenas a parte da data (sem hora)
-    return d.toISOString().split('T')[0];
+    // Usa getFullYear, getMonth, getDate locais para evitar conversão para UTC que muda o dia
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
   } catch {
     return '';
   }
@@ -28,6 +37,13 @@ export const toBrazilianDate = (date: string | Date | null | undefined): string 
   if (!date) return '-';
   
   try {
+    // Se for string YYYY-MM-DD, tratar manualmente para evitar timezone
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const [year, month, day] = date.split('-').map(Number);
+      const d = new Date(year, month - 1, day);
+      return d.toLocaleDateString('pt-BR');
+    }
+
     const d = new Date(date);
     if (isNaN(d.getTime())) return '-';
     

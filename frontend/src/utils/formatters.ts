@@ -24,7 +24,21 @@ export const formatDate = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
-    return new Date(date).toLocaleDateString('pt-BR');
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '-';
+
+    // Ajustar para UTC antes de formatar para evitar conversão de fuso horário local
+    // Assumindo que a data do banco vem como string ISO ou Date em UTC
+    if (typeof date === 'string' && date.includes('T')) {
+       return d.toLocaleDateString('pt-BR'); // Se tem hora, deixa o navegador converter para local
+    } else if (typeof date === 'string') {
+       // Se for apenas data YYYY-MM-DD, força interpretação como UTC meio-dia para evitar problemas de timezone
+       const [year, month, day] = date.split('-').map(Number);
+       const utcDate = new Date(year, month - 1, day);
+       return utcDate.toLocaleDateString('pt-BR');
+    }
+    
+    return d.toLocaleDateString('pt-BR');
   } catch {
     return '-';
   }
@@ -39,7 +53,11 @@ export const formatDateTime = (date: string | Date): string => {
   if (!date) return '-';
   
   try {
-    return new Date(date).toLocaleString('pt-BR');
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '-';
+    
+    // Para DateTime completo, geralmente queremos a conversão para o horário local do usuário
+    return d.toLocaleString('pt-BR');
   } catch {
     return '-';
   }
