@@ -1,249 +1,28 @@
-import { Request, Response } from 'express';
-import { Banco } from '../models/Banco';
-import { Cliente } from '../models/Cliente';
-import { Plano } from '../models/Plano';
-import { Titulo } from '../models/Titulo';
-import { Usuario } from '../models/Usuario';
-import { BancoApiService } from '../services/BancoApiService';
-import { logger } from '../utils/logger';
-import { JsonValue } from '../types';
-import { BarcodeService } from '../services/BarcodeService';
+import { Banco } from '../../models/Banco';
+import { Titulo } from '../../models/Titulo';
+import { BancoApiService } from '../BancoApiService';
+import { PaymentCommonService } from './PaymentCommonService';
+import { logger } from '../../utils/logger';
+import {
+  WebhookResponse,
+  NotificationData,
+  NotificationItem,
+  NotificationIdentifiers,
+  ChargeNotification,
+  TituloUpdateData
+} from '../../types/webhooks';
 
-interface WebhookResponse {
-  success: boolean;
-  message: string;
-  status?: number;
-  data?: Record<string, JsonValue>;
-}
-
-interface NotificationData {
-  code?: string;
-  data?: NotificationItem[];
-  charge?: ChargeNotification;
-}
-
-interface NotificationItem {
-  id?: string;
-  type?: string;
-  identifiers?: NotificationIdentifiers;
-  status?: string | {
-    current?: string;
-  };
-  custom_id?: string | null;
-  created_at?: string;
-  expire_at?: string;
-  due_date?: string;
-}
-
-interface NotificationIdentifiers {
-  charge_id?: string | null;
-  [key: string]: JsonValue | undefined;
-}
-
-interface ChargeNotification {
-  id?: string;
-  charge_id?: string | null;
-  status?: string;
-  custom_id?: string;
-}
-
-interface TituloUpdateData {
-  status?: 'pendente' | 'pago' | 'vencido' | 'cancelado';
-  pago?: boolean;
-  codigo_barras?: string;
-  linha_digitavel?: string;
-  url_boleto?: string;
-  qrcode?: string;
-  qrcode_image?: string;
-  data_pagamento?: string | null;
-  valor_pago?: number | null;
-  data_vencimento?: string | Date;
-}
-
-interface EfiPaymentData {
-  payment?: {
-    banking_billet?: {
-      barcode?: string;
-      url?: string;
-      pdf?: {
-        charge?: string;
-      };
-      pix?: {
-        qrcode?: string;
-        qrcode_image?: string;
-      };
-    };
-  };
-}
-
-interface EfiDadosAtualizados {
-  codigo_barras?: string;
-  linha_digitavel?: string;
-  url_boleto?: string;
-  qrcode?: string;
-  qrcode_image?: string;
-  pdf_url?: string;
-}
-
-interface TituloWithBanco {
-  id: number;
-  charge_id: string | null;
-  banco?: Banco | null;
-}
-
-export class WebhookController {
+/**
+ * Serviço para processamento de webhooks da EFI (Efí/Gerencianet)
+ */
+export class EfiWebhookService {
   /**
-   * Normaliza data removendo hora (apenas para data de vencimento)
+   * Processa token de notificação (form-urlencoded)
    */
-  private static normalizeDate(value: string | Date | null | undefined): Date | null {
-    if (!value) return null;
-    
-    if (typeof value === 'string') {
-      const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (match) {
-        const [, year, month, day] = match;
-        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      }
-      const date = new Date(value);
-      return isNaN(date.getTime()) ? null : new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    }
-    
-    if (value instanceof Date) {
-      return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-    }
-    
-    return null;
-  }
-
-  /**
-   * Normaliza data de pagamento preservando hora (para webhooks)
-   */
-  private static normalizePaymentDate(value: string | Date | null | undefined): Date | null {
-    if (!value) return null;
-    
-    if (typeof value === 'string') {
-      const date = new Date(value);
-      return !isNaN(date.getTime()) ? date : null;
-    }
-    
-    return value instanceof Date ? value : null;
-  }
-
-  /**
-   * Webhook unificado para receber notificações da Efí sobre todos os tipos de operações
-   * (PIX, Bolix, carnês, boletos individuais, etc.)
-   */
-  static async efiWebhook(req: Request, res: Response): Promise<void> {
-    try {
-      const payload = req.body;
-
-      const receivedSecret =
-        req.get('asaas-access-token') ||
-        req.get('efi-access-token') ||
-        req.get('x-internal-webhook-secret') ||
-        (typeof payload?.secret === 'string' ? payload.secret : undefined) ||
-        (typeof payload?.token === 'string' ? payload.token : undefined);
-      
-      // Verificar se é um token de notificação (form-urlencoded)
-      if (req.get('Content-Type') === 'application/x-www-form-urlencoded' && 
-          payload.notification && 
-          typeof payload.notification === 'string' && 
-          !Array.isArray(payload.notification)) {
-        
-        const notificationToken = payload.notification;
-        logger.info(`Token de notificação recebido: ${notificationToken}`);
-        
-        // Processar token de notificação - consultar API do EFI
-        const result = await WebhookController.processarTokenNotificacao(notificationToken, receivedSecret);
-        res.status(result.status || 200).json(result);
-        return;
-      }
-      
-      // Verificar se é uma notificação válida da Efí
-      if (!payload.notification && !payload.charge && !payload.pix) {
-        logger.warn('Payload não contém campos esperados da Efí');
-        res.status(400).json({
-          success: false,
-          message: 'Payload inválido'
-        });
-        return;
-      }
-
-      // Determinar tipo de notificação
-      let notificationType = '';
-      let notification = null;
-
-      if (payload.notification) {
-        notification = payload.notification;
-        notificationType = notification.type || '';
-      } else if (payload.charge) {
-        notification = payload.charge;
-        notificationType = 'charge_' + (notification.status || 'unknown');
-      } else if (payload.pix) {
-        notification = payload.pix;
-        notificationType = 'pix_' + (notification.status || 'unknown');
-      }
-
-      logger.info(`Tipo de notificação identificado: ${notificationType}`);
-
-      // Processar diferentes tipos de notificação
-      switch (notificationType) {
-        case 'charge_paid':
-        case 'charge_settled':
-        case 'charge_canceled':
-        case 'charge_expired':
-        case 'charge_waiting':
-        case 'charge_pending':
-          const chargeResult = await WebhookController.processarNotificacaoCharge(notification, receivedSecret);
-          res.status(chargeResult.status || 200).json(chargeResult);
-          break;
-        
-        
-        case 'pix_paid':
-        case 'pix_settled':
-        case 'pix_canceled':
-        case 'pix_expired':
-        case 'pix_waiting':
-        case 'pix_pending':
-          const pixResult = await WebhookController.processarNotificacaoPix(notification, receivedSecret);
-          res.status(pixResult.status || 200).json(pixResult);
-          break;
-        
-        // Processar notificações genéricas
-        case 'payment':
-        case 'paid':
-        case 'settled':
-        case 'canceled':
-        case 'expired':
-          logger.info(`Processando notificação genérica: ${notificationType}`);
-          const genericResult = await WebhookController.processarNotificacaoGenerica(notification, receivedSecret);
-          res.status(genericResult.status || 200).json(genericResult);
-          break;
-        
-        default:
-          logger.warn(`Tipo de notificação não reconhecido: ${notificationType}`);
-          logger.warn('Payload completo:', JSON.stringify(payload, null, 2));
-          res.status(200).json({ message: 'Tipo de notificação não processado' });
-      }
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao processar webhook Efí unificado', {
-        error: errorMessage,
-        stack: errorStack
-      });
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno do servidor'
-      });
-    }
-  }
-
-  /**
-   * Processar token de notificação
-   */
-  private static async processarTokenNotificacao(notificationToken: string, receivedSecret?: string): Promise<WebhookResponse> {
+  static async processNotificationToken(
+    notificationToken: string,
+    receivedSecret?: string
+  ): Promise<WebhookResponse> {
     try {
       logger.info(`Iniciando processamento de token de notificação: ${notificationToken}`);
       
@@ -263,7 +42,7 @@ export class WebhookController {
       for (const banco of bancosAtivos) {
         // Validar secret apenas se foi enviado (para segurança adicional)
         // Mas permitir processar mesmo sem secret, pois o token é autenticação suficiente
-        if (receivedSecret && !(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
+        if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(banco, receivedSecret))) {
           // Se um secret foi enviado mas não é válido, apenas logar mas continuar
           logger.debug('Secret do webhook não corresponde ao banco, mas tentando processar token mesmo assim', {
             banco_id: banco.id,
@@ -287,7 +66,7 @@ export class WebhookController {
           
           algumBancoAutorizado = true;
           
-          return await WebhookController.processarDadosNotificacao(
+          return await EfiWebhookService.processNotificationData(
             resultado.data as NotificationData | NotificationItem[] | NotificationItem,
             banco,
             receivedSecret
@@ -345,7 +124,7 @@ export class WebhookController {
             });
             
             // Processar os dados da notificação
-            return await WebhookController.processarDadosNotificacao(
+            return await EfiWebhookService.processNotificationData(
               resultado.data as NotificationData | NotificationItem[] | NotificationItem,
               banco,
               receivedSecret
@@ -374,7 +153,7 @@ export class WebhookController {
       return {
         success: false,
         message: 'Não foi possível consultar a notificação',
-        status: 400 // Retornar 400 como no PHP
+        status: 400
       };
       
     } catch (error) {
@@ -392,9 +171,9 @@ export class WebhookController {
   }
 
   /**
-   * Processar dados da notificação
+   * Processa dados da notificação retornados pela API EFI
    */
-  private static async processarDadosNotificacao(
+  static async processNotificationData(
     dados: NotificationData | NotificationItem[] | NotificationItem,
     banco: Banco,
     receivedSecret?: string
@@ -407,7 +186,7 @@ export class WebhookController {
 
       // Validar secret apenas se foi enviado (para segurança adicional)
       // Não bloquear processamento, pois dados já foram obtidos com sucesso da API
-      if (receivedSecret && !(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
+      if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(banco, receivedSecret))) {
         logger.debug('Webhook EFI: secret não corresponde ao banco, mas continuando processamento', {
           banco_id: banco.id,
           possui_secret: !!banco.webhook_secret
@@ -424,7 +203,7 @@ export class WebhookController {
         let processadas = 0;
         for (const notificacao of dados.data) {
           if (notificacao.type && notificacao.identifiers) {
-            processadas += await WebhookController.processarNotificacaoIndividual(notificacao, banco, receivedSecret);
+            processadas += await EfiWebhookService.processIndividualNotification(notificacao, banco, receivedSecret);
           }
         }
         
@@ -448,13 +227,12 @@ export class WebhookController {
           });
           
           // Buscar título pelo charge_id
-          const { Titulo } = await import('../models/Titulo');
           const titulo = await Titulo.findOne({
             where: { charge_id: chargeId }
           });
           
           if (titulo) {
-            const statusLocal = WebhookController.mapearStatusEfi(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+            const statusLocal = EfiWebhookService.mapEfiStatus(status) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
             const oldStatus = titulo.status;
             const oldPago = titulo.pago;
             
@@ -488,13 +266,12 @@ export class WebhookController {
         }
       }
 
-
       // Verificar se é uma notificação individual ou múltipla (estrutura direta)
       if (Array.isArray(dados)) {
         // Notificação múltipla
         let totalProcessadas = 0;
         for (const notificacao of dados) {
-          const processadas = await WebhookController.processarNotificacaoIndividual(notificacao, banco, receivedSecret);
+          const processadas = await EfiWebhookService.processIndividualNotification(notificacao, banco, receivedSecret);
           totalProcessadas += processadas;
         }
         
@@ -505,7 +282,7 @@ export class WebhookController {
         };
       } else if (!Array.isArray(dados) && 'type' in dados) {
         // Notificação individual
-        const processadas = await WebhookController.processarNotificacaoIndividual(dados as NotificationItem, banco, receivedSecret);
+        const processadas = await EfiWebhookService.processIndividualNotification(dados as NotificationItem, banco, receivedSecret);
         
         return {
           success: true,
@@ -535,9 +312,9 @@ export class WebhookController {
   }
 
   /**
-   * Processar notificação individual
+   * Processa notificação individual
    */
-  private static async processarNotificacaoIndividual(
+  static async processIndividualNotification(
     notificacao: NotificationItem,
     banco: Banco,
     receivedSecret?: string
@@ -552,7 +329,7 @@ export class WebhookController {
       
       // Validar secret apenas se foi enviado (para segurança adicional)
       // Não bloquear processamento, pois dados já foram validados pela API da Efí
-      if (receivedSecret && !(await WebhookController.isWebhookSecretValid(banco, receivedSecret))) {
+      if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(banco, receivedSecret))) {
         logger.debug('Webhook EFI: secret não corresponde ao banco em notificação individual, mas continuando', {
           banco_id: banco.id,
           possui_secret: !!banco.webhook_secret
@@ -562,7 +339,7 @@ export class WebhookController {
       
       switch (type) {
         case 'charge':
-          return await WebhookController.processarNotificacaoTitulo(identifiers, status, customId, notificacao, banco, receivedSecret);
+          return await EfiWebhookService.processTituloNotification(identifiers, status, customId, notificacao, banco, receivedSecret);
           
         default:
           logger.warn('Tipo de notificação não suportado', { type });
@@ -579,9 +356,9 @@ export class WebhookController {
   }
 
   /**
-   * Processar notificação de título (charge)
+   * Processa notificação de título (charge)
    */
-  private static async processarNotificacaoTitulo(
+  static async processTituloNotification(
     identifiers: NotificationIdentifiers,
     status: string | null,
     customId: string | null,
@@ -598,8 +375,6 @@ export class WebhookController {
 
     try {
       // Buscar título pelo charge_id
-      const { Titulo } = await import('../models/Titulo');
-      const { Banco } = await import('../models/Banco');
       const titulo = await Titulo.findOne({
         where: { charge_id: chargeId },
         include: [
@@ -618,7 +393,7 @@ export class WebhookController {
 
       const bancoRelacionado = bancoContext ?? (titulo as Titulo & { banco?: Banco | null }).banco ?? null;
       // Validar secret apenas se foi enviado, mas não bloquear processamento
-      if (receivedSecret && !(await WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret))) {
+      if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(bancoRelacionado ?? undefined, receivedSecret))) {
         logger.debug('Webhook EFI: secret não corresponde ao banco ao processar título, mas continuando', {
           charge_id: chargeId,
           banco_id: bancoRelacionado?.id ?? null
@@ -628,7 +403,7 @@ export class WebhookController {
 
       // Atualizar status do título
       const statusString = status || 'pendente';
-      const novoStatus = WebhookController.mapearStatusEfi(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+      const novoStatus = EfiWebhookService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       const isPago = ['pago', 'liquidado'].includes(novoStatus);
       
       const updateData: TituloUpdateData = { 
@@ -641,13 +416,13 @@ export class WebhookController {
         // Buscar data de pagamento do webhook (com hora se disponível)
         // Tentar created_at completo primeiro (pode ter hora), depois paid_at, depois confirm_at
         const dataPagamentoWebhook = dadosCompletos?.created_at 
-          || (dadosCompletos as any)?.paid_at 
-          || (dadosCompletos as any)?.confirmed_at
-          || (dadosCompletos as any)?.payment_date;
+          || dadosCompletos?.paid_at 
+          || dadosCompletos?.confirmed_at
+          || dadosCompletos?.payment_date;
         
         // Normalizar data de pagamento preservando hora
         const dataPagamentoNormalizada = dataPagamentoWebhook 
-          ? WebhookController.normalizePaymentDate(dataPagamentoWebhook)
+          ? PaymentCommonService.normalizePaymentDate(dataPagamentoWebhook)
           : new Date();
         
         // Usar método marcarComoPago para garantir lógica consistente
@@ -663,19 +438,18 @@ export class WebhookController {
       
       // Atualizar data de vencimento se fornecida no webhook
       if (dadosCompletos?.expire_at) {
-        const normalizedDate = WebhookController.normalizeDate(dadosCompletos.expire_at);
+        const normalizedDate = PaymentCommonService.normalizeDueDate(dadosCompletos.expire_at);
         if (normalizedDate) {
           updateData.data_vencimento = normalizedDate;
         }
       } else if (dadosCompletos?.due_date) {
-        const normalizedDate = WebhookController.normalizeDate(dadosCompletos.due_date);
+        const normalizedDate = PaymentCommonService.normalizeDueDate(dadosCompletos.due_date);
         if (normalizedDate) {
           updateData.data_vencimento = normalizedDate;
         }
       }
       
       await titulo.update(updateData as Partial<typeof titulo>);
-
 
       return 1;
     } catch (error) {
@@ -688,11 +462,10 @@ export class WebhookController {
     }
   }
 
-
   /**
-   * Processar notificação de charge
+   * Processa notificação de charge (formato direto)
    */
-  private static async processarNotificacaoCharge(
+  static async processChargeNotification(
     notification: ChargeNotification | NotificationItem,
     receivedSecret?: string,
     bancoContext?: Banco
@@ -704,7 +477,6 @@ export class WebhookController {
         : notification.status?.current;
       const customId = notification.custom_id;
 
-
       if (!chargeId) {
         return {
           success: false,
@@ -714,7 +486,6 @@ export class WebhookController {
       }
 
       // Buscar título pelo charge_id
-      const { Titulo } = await import('../models/Titulo');
       const titulo = await Titulo.findOne({
         where: { charge_id: chargeId },
         include: [{ model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret'] }]
@@ -723,7 +494,7 @@ export class WebhookController {
       const bancoRelacionado = bancoContext ?? titulo?.banco ?? null;
 
       // Validar secret apenas se foi enviado, mas não bloquear processamento
-      if (receivedSecret && !(await WebhookController.isWebhookSecretValid(bancoRelacionado ?? undefined, receivedSecret))) {
+      if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(bancoRelacionado ?? undefined, receivedSecret))) {
         logger.debug('Webhook EFI: secret não corresponde ao banco ao processar charge, mas continuando', {
           charge_id: chargeId,
           banco_id: bancoRelacionado?.id ?? null
@@ -733,7 +504,7 @@ export class WebhookController {
 
       if (!titulo) {
         logger.warn('Título não encontrado para charge', { charge_id: chargeId });
-            return {
+        return {
           success: false,
           message: 'Título não encontrado',
           status: 404
@@ -742,7 +513,7 @@ export class WebhookController {
 
       // Atualizar status do título
       const statusString = status || '';
-      const novoStatus = WebhookController.mapearStatusEfi(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+      const novoStatus = EfiWebhookService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
       await titulo.update({ status: novoStatus });
 
       logger.info('Status do título atualizado via charge', {
@@ -774,17 +545,19 @@ export class WebhookController {
     }
   }
 
-
   /**
-   * Processar notificação de PIX
+   * Processa notificação de PIX
    */
-  private static async processarNotificacaoPix(notification: NotificationItem, receivedSecret?: string): Promise<WebhookResponse> {
+  static async processPixNotification(
+    notification: NotificationItem,
+    receivedSecret?: string
+  ): Promise<WebhookResponse> {
     try {
       logger.info('Processando notificação de PIX', { notification });
 
       // Implementar lógica específica para PIX se necessário
       // Por enquanto, tratar como notificação genérica
-      return await WebhookController.processarNotificacaoGenerica(notification, receivedSecret);
+      return await EfiWebhookService.processGenericNotification(notification, receivedSecret);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       logger.error('Erro ao processar notificação de PIX', {
@@ -800,26 +573,27 @@ export class WebhookController {
   }
 
   /**
-   * Processar notificação genérica
+   * Processa notificação genérica
    */
-  private static async processarNotificacaoGenerica(notification: NotificationItem | ChargeNotification, receivedSecret?: string): Promise<WebhookResponse> {
+  static async processGenericNotification(
+    notification: NotificationItem | ChargeNotification,
+    receivedSecret?: string
+  ): Promise<WebhookResponse> {
     try {
-
       // Tentar identificar o tipo de notificação pelos campos disponíveis
       const chargeId = 'charge_id' in notification ? notification.charge_id : notification.id;
       const customId = notification.custom_id;
 
       if (chargeId) {
-        return await WebhookController.processarNotificacaoCharge(notification, receivedSecret);
+        return await EfiWebhookService.processChargeNotification(notification, receivedSecret);
       } else if (customId) {
         // Tentar buscar por custom_id
-        const { Titulo } = await import('../models/Titulo');
         const titulo = await Titulo.findByPk(String(customId), {
           include: [{ model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco', 'codigo', 'webhook_secret'] }]
         }) as (Titulo & { banco?: Banco | null }) | null;
         if (titulo) {
           // Validar secret apenas se foi enviado, mas não bloquear processamento
-          if (receivedSecret && !(await WebhookController.isWebhookSecretValid(titulo.banco ?? undefined, receivedSecret))) {
+          if (receivedSecret && !(await PaymentCommonService.validateWebhookSecret(titulo.banco ?? undefined, receivedSecret))) {
             logger.debug('Webhook EFI: secret não corresponde ao banco ao processar custom_id, mas continuando', {
               titulo_id: titulo.id,
               banco_id: titulo.banco?.id ?? null
@@ -830,7 +604,7 @@ export class WebhookController {
           const statusString = typeof notification.status === 'string' 
             ? notification.status 
             : notification.status?.current || 'pendente';
-          const novoStatus = WebhookController.mapearStatusEfi(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
+          const novoStatus = EfiWebhookService.mapEfiStatus(statusString) as 'pendente' | 'pago' | 'vencido' | 'cancelado';
           await titulo.update({ status: novoStatus });
           
           return {
@@ -863,11 +637,10 @@ export class WebhookController {
     }
   }
 
-
   /**
-   * Mapear status da Efí para status interno
+   * Mapeia status da Efí para status interno
    */
-  private static mapearStatusEfi(statusEfi: string): string {
+  static mapEfiStatus(statusEfi: string): string {
     const statusMap: Record<string, string> = {
       'paid': 'pago',
       'settled': 'pago',
@@ -881,231 +654,5 @@ export class WebhookController {
 
     return statusMap[statusEfi?.toLowerCase()] || 'pendente';
   }
-
-  private static async isWebhookSecretValid(banco?: Banco | null, receivedSecret?: string): Promise<boolean> {
-    if (!receivedSecret) {
-      return false;
-    }
-
-    // Primeiro tentar validar com webhook_secret do banco (se existir)
-    if (banco?.webhook_secret && banco.webhook_secret === receivedSecret) {
-      return true;
-    }
-
-    // Buscar usuário pelo webhook_secret
-    const usuario = await Usuario.findOne({
-      where: {
-        webhook_secret: receivedSecret
-      }
-    });
-
-    if (usuario && usuario.webhook_secret === receivedSecret) {
-      return true;
-    }
-
-    // Se não encontrou usuário nem banco, rejeitar
-    return false;
-  }
-
-  /**
-   * Webhook para notificações do Asaas
-   */
-  static async asaasWebhook(req: Request, res: Response): Promise<void> {
-    try {
-      const payload = req.body as Record<string, JsonValue> | undefined;
-
-      if (!payload || typeof payload !== 'object') {
-        res.status(400).json({
-          success: false,
-          message: 'Payload inválido'
-        });
-        return;
-      }
-
-      const receivedSecret =
-        req.get('asaas-access-token') ||
-        req.get('access_token') ||
-        (typeof payload?.token === 'string' ? payload.token : undefined);
-
-      const payment = (payload.payment && typeof payload.payment === 'object' && !Array.isArray(payload.payment))
-        ? payload.payment as Record<string, JsonValue>
-        : undefined;
-
-      if (!payment || !payment.id) {
-        res.status(200).json({
-          success: true,
-          message: 'Webhook recebido sem payment.id'
-        });
-        return;
-      }
-
-      const chargeId = String(payment.id);
-
-      const titulo = await Titulo.findOne({
-        where: { charge_id: chargeId },
-        include: [{ model: Banco, as: 'banco' }]
-      }) as (Titulo & { banco?: Banco | null }) | null;
-
-      const getWebhookToken = (banco: Banco): string | undefined => {
-        if (banco.webhook_secret && typeof banco.webhook_secret === 'string' && banco.webhook_secret.trim()) {
-          return banco.webhook_secret;
-        }
-        if (banco.configuracoes?.webhook_token && typeof banco.configuracoes.webhook_token === 'string') {
-          return banco.configuracoes.webhook_token.trim() || undefined;
-        }
-        return undefined;
-      };
-
-      let expectedSecret: string | undefined = undefined;
-
-      if (titulo?.banco?.tipo_banco === 'asaas') {
-        expectedSecret = getWebhookToken(titulo.banco);
-      }
-
-      if (!expectedSecret) {
-        const bancosAsaas = await Banco.findAll({
-          where: { tipo_banco: 'asaas', ativo: true }
-        });
-
-        for (const banco of bancosAsaas) {
-          const token = getWebhookToken(banco);
-          if (token && (!receivedSecret || receivedSecret === token)) {
-            expectedSecret = token;
-            break;
-          }
-        }
-      }
-
-      if (!expectedSecret) {
-        res.status(401).json({
-          success: false,
-          message: 'Token do webhook não configurado'
-        });
-        return;
-      }
-
-      if (!receivedSecret || receivedSecret !== expectedSecret) {
-        logger.warn('Webhook Asaas com token inválido');
-        res.status(401).json({
-          success: false,
-          message: 'Token do webhook inválido'
-        });
-        return;
-      }
-
-      if (!titulo) {
-        res.status(200).json({
-          success: true,
-          message: 'Título não encontrado para este charge_id'
-        });
-        return;
-      }
-
-      const updates: Partial<Titulo> & Record<string, JsonValue> = {};
-      const pagamentoStatusRaw = payment.status;
-      const paymentStatus = typeof pagamentoStatusRaw === 'string'
-        ? pagamentoStatusRaw.toUpperCase()
-        : '';
-
-      const statusMap: Record<string, Titulo['status']> = {
-        PENDING: 'pendente',
-        AWAITING_APPROVAL: 'pendente',
-        RECEIVED: 'pago',
-        RECEIVED_IN_CASH: 'pago',
-        CONFIRMED: 'pago',
-        OVERDUE: 'vencido',
-        PAYMENT_DELETED: 'cancelado',
-        DELETED: 'cancelado',
-        CANCELED: 'cancelado',
-        REFUNDED: 'cancelado',
-        CHARGEBACK: 'cancelado'
-      };
-
-      const novoStatus = statusMap[paymentStatus];
-      if (novoStatus) {
-        updates.status = novoStatus;
-      }
-
-      const paymentDate = typeof payment.paymentDate === 'string'
-        ? payment.paymentDate
-        : typeof payment.effectiveDate === 'string'
-          ? payment.effectiveDate
-          : undefined;
-
-      if (novoStatus === 'pago') {
-        // Normalizar data de pagamento preservando hora
-        const dataPagamentoNormalizada = paymentDate 
-          ? WebhookController.normalizePaymentDate(paymentDate)
-          : new Date();
-        
-        const valorPago = typeof payment.value === 'number' ? Number(payment.value) : 
-                          typeof payment.netValue === 'number' ? Number(payment.netValue) : 
-                          titulo.valor;
-        
-        // Usar método marcarComoPago para garantir lógica consistente
-        // skipLiquidacaoBanco = true pois o webhook já indica que o banco sabe do pagamento
-        await titulo.marcarComoPago(valorPago, dataPagamentoNormalizada || undefined, true);
-        
-        // Não adicionar data_pagamento e valor_pago ao updates, pois já foi salvo pelo marcarComoPago
-        // Apenas atualizar status se necessário
-        delete updates.data_pagamento;
-        delete updates.valor_pago;
-      }
-
-      if (typeof payment.nossoNumero === 'string') {
-        updates.nosso_numero = payment.nossoNumero;
-      }
-
-      if (typeof payment.bankSlipUrl === 'string') {
-        updates.url_boleto = payment.bankSlipUrl;
-      }
-
-      if (typeof payment.bankSlipDigitableLine === 'string') {
-        updates.linha_digitavel = BarcodeService.formatarLinhaDigitavel(payment.bankSlipDigitableLine);
-      }
-
-      if (typeof payment.bankSlipBarcode === 'string') {
-        const codigoLimpo = payment.bankSlipBarcode.replace(/\D/g, '');
-        updates.codigo_barras = codigoLimpo.length > 0 ? codigoLimpo : payment.bankSlipBarcode;
-      }
-
-      if (typeof payment.pixQrCode === 'string') {
-        updates.qrcode = payment.pixQrCode;
-      }
-
-      if (typeof payment.pixQrCodeImage === 'string') {
-        const imagem = payment.pixQrCodeImage;
-        updates.qrcode_image = imagem.startsWith('data:image/')
-          ? imagem
-          : `data:image/png;base64,${imagem}`;
-      } else if (typeof payment.pixQrCodeUrl === 'string') {
-        updates.qrcode_image = payment.pixQrCodeUrl;
-      }
-
-      if (typeof payment.dueDate === 'string') {
-        const normalizedDate = WebhookController.normalizeDate(payment.dueDate);
-        if (normalizedDate) {
-          updates.data_vencimento = normalizedDate;
-        }
-      }
-
-      if (Object.keys(updates).length > 0) {
-        await titulo.update(updates);
-      }
-
-      res.status(200).json({
-        success: true,
-        message: 'Título atualizado via webhook Asaas'
-      });
-    } catch (error) {
-      logger.error('Erro ao processar webhook Asaas', {
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-
-      res.status(500).json({
-        success: false,
-        message: 'Erro interno ao processar webhook Asaas'
-      });
-    }
-  }
 }
+

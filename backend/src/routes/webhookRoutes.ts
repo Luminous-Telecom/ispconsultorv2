@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { WebhookController } from '../controllers/WebhookController';
+import { EfiWebhookController } from '../controllers/webhooks/EfiWebhookController';
+import { AsaasWebhookController } from '../controllers/webhooks/AsaasWebhookController';
 import { ValidateEfiWebhook } from '../middleware/ValidateEfiWebhook';
 import { IntegrationWebhookController } from '../controllers/IntegrationWebhookController';
 
@@ -10,14 +11,14 @@ const efiRouter = Router();
 efiRouter.use(ValidateEfiWebhook.validate);
 
 // Webhook unificado para receber notificações da Efí
-efiRouter.post('/', WebhookController.efiWebhook);
+efiRouter.post('/', EfiWebhookController.handle);
 
 // Usar o roteador EFI para rotas específicas
 router.use('/efi', efiRouter);
 
 // Webhook do Asaas
 const asaasRouter = Router();
-asaasRouter.post('/', WebhookController.asaasWebhook);
+asaasRouter.post('/', AsaasWebhookController.handle);
 router.use('/asaas', asaasRouter);
 
 // Webhook interno para integrações personalizadas
