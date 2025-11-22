@@ -196,6 +196,8 @@ const Layout: React.FC = () => {
                 <span className="text-muted small me-1">Data inicial:</span>
                 <input
                   type="date"
+                  id="dashboard-start-date"
+                  name="dashboard-start-date"
                   value={dashboardFilters.startDate}
                   onChange={(e) => {
                     dashboardFilters.setStartDate(e.target.value);
@@ -209,6 +211,8 @@ const Layout: React.FC = () => {
                 <span className="text-muted small me-1">Data final:</span>
                 <input
                   type="date"
+                  id="dashboard-end-date"
+                  name="dashboard-end-date"
                   value={dashboardFilters.endDate}
                   onChange={(e) => {
                     if (dashboardFilters.startDate && new Date(`${e.target.value}T00:00:00`) < new Date(`${dashboardFilters.startDate}T00:00:00`)) {
