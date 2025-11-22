@@ -16,14 +16,31 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 
 ## 🎨 Padronização de Código
 
-### 1. Padrão de Nomenclatura
+### 1. Padrão de Nomenclatura ✅
 
 **Problema:** Algumas inconsistências na nomenclatura.
 
-**Sugestão:**
-- Padronizar nomes de variáveis, funções e componentes
-- Documentar convenções de nomenclatura
-- Usar ESLint para garantir consistência
+**Solução Implementada:**
+- ✅ Criado documento `CONVENCOES_NOMENCLATURA.md` com padrões completos:
+  - Convenções para arquivos (componentes, hooks, services)
+  - Padrões para variáveis e constantes (camelCase, UPPER_SNAKE_CASE)
+  - Convenções para funções e métodos (camelCase com verbos descritivos)
+  - Padrões para componentes React (PascalCase)
+  - Convenções para tipos e interfaces (PascalCase)
+  - Padrões para hooks (camelCase com prefixo `use`)
+  - Convenções para classes (PascalCase)
+  - Prefixos comuns documentados (handle, on, is, has, etc.)
+- ✅ Adicionadas regras ESLint `@typescript-eslint/naming-convention`:
+  - Validação automática de nomenclatura durante desenvolvimento
+  - Avisos para inconsistências encontradas
+  - Suporte para diferentes tipos de identificadores
+- ✅ Checklist de verificação incluído no documento
+
+**Benefícios:**
+- Consistência no código do projeto
+- Melhor legibilidade e manutenibilidade
+- Validação automática via ESLint
+- Documentação clara para novos desenvolvedores
 
 **Prioridade:** 🟢 Baixa
 
