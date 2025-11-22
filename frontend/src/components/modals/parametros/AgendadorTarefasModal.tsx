@@ -85,6 +85,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         label: 'Erros',
         sortable: true,
         render: (item: RotinaAgendada) => item.execucoes_com_erro
+      },
+      {
+        key: 'created_at',
+        label: 'Criado em',
+        sortable: true,
+        render: (item: RotinaAgendada & { created_at?: string }) => 
+          item.created_at ? formatDateTime(item.created_at) : '-'
       }
     ],
     searchPlaceholder: 'Buscar por tipo ou descrição...',

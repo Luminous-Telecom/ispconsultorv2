@@ -140,7 +140,7 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
         try {
           return (
             <span className="text-secondary">
-              {new Date(item.created_at).toLocaleDateString('pt-BR')}
+              {new Date(item.created_at).toLocaleString('pt-BR')}
             </span>
           );
         } catch {

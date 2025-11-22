@@ -139,6 +139,14 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
           {item.webhook_secret ? 'Configurado' : 'Não configurado'}
         </span>
       )
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      searchable: false,
+      render: (item: Usuario & { created_at?: string }) => 
+        item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : '-'
     }
   ];
 
