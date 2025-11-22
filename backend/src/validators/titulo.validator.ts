@@ -22,17 +22,15 @@ export const tituloCreateSchema = Joi.object({
     'number.min': 'ID do plano deve ser maior que zero',
     'any.required': 'ID do plano é obrigatório'
   }),
-  banco_id: Joi.number().integer().min(1).required().messages({
+  banco_id: Joi.number().integer().min(1).optional().messages({
     'number.base': 'ID do banco deve ser um número',
     'number.integer': 'ID do banco deve ser um número inteiro',
-    'number.min': 'ID do banco deve ser maior que zero',
-    'any.required': 'ID do banco é obrigatório'
+    'number.min': 'ID do banco deve ser maior que zero'
   }),
-  valor: Joi.number().positive().precision(2).required().messages({
+  valor: Joi.number().positive().precision(2).optional().messages({
     'number.base': 'Valor deve ser um número',
     'number.positive': 'Valor deve ser maior que zero',
-    'number.precision': 'Valor deve ter no máximo 2 casas decimais',
-    'any.required': 'Valor é obrigatório'
+    'number.precision': 'Valor deve ter no máximo 2 casas decimais'
   }),
   data_vencimento: Joi.alternatives().try(
     Joi.string().pattern(/^\d{4}-\d{2}-\d{2}/),

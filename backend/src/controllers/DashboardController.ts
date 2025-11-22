@@ -7,6 +7,7 @@ import { Contrato } from '../models/Contrato';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/database';
 import { logger } from '../utils/logger';
+import { parseDateFromDb } from '../utils/dateUtils';
 
 interface TituloWithCliente extends Titulo {
   cliente?: Cliente | null;
@@ -339,7 +340,7 @@ export class DashboardController {
         cliente: tituloWithCliente.cliente?.razao_social || 'N/A',
         valor: titulo.valor,
         status: titulo.status,
-        data: titulo.created_at.toLocaleDateString('pt-BR')
+        data: new Date(titulo.created_at).toLocaleDateString('pt-BR')
       };
     });
   }
@@ -833,7 +834,9 @@ export class DashboardController {
       if (!titulo.data_vencimento) {
         continue;
       }
-      const dataTitulo = new Date(titulo.data_vencimento);
+      const dataTitulo = parseDateFromDb(titulo.data_vencimento);
+      if (!dataTitulo) continue;
+      
       dataTitulo.setHours(0, 0, 0, 0);
       const diff = dataTitulo.getTime() - inicio.getTime();
       const indice = Math.floor(diff / MS_POR_DIA);
@@ -884,7 +887,9 @@ export class DashboardController {
         continue;
       }
 
-      const dataPagamento = new Date(titulo.data_pagamento);
+      const dataPagamento = parseDateFromDb(titulo.data_pagamento);
+      if (!dataPagamento) continue;
+
       dataPagamento.setHours(0, 0, 0, 0);
       const diff = dataPagamento.getTime() - inicio.getTime();
       const indice = Math.floor(diff / MS_POR_DIA);
@@ -1069,7 +1074,9 @@ export class DashboardController {
       const proxMes = new Date(hoje.getFullYear(), hoje.getMonth() - i + 1, 1, 0, 0, 0, 0);
 
       const totalMes = titulos.reduce((acumulado, titulo) => {
-        const referencia = titulo.data_pagamento ?? titulo.data_vencimento;
+        const refRaw = titulo.data_pagamento ?? titulo.data_vencimento;
+        const referencia = parseDateFromDb(refRaw);
+        
         if (!referencia) {
           return acumulado;
         }

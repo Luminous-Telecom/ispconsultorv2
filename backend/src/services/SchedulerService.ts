@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 import { BarcodeService } from './BarcodeService';
 import { ajustarDataVencimento } from '../utils/dateUtils';
 import { withTransaction } from '../utils/transaction';
+import { normalizeDateForDb } from '../utils/dateForDb';
 import { metrics, isMetricsEnabled } from '../utils/metrics';
 import type { JsonValue } from '../types';
 import type { Transaction } from 'sequelize';
@@ -610,13 +611,23 @@ export class SchedulerService {
                 
                 const bancoId = contrato.conta_boleto; // TypeScript agora sabe que não é null
                 
+                // Normalizar data de vencimento para meia-noite (00:00:00) - apenas data, sem hora
+                // Criar data local (GMT-3) que será salva como está no banco
+                // dataVencimento já foi normalizado com setHours(0,0,0,0) na linha 499
+                const dataVencimentoNormalizada = new Date(
+                  dataVencimento.getFullYear(),
+                  dataVencimento.getMonth(),
+                  dataVencimento.getDate(),
+                  0, 0, 0, 0
+                );
+                
                 await Titulo.create({
                   contrato_id: contrato.id,
                   cliente_id: contrato.cliente_id,
                   plano_id: contrato.plano_id,
                   banco_id: bancoId,
                   valor: valorTitulo,
-                  data_vencimento: dataVencimento instanceof Date ? dataVencimento : new Date(dataVencimento),
+                  data_vencimento: dataVencimentoNormalizada as any,
                   status: 'pendente',
                   pago: false,
                   descricao: `${plano?.nome_plano || 'Mensalidade'}\n${dataVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`,
@@ -991,6 +1002,23 @@ export class SchedulerService {
     }
 
     return nextExecution;
+  }
+
+  /**
+   * Normaliza uma data para o início do dia e a formata como string 'YYYY-MM-DD 00:00:00'.
+   * @param date - A data a ser normalizada.
+   * @returns A data formatada como string.
+   */
+  private async normalizeDateToString(date: Date): Promise<string> {
+    // 1. Aplica regra de ajuste de vencimento (sábado/domingo)
+    const dataAjustada = await ajustarDataVencimento(date);
+
+    // 2. Formata para string YYYY-MM-DD HH:mm:ss
+    const year = dataAjustada.getFullYear();
+    const month = String(dataAjustada.getMonth() + 1).padStart(2, '0');
+    const day = String(dataAjustada.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day} 00:00:00`;
   }
 
   public getStatus(): SchedulerStatus {

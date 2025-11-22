@@ -10,6 +10,7 @@ import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import nodemailer, { SendMailOptions } from 'nodemailer';
 import { TituloController } from '../controllers/TituloController';
+import { parseDateFromDb } from '../utils/dateUtils';
 
 interface ConfiguracoesEnvios {
   antesVencimento?: number[];
@@ -122,7 +123,7 @@ export class EmailService {
           }, baseUrl);
         } else {
           // Corpo padrão simples
-          const dataVenc = new Date(titulo.data_vencimento).toLocaleDateString('pt-BR');
+          const dataVenc = parseDateFromDb(titulo.data_vencimento)?.toLocaleDateString('pt-BR') || '';
           const valor = Number(titulo.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
           corpoHtml = `
             <div style="font-family: Arial, sans-serif; font-size: 14px;">

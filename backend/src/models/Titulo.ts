@@ -15,6 +15,7 @@ import { logger } from '../utils/logger';
 import { Cliente } from './Cliente';
 import { Plano } from './Plano';
 import { Banco } from './Banco';
+import { normalizeDateForDb } from '../utils/dateForDb';
 
 export class Titulo extends Model<
   InferAttributes<Titulo>,
@@ -123,7 +124,7 @@ export class Titulo extends Model<
   async marcarComoPago(valorPago?: number, dataPagamento?: Date, skipLiquidacaoBanco: boolean = false): Promise<void> {
     const valor = valorPago || this.valor;
     const agora = new Date();
-    
+
     // Normalizar data de pagamento
     let data: Date;
     if (dataPagamento) {
@@ -137,15 +138,15 @@ export class Titulo extends Model<
     } else {
       data = new Date(agora);
     }
-    
+
     const valorTotal = Number(this.valor);
     const valorPagoNum = Number(valor);
-    
+
     // Determinar status
     let novoStatus: 'pago' | 'parcial' | 'pago_atraso';
     let valorAberto: number | null = null;
     let estaPago = false;
-    
+
     if (valorPagoNum < valorTotal) {
       novoStatus = 'parcial';
       valorAberto = valorTotal - valorPagoNum;
@@ -155,18 +156,20 @@ export class Titulo extends Model<
       vencDia.setHours(0, 0, 0, 0);
       const pagDia = new Date(data);
       pagDia.setHours(0, 0, 0, 0);
-      
+
       novoStatus = pagDia > vencDia ? 'pago_atraso' : 'pago';
       estaPago = true;
       valorAberto = null;
     }
-    
-    // Formatar data para salvar no banco
-    const dataFormatada = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')} ${String(data.getHours()).padStart(2, '0')}:${String(data.getMinutes()).padStart(2, '0')}:${String(data.getSeconds()).padStart(2, '0')}.${String(data.getMilliseconds()).padStart(3, '0')}`;
-    
+
+    // Formatar data para salvar no banco usando utilitário centralizado
+    // Aqui não ajustamos vencimento (sábado/domingo) pois é a data efetiva do pagamento
+    // E mantemos a hora para registro preciso (true)
+    const dataPagamentoLiteral = await normalizeDateForDb(data, false, true);
+
     await this.update({
       pago: estaPago,
-      data_pagamento: Sequelize.literal(`'${dataFormatada}'`) as unknown as Date,
+      data_pagamento: dataPagamentoLiteral,
       valor_pago: valor,
       valor_aberto: valorAberto,
       status: novoStatus
@@ -365,8 +368,8 @@ export class Titulo extends Model<
     // Atualizar o campo nosso_numero
     await this.update({ nosso_numero: nossoNumero });
     
-      return nossoNumero;
-    }
+    return nossoNumero;
+  }
 
   /**
    * Formata data de pagamento para exibição (lê exatamente como está no banco)

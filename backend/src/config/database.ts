@@ -18,13 +18,17 @@ const sequelize = new Sequelize({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   logging: false,
-  timezone: '+00:00', // Usar UTC para evitar conversões indesejadas
-  // As datas são criadas e salvas como estão, sem conversão de timezone
+  timezone: '-03:00', // Configura fuso horário para Brasil (GMT-3)
   pool: {
     max: 10,
     min: 0,
     acquire: 30000,
     idle: 10000
+  },
+  dialectOptions: {
+    // Garante que datas sejam tratadas como strings para evitar conversões indesejadas do driver
+    dateStrings: true,
+    typeCast: true
   },
   define: {
     timestamps: true,
@@ -32,5 +36,5 @@ const sequelize = new Sequelize({
     freezeTableName: true
   }
 });
-// Fuso horário de Brasília (GMT-3)
+
 export { sequelize };

@@ -10,6 +10,7 @@ import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from './VariaveisDocumentoService';
 import { TituloController } from '../controllers/TituloController';
 import { WhatsAppCloudService } from './WhatsAppCloudService';
+import { parseDateFromDb } from '../utils/dateUtils';
 
 const INTERACTION_DELAY_MS = 2000;
 
@@ -496,7 +497,7 @@ export class WhatsAppService {
         }
         case 'titulo.data_vencimento': {
           const texto = titulo.data_vencimento 
-            ? new Date(titulo.data_vencimento).toLocaleDateString('pt-BR')
+            ? parseDateFromDb(titulo.data_vencimento)?.toLocaleDateString('pt-BR') || 'N/A'
             : 'N/A';
           bodyParams.push({ type: 'text', text: texto });
           break;
