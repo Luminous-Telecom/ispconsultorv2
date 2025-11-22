@@ -6,6 +6,11 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 
 *Nenhuma inconsistência pendente no momento.*
 
+**Refatorações concluídas:**
+- ✅ Todos os imports profundos (`../../../../` e `../../../`) refatorados para path aliases
+- ✅ 89 arquivos refatorados no total
+- ✅ Todos os imports críticos agora usam path aliases (`@/hooks`, `@/services`, `@/types`, `@/utils`, `@/components/*`)
+
 ---
 
 ## 📝 Notas Técnicas
@@ -31,4 +36,4 @@ O projeto usa **CRACO** (Create React App Configuration Override) para permitir 
 ---
 
 **Última atualização:** 2025-01-22
-**Versão:** 4.0
+**Versão:** 5.0
