@@ -26,8 +26,8 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
   - 14 modais otimizados (Clientes, Planos, Bancos, Contratos, Financeiro, etc.)
   - Cada modal é um chunk separado, melhorando cache do navegador
 - ✅ Criado componente `Loading.tsx` para feedback durante carregamento
-- ✅ Configurado `webpack-bundle-analyzer`:
-  - Script `npm run build:analyze` para analisar tamanho do bundle
+- ✅ Instalado `webpack-bundle-analyzer` como dev dependency:
+  - Pode ser usado manualmente quando necessário para análise do bundle
   - Permite identificar oportunidades de otimização futuras
 
 **Benefícios:**
