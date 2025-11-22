@@ -162,9 +162,9 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     from: planosData.pagination.from,
     to: planosData.pagination.to
   } : {
-    current_page: page,
+    current_page: tableFilters.page,
     last_page: 1,
-    per_page: limit,
+    per_page: tableFilters.limit,
     total: 0,
     from: 0,
     to: 0

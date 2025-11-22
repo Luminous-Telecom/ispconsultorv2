@@ -1,7 +1,7 @@
 // Hook unificado para gerenciar filtros, busca e ordenação em tabelas
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useSearch, UseSearchOptions } from './useSearch';
-import { useFilters, UseFiltersOptions } from './useFilters';
+import { useSearch } from './useSearch';
+import { useFilters } from './useFilters';
 
 /**
  * Direção de ordenação
