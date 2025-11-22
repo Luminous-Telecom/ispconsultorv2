@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { BancoService } from '../../../services/bancoService';
 import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import DraggableModal from '../../common/DraggableModal';
-import { useFormReset } from '../../../hooks/useFormReset';
 import { useFormPrefix } from '../../../hooks/useFormId';
+import { useBancoForm } from '../../../hooks/useBancoForm';
 import { FormValue } from '../../../types/common';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { Banco } from '../../../types';
@@ -20,49 +20,6 @@ interface BancoModalProps {
   onSuccess?: (banco: Banco) => void;
 }
 
-const mapBancoToForm = (banco: Banco): BancoForm => ({
-  nome: banco.nome || '',
-  codigo: banco.codigo || '',
-  descricao: banco.descricao || '',
-  ativo: banco.ativo ?? true,
-  tipo_banco: banco.tipo_banco || 'efi',
-  api_url: banco.api_url || '',
-  api_key: banco.api_key || '',
-  api_secret: banco.api_secret || '',
-  webhook_secret: banco.webhook_secret || '',
-  has_api_key: banco.has_api_key ?? false,
-  sandbox: banco.sandbox ?? true,
-  identificador_conta: banco.identificador_conta || '',
-  client_id_producao: banco.client_id_producao || '',
-  client_secret_producao: banco.client_secret_producao || '',
-  url_retorno: banco.url_retorno || `${window.location.origin}/webhook/efi`,
-  repassar_email_cliente: banco.repassar_email_cliente ?? false,
-  percentual_multa: banco.percentual_multa || 2,
-  percentual_juros: banco.percentual_juros || 0.03,
-  desconto_tipo: banco.desconto_tipo || 'fixo',
-  desconto_valor: banco.desconto_valor || 0,
-  contra_apresentacao: banco.contra_apresentacao ?? false,
-  recalcular_segunda_via: banco.recalcular_segunda_via ?? false,
-  maximo_dias_recalcular: banco.maximo_dias_recalcular || 0,
-  layout_web: banco.layout_web || 'normal',
-  layout_pdf: banco.layout_pdf || 'normal',
-  layout_carne: banco.layout_carne || '',
-  local_pagamento: banco.local_pagamento || '',
-  dados_avalista: banco.dados_avalista || '',
-  exibir_mes_referente: banco.exibir_mes_referente ?? false,
-  taxa_cobranca: banco.taxa_cobranca || 0,
-  incluir_taxa: banco.incluir_taxa ?? false,
-  observacao_linha_1: banco.observacao_linha_1 || '',
-  observacao_linha_2: banco.observacao_linha_2 || '',
-  observacao_linha_3: banco.observacao_linha_3 || '',
-  observacao_linha_4: banco.observacao_linha_4 || '',
-  instrucao_linha_1: banco.instrucao_linha_1 || '',
-  instrucao_linha_2: banco.instrucao_linha_2 || '',
-  instrucao_linha_3: banco.instrucao_linha_3 || '',
-  instrucao_linha_4: banco.instrucao_linha_4 || '',
-  instrucao_linha_5: banco.instrucao_linha_5 || '',
-});
-
 const BancoModal: React.FC<BancoModalProps> = ({ 
   show, 
   onClose, 
@@ -72,236 +29,34 @@ const BancoModal: React.FC<BancoModalProps> = ({
   const isEdit = !!bancoId;
   const formPrefix = useFormPrefix(isEdit ? 'BancoEditModal' : 'BancoCreateModal');
   
-  const initialFormData: BancoForm = {
-    nome: '',
-    codigo: '364',
-    descricao: '',
-    ativo: true,
-    tipo_banco: 'efi',
-    api_url: '',
-    api_key: '',
-    api_secret: '',
-    webhook_secret: '',
-    has_api_key: false,
-    sandbox: true,
-    identificador_conta: '',
-    client_id_producao: '',
-    client_secret_producao: '',
-    url_retorno: `${window.location.origin}/webhook/efi`,
-    repassar_email_cliente: false,
-    percentual_multa: 2,
-    percentual_juros: 0.03,
-    desconto_tipo: 'fixo',
-    desconto_valor: 0,
-    contra_apresentacao: false,
-    recalcular_segunda_via: false,
-    maximo_dias_recalcular: 0,
-    layout_web: 'normal',
-    layout_pdf: 'normal',
-    layout_carne: '',
-    local_pagamento: '',
-    dados_avalista: '',
-    exibir_mes_referente: false,
-    taxa_cobranca: 0,
-    incluir_taxa: false,
-    observacao_linha_1: '',
-    observacao_linha_2: '',
-    observacao_linha_3: '',
-    observacao_linha_4: '',
-    instrucao_linha_1: '',
-    instrucao_linha_2: '',
-    instrucao_linha_3: '',
-    instrucao_linha_4: '',
-    instrucao_linha_5: '',
-  };
+  // Hook de formulário com React Hook Form + Zod
+  const formHook = useBancoForm({
+    bancoId: bancoId || null,
+    show,
+    onSuccess
+  });
 
-  const [formData, setFormData] = useState<BancoForm>(initialFormData);
-  const [errors, setErrors] = useState<Partial<BancoForm>>({});
+  // Usar dados do hook
+  const formData = formHook.formData;
+  const errors = formHook.errors;
+  const banco = formHook.banco;
+  const isLoading = formHook.isLoadingBanco;
+
+  // Estados locais para funcionalidades específicas do modal
   const [testResult, setTestResult] = useState<string>('');
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
   const [isGeneratingSecret, setIsGeneratingSecret] = useState(false);
   const { success, error, warning } = useNotificationContext();
   const queryClient = useQueryClient();
 
-  // Query para buscar dados do banco (apenas em modo edição)
-  const { data: banco, isLoading } = useQuery({
-    queryKey: ['banco', bancoId],
-    queryFn: () => BancoService.getById(bancoId!),
-    enabled: isEdit && !!bancoId,
-    staleTime: 60 * 1000,
-    refetchOnMount: false,
-  });
-
-  // Converter banco para formato do formulário
-  const bankoFormData: BancoForm | undefined = banco ? mapBancoToForm(banco) : undefined;
-
-  // Usar hook personalizado para reset do formulário
-  useFormReset({
-    show,
-    initialData: initialFormData,
-    setFormData,
-    setErrors,
-    customData: bankoFormData
-  });
-
   // Limpar resultado do teste quando o modal abre
   useEffect(() => {
     if (show) {
       setTestResult('');
-      setErrors({});
     }
   }, [show]);
 
-  // Mutation para criar banco
-  const createBancoMutation = useMutation({
-    mutationFn: (data: BancoForm) => BancoService.create(data),
-    onSuccess: (createdBanco) => {
-      success('Banco criado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['bancos'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      setFormData(mapBancoToForm(createdBanco));
-      onSuccess?.(createdBanco);
-    },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao criar banco');
-    }
-  });
-
-  // Mutation para atualizar banco
-  const updateBancoMutation = useMutation({
-    mutationFn: (data: BancoForm) => BancoService.update(bancoId!, data),
-    onSuccess: (updatedBanco) => {
-      success('Banco atualizado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['bancos'] });
-      queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      setFormData(mapBancoToForm(updatedBanco));
-      onSuccess?.(updatedBanco);
-    },
-    onError: (err) => {
-      const axiosError = err as AxiosError<{ message: string }>;
-      error(axiosError.response?.data?.message || 'Erro ao atualizar banco');
-    }
-  });
-
-  const isPending = createBancoMutation.isPending || updateBancoMutation.isPending;
-
-  const handleInputChange = (field: keyof BancoForm, value: FormValue) => {
-    // Normalizar o valor baseado no tipo esperado do campo
-    let normalizedValue: string | boolean | number;
-    
-    if (value === null || value === undefined) {
-      // Para campos string, usar string vazia; para boolean, manter o valor atual; para number, usar 0
-      const fieldType = typeof formData[field];
-      if (fieldType === 'boolean') {
-        normalizedValue = false;
-      } else if (fieldType === 'number') {
-        normalizedValue = 0;
-      } else {
-        normalizedValue = '';
-      }
-    } else if (Array.isArray(value)) {
-      // Arrays não são esperados, usar primeiro valor ou string vazia
-      normalizedValue = value.length > 0 ? String(value[0]) : '';
-    } else {
-      normalizedValue = value as string | boolean | number;
-    }
-
-    setFormData(prev => {
-      const newData = {
-        ...prev,
-        [field]: normalizedValue
-      };
-
-      if (field === 'api_key') {
-        newData.has_api_key = !!normalizedValue;
-      }
-      
-      // Atualizar código e url_retorno quando tipo_banco mudar
-      if (field === 'tipo_banco' && !isEdit) {
-        const codigos: Record<string, string> = {
-          'efi': '364',
-          'asaas': '461',
-          'bancario': '',
-          'outros': ''
-        };
-        newData.codigo = codigos[String(normalizedValue)] || '';
-        newData.url_retorno = `${window.location.origin}/webhook/${normalizedValue}`;
-      }
-      
-      return newData;
-    });
-
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined
-      }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Partial<BancoForm> = {};
-
-    if (!formData.nome.trim()) newErrors.nome = 'Nome é obrigatório';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    if (isEdit) {
-      // Preparar dados para salvar (não enviar campos de senha vazios)
-      const dataToSave = { ...formData };
-      
-      // Se api_key estiver vazio, não enviar (para não sobrescrever o valor existente)
-      if (!dataToSave.api_key || dataToSave.api_key.trim() === '') {
-        delete (dataToSave as Partial<BancoForm>).api_key;
-      }
-      
-      // Se client_id_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
-      if (!dataToSave.client_id_producao || dataToSave.client_id_producao.trim() === '') {
-        delete (dataToSave as Partial<BancoForm>).client_id_producao;
-      }
-      
-      // Se client_secret_producao estiver vazio, não enviar (para não sobrescrever o valor existente)
-      if (!dataToSave.client_secret_producao || dataToSave.client_secret_producao.trim() === '') {
-        delete (dataToSave as Partial<BancoForm>).client_secret_producao;
-      }
-      
-      // Se api_secret estiver vazio, não enviar
-      if (!dataToSave.api_secret || dataToSave.api_secret.trim() === '') {
-        delete (dataToSave as Partial<BancoForm>).api_secret;
-      }
-      if (!dataToSave.webhook_secret || dataToSave.webhook_secret.trim() === '') {
-        delete (dataToSave as Partial<BancoForm>).webhook_secret;
-      }
-      delete (dataToSave as Partial<BancoForm>).has_api_key;
-      
-      updateBancoMutation.mutate(dataToSave);
-    } else {
-      const dataToCreate = { ...formData };
-      if (!dataToCreate.webhook_secret || dataToCreate.webhook_secret.trim() === '') {
-        delete (dataToCreate as Partial<BancoForm>).webhook_secret;
-      }
-      if (!dataToCreate.api_secret || dataToCreate.api_secret.trim() === '') {
-        delete (dataToCreate as Partial<BancoForm>).api_secret;
-      }
-      delete (dataToCreate as Partial<BancoForm>).has_api_key;
-      createBancoMutation.mutate(dataToCreate);
-    }
-  };
-
   const handleCancel = () => {
-    setErrors({});
-    setFormData(initialFormData);
     setTestResult('');
     setIsGeneratingSecret(false);
     onClose();
@@ -316,7 +71,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
     setTestResult('Testando conexão...');
     try {
       // Preparar dados para salvar
-      const dataToSave = { ...formData };
+      const dataToSave: BancoForm = { ...formData };
       
       // Se api_key estiver vazio, não enviar (para não sobrescrever o valor existente)
       if (!dataToSave.api_key || dataToSave.api_key.trim() === '') {
@@ -389,10 +144,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
       const novoSecret = await BancoService.gerarWebhookSecret(bancoId);
 
       if (novoSecret) {
-        setFormData(prev => ({
-          ...prev,
-          webhook_secret: novoSecret
-        }));
+        formHook.handleInputChange('webhook_secret', novoSecret);
         queryClient.invalidateQueries({ queryKey: ['banco', bancoId] });
         queryClient.invalidateQueries({ queryKey: ['bancos'] });
         success('Token do webhook gerado com sucesso!');
@@ -481,7 +233,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={handleCancel}
-            disabled={isPending}
+            disabled={formHook.isSubmitting}
           >
             Cancelar
           </button>
@@ -489,14 +241,14 @@ const BancoModal: React.FC<BancoModalProps> = ({
             type="submit"
             form="banco-form"
             className="btn btn-primary btn-sm"
-            disabled={isPending}
+            disabled={formHook.isSubmitting}
           >
             Salvar
           </button>
         </div>
       }
     >
-      <form id="banco-form" onSubmit={handleSubmit}>
+      <form id="banco-form" onSubmit={formHook.handleSubmit}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Navegação por Abas */}
           <ul className="nav nav-tabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
@@ -535,8 +287,8 @@ const BancoModal: React.FC<BancoModalProps> = ({
               <InformacoesBasicasTab
                 formData={formData}
                 errors={errors}
-                handleInputChange={handleInputChange}
-                isPending={isPending}
+                handleInputChange={formHook.handleInputChange}
+                isPending={formHook.isSubmitting}
                 formPrefix={formPrefix}
                 renderBancoEspecificoCampos={renderBancoEspecificoCampos}
                 handleTestConnection={handleTestConnection}
@@ -549,8 +301,8 @@ const BancoModal: React.FC<BancoModalProps> = ({
               <ConfiguracoesApiTab
                 formData={formData}
                 errors={errors}
-                handleInputChange={handleInputChange}
-                isPending={isPending}
+                handleInputChange={formHook.handleInputChange}
+                isPending={formHook.isSubmitting}
                 formPrefix={formPrefix}
                 renderBancoEspecificoCampos={renderBancoEspecificoCampos}
                 handleTestConnection={handleTestConnection}
