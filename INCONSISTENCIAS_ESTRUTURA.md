@@ -18,9 +18,9 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 - ✅ 41 arquivos principais já refatorados
 
 **Estatísticas:**
-- ✅ 41 arquivos principais refatorados (72% do total)
-- ⏳ ~16 arquivos ainda com imports profundos (`../../../` ou `../../../../`)
-- 📊 Total de imports profundos encontrados: ~90 ocorrências restantes
+- ✅ 42 arquivos principais refatorados (74% do total)
+- ⏳ Imports restantes são principalmente relativos para componentes UI próximos (`../../../../ui/FormField`)
+- 📊 Imports de hooks/services/types/utils já estão todos usando path aliases
 
 **Observação**: A refatoração pode continuar gradualmente nos demais arquivos conforme necessário.
 
@@ -32,7 +32,8 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 
 **Status**: ⏳ **EM ANDAMENTO**
 
-- ⏳ Refatorar ~16 arquivos restantes que ainda usam imports profundos
+- ✅ Imports críticos (hooks/services/types/utils) já refatorados
+- ⏳ Imports restantes são relativos para componentes UI próximos (opcional refatorar)
 - ⏳ Priorizar arquivos mais críticos ou frequentemente modificados
 - ⏳ A refatoração pode ser feita gradualmente conforme necessário
 
