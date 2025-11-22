@@ -4,6 +4,7 @@ import { Titulo } from '../../models/Titulo';
 import { Op } from 'sequelize';
 import { Formatter } from './utils/Formatter';
 import { VariableReplacer } from './utils/VariableReplacer';
+import { FinancialCalculationsService } from '../FinancialCalculationsService';
 
 interface CalculosFinanceiros {
   totalAberto: number;
@@ -147,8 +148,6 @@ export class FinanceiroVariableHandler implements IVariableHandler {
     valor: number,
     calculos: CalculosFinanceiros
   ): void {
-    const { FinancialCalculationsService } = require('../FinancialCalculationsService');
-    
     const acrescimoResult = FinancialCalculationsService.calcularAcrescimo(valor, {
       acrescimo_percentual: titulo.acrescimo_percentual,
       acrescimo_valor: titulo.acrescimo_valor
