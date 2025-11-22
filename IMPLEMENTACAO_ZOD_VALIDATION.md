@@ -104,14 +104,27 @@ const onSubmit = (data: ClienteFormData) => {
 - ✅ Schema completo e funcional
 - ✅ Validação em tempo real implementada
 
-### 2. Próximos Passos (Opcional)
+### 2. Schemas para Outras Entidades - CRIADOS ✅
 
-#### Criar Schemas para Outras Entidades
-- `plano.schema.ts` - Schema para validação de Planos
-- `contrato.schema.ts` - Schema para validação de Contratos
-- `titulo.schema.ts` - Schema para validação de Títulos
+#### `frontend/src/schemas/plano.schema.ts` ✅
+- ✅ Schema completo para validação de Planos
+- ✅ Validações para valores, descontos, periodicidade
+- ✅ Validação de datas e status
+- ✅ Tipos TypeScript inferidos
 
-**Nota:** Estes schemas podem ser criados conforme necessário, seguindo o mesmo padrão usado em `cliente.schema.ts`
+#### `frontend/src/schemas/contrato.schema.ts` ✅
+- ✅ Schema completo para validação de Contratos
+- ✅ Validações para relacionamentos obrigatórios
+- ✅ Validação de descontos e datas
+- ✅ Tipos TypeScript inferidos
+
+#### `frontend/src/schemas/titulo.schema.ts` ✅
+- ✅ Schema completo para validação de Títulos
+- ✅ Validações para valores, descontos e acréscimos
+- ✅ Validação de datas e status
+- ✅ Tipos TypeScript inferidos
+
+**Status:** Schemas criados e prontos para uso. Podem ser integrados aos formulários seguindo o mesmo padrão usado em `cliente.schema.ts`
 
 ## 📚 Documentação Adicional
 
@@ -177,8 +190,9 @@ const MyForm = () => {
 3. **Validação em Tempo Real**: Use `mode: 'onChange'` para validação enquanto o usuário digita
 4. **Mensagens de Erro**: Todas as mensagens estão em português e são personalizadas
 
-## ✅ Checklist de Implementação - Cliente
+## ✅ Checklist de Implementação
 
+### Cliente - COMPLETO ✅
 - [x] Instalar dependências (zod, @hookform/resolvers, react-hook-form)
 - [x] Criar schemas reutilizáveis para documentos brasileiros
 - [x] Criar schema completo para Cliente
@@ -192,6 +206,15 @@ const MyForm = () => {
 - [x] Documentação completa criada
 
 **Status:** ✅ **IMPLEMENTAÇÃO COMPLETA PARA CLIENTE**
+
+### Outras Entidades - SCHEMAS CRIADOS ✅
+- [x] Criar `plano.schema.ts` com validações completas
+- [x] Criar `contrato.schema.ts` com validações completas
+- [x] Criar `titulo.schema.ts` com validações completas
+
+**Status:** ✅ **SCHEMAS CRIADOS E PRONTOS PARA USO**
+
+**Próximo Passo:** Refatorar formulários de Plano, Contrato e Título para usar React Hook Form + Zod (opcional)
 
 ## 🎯 Próximas Implementações (Opcional)
 
