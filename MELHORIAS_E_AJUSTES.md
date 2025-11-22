@@ -30,6 +30,11 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
   - Regras de níveis de aninhamento (máximo 4 níveis)
   - Checklist de verificação para novos arquivos
   - Processo de migração e reorganização documentado
+- ✅ Criado documento `INCONSISTENCIAS_ESTRUTURA.md`:
+  - Lista inconsistências de nomenclatura identificadas
+  - Documenta imports com caminhos profundos
+  - Sugere uso de path aliases no tsconfig.json
+  - Define ações recomendadas para correção futura
 - ✅ Documentação de padrões híbridos atuais:
   - Components agrupados por tipo e entidade
   - Hooks agrupados por tipo
