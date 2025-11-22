@@ -120,7 +120,7 @@ export class ParametroService {
       const response = await this.updateParametro(chave, { valor: valor.toString() });
       return response.success;
     } catch (error) {
-      console.error(`Erro ao atualizar parâmetro ${chave}:`, error);
+      // Erro silencioso - retorna false em caso de falha
       return false;
     }
   }

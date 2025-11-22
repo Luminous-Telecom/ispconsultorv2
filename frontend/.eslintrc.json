@@ -3,7 +3,7 @@
   "rules": {
     // 1. Desabilitar no-unused-vars padrão porque @typescript-eslint/no-unused-vars já cobre
     "no-unused-vars": "off",
-    "no-console": "off",
+    "no-console": "warn", // Alertar sobre console.logs (não bloquear, mas avisar)
     
     // 2. Uso explícito de 'any' (muito perigoso, o principal alvo)
     "@typescript-eslint/no-explicit-any": "error",

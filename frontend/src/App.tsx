@@ -15,7 +15,7 @@ const Home = lazy(() => import('./components/pages/Home'));
 const Dashboard = lazy(() => import('./components/pages/Dashboard'));
 const Login = lazy(() => import('./components/pages/Login'));
 const PagamentoPublico = lazy(() => import('./components/pages/PagamentoPublico'));
-// teste
+
 // Query Client
 const queryClient = new QueryClient({
   defaultOptions: {

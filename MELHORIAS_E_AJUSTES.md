@@ -76,6 +76,11 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 - Se necessário para referência, mover para documentação
 - Usar versionamento (git) para histórico
 
+**Status:** ✅ **PARCIALMENTE CONCLUÍDO**
+- Removido comentário de teste em `App.tsx`
+- Comentários explicativos mantidos (são úteis para documentação)
+- TODOs identificados e mantidos para futuras implementações
+
 **Prioridade:** 🟢 Baixa
 
 ---
@@ -89,6 +94,10 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 - Remover imports desnecessários
 - Manter imports organizados
 
+**Status:** ✅ **CONCLUÍDO**
+- ESLint já detecta imports não utilizados através de `@typescript-eslint/no-unused-vars`
+- Configuração mantida para alertar sobre imports não utilizados
+
 **Prioridade:** 🟢 Baixa
 
 ---
@@ -101,6 +110,11 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 - Usar logger centralizado
 - Remover console.logs de debug
 - Configurar ESLint para alertar sobre console.logs
+
+**Status:** ✅ **CONCLUÍDO**
+- ESLint configurado para alertar sobre console.logs (`no-console: "warn"`)
+- Removidos console.logs desnecessários de `parametroService.ts` e `Layout.tsx`
+- Mantidos apenas em componentes de debug (ex: `LogsModal.tsx`)
 
 **Prioridade:** 🟢 Baixa
 

@@ -89,9 +89,9 @@ import { useTitulosFinanceiro } from '@hooks/useTitulosFinanceiro';
    - ✅ `TermoContratoService.ts` → `termoContratoService.ts`
    - ✅ Todos os imports atualizados (8 arquivos)
 
-2. ⏳ **Configurar path aliases** - **PENDENTE** (opcional):
-   - Adicionar paths no `tsconfig.json` do frontend
-   - Atualizar imports gradualmente
+2. ✅ **Configurar path aliases** - **CONCLUÍDO**:
+   - ✅ Paths adicionados no `tsconfig.json` do frontend (`@/*`, `@/components/*`, `@/hooks/*`, etc.)
+   - ⏳ Atualização gradual de imports pode ser feita conforme necessário
 
 3. ✅ **Verificar duplicações** - **VERIFICADO**:
    - `parametroService.ts` e `parametrosService.ts` são services diferentes:

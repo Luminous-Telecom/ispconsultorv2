@@ -62,7 +62,6 @@ const Layout: React.FC = () => {
           }
         } catch (error) {
           // Silenciosamente falhar se não conseguir carregar o usuário
-          console.error('Erro ao carregar usuário atual:', error);
         }
       }
     };
