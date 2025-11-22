@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useDeleteContrato, Contrato } from '../../../hooks/useContratos';
-import { ContratoService } from '../../../services/contratoService';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
+import { useDeleteContrato, Contrato } from '@/hooks/useContratos';
+import { ContratoService } from '@/services/contratoService';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import DocumentoSistemaService from '@/services/documentoSistemaService';
+import { formatDate, formatDateTime } from '@/utils/formatters';
+import { useImpressaoContrato } from '@/hooks/useImpressaoContrato';
 import DraggableModal from '../../common/DraggableModal';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
 import ContratoModal from '../clientes/contrato/ContratoModal';
-import DocumentoSistemaService from '../../../services/documentoSistemaService';
 import ImprimirModal from '../../common/ImprimirModal';
-import { formatDate, formatDateTime } from '../../../utils/formatters';
-import { useImpressaoContrato } from '../../../hooks/useImpressaoContrato';
 
 interface ContratoListModalProps {
   show: boolean;

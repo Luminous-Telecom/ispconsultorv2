@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { usePlanos, useDeletePlano } from '../../../hooks/usePlanos';
-import { useModalSelect } from '../../../hooks/useModalSelect';
-import { useListModal } from '../../../hooks/useListModal';
-import { useTableFilters } from '../../../hooks/useTableFilters';
+import { useQueryClient } from '@tanstack/react-query';
+import { usePlanos, useDeletePlano } from '@/hooks/usePlanos';
+import { useModalSelect } from '@/hooks/useModalSelect';
+import { useListModal } from '@/hooks/useListModal';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { Plano } from '@/types';
+import { formatDateTime } from '@/utils/formatters';
 import ListModal from '../../common/ListModal';
 import PlanoModal from './PlanoModal';
-import { Plano } from '../../../types';
-import { useQueryClient } from '@tanstack/react-query';
-import { formatDateTime } from '../../../utils/formatters';
 
 interface PlanoListModalProps {
   show: boolean;

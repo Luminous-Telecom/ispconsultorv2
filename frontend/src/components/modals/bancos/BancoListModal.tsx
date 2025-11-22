@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useBancos, useDeleteBanco } from '../../../hooks/useBancos';
-import { useModalSelect } from '../../../hooks/useModalSelect';
-import { useListModal } from '../../../hooks/useListModal';
-import { useTableFilters } from '../../../hooks/useTableFilters';
+import { useBancos, useDeleteBanco } from '@/hooks/useBancos';
+import { useModalSelect } from '@/hooks/useModalSelect';
+import { useListModal } from '@/hooks/useListModal';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { Banco } from '@/types';
+import { formatDateTime } from '@/utils/formatters';
 import ListModal from '../../common/ListModal';
 import BancoModal from './BancoModal';
-import { Banco } from '../../../types';
-import { formatDateTime } from '../../../utils/formatters';
 interface BancoListModalProps {
   show: boolean;
   onClose: () => void;

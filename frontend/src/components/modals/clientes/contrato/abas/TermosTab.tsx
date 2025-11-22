@@ -1,7 +1,7 @@
 import React from 'react';
+import { TermoContrato } from '@/services/termoContratoService';
 import Table from '../../../../tables/Table';
 import { BulkAction } from '../types';
-import { TermoContrato } from '../../../../../services/termoContratoService';
 import { TableColumn } from '../../../../tables/types';
 
 interface TermosTabProps {

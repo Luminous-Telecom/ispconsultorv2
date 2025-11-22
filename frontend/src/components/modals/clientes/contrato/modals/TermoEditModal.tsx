@@ -1,11 +1,11 @@
 import React from 'react';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { TermoContrato } from '@/services/termoContratoService';
+import { useCreateTermoContrato, useUpdateTermoContrato } from '@/hooks/useTermosContrato';
+import { useModelosTermo } from '@/hooks/useModelosTermo';
+import EntitySelectField from '@/components/ui/EntitySelectField';
 import DraggableModal from '../../../../common/DraggableModal';
-import { useNotificationContext } from '../../../../../components/notifications/NotificationProvider';
-import { TermoContrato } from '../../../../../services/termoContratoService';
-import { useCreateTermoContrato, useUpdateTermoContrato } from '../../../../../hooks/useTermosContrato';
-import { useModelosTermo } from '../../../../../hooks/useModelosTermo';
 import { TermoFormData } from '../types';
-import EntitySelectField from '../../../../../components/ui/EntitySelectField';
 
 interface TermoEditModalProps {
   show: boolean;

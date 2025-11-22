@@ -44,30 +44,37 @@ Este documento lista inconsistências encontradas na estrutura de arquivos do pr
 
 **Problema**: Alguns arquivos têm imports com muitos níveis (`../../../`).
 
-**Exemplo encontrado:**
-```typescript
-// frontend/src/components/modals/financeiro/FinanceiroModal.tsx
-import { useTitulosFinanceiro } from '../../../hooks/useTitulosFinanceiro';
-import { Titulo, TituloFilters } from '../../../types';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
-```
+**Status**: ✅ **EM REFATORAÇÃO** - Path aliases configurados e sendo aplicados gradualmente.
 
-**Solução**: Considerar usar path aliases no `tsconfig.json` para simplificar imports.
-
-**Sugestão de path aliases:**
+**Solução**: ✅ Path aliases configurados no `tsconfig.json`:
 ```json
 {
   "compilerOptions": {
     "paths": {
-      "@hooks/*": ["src/hooks/*"],
-      "@services/*": ["src/services/*"],
-      "@types/*": ["src/types/*"],
-      "@components/*": ["src/components/*"],
-      "@utils/*": ["src/utils/*"]
+      "@/*": ["*"],
+      "@/hooks/*": ["hooks/*"],
+      "@/services/*": ["services/*"],
+      "@/types/*": ["types/*"],
+      "@/components/*": ["components/*"],
+      "@/utils/*": ["utils/*"],
+      "@/constants/*": ["constants/*"]
     }
   }
 }
 ```
+
+**Arquivos Refatorados**:
+- ✅ `FinanceiroModal.tsx`
+- ✅ `BancoListModal.tsx`
+- ✅ `PlanoListModal.tsx`
+- ✅ `ContratoModal.tsx`
+- ✅ `ContratoListModal.tsx`
+- ✅ `TituloModal.tsx`
+- ✅ `ClienteListModal.tsx`
+- ✅ `ClienteModal.tsx`
+- ✅ `ParametrosModal.tsx`
+- ✅ `TermosTab.tsx`
+- ✅ `TermoEditModal.tsx`
 
 **Uso:**
 ```typescript
@@ -75,8 +82,10 @@ import { useNotificationContext } from '../../../components/notifications/Notifi
 import { useTitulosFinanceiro } from '../../../hooks/useTitulosFinanceiro';
 
 // Depois
-import { useTitulosFinanceiro } from '@hooks/useTitulosFinanceiro';
+import { useTitulosFinanceiro } from '@/hooks/useTitulosFinanceiro';
 ```
+
+**Observação**: A refatoração pode continuar gradualmente nos demais arquivos conforme necessário.
 
 ---
 
@@ -91,7 +100,8 @@ import { useTitulosFinanceiro } from '@hooks/useTitulosFinanceiro';
 
 2. ✅ **Configurar path aliases** - **CONCLUÍDO**:
    - ✅ Paths adicionados no `tsconfig.json` do frontend (`@/*`, `@/components/*`, `@/hooks/*`, etc.)
-   - ⏳ Atualização gradual de imports pode ser feita conforme necessário
+   - ✅ Refatorados 11 arquivos principais de modais para usar path aliases
+   - ⏳ Atualização gradual dos demais arquivos pode continuar conforme necessário
 
 3. ✅ **Verificar duplicações** - **VERIFICADO**:
    - `parametroService.ts` e `parametrosService.ts` são services diferentes:

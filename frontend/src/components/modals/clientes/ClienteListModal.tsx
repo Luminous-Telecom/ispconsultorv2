@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useClientes, useDeleteCliente } from '../../../hooks/useClientes';
-import { useModalSelect } from '../../../hooks/useModalSelect';
-import { useListModal } from '../../../hooks/useListModal';
-import { useTableFilters } from '../../../hooks/useTableFilters';
+import { useClientes, useDeleteCliente } from '@/hooks/useClientes';
+import { useModalSelect } from '@/hooks/useModalSelect';
+import { useListModal } from '@/hooks/useListModal';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { formatDateTime } from '@/utils/formatters';
 import ListModal from '../../common/ListModal';
 import ClienteModal from './cliente/ClienteModal';
-import { formatDateTime } from '../../../utils/formatters';
 
 interface Cliente {
   id: number;

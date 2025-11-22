@@ -1,21 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TituloService } from '../../../../services/tituloService';
+import { TituloService } from '@/services/tituloService';
+import { useFormPrefix } from '@/hooks/useFormId';
+import { useClienteForm } from '@/hooks/useClienteForm';
+import { useClienteContratos } from '@/hooks/useClienteContratos';
+import { useClienteImpressao } from '@/hooks/useClienteImpressao';
+import { useClienteBulkActions } from '@/hooks/useClienteBulkActions';
+import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
+import { CarneParcela } from '@/types';
+import { TituloItem } from '@/types/cliente';
 import DraggableModal from '../../../common/DraggableModal';
-import { useFormPrefix } from '../../../../hooks/useFormId';
 import ImprimirModal from '../../../common/ImprimirModal';
 import { TituloModal } from '../../titulos/titulo';
 import ReceberModal from '../../pagamentos/ReceberModal';
 import ContratoModal from '../contrato/ContratoModal';
-// Hooks refatorados
-import { useClienteForm } from '../../../../hooks/useClienteForm';
-import { useClienteContratos } from '../../../../hooks/useClienteContratos';
-import { useClienteImpressao } from '../../../../hooks/useClienteImpressao';
-import { useClienteBulkActions } from '../../../../hooks/useClienteBulkActions';
-// Utilitários
-import { formatCurrency, formatDate, formatDateTime } from '../../../../utils/formatters';
-import { CarneParcela } from '../../../../types';
-import { TituloItem } from '../../../../types/cliente';
 // Componentes de abas
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import ContatoTab from './abas/ContatoTab';

@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import DraggableModal from '../../common/DraggableModal';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
-import { ParametrosService } from '../../../services/parametrosService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useFormReset } from '../../../hooks/useFormReset';
 import { AxiosError } from 'axios';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { ParametrosService } from '@/services/parametrosService';
+import { useFormReset } from '@/hooks/useFormReset';
+import DraggableModal from '../../common/DraggableModal';
 
 interface ParametrosModalProps {
   show: boolean;

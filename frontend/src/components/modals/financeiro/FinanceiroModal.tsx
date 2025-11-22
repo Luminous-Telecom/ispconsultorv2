@@ -1,18 +1,18 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { useTitulosFinanceiro } from '../../../hooks/useTitulosFinanceiro';
-import { Titulo, TituloFilters } from '../../../types';
-import { useNotificationContext } from '../../../components/notifications/NotificationProvider';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTitulosFinanceiro } from '@/hooks/useTitulosFinanceiro';
+import { Titulo, TituloFilters } from '@/types';
+import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useSorting } from '@/hooks/useSorting';
+import { useTableFilters } from '@/hooks/useTableFilters';
+import { TituloService } from '@/services/tituloService';
+import { formatDate, formatDateTime } from '@/utils/formatters';
 import DraggableModal from '../../common/DraggableModal';
 import Table from '../../tables/Table';
 import { TableConfig } from '../../tables/types';
-import { useSorting } from '../../../hooks/useSorting';
-import { useTableFilters } from '../../../hooks/useTableFilters';
-import { TituloService } from '../../../services/tituloService';
 import { TituloModal } from '../titulos';
 import ReceberModal from '../pagamentos/ReceberModal';
 import ImprimirModal from '../../common/ImprimirModal';
-import { formatDate, formatDateTime } from '../../../utils/formatters';
 
 interface FinanceiroModalProps {
   show: boolean;
