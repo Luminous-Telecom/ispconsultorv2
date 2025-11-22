@@ -5,10 +5,7 @@ import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
-
-// @ts-ignore
-import * as htmlPdf from 'html-pdf-node';
-import type { PdfOptions } from 'html-pdf-node';
+import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
 
 export class ModeloCartaController {
   /**
