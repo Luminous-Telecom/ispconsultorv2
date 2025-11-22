@@ -1,20 +1,21 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
+import Loading from './components/common/Loading';
 import './styles/themes.css';
 import './styles/protection.css';
 
-// Layout
+// Layout (carregado normalmente pois é sempre necessário)
 import Layout from './components/layout/Layout';
-//
-// Pages
-import Home from './components/pages/Home';
-import Dashboard from './components/pages/Dashboard';
-import Login from './components/pages/Login';
-import PagamentoPublico from './components/pages/PagamentoPublico';
+
+// Pages com lazy loading (code splitting)
+const Home = lazy(() => import('./components/pages/Home'));
+const Dashboard = lazy(() => import('./components/pages/Dashboard'));
+const Login = lazy(() => import('./components/pages/Login'));
+const PagamentoPublico = lazy(() => import('./components/pages/PagamentoPublico'));
 
 // Protection
 import ProtectionLayer from './components/common/ProtectionLayer';
@@ -51,19 +52,41 @@ function App() {
         <ThemeProvider>
           <NotificationProvider>
             <Router>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/pagamento/:id/:token" element={<PagamentoPublico />} />
-                <Route path="/adm" element={
-                  <DashboardFiltersProvider>
-                    <Layout />
-                  </DashboardFiltersProvider>
-                }>
-                  <Route index element={<Dashboard />} />
-                  <Route path="dashboard" element={<Dashboard />} />
-                </Route>
-              </Routes>
+              <Suspense fallback={<Loading message="Carregando página..." />}>
+                <Routes>
+                  <Route path="/" element={
+                    <Suspense fallback={<Loading message="Carregando página inicial..." />}>
+                      <Home />
+                    </Suspense>
+                  } />
+                  <Route path="/login" element={
+                    <Suspense fallback={<Loading message="Carregando login..." />}>
+                      <Login />
+                    </Suspense>
+                  } />
+                  <Route path="/pagamento/:id/:token" element={
+                    <Suspense fallback={<Loading message="Carregando página de pagamento..." />}>
+                      <PagamentoPublico />
+                    </Suspense>
+                  } />
+                  <Route path="/adm" element={
+                    <DashboardFiltersProvider>
+                      <Layout />
+                    </DashboardFiltersProvider>
+                  }>
+                    <Route index element={
+                      <Suspense fallback={<Loading message="Carregando dashboard..." />}>
+                        <Dashboard />
+                      </Suspense>
+                    } />
+                    <Route path="dashboard" element={
+                      <Suspense fallback={<Loading message="Carregando dashboard..." />}>
+                        <Dashboard />
+                      </Suspense>
+                    } />
+                  </Route>
+                </Routes>
+              </Suspense>
             </Router>
           </NotificationProvider>
         </ThemeProvider>

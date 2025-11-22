@@ -13,39 +13,28 @@ Este documento contém sugestões de melhorias e ajustes para simplificar códig
 7. [Limpeza de Código](#limpeza-de-código)
 
 ---
-
-### 2. Re-renderizações Desnecessárias ✅
-
-**Problema:** Componentes React podem estar re-renderizando desnecessariamente.
-
-**Solução Implementada:**
-- ✅ Otimizado `ListModal.tsx`:
-  - Adicionado `useMemo` para `tableColumns` e `bulkActions`
-  - Evita recriação de arrays/objetos a cada render
-- ✅ Otimizado `TableColumn.tsx`:
-  - Adicionado `React.memo` para evitar re-renderizações desnecessárias
-  - Memoizado `handleSort`, `columnStyles` e `columnClasses` com `useMemo`/`useCallback`
-- ✅ Otimizado `TableActions.tsx`:
-  - Adicionado `React.memo` para evitar re-renderizações desnecessárias
-  - Memoizado `visibleActions` e `visibleBulkActions` com `useMemo`
-  - Memoizado callbacks `handleActionClick` e `handleBulkActionClick` com `useCallback`
-- ✅ Otimizado `Table.tsx`:
-  - Memoizado `handleSelectionChange` com `useCallback`
-  - Memoizado `handleClickOutside` com `useCallback`
-  - Melhorado gerenciamento de dependências de hooks
-
-**Prioridade:** 🟢 Baixa
-
----
-
-### 3. Bundle Size
+### 3. Bundle Size ✅
 
 **Problema:** Possível bundle grande do frontend.
 
-**Sugestão:**
-- Implementar code splitting
-- Lazy loading de rotas e componentes pesados
-- Analisar bundle com webpack-bundle-analyzer
+**Solução Implementada:**
+- ✅ Implementado code splitting nas rotas principais:
+  - `Home`, `Dashboard`, `Login`, `PagamentoPublico` agora são carregados sob demanda
+  - Reduz tamanho do bundle inicial significativamente
+- ✅ Implementado lazy loading para todos os modais:
+  - Modais são carregados apenas quando abertos
+  - 14 modais otimizados (Clientes, Planos, Bancos, Contratos, Financeiro, etc.)
+  - Cada modal é um chunk separado, melhorando cache do navegador
+- ✅ Criado componente `Loading.tsx` para feedback durante carregamento
+- ✅ Configurado `webpack-bundle-analyzer`:
+  - Script `npm run build:analyze` para analisar tamanho do bundle
+  - Permite identificar oportunidades de otimização futuras
+
+**Benefícios:**
+- Bundle inicial menor (apenas código essencial carregado)
+- Melhor performance de carregamento inicial
+- Melhor experiência do usuário (carregamento progressivo)
+- Melhor cache do navegador (chunks separados)
 
 **Prioridade:** 🟢 Baixa
 

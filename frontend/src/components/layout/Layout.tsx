@@ -6,20 +6,27 @@ import { useTheme } from '../../contexts/ThemeContext';
 import DropdownMenu from '../common/DropdownMenu';
 import { Button } from '../ui';
 import { useDashboardFilters } from '../../contexts/DashboardFiltersContext';
-import { ClienteListModal } from '../modals/clientes';
-import { PlanoListModal } from '../modals/planos';
-import { BancoListModal } from '../modals/bancos';
-import ContratoListModal from '../modals/contratos/ContratoListModal';
-import FinanceiroModal from '../modals/financeiro/FinanceiroModal';
-import { DadosEmpresaModal } from '../modals/empresa/empresa';
-import UsuariosModal from '../modals/parametros/UsuariosModal';
-import RecursosSistemaModal from '../modals/parametros/RecursosSistemaModal';
-import { ServidorEmailModal } from '../modals/parametros/servidor-email';
-import { ServidorWhatsappModal } from '../modals/parametros/servidor-whatsapp';
-import { DocumentosSistemaModal } from '../modals/parametros/documentos-sistema';
-import DiasVencimentoModal from '../modals/parametros/DiasVencimentoModal';
-import AtualizacoesModal from '../modals/parametros/AtualizacoesModal';
-import AgendadorTarefasModal from '../modals/parametros/AgendadorTarefasModal';
+// Modais com lazy loading (code splitting) - carregados apenas quando necessário
+import { lazy, Suspense } from 'react';
+import Loading from '../common/Loading';
+
+// Named exports
+const ClienteListModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteListModal })));
+const PlanoListModal = lazy(() => import('../modals/planos').then(m => ({ default: m.PlanoListModal })));
+const BancoListModal = lazy(() => import('../modals/bancos').then(m => ({ default: m.BancoListModal })));
+const DadosEmpresaModal = lazy(() => import('../modals/empresa/empresa').then(m => ({ default: m.DadosEmpresaModal })));
+const ServidorEmailModal = lazy(() => import('../modals/parametros/servidor-email').then(m => ({ default: m.ServidorEmailModal })));
+const ServidorWhatsappModal = lazy(() => import('../modals/parametros/servidor-whatsapp').then(m => ({ default: m.ServidorWhatsappModal })));
+const DocumentosSistemaModal = lazy(() => import('../modals/parametros/documentos-sistema').then(m => ({ default: m.DocumentosSistemaModal })));
+
+// Default exports
+const ContratoListModal = lazy(() => import('../modals/contratos/ContratoListModal'));
+const FinanceiroModal = lazy(() => import('../modals/financeiro/FinanceiroModal'));
+const UsuariosModal = lazy(() => import('../modals/parametros/UsuariosModal'));
+const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSistemaModal'));
+const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
+const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
+const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
 import { authService, CurrentUser } from '../../services/authService';
 import { getAuthToken } from '../../services/core';
 
@@ -268,108 +275,136 @@ const Layout: React.FC = () => {
             onActionClick={() => {}}
           />
 
-      {/* Modais renderizados condicionalmente apenas quando necessário */}
+      {/* Modais renderizados condicionalmente apenas quando necessário (com lazy loading) */}
       {activeModal === 'clientes' && (
-        <ClienteListModal
-          show={true}
-          onClose={closeModal}
-          title="Clientes"
-        />
+        <Suspense fallback={<Loading message="Carregando clientes..." />}>
+          <ClienteListModal
+            show={true}
+            onClose={closeModal}
+            title="Clientes"
+          />
+        </Suspense>
       )}
       
       {activeModal === 'planos' && (
-        <PlanoListModal
-          show={true}
-          onClose={closeModal}
-          title="Planos"
-        />
+        <Suspense fallback={<Loading message="Carregando planos..." />}>
+          <PlanoListModal
+            show={true}
+            onClose={closeModal}
+            title="Planos"
+          />
+        </Suspense>
       )}
       
       {activeModal === 'bancos' && (
-        <BancoListModal
-          show={true}
-          onClose={closeModal}
-          title="Bancos"
-        />
+        <Suspense fallback={<Loading message="Carregando bancos..." />}>
+          <BancoListModal
+            show={true}
+            onClose={closeModal}
+            title="Bancos"
+          />
+        </Suspense>
       )}
       
       {activeModal === 'contratos' && (
-        <ContratoListModal
-          show={true}
-          onClose={closeModal}
-          title="Contratos"
-        />
+        <Suspense fallback={<Loading message="Carregando contratos..." />}>
+          <ContratoListModal
+            show={true}
+            onClose={closeModal}
+            title="Contratos"
+          />
+        </Suspense>
       )}
       
       {activeModal === 'financeiro' && (
-        <FinanceiroModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando financeiro..." />}>
+          <FinanceiroModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
       
       {activeModal === 'dados-empresa' && (
-        <DadosEmpresaModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando dados da empresa..." />}>
+          <DadosEmpresaModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
       
       {/* Modais de Parâmetros */}
       {activeModal === 'usuarios' && (
-        <UsuariosModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando usuários..." />}>
+          <UsuariosModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
       
       {activeModal === 'recursos-sistema' && (
-        <RecursosSistemaModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando recursos do sistema..." />}>
+          <RecursosSistemaModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
       
       {activeModal === 'servidor-email' && (
-        <ServidorEmailModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando servidor de e-mail..." />}>
+          <ServidorEmailModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
       
       {activeModal === 'servidor-whatsapp' && (
-        <ServidorWhatsappModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando servidor de WhatsApp..." />}>
+          <ServidorWhatsappModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
       
       {activeModal === 'documentos-sistema' && (
-        <DocumentosSistemaModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando documentos do sistema..." />}>
+          <DocumentosSistemaModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
       
       {activeModal === 'dias-vencimento' && (
-        <DiasVencimentoModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando dias de vencimento..." />}>
+          <DiasVencimentoModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
 
       {activeModal === 'atualizacoes' && (
-        <AtualizacoesModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando atualizações..." />}>
+          <AtualizacoesModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
 
       {activeModal === 'agendador-tarefas' && (
-        <AgendadorTarefasModal
-          show={true}
-          onClose={closeModal}
-        />
+        <Suspense fallback={<Loading message="Carregando agendador de tarefas..." />}>
+          <AgendadorTarefasModal
+            show={true}
+            onClose={closeModal}
+          />
+        </Suspense>
       )}
 
     </div>
