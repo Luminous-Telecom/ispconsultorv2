@@ -3,7 +3,7 @@ import { AxiosError } from 'axios';
 import { ApiClient } from './ApiClient';
 import { ErrorHandler } from './ErrorHandler';
 import { ResponseTransformer } from './ResponseTransformer';
-import { ApiResponse, PaginatedResponse } from '../../types';
+import { ApiResponse, PaginatedResponse } from '@/types';
 
 /**
  * Interface para filtros genéricos

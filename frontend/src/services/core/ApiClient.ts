@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { API_CONFIG } from '../../config/api';
+import { API_CONFIG } from '@/config/api';
 import { ErrorHandler } from './ErrorHandler';
 import { ResponseTransformer } from './ResponseTransformer';
-import { ApiResponse } from '../../types';
+import { ApiResponse } from '@/types';
 
 export interface ApiClientConfig {
   baseURL?: string;

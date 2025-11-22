@@ -1,6 +1,6 @@
 // Transformação de respostas da API
 import { AxiosResponse } from 'axios';
-import { ApiResponse, PaginatedResponse } from '../../types';
+import { ApiResponse, PaginatedResponse } from '@/types';
 
 /**
  * Classe para transformar respostas da API em formatos padronizados
