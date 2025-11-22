@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { useNotificationContext } from '../../../../components/notifications/NotificationProvider';
 import { usePlanos } from '../../../../hooks/usePlanos';
 import { useBancos } from '../../../../hooks/useBancos';
@@ -337,6 +338,75 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       success('Boletos selecionados gerados com sucesso!');
     } catch (err) {
       error('Erro ao gerar boletos selecionados');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleImprimirContrato = async () => {
+    if (!contratoData?.cliente_id) {
+      error('Cliente não encontrado');
+      return;
+    }
+    
+    setIsGeneratingPdf(true);
+    try {
+      await new Promise(resolve => {
+        if (window.requestIdleCallback) {
+          window.requestIdleCallback(resolve);
+        } else {
+          setTimeout(resolve, 0);
+        }
+      });
+      
+      const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
+      
+      if (modeloContrato.success && modeloContrato.data) {
+        // Passar contrato_id para usar o contrato específico sendo visualizado
+        const pdfBlob = await DocumentoSistemaService.generateTestPdf(
+          modeloContrato.data.id, 
+          contratoData.cliente_id,
+          internalContratoId || undefined
+        );
+        
+        const url = window.URL.createObjectURL(pdfBlob);
+        setPdfUrl(url);
+        setShowPreview(true);
+        
+        success('Contrato gerado com sucesso!');
+      } else {
+        error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
+      }
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      let errorMessage = 'Erro ao gerar contrato';
+      
+      if (axiosError.response) {
+        // Tentar extrair mensagem de erro do response
+        if (axiosError.response.data instanceof Blob) {
+          try {
+            const text = await axiosError.response.data.text();
+            const errorData = JSON.parse(text);
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            errorMessage = `Erro ${axiosError.response.status}: ${axiosError.response.statusText}`;
+          }
+        } else if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
+          errorMessage = (axiosError.response.data as { message?: string }).message || errorMessage;
+        }
+        
+        if (axiosError.response.status === 404) {
+          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
+        } else if (axiosError.response.status === 500) {
+          errorMessage = 'Erro interno do servidor ao gerar contrato. Tente novamente.';
+        }
+      } else if (axiosError.message) {
+        errorMessage = axiosError.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      error(errorMessage);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -1077,6 +1147,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       modalId="contrato-modal"
       headerActions={
         <div className="d-flex gap-2">
+          {isEditMode && (
+            <button 
+              type="button" 
+              className="btn btn-info btn-sm" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleImprimirContrato();
+              }}
+              disabled={isGeneratingPdf}
+            >
+              {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
+            </button>
+          )}
           <button 
             type="button" 
             className="btn btn-secondary btn-sm" 
@@ -1377,8 +1461,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               setPdfUrl(null);
             }}
             pdfUrl={pdfUrl}
-            title="Visualizar Termo"
-            modalId="termo-imprimir-modal"
+            title="Visualizar Contrato"
+            modalId="contrato-imprimir-modal"
           />
         </>
       )}

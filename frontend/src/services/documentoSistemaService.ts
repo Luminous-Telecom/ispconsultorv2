@@ -138,22 +138,107 @@ class DocumentoSistemaService {
     }
   }
 
-  static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
+  static async generateTestPdf(id: number, clienteId: number, contratoId?: number): Promise<Blob> {
     try {
-      const response = await apiService.get<Blob>(`/modelos-documento/${id}/pdf-teste?cliente_id=${clienteId}`, {
+      let url = `/modelos-documento/${id}/pdf-teste?cliente_id=${clienteId}`;
+      if (contratoId) {
+        url += `&contrato_id=${contratoId}`;
+      }
+      
+      const response = await apiService.get<Blob>(url, {
         responseType: 'blob'
       });
-
-      const blob = response.data;
-
-      if (!blob || !(blob instanceof Blob)) {
+      
+      // O interceptador retorna o blob diretamente quando responseType é 'blob'
+      // Mas pode retornar outros tipos em caso de erro
+      let blob: Blob;
+      
+      if (response instanceof Blob) {
+        blob = response;
+      } else if (response && typeof response === 'object' && 'data' in response) {
+        // Se for um objeto ApiResponse, tentar extrair o blob
+        const responseObj = response as { data?: unknown };
+        const data = responseObj.data;
+        if (data instanceof Blob) {
+          blob = data;
+        } else {
+          // Pode ser um erro JSON
+          const errorData = data as { message?: string } | null;
+          throw new Error(errorData?.message || 'Resposta do servidor não é um Blob válido');
+        }
+      } else {
         throw new Error('Resposta do servidor não é um Blob válido');
+      }
+
+      // Verificar se o blob é muito pequeno (pode ser uma mensagem de erro JSON)
+      if (blob.size < 1000) {
+        try {
+          const text = await blob.text();
+          // Se conseguir fazer parse como JSON, é um erro
+          const errorData = JSON.parse(text);
+          throw new Error(errorData.message || 'Erro ao gerar PDF de teste');
+        } catch (parseError) {
+          // Se não for JSON, verificar se é um PDF válido
+          if (blob.type && !blob.type.includes('application/pdf')) {
+            throw new Error('Resposta do servidor não é um PDF válido');
+          }
+          // Se não tiver tipo definido mas for pequeno, pode ser um erro
+          if (blob.size < 100) {
+            throw new Error('Resposta do servidor muito pequena para ser um PDF válido');
+          }
+        }
       }
 
       return blob;
     } catch (error) {
+      // Se já é um Error com mensagem, apenas relançar
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      // Tentar extrair mensagem de erro do Axios
       const axiosError = error as AxiosError<{ message?: string }>;
-      throw new Error(axiosError.response?.data?.message || axiosError.message || 'Erro ao gerar PDF de teste');
+      
+      // Se a resposta é um Blob mas pode conter erro JSON
+      if (axiosError.response && axiosError.response.data instanceof Blob) {
+        try {
+          const text = await axiosError.response.data.text();
+          const errorData = JSON.parse(text);
+          throw new Error(errorData.message || 'Erro ao gerar PDF de teste');
+        } catch {
+          // Se não conseguir fazer parse, usar mensagem padrão
+        }
+      }
+      
+      // Tentar extrair mensagem de erro de diferentes formatos
+      let errorMessage = 'Erro ao gerar PDF de teste';
+      
+      if (axiosError.response) {
+        const responseData = axiosError.response.data;
+        
+        if (typeof responseData === 'string') {
+          try {
+            const parsed = JSON.parse(responseData);
+            errorMessage = parsed.message || errorMessage;
+          } catch {
+            errorMessage = responseData || errorMessage;
+          }
+        } else if (typeof responseData === 'object' && responseData !== null) {
+          errorMessage = (responseData as { message?: string }).message || axiosError.response.statusText || errorMessage;
+        } else {
+          errorMessage = axiosError.response.statusText || errorMessage;
+        }
+        
+        if (axiosError.response.status === 404) {
+          errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
+        } else if (axiosError.response.status === 500) {
+          errorMessage = 'Erro interno do servidor ao gerar PDF. Tente novamente.';
+        }
+      } else if (axiosError.message) {
+        errorMessage = axiosError.message;
+      }
+      
+      throw new Error(errorMessage);
     }
   }
 
@@ -185,7 +270,8 @@ class DocumentoSistemaService {
         responseType: 'blob'
       });
 
-      const blob = response.data;
+      // O interceptador retorna o blob diretamente quando responseType é 'blob'
+      const blob = response as unknown as Blob;
 
       if (!blob || !(blob instanceof Blob)) {
         throw new Error('Resposta do servidor não é um Blob válido');

@@ -280,15 +280,24 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               
               setIsGeneratingPdf(true);
               try {
+                await new Promise(resolve => {
+                  if (window.requestIdleCallback) {
+                    window.requestIdleCallback(resolve);
+                  } else {
+                    setTimeout(resolve, 0);
+                  }
+                });
+                
                 const modeloContrato = await DocumentoSistemaService.getDefaultByType('contrato');
                 
                 if (modeloContrato.success && modeloContrato.data) {
-                  const modelosData = await DocumentoSistemaService.getModelosByModeloContrato(modeloContrato.data.id);
-                  const conteudoContrato = modelosData.data?.modelo_contrato_conteudo || modeloContrato.data.conteudo;
-                  const pdfBlob = await DocumentoSistemaService.generateTestPdfWithContent(
+                  // Usar generateTestPdf em vez de generateTestPdfWithContent
+                  // Isso garante que o backend processe as variáveis corretamente
+                  // e preserve a formatação do modelo
+                  const pdfBlob = await DocumentoSistemaService.generateTestPdf(
                     modeloContrato.data.id,
                     contrato.cliente_id,
-                    conteudoContrato
+                    contrato.id // Passar contrato_id para usar o contrato específico
                   );
                   
                   const url = window.URL.createObjectURL(pdfBlob);
@@ -300,12 +309,35 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
                   error('Nenhum modelo de contrato encontrado. Cadastre um modelo primeiro.');
                 }
               } catch (err) {
-                const axiosError = err as AxiosError<{ message: string }>;
-                if (axiosError.response?.status === 404) {
-                  error('Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.');
-                } else {
-                  error('Erro ao gerar contrato');
+                const axiosError = err as AxiosError<{ message?: string }>;
+                let errorMessage = 'Erro ao gerar contrato';
+                
+                if (axiosError.response) {
+                  // Tentar extrair mensagem de erro do response
+                  if (axiosError.response.data instanceof Blob) {
+                    try {
+                      const text = await axiosError.response.data.text();
+                      const errorData = JSON.parse(text);
+                      errorMessage = errorData.message || errorMessage;
+                    } catch {
+                      errorMessage = `Erro ${axiosError.response.status}: ${axiosError.response.statusText}`;
+                    }
+                  } else if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
+                    errorMessage = (axiosError.response.data as { message?: string }).message || errorMessage;
+                  }
+                  
+                  if (axiosError.response.status === 404) {
+                    errorMessage = 'Modelo de contrato não encontrado. Verifique se existe um modelo padrão cadastrado.';
+                  } else if (axiosError.response.status === 500) {
+                    errorMessage = 'Erro interno do servidor ao gerar contrato. Tente novamente.';
+                  }
+                } else if (axiosError.message) {
+                  errorMessage = axiosError.message;
+                } else if (err instanceof Error) {
+                  errorMessage = err.message;
                 }
+                
+                error(errorMessage);
               } finally {
                 setIsGeneratingPdf(false);
               }

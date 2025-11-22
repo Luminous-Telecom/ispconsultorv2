@@ -512,7 +512,7 @@ export class ModeloDocumentoController {
   static async generateTestPdf(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { cliente_id } = req.query;
+      const { cliente_id, contrato_id } = req.query;
 
       const documento = await ModeloDocumento.findByPk(id);
 
@@ -538,11 +538,45 @@ export class ModeloDocumentoController {
           return;
         }
 
-        // Buscar contrato ativo do cliente
-        const contrato = await Contrato.findOne({
-          where: { cliente_id: cliente.id, status: 'ativo' },
-          include: [{ model: Plano, as: 'plano' }]
-        });
+        // Se contrato_id foi fornecido, usar esse contrato específico
+        // Caso contrário, buscar contrato ativo do cliente
+        let contrato: Contrato | null = null;
+        
+        if (contrato_id) {
+          contrato = await Contrato.findByPk(contrato_id as string, {
+            include: [
+              { model: Plano, as: 'plano' },
+              { model: Cliente, as: 'cliente' }
+            ]
+          });
+          
+          if (!contrato) {
+            res.status(404).json({
+              success: false,
+              message: 'Contrato não encontrado'
+            });
+            return;
+          }
+          
+          const contratoComIncludes = contrato as Contrato & { plano?: Plano; cliente?: Cliente };
+          
+          // Verificar se o contrato pertence ao cliente
+          if (contratoComIncludes.cliente_id !== cliente.id) {
+            res.status(400).json({
+              success: false,
+              message: 'Contrato não pertence ao cliente informado'
+            });
+            return;
+          }
+        } else {
+          contrato = await Contrato.findOne({
+            where: { cliente_id: cliente.id, status: 'ativo' },
+            include: [
+              { model: Plano, as: 'plano' },
+              { model: Cliente, as: 'cliente' }
+            ]
+          });
+        }
 
         // Processar variáveis do documento
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
@@ -696,7 +730,6 @@ export class ModeloDocumentoController {
       const file = { content: htmlContent };
       const pdfBuffer = await htmlPdf.generatePdf(file, options);
 
-      // Configurar headers
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${documento.nome}-teste.pdf"`);
       res.send(pdfBuffer);
