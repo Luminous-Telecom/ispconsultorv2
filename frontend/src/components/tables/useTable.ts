@@ -1,6 +1,26 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { UseTableOptions, UseTableReturn, TableState, TableActions, SortDirection } from './types';
+import { UseTableOptions, UseTableReturn, TableState, TableActions, SortDirection, TablePagination } from './types';
 import { FilterValue } from '@/types/common';
+
+// Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
+const normalizePagination = (pagination: UseTableOptions<unknown>['pagination']): TablePagination | undefined => {
+  if (!pagination) return undefined;
+  
+  const pag = pagination as TablePagination & {
+    current_page?: number;
+    last_page?: number;
+    per_page?: number;
+  };
+  
+  return {
+    currentPage: pag.currentPage ?? pag.current_page ?? 1,
+    lastPage: pag.lastPage ?? pag.last_page ?? 1,
+    perPage: pag.perPage ?? pag.per_page ?? 15,
+    total: pag.total,
+    from: pag.from,
+    to: pag.to,
+  };
+};
 
 export const useTable = <T extends { id: number | string }>(options: UseTableOptions<T>): UseTableReturn<T> => {
   const {
@@ -22,6 +42,9 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     onRefresh,
   } = options;
 
+  // Normalizar paginação
+  const normalizedPagination = useMemo(() => normalizePagination(pagination), [pagination]);
+
   // Ref para armazenar callback de seleção (evita problemas de closure e setState durante render)
   const onSelectionChangeRef = useRef(onSelectionChange);
   
@@ -39,8 +62,8 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
     sortColumn: '',
     sortDirection: 'asc',
     filters: {},
-    currentPage: pagination?.current_page || 1,
-    pageSize: pagination?.per_page || 15,
+    currentPage: normalizedPagination?.currentPage || 1,
+    pageSize: normalizedPagination?.perPage || 15,
     isLoading: false,
     isFiltered: false,
     isSorted: false,
@@ -78,14 +101,14 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   // Atualizar estado de paginação quando prop pagination mudar
   useEffect(() => {
-    if (pagination) {
+    if (normalizedPagination) {
       setState(prev => ({
         ...prev,
-        currentPage: pagination.current_page,
-        pageSize: pagination.per_page,
+        currentPage: normalizedPagination.currentPage,
+        pageSize: normalizedPagination.perPage,
       }));
     }
-  }, [pagination?.current_page, pagination?.per_page, pagination]);
+  }, [normalizedPagination]);
 
   // Filtrar dados baseado em busca e filtros
   const filteredData = useMemo(() => {
@@ -162,12 +185,12 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   // Calcular total de páginas
   const totalPages = useMemo(() => {
-    if (pagination) return pagination.last_page;
+    if (normalizedPagination) return normalizedPagination.lastPage;
     return Math.ceil(sortedData.length / state.pageSize);
-  }, [pagination, sortedData.length, state.pageSize]);
+  }, [normalizedPagination, sortedData.length, state.pageSize]);
 
   // Obter página atual (usar pagination se disponível, senão usar state)
-  const currentPage = pagination ? pagination.current_page : state.currentPage;
+  const currentPage = normalizedPagination ? normalizedPagination.currentPage : state.currentPage;
 
   // Verificar se tem próxima/anterior página
   const hasNextPage = currentPage < totalPages;

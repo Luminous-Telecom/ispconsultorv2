@@ -1,11 +1,31 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { TableConfig, TableAction, BulkAction, SortDirection } from './types';
+import { TableConfig, TableAction, BulkAction, SortDirection, TablePagination } from './types';
 import { FilterValue } from '@/types/common';
 import { useTable } from './useTable';
 import TableColumn from './TableColumn';
 import TableActions from './TableActions';
 import FormField from '../ui/FormField';
 import Button from '../ui/Button';
+
+// Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
+const normalizePagination = (pagination: TableConfig<unknown>['pagination']): TablePagination | undefined => {
+  if (!pagination) return undefined;
+  
+  const pag = pagination as TablePagination & {
+    current_page?: number;
+    last_page?: number;
+    per_page?: number;
+  };
+  
+  return {
+    currentPage: pag.currentPage ?? pag.current_page ?? 1,
+    lastPage: pag.lastPage ?? pag.last_page ?? 1,
+    perPage: pag.perPage ?? pag.per_page ?? 15,
+    total: pag.total,
+    from: pag.from,
+    to: pag.to,
+  };
+};
 
 interface TableProps<T = Record<string, unknown>> {
   config: TableConfig<T>;
@@ -73,6 +93,9 @@ function Table<T extends { id: number | string }>({
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const _tableRef = useRef<HTMLTableElement>(null);
+
+  // Normalizar paginação
+  const normalizedPagination = useMemo(() => normalizePagination(configPagination), [configPagination]);
 
   // Memoizar dados filtrados para evitar loops infinitos
   const filteredData = useMemo(() => {
@@ -386,7 +409,7 @@ function Table<T extends { id: number | string }>({
   return (
     <div className={className} style={{ width: '100%', margin: 0, padding: 0, boxSizing: 'border-box' }}>
       {/* Header com botões de ação e filtros */}
-      {(bulkActions.length > 0 || searchable || configPagination || (!configPagination && data.length > 0)) && (
+          {(bulkActions.length > 0 || searchable || normalizedPagination || (!normalizedPagination && data.length > 0)) && (
         <div className="border-bottom" style={{ margin: 0, padding: 0, background: 'transparent' }}>
           {/* Primeira linha: Botões de ação */}
           {(bulkActions.length > 0 || customControlsAfterActions) && (
@@ -493,17 +516,17 @@ function Table<T extends { id: number | string }>({
           </div>
 
           {/* Paginação centralizada */}
-          {(configPagination || (!configPagination && data.length > 0)) && (
+          {(normalizedPagination || (!normalizedPagination && data.length > 0)) && (
             <div className="d-flex align-items-center gap-2">
               {/* Seletor de linhas por página */}
               <select 
                 className="form-select form-select-sm" 
                 id={`${uniqueTableId}-limit`}
                 name="dataTableLimit"
-                value={configPagination?.per_page || state.pageSize}
+                value={normalizedPagination?.perPage || state.pageSize}
                 onChange={(e) => {
                   const newPageSize = parseInt(e.target.value);
-                  if (configPagination) {
+                  if (normalizedPagination) {
                     // Quando há paginação do servidor, resetar página para 1 ao mudar limite
                     onPageChange?.(1);
                     onPageSizeChange?.(newPageSize);
@@ -533,7 +556,7 @@ function Table<T extends { id: number | string }>({
                       tableActions.setPage(1);
                     }
                   }}
-                  disabled={configPagination ? configPagination.current_page <= 1 : state.currentPage <= 1}
+                  disabled={normalizedPagination ? normalizedPagination.currentPage <= 1 : state.currentPage <= 1}
                 >
                   <i className="bi bi-chevron-double-left"></i>
                 </button>
@@ -541,20 +564,20 @@ function Table<T extends { id: number | string }>({
                   type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
-                    if (configPagination) {
-                      onPageChange?.(configPagination.current_page - 1);
+                    if (normalizedPagination) {
+                      onPageChange?.(normalizedPagination.currentPage - 1);
                     } else {
                       tableActions.setPage(state.currentPage - 1);
                     }
                   }}
-                  disabled={configPagination ? configPagination.current_page <= 1 : state.currentPage <= 1}
+                  disabled={normalizedPagination ? normalizedPagination.currentPage <= 1 : state.currentPage <= 1}
                 >
                   <i className="bi bi-chevron-left"></i>
                 </button>
                 
                 <span className="small text-muted mx-2">
-                  {configPagination ? (
-                    `${configPagination.from || 0} - ${configPagination.to || 0} / ${configPagination.total || 0}`
+                  {normalizedPagination ? (
+                    `${normalizedPagination.from || 0} - ${normalizedPagination.to || 0} / ${normalizedPagination.total || 0}`
                   ) : (
                     `${((state.currentPage - 1) * state.pageSize) + 1}-${Math.min(state.currentPage * state.pageSize, data.length)} de ${data.length}`
                   )}
@@ -564,13 +587,13 @@ function Table<T extends { id: number | string }>({
                   type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
-                    if (configPagination) {
-                      onPageChange?.(configPagination.current_page + 1);
+                    if (normalizedPagination) {
+                      onPageChange?.(normalizedPagination.currentPage + 1);
                     } else {
                       tableActions.setPage(state.currentPage + 1);
                     }
                   }}
-                  disabled={configPagination ? configPagination.current_page >= configPagination.last_page : !hasNextPage}
+                  disabled={normalizedPagination ? normalizedPagination.currentPage >= normalizedPagination.lastPage : !hasNextPage}
                 >
                   <i className="bi bi-chevron-right"></i>
                 </button>
@@ -578,13 +601,13 @@ function Table<T extends { id: number | string }>({
                   type="button"
                   className="btn btn-outline-secondary btn-sm" 
                   onClick={() => {
-                    if (configPagination) {
-                      onPageChange?.(configPagination.last_page);
+                    if (normalizedPagination) {
+                      onPageChange?.(normalizedPagination.lastPage);
                     } else {
                       tableActions.setPage(totalPages);
                     }
                   }}
-                  disabled={configPagination ? configPagination.current_page >= configPagination.last_page : !hasNextPage}
+                  disabled={normalizedPagination ? normalizedPagination.currentPage >= normalizedPagination.lastPage : !hasNextPage}
                 >
                   <i className="bi bi-chevron-double-right"></i>
                 </button>

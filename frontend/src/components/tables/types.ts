@@ -64,9 +64,9 @@ export interface BulkAction<T = Record<string, unknown>> {
 }
 
 export interface TablePagination {
-  current_page: number;
-  last_page: number;
-  per_page: number;
+  currentPage: number;
+  lastPage: number;
+  perPage: number;
   total: number;
   from?: number;
   to?: number;
@@ -85,7 +85,17 @@ export interface TableConfig<T = Record<string, unknown>> {
   columns: TableColumn<T>[];
   data: T[];
   loading?: boolean;
-  pagination?: TablePagination;
+  pagination?: TablePagination | {
+    current_page?: number;
+    last_page?: number;
+    per_page?: number;
+    currentPage?: number;
+    lastPage?: number;
+    perPage?: number;
+    total: number;
+    from?: number;
+    to?: number;
+  };
   filters?: TableFilter[];
   actions?: TableAction<T>[];
   bulkActions?: BulkAction<T>[];
@@ -145,7 +155,17 @@ export interface TableActions<T = Record<string, unknown>> {
 export interface UseTableOptions<T = Record<string, unknown>> {
   data: T[];
   columns: TableColumn<T>[];
-  pagination?: TablePagination;
+  pagination?: TablePagination | {
+    current_page?: number;
+    last_page?: number;
+    per_page?: number;
+    currentPage?: number;
+    lastPage?: number;
+    perPage?: number;
+    total: number;
+    from?: number;
+    to?: number;
+  };
   filters?: TableFilter[];
   searchable?: boolean;
   sortable?: boolean;

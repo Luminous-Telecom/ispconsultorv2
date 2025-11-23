@@ -3,7 +3,17 @@ import { TablePagination as TablePaginationType } from './types';
 import Button from '../ui/Button';
 
 interface TablePaginationProps {
-  pagination: TablePaginationType;
+  pagination: TablePaginationType | {
+    current_page?: number;
+    last_page?: number;
+    per_page?: number;
+    currentPage?: number;
+    lastPage?: number;
+    perPage?: number;
+    total: number;
+    from?: number;
+    to?: number;
+  };
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   pageSizeOptions?: number[];
@@ -11,6 +21,24 @@ interface TablePaginationProps {
   showPageInfo?: boolean;
   className?: string;
 }
+
+// Helper para normalizar paginação (aceita snake_case da API ou camelCase interno)
+const normalizePagination = (pagination: TablePaginationProps['pagination']): TablePaginationType => {
+  const pag = pagination as TablePaginationType & {
+    current_page?: number;
+    last_page?: number;
+    per_page?: number;
+  };
+  
+  return {
+    currentPage: pag.currentPage ?? pag.current_page ?? 1,
+    lastPage: pag.lastPage ?? pag.last_page ?? 1,
+    perPage: pag.perPage ?? pag.per_page ?? 15,
+    total: pag.total,
+    from: pag.from,
+    to: pag.to,
+  };
+};
 
 const TablePagination: React.FC<TablePaginationProps> = ({
   pagination,
@@ -21,7 +49,8 @@ const TablePagination: React.FC<TablePaginationProps> = ({
   showPageInfo = true,
   className = '',
 }) => {
-  const { current_page, last_page, per_page, total, from, to } = pagination;
+  const normalizedPagination = normalizePagination(pagination);
+  const { currentPage, lastPage, perPage, total, from, to } = normalizedPagination;
 
   // Calcular páginas visíveis
   const getVisiblePages = () => {
@@ -29,11 +58,11 @@ const TablePagination: React.FC<TablePaginationProps> = ({
     const range = [];
     const rangeWithDots = [];
 
-    for (let i = Math.max(2, current_page - delta); i <= Math.min(last_page - 1, current_page + delta); i++) {
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(lastPage - 1, currentPage + delta); i++) {
       range.push(i);
     }
 
-    if (current_page - delta > 2) {
+    if (currentPage - delta > 2) {
       rangeWithDots.push(1, '...');
     } else {
       rangeWithDots.push(1);
@@ -41,10 +70,10 @@ const TablePagination: React.FC<TablePaginationProps> = ({
 
     rangeWithDots.push(...range);
 
-    if (current_page + delta < last_page - 1) {
-      rangeWithDots.push('...', last_page);
-    } else if (last_page > 1) {
-      rangeWithDots.push(last_page);
+    if (currentPage + delta < lastPage - 1) {
+      rangeWithDots.push('...', lastPage);
+    } else if (lastPage > 1) {
+      rangeWithDots.push(lastPage);
     }
 
     return rangeWithDots;
@@ -56,8 +85,8 @@ const TablePagination: React.FC<TablePaginationProps> = ({
   const renderPageInfo = () => {
     if (!showPageInfo) return null;
 
-    const start = from || ((current_page - 1) * per_page) + 1;
-    const end = to || Math.min(current_page * per_page, total);
+    const start = from || ((currentPage - 1) * perPage) + 1;
+    const end = to || Math.min(currentPage * perPage, total);
 
     return (
       <div className="pagination-info">
@@ -80,7 +109,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
         <select
           id="page-size"
           className="form-select form-select-sm"
-          value={per_page}
+          value={perPage}
           onChange={(e) => onPageSizeChange(Number(e.target.value))}
           style={{ width: 'auto' }}
         >
@@ -103,7 +132,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           variant="outline-secondary"
           size="sm"
           icon="chevron-double-left"
-          disabled={current_page === 1}
+          disabled={currentPage === 1}
           onClick={() => onPageChange(1)}
           tooltip="Primeira página"
         >
@@ -115,8 +144,8 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           variant="outline-secondary"
           size="sm"
           icon="chevron-left"
-          disabled={current_page === 1}
-          onClick={() => onPageChange(current_page - 1)}
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
           tooltip="Página anterior"
         >
           {''}
@@ -133,7 +162,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           }
 
           const pageNumber = page as number;
-          const isActive = pageNumber === current_page;
+          const isActive = pageNumber === currentPage;
 
           return (
             <Button
@@ -153,8 +182,8 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           variant="outline-secondary"
           size="sm"
           icon="chevron-right"
-          disabled={current_page === last_page}
-          onClick={() => onPageChange(current_page + 1)}
+          disabled={currentPage === lastPage}
+          onClick={() => onPageChange(currentPage + 1)}
           tooltip="Próxima página"
         >
           {''}
@@ -165,8 +194,8 @@ const TablePagination: React.FC<TablePaginationProps> = ({
           variant="outline-secondary"
           size="sm"
           icon="chevron-double-right"
-          disabled={current_page === last_page}
-          onClick={() => onPageChange(last_page)}
+          disabled={currentPage === lastPage}
+          onClick={() => onPageChange(lastPage)}
           tooltip="Última página"
         >
           {''}
@@ -176,7 +205,7 @@ const TablePagination: React.FC<TablePaginationProps> = ({
   };
 
   // Se não há dados para paginar
-  if (last_page <= 1) {
+  if (lastPage <= 1) {
     return (
       <div className={`table-pagination ${className}`}>
         {renderPageInfo()}
