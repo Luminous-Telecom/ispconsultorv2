@@ -2275,7 +2275,7 @@ body {
   .responsive-dialog-mobile-content .form-select {
     font-size: 16px; /* Previne zoom no iOS */
     min-height: 44px;
-    padding: 0.5rem 0.75rem !important; /* Reduzir padding interno */
+    padding: 0.375rem 0.5rem !important; /* Padding reduzido para mobile */
   }
 
   /* Corrigir overflow horizontal causado por .row do Bootstrap */
@@ -2692,6 +2692,22 @@ textarea {
   border-radius: 8px !important;
   border: 1px solid var(--border-color) !important;
   resize: vertical !important;
+}
+
+/* Reduzir padding de todos os inputs no mobile (deve vir depois da regra geral) */
+@media (max-width: 767.98px) {
+  .form-control,
+  .form-control-sm,
+  .form-select,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="date"],
+  textarea {
+    padding: 0.375rem 0.5rem !important;
+  }
 }
 
 .form-control:focus,

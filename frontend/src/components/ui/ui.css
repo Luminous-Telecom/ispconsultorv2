@@ -30,6 +30,17 @@
   padding-right: 2.5rem;
 }
 
+/* Reduzir padding de inputs com ícones no mobile */
+@media (max-width: 767.98px) {
+  .input-icon-left .form-control {
+    padding-left: 2rem;
+  }
+
+  .input-icon-right .form-control {
+    padding-right: 2rem;
+  }
+}
+
 /* FormField */
 .form-field {
   margin-bottom: 1rem;
