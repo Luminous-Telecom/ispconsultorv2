@@ -1,92 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { useTableHeader } from '@/contexts/TableHeaderContext';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface ResponsiveDialogProps {
-  /**
-   * Controla se o dialog está aberto
-   */
   isOpen: boolean;
-  
-  /**
-   * Callback chamado quando o dialog deve ser fechado
-   */
   onClose: () => void;
-  
-  /**
-   * Título exibido no header do dialog
-   */
   title: string;
-  
-  /**
-   * Conteúdo do dialog
-   */
   children: React.ReactNode;
-  
-  /**
-   * Tamanho do modal (apenas para desktop)
-   */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'a4';
-  
-  /**
-   * Classes CSS adicionais
-   */
   className?: string;
-  
-  /**
-   * Ações customizadas no header (botões, filtros, etc)
-   */
   headerActions?: React.ReactNode;
-  
-  /**
-   * ID único do modal (opcional, gerado automaticamente se não fornecido)
-   */
   modalId?: string;
 }
 
 /**
- * ResponsiveDialog - Componente responsivo que adapta o comportamento baseado no dispositivo
- * 
- * Desktop (>= 768px): Renderiza como modal centralizado usando DraggableModal
- * Mobile (< 768px): Renderiza como página fullscreen com header fixo e botão voltar
+ * Componente interno que renderiza o conteúdo do diálogo.
+ * Este componente deve ser filho de um TableHeaderProvider para ter seu próprio contexto.
  */
-const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
+const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
   isOpen,
   onClose,
   title,
   children,
-  size: _size = 'lg',
   className = '',
   headerActions,
-  modalId: _modalId,
 }) => {
-  // ResponsiveDialog só deve ser chamado quando é mobile (DraggableModal já verifica)
-  // Mas vamos verificar novamente por segurança
-  // Usar função helper para verificar mobile de forma síncrona
-  const checkIsMobile = (): boolean => {
-    if (typeof window === 'undefined') return true; // Assume mobile se não tiver window
-    return window.innerWidth < 768;
-  };
-
-  const [isMobile, setIsMobile] = useState(() => checkIsMobile());
-
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = checkIsMobile();
-      setIsMobile(mobile);
-    };
-    
-    // Verificar imediatamente
-    checkMobile();
-    
-    // Listener para mudanças de tamanho
-    window.addEventListener('resize', checkMobile);
-    window.addEventListener('orientationchange', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-      window.removeEventListener('orientationchange', checkMobile);
-    };
-  }, []);
+  const isMobile = useIsMobile();
+  const tableHeader = useTableHeader();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Prevenir scroll do body quando dialog estiver aberto
   useEffect(() => {
@@ -118,20 +61,27 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
     };
   }, [isOpen, onClose]);
 
-  // Verificar mobile de forma síncrona no momento da renderização para garantir detecção correta
-  const currentIsMobile = checkIsMobile();
+  // Fechar menu ao clicar fora
+  useEffect(() => {
+    if (!showMenu) return;
 
-  // Se não for mobile, não renderizar (DraggableModal cuida do desktop)
-  if (!currentIsMobile) {
-    return null;
-  }
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
 
-  // Se não estiver aberto, não renderizar
-  if (!isOpen) {
-    return null;
-  }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
 
-  const mobileContent = (
+  if (!isOpen) return null;
+
+  const hasActions = tableHeader.showSearch || tableHeader.showReload || headerActions;
+
+  return (
     <div
       className="responsive-dialog-mobile"
       style={{
@@ -177,6 +127,7 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
             lineHeight: 1,
             padding: '4px 8px',
             minWidth: '36px',
+            width: 'auto', // Override global .btn width: 100% on mobile
             minHeight: '36px',
             display: 'flex',
             alignItems: 'center',
@@ -204,28 +155,138 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
 
         {/* Título */}
         <h5
-          className="mb-0 flex-grow-1 text-truncate"
+          className="mb-0 text-truncate"
           style={{
             color: 'var(--text-primary)',
             fontSize: '1.125rem',
             fontWeight: 600,
             margin: 0,
-            textAlign: 'left',
+            textAlign: 'center',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+            flex: 1, // Força o título a ocupar o espaço restante mas respeitando o shrink
+            minWidth: 0, // Crítico para o truncate funcionar em flexbox
           }}
         >
           {title}
         </h5>
 
-        {/* Ações do header (se houver) */}
-        {headerActions && (
-          <div className="ms-2 d-flex align-items-center flex-shrink-0">
-            {headerActions}
+        {/* Menu de Ações (Três Pontos) */}
+        {hasActions && (
+          <div className="d-flex align-items-center flex-shrink-0 position-relative" ref={menuRef}>
+            <button
+              type="button"
+              className="btn btn-link p-0"
+              onClick={() => setShowMenu(!showMenu)}
+              style={{
+                color: 'var(--text-primary)',
+                border: 'none',
+                background: 'none',
+                fontSize: '1.25rem',
+                minWidth: '36px',
+                width: 'auto', // Override global .btn width: 100% on mobile
+                minHeight: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.5rem',
+              }}
+            >
+              <i className="bi bi-three-dots-vertical"></i>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <div
+                className="dropdown-menu show"
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: '100%',
+                  marginTop: '0.5rem',
+                  minWidth: '200px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  borderRadius: '0.5rem',
+                  zIndex: 1050,
+                  backgroundColor: 'var(--bg-primary)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                {/* Search Action */}
+                {tableHeader.showSearch && (
+                  <button
+                    className="dropdown-item d-flex align-items-center gap-2 py-2"
+                    onClick={() => {
+                      tableHeader.setShowMobileSearch(!tableHeader.showMobileSearch);
+                      setShowMenu(false);
+                    }}
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    <i className="bi bi-search"></i>
+                    <span>Buscar</span>
+                  </button>
+                )}
+
+                {/* Reload Action */}
+                {tableHeader.showReload && (
+                  <button
+                    className="dropdown-item d-flex align-items-center gap-2 py-2"
+                    onClick={() => {
+                      if (tableHeader.onReloadClick) {
+                        tableHeader.onReloadClick();
+                      }
+                      setShowMenu(false);
+                    }}
+                    disabled={tableHeader.loading}
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    <i className="bi bi-arrow-clockwise"></i>
+                    <span>Atualizar</span>
+                  </button>
+                )}
+
+                {/* Header Actions Customizados - Renderizar como itens de menu se possível, ou container */}
+                {headerActions && (
+                  <div className="dropdown-divider"></div>
+                )}
+                {headerActions && (
+                  <div className="px-3 py-2 d-flex flex-column gap-2">
+                    {headerActions}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Mobile Search Field (expandable) */}
+      {tableHeader.showMobileSearch && tableHeader.showSearch && (
+        <div 
+          className="p-2 border-bottom d-flex align-items-center gap-2 bg-light"
+          style={{
+            animation: 'slideDown 0.2s ease-out'
+          }}
+        >
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder={tableHeader.searchPlaceholder}
+            value={tableHeader.searchValue}
+            onChange={(e) => tableHeader.setSearchValue(e.target.value)}
+            autoFocus
+          />
+          <button
+            type="button"
+            className="btn btn-sm btn-link text-danger p-1"
+            onClick={() => tableHeader.setShowMobileSearch(false)}
+            style={{ width: 'auto' }} // Override global .btn width: 100%
+          >
+            <i className="bi bi-x-lg"></i>
+          </button>
+        </div>
+      )}
 
       {/* Conteúdo com scroll */}
       <div
@@ -243,10 +304,39 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
       </div>
     </div>
   );
+};
+
+/**
+ * ResponsiveDialog - Componente responsivo que adapta o comportamento baseado no dispositivo
+ * 
+ * Desktop (>= 768px): Renderiza como modal centralizado usando DraggableModal
+ * Mobile (< 768px): Renderiza como página fullscreen com header fixo e botão voltar
+ */
+const ResponsiveDialog: React.FC<ResponsiveDialogProps> = (props) => {
+  const isMobile = useIsMobile();
+
+  // Se não for mobile, não renderizar (DraggableModal cuida do desktop)
+  if (!isMobile) {
+    return null;
+  }
+
+  // Se não estiver aberto, não renderizar
+  if (!props.isOpen) {
+    return null;
+  }
+
+  // Importante: Removemos o TableHeaderProvider isolado aqui.
+  // Children passados para este componente consomem o contexto onde foram criados (Global/Layout).
+  // Se criarmos um Provider novo aqui, a Table (children) continuará escrevendo no Global,
+  // mas este componente lerá do Local (vazio), quebrando a comunicação.
+  // Voltamos a usar o contexto Global. O conflito com o dashboard é mitigado pelo fato
+  // de que a tabela do modal é montada por último.
+  const mobileContent = (
+    <ResponsiveDialogContent {...props} />
+  );
 
   // Renderizar usando portal para garantir que apareça no nível raiz
   return ReactDOM.createPortal(mobileContent, document.body);
 };
 
 export default ResponsiveDialog;
-

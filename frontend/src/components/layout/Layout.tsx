@@ -10,7 +10,7 @@ import Loading from '../common/Loading';
 import { authService, CurrentUser } from '@/services/authService';
 import { getAuthToken } from '@/services/core';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useTableHeader } from '@/contexts/TableHeaderContext';
+import { useTableHeader, TableHeaderProvider } from '@/contexts/TableHeaderContext';
 
 // Modais com lazy loading (code splitting) - carregados apenas quando necessário
 // Named exports
@@ -40,6 +40,7 @@ const Layout: React.FC = () => {
     pauseNotification,
     resumeNotification,
     success,
+    
   } = useNotificationContext();
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -462,7 +463,7 @@ const Layout: React.FC = () => {
                   }}
                     className="form-control form-control-sm dashboard-date-input"
                     aria-label="Data inicial do período"
-                />
+                  />
                 </div>
                 <div className="date-filter-group">
                   <label htmlFor="dashboard-end-date" className="date-label">
@@ -482,7 +483,7 @@ const Layout: React.FC = () => {
                   }}
                     className="form-control form-control-sm dashboard-date-input"
                     aria-label="Data final do período"
-                />
+                  />
                 </div>
               </div>
             )}
@@ -542,134 +543,166 @@ const Layout: React.FC = () => {
           />
 
       {/* Modais renderizados condicionalmente apenas quando necessário (com lazy loading) */}
+      {/* NOTA: Cada modal é envolvido em um TableHeaderProvider para criar um contexto isolado.
+          Isso impede que a tabela dentro do modal entre em conflito com a tabela do Dashboard ou outros componentes
+          que utilizam o contexto global do Layout. */}
+      
       {activeModal === 'clientes' && (
         <Suspense fallback={<Loading message="Carregando clientes..." />}>
-          <ClienteListModal
-            show={true}
-            onClose={closeModal}
-            title="Clientes"
-          />
+          <TableHeaderProvider>
+            <ClienteListModal
+              show={true}
+              onClose={closeModal}
+              title="Clientes"
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'planos' && (
         <Suspense fallback={<Loading message="Carregando planos..." />}>
-          <PlanoListModal
-            show={true}
-            onClose={closeModal}
-            title="Planos"
-          />
+          <TableHeaderProvider>
+            <PlanoListModal
+              show={true}
+              onClose={closeModal}
+              title="Planos"
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'bancos' && (
         <Suspense fallback={<Loading message="Carregando bancos..." />}>
-          <BancoListModal
-            show={true}
-            onClose={closeModal}
-            title="Bancos"
-          />
+          <TableHeaderProvider>
+            <BancoListModal
+              show={true}
+              onClose={closeModal}
+              title="Bancos"
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'contratos' && (
         <Suspense fallback={<Loading message="Carregando contratos..." />}>
-          <ContratoListModal
-            show={true}
-            onClose={closeModal}
-            title="Contratos"
-          />
+          <TableHeaderProvider>
+            <ContratoListModal
+              show={true}
+              onClose={closeModal}
+              title="Contratos"
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'financeiro' && (
         <Suspense fallback={<Loading message="Carregando financeiro..." />}>
-          <FinanceiroModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <FinanceiroModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'dados-empresa' && (
         <Suspense fallback={<Loading message="Carregando dados da empresa..." />}>
-          <DadosEmpresaModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <DadosEmpresaModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {/* Modais de Parâmetros */}
       {activeModal === 'usuarios' && (
         <Suspense fallback={<Loading message="Carregando usuários..." />}>
-          <UsuariosModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <UsuariosModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'recursos-sistema' && (
         <Suspense fallback={<Loading message="Carregando recursos do sistema..." />}>
-          <RecursosSistemaModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <RecursosSistemaModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'servidor-email' && (
         <Suspense fallback={<Loading message="Carregando servidor de e-mail..." />}>
-          <ServidorEmailModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <ServidorEmailModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'servidor-whatsapp' && (
         <Suspense fallback={<Loading message="Carregando servidor de WhatsApp..." />}>
-          <ServidorWhatsappModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <ServidorWhatsappModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'documentos-sistema' && (
         <Suspense fallback={<Loading message="Carregando documentos do sistema..." />}>
-          <DocumentosSistemaModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <DocumentosSistemaModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
       
       {activeModal === 'dias-vencimento' && (
         <Suspense fallback={<Loading message="Carregando dias de vencimento..." />}>
-          <DiasVencimentoModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <DiasVencimentoModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
 
       {activeModal === 'atualizacoes' && (
         <Suspense fallback={<Loading message="Carregando atualizações..." />}>
-          <AtualizacoesModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <AtualizacoesModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
 
       {activeModal === 'agendador-tarefas' && (
         <Suspense fallback={<Loading message="Carregando agendador de tarefas..." />}>
-          <AgendadorTarefasModal
-            show={true}
-            onClose={closeModal}
-          />
+          <TableHeaderProvider>
+            <AgendadorTarefasModal
+              show={true}
+              onClose={closeModal}
+            />
+          </TableHeaderProvider>
         </Suspense>
       )}
 

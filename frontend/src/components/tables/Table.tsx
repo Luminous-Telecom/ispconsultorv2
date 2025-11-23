@@ -251,37 +251,29 @@ function Table<T extends { id: number | string }>({
 
   // Registrar botões no contexto do header quando for mobile
   useEffect(() => {
-    const updateHeader = () => {
-      if (!isMobile) {
-        // Limpar se não for mobile
-        tableHeader.setTitle(null);
-        tableHeader.setShowSearch(false);
-        tableHeader.setShowReload(false);
-        tableHeader.setOnReloadClick(null);
-        tableHeader.setShowMobileSearch(false);
-      } else {
-        // Atualizar quando for mobile
-        tableHeader.setTitle(title || 'Lista');
-        tableHeader.setShowSearch(searchable || false);
-        tableHeader.setShowReload(true);
-        tableHeader.setSearchPlaceholder(searchPlaceholder || 'Buscar...');
-        tableHeader.setOnReloadClick(handleReloadClick);
-        
-        // Sincronizar valor inicial da busca se necessário
-        if (searchTerm) {
-          tableHeader.setSearchValue(searchTerm);
-        }
+    if (isMobile) {
+      tableHeader.setTitle(title || 'Lista');
+      tableHeader.setShowSearch(searchable || false);
+      tableHeader.setShowReload(true);
+      tableHeader.setSearchPlaceholder(searchPlaceholder || 'Buscar...');
+      tableHeader.setOnReloadClick(handleReloadClick);
+      
+      if (searchTerm) {
+        tableHeader.setSearchValue(searchTerm);
       }
-    };
+    }
+  }, [isMobile, title, searchable, searchPlaceholder, handleReloadClick, searchTerm, tableHeader]);
 
-    // Usar requestAnimationFrame para garantir atualização suave e evitar conflitos de render
-    const rafId = requestAnimationFrame(updateHeader);
-    
-    return () => {
-      cancelAnimationFrame(rafId);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMobile, title, searchable, searchPlaceholder, handleReloadClick]);
+  // Limpar quando sair do mobile
+  useEffect(() => {
+    if (!isMobile) {
+      tableHeader.setTitle(null);
+      tableHeader.setShowSearch(false);
+      tableHeader.setShowReload(false);
+      tableHeader.setOnReloadClick(null);
+      tableHeader.setShowMobileSearch(false);
+    }
+  }, [isMobile, tableHeader]);
 
   // Sincronizar loading separadamente para evitar re-configuração completa do header
   useEffect(() => {
@@ -1266,9 +1258,9 @@ function Table<T extends { id: number | string }>({
       {/* Paginação fixa na parte inferior (mobile) */}
       {isMobile && (normalizedPagination || (!normalizedPagination && data.length > 0)) && (
         <div className="table-mobile-pagination">
-          <div className="d-flex align-items-center justify-content-between gap-2 w-100">
-            {/* Botões de navegação */}
-            <div className="d-flex align-items-center gap-1">
+          <div className="d-grid align-items-center w-100" style={{ gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem' }}>
+            {/* Botões de navegação esquerda */}
+            <div className="d-flex align-items-center gap-1 justify-content-start">
               <button 
                 type="button"
                 className="btn btn-outline-secondary btn-sm" 
@@ -1300,7 +1292,7 @@ function Table<T extends { id: number | string }>({
             </div>
             
             {/* Informação da página */}
-            <span className="small text-muted text-center flex-grow-1">
+            <span className="small text-muted text-center text-nowrap">
               {normalizedPagination ? (
                 `${normalizedPagination.from || 0} - ${normalizedPagination.to || 0} / ${normalizedPagination.total || 0} registros`
               ) : (
@@ -1308,8 +1300,8 @@ function Table<T extends { id: number | string }>({
               )}
             </span>
             
-            {/* Botões de navegação */}
-            <div className="d-flex align-items-center gap-1">
+            {/* Botões de navegação direita */}
+            <div className="d-flex align-items-center gap-1 justify-content-end">
               <button 
                 type="button"
                 className="btn btn-outline-secondary btn-sm" 
