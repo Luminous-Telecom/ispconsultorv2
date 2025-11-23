@@ -55,7 +55,7 @@ const InformacoesBasicasTab: React.FC<BancoTabProps> = ({
         </div>
 
         <div className="col-md-6">
-          <div className="mb-4">
+          <div className="mb-2">
             <FormField
               name="ativo"
               type="checkbox"

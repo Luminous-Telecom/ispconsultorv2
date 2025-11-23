@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
@@ -9,6 +9,8 @@ import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
 import Loading from '../common/Loading';
 import { authService, CurrentUser } from '@/services/authService';
 import { getAuthToken } from '@/services/core';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useTableHeader } from '@/contexts/TableHeaderContext';
 
 // Modais com lazy loading (code splitting) - carregados apenas quando necessário
 // Named exports
@@ -42,13 +44,57 @@ const Layout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  
+  // Responsividade: Mobile-First
+  const isMobile = useIsMobile();
   
   // Dashboard filters (apenas na rota do dashboard)
   const isDashboard = location.pathname === '/adm' || location.pathname === '/adm/dashboard';
   const dashboardFilters = useDashboardFilters();
   
+  // Table header context (para botões de busca e reload)
+  const tableHeader = useTableHeader();
+  
   // Estado para controlar qual modal está aberto (apenas um por vez)
   const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  // Fechar menu de usuário ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showUserMenu]);
+
+  // Fechar sidebar ao clicar fora (apenas no mobile)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMobile && sidebarOpen && sidebarRef.current) {
+        const target = event.target as Node;
+        if (!sidebarRef.current.contains(target)) {
+          setSidebarOpen(false);
+        }
+      }
+    };
+
+    if (isMobile && sidebarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isMobile, sidebarOpen]);
   
   // Carregar usuário atual da API
   useEffect(() => {
@@ -122,8 +168,16 @@ const Layout: React.FC = () => {
 
   return (
     <div className="app-layout">
+      {/* Overlay para fechar sidebar no mobile */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside ref={sidebarRef} className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <i className="bi bi-broadcast"></i>
@@ -134,9 +188,24 @@ const Layout: React.FC = () => {
               <p className="sidebar-user-name">{currentUser.nome}</p>
             )}
           </div>
+          {/* Botão Voltar - Recolher menu (apenas mobile) */}
+          {isMobile && (
+            <button
+              type="button"
+              className="sidebar-header-back-btn"
+              onClick={() => {
+                setSidebarOpen(false);
+              }}
+              title="Recolher menu"
+              aria-label="Recolher menu"
+            >
+              <i className="bi bi-arrow-left"></i>
+            </button>
+          )}
         </div>
         
         <nav className="sidebar-nav">
+
           {menuItems.map((item) => (
             <div key={item.path} className="sidebar-nav-item">
               {item.isModal ? (
@@ -179,26 +248,207 @@ const Layout: React.FC = () => {
 
       {/* Main Layout */}
       <div className="main-layout">
-        {/* Header */}
+        {/* Header - Mobile-First Responsive */}
         <header className="main-header">
-          <div className="d-flex align-items-center flex-grow-1">
+          <div className="header-container">
+            {/* Linha 1: Controles principais - Layout: Esquerda | Centro | Direita */}
+            <div className="header-row-1">
+              {/* Esquerda: Hamburger Menu */}
+              {isMobile && (
+                <div className="header-left">
             <Button 
               variant="outline-secondary"
               size="sm"
               icon="list"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="d-md-none me-3"
-              style={{ color: 'var(--text-primary)' }}
+                    className="hamburger-btn"
               tooltip="Abrir/Fechar menu"
+                    aria-label="Abrir menu lateral"
+                  >
+                    {''}
+                  </Button>
+                </div>
+              )}
+              
+              {/* Título - Dashboard ou título da tabela */}
+              <div className="header-center">
+                <h1 className="header-title">{isMobile && tableHeader.title ? tableHeader.title : 'Dashboard'}</h1>
+              </div>
+              
+              {/* Desktop: Filtros de data depois do Dashboard */}
+              {isDashboard && !isMobile && (
+                <div className="header-dates-desktop">
+                  <div className="date-filter-group">
+                    <label htmlFor="dashboard-start-date-desktop" className="date-label">
+                      Data inicial:
+                    </label>
+                    <input
+                      type="date"
+                      id="dashboard-start-date-desktop"
+                      name="dashboard-start-date-desktop"
+                      value={dashboardFilters.startDate}
+                      onChange={(e) => {
+                        dashboardFilters.setStartDate(e.target.value);
+                        if (dashboardFilters.endDate && new Date(`${e.target.value}T00:00:00`) > new Date(`${dashboardFilters.endDate}T00:00:00`)) {
+                          dashboardFilters.setEndDate(e.target.value);
+                        }
+                      }}
+                      className="form-control form-control-sm dashboard-date-input"
+                      aria-label="Data inicial do período"
+                    />
+                  </div>
+                  <div className="date-filter-group">
+                    <label htmlFor="dashboard-end-date-desktop" className="date-label">
+                      Data final:
+                    </label>
+                    <input
+                      type="date"
+                      id="dashboard-end-date-desktop"
+                      name="dashboard-end-date-desktop"
+                      value={dashboardFilters.endDate}
+                      onChange={(e) => {
+                        if (dashboardFilters.startDate && new Date(`${e.target.value}T00:00:00`) < new Date(`${dashboardFilters.startDate}T00:00:00`)) {
+                          dashboardFilters.setEndDate(dashboardFilters.startDate);
+                          return;
+                        }
+                        dashboardFilters.setEndDate(e.target.value);
+                      }}
+                      className="form-control form-control-sm dashboard-date-input"
+                      aria-label="Data final do período"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Direita: Menu de ações */}
+              <div className="header-right">
+                {isMobile ? (
+                  <>
+                    {/* Botões da tabela (busca e reload) */}
+                    {tableHeader.showSearch && (
+                      <button
+                        type="button"
+                        className="btn btn-link p-0"
+                        onClick={() => tableHeader.setShowMobileSearch(!tableHeader.showMobileSearch)}
+                        style={{
+                          color: 'var(--text-primary)',
+                          border: 'none',
+                          background: 'none',
+                          fontSize: '1.25rem',
+                          minWidth: '36px',
+                          minHeight: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '0.5rem',
+                        }}
+                      >
+                        <i className="bi bi-search"></i>
+                      </button>
+                    )}
+                    
+                    {tableHeader.showReload && (
+                      <button
+                        type="button"
+                        className="btn btn-link p-0"
+                        onClick={() => {
+                          if (tableHeader.onReloadClick) {
+                            tableHeader.onReloadClick();
+                          }
+                        }}
+                        disabled={tableHeader.loading}
+                        style={{
+                          color: 'var(--text-primary)',
+                          border: 'none',
+                          background: 'none',
+                          fontSize: '1.25rem',
+                          minWidth: '36px',
+                          minHeight: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '0.5rem',
+                          opacity: tableHeader.loading ? 0.5 : 1,
+                        }}
+                      >
+                        <i className="bi bi-arrow-clockwise"></i>
+                      </button>
+                    )}
+                    
+                    {/* Menu de 3 pontos com dropdown */}
+                    <div className="mobile-menu-dropdown" ref={userMenuRef}>
+                      <button
+                        className="btn btn-outline-secondary mobile-menu-btn"
+                        type="button"
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                        title="Menu"
+                        aria-label="Menu de opções"
+                        aria-expanded={showUserMenu}
+                      >
+                        <span aria-hidden="true">⋮</span>
+                      </button>
+                      {showUserMenu && (
+                        <div className="dropdown-menu show mobile-dropdown-menu">
+                          <button
+                            className="dropdown-item d-flex align-items-center gap-2"
+                            onClick={() => {
+                              toggleTheme();
+                              setShowUserMenu(false);
+                            }}
+                            type="button"
+                          >
+                            <i className={`bi bi-${theme === 'light' ? 'moon' : 'sun'}`}></i>
+                            <span>{theme === 'light' ? 'Tema escuro' : 'Tema claro'}</span>
+                          </button>
+                          <button
+                            className="dropdown-item d-flex align-items-center gap-2 text-danger"
+                            onClick={() => {
+                              handleLogout();
+                              setShowUserMenu(false);
+                            }}
+                            type="button"
+                          >
+                            <i className="bi bi-box-arrow-right"></i>
+                            <span>Sair</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  /* Desktop: Botões separados */
+                  <div className="desktop-buttons">
+                    <Button 
+                      variant="outline-secondary"
+                      size="sm"
+                      icon={theme === 'light' ? 'moon' : 'sun'}
+                      onClick={toggleTheme}
+                      tooltip={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
+                      aria-label={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
             >
               {''}
             </Button>
-            <h2 className="h4 mb-0 me-4">
-              Dashboard
-            </h2>
-            {isDashboard && (
-              <div className="d-flex align-items-center gap-2 flex-wrap">
-                <span className="text-muted small me-1">Data inicial:</span>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      icon="box-arrow-right"
+                      onClick={handleLogout}
+                      aria-label="Sair do sistema"
+                    >
+                      Sair
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Linha 2: Filtros de data (apenas no mobile) */}
+            {isDashboard && isMobile && (
+              <div className="header-row-2">
+                <div className="date-filter-group">
+                  <label htmlFor="dashboard-start-date" className="date-label">
+                    {isMobile ? 'Inicial:' : 'Data inicial:'}
+                  </label>
                 <input
                   type="date"
                   id="dashboard-start-date"
@@ -210,10 +460,14 @@ const Layout: React.FC = () => {
                       dashboardFilters.setEndDate(e.target.value);
                     }
                   }}
-                  className="form-control form-control-sm"
-                  style={{ width: '150px' }}
+                    className="form-control form-control-sm dashboard-date-input"
+                    aria-label="Data inicial do período"
                 />
-                <span className="text-muted small me-1">Data final:</span>
+                </div>
+                <div className="date-filter-group">
+                  <label htmlFor="dashboard-end-date" className="date-label">
+                    {isMobile ? 'Final:' : 'Data final:'}
+                  </label>
                 <input
                   type="date"
                   id="dashboard-end-date"
@@ -226,36 +480,50 @@ const Layout: React.FC = () => {
                     }
                     dashboardFilters.setEndDate(e.target.value);
                   }}
-                  className="form-control form-control-sm"
-                  style={{ width: '150px' }}
+                    className="form-control form-control-sm dashboard-date-input"
+                    aria-label="Data final do período"
                 />
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={dashboardFilters.handleResetPeriod}>
-                  Mês atual
-                </button>
+                </div>
               </div>
             )}
           </div>
-          
-          <div className="d-flex align-items-center gap-3">
-            <Button 
-              variant="outline-secondary"
-              size="sm"
-              icon={theme === 'light' ? 'moon' : 'sun'}
-              onClick={toggleTheme}
-              tooltip={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
-              className="theme-toggle"
-            >
-              {''}
-            </Button>
-            <Button
-              variant="outline-danger"
-              size="sm"
-              onClick={handleLogout}
-            >
-              Sair
-            </Button>
-          </div>
         </header>
+        
+        {/* Campo de busca mobile - aparece quando showMobileSearch é true */}
+        {isMobile && tableHeader.showMobileSearch && tableHeader.showSearch && (
+          <div className="table-mobile-search-container">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder={tableHeader.searchPlaceholder}
+              value={tableHeader.searchValue}
+              onChange={(e) => {
+                tableHeader.setSearchValue(e.target.value);
+              }}
+              autoFocus
+              style={{ flex: 1 }}
+            />
+            <button
+              type="button"
+              className="btn btn-link p-0"
+              onClick={() => tableHeader.setShowMobileSearch(false)}
+              style={{
+                color: 'var(--text-primary)',
+                border: 'none',
+                background: 'none',
+                fontSize: '1rem',
+                padding: '0.25rem',
+                minWidth: '32px',
+                minHeight: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <i className="bi bi-x"></i>
+            </button>
+          </div>
+        )}
 
         {/* Main Content */}
         <main className="main-content">

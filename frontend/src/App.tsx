@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/notifications/NotificationProvider';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
+import { TableHeaderProvider } from './contexts/TableHeaderContext';
 import Loading from './components/common/Loading';
 import ProtectionLayer from './components/common/ProtectionLayer';
 import Layout from './components/layout/Layout';
@@ -67,7 +68,9 @@ function App() {
                   } />
                   <Route path="/adm" element={
                     <DashboardFiltersProvider>
-                      <Layout />
+                      <TableHeaderProvider>
+                        <Layout />
+                      </TableHeaderProvider>
                     </DashboardFiltersProvider>
                   }>
                     <Route index element={

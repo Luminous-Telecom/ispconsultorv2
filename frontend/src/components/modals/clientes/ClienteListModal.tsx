@@ -205,10 +205,11 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     {
       label: 'Editar',
       variant: 'primary' as const,
-      disabled: () => !selectedItem,
-      action: () => {
-        if (selectedItem) {
-          setSelectedClienteId(selectedItem.id);
+      disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
+      action: (selectedItems: Cliente[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (item) {
+          setSelectedClienteId(item.id);
           setShowEditModal(true);
         }
       }
@@ -216,10 +217,11 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     {
       label: 'Excluir',
       variant: 'danger' as const,
-      disabled: () => !selectedItem,
-      action: () => {
-        if (selectedItem && window.confirm('Tem certeza que deseja excluir este cliente?')) {
-          handleDelete(selectedItem.id);
+      disabled: (selectedItems: Cliente[]) => selectedItems.length === 0,
+      action: (selectedItems: Cliente[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (item && window.confirm('Tem certeza que deseja excluir este cliente?')) {
+          handleDelete(item.id);
         }
       }
     }

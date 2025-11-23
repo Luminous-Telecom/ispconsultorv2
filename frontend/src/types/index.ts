@@ -96,6 +96,8 @@
  * ```
  */
 
+import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela } from './entities';
+
 // Re-exportar tipos consolidados
 export * from './entities';
 export * from './common';
@@ -121,7 +123,6 @@ export type { ClienteFilters, PlanoFilters, BancoFilters, CarneFilters, CarnePar
 // TIPOS DE CRIAÇÃO E ATUALIZAÇÃO
 // ============================================
 
-import { Cliente, Plano, Banco, Contrato, Carne, CarneParcela } from './entities';
 
 export type CreateCliente = Omit<Cliente, 'id' | 'created_at' | 'updated_at' | 'data_cadastro'>;
 export type UpdateCliente = Partial<CreateCliente>;

@@ -164,7 +164,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
           </div>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-2">
           <FormField
             name="observacoes"
             type="textarea"

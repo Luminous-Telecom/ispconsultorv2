@@ -173,22 +173,24 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
             textDecoration: 'none',
             border: 'none',
             background: 'none',
-            fontSize: '1.5rem',
+            fontSize: '1.25rem',
             lineHeight: 1,
             padding: '4px 8px',
-            minWidth: '44px',
-            minHeight: '44px',
+            minWidth: '36px',
+            minHeight: '36px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
             cursor: 'pointer',
             flexShrink: 0,
+            alignSelf: 'flex-start',
+            marginTop: '2px',
           }}
           aria-label="Voltar"
         >
           <svg
-            width="24"
-            height="24"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

@@ -20,7 +20,7 @@ const DadosBasicosTab: React.FC<DadosEmpresaTabProps & { onLogoChange: (file: Fi
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-2">
       <div className="row">
         <div className="col-md-6">
           <FormField

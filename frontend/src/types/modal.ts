@@ -45,7 +45,7 @@ export interface ListModalProps<T> {
   bulkActions?: Array<{
     label: string;
     variant?: 'primary' | 'secondary' | 'danger';
-    disabled?: () => boolean;
-    action: () => void;
+    disabled?: (() => boolean) | ((selectedItems: T[]) => boolean);
+    action: (() => void) | ((selectedItems: T[]) => void);
   }>;
 }

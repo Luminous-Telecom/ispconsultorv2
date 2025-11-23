@@ -29,4 +29,5 @@ export * from './useSorting';
 export * from './useCep';
 export * from './useDashboard';
 export * from './useClienteEditModal';
+export * from './useMediaQuery';
 

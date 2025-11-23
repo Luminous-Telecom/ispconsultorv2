@@ -59,7 +59,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <div className="mb-3">
           <i className={`bi ${getIconClass()}`} style={{ fontSize: '3rem' }}></i>
         </div>
-        <p className="text-muted mb-4">
+        <p className="text-muted mb-2">
           {message}
         </p>
         

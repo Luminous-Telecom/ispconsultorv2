@@ -67,18 +67,18 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      <div className="container-fluid px-0">
-        <div className="dashboard-hero card border-0 shadow-sm mb-4">
+      <div className="container-fluid px-0 px-md-0">
+        <div className="dashboard-hero card border-0 shadow-sm mb-2">
           <div className="dashboard-hero-body">
             <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-              <div>
+              <div className="w-100 w-lg-auto">
                 <span className="dashboard-badge text-uppercase">Visão geral</span>
                 <h2 className="dashboard-hero-title mb-2">Painel financeiro e operacional</h2>
                 <p className="dashboard-hero-subtitle mb-0">
                   Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
                 </p>
               </div>
-              <div className="d-flex flex-wrap gap-3">
+              <div className="d-flex flex-column flex-sm-row flex-wrap gap-3 w-100 w-lg-auto">
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Faturamento total</span>
                   <strong className="dashboard-hero-value">{formatCurrency(stats.receitaPagaPeriodo)}</strong>
@@ -101,7 +101,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="row g-3 mb-4">
+        <div className="row g-3">
           <div className="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
             <div className="chart-card">
               <ResponsivePieChart
@@ -175,7 +175,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="row g-3 mb-4">
+        <div className="row g-3">
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart 
@@ -197,7 +197,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="row g-3 mb-4">
+        <div className="row g-3">
           <div className="col-xl-6 col-lg-6">
             <div className="chart-card chart-card-line">
               <ResponsiveLineChart

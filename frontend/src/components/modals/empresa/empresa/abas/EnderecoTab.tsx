@@ -18,7 +18,7 @@ const EnderecoTab: React.FC<DadosEmpresaTabProps> = ({
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-2">
       <AddressFields 
         required={false}
         size="md"

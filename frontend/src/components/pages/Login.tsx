@@ -61,7 +61,7 @@ const Login: React.FC = () => {
           <div className="col-md-6 col-lg-4">
             <div className="card shadow-sm border-0">
               <div className="card-body p-4 p-md-5">
-                <div className="text-center mb-4">
+                <div className="text-center mb-2">
                   <h1 className="h4 text-primary fw-bold mb-1">BackNet</h1>
                   <p className="text-muted mb-0">Acesse o painel administrativo</p>
                 </div>

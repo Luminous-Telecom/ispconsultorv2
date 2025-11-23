@@ -67,8 +67,25 @@ function ListModal<T extends { id: number | string }>({
               return bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,
-                onClick: action.action,
-                disabled: action.disabled
+                onClick: (selectedItems: T[]) => {
+                  // Se action aceita selectedItems, passar; caso contrário, chamar sem parâmetros
+                  if (action.action.length > 0) {
+                    (action.action as (selectedItems: T[]) => void)(selectedItems);
+                  } else {
+                    (action.action as () => void)();
+                  }
+                },
+                disabled: (selectedItems: T[]) => {
+                  // Se disabled aceita selectedItems, passar; caso contrário, chamar sem parâmetros
+                  if (action.disabled) {
+                    if (action.disabled.length > 0) {
+                      return (action.disabled as (selectedItems: T[]) => boolean)(selectedItems);
+                    } else {
+                      return (action.disabled as () => boolean)();
+                    }
+                  }
+                  return false;
+                }
               }));
             }, [bulkActions])
           }}

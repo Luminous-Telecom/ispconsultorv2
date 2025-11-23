@@ -17,7 +17,7 @@ const ContatoTab: React.FC<DadosEmpresaTabProps> = ({
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-2">
       <div className="row">
         <div className="col-md-4">
           <FormField

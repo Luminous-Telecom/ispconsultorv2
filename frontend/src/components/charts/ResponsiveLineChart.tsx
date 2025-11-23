@@ -9,13 +9,20 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string; value: number } | null>(null);
 
+  // Função para formatar o ano (2025 -> 25, 2024 -> 24)
+  const formatDateLabel = useCallback((label: string): string => {
+    if (!label) return '';
+    // Substituir anos de 4 dígitos por 2 dígitos (ex: 2025 -> 25, 2024 -> 24)
+    return label.replace(/\b(20)(\d{2})\b/g, '$2');
+  }, []);
+
   const chartData = useMemo(() => 
     data.map((item) => ({
-      name: item.mes || item.name || '',
+      name: formatDateLabel(item.mes || item.name || ''),
       value: item.valor ?? item.value ?? 0,
       color: item.color || '#007bff',
     })),
-    [data]
+    [data, formatDateLabel]
   );
 
   const formatYAxis = useCallback((tickItem: number) => {
@@ -40,7 +47,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
         const rect = containerRef.current.getBoundingClientRect();
         setDimensions({ 
           width: rect.width || 200, 
-          height: rect.height || 220 
+          height: rect.height || 260 
         });
       }
     };
@@ -64,8 +71,8 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
     // Limpar canvas
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
-    // Margens
-    const margin = { top: 15, right: 30, left: 50, bottom: 30 };
+    // Margens - aumentar bottom para acomodar labels rotacionadas
+    const margin = { top: 15, right: 30, left: 50, bottom: 60 };
     const chartWidth = dimensions.width - margin.left - margin.right;
     const chartHeight = dimensions.height - margin.top - margin.bottom;
 
@@ -127,13 +134,20 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
       ctx.fillText(label, margin.left - 10, y);
     }
 
-    // Desenhar labels do eixo X
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
+    // Desenhar labels do eixo X (rotacionados verticalmente)
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
     const xStep = chartWidth / (chartData.length - 1 || 1);
     chartData.forEach((item, index) => {
       const x = margin.left + xStep * index;
-      ctx.fillText(item.name, x, margin.top + chartHeight + 10);
+      const y = margin.top + chartHeight + 15;
+      
+      // Rotacionar o texto verticalmente
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-Math.PI / 2); // -90 graus
+      ctx.fillText(item.name, 0, 0);
+      ctx.restore();
     });
 
     // Calcular pontos da linha
@@ -221,7 +235,7 @@ const ResponsiveLineChart: React.FC<LineChartProps> = memo(({ data, title, forma
   return (
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
-      <div ref={containerRef} style={{ width: '100%', height: '220px', minWidth: '200px', minHeight: '220px', position: 'relative' }}>
+      <div ref={containerRef} style={{ width: '100%', height: '260px', minWidth: '200px', minHeight: '260px', position: 'relative', overflow: 'visible' }}>
         <canvas
           ref={canvasRef}
           width={dimensions.width}

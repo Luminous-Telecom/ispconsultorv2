@@ -132,7 +132,7 @@ const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hid
   }, [data, onToggleItem]);
 
   return (
-    <div ref={containerRef} className="pie-legend-box" style={{ position: 'relative', width: '100%' }}>
+    <div ref={containerRef} className="pie-legend-box" style={{ position: 'relative' }}>
       <canvas
         ref={canvasRef}
         width={dimensions.width}
