@@ -236,10 +236,11 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     {
       label: 'Editar',
       variant: 'primary' as const,
-      disabled: () => !selectedItem,
-      action: () => {
-        if (selectedItem) {
-          setSelectedPlanoId(selectedItem.id);
+      disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
+      action: (selectedItems: Plano[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (item) {
+          setSelectedPlanoId(item.id);
           setShowEditModal(true);
         }
       }
@@ -247,10 +248,11 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     {
       label: 'Excluir',
       variant: 'danger' as const,
-      disabled: () => !selectedItem,
-      action: () => {
-        if (selectedItem && window.confirm('Tem certeza que deseja excluir este plano?')) {
-          handleDelete(selectedItem.id);
+      disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
+      action: (selectedItems: Plano[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (item && window.confirm('Tem certeza que deseja excluir este plano?')) {
+          handleDelete(item.id);
         }
       }
     }
