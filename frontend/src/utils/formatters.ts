@@ -12,8 +12,24 @@ export const formatCurrency = (value: number | string, showCurrency: boolean = t
   
   if (isNaN(numValue)) return showCurrency ? 'R$ 0,00' : '0,00';
   
-  const formatted = numValue.toFixed(2).replace('.', ',');
-  return showCurrency ? `R$ ${formatted}` : formatted;
+  return numValue.toLocaleString('pt-BR', {
+    style: showCurrency ? 'currency' : 'decimal',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+  });
+};
+
+/**
+ * Formata um número com separadores de milhar brasileiros
+ * @param value - Valor numérico para formatar
+ * @returns String formatada com separadores
+ */
+export const formatNumber = (value: number | string): string => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  if (isNaN(numValue)) return '0';
+  
+  return numValue.toLocaleString('pt-BR');
 };
 
 /**
@@ -163,4 +179,31 @@ export const formatCEP = (cep: string): string => {
   
   if (limitedNumbers.length <= 5) return limitedNumbers;
   return `${limitedNumbers.slice(0, 5)}-${limitedNumbers.slice(5, 8)}`;
+};
+
+/**
+ * Formata uma data para o formato "15 de janeiro"
+ * @param date - Data como string, Date ou null/undefined
+ * @returns String formatada como "DD de mês" ou '-' se nula
+ */
+export const formatDateLong = (date: string | Date | null | undefined): string => {
+  if (!date) return '-';
+  
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) return '-';
+    
+    const formatted = formatDate(dateObj);
+    const meses = [
+      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+    ];
+    
+    return formatted.replace(/(\d{2})\/(\d{2})\/(\d{4})/, (_, dia, mes) => {
+      return `${dia} de ${meses[parseInt(mes) - 1]}`;
+    });
+  } catch {
+    return '-';
+  }
 };

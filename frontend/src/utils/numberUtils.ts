@@ -41,7 +41,7 @@ export const toInteger = (value: string | number | null | undefined, defaultValu
  * @param decimals - Número de casas decimais
  * @returns String formatada
  */
-export const formatNumber = (value: number | string, decimals: number = 2): string => {
+export const formatNumberWithDecimals = (value: number | string, decimals: number = 2): string => {
   const num = toNumber(value);
   return num.toFixed(decimals);
 };

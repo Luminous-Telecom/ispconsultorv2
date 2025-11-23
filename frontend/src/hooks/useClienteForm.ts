@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
@@ -366,31 +366,29 @@ export const useClienteForm = ({
   };
 
   // Handler de submit usando React Hook Form
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = (data: any) => {
-    const typedData = data as ZodClienteFormData;
+  const onSubmit: SubmitHandler<ZodClienteFormData> = (data) => {
     // Preparar dados para envio
     const dataToSend: Partial<CreateCliente> = {
-      cnpj: typedData.cnpj,
-      razao_social: typedData.razao_social,
-      nome_fantasia: typedData.nome_fantasia || undefined,
-      email: typedData.email,
-      telefone: typedData.telefone || undefined,
-      whatsapp: typedData.whatsapp || undefined,
-      cep: typedData.cep,
-      endereco: typedData.endereco,
-      numero: typedData.numero,
-      complemento: typedData.complemento || undefined,
-      bairro: typedData.bairro,
-      cidade: typedData.cidade,
-      estado: typedData.estado,
-      ativo: typedData.ativo,
-      tipo_cobranca: typedData.tipo_cobranca as 'titulo' | 'boleto' | 'carne',
-      valor_primeiro_titulo: typedData.valor_primeiro_titulo as 'total' | 'proporcional',
-      recebe_email: typedData.recebe_email,
-      recebe_sms: typedData.recebe_sms,
-      recebe_whatsapp: typedData.recebe_whatsapp,
-      observacoes: typedData.observacoes || undefined
+      cnpj: data.cnpj,
+      razao_social: data.razao_social,
+      nome_fantasia: data.nome_fantasia || undefined,
+      email: data.email,
+      telefone: data.telefone || undefined,
+      whatsapp: data.whatsapp || undefined,
+      cep: data.cep,
+      endereco: data.endereco,
+      numero: data.numero,
+      complemento: data.complemento || undefined,
+      bairro: data.bairro,
+      cidade: data.cidade,
+      estado: data.estado,
+      ativo: data.ativo,
+      tipo_cobranca: data.tipo_cobranca as 'titulo' | 'boleto' | 'carne',
+      valor_primeiro_titulo: data.valor_primeiro_titulo as 'total' | 'proporcional',
+      recebe_email: data.recebe_email,
+      recebe_sms: data.recebe_sms,
+      recebe_whatsapp: data.recebe_whatsapp,
+      observacoes: data.observacoes || undefined
     };
 
     // Remover campos undefined
@@ -411,8 +409,7 @@ export const useClienteForm = ({
   // Handler de submit mantido para compatibilidade
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rhfHandleSubmit(onSubmit as any)(e);
+    rhfHandleSubmit(onSubmit)(e);
   };
 
   return {
