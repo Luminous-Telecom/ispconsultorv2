@@ -445,7 +445,7 @@ body {
 }
 
 .header-title {
-  font-size: 1.125rem; /* Mobile: tamanho menor */
+  font-size: 0.8rem; /* Mobile: tamanho reduzido (12.8px) */
   font-weight: 600;
   margin: 0;
   color: var(--text-primary);

@@ -158,7 +158,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
           className="mb-0 text-truncate"
           style={{
             color: 'var(--text-primary)',
-            fontSize: '1.125rem',
+            fontSize: '0.8rem', // 12.8px - reduzido para mobile
             fontWeight: 600,
             margin: 0,
             textAlign: 'center',
