@@ -30,7 +30,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "craco start",
+    "dev": "BROWSER=none craco start",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
