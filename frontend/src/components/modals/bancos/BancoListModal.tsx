@@ -196,10 +196,11 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     {
       label: 'Editar',
       variant: 'primary' as const,
-      disabled: () => !selectedBanco,
-      action: () => {
-        if (selectedBanco) {
-          setSelectedBancoId(selectedBanco.id);
+      disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
+      action: (selectedItems: Banco[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
+        if (item) {
+          setSelectedBancoId(item.id);
           setShowBancoModal(true);
         }
       }
@@ -207,10 +208,11 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     {
       label: 'Excluir',
       variant: 'danger' as const,
-      disabled: () => !selectedBanco,
-      action: () => {
-        if (selectedBanco && window.confirm('Tem certeza que deseja excluir este banco?')) {
-          handleDelete(selectedBanco.id);
+      disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
+      action: (selectedItems: Banco[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
+        if (item && window.confirm('Tem certeza que deseja excluir este banco?')) {
+          handleDelete(item.id);
         }
       }
     }

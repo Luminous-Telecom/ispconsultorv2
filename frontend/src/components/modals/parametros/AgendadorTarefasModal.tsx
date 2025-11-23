@@ -196,9 +196,10 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     setShowCreateModal(true);
   };
 
-  const handleEdit = () => {
-    if (selectedItem) {
-      setSelectedRotinaId(selectedItem.id);
+  const handleEdit = (selectedItems: RotinaAgendada[]) => {
+    const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+    if (item) {
+      setSelectedRotinaId(item.id);
       setShowEditModal(true);
     }
   };
@@ -221,26 +222,44 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
     {
       label: 'Editar',
       variant: 'primary' as const,
-      disabled: () => !selectedItem,
+      disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
       action: handleEdit
     },
     {
       label: 'Executar',
       variant: 'primary' as const,
-      disabled: () => !selectedItem,
-      action: () => selectedItem && handleExecute(selectedItem)
+      disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
+      action: (selectedItems: RotinaAgendada[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (item) {
+          handleExecute(item);
+        }
+      }
     },
     {
       label: 'Desativar',
       variant: 'secondary' as const,
-      disabled: () => !selectedItem || !selectedItem.ativo,
-      action: () => selectedItem && handleToggle(selectedItem)
+      disabled: (selectedItems: RotinaAgendada[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        return !item || !item.ativo;
+      },
+      action: (selectedItems: RotinaAgendada[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (item) {
+          handleToggle(item);
+        }
+      }
     },
     {
       label: 'Excluir',
       variant: 'danger' as const,
-      disabled: () => !selectedItem,
-      action: () => selectedItem && handleDelete(selectedItem)
+      disabled: (selectedItems: RotinaAgendada[]) => selectedItems.length === 0 && !selectedItem,
+      action: (selectedItems: RotinaAgendada[]) => {
+        const item = selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+        if (item) {
+          handleDelete(item);
+        }
+      }
     }
   ];
 
