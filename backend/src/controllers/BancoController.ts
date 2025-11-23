@@ -348,7 +348,7 @@ export class BancoController {
     try {
       const { id } = req.params;
       
-      let banco = await Banco.findByPk(id);
+      const banco = await Banco.findByPk(id);
       
       if (!banco) {
         res.status(404).json({ 

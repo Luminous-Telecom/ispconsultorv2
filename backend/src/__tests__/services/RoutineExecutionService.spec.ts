@@ -123,25 +123,31 @@ import { DiasVencimento } from '../../models/DiasVencimento';
 import { ContratoPlanoAdicional } from '../../models/ContratoPlanoAdicional';
 import { BarcodeService } from '../../services/BarcodeService';
 import { BancoApiService } from '../../services/BancoApiService';
-import { EnvioBoletosRoutine } from '../../services/routines/EnvioBoletosRoutine';
 import { ajustarDataVencimento } from '../../utils/dateUtils';
 import { withTransaction } from '../../utils/transaction';
 import { metrics, isMetricsEnabled } from '../../utils/metrics';
 import { logger } from '../../utils/logger';
 
 // Cast para acessar métodos mockados
-const mockContratoModel = Contrato as any;
-const mockTituloModel = Titulo as any;
-const mockParametrosModel = Parametros as any;
-const mockDiasVencimentoModel = DiasVencimento as any;
-const mockContratoPlanoAdicionalModel = ContratoPlanoAdicional as any;
-const mockBarcodeService = BarcodeService as any;
-const mockBancoApiService = BancoApiService as any;
+type MockedModel = {
+  findAll?: jest.Mock;
+  findByPk?: jest.Mock;
+  findOne?: jest.Mock;
+  create?: jest.Mock;
+};
+
+const mockContratoModel = Contrato as unknown as MockedModel;
+const mockTituloModel = Titulo as unknown as MockedModel;
+const mockParametrosModel = Parametros as unknown as MockedModel;
+const mockDiasVencimentoModel = DiasVencimento as unknown as MockedModel;
+const mockContratoPlanoAdicionalModel = ContratoPlanoAdicional as unknown as MockedModel;
+const mockBarcodeService = BarcodeService as unknown as { validarCodigoBarrasFebraban: jest.Mock };
+const mockBancoApiService = BancoApiService as unknown as { gerarTitulo: jest.Mock };
 const mockAjustarDataVencimento = ajustarDataVencimento as jest.MockedFunction<typeof ajustarDataVencimento>;
 const mockWithTransaction = withTransaction as jest.MockedFunction<typeof withTransaction>;
 const mockIsMetricsEnabled = isMetricsEnabled as jest.MockedFunction<typeof isMetricsEnabled>;
-const mockMetrics = metrics as any;
-const mockLogger = logger as any;
+const mockMetrics = metrics as unknown as { businessTitulosGerados: { inc: jest.Mock } };
+const mockLogger = logger as unknown as { error: jest.Mock; info: jest.Mock; warn: jest.Mock };
 
 // Garantir que os métodos mockados estejam disponíveis através dos objetos importados
 // Isso garante que os mocks funcionem mesmo com imports dinâmicos

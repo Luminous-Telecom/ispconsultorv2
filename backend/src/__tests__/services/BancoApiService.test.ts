@@ -38,7 +38,10 @@ describe('BancoApiService', () => {
       } as Banco;
 
       const config = BancoApiService['getBancoConfig']('efi');
-      const result = BancoApiService['verificarCredenciais'](banco, config!);
+      if (!config) {
+        throw new Error('Config não encontrado');
+      }
+      const result = BancoApiService['verificarCredenciais'](banco, config);
       expect(result).toBe(true);
     });
 
@@ -50,7 +53,10 @@ describe('BancoApiService', () => {
       } as Banco;
 
       const config = BancoApiService['getBancoConfig']('efi');
-      const result = BancoApiService['verificarCredenciais'](banco, config!);
+      if (!config) {
+        throw new Error('Config não encontrado');
+      }
+      const result = BancoApiService['verificarCredenciais'](banco, config);
       expect(result).toBe(false);
     });
   });

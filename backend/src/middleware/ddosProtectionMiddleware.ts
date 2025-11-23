@@ -65,7 +65,6 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
 
     // Flag para garantir que o contador seja decrementado apenas uma vez
     let isDecremented = false;
-    let timeoutId: NodeJS.Timeout;
 
     const decrementCounter = () => {
       if (!isDecremented) {
@@ -78,7 +77,7 @@ export const ddosProtectionMiddleware = (config?: Partial<DDoSProtectionConfig>)
     };
 
     // Criar timeout para a requisição
-    timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       // Verificar se a resposta ainda não foi enviada
       if (!res.headersSent && !isDecremented) {
         logger.warn('Timeout de processamento excedido', {

@@ -228,7 +228,10 @@ export class RoutineExecutionService {
           if (!titulosEmAbertoPorContrato.has(contratoId)) {
             titulosEmAbertoPorContrato.set(contratoId, []);
           }
-          titulosEmAbertoPorContrato.get(contratoId)!.push(titulo);
+          const titulos = titulosEmAbertoPorContrato.get(contratoId);
+          if (titulos) {
+            titulos.push(titulo);
+          }
         }
       });
 
@@ -238,7 +241,10 @@ export class RoutineExecutionService {
           if (!todosTitulosPorContrato.has(contratoId)) {
             todosTitulosPorContrato.set(contratoId, []);
           }
-          todosTitulosPorContrato.get(contratoId)!.push(titulo);
+          const todosTitulos = todosTitulosPorContrato.get(contratoId);
+          if (todosTitulos) {
+            todosTitulos.push(titulo);
+          }
         }
       });
 
@@ -254,7 +260,10 @@ export class RoutineExecutionService {
           if (!servicosAdicionaisPorContrato.has(contratoId)) {
             servicosAdicionaisPorContrato.set(contratoId, []);
           }
-          servicosAdicionaisPorContrato.get(contratoId)!.push(servico);
+          const servicos = servicosAdicionaisPorContrato.get(contratoId);
+          if (servicos) {
+            servicos.push(servico);
+          }
         }
       });
 
@@ -718,7 +727,7 @@ export class RoutineExecutionService {
 
             const dados = resultado.data;
             const chargeId = typeof dados.charge_id === 'string' ? dados.charge_id : undefined;
-            let codigoBarrasFinal = typeof dados.codigo_barras === 'string' ? dados.codigo_barras : null;
+            const codigoBarrasFinal = typeof dados.codigo_barras === 'string' ? dados.codigo_barras : null;
 
             // Log para debug - verificar se cada título está recebendo código diferente
             logger.info('Dados retornados pela API do banco', {

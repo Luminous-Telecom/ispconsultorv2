@@ -49,8 +49,9 @@ export class TemplateLoader {
   static loadTemplate(templateName: string): string {
     const cacheKey = `template:${templateName}`;
     
-    if (this.templateCache.has(cacheKey)) {
-      return this.templateCache.get(cacheKey)!;
+    const cached = this.templateCache.get(cacheKey);
+    if (cached) {
+      return cached;
     }
 
     const templatePath = path.join(this.TEMPLATES_DIR, `${templateName}.html`);
@@ -71,8 +72,9 @@ export class TemplateLoader {
   static loadStyle(styleName: string): string {
     const cacheKey = `style:${styleName}`;
     
-    if (this.styleCache.has(cacheKey)) {
-      return this.styleCache.get(cacheKey)!;
+    const cached = this.styleCache.get(cacheKey);
+    if (cached) {
+      return cached;
     }
 
     const stylePath = path.join(this.STYLES_DIR, `${styleName}.css`);

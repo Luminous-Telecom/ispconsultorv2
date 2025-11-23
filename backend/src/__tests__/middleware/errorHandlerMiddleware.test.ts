@@ -4,7 +4,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { errorHandlerMiddleware } from '../../middleware/errorHandlerMiddleware';
 import { ValidationError as JoiValidationError } from 'joi';
-import { ValidationError as SequelizeValidationError, UniqueConstraintError } from 'sequelize';
 
 describe('errorHandlerMiddleware', () => {
   let mockRequest: Partial<Request>;

@@ -343,8 +343,9 @@ const gracefulShutdown = async (signal: string) => {
   logger.info(`Recebido sinal ${signal}, iniciando encerramento gracioso...`);
   
   if (server) {
+    const serverToClose = server;
     await new Promise<void>((resolve) => {
-      server!.close(() => {
+      serverToClose.close(() => {
         logger.info('Servidor HTTP fechado');
         resolve();
       });
