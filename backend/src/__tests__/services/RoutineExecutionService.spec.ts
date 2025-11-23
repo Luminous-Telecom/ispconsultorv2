@@ -886,7 +886,9 @@ describe('RoutineExecutionService', () => {
       mockTituloFindAll.mockResolvedValue([tituloMock]);
       
       // Garantir que o mock está disponível no objeto importado
-      (mockTituloModel as any).findAll = mockTituloFindAll;
+      if (mockTituloModel.findAll) {
+        mockTituloModel.findAll = mockTituloFindAll;
+      }
       
       mockBancoApiService.gerarTitulo.mockResolvedValue({
         success: true,
@@ -948,13 +950,15 @@ describe('RoutineExecutionService', () => {
           id: 1,
           nome_plano: 'Plano Teste'
         }
-      } as any;
+      } as unknown as InstanceType<typeof Titulo>;
 
       // O código usa import dinâmico, então precisamos garantir que o mock seja aplicado
       mockTituloFindAll.mockResolvedValue([tituloMock]);
       
       // Garantir que o mock está disponível no objeto importado
-      (mockTituloModel as any).findAll = mockTituloFindAll;
+      if (mockTituloModel.findAll) {
+        mockTituloModel.findAll = mockTituloFindAll;
+      }
       
       mockBancoApiService.gerarTitulo.mockRejectedValue(new Error('Erro na API'));
 
