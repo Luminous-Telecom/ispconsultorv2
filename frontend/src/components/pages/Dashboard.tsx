@@ -1,20 +1,7 @@
-import React, { useState, useLayoutEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef, useCallback, useMemo, memo, startTransition } from 'react';
 import { formatDate } from '@/utils/formatters';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
-import {
-  LineChart as RLineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  PieLabelRenderProps
-} from 'recharts';
 
 /**
  * Interface para dados de gráfico
@@ -40,186 +27,218 @@ interface ResponsiveLineChartProps {
   format?: 'currency' | 'number';
 }
 
-/**
- * Interface para o payload aninhado do Recharts
- * Representa os dados do ponto do gráfico
- */
-interface RechartsNestedPayload {
-  value?: number;
-  valor?: number;
-  name?: string;
-  mes?: string;
-  label?: string;
-  // Propriedades dinâmicas podem existir devido à obfuscação
-  // Usamos unknown para manter type safety enquanto permitimos acesso dinâmico
-  [key: string]: string | number | undefined | unknown;
-}
 
-/**
- * Interface para um item do payload do tooltip do Recharts
- */
-interface RechartsTooltipPayloadItem {
-  value?: number;
-  dataKey?: string;
-  name?: string;
-  color?: string;
-  fill?: string;
-  stroke?: string;
-  payload?: RechartsNestedPayload;
-  // Propriedades adicionais podem existir após obfuscação
-  [key: string]: string | number | RechartsNestedPayload | undefined | unknown;
-}
-
-/**
- * Props para o componente CustomTooltip
- */
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: RechartsTooltipPayloadItem[];
-  label?: string | number;
-  format: 'currency' | 'number';
-}
-
-const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, format }) => {
-  if (active && payload && payload.length > 0) {
-    // Acessar value de forma mais robusta, considerando possíveis variações após obfuscação
-    // O Recharts passa o payload como um array, onde cada item contém informações sobre o ponto do gráfico
-    const firstPayload = payload[0];
-    let value: number | null = null;
-    
-    if (firstPayload && typeof firstPayload === 'object') {
-      // Após obfuscação com transform-object-keys, as chaves podem ser alteradas
-      // Estratégia: usar Object.entries() para encontrar valores numéricos sem depender do nome da propriedade
-      
-      // 1. Tentar acessar diretamente pelo nome da propriedade (caso não tenha sido ofuscado)
-      const directValue = firstPayload.value;
-      if (typeof directValue === 'number' && !isNaN(directValue) && isFinite(directValue)) {
-        value = directValue;
-      }
-      
-      // 2. Tentar acessar via payload aninhado (estrutura padrão do Recharts)
-      // O Recharts geralmente passa: payload[0].payload.value ou payload[0].value
-      if (value === null && firstPayload.payload && typeof firstPayload.payload === 'object') {
-        const nestedPayload = firstPayload.payload as RechartsNestedPayload;
-        // Tentar acessar via dataKey primeiro (mais confiável)
-        if (firstPayload.dataKey && typeof firstPayload.dataKey === 'string') {
-          const dataKeyValue = nestedPayload[firstPayload.dataKey];
-          if (typeof dataKeyValue === 'number' && !isNaN(dataKeyValue) && isFinite(dataKeyValue)) {
-            value = dataKeyValue;
-          }
-        }
-        // Se não encontrou via dataKey, tentar propriedades conhecidas
-        if (value === null && nestedPayload.value !== undefined) {
-          const nestedValue = nestedPayload.value;
-          if (typeof nestedValue === 'number' && !isNaN(nestedValue) && isFinite(nestedValue)) {
-            value = nestedValue;
-          }
-        }
-        if (value === null && nestedPayload.valor !== undefined) {
-          const nestedValor = nestedPayload.valor;
-          if (typeof nestedValor === 'number' && !isNaN(nestedValor) && isFinite(nestedValor)) {
-            value = nestedValor;
-          }
-        }
-      }
-      
-      // 3. Iterar sobre todas as propriedades do payload aninhado para encontrar valores numéricos
-      // Isso funciona mesmo após obfuscação, pois não depende do nome da propriedade
-      if (value === null && firstPayload.payload && typeof firstPayload.payload === 'object') {
-        const nestedPayload = firstPayload.payload as RechartsNestedPayload;
-        const nestedEntries = Object.entries(nestedPayload);
-        // Ignorar propriedades que não são números (objetos, arrays, strings, etc)
-        for (const [, val] of nestedEntries) {
-          if (typeof val === 'number' && !isNaN(val) && isFinite(val)) {
-            value = val;
-            break;
-          }
-        }
-      }
-      
-      // 4. Como último recurso, iterar sobre todas as propriedades do primeiro payload
-      if (value === null) {
-        const allEntries = Object.entries(firstPayload);
-        // Ignorar propriedades que não são números e propriedades conhecidas (payload, dataKey, name, color, etc)
-        const ignoredKeys = ['payload', 'dataKey', 'name', 'color', 'fill', 'stroke'];
-        for (const [key, val] of allEntries) {
-          if (!ignoredKeys.includes(key) && typeof val === 'number' && !isNaN(val) && isFinite(val)) {
-            value = val;
-            break;
-          }
-        }
-      }
-    }
-    
-    // Garantir que value é um número válido
-    const numericValue = value !== null && typeof value === 'number' && !isNaN(value) && isFinite(value) ? value : 0;
-    
-    const formattedValue = format === 'currency'
-      ? numericValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
-      : numericValue.toLocaleString('pt-BR');
-
-    return (
-      <div className="custom-tooltip bg-dark p-2 border border-secondary rounded shadow">
-        <p className="label text-light mb-0">{label}</p>
-        <p className="intro text-info mb-0">Valor: {formattedValue}</p>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, format = 'number' }) => {
+const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = memo(({ data, title, format = 'number' }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isReady, setIsReady] = useState(false);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string; value: number } | null>(null);
+
+  const chartData = useMemo(() => 
+    data.map((item) => ({
+      name: item.mes || item.name || '',
+      value: item.valor ?? item.value ?? 0,
+      color: item.color || '#007bff',
+    })),
+    [data]
+  );
+
+  const formatYAxis = useCallback((tickItem: number) => {
+    if (format === 'currency') {
+      if (tickItem >= 1_000_000) return `R$${(tickItem / 1_000_000).toFixed(1)}M`;
+      if (tickItem >= 1_000) return `R$${(tickItem / 1_000).toFixed(1)}K`;
+      return `R$${tickItem.toFixed(0)}`;
+    }
+    return tickItem.toLocaleString('pt-BR');
+  }, [format]);
+
+  const formatValue = useCallback((value: number) => {
+    if (format === 'currency') {
+      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+    }
+    return value.toLocaleString('pt-BR');
+  }, [format]);
 
   useLayoutEffect(() => {
-    // Verificar dimensões antes da renderização visual
-    const checkDimensions = () => {
+    const updateDimensions = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        const { width, height } = rect;
-
-        if (width > 0 && height > 0) {
-          setDimensions({ width, height });
-          setIsReady(true);
-          return true;
-        }
+        setDimensions({ 
+          width: rect.width || 200, 
+          height: rect.height || 220 
+        });
       }
-      setIsReady(false);
-      return false;
     };
 
-    // Tentar imediatamente
-    checkDimensions();
-
-    // Usar ResizeObserver para detectar mudanças de tamanho
-    const resizeObserver = new ResizeObserver(() => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const { width, height } = rect;
-        if (width > 0 && height > 0) {
-          setDimensions({ width, height });
-        }
-      }
-      checkDimensions();
-    });
-
+    updateDimensions();
+    const resizeObserver = new ResizeObserver(updateDimensions);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
 
-    // Fallback: tentar após um pequeno delay
-    const timer = setTimeout(() => {
-      checkDimensions();
-    }, 100);
+    return () => resizeObserver.disconnect();
+  }, []);
 
-    return () => {
-      resizeObserver.disconnect();
-      clearTimeout(timer);
-    };
-  }, [data, title]);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || dimensions.width === 0 || dimensions.height === 0 || chartData.length === 0) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Limpar canvas
+    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+
+    // Margens
+    const margin = { top: 15, right: 30, left: 50, bottom: 30 };
+    const chartWidth = dimensions.width - margin.left - margin.right;
+    const chartHeight = dimensions.height - margin.top - margin.bottom;
+
+    // Valores para cálculo
+    const values = chartData.map(d => d.value);
+    const maxValue = Math.max(...values, 0);
+    const minValue = 0;
+    const valueRange = maxValue - minValue || 1;
+
+    // Número de ticks no eixo Y
+    const numYTicks = 5;
+    const yTickStep = valueRange / (numYTicks - 1);
+
+    // Cores
+    const gridColor = '#2f3844';
+    const axisColor = '#6c757d';
+    const lineColor = '#007bff';
+    const dotColor = '#007bff';
+    const activeDotColor = '#0056b3';
+
+    // Desenhar grid
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    for (let i = 0; i < numYTicks; i++) {
+      const y = margin.top + (chartHeight / (numYTicks - 1)) * i;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, y);
+      ctx.lineTo(margin.left + chartWidth, y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // Desenhar eixos
+    ctx.strokeStyle = axisColor;
+    ctx.lineWidth = 1;
+    
+    // Eixo Y
+    ctx.beginPath();
+    ctx.moveTo(margin.left, margin.top);
+    ctx.lineTo(margin.left, margin.top + chartHeight);
+    ctx.stroke();
+
+    // Eixo X
+    ctx.beginPath();
+    ctx.moveTo(margin.left, margin.top + chartHeight);
+    ctx.lineTo(margin.left + chartWidth, margin.top + chartHeight);
+    ctx.stroke();
+
+    // Desenhar labels do eixo Y
+    ctx.fillStyle = axisColor;
+    ctx.font = '10px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i < numYTicks; i++) {
+      const value = minValue + yTickStep * (numYTicks - 1 - i);
+      const y = margin.top + (chartHeight / (numYTicks - 1)) * i;
+      const label = formatYAxis(value);
+      ctx.fillText(label, margin.left - 10, y);
+    }
+
+    // Desenhar labels do eixo X
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const xStep = chartWidth / (chartData.length - 1 || 1);
+    chartData.forEach((item, index) => {
+      const x = margin.left + xStep * index;
+      ctx.fillText(item.name, x, margin.top + chartHeight + 10);
+    });
+
+    // Calcular pontos da linha
+    const points = chartData.map((item, index) => {
+      const x = margin.left + (chartWidth / (chartData.length - 1 || 1)) * index;
+      const y = margin.top + chartHeight - ((item.value - minValue) / valueRange) * chartHeight;
+      return { x, y, value: item.value, label: item.name };
+    });
+
+    // Desenhar linha
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) {
+        ctx.moveTo(point.x, point.y);
+      } else {
+        const prevPoint = points[index - 1];
+        const cp1x = prevPoint.x + (point.x - prevPoint.x) / 3;
+        const cp1y = prevPoint.y;
+        const cp2x = prevPoint.x + (point.x - prevPoint.x) * 2 / 3;
+        const cp2y = point.y;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, point.x, point.y);
+      }
+    });
+    ctx.stroke();
+
+    // Desenhar pontos
+    points.forEach((point, index) => {
+      const isHovered = hoveredIndex === index;
+      ctx.fillStyle = isHovered ? activeDotColor : dotColor;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, isHovered ? 6 : 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }, [chartData, dimensions, formatYAxis, hoveredIndex]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas || chartData.length === 0) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+
+    const margin = { top: 15, right: 30, left: 50, bottom: 30 };
+    const chartWidth = dimensions.width - margin.left - margin.right;
+    const xStep = chartWidth / (chartData.length - 1 || 1);
+
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    chartData.forEach((_, index) => {
+      const pointX = margin.left + xStep * index;
+      const distance = Math.abs(x - pointX);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    if (minDistance < 30) {
+      setHoveredIndex(closestIndex);
+      const point = chartData[closestIndex];
+      setTooltip({
+        x: e.clientX,
+        y: e.clientY,
+        label: point.name,
+        value: point.value,
+      });
+    } else {
+      setHoveredIndex(null);
+      setTooltip(null);
+    }
+  }, [chartData, dimensions]);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredIndex(null);
+    setTooltip(null);
+  }, []);
 
   if (!data || data.length === 0) {
     return (
@@ -232,59 +251,44 @@ const ResponsiveLineChart: React.FC<ResponsiveLineChartProps> = ({ data, title, 
     );
   }
 
-  const chartData = data.map((item) => ({
-    name: item.mes,
-    value: item.valor ?? item.value ?? 0,
-    color: item.color,
-  }));
-
-  const formatYAxis = (tickItem: number) => {
-    if (format === 'currency') {
-      if (tickItem >= 1_000_000) return `R$${(tickItem / 1_000_000).toFixed(1)}M`;
-      if (tickItem >= 1_000) return `R$${(tickItem / 1_000).toFixed(1)}K`;
-      return `R$${tickItem.toFixed(0)}`;
-    }
-    return tickItem.toLocaleString('pt-BR');
-  };
-
-  const formatXAxis = (tickItem: string) => {
-    // Backend já envia no formato MM/AA, apenas retorna
-    return tickItem || '';
-  };
-
   return (
     <div className="chart-container">
       <h6 className="chart-title">{title}</h6>
       <div ref={containerRef} style={{ width: '100%', height: '220px', minWidth: '200px', minHeight: '220px', position: 'relative' }}>
-        {isReady && dimensions && dimensions.width > 0 && dimensions.height > 0 ? (
-          <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={220} minWidth={200}>
-            <RLineChart data={chartData} margin={{ top: 15, right: 30, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2f3844" />
-              <XAxis dataKey="name" stroke="#6c757d" fontSize={10} padding={{ left: 10, right: 10 }} tickFormatter={formatXAxis} />
-              <YAxis stroke="#6c757d" fontSize={10} tickFormatter={formatYAxis} domain={[0, 'dataMax']} allowDecimals />
-              <Tooltip content={<CustomTooltip format={format} />} />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#007bff" 
-                strokeWidth={2} 
-                activeDot={{ r: 6 }} 
-                dot={{ r: 3 }}
-                name="Valor"
-              />
-            </RLineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="spinner-border spinner-border-sm text-primary" role="status">
-              <span className="visually-hidden">Carregando...</span>
-            </div>
+        <canvas
+          ref={canvasRef}
+          width={dimensions.width}
+          height={dimensions.height}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          style={{
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            cursor: hoveredIndex !== null ? 'pointer' : 'default',
+          }}
+        />
+        {tooltip && (
+          <div
+            className="custom-tooltip bg-dark p-2 border border-secondary rounded shadow"
+            style={{
+              position: 'fixed',
+              left: `${tooltip.x + 10}px`,
+              top: `${tooltip.y - 10}px`,
+              pointerEvents: 'none',
+              zIndex: 1000,
+            }}
+          >
+            <p className="label text-light mb-0">{tooltip.label}</p>
+            <p className="intro text-info mb-0">Valor: {formatValue(tooltip.value)}</p>
           </div>
         )}
       </div>
     </div>
   );
-};
+});
+
+ResponsiveLineChart.displayName = 'ResponsiveLineChart';
 
 interface ResponsivePieChartProps {
   data: ChartDataItem[];
@@ -300,67 +304,150 @@ const formatPieValue = (value: number, title: string): string | number => {
   return value.toLocaleString('pt-BR');
 };
 
-// Componente memoizado para itens da legenda
-interface PieLegendItemProps {
-  item: ChartDataItem;
-  index: number;
+// Componente Canvas para renderizar legenda - similar ao exemplo fornecido
+interface PieLegendCanvasProps {
+  data: ChartDataItem[];
   title: string;
-  isHidden: boolean;
-  onToggle: (index: number) => void;
+  hiddenItems: Set<number>;
+  onToggleItem: (index: number) => void;
 }
 
-const PieLegendItem = memo<PieLegendItemProps>(({ item, index, title, isHidden, onToggle }) => {
-  const isProcessingRef = useRef(false);
+const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hiddenItems, onToggleItem }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
-  // Handler otimizado para resposta imediata
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Prevenir múltiplos cliques rápidos
-    if (isProcessingRef.current) {
-      e.preventDefault();
-      return;
+  // Calcular dimensões do canvas
+  useLayoutEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        // Altura baseada no número de itens
+        const itemHeight = 32;
+        const gap = 8;
+        const calculatedHeight = data.length * (itemHeight + gap) - gap;
+        setDimensions({ 
+          width: rect.width || 200, 
+          height: calculatedHeight || itemHeight 
+        });
+      }
+    };
+
+    updateDimensions();
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
     }
-    
-    isProcessingRef.current = true;
-    
-    // Usar startTransition diretamente para resposta mais rápida
-    startTransition(() => {
-      onToggle(index);
+
+    return () => resizeObserver.disconnect();
+  }, [data.length]);
+
+  // Renderizar no canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || dimensions.width === 0 || dimensions.height === 0) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Limpar canvas
+    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+
+    // Configurações de estilo
+    const itemHeight = 32;
+    const gap = 8;
+    const colorSize = 12;
+    const colorMargin = 8;
+    const fontSize = 11;
+    const fontFamily = 'system-ui, -apple-system, sans-serif';
+
+    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.textBaseline = 'middle';
+
+    // Obter cor do texto do CSS (fallback para cor padrão)
+    const getTextColor = () => {
+      const computedStyle = window.getComputedStyle(containerRef.current || document.body);
+      return computedStyle.getPropertyValue('--text-primary')?.trim() || '#ffffff';
+    };
+
+    const textColor = getTextColor();
+    let y = itemHeight / 2;
+
+    data.forEach((item, index) => {
+      const isHidden = hiddenItems.has(index);
+      const opacity = isHidden ? 0.5 : 1;
+      const formattedValue = formatPieValue(item.value || 0, title);
+      const text = `${item.label}: ${formattedValue}`;
+
+      // Desenhar quadrado de cor
+      ctx.fillStyle = item.color || '#6c757d';
+      ctx.globalAlpha = opacity;
+      ctx.fillRect(colorMargin, y - colorSize / 2, colorSize, colorSize);
+
+      // Desenhar texto
+      ctx.fillStyle = textColor;
+      ctx.globalAlpha = opacity;
+      const textX = colorMargin + colorSize + 8;
+      ctx.fillText(text, textX, y);
+
+      // Desenhar linha através do texto se estiver oculto
+      if (isHidden) {
+        ctx.strokeStyle = textColor;
+        ctx.globalAlpha = opacity;
+        ctx.lineWidth = 1;
+        const textWidth = ctx.measureText(text).width;
+        ctx.beginPath();
+        ctx.moveTo(textX, y);
+        ctx.lineTo(textX + textWidth, y);
+        ctx.stroke();
+      }
+
+      ctx.globalAlpha = 1;
+      y += itemHeight + gap;
     });
-    
-    // Resetar flag após um pequeno delay (fora do startTransition)
-    setTimeout(() => {
-      isProcessingRef.current = false;
-    }, 150);
-  }, [index, onToggle]);
+  }, [data, title, hiddenItems, dimensions]);
+
+  // Calcular qual item foi clicado
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickY = e.clientY - rect.top;
+
+    const itemHeight = 32;
+    const gap = 8;
+    const totalItemHeight = itemHeight + gap;
+
+    const clickedIndex = Math.floor(clickY / totalItemHeight);
+    if (clickedIndex >= 0 && clickedIndex < data.length) {
+      startTransition(() => {
+        onToggleItem(clickedIndex);
+      });
+    }
+  }, [data, onToggleItem]);
 
   return (
-    <div
-      className="pie-legend-item"
-      style={{
-        cursor: 'pointer',
-        opacity: isHidden ? 0.5 : 1,
-        textDecoration: isHidden ? 'line-through' : 'none',
-      }}
-      onClick={handleClick}
-    >
-      <div className="pie-legend-color" style={{ backgroundColor: item.color || '#6c757d' }}></div>
-      <span className="pie-legend-text">
-        {item.label}: {formatPieValue(item.value || 0, title)}
-      </span>
+    <div ref={containerRef} className="pie-legend-box" style={{ position: 'relative', width: '100%' }}>
+      <canvas
+        ref={canvasRef}
+        width={dimensions.width}
+        height={dimensions.height}
+        onClick={handleClick}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: dimensions.height || 'auto',
+          cursor: 'pointer',
+        }}
+      />
     </div>
   );
 });
 
-PieLegendItem.displayName = 'PieLegendItem';
+PieLegendCanvas.displayName = 'PieLegendCanvas';
 
 const ResponsivePieChart: React.FC<ResponsivePieChartProps> = memo(({ data, title, hiddenItems, onToggleItem }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isReady, setIsReady] = useState(false);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
-
-  // Todos os hooks devem ser chamados antes de qualquer early return
   const visibleData = useMemo(() => 
     data && data.length > 0 ? data.filter((_, index) => !hiddenItems.has(index)) : [],
     [data, hiddenItems]
@@ -385,100 +472,98 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = memo(({ data, titl
     [chartData, hiddenItems]
   );
 
-  const renderCustomizedLabel = useCallback(({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }: PieLabelRenderProps) => {
-    const safeInnerRadius = (innerRadius ?? 0) as number;
-    const safeOuterRadius = (outerRadius ?? safeInnerRadius) as number;
-    const safeCx = (cx ?? 0) as number;
-    const safeCy = (cy ?? 0) as number;
-    const safeMidAngle = (midAngle ?? 0) as number;
-    const safePercent = (percent ?? 0) as number;
-
-    const radius = safeInnerRadius + (safeOuterRadius - safeInnerRadius) * 0.38;
-    const x = safeCx + radius * Math.cos(-safeMidAngle * Math.PI / 180);
-    const y = safeCy + radius * Math.sin(-safeMidAngle * Math.PI / 180);
-
-    if (safePercent * 100 > 3) {
-      return (
-        <text
-          x={x}
-          y={y}
-          fill="#ffffff"
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={8}
-          fontWeight={400}
-        >
-          {`${(safePercent * 100).toFixed(0)}%`}
-        </text>
-      );
-    }
-    return null;
-  }, []);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pieContainerRef = useRef<HTMLDivElement>(null);
+  const [pieDimensions, setPieDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   // Calcular raios baseado no tamanho do container (proporcional)
   const radii = useMemo(() => {
-    if (!dimensions) return { inner: 22, outer: 45 };
-    const size = Math.min(dimensions.width, dimensions.height);
+    const size = Math.min(pieDimensions.width, pieDimensions.height);
+    if (size === 0) return { inner: 22, outer: 45 };
     // Interpolação linear: 80px -> 16/32, 110px -> 22/45
-    const ratio = (size - 80) / (110 - 80); // 0 a 1
+    const ratio = Math.max(0, Math.min(1, (size - 80) / (110 - 80)));
     const inner = Math.round(16 + (22 - 16) * ratio);
     const outer = Math.round(32 + (45 - 32) * ratio);
     return { inner, outer };
-  }, [dimensions]);
+  }, [pieDimensions]);
 
   useLayoutEffect(() => {
-    // Verificar dimensões antes da renderização visual
-    const checkDimensions = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const { width, height } = rect;
-
-        if (width > 0 && height > 0) {
-          setDimensions({ width, height });
-          setIsReady(true);
-          return true;
-        }
+    const updateDimensions = () => {
+      if (pieContainerRef.current) {
+        const rect = pieContainerRef.current.getBoundingClientRect();
+        setPieDimensions({ 
+          width: rect.width || 100, 
+          height: rect.height || 100 
+        });
       }
-      setIsReady(false);
-      return false;
     };
 
-    // Tentar imediatamente
-    checkDimensions();
-
-    // Usar ResizeObserver para detectar mudanças de tamanho
-    const resizeObserver = new ResizeObserver(() => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const { width, height } = rect;
-        if (width > 0 && height > 0) {
-          setDimensions({ width, height });
-        }
-      }
-      checkDimensions();
-    });
-
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
+    updateDimensions();
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (pieContainerRef.current) {
+      resizeObserver.observe(pieContainerRef.current);
     }
 
-    // Fallback: tentar após um pequeno delay
-    const timer = setTimeout(() => {
-      checkDimensions();
-    }, 100);
+    return () => resizeObserver.disconnect();
+  }, []);
 
-    return () => {
-      resizeObserver.disconnect();
-      clearTimeout(timer);
-    };
-  }, [data, title]);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || pieDimensions.width === 0 || pieDimensions.height === 0 || filteredChartData.length === 0) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Limpar canvas
+    ctx.clearRect(0, 0, pieDimensions.width, pieDimensions.height);
+
+    const centerX = pieDimensions.width / 2;
+    const centerY = pieDimensions.height / 2;
+    const { inner, outer } = radii;
+
+    // Calcular totais e ângulos
+    const totalValue = filteredChartData.reduce((sum, item) => sum + item.value, 0);
+    if (totalValue === 0) return;
+
+    const paddingAngle = 2 * (Math.PI / 180); // 2 graus em radianos
+    const totalPadding = paddingAngle * filteredChartData.length;
+    const availableAngle = Math.PI * 2 - totalPadding;
+
+    let currentAngle = -Math.PI / 2; // Começar do topo
+
+    // Desenhar fatias
+    filteredChartData.forEach((item) => {
+      const sliceAngle = (item.value / totalValue) * availableAngle;
+      const endAngle = currentAngle + sliceAngle;
+
+      // Desenhar fatia externa
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, outer, currentAngle, endAngle);
+      ctx.arc(centerX, centerY, inner, endAngle, currentAngle, true);
+      ctx.closePath();
+
+      const color = item.color || '#6c757d';
+      
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Desenhar porcentagem se maior que 3%
+      if ((item.value / totalValue) * 100 > 3) {
+        const midAngle = currentAngle + sliceAngle / 2;
+        const labelRadius = inner + (outer - inner) * 0.38;
+        const labelX = centerX + labelRadius * Math.cos(midAngle);
+        const labelY = centerY + labelRadius * Math.sin(midAngle);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '8px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${((item.value / totalValue) * 100).toFixed(0)}%`, labelX, labelY);
+      }
+
+      currentAngle = endAngle + paddingAngle;
+    });
+  }, [filteredChartData, pieDimensions, radii]);
 
   if (!data || data.length === 0) {
     return (
@@ -497,56 +582,24 @@ const ResponsivePieChart: React.FC<ResponsivePieChartProps> = memo(({ data, titl
         {title} ({formatPieValue(total, title)})
       </h6>
       <div className="pie-chart-content">
-        <div ref={containerRef} className="pie-chart-box">
-          {isReady && dimensions && dimensions.width > 0 && dimensions.height > 0 ? (
-            <ResponsiveContainer width={dimensions.width} height={dimensions.height} minHeight={dimensions.height} minWidth={dimensions.width}>
-              <PieChart>
-                <Pie
-                  data={filteredChartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={radii.inner}
-                  outerRadius={radii.outer}
-                  fill="#8884d8"
-                  paddingAngle={2}
-                  labelLine={false}
-                  label={renderCustomizedLabel}
-                  stroke="none"
-                  isAnimationActive={false}
-                >
-                  {filteredChartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color || '#6c757d'}
-                      opacity={hiddenItems.has(index) ? 0.3 : 1}
-                      stroke="none"
-                    />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div className="spinner-border spinner-border-sm text-primary" role="status">
-                <span className="visually-hidden">Carregando...</span>
-              </div>
-            </div>
-          )}
+        <div ref={pieContainerRef} className="pie-chart-box">
+          <canvas
+            ref={canvasRef}
+            width={pieDimensions.width}
+            height={pieDimensions.height}
+            style={{
+              display: 'block',
+              width: '100%',
+              height: '100%',
+            }}
+          />
         </div>
-        <div className="pie-legend-box">
-          {data.map((item, index) => (
-            <PieLegendItem
-              key={index}
-              item={item}
-              index={index}
-              title={title}
-              isHidden={hiddenItems.has(index)}
-              onToggle={onToggleItem}
-            />
-          ))}
-        </div>
+        <PieLegendCanvas
+          data={data}
+          title={title}
+          hiddenItems={hiddenItems}
+          onToggleItem={onToggleItem}
+        />
       </div>
     </div>
   );
@@ -910,7 +963,7 @@ const Dashboard: React.FC = () => {
     );
   };
   
-  // Função para renderizar gráfico de linha temporal com Recharts
+  // Função para renderizar gráfico de linha temporal
   const renderLineChart = (data: ChartDataItem[], title: string, format: 'currency' | 'number' = 'number') => {
     return <ResponsiveLineChart data={data} title={title} format={format} />;
   };

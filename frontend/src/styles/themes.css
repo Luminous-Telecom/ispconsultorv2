@@ -1131,6 +1131,14 @@ body {
   overflow: hidden;
   visibility: visible !important;
   opacity: 1 !important;
+  position: relative;
+}
+
+/* Canvas para legenda - apenas o canvas será registrado como interativo */
+.pie-legend-box canvas {
+  display: block;
+  width: 100%;
+  cursor: pointer;
 }
 
 .pie-legend-item {
