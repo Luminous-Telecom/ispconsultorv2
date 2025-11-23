@@ -146,7 +146,7 @@ const mockBancoApiService = BancoApiService as unknown as { gerarTitulo: jest.Mo
 const mockAjustarDataVencimento = ajustarDataVencimento as jest.MockedFunction<typeof ajustarDataVencimento>;
 const mockWithTransaction = withTransaction as jest.MockedFunction<typeof withTransaction>;
 const mockIsMetricsEnabled = isMetricsEnabled as jest.MockedFunction<typeof isMetricsEnabled>;
-const mockMetrics = metrics as unknown as { businessTitulosGerados: { inc: jest.Mock } };
+const _mockMetrics = metrics as unknown as { businessTitulosGerados: { inc: jest.Mock } };
 const mockLogger = logger as unknown as { error: jest.Mock; info: jest.Mock; warn: jest.Mock };
 
 // Garantir que os métodos mockados estejam disponíveis através dos objetos importados
@@ -170,10 +170,15 @@ if (mockContratoPlanoAdicionalModel) {
 }
 
 // Mock de Transaction
-const mockTransaction = {
+interface MockTransaction {
+  commit: jest.Mock;
+  rollback: jest.Mock;
+}
+
+const mockTransaction: MockTransaction = {
   commit: jest.fn(),
   rollback: jest.fn()
-} as any;
+};
 
 describe('RoutineExecutionService', () => {
   let service: RoutineExecutionService;
@@ -186,7 +191,8 @@ describe('RoutineExecutionService', () => {
     service = new RoutineExecutionService();
 
     // Configurar mock padrão para withTransaction
-    mockWithTransaction.mockImplementation(async (callback: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockWithTransaction.mockImplementation(async (callback: (transaction: any) => Promise<unknown>) => {
       return await callback(mockTransaction);
     });
 
@@ -263,12 +269,12 @@ describe('RoutineExecutionService', () => {
     });
 
     it('deve retornar mensagem quando tipo não é implementado', async () => {
-      const routine = createMockRoutine('outros' as any);
+      const routine = createMockRoutine('outros' as ScheduledRoutine['tipo']);
 
       const result = await service.executeRoutineByType(routine);
 
       expect(result).toHaveProperty('message');
-      expect((result as any).message).toBe('Tipo de rotina não implementado');
+      expect((result as { message: string }).message).toBe('Tipo de rotina não implementado');
     });
   });
 
@@ -290,7 +296,7 @@ describe('RoutineExecutionService', () => {
       updated_at: new Date()
     } as ScheduledRoutine);
 
-    const createMockContrato = (overrides: any = {}) => ({
+    const createMockContrato = (overrides: Partial<Record<string, unknown>> = {}) => ({
       id: 1,
       cliente_id: 1,
       plano_id: 1,
@@ -549,7 +555,7 @@ describe('RoutineExecutionService', () => {
 
       it('deve ignorar contrato quando status não é ativo', async () => {
         const routine = createMockRoutine();
-        const contrato = createMockContrato({
+        const _contrato = createMockContrato({
           status: 'inativo' // Contrato inativo
         });
 
@@ -686,7 +692,7 @@ describe('RoutineExecutionService', () => {
           .mockRejectedValueOnce(new Error('Erro ao criar título'))
           .mockResolvedValueOnce({ id: 1 }); // Próximo título criado com sucesso
 
-        const result = await service.executeGeracaoTitulos(routine) as GeracaoTitulosResult;
+        const _result = await service.executeGeracaoTitulos(routine) as GeracaoTitulosResult;
 
         // O erro deve ser tratado e o processamento deve continuar
         expect(mockLogger.error).toHaveBeenCalled();
@@ -873,7 +879,7 @@ describe('RoutineExecutionService', () => {
           nome_plano: 'Plano Teste'
         },
         update: mockUpdate
-      } as any;
+      } as unknown as InstanceType<typeof Titulo> & { update: jest.Mock };
 
       // O código usa import dinâmico, então precisamos garantir que o mock seja aplicado
       // O jest.mock já está configurado no topo do arquivo com __esModule: true
