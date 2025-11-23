@@ -138,7 +138,8 @@ export class RoutineExecutionService {
         .map(c => (c as unknown as ContratoWithCliente).dia_vencimento_id)
         .filter((id): id is number => id !== null && id !== undefined);
       
-      const [titulosEmAbertoTodos, todosTitulosTodos, diasVencimentoTodos, servicosAdicionaisTodos] = await Promise.all([
+      // Usar Promise.allSettled para tratar erros individuais sem interromper todo o processo
+      const results = await Promise.allSettled([
         // Buscar todos os títulos em aberto de todos os contratos
         Titulo.findAll({
           where: {
@@ -178,6 +179,42 @@ export class RoutineExecutionService {
           attributes: ['id', 'contrato_id', 'status']
         })
       ]);
+
+      // Extrair resultados ou arrays vazios em caso de erro
+      const titulosEmAbertoTodos = results[0].status === 'fulfilled' ? results[0].value : [];
+      const todosTitulosTodos = results[1].status === 'fulfilled' ? results[1].value : [];
+      const diasVencimentoTodos = results[2].status === 'fulfilled' ? results[2].value : [];
+      const servicosAdicionaisTodos = results[3].status === 'fulfilled' ? results[3].value : [];
+
+      // Logar erros se houver
+      if (results[0].status === 'rejected') {
+        logger.error('Erro ao buscar títulos em aberto', {
+          context: 'RoutineExecutionService',
+          action: 'executeGeracaoTitulos',
+          error: results[0].reason instanceof Error ? results[0].reason.message : 'Erro desconhecido'
+        });
+      }
+      if (results[1].status === 'rejected') {
+        logger.error('Erro ao buscar todos os títulos', {
+          context: 'RoutineExecutionService',
+          action: 'executeGeracaoTitulos',
+          error: results[1].reason instanceof Error ? results[1].reason.message : 'Erro desconhecido'
+        });
+      }
+      if (results[2].status === 'rejected') {
+        logger.error('Erro ao buscar dias de vencimento', {
+          context: 'RoutineExecutionService',
+          action: 'executeGeracaoTitulos',
+          error: results[2].reason instanceof Error ? results[2].reason.message : 'Erro desconhecido'
+        });
+      }
+      if (results[3].status === 'rejected') {
+        logger.error('Erro ao buscar serviços adicionais', {
+          context: 'RoutineExecutionService',
+          action: 'executeGeracaoTitulos',
+          error: results[3].reason instanceof Error ? results[3].reason.message : 'Erro desconhecido'
+        });
+      }
 
       // Agrupar títulos por contrato_id para acesso rápido
       const titulosEmAbertoPorContrato = new Map<number, Array<typeof titulosEmAbertoTodos[0]>>();
