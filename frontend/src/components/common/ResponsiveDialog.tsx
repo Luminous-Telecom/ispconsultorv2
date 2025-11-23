@@ -293,7 +293,8 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
         className={`responsive-dialog-mobile-content ${className}`}
         style={{
           flex: 1,
-          overflow: 'auto',
+          overflowY: 'auto',
+          overflowX: 'visible',
           WebkitOverflowScrolling: 'touch',
           padding: className?.includes('no-padding') ? 0 : '16px',
           minHeight: 0,

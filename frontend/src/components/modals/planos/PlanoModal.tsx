@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePlanoForm } from '@/hooks/usePlanoForm';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
 import { InformacoesBasicasTab, DescontosConfiguracoesTab, ServicosObservacoesTab } from './plano';
 
@@ -16,6 +17,7 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
   onSuccess,
   planoId 
 }) => {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('informacoes-basicas');
 
   // Hook de formulário com React Hook Form + Zod
@@ -85,7 +87,20 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
         <form id={formHook.isEditing ? 'plano-edit-form' : 'plano-create-form'} onSubmit={formHook.handleSubmit}>
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               {/* Navegação por Abas */}
-              <ul className="nav nav-tabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
+              <ul className="nav nav-tabs" role="tablist" style={{ 
+                flexShrink: 0, 
+                marginBottom: isMobile ? '1rem' : 0, 
+                marginTop: isMobile ? '0' : '1rem', 
+                marginLeft: isMobile ? '0' : '1rem', 
+                marginRight: isMobile ? '0' : '1rem',
+                ...(isMobile && {
+                  display: 'flex',
+                  flexWrap: 'nowrap',
+                  overflowX: 'auto',
+                  overflowY: 'hidden',
+                  WebkitOverflowScrolling: 'touch'
+                })
+              }}>
                 <li className="nav-item" role="presentation">
                   <button
                     className={`nav-link ${activeTab === 'informacoes-basicas' ? 'active' : ''}`}
@@ -121,7 +136,8 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
                 style={{ 
                   flex: 1, 
                   overflow: 'auto', 
-                  padding: '16px',
+                  // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
+                  padding: isMobile ? '0' : '16px',
                   minHeight: 0
                 }}
               >

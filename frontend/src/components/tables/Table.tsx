@@ -123,7 +123,8 @@ function Table<T extends { id: number | string }>({
       dropdownElement.style.display = 'block';
       dropdownElement.style.visibility = 'hidden';
       dropdownElement.style.maxHeight = '';
-      const realDropdownHeight = dropdownElement.offsetHeight || 160;
+      dropdownElement.style.position = 'static'; // Temporário para calcular altura
+      const realDropdownHeight = Math.max(dropdownElement.offsetHeight || 160, 160); // Mínimo de 160px
       dropdownElement.style.visibility = '';
 
       const shouldOpenUp = (spaceBelow < realDropdownHeight && spaceAbove >= realDropdownHeight) || spaceBelow < 120;
@@ -138,12 +139,14 @@ function Table<T extends { id: number | string }>({
       if (shouldOpenUp) {
         dropdownElement.style.bottom = '';
         dropdownElement.style.top = 'auto';
-        dropdownElement.style.maxHeight = `${Math.min(realDropdownHeight, spaceAbove)}px`;
+        const maxHeight = Math.max(Math.min(realDropdownHeight, spaceAbove), 160); // Mínimo de 160px
+        dropdownElement.style.maxHeight = `${maxHeight}px`;
         dropdownElement.classList.add('opens-up');
       } else {
         dropdownElement.style.top = `${buttonRect.bottom + gap}px`;
         dropdownElement.style.bottom = 'auto';
-        dropdownElement.style.maxHeight = `${Math.min(realDropdownHeight, spaceBelow)}px`;
+        const maxHeight = Math.max(Math.min(realDropdownHeight, spaceBelow), 160); // Mínimo de 160px
+        dropdownElement.style.maxHeight = `${maxHeight}px`;
         dropdownElement.classList.remove('opens-up');
       }
     };
@@ -668,9 +671,14 @@ function Table<T extends { id: number | string }>({
                             // Se não há ações, criar ações padrão baseadas nos bulkActions
                             const defaultActions = bulkActions
                               .filter(bulkAction => {
-                                // Filtrar apenas ações que fazem sentido para item individual
+                                // Filtrar ações que fazem sentido para item individual ou seleção
                                 const label = bulkAction.label.toLowerCase();
-                                return label.includes('editar') || label.includes('excluir');
+                                // Incluir ações de edição, exclusão, inserção e cancelamento
+                                return label.includes('editar') || 
+                                       label.includes('excluir') || 
+                                       label.includes('inserir') || 
+                                       label.includes('cancelar') ||
+                                       label.includes('selecionar');
                               })
                               .map(bulkAction => {
                                 // Para ações de linha específica, sempre habilitar
@@ -927,9 +935,14 @@ function Table<T extends { id: number | string }>({
                             // Se não há ações, criar ações padrão baseadas nos bulkActions
                             const defaultActions = bulkActions
                               .filter(bulkAction => {
-                                // Filtrar apenas ações que fazem sentido para item individual
+                                // Filtrar ações que fazem sentido para item individual ou seleção
                                 const label = bulkAction.label.toLowerCase();
-                                return label.includes('editar') || label.includes('excluir');
+                                // Incluir ações de edição, exclusão, inserção e cancelamento
+                                return label.includes('editar') || 
+                                       label.includes('excluir') || 
+                                       label.includes('inserir') || 
+                                       label.includes('cancelar') ||
+                                       label.includes('selecionar');
                               })
                               .map(bulkAction => {
                                 // Para ações de linha específica, criar uma ação que funciona diretamente com o item

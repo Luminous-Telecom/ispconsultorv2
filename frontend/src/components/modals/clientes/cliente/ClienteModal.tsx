@@ -6,6 +6,7 @@ import { useClienteForm } from '@/hooks/useClienteForm';
 import { useClienteContratos } from '@/hooks/useClienteContratos';
 import { useClienteImpressao } from '@/hooks/useClienteImpressao';
 import { useClienteBulkActions } from '@/hooks/useClienteBulkActions';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
 import { CarneParcela } from '@/types';
 import { TituloItem } from '@/types/cliente';
@@ -36,6 +37,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
   onSuccess 
 }) => {
   const formPrefix = useFormPrefix('ClienteEditModal');
+  const isMobile = useIsMobile();
   
   // Estados de modais aninhados
   const [activeTab, setActiveTab] = useState('dados-basicos');
@@ -349,7 +351,20 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
         flexDirection: 'column'
       }}>
         {/* Navegação por Abas - Fixa */}
-        <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
+        <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ 
+          flexShrink: 0, 
+          marginBottom: isMobile ? '1rem' : 0, 
+          marginTop: isMobile ? '0' : '1rem', 
+          marginLeft: isMobile ? '0' : '1rem', 
+          marginRight: isMobile ? '0' : '1rem',
+          ...(isMobile && {
+            display: 'flex',
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch'
+          })
+        }}>
           <li className="nav-item" role="presentation">
             <button
               className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
@@ -415,7 +430,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           style={{ 
             flex: 1, 
             overflow: (activeTab === 'contratos' || activeTab === 'financeiro') ? 'hidden' : 'auto', 
-            padding: (activeTab === 'contratos' || activeTab === 'financeiro') ? '0' : '16px', 
+            // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
+            padding: (activeTab === 'contratos' || activeTab === 'financeiro') ? '0' : (isMobile ? '0' : '16px'), 
             minHeight: 0,
             display: 'flex',
             flexDirection: 'column'

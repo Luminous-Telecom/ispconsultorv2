@@ -2170,6 +2170,13 @@ body {
   .main-layout {
     margin-left: 0;
   }
+
+  /* Remover padding dos containers Bootstrap no mobile */
+  .main-content .container,
+  .main-content .container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 }
 
 /* ResponsiveDialog Mobile Styles */
@@ -2181,6 +2188,51 @@ body {
 .responsive-dialog-mobile-content {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+
+/* Remover padding duplicado do tab-content quando está dentro do ResponsiveDialog no mobile */
+/* O ResponsiveDialog já aplica padding de 16px, então o tab-content não precisa de padding adicional */
+/* Os componentes já removem o padding inline quando isMobile é true, mas esta regra garante que não haja padding duplicado */
+.responsive-dialog-mobile-content .tab-content {
+  padding: 0 !important;
+}
+
+/* Tabs com scroll horizontal no mobile */
+@media (max-width: 767.98px) {
+  .responsive-dialog-mobile-content .nav-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+    white-space: nowrap;
+    margin-bottom: 1rem !important;
+  }
+
+  .responsive-dialog-mobile-content .nav-tabs::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .responsive-dialog-mobile-content .nav-tabs::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .responsive-dialog-mobile-content .nav-tabs::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 2px;
+  }
+
+  .responsive-dialog-mobile-content .nav-tabs .nav-item {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .responsive-dialog-mobile-content .nav-tabs .nav-link {
+    white-space: nowrap;
+    min-width: fit-content;
+  }
 }
 
 /* Melhorias para tabelas em mobile dentro do ResponsiveDialog */
@@ -2223,6 +2275,91 @@ body {
   .responsive-dialog-mobile-content .form-select {
     font-size: 16px; /* Previne zoom no iOS */
     min-height: 44px;
+    padding: 0.5rem 0.75rem !important; /* Reduzir padding interno */
+  }
+
+  /* Corrigir overflow horizontal causado por .row do Bootstrap */
+  .responsive-dialog-mobile-content .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .responsive-dialog-mobile-content .row > [class*="col-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Garantir que o tab-content não ultrapasse a largura */
+  .responsive-dialog-mobile-content .tab-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Garantir que inputs não ultrapassem a largura */
+  .responsive-dialog-mobile-content .form-control,
+  .responsive-dialog-mobile-content .form-select,
+  .responsive-dialog-mobile-content input,
+  .responsive-dialog-mobile-content select,
+  .responsive-dialog-mobile-content textarea {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Reduzir espaço entre inputs no mobile */
+  .responsive-dialog-mobile-content .form-field {
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Remover padding das tabelas dentro das abas no mobile */
+  /* Apenas dentro de .tab-content para não afetar listagens gerais */
+  .responsive-dialog-mobile-content .tab-content .table-mobile-container {
+    padding: 0 !important;
+    padding-bottom: 4.5rem !important; /* Manter espaço para paginação */
+  }
+
+  /* Garantir que dropdowns apareçam corretamente no mobile */
+  /* Permitir overflow-y para scroll mas manter overflow-x visible para dropdowns */
+  .responsive-dialog-mobile-content {
+    overflow-y: auto !important;
+    overflow-x: visible !important;
+  }
+
+  /* Garantir que table-mobile-container permita dropdowns */
+  .responsive-dialog-mobile-content .table-mobile-container {
+    overflow: visible !important;
+    position: relative;
+    z-index: auto;
+  }
+
+  /* Garantir que cards também permitam dropdowns */
+  .responsive-dialog-mobile-content .table-mobile-card {
+    overflow: visible !important;
+  }
+
+  /* Remover margin dos resumos dentro das abas no mobile */
+  .responsive-dialog-mobile-content .tab-content .row > [class*="col-"] > div[style*="margin"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Remover padding dos containers de resumo */
+  .responsive-dialog-mobile-content .tab-content .p-3 {
+    padding: 0.75rem !important;
+  }
+
+  /* Remover padding do container que envolve a tabela nas abas */
+  .responsive-dialog-mobile-content .tab-content .row > [class*="col-"] > div[style*="overflow"] {
+    padding: 0 !important;
   }
 }
 

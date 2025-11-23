@@ -25,6 +25,7 @@ import { extractApiErrorMessageSync } from '@/utils/apiErrorHelper';
 import { CONTEXT_ERROR_MESSAGES } from '@/constants/ErrorMessages';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 import { useImpressaoContrato } from '@/hooks/useImpressaoContrato';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import ModeloContratoSelectModal from '@/components/modals/parametros/ModeloContratoSelectModal';
 import '../../contratos/ContratoModals.css';
 import ContratoTab from './abas/ContratoTab';
@@ -49,6 +50,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   contratoId = null,
   clienteId
 }) => {
+  const isMobile = useIsMobile();
   // Estado interno para controlar o contratoId após criação
   const [internalContratoId, setInternalContratoId] = useState<number | null>(contratoId);
   
@@ -1018,7 +1020,20 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         {/* Sempre mostrar estrutura com abas */}
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Navegação por Abas */}
-          <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
+          <ul className="nav nav-tabs" id="contratoTab" role="tablist" style={{ 
+            flexShrink: 0, 
+            marginBottom: isMobile ? '1rem' : 0, 
+            marginTop: isMobile ? '0' : '1rem', 
+            marginLeft: isMobile ? '0' : '1rem', 
+            marginRight: isMobile ? '0' : '1rem',
+            ...(isMobile && {
+              display: 'flex',
+              flexWrap: 'nowrap',
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch'
+            })
+          }}>
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
@@ -1081,7 +1096,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             style={{ 
               flex: 1, 
               overflow: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'servicos-adicionais') ? 'hidden' : 'auto', 
-              padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'servicos-adicionais') ? '0' : '16px',
+              // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
+              padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'servicos-adicionais') ? '0' : (isMobile ? '0' : '16px'),
               minHeight: 0,
               display: 'flex',
               flexDirection: 'column'
