@@ -55,19 +55,6 @@ export interface DashboardFilters {
   endDate?: string;
 }
 
-export interface RelatorioVendas {
-  periodo: string;
-  totalVendas: number;
-  quantidadeVendas: number;
-  ticketMedio: number;
-  crescimento?: number;
-  dados?: Array<{
-    data: string;
-    valor: number;
-    quantidade: number;
-  }>;
-}
-
 export class DashboardService {
   // Buscar dados do dashboard
   static async getDashboardData(filters?: DashboardFilters): Promise<DashboardData> {
@@ -84,85 +71,4 @@ export class DashboardService {
     }
   }
 
-  // Buscar estatísticas
-  static async getStats(): Promise<DashboardStats> {
-    try {
-      const response = await apiService.get<DashboardStats>('/dashboard/stats');
-      if (response.success && response.data) {
-        const data = response.data as DashboardStats & { ticket_medio?: number };
-        return {
-          ...data,
-          ticketMedio: data.ticketMedio ?? data.ticket_medio,
-        };
-      }
-      throw new Error(response.message || 'Erro ao carregar estatísticas do dashboard');
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Buscar carnês recentes
-  static async getCarnesRecentes(limit: number = 5): Promise<Titulo[]> {
-    try {
-      const response = await apiService.get<Titulo[]>(`/dashboard/carnes-recentes?limit=${limit}`);
-      if (response.success && Array.isArray(response.data)) {
-        return response.data;
-      }
-      return [];
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Buscar parcelas vencidas
-  static async getParcelasVencidas(limit: number = 10): Promise<Titulo[]> {
-    try {
-      const response = await apiService.get<Titulo[]>(`/dashboard/parcelas-vencidas?limit=${limit}`);
-      if (response.success && Array.isArray(response.data)) {
-        return response.data;
-      }
-      return [];
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Buscar receita dos últimos meses
-  static async getReceitaUltimosMeses(months: number = 6): Promise<DashboardChart> {
-    try {
-      const response = await apiService.get<DashboardChart>(`/dashboard/receita-ultimos-meses?months=${months}`);
-      if (response.success && response.data) {
-        return response.data;
-      }
-      throw new Error(response.message || 'Erro ao carregar receita dos últimos meses');
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Buscar clientes por status
-  static async getClientesPorStatus(): Promise<DashboardChart> {
-    try {
-      const response = await apiService.get<DashboardChart>('/dashboard/clientes-por-status');
-      if (response.success && response.data) {
-        return response.data;
-      }
-      throw new Error(response.message || 'Erro ao carregar clientes por status');
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Buscar relatório de vendas
-  static async getRelatorioVendas(periodo: 'dia' | 'semana' | 'mes' | 'ano'): Promise<RelatorioVendas> {
-    try {
-      const response = await apiService.get<RelatorioVendas>(`/dashboard/relatorio-vendas?periodo=${periodo}`);
-      if (response.success && response.data) {
-        return response.data;
-      }
-      throw new Error(response.message || 'Erro ao carregar relatório de vendas');
-    } catch (error) {
-      throw error;
-    }
-  }
 }
