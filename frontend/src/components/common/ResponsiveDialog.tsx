@@ -296,7 +296,7 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
           overflowY: 'auto',
           overflowX: 'visible',
           WebkitOverflowScrolling: 'touch',
-          padding: className?.includes('no-padding') ? 0 : '16px',
+          padding: className?.includes('no-padding') ? 0 : '0.5rem',
           minHeight: 0,
           position: 'relative',
         }}

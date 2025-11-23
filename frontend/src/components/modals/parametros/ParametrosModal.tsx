@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ParametrosService } from '@/services/parametrosService';
 import { useFormReset } from '@/hooks/useFormReset';
 import DraggableModal from '@/components/common/DraggableModal';
@@ -21,6 +22,7 @@ interface ParametrosForm {
 }
 
 const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
+  const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -159,8 +161,8 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
         </div>
       }
     >
-      <form id="parametros-form" onSubmit={handleSubmit}>
-        <div className="modal-body">
+      <form id="parametros-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+        <div>
           <div className="card mb-3">
             <div className="card-header">
               <h6 className="mb-0">Validações</h6>

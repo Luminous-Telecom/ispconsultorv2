@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useSelectedEntity } from '@/hooks/useSelectedEntity';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
 import { DocumentoModal } from '../documento';
 import { DocumentosSistemaModalProps, TipoDocumento, DocumentoUnion } from './types';
 import DocumentoTab from './abas/DocumentoTab';
 
 const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, onClose }) => {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<TipoDocumento>('contrato');
   const [showDocumentoModal, setShowDocumentoModal] = useState(false);
   const [documentoModalMode, setDocumentoModalMode] = useState<'create' | 'edit'>('create');
@@ -69,7 +71,20 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
           flexDirection: 'column'
         }}>
           {/* Navegação por Abas - Fixa */}
-          <ul className="nav nav-tabs" role="tablist" style={{ flexShrink: 0, marginBottom: 0, marginTop: '1rem', marginLeft: '1rem', marginRight: '1rem' }}>
+          <ul className="nav nav-tabs" role="tablist" style={{ 
+            flexShrink: 0, 
+            marginBottom: isMobile ? '1rem' : 0, 
+            marginTop: isMobile ? '0' : '1rem', 
+            marginLeft: isMobile ? '0' : '1rem', 
+            marginRight: isMobile ? '0' : '1rem',
+            ...(isMobile && {
+              display: 'flex',
+              flexWrap: 'nowrap',
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch'
+            })
+          }}>
             <li className="nav-item" role="presentation">
               <button
                 className={`nav-link ${activeTab === 'contrato' ? 'active' : ''}`}
@@ -118,6 +133,7 @@ const DocumentosSistemaModal: React.FC<DocumentosSistemaModalProps> = ({ show, o
             style={{ 
               flex: 1, 
               overflow: 'hidden', 
+              // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
               padding: 0, 
               minHeight: 0 
             }}

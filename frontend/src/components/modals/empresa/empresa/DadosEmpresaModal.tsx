@@ -5,6 +5,7 @@ import { DadosEmpresaService, DadosEmpresa as DadosEmpresaType } from '@/service
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { ApiError } from '@/services/core/ErrorHandler';
 import { useFormReset } from '@/hooks/useFormReset';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
@@ -16,6 +17,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   show,
   onClose
 }) => {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'basico' | 'endereco' | 'contato' | 'responsavel'>('basico');
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -135,10 +137,23 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         </div>
       }
     >
-      <form id="empresa-form" onSubmit={handleSubmit} style={{ padding: '1rem' }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Navegação de Abas */}
-        <ul className="nav nav-tabs mb-3">
-          <li className="nav-item">
+        <ul className="nav nav-tabs" role="tablist" style={{ 
+          flexShrink: 0, 
+          marginBottom: isMobile ? '1rem' : 0, 
+          marginTop: isMobile ? '0' : '1rem', 
+          marginLeft: isMobile ? '0' : '1rem', 
+          marginRight: isMobile ? '0' : '1rem',
+          ...(isMobile && {
+            display: 'flex',
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch'
+          })
+        }}>
+          <li className="nav-item" role="presentation">
             <button
               type="button"
               className={`nav-link ${activeTab === 'basico' ? 'active' : ''}`}
@@ -148,7 +163,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
               Dados Básicos
             </button>
           </li>
-          <li className="nav-item">
+          <li className="nav-item" role="presentation">
             <button
               type="button"
               className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
@@ -158,7 +173,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
               Endereço
             </button>
           </li>
-          <li className="nav-item">
+          <li className="nav-item" role="presentation">
             <button
               type="button"
               className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
@@ -168,7 +183,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
               Contato
             </button>
           </li>
-          <li className="nav-item">
+          <li className="nav-item" role="presentation">
             <button
               type="button"
               className={`nav-link ${activeTab === 'responsavel' ? 'active' : ''}`}
@@ -181,39 +196,52 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
         </ul>
 
         {/* Conteúdo das Abas */}
-        {activeTab === 'basico' && (
-          <DadosBasicosTab
-            dados={dados}
-            onChange={handleInputChange}
-            isPending={updateDadosMutation.isPending}
-            onLogoChange={onLogoChange}
-          />
-        )}
+        <div 
+          className="tab-content" 
+          style={{ 
+            flex: 1, 
+            overflow: 'auto', 
+            // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
+            padding: isMobile ? '0' : '16px',
+            minHeight: 0
+          }}
+        >
+          <form id="empresa-form" onSubmit={handleSubmit}>
+            {activeTab === 'basico' && (
+              <DadosBasicosTab
+                dados={dados}
+                onChange={handleInputChange}
+                isPending={updateDadosMutation.isPending}
+                onLogoChange={onLogoChange}
+              />
+            )}
 
-        {activeTab === 'endereco' && (
-          <EnderecoTab
-            dados={dados}
-            onChange={handleInputChange}
-            isPending={updateDadosMutation.isPending}
-          />
-        )}
+            {activeTab === 'endereco' && (
+              <EnderecoTab
+                dados={dados}
+                onChange={handleInputChange}
+                isPending={updateDadosMutation.isPending}
+              />
+            )}
 
-        {activeTab === 'contato' && (
-          <ContatoTab
-            dados={dados}
-            onChange={handleInputChange}
-            isPending={updateDadosMutation.isPending}
-          />
-        )}
+            {activeTab === 'contato' && (
+              <ContatoTab
+                dados={dados}
+                onChange={handleInputChange}
+                isPending={updateDadosMutation.isPending}
+              />
+            )}
 
-        {activeTab === 'responsavel' && (
-          <ResponsavelTab
-            dados={dados}
-            onChange={handleInputChange}
-            isPending={updateDadosMutation.isPending}
-          />
-        )}
-      </form>
+            {activeTab === 'responsavel' && (
+              <ResponsavelTab
+                dados={dados}
+                onChange={handleInputChange}
+                isPending={updateDadosMutation.isPending}
+              />
+            )}
+          </form>
+        </div>
+      </div>
     </DraggableModal>
   );
 };

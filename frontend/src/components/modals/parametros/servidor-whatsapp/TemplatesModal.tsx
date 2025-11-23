@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { defaultApiClient } from '@/services/core';
 import DraggableModal from '@/components/common/DraggableModal';
 
@@ -36,6 +37,7 @@ interface TemplatesModalProps {
 }
 
 const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose }) => {
+  const isMobile = useIsMobile();
 
   const { data, isLoading, error, refetch } = useQuery<TemplatesResponse['data']>({
     queryKey: ['whatsapp-templates'],
@@ -115,7 +117,7 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose }) => {
         </div>
       }
     >
-      <div className="modal-body p-3">
+      <div style={{ padding: isMobile ? '0' : '16px' }}>
         {/* Seção de Ajuda */}
         <div className="collapse mb-3" id="template-help">
           <div className="card card-body bg-light">

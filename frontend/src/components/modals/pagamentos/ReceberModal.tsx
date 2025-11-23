@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMarcarTituloPago } from '@/hooks/useTitulos';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { formatDate } from '@/utils/formatters';
 import { receberSchema, ReceberFormData } from '@/schemas/receber.schema';
 import DraggableModal from '@/components/common/DraggableModal';
@@ -28,6 +29,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
   parcela,
   onSuccess
 }) => {
+  const isMobile = useIsMobile();
   const marcarPagoMutation = useMarcarTituloPago();
 
   // React Hook Form com Zod
@@ -93,7 +95,7 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
       title={`Receber - Título ${parcela.numero_titulo}`}
       size="lg"
     >
-      <form onSubmit={rhfHandleSubmit(handleSubmit)} className="p-3">
+      <form onSubmit={rhfHandleSubmit(handleSubmit)} style={{ padding: isMobile ? '0' : '16px' }}>
         <div className="card mb-3">
           <div className="card-header py-2">
             <h6 className="mb-0">Informações da Parcela</h6>

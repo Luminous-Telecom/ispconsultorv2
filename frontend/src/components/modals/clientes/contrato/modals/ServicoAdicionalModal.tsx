@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ContratoPlanoAdicional, CreateContratoPlanoAdicional, UpdateContratoPlanoAdicional } from '@/services/contratoPlanoAdicionalService';
 import { useCreateContratoPlanoAdicional, useUpdateContratoPlanoAdicional } from '@/hooks/useContratoPlanosAdicionais';
 import { usePlanos } from '@/hooks/usePlanos';
@@ -26,6 +27,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
   onSuccess,
   onShowPlanoModal
 }) => {
+  const isMobile = useIsMobile();
   const { success, error } = useNotificationContext();
   const createMutation = useCreateContratoPlanoAdicional();
   const updateMutation = useUpdateContratoPlanoAdicional();
@@ -148,7 +150,7 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
         title={editingServico ? 'Editar Serviço Adicional' : 'Novo Serviço Adicional'}
         size="lg"
       >
-        <form onSubmit={handleSubmit} style={{ padding: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
           <div className="row">
             <div className="col-md-12 mb-3">
               <EntitySelectField

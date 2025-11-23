@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { UsuarioService } from '@/services/usuarioService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useFormReset } from '@/hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from '@/hooks/useUsuarios';
 import DraggableModal from '@/components/common/DraggableModal';
@@ -28,6 +29,7 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
   onSuccess,
   usuarioId
 }) => {
+  const isMobile = useIsMobile();
   const isEditing = !!usuarioId;
   const initialFormData: UsuarioForm = {
     nome: '',
@@ -189,8 +191,8 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
         </div>
       }
     >
-      <form id="usuario-form" onSubmit={handleSubmit}>
-        <div className="p-3">
+      <form id="usuario-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+        <div>
           <div className="row g-2 mb-3">
             <div className="col-md-12">
               <FormField

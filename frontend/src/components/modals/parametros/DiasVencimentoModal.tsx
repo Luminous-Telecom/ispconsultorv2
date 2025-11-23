@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { DiasVencimentoService, DiasVencimento } from '@/services/diasVencimentoService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
 
 interface DiasVencimentoModalProps {
@@ -10,6 +11,7 @@ interface DiasVencimentoModalProps {
 }
 
 const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose }) => {
+  const isMobile = useIsMobile();
   const [diasAtivos, setDiasAtivos] = useState<number[]>([5, 10, 15, 20, 25, 30]);
   const { success, error } = useNotificationContext();
   
@@ -61,7 +63,7 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
         </button>
       }
     >
-      <div className="modal-body p-3">
+      <div style={{ padding: isMobile ? '0' : '16px' }}>
         <div className="row g-2">
           {Array.from({ length: 30 }, (_, i) => i + 1).map(dia => (
             <div key={dia} className="col-12 col-sm-6 col-md-4 col-lg-3">

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ServidorWhatsAppService, MensagemWhatsApp } from '@/services/servidorWhatsAppService';
 import { defaultApiClient } from '@/services/core';
 import DraggableModal from '@/components/common/DraggableModal';
@@ -16,6 +17,7 @@ interface GrupoVariaveis {
 }
 
 const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onClose }) => {
+  const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
   
@@ -342,9 +344,22 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         </div>
       }
     >
-      <div className="modal-body p-2">
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Navegação de Abas */}
-        <ul className="nav nav-tabs mb-3" role="tablist">
+        <ul className="nav nav-tabs" role="tablist" style={{ 
+          flexShrink: 0, 
+          marginBottom: isMobile ? '1rem' : 0, 
+          marginTop: isMobile ? '0' : '1rem', 
+          marginLeft: isMobile ? '0' : '1rem', 
+          marginRight: isMobile ? '0' : '1rem',
+          ...(isMobile && {
+            display: 'flex',
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch'
+          })
+        }}>
           <li className="nav-item" role="presentation">
             <button
               className={`nav-link ${activeTab === 'servidor' ? 'active' : ''}`}
@@ -366,50 +381,61 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
         </ul>
 
         {/* Conteúdo das Abas */}
-        {activeTab === 'servidor' && (
-          <form id="servidor-whatsapp-form" onSubmit={handleSubmit}>
-            <ServidorTab
-              formData={formData}
-              onChange={(field, value) => setFormData(prev => ({ ...prev, [field]: value }))}
-              isPending={saveServidorMutation.isPending}
-              servidorAtivo={servidorAtivo}
-              testPhone={testPhone}
-              testMessage={testMessage}
-              onTestPhoneChange={setTestPhone}
-              onTestMessageChange={setTestMessage}
-              onSendTestMessage={handleSendTestMessage}
-              isSendingTest={sendTestMessageMutation.isPending}
-            />
-          </form>
-        )}
+        <div 
+          className="tab-content" 
+          style={{ 
+            flex: 1, 
+            overflow: 'auto', 
+            // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
+            padding: isMobile ? '0' : '16px',
+            minHeight: 0
+          }}
+        >
+          {activeTab === 'servidor' && (
+            <form id="servidor-whatsapp-form" onSubmit={handleSubmit}>
+              <ServidorTab
+                formData={formData}
+                onChange={(field, value) => setFormData(prev => ({ ...prev, [field]: value }))}
+                isPending={saveServidorMutation.isPending}
+                servidorAtivo={servidorAtivo}
+                testPhone={testPhone}
+                testMessage={testMessage}
+                onTestPhoneChange={setTestPhone}
+                onTestMessageChange={setTestMessage}
+                onSendTestMessage={handleSendTestMessage}
+                isSendingTest={sendTestMessageMutation.isPending}
+              />
+            </form>
+          )}
 
-        {activeTab === 'mensagens' && (
-          <MensagensTab
-            mensagemType={mensagemType}
-            tipoEnvio={tipoEnvio}
-            mensagemPadrao={mensagemPadrao}
-            mensagemManual={mensagemManual}
-            templateMapping={templateMapping}
-            interacao1={interacao1}
-            interacao2={interacao2}
-            interacao3={interacao3}
-            isWhatsAppCloud={servidorAtivo?.data?.tipo_api === 'whatsapp_cloud'}
-            onMensagemTypeChange={setMensagemType}
-            onTipoEnvioChange={setTipoEnvio}
-            onMensagemPadraoChange={setMensagemPadrao}
-            onMensagemManualChange={setMensagemManual}
-            onTemplateMappingChange={setTemplateMapping}
-            onInteracao1Change={setInteracao1}
-            onInteracao2Change={setInteracao2}
-            onInteracao3Change={setInteracao3}
-            onSaveMensagem={handleSaveMensagem}
-            isPending={saveMensagemMutation.isPending}
-            variaveisData={variaveisData}
-            onCopyVariable={handleCopyVariable}
-            onInsertVariable={handleInsertVariable}
-            onShowTemplates={() => setShowTemplatesModal(true)}
-          />
-        )}
+          {activeTab === 'mensagens' && (
+            <MensagensTab
+              mensagemType={mensagemType}
+              tipoEnvio={tipoEnvio}
+              mensagemPadrao={mensagemPadrao}
+              mensagemManual={mensagemManual}
+              templateMapping={templateMapping}
+              interacao1={interacao1}
+              interacao2={interacao2}
+              interacao3={interacao3}
+              isWhatsAppCloud={servidorAtivo?.data?.tipo_api === 'whatsapp_cloud'}
+              onMensagemTypeChange={setMensagemType}
+              onTipoEnvioChange={setTipoEnvio}
+              onMensagemPadraoChange={setMensagemPadrao}
+              onMensagemManualChange={setMensagemManual}
+              onTemplateMappingChange={setTemplateMapping}
+              onInteracao1Change={setInteracao1}
+              onInteracao2Change={setInteracao2}
+              onInteracao3Change={setInteracao3}
+              onSaveMensagem={handleSaveMensagem}
+              isPending={saveMensagemMutation.isPending}
+              variaveisData={variaveisData}
+              onCopyVariable={handleCopyVariable}
+              onInsertVariable={handleInsertVariable}
+              onShowTemplates={() => setShowTemplatesModal(true)}
+            />
+          )}
+        </div>
       </div>
     </DraggableModal>
     {showTemplatesModal && (

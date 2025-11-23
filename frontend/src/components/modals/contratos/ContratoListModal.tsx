@@ -472,6 +472,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       title={title}
       size="lg"
       modalId="contrato-list-modal"
+      className="no-padding"
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1, overflow: 'auto' }}>

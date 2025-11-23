@@ -6,6 +6,7 @@ import ModeloReciboService from '@/services/modeloReciboService';
 import ModeloCartaService from '@/services/modeloCartaService';
 import ModeloTermoService from '@/services/modeloTermoService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import FormField from '@/components/ui/FormField';
@@ -28,6 +29,7 @@ const emptyForm: DocumentoForm = {
 };
 
 const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, documento, tipo, onSuccess }) => {
+  const isMobile = useIsMobile();
   const [formData, setFormData] = useState<DocumentoForm>({ ...emptyForm });
 
   const [currentDocumento, setCurrentDocumento] = useState<DocumentoUnion | null>(documento ?? null);
@@ -384,7 +386,7 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   return (
     <>
       <DraggableModal show={show} onClose={handleClose} title={`${isEditing ? 'Editar' : 'Novo'} ${getTipoLabel(tipo)}`} size="xl" headerActions={headerActions}>
-        <div className="p-3">
+        <div style={{ padding: isMobile ? '0' : '16px' }}>
           <form onSubmit={handleSubmit}>
             <div className="row g-2 mb-3">
               <div className="col-md-6">

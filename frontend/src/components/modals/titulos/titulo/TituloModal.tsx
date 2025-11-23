@@ -5,6 +5,7 @@ import { PlanoService } from '@/services/planoService';
 import { ClienteService } from '@/services/clienteService';
 import { ContratoService } from '@/services/contratoService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Contrato, Plano, CarneParcela } from '@/types';
 import { FormValue } from '@/types/common';
 import { useEntitySelectField } from '@/hooks/useEntitySelectField';
@@ -24,6 +25,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
   clienteId,
   contratoId
 }) => {
+  const isMobile = useIsMobile();
   // Estado interno para controlar o tituloId após criação
   const [internalTituloId, setInternalTituloId] = useState<number | null>(tituloId);
   
@@ -270,7 +272,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
         </div>
       }
     >
-      <form id="titulo-form" onSubmit={handleSubmit} style={{ padding: '16px' }}>
+      <form id="titulo-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         {/* Mostrar erros de validação se houver */}
         {Object.keys(errors).length > 0 && (
           <div className="alert alert-danger mb-3" role="alert">

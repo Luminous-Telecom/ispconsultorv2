@@ -187,6 +187,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
       title="Usuários"
       size="lg"
       modalId="usuarios-modal"
+      className="no-padding"
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1, overflow: 'auto' }}>

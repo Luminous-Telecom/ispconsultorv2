@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ServidorEmailService } from '@/services/servidorEmailService';
 import DraggableModal from '@/components/common/DraggableModal';
 import { ServidorEmailForm, ServidorEmailModalProps } from './types';
@@ -8,6 +9,7 @@ import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
 
 const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }) => {
+  const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'servidor' | 'mensagens'>('servidor');
@@ -219,9 +221,22 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
         </div>
       }
     >
-      <div className="modal-body p-2" style={{ maxHeight: 'calc(90vh - 120px)', overflowY: 'auto' }}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Navegação de Abas */}
-        <ul className="nav nav-tabs mb-3" role="tablist">
+        <ul className="nav nav-tabs" role="tablist" style={{ 
+          flexShrink: 0, 
+          marginBottom: isMobile ? '1rem' : 0, 
+          marginTop: isMobile ? '0' : '1rem', 
+          marginLeft: isMobile ? '0' : '1rem', 
+          marginRight: isMobile ? '0' : '1rem',
+          ...(isMobile && {
+            display: 'flex',
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch'
+          })
+        }}>
           <li className="nav-item" role="presentation">
             <button
               className={`nav-link ${activeTab === 'servidor' ? 'active' : ''}`}
@@ -242,37 +257,49 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
           </li>
         </ul>
 
-        <form id="servidor-email-form" onSubmit={handleSubmit}>
-          {/* Conteúdo da Aba Servidor */}
-          {activeTab === 'servidor' && (
-            <ServidorTab
-              formData={formData}
-              onChange={handleFormChange}
-              isPending={saveServidorMutation.isPending}
-              servidorAtivo={servidorAtivo}
-              emailTeste={emailTeste}
-              onEmailTesteChange={setEmailTeste}
-              onSendTestEmail={handleSendTestEmail}
-              isSendingTest={sendTestEmailMutation.isPending}
-            />
-          )}
+        {/* Conteúdo das Abas */}
+        <div 
+          className="tab-content" 
+          style={{ 
+            flex: 1, 
+            overflow: 'auto', 
+            // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
+            padding: isMobile ? '0' : '16px',
+            minHeight: 0
+          }}
+        >
+          <form id="servidor-email-form" onSubmit={handleSubmit}>
+            {/* Conteúdo da Aba Servidor */}
+            {activeTab === 'servidor' && (
+              <ServidorTab
+                formData={formData}
+                onChange={handleFormChange}
+                isPending={saveServidorMutation.isPending}
+                servidorAtivo={servidorAtivo}
+                emailTeste={emailTeste}
+                onEmailTesteChange={setEmailTeste}
+                onSendTestEmail={handleSendTestEmail}
+                isSendingTest={sendTestEmailMutation.isPending}
+              />
+            )}
 
-          {/* Conteúdo da Aba Mensagens */}
-          {activeTab === 'mensagens' && (
-            <MensagensTab
-              mensagemType={mensagemType}
-              tipoEnvio={tipoEnvio}
-              mensagemTexto={mensagemTexto}
-              mensagemManual={mensagemManual}
-              onMensagemTypeChange={setMensagemType}
-              onTipoEnvioChange={setTipoEnvio}
-              onMensagemTextoChange={setMensagemTexto}
-              onMensagemManualChange={setMensagemManual}
-              onSaveMensagem={handleSaveMensagem}
-              isPending={saveMensagemMutation.isPending}
-            />
-          )}
-        </form>
+            {/* Conteúdo da Aba Mensagens */}
+            {activeTab === 'mensagens' && (
+              <MensagensTab
+                mensagemType={mensagemType}
+                tipoEnvio={tipoEnvio}
+                mensagemTexto={mensagemTexto}
+                mensagemManual={mensagemManual}
+                onMensagemTypeChange={setMensagemType}
+                onTipoEnvioChange={setTipoEnvio}
+                onMensagemTextoChange={setMensagemTexto}
+                onMensagemManualChange={setMensagemManual}
+                onSaveMensagem={handleSaveMensagem}
+                isPending={saveMensagemMutation.isPending}
+              />
+            )}
+          </form>
+        </div>
       </div>
     </DraggableModal>
   );

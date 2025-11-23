@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '@/services/schedulerService';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
 import FormField from '@/components/ui/FormField';
 
@@ -19,6 +20,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
   rotinaId = null,
   onSuccess
 }) => {
+  const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
   const isEditMode = !!rotinaId;
@@ -133,7 +135,7 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
       title={isEditMode ? 'Editar Rotina' : 'Nova Rotina'}
       size="lg"
     >
-      <div style={{ padding: '1rem' }}>
+      <div style={{ padding: isMobile ? '0' : '16px' }}>
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
           <div className="col-12">

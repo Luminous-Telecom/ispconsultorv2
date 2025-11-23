@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatDate } from '@/utils/formatters';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { apiService } from '@/services/api';
 import DraggableModal from '@/components/common/DraggableModal';
 
@@ -17,6 +18,7 @@ interface AtualizacoesModalProps {
 }
 
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) => {
+  const isMobile = useIsMobile();
 
   // Query para buscar atualizações
   const { data: atualizacoes, isLoading, error } = useQuery<Atualizacao[]>({
@@ -50,7 +52,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       size="md"
       modalId="atualizacoes-modal"
     >
-      <div style={{ padding: '1rem' }}>
+      <div style={{ padding: isMobile ? '0' : '16px' }}>
         {isLoading && (
           <div className="text-center p-5">
             <div className="spinner-border text-primary" role="status">

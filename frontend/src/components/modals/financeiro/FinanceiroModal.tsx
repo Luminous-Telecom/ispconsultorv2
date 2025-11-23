@@ -476,6 +476,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         title="Financeiro - Títulos"
         size="xl"
         modalId="financeiro-modal"
+        className="no-padding"
       >
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ flex: 1, overflow: 'auto' }}>
