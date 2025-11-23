@@ -381,14 +381,11 @@ export class ModeloReciboController {
       `;
 
       // Configurações do PDF
-      const options: PdfOptions = {
+      const pdfBuffer = await PDFGenerationService.generateFromHtml(htmlContent, 'html-pdf-node', {
         format: 'A4',
         margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true
-      };
-
-      const file = { content: htmlContent };
-      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      });
 
       // Configurar headers
       res.setHeader('Content-Type', 'application/pdf');

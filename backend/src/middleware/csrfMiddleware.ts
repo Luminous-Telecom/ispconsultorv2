@@ -41,8 +41,8 @@ interface SessionWithCsrf extends SessionData {
 /**
  * Interface para Request com sessão tipada
  */
-interface RequestWithCsrfSession extends Request {
-  session?: SessionWithCsrf;
+interface RequestWithCsrfSession extends Omit<Request, 'session'> {
+  session: SessionWithCsrf;
 }
 
 // Importação condicional do csrf
@@ -86,22 +86,22 @@ export function csrfTokenMiddleware(req: Request, res: Response, next: NextFunct
     res.locals.csrfToken = token;
   } else {
     // Usar sessão se disponível
-    const requestWithSession = req as RequestWithCsrfSession;
-    if (requestWithSession.session) {
+    if (req.session) {
+      const requestWithSession = req as RequestWithCsrfSession;
       if (!requestWithSession.session.csrfSecret) {
         requestWithSession.session.csrfSecret = csrfInstance.secretSync();
       }
       
       const token = csrfInstance.create(requestWithSession.session.csrfSecret);
       res.locals.csrfToken = token;
+      
+      res.cookie('XSRF-TOKEN', token, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 3600000
+      });
     }
-    
-    res.cookie('XSRF-TOKEN', token, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 3600000
-    });
   }
 
   next();
