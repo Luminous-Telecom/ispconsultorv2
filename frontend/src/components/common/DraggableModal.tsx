@@ -1,11 +1,12 @@
 /**
- * DraggableModal - Refatorado para usar useModal base
+ * DraggableModal - Refatorado para usar ResponsiveDialog internamente
  * Mantém a API original do DraggableModal para compatibilidade total
- * Agora usa a infraestrutura do Modal base internamente
+ * Agora usa ResponsiveDialog que adapta automaticamente para mobile/desktop
  */
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { modalStack } from '@/utils/modalStack';
+import ResponsiveDialog from './ResponsiveDialog';
 
 interface DraggableModalProps {
   show: boolean;
@@ -28,6 +29,34 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   headerActions,
   modalId: propModalId,
 }) => {
+  // Verificação direta e simples de mobile
+  // Usar função helper para verificar mobile de forma síncrona
+  const checkIsMobile = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768;
+  };
+
+  const [isMobile, setIsMobile] = useState(() => checkIsMobile());
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = checkIsMobile();
+      setIsMobile(mobile);
+    };
+    
+    // Verificar imediatamente
+    checkMobile();
+    
+    // Listener para mudanças de tamanho
+    window.addEventListener('resize', checkMobile);
+    window.addEventListener('orientationchange', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('orientationchange', checkMobile);
+    };
+  }, []);
+  
   // ID único estável
   const modalId = useMemo(() => {
     return propModalId || `draggable-modal-${Math.random().toString(36).substr(2, 9)}`;
@@ -43,8 +72,10 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
 
-  // Gerenciar pilha de modais
+  // Gerenciar pilha de modais (apenas desktop)
   useEffect(() => {
+    if (isMobile) return;
+    
     if (show) {
       modalStack.push(modalId);
     } else {
@@ -54,10 +85,12 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     return () => {
       modalStack.remove(modalId);
     };
-  }, [show, modalId]);
+  }, [show, modalId, isMobile]);
 
-  // Posicionar modal na área restante (excluindo menu) - 95% da dashboard
+  // Posicionar modal na área restante (excluindo menu) - 95% da dashboard (apenas desktop)
   useEffect(() => {
+    if (isMobile) return;
+    
     if (show && !isInitialized) {
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
@@ -87,10 +120,12 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       setIsInitialized(false);
       setIsVisible(false);
     }
-  }, [show, isInitialized]);
+  }, [show, isInitialized, isMobile]);
 
-  // Funções de drag - só permite arrastar pelo título
+  // Funções de drag - só permite arrastar pelo título (apenas desktop)
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isMobile) return;
+    
     // Só permite arrastar se clicar diretamente no título ou na área do header (exceto botões)
     const target = e.target as HTMLElement;
     const isTitle = target.classList.contains('modal-title') || target.closest('.modal-title');
@@ -111,7 +146,7 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
   };
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (isMobile || !isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       const newPosition = {
@@ -134,11 +169,11 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragStart]);
+  }, [isDragging, dragStart, isMobile, position]);
 
-  // Handler para tecla ESC
+  // Handler para tecla ESC (apenas desktop)
   useEffect(() => {
-    if (!show) return;
+    if (isMobile || !show) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -160,14 +195,40 @@ const DraggableModal: React.FC<DraggableModalProps> = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
-  }, [show, modalId, onClose]);
+  }, [show, modalId, onClose, isMobile]);
 
-  // Calcular z-index baseado na pilha de modais
+  // Calcular z-index baseado na pilha de modais (apenas desktop)
   const zIndex = useMemo(() => {
+    if (isMobile) return 1050;
+    
     const stack = modalStack.getStack();
     const index = stack.indexOf(modalId);
     return 1050 + (index * 10);
-  }, [modalId]);
+  }, [modalId, isMobile]);
+
+  // Em mobile, usar ResponsiveDialog diretamente
+  // Verificar mobile de forma síncrona no momento da renderização para garantir detecção correta
+  const currentIsMobile = checkIsMobile();
+  
+  if (currentIsMobile && show) {
+    return (
+      <ResponsiveDialog
+        isOpen={show}
+        onClose={onClose}
+        title={title}
+        size={_size}
+        className={className}
+        headerActions={headerActions}
+        modalId={modalId}
+      >
+        {children}
+      </ResponsiveDialog>
+    );
+  }
+  
+  if (currentIsMobile && !show) {
+    return null;
+  }
 
   // Não renderizar se não deve ser renderizado
   const shouldRender = show || isVisible;
