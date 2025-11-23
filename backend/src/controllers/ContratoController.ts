@@ -9,7 +9,6 @@ import { Op, WhereOptions, Transaction } from 'sequelize';
 import * as Joi from 'joi';
 import { logger } from '../utils/logger';
 import { withTransaction } from '../utils/transaction';
-import { contratoCreateSchema } from '../validators/contrato.validator';
 
 export class ContratoController {
   // Função auxiliar para normalizar data (evitar problemas de timezone)

@@ -2,10 +2,9 @@ import { Request, Response } from 'express';
 import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
 import { Contrato } from '../models/Contrato';
 import { Plano } from '../models/Plano';
-import { Op } from 'sequelize';
 import * as Joi from 'joi';
 import { logger } from '../utils/logger';
-import { isJoiError, getErrorMessage, getErrorStack } from '../utils/errorUtils';
+import { isJoiError, getErrorMessage } from '../utils/errorUtils';
 //
 export class ContratoPlanoAdicionalController {
   // Schema de validação para criação

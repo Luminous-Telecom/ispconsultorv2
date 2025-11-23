@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import { logger } from '../utils/logger';
 import type { AuthenticatedRequest } from '../types/auth';
-import { getErrorMessage, getErrorStack } from '../utils/errorUtils';
 
 export class DadosEmpresaController {
   // Dados padrão para criação de empresa
@@ -64,11 +63,11 @@ export class DadosEmpresaController {
 
       // Criar objeto apenas com dados públicos (sem dados sensíveis)
       const { 
-        id, 
-        responsavel_nome, 
-        responsavel_cpf, 
-        responsavel_cargo, 
-        inscricao_estadual, 
+        id: _id, 
+        responsavel_nome: _responsavel_nome, 
+        responsavel_cpf: _responsavel_cpf, 
+        responsavel_cargo: _responsavel_cargo, 
+        inscricao_estadual: _inscricao_estadual, 
         inscricao_municipal, 
         created_at, 
         updated_at,
