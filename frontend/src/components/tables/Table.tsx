@@ -70,7 +70,17 @@ function Table<T extends { id: number | string }>({
   const isMobile = useIsMobile();
   
   // Table header context (para botões no header do Layout)
-  const tableHeader = useTableHeader();
+  const {
+    setTitle: setHeaderTitle,
+    setShowSearch: setHeaderShowSearch,
+    setShowReload: setHeaderShowReload,
+    setSearchPlaceholder: setHeaderSearchPlaceholder,
+    setOnReloadClick: setHeaderOnReloadClick,
+    setSearchValue: setHeaderSearchValue,
+    setLoading: setHeaderLoading,
+    setShowMobileSearch: setHeaderShowMobileSearch,
+    searchValue: headerSearchValue,
+  } = useTableHeader();
   
   // Estado para controlar abertura do menu FAB
   const [isFabOpen, setIsFabOpen] = useState(false);
@@ -252,46 +262,69 @@ function Table<T extends { id: number | string }>({
   // Registrar botões no contexto do header quando for mobile
   useEffect(() => {
     if (isMobile) {
-      tableHeader.setTitle(title || 'Lista');
-      tableHeader.setShowSearch(searchable || false);
-      tableHeader.setShowReload(true);
-      tableHeader.setSearchPlaceholder(searchPlaceholder || 'Buscar...');
-      tableHeader.setOnReloadClick(handleReloadClick);
+      setHeaderTitle(title || 'Lista');
+      setHeaderShowSearch(searchable || false);
+      setHeaderShowReload(true);
+      setHeaderSearchPlaceholder(searchPlaceholder || 'Buscar...');
+      setHeaderOnReloadClick(handleReloadClick);
       
-      if (searchTerm) {
-        tableHeader.setSearchValue(searchTerm);
+      // Inicializar busca se houver valor inicial (uma única vez ao montar/entrar mobile)
+      // Usamos apenas se houver valor, mas não sincronizamos o tempo todo aqui
+      if (searchTerm && headerSearchValue !== searchTerm) {
+         setHeaderSearchValue(searchTerm);
       }
     }
-  }, [isMobile, title, searchable, searchPlaceholder, handleReloadClick, searchTerm, tableHeader]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isMobile, 
+    title, 
+    searchable, 
+    searchPlaceholder, 
+    handleReloadClick,
+    // Incluir setters do header que são estáveis
+    setHeaderTitle,
+    setHeaderShowSearch,
+    setHeaderShowReload,
+    setHeaderSearchPlaceholder,
+    setHeaderOnReloadClick,
+    setHeaderSearchValue
+  ]);
 
   // Limpar quando sair do mobile
   useEffect(() => {
     if (!isMobile) {
-      tableHeader.setTitle(null);
-      tableHeader.setShowSearch(false);
-      tableHeader.setShowReload(false);
-      tableHeader.setOnReloadClick(null);
-      tableHeader.setShowMobileSearch(false);
+      setHeaderTitle(null);
+      setHeaderShowSearch(false);
+      setHeaderShowReload(false);
+      setHeaderOnReloadClick(null);
+      setHeaderShowMobileSearch(false);
     }
-  }, [isMobile, tableHeader]);
+  }, [
+    isMobile, 
+    setHeaderTitle,
+    setHeaderShowSearch,
+    setHeaderShowReload,
+    setHeaderOnReloadClick,
+    setHeaderShowMobileSearch
+  ]);
 
   // Sincronizar loading separadamente para evitar re-configuração completa do header
   useEffect(() => {
     if (isMobile) {
-      tableHeader.setLoading(loading || false);
+      setHeaderLoading(loading || false);
     }
-  }, [isMobile, loading, tableHeader]);
+  }, [isMobile, loading, setHeaderLoading]);
   
   // Limpar ao desmontar
   useEffect(() => {
     return () => {
       // Limpar apenas ao desmontar o componente
-      tableHeader.setTitle(null);
-      tableHeader.setShowSearch(false);
-      tableHeader.setShowReload(false);
-      tableHeader.setOnReloadClick(null);
-      tableHeader.setShowMobileSearch(false);
-      tableHeader.setSearchValue('');
+      setHeaderTitle(null);
+      setHeaderShowSearch(false);
+      setHeaderShowReload(false);
+      setHeaderOnReloadClick(null);
+      setHeaderShowMobileSearch(false);
+      setHeaderSearchValue('');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -305,24 +338,27 @@ function Table<T extends { id: number | string }>({
   
   // Sincronizar busca do contexto com busca local
   useEffect(() => {
-    if (isMobile && tableHeader.searchValue !== searchTerm) {
-      setSearchTerm(tableHeader.searchValue);
-      // Propagar para tableActions e onSearch externo de forma assíncrona
-      setTimeout(() => {
-        tableActionsRef.current.setSearchTerm(tableHeader.searchValue);
-        if (onSearchRef.current) {
-          onSearchRef.current(tableHeader.searchValue);
-        }
-      }, 0);
+    // Apenas sincronizar se for mobile e os valores forem diferentes
+    if (isMobile && headerSearchValue !== searchTerm) {
+      // Atualizar busca local (que vai disparar o efeito acima para atualizar o hook)
+      setSearchTerm(headerSearchValue);
+      
+      // Propagar para callback externo imediatamente se necessário
+      // Não chamamos tableActions aqui para evitar race condition com o efeito acima
+      if (onSearchRef.current) {
+        onSearchRef.current(headerSearchValue);
+      }
     }
-  }, [isMobile, tableHeader.searchValue, searchTerm]);
+  }, [isMobile, headerSearchValue, searchTerm]);
 
   // Conectar busca com callback externo
   useEffect(() => {
-    if (onSearch && searchTerm !== state.searchTerm) {
+    // Apenas chamar callback se não for mobile (no mobile já chamamos acima)
+    // Ou se for uma mudança iniciada pelo hook (ex: filtro)
+    if (!isMobile && onSearch && searchTerm !== state.searchTerm) {
       onSearch(searchTerm);
     }
-  }, [searchTerm, onSearch, state.searchTerm]);
+  }, [searchTerm, onSearch, state.searchTerm, isMobile]);
 
   // Fechar dropdown quando clicar fora (callback memoizado)
   const handleClickOutside = useCallback(() => {

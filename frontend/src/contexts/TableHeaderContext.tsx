@@ -34,29 +34,39 @@ export const TableHeaderProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const value = React.useMemo(() => ({
+    title,
+    setTitle,
+    showSearch,
+    setShowSearch,
+    showReload,
+    setShowReload,
+    onSearchClick,
+    setOnSearchClick,
+    onReloadClick,
+    setOnReloadClick,
+    searchPlaceholder,
+    setSearchPlaceholder,
+    searchValue,
+    setSearchValue,
+    showMobileSearch,
+    setShowMobileSearch,
+    loading,
+    setLoading,
+  }), [
+    title,
+    showSearch,
+    showReload,
+    onSearchClick,
+    onReloadClick,
+    searchPlaceholder,
+    searchValue,
+    showMobileSearch,
+    loading
+  ]);
+
   return (
-    <TableHeaderContext.Provider
-      value={{
-        title,
-        setTitle,
-        showSearch,
-        setShowSearch,
-        showReload,
-        setShowReload,
-        onSearchClick,
-        setOnSearchClick,
-        onReloadClick,
-        setOnReloadClick,
-        searchPlaceholder,
-        setSearchPlaceholder,
-        searchValue,
-        setSearchValue,
-        showMobileSearch,
-        setShowMobileSearch,
-        loading,
-        setLoading,
-      }}
-    >
+    <TableHeaderContext.Provider value={value}>
       {children}
     </TableHeaderContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { UseTableOptions, UseTableReturn, TableState, TableActions, SortDirection, TablePagination } from './types';
 import { FilterValue } from '@/types/common';
 
@@ -45,13 +45,36 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
   // Normalizar paginação
   const normalizedPagination = useMemo(() => normalizePagination(pagination), [pagination]);
 
-  // Ref para armazenar callback de seleção (evita problemas de closure e setState durante render)
+  // Refs para callbacks (evita problemas de closure e re-render)
   const onSelectionChangeRef = useRef(onSelectionChange);
-  
-  // Atualizar ref quando callback mudar
+  const onDataChangeRef = useRef(onDataChange);
+  const onSearchRef = useRef(onSearch);
+  const onSortRef = useRef(onSort);
+  const onFilterRef = useRef(onFilter);
+  const onPageChangeRef = useRef(onPageChange);
+  const onPageSizeChangeRef = useRef(onPageSizeChange);
+  const onRefreshRef = useRef(onRefresh);
+
+  // Atualizar refs quando callbacks mudarem
   useEffect(() => {
     onSelectionChangeRef.current = onSelectionChange;
-  }, [onSelectionChange]);
+    onDataChangeRef.current = onDataChange;
+    onSearchRef.current = onSearch;
+    onSortRef.current = onSort;
+    onFilterRef.current = onFilter;
+    onPageChangeRef.current = onPageChange;
+    onPageSizeChangeRef.current = onPageSizeChange;
+    onRefreshRef.current = onRefresh;
+  }, [
+    onSelectionChange, 
+    onDataChange, 
+    onSearch, 
+    onSort, 
+    onFilter, 
+    onPageChange, 
+    onPageSizeChange, 
+    onRefresh
+  ]);
 
   // Estado inicial
   const [state, setState] = useState<TableState<T>>({
@@ -213,89 +236,115 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
   }, [selectable, paginatedData, state.selectedItems]);
 
   // Ações da tabela
-  const actions: TableActions<T> = {
-    setData: useCallback((newData: T[]) => {
+  const actions: TableActions<T> = useMemo(() => ({
+    setData: (newData: T[]) => {
       setState(prev => ({
         ...prev,
         data: newData,
         filteredData: newData,
       }));
-      onDataChange?.(newData);
-    }, [onDataChange]),
+      onDataChangeRef.current?.(newData);
+    },
 
-    setSelectedItems: useCallback((items: T[]) => {
+    setSelectedItems: (items: T[]) => {
       setState(prev => ({ ...prev, selectedItems: items }));
-      onSelectionChange?.(items);
-    }, [onSelectionChange]),
+      onSelectionChangeRef.current?.(items);
+    },
 
-    setSearchTerm: useCallback((term: string) => {
-      setState(prev => ({ ...prev, searchTerm: term }));
-      onSearch?.(term);
-    }, [onSearch]),
+    setSearchTerm: (term: string) => {
+      setState(prev => {
+        if (prev.searchTerm === term) return prev;
+        return { ...prev, searchTerm: term };
+      });
+      onSearchRef.current?.(term);
+    },
 
-    setSort: useCallback((column: string, direction: SortDirection) => {
-      setState(prev => ({
-        ...prev,
-        sortColumn: column,
-        sortDirection: direction,
-        isSorted: true,
-      }));
-      onSort?.(column, direction);
-    }, [onSort]),
+    setSort: (column: string, direction: SortDirection) => {
+      setState(prev => {
+        if (prev.sortColumn === column && prev.sortDirection === direction && prev.isSorted) return prev;
+        return {
+          ...prev,
+          sortColumn: column,
+          sortDirection: direction,
+          isSorted: true,
+        };
+      });
+      onSortRef.current?.(column, direction);
+    },
 
-    setFilter: useCallback((key: string, value: FilterValue) => {
-      setState(prev => ({
-        ...prev,
-        filters: { ...prev.filters, [key]: value },
-        isFiltered: true,
-      }));
-      onFilter?.({ ...state.filters, [key]: value });
-    }, [onFilter, state.filters]),
+    setFilter: (key: string, value: FilterValue) => {
+      setState(prev => {
+        if (prev.filters[key] === value) return prev;
+        return {
+          ...prev,
+          filters: { ...prev.filters, [key]: value },
+          isFiltered: true,
+        };
+      });
+      onFilterRef.current?.({ ...state.filters, [key]: value });
+    },
 
-    setFilters: useCallback((newFilters: Record<string, FilterValue>) => {
-      setState(prev => ({
-        ...prev,
-        filters: newFilters,
-        isFiltered: Object.values(newFilters).some(value => 
-          value !== null && value !== undefined && value !== ''
-        ),
-      }));
-      onFilter?.(newFilters);
-    }, [onFilter]),
+    setFilters: (newFilters: Record<string, FilterValue>) => {
+      setState(prev => {
+        // Comparação superficial simples para evitar atualizações desnecessárias
+        const isSame = Object.keys(newFilters).length === Object.keys(prev.filters).length &&
+          Object.keys(newFilters).every(key => newFilters[key] === prev.filters[key]);
+        
+        if (isSame) return prev;
 
-    clearFilters: useCallback(() => {
-      setState(prev => ({
-        ...prev,
-        filters: {},
-        isFiltered: false,
-      }));
-      onFilter?.({});
-    }, [onFilter]),
+        return {
+          ...prev,
+          filters: newFilters,
+          isFiltered: Object.values(newFilters).some(value => 
+            value !== null && value !== undefined && value !== ''
+          ),
+        };
+      });
+      onFilterRef.current?.(newFilters);
+    },
 
-    setPage: useCallback((page: number) => {
-      setState(prev => ({ ...prev, currentPage: page }));
-      onPageChange?.(page);
-    }, [onPageChange]),
+    clearFilters: () => {
+      setState(prev => {
+        if (Object.keys(prev.filters).length === 0 && !prev.isFiltered) return prev;
+        return {
+          ...prev,
+          filters: {},
+          isFiltered: false,
+        };
+      });
+      onFilterRef.current?.({});
+    },
 
-    setPageSize: useCallback((size: number) => {
-      setState(prev => ({
-        ...prev,
-        pageSize: size,
-        currentPage: 1, // Reset para primeira página
-      }));
-      onPageSizeChange?.(size);
-    }, [onPageSizeChange]),
+    setPage: (page: number) => {
+      setState(prev => {
+        if (prev.currentPage === page) return prev;
+        return { ...prev, currentPage: page };
+      });
+      onPageChangeRef.current?.(page);
+    },
 
-    refresh: useCallback(() => {
+    setPageSize: (size: number) => {
+      setState(prev => {
+        if (prev.pageSize === size) return prev;
+        return {
+          ...prev,
+          pageSize: size,
+          currentPage: 1, // Reset para primeira página
+        };
+      });
+      onPageSizeChangeRef.current?.(size);
+    },
+
+    refresh: () => {
       setState(prev => ({ ...prev, isLoading: true }));
-      onRefresh?.();
+      onRefreshRef.current?.();
       // Simular loading por um tempo mínimo
       setTimeout(() => {
         setState(prev => ({ ...prev, isLoading: false }));
       }, 300);
-    }, [onRefresh]),
+    },
 
-    selectAll: useCallback(() => {
+    selectAll: () => {
       if (!selectable) return;
       if (multiSelect) {
         // Seleção múltipla: seleciona todos os itens da página atual
@@ -310,14 +359,14 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
           setPendingSelectionChange([firstItem]);
         }
       }
-    }, [selectable, multiSelect, paginatedData]),
+    },
 
-    clearSelection: useCallback(() => {
+    clearSelection: () => {
       setState(prev => ({ ...prev, selectedItems: [] }));
       setPendingSelectionChange([]);
-    }, []),
+    },
 
-    toggleSelection: useCallback((item: T) => {
+    toggleSelection: (item: T) => {
       if (!selectable) return;
       
       // Usar estado anterior dentro do setState para evitar stale closure
@@ -341,8 +390,14 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
         
         return { ...prev, selectedItems: newSelection };
       });
-    }, [selectable, multiSelect]),
-  };
+    },
+  }), [
+    state.filters,
+    selectable,
+    multiSelect,
+    paginatedData,
+    // Callbacks removidos daqui porque usamos refs
+  ]);
 
   return {
     state,
