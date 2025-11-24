@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { Button } from '@/components/ui';
 
 interface ResponsiveDialogProps {
   isOpen: boolean;
@@ -253,14 +254,83 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                   </button>
                 )}
 
-                {/* Header Actions Customizados - Renderizar como itens de menu se possível, ou container */}
+                {/* Header Actions Customizados - Renderizar como dropdown-items */}
                 {headerActions && (
-                  <div className="dropdown-divider"></div>
-                )}
-                {headerActions && (
-                  <div className="px-3 py-2 d-flex flex-column gap-2">
-                    {headerActions}
-                  </div>
+                  <>
+                    <div className="dropdown-divider"></div>
+                    {React.Children.map(headerActions, (child) => {
+                      if (!React.isValidElement(child)) return child;
+                      
+                      // Função helper para renderizar Button como dropdown-item
+                      const renderButtonAsDropdownItem = (buttonChild: React.ReactElement) => {
+                        const props = buttonChild.props as {
+                          leftIcon?: React.ReactNode;
+                          icon?: string;
+                          isLoading?: boolean;
+                          disabled?: boolean;
+                          onClick?: (e: React.MouseEvent) => void;
+                          type?: string;
+                          children?: React.ReactNode;
+                          key?: string | number;
+                        };
+                        
+                        const leftIcon = props.leftIcon || (props.icon ? <i className={`bi bi-${props.icon}`}></i> : null);
+                        const isLoading = props.isLoading || false;
+                        
+                        return (
+                          <button
+                            key={props.key || Math.random()}
+                            type={(props.type as 'button' | 'submit' | 'reset') || 'button'}
+                            className="dropdown-item d-flex align-items-center gap-2 py-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowMenu(false);
+                              if (props.onClick && !isLoading && !props.disabled) {
+                                props.onClick(e);
+                              }
+                            }}
+                            disabled={isLoading || props.disabled}
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {isLoading ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>{props.children}</span>
+                              </>
+                            ) : (
+                              <>
+                                {leftIcon}
+                                <span>{props.children}</span>
+                              </>
+                            )}
+                          </button>
+                        );
+                      };
+                      
+                      // Se for um Button component, renderizar como dropdown-item
+                      if (child.type === Button) {
+                        return renderButtonAsDropdownItem(child);
+                      }
+                      
+                      // Se for um div com botões dentro, processar cada botão
+                      if (child.type === 'div') {
+                        const divProps = child.props as { children?: React.ReactNode };
+                        if (divProps.children) {
+                          return React.Children.map(divProps.children, (buttonChild) => {
+                            if (!React.isValidElement(buttonChild)) return buttonChild;
+                            
+                            if (buttonChild.type === Button) {
+                              return renderButtonAsDropdownItem(buttonChild);
+                            }
+                            
+                            return buttonChild;
+                          });
+                        }
+                      }
+                      
+                      return child;
+                    })}
+                  </>
                 )}
               </div>
             )}

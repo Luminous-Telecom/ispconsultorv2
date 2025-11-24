@@ -1430,11 +1430,23 @@ function Table<T extends { id: number | string }>({
                     const isDisabledByCondition = bulkAction.disabled && typeof bulkAction.disabled === 'function' ? bulkAction.disabled(state.selectedItems) : false;
                     const isDisabled = isDisabledBySelection || isDisabledByCondition;
                     
+                    // Determinar ícone baseado no label
+                    let icon = bulkAction.icon;
+                    if (!icon) {
+                      if (isNewButton) {
+                        icon = 'plus-circle';
+                      } else if (isExcluirButton) {
+                        icon = 'trash';
+                      } else if (bulkAction.label.toLowerCase().includes('editar')) {
+                        icon = 'pencil';
+                      }
+                    }
+                    
                     return (
                       <button
                         key={index}
                         type="button"
-                        className={`btn btn-sm ${isExcluirButton ? 'btn-danger' : 'btn-primary'}`}
+                        className="dropdown-item d-flex align-items-center gap-2 py-2"
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsFabOpen(false);
@@ -1443,8 +1455,10 @@ function Table<T extends { id: number | string }>({
                           }
                         }}
                         disabled={isDisabled}
+                        style={{ color: 'var(--text-primary)' }}
                       >
-                        {bulkAction.label}
+                        {icon && <i className={`bi bi-${icon}`}></i>}
+                        <span>{bulkAction.label}</span>
                       </button>
                     );
                   })}
