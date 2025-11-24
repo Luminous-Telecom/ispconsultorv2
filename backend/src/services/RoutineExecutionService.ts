@@ -149,12 +149,13 @@ export class RoutineExecutionService {
           },
           attributes: ['id', 'contrato_id', 'data_vencimento']
         }),
-        // Buscar TODOS os títulos (incluindo pagos) de todos os contratos
+        // Buscar TODOS os títulos (incluindo pagos, mas excluindo cancelados) de todos os contratos
         Titulo.findAll({
           where: {
-            contrato_id: { [Op.in]: contratoIds }
+            contrato_id: { [Op.in]: contratoIds },
+            status: { [Op.ne]: 'cancelado' }
           },
-          attributes: ['id', 'contrato_id', 'data_vencimento']
+          attributes: ['id', 'contrato_id', 'data_vencimento', 'status']
         }),
         // Buscar todas as configurações de dia de vencimento de uma vez
         DiasVencimento.findAll({
@@ -344,8 +345,8 @@ export class RoutineExecutionService {
                   parametros
                 );
 
-                // Verificar se já existe título para este mês (incluindo pagos)
-                // Se já existe título para este mês/ano (mesmo que pago), não gerar novo
+                // Verificar se já existe título para este mês (incluindo pagos, excluindo cancelados)
+                // Se já existe título para este mês/ano (mesmo que pago, mas não cancelado), não gerar novo
                 const tituloExistente = this.hasTituloForMonth(todosTitulos, anoAtual, mesAtual);
 
                 // Gerar título se:
@@ -621,12 +622,16 @@ export class RoutineExecutionService {
    * @returns true se existe título para o mês, false caso contrário
    */
   private hasTituloForMonth(
-    todosTitulos: Array<{ data_vencimento: Date }>,
+    todosTitulos: Array<{ data_vencimento: Date; status?: string }>,
     ano: number,
     mes: number
   ): boolean {
     const mesAno = `${ano}-${String(mes + 1).padStart(2, '0')}`;
     return todosTitulos.some(t => {
+      // Ignorar títulos cancelados
+      if (t.status === 'cancelado') {
+        return false;
+      }
       const dataTitulo = new Date(t.data_vencimento);
       return `${dataTitulo.getFullYear()}-${String(dataTitulo.getMonth() + 1).padStart(2, '0')}` === mesAno;
     });
