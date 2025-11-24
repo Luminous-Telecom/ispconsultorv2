@@ -667,6 +667,13 @@ body {
   box-sizing: border-box;
 }
 
+/* Reduzir min-height do dashboard-date-input no mobile */
+@media (max-width: 767.98px) {
+  .dashboard-date-input {
+    min-height: 30px !important;
+  }
+}
+
 
 .main-content {
   background: var(--bg-primary);
@@ -2274,7 +2281,7 @@ body {
   .responsive-dialog-mobile-content .form-control,
   .responsive-dialog-mobile-content .form-select {
     font-size: 16px; /* Previne zoom no iOS */
-    min-height: 44px;
+    min-height: 30px;
     padding: 0.375rem 0.5rem !important; /* Padding reduzido para mobile */
   }
 
@@ -2707,6 +2714,7 @@ textarea {
   input[type="date"],
   textarea {
     padding: 0.375rem 0.5rem !important;
+    min-height: 30px !important;
   }
 }
 
