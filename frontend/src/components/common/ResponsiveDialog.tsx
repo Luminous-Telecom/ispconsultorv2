@@ -268,26 +268,67 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                           icon?: string;
                           isLoading?: boolean;
                           disabled?: boolean;
-                          onClick?: (e: React.MouseEvent) => void;
+                          onClick?: (e: React.MouseEvent | React.FormEvent) => void;
                           type?: string;
+                          form?: string;
                           children?: React.ReactNode;
                           key?: string | number;
                         };
                         
                         const leftIcon = props.leftIcon || (props.icon ? <i className={`bi bi-${props.icon}`}></i> : null);
                         const isLoading = props.isLoading || false;
+                        const buttonType = (props.type as 'button' | 'submit' | 'reset') || 'button';
                         
+                        // Se for type="submit" com form, usar o comportamento nativo do formulário
+                        if (buttonType === 'submit' && props.form) {
+                          return (
+                            <button
+                              key={props.key || Math.random()}
+                              type="submit"
+                              form={props.form}
+                              className="dropdown-item d-flex align-items-center gap-2 py-2"
+                              disabled={isLoading || props.disabled}
+                              style={{ color: 'var(--text-primary)' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Fechar o menu após processar o evento
+                                setTimeout(() => {
+                                  setShowMenu(false);
+                                }, 0);
+                              }}
+                            >
+                              {isLoading ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                  <span>{props.children}</span>
+                                </>
+                              ) : (
+                                <>
+                                  {leftIcon}
+                                  <span>{props.children}</span>
+                                </>
+                              )}
+                            </button>
+                          );
+                        }
+                        
+                        // Para type="button" com onClick, passar o evento diretamente
                         return (
                           <button
                             key={props.key || Math.random()}
-                            type={(props.type as 'button' | 'submit' | 'reset') || 'button'}
+                            type={buttonType}
                             className="dropdown-item d-flex align-items-center gap-2 py-2"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setShowMenu(false);
+                              // Processar o evento antes de fechar o menu
                               if (props.onClick && !isLoading && !props.disabled) {
-                                props.onClick(e);
+                                // Passar o evento diretamente - handleSubmit aceita qualquer evento com preventDefault
+                                props.onClick(e as React.MouseEvent & React.FormEvent);
                               }
+                              // Fechar o menu após processar o evento
+                              setTimeout(() => {
+                                setShowMenu(false);
+                              }, 0);
                             }}
                             disabled={isLoading || props.disabled}
                             style={{ color: 'var(--text-primary)' }}
