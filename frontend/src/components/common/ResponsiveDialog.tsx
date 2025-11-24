@@ -110,7 +110,8 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
           flexShrink: 0,
           position: 'sticky',
           top: 0,
-          zIndex: 1,
+          zIndex: 100,
+          overflow: 'visible',
         }}
       >
         {/* Botão voltar */}
@@ -174,7 +175,13 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
 
         {/* Menu de Ações (Três Pontos) */}
         {hasActions && (
-          <div className="d-flex align-items-center flex-shrink-0 position-relative" ref={menuRef}>
+          <div 
+            className="d-flex align-items-center flex-shrink-0 position-relative" 
+            ref={menuRef}
+            style={{
+              zIndex: 101,
+            }}
+          >
             <button
               type="button"
               className="btn btn-link p-0"
@@ -203,12 +210,12 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
                 style={{
                   position: 'absolute',
                   right: 0,
-                  top: '100%',
-                  marginTop: '0.5rem',
+                  top: 'calc(100% + 0.5rem)',
                   minWidth: '200px',
+                  maxWidth: 'calc(100vw - 32px)',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                   borderRadius: '0.5rem',
-                  zIndex: 1050,
+                  zIndex: 100001,
                   backgroundColor: 'var(--bg-primary)',
                   border: '1px solid var(--border-color)',
                 }}
@@ -294,11 +301,12 @@ const ResponsiveDialogContent: React.FC<ResponsiveDialogProps> = ({
         style={{
           flex: 1,
           overflowY: 'auto',
-          overflowX: 'visible',
+          overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           padding: className?.includes('no-padding') ? 0 : '0.5rem',
           minHeight: 0,
           position: 'relative',
+          zIndex: 1,
         }}
       >
         {children}

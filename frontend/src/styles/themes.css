@@ -893,12 +893,20 @@ body {
   z-index: 2001; /* Acima do FAB container (2000) mas abaixo do dropdown de ações (99999) */
 }
 
-.table-mobile-fab-dropdown .btn {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  white-space: nowrap;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
-  min-height: 40px;
+.table-mobile-fab-dropdown .btn,
+.table-mobile-fab-dropdown .btn-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  white-space: nowrap !important;
+  padding: 0.5rem 1.25rem !important;
+  font-size: 0.75rem !important;
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
 }
 
 @media (min-width: 768px) {
@@ -924,15 +932,6 @@ body {
     flex: 1 1 auto;
   }
   
-  /* Botões pequenos */
-  .btn-sm:not(.btn-link) {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
-    min-height: 44px;
-    min-width: 80px;
-    white-space: nowrap;
-    flex: 1 1 auto;
-  }
   
   /* Botões grandes */
   .btn-lg:not(.btn-link) {
@@ -1033,6 +1032,15 @@ body {
     cursor: not-allowed !important;
     background-color: var(--bg-tertiary) !important;
     color: var(--text-primary) !important;
+  }
+  
+  /* Garantir que o dropdown possa escapar do container */
+  .responsive-dialog-mobile > div:first-child {
+    overflow: visible !important;
+  }
+  
+  .responsive-dialog-mobile .position-relative[style*="z-index"] {
+    overflow: visible !important;
   }
   
   /* Garantir que botões em grupos no dropdown tenham tamanhos iguais */
@@ -2369,22 +2377,6 @@ body {
   }
   
   /* Garantir que botões sejam tocáveis em mobile e tenham tamanho igual */
-  .responsive-dialog-mobile-content button:not(.btn-link):not(.mobile-menu-btn),
-  .responsive-dialog-mobile-content .btn:not(.btn-link):not(.mobile-menu-btn) {
-    min-height: 44px;
-    min-width: 80px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
-    white-space: nowrap;
-  }
-  
-  .responsive-dialog-mobile-content .btn-sm:not(.btn-link) {
-    min-height: 44px;
-    min-width: 80px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
-    white-space: nowrap;
-  }
   
   /* Garantir que botões em grupos tenham tamanhos iguais */
   .responsive-dialog-mobile-content .d-flex.gap-2 > .btn:not(.btn-link),
