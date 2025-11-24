@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, Checkbox } from '@/components/ui';
+import { FormField, Checkbox, Button } from '@/components/ui';
 import { ServidorTabProps } from '../types';
 
 const ServidorTab: React.FC<ServidorTabProps> = ({
@@ -156,24 +156,15 @@ const ServidorTab: React.FC<ServidorTabProps> = ({
                     onChange={(value) => onEmailTesteChange(value as string)}
                     className="flex-grow-1"
                   />
-                  <button
+                  <Button
                     type="button"
-                    className="btn btn-outline-success"
+                    variant="outline-success"
+                    leftIcon={<i className="bi bi-send"></i>}
                     onClick={onSendTestEmail}
-                    disabled={isSendingTest}
+                    isLoading={isSendingTest}
                   >
-                    {isSendingTest ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-send me-2"></i>
-                        Enviar Teste
-                      </>
-                    )}
-                  </button>
+                    Enviar Teste
+                  </Button>
                 </div>
                 <small className="form-text text-secondary">
                   Digite um e-mail válido para testar o envio através deste servidor

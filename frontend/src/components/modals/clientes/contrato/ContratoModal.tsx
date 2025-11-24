@@ -27,6 +27,7 @@ import { formatDate, formatDateTime } from '@/utils/formatters';
 import { useImpressaoContrato } from '@/hooks/useImpressaoContrato';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import ModeloContratoSelectModal from '@/components/modals/parametros/ModeloContratoSelectModal';
+import { Button } from '@/components/ui';
 import '../../contratos/ContratoModals.css';
 import ContratoTab from './abas/ContratoTab';
 import TermosTab from './abas/TermosTab';
@@ -990,34 +991,40 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       headerActions={
         <div className="d-flex gap-2">
           {isEditMode && (
-            <button 
+            <Button 
               type="button" 
-              className="btn btn-info btn-sm" 
+              variant="info"
+              size="sm" 
+              leftIcon={<i className="bi bi-printer"></i>}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleImprimirContrato();
               }}
-              disabled={impressaoHook.isGeneratingPdf}
+              isLoading={impressaoHook.isGeneratingPdf}
             >
-              {impressaoHook.isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
-            </button>
+              Imprimir
+            </Button>
           )}
-          <button 
+          <Button 
             type="button" 
-            className="btn btn-secondary btn-sm" 
+            variant="secondary"
+            size="sm" 
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
           >
             Cancelar
-          </button>
-          <button 
+          </Button>
+          <Button 
             type="submit" 
             form="contrato-form"
-            className="btn btn-primary btn-sm"
-            disabled={formHook.isSubmitting}
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={formHook.isSubmitting}
           >
             {isEditMode ? 'Salvar' : 'Criar Contrato'}
-          </button>
+          </Button>
         </div>
       }
     >

@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { formatDate } from '@/utils/formatters';
 import { receberSchema, ReceberFormData } from '@/schemas/receber.schema';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 
 interface ReceberModalProps {
@@ -186,21 +187,23 @@ const ReceberModal: React.FC<ReceberModalProps> = ({
         </div>
 
         <div className="d-flex justify-content-end gap-2 mt-4">
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary"
+            variant="secondary"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
             disabled={marcarPagoMutation.isPending}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="btn btn-success"
-            disabled={marcarPagoMutation.isPending}
+            variant="success"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={marcarPagoMutation.isPending}
           >
             Receber
-          </button>
+          </Button>
         </div>
       </form>
     </DraggableModal>

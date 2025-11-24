@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DraggableModal from '../common/DraggableModal';
+import { Button } from '@/components/ui';
 
 interface ImprimirModalProps {
   show: boolean;
@@ -69,17 +70,20 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
                   <div className="alert alert-danger" role="alert">
                     <h5 className="alert-heading">Erro ao carregar documento PDF</h5>
                     <p>Não foi possível exibir o documento. Tente novamente.</p>
-                    <button className="btn btn-primary" onClick={() => {
-                      setHasError(false);
-                      setIsLoading(true);
-                      // Forçar recarregamento do iframe
-                      const iframe = document.querySelector(`#pdf-iframe-${modalId}`) as HTMLIFrameElement;
-                      if (iframe) {
-                        iframe.src = pdfUrl;
-                      }
-                    }}>
+                    <Button 
+                      variant="primary" 
+                      onClick={() => {
+                        setHasError(false);
+                        setIsLoading(true);
+                        // Forçar recarregamento do iframe
+                        const iframe = document.querySelector(`#pdf-iframe-${modalId}`) as HTMLIFrameElement;
+                        if (iframe) {
+                          iframe.src = pdfUrl;
+                        }
+                      }}
+                    >
                       Recarregar
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

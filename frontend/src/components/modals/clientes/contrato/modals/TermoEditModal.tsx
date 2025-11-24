@@ -6,6 +6,7 @@ import { useCreateTermoContrato, useUpdateTermoContrato } from '@/hooks/useTermo
 import { useModelosTermo } from '@/hooks/useModelosTermo';
 import EntitySelectField from '@/components/ui/EntitySelectField';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import { TermoFormData } from '../types';
 
 interface TermoEditModalProps {
@@ -133,23 +134,22 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
         </div>
 
         <div className="d-flex justify-content-end gap-2 mt-4">
-          <button 
+          <Button 
             type="button" 
-            className="btn btn-secondary" 
+            variant="secondary"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
           >
             Cancelar
-          </button>
-          <button 
+          </Button>
+          <Button 
             type="submit" 
-            className="btn btn-primary"
-            disabled={createTermoMutation.isPending || updateTermoMutation.isPending}
+            variant="primary"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={createTermoMutation.isPending || updateTermoMutation.isPending}
           >
-            {(createTermoMutation.isPending || updateTermoMutation.isPending) 
-              ? 'Salvando...' 
-              : (editingTermo ? 'Atualizar' : 'Salvar')
-            }
-          </button>
+            {editingTermo ? 'Atualizar' : 'Salvar'}
+          </Button>
         </div>
       </form>
     </DraggableModal>

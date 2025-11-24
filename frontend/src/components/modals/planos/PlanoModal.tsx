@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePlanoForm } from '@/hooks/usePlanoForm';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import { InformacoesBasicasTab, DescontosConfiguracoesTab, ServicosObservacoesTab } from './plano';
 
 interface PlanoModalProps {
@@ -65,22 +66,26 @@ const PlanoModal: React.FC<PlanoModalProps> = ({
       modalId={formHook.isEditing ? 'plano-edit-modal' : 'plano-create-modal'}
       headerActions={
         <div className="d-flex gap-2">
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary btn-sm"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
             disabled={formHook.isSubmitting}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form={formHook.isEditing ? 'plano-edit-form' : 'plano-create-form'}
-            className="btn btn-primary btn-sm"
-            disabled={formHook.isSubmitting}
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={formHook.isSubmitting}
           >
             Salvar
-          </button>
+          </Button>
         </div>
       }
     >

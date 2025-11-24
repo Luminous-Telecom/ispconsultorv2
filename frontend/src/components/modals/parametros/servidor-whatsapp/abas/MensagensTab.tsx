@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FormField } from '@/components/ui';
+import { FormField, Button } from '@/components/ui';
 import { MensagensTabProps } from '../types';
 
 const MensagensTab: React.FC<MensagensTabProps> = ({
@@ -119,14 +119,15 @@ const MensagensTab: React.FC<MensagensTabProps> = ({
                           Configuração de Template (JSON) - WhatsApp Cloud API
                         </label>
                         {onShowTemplates && (
-                          <button
+                          <Button
                             type="button"
-                            className="btn btn-outline-primary btn-sm"
+                            variant="outline-primary"
+                            size="sm"
+                            leftIcon={<i className="bi bi-list-ul"></i>}
                             onClick={onShowTemplates}
                           >
-                            <i className="bi bi-list-ul me-1"></i>
                             Ver Templates Ativos
-                          </button>
+                          </Button>
                         )}
                       </div>
                       <small className="text-muted d-block mt-1 mb-2">

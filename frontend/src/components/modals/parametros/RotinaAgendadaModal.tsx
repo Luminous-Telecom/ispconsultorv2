@@ -5,6 +5,7 @@ import { SchedulerService, CreateRotinaData, UpdateRotinaData } from '@/services
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 
 interface RotinaAgendadaModalProps {
@@ -224,20 +225,22 @@ const RotinaAgendadaModal: React.FC<RotinaAgendadaModalProps> = ({
 
           <div className="col-12 mt-3">
             <div className="d-flex gap-2 justify-content-end">
-              <button
+              <Button
                 type="button"
-                className="btn btn-secondary"
+                variant="secondary"
+                leftIcon={<i className="bi bi-x-lg"></i>}
                 onClick={handleClose}
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="btn btn-primary"
-                disabled={createMutation.isPending || updateMutation.isPending}
+                variant="primary"
+                leftIcon={<i className="bi bi-check-lg"></i>}
+                isLoading={createMutation.isPending || updateMutation.isPending}
               >
-                {createMutation.isPending || updateMutation.isPending ? 'Salvando...' : 'Salvar'}
-              </button>
+                Salvar
+              </Button>
             </div>
           </div>
         </div>

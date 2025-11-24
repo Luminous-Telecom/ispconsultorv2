@@ -11,6 +11,7 @@ import { FormValue } from '@/types/common';
 import { useEntitySelectField } from '@/hooks/useEntitySelectField';
 import { useTituloForm } from '@/hooks/useTituloForm';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 import EntitySelectField from '@/components/ui/EntitySelectField';
 import ClienteListModal from '@/components/modals/clientes/ClienteListModal';
@@ -253,22 +254,26 @@ const TituloModal: React.FC<TituloModalProps> = ({
               </ul>
             </div>
           )}
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary btn-sm"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={handleCancel}
             disabled={isPending}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="titulo-form"
-            className="btn btn-primary btn-sm"
-            disabled={isPending}
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={isPending}
           >
             {isEditMode ? 'Salvar' : 'Criar Título'}
-          </button>
+          </Button>
         </div>
       }
     >

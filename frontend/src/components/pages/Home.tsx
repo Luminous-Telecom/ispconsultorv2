@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DadosEmpresaService, type DadosEmpresa } from '@/services/dadosEmpresaService';
 import { getBrandLogo } from '@/utils/brandLogos';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Button } from '@/components/ui';
 import './Home.css';
 
 // Throttle function para otimizar scroll handler
@@ -192,12 +193,20 @@ const Home: React.FC = () => {
                 para impulsionar seu negócio.
               </p>
               <div className="hero-buttons">
-                <button className="btn btn-primary-gradient btn-lg me-3" onClick={() => scrollToSection('contato')}>
+                <Button 
+                  className="btn-primary-gradient me-3" 
+                  size="lg" 
+                  onClick={() => scrollToSection('contato')}
+                >
                   Solicitar Orçamento
-                </button>
-                <button className="btn btn-outline-gradient btn-lg" onClick={() => scrollToSection('sobre')}>
+                </Button>
+                <Button 
+                  className="btn-outline-gradient" 
+                  size="lg" 
+                  onClick={() => scrollToSection('sobre')}
+                >
                   Conheça Nossos Serviços
-                </button>
+                </Button>
               </div>
             </div>
             <div className="col-lg-6 text-center">
@@ -477,9 +486,13 @@ const Home: React.FC = () => {
                 )}
               </div>
               <div className="mt-5">
-                <button className="btn btn-primary-gradient btn-lg" onClick={() => scrollToSection('contato')}>
+                <Button 
+                  className="btn-primary-gradient" 
+                  size="lg" 
+                  onClick={() => scrollToSection('contato')}
+                >
                   Solicitar Orçamento
-                </button>
+                </Button>
               </div>
             </div>
           </div>

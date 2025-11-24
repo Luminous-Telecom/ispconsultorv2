@@ -16,7 +16,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   pauseOnFocus = true,
   closeOnClick = false,
   showProgress = true,
-  zIndex = 9999,
+  zIndex = 999999, // Maior que ResponsiveDialog (99999) para aparecer acima dos modais no mobile
 }) => {
   const {
     notifications,

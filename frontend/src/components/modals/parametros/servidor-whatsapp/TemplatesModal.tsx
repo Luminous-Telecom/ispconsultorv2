@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { defaultApiClient } from '@/services/core';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 
 interface Template {
   name: string;
@@ -87,33 +88,37 @@ const TemplatesModal: React.FC<TemplatesModalProps> = ({ show, onClose }) => {
       modalId="templates-modal"
       headerActions={
         <div className="d-flex gap-2">
-          <button
+          <Button
             type="button"
-            className="btn btn-info btn-sm"
+            variant="info"
+            size="sm"
+            leftIcon={<i className="bi bi-question-circle"></i>}
             data-bs-toggle="collapse"
             data-bs-target="#template-help"
             aria-expanded="false"
             aria-controls="template-help"
           >
-            <i className="bi bi-question-circle me-1"></i>
             Ajuda
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="btn btn-primary btn-sm"
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-arrow-clockwise"></i>}
             onClick={() => refetch()}
-            disabled={isLoading}
+            isLoading={isLoading}
           >
-            <i className="bi bi-arrow-clockwise me-1"></i>
-            {isLoading ? 'Carregando...' : 'Atualizar'}
-          </button>
-          <button
+            Atualizar
+          </Button>
+          <Button
             type="button"
-            className="btn btn-secondary btn-sm"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
           >
             Fechar
-          </button>
+          </Button>
         </div>
       }
     >
@@ -247,22 +252,28 @@ Atenção: Faltam apenas *{{4}}* para o vencimento!`}
                         </td>
                         <td>
                           <div className="d-flex gap-1">
-                            <button
+                            <Button
                               type="button"
-                              className="btn btn-sm btn-outline-primary"
+                              variant="outline-primary"
+                              size="sm"
+                              leftIcon={<i className="bi bi-clipboard"></i>}
+                              iconOnlyOnMobile
                               onClick={() => handleCopyName(template.name)}
                               title="Copiar nome do template"
                             >
-                              <i className="bi bi-clipboard"></i>
-                            </button>
-                            <button
+                              {''}
+                            </Button>
+                            <Button
                               type="button"
-                              className="btn btn-sm btn-outline-success"
+                              variant="outline-success"
+                              size="sm"
+                              leftIcon={<i className="bi bi-code-square"></i>}
+                              iconOnlyOnMobile
                               onClick={() => handleCopyMappingExample(template.name, template.language)}
                               title="Copiar exemplo de JSON para template_mapping"
                             >
-                              <i className="bi bi-code-square"></i>
-                            </button>
+                              {''}
+                            </Button>
                           </div>
                         </td>
                       </tr>

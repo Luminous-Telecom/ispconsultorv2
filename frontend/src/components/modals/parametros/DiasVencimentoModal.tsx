@@ -4,6 +4,7 @@ import { DiasVencimentoService, DiasVencimento } from '@/services/diasVencimento
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 
 interface DiasVencimentoModalProps {
   show: boolean;
@@ -58,9 +59,15 @@ const DiasVencimentoModal: React.FC<DiasVencimentoModalProps> = ({ show, onClose
       size="xl"
       modalId="dias-vencimento-modal"
       headerActions={
-        <button type="button" className="btn btn-primary btn-sm" onClick={handleSave}>
+        <Button 
+          type="button" 
+          variant="primary" 
+          size="sm" 
+          leftIcon={<i className="bi bi-check-lg"></i>}
+          onClick={handleSave}
+        >
           Salvar
-        </button>
+        </Button>
       }
     >
       <div style={{ padding: isMobile ? '0' : '16px' }}>

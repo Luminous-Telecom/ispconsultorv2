@@ -8,6 +8,7 @@ import { useBancoForm } from '@/hooks/useBancoForm';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Banco } from '@/types';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import { InformacoesBasicasTab, ConfiguracoesApiTab } from './banco';
 import { BancoForm } from './banco/types';
 import AsaasForm from './banco/especificos/AsaasForm';
@@ -229,22 +230,26 @@ const BancoModal: React.FC<BancoModalProps> = ({
       modalId="banco-modal"
       headerActions={
         <div className="d-flex gap-2">
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary btn-sm"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={handleCancel}
             disabled={formHook.isSubmitting}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="banco-form"
-            className="btn btn-primary btn-sm"
-            disabled={formHook.isSubmitting}
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={formHook.isSubmitting}
           >
             Salvar
-          </button>
+          </Button>
         </div>
       }
     >

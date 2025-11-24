@@ -1,5 +1,6 @@
 import React from 'react';
 import FormField from '@/components/ui/FormField';
+import { Button } from '@/components/ui';
 import { BancoTabProps } from '../types';
 
 const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
@@ -153,14 +154,15 @@ const ConfiguracoesApiTab: React.FC<BancoTabProps> = ({
       {renderBancoEspecificoCampos()}
 
       <div className="mt-3">
-        <button
+        <Button
           type="button"
-          className="btn btn-outline-primary btn-sm"
+          variant="outline-primary"
+          size="sm"
           onClick={handleTestConnection}
           disabled={isPending}
         >
           Testar Conexão
-        </button>
+        </Button>
         {testResult && (
           <span className={`ms-2 badge ${testResult.includes('✅') ? 'bg-success' : 'bg-danger'}`}>
             {testResult}

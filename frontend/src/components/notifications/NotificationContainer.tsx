@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { NotificationContainerProps, NotificationState, NotificationAction } from './types';
 import Notification from './Notification';
 
@@ -49,7 +50,7 @@ const NotificationContainer: React.FC<NotificationContainerComponentProps> = ({
   const getContainerStyles = (): React.CSSProperties => {
     const styles: React.CSSProperties = {
       position: 'fixed',
-      zIndex: 9999,
+      zIndex: 999999, // Maior que ResponsiveDialog (99999) para aparecer acima dos modais no mobile
       ...style,
     };
 
@@ -100,7 +101,7 @@ const NotificationContainer: React.FC<NotificationContainerComponentProps> = ({
     return styles;
   };
 
-  return (
+  const containerContent = (
     <div
       className={getContainerClasses()}
       style={getContainerStyles()}
@@ -121,6 +122,9 @@ const NotificationContainer: React.FC<NotificationContainerComponentProps> = ({
       ))}
     </div>
   );
+
+  // Renderizar usando portal para garantir que apareça acima de modais e outros elementos
+  return ReactDOM.createPortal(containerContent, document.body);
 };
 
 export default NotificationContainer;

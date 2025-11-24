@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { ServidorWhatsAppService, MensagemWhatsApp } from '@/services/servidorWhatsAppService';
 import { defaultApiClient } from '@/services/core';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import { ServidorWhatsAppForm, ServidorWhatsappModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
@@ -309,9 +310,11 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
       modalId="servidor-whatsapp-modal"
       headerActions={
         <div className="d-flex gap-2">
-          <button
+          <Button
             type="button"
-            className="btn btn-primary btn-sm"
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
             onClick={(e) => {
               if (activeTab === 'servidor') {
                 const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
@@ -321,26 +324,29 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
                 handleSaveMensagem();
               }
             }}
-            disabled={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+            isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
           >
-            {(saveServidorMutation.isPending || saveMensagemMutation.isPending) ? 'Salvando...' : 'Salvar'}
-          </button>
-          <button
+            Salvar
+          </Button>
+          <Button
             type="button"
-            className="btn btn-outline-danger btn-sm"
+            variant="outline-danger"
+            size="sm"
             onClick={handleReset}
             disabled={saveServidorMutation.isPending}
           >
             {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="btn btn-secondary btn-sm"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={handleClose}
             disabled={saveServidorMutation.isPending}
           >
             Fechar
-          </button>
+          </Button>
         </div>
       }
     >

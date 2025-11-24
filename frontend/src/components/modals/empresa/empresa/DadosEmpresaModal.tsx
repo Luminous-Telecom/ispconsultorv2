@@ -7,6 +7,7 @@ import { ApiError } from '@/services/core/ErrorHandler';
 import { useFormReset } from '@/hooks/useFormReset';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import { DadosEmpresaForm, DadosEmpresaModalProps } from './types';
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import EnderecoTab from './abas/EnderecoTab';
@@ -118,22 +119,26 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
       modalId="dados-empresa-modal"
       headerActions={
         <div className="d-flex gap-2">
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary btn-sm"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={handleCancel}
             disabled={updateDadosMutation.isPending}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="empresa-form"
-            className="btn btn-primary btn-sm"
-            disabled={updateDadosMutation.isPending}
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={updateDadosMutation.isPending}
           >
             Salvar
-          </button>
+          </Button>
         </div>
       }
     >

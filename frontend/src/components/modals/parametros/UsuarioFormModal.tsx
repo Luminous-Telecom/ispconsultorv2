@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useFormReset } from '@/hooks/useFormReset';
 import { useUsuario, useGerarWebhookSecret } from '@/hooks/useUsuarios';
 import DraggableModal from '@/components/common/DraggableModal';
+import { Button } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 
 interface UsuarioForm {
@@ -172,22 +173,26 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
       modalId="usuario-form-modal"
       headerActions={
         <div className="d-flex gap-2">
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary btn-sm"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={onClose}
             disabled={isPending}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="usuario-form"
-            className="btn btn-primary btn-sm"
-            disabled={isPending}
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={isPending}
           >
             Salvar
-          </button>
+          </Button>
         </div>
       }
     >
@@ -283,22 +288,25 @@ const UsuarioFormModal: React.FC<UsuarioFormModalProps> = ({
                     autoComplete="off"
                   />
                   <div className="d-flex flex-wrap gap-2 mt-2">
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn-outline-secondary btn-sm"
+                      variant="outline-secondary"
+                      size="sm"
                       onClick={handleGenerateWebhookSecret}
+                      isLoading={isGeneratingSecret}
                       disabled={isPending || isGeneratingSecret}
                     >
-                      {isGeneratingSecret ? 'Gerando...' : 'Gerar token'}
-                    </button>
-                    <button
+                      Gerar token
+                    </Button>
+                    <Button
                       type="button"
-                      className="btn btn-outline-primary btn-sm"
+                      variant="outline-primary"
+                      size="sm"
                       onClick={handleCopyWebhookSecret}
                       disabled={!webhookSecret}
                     >
                       Copiar
-                    </button>
+                    </Button>
                   </div>
                   <small className="text-secondary d-block mt-1">
                     {webhookSecret

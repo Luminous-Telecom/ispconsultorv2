@@ -15,6 +15,7 @@ import ImprimirModal from '@/components/common/ImprimirModal';
 import { TituloModal } from '@/components/modals/titulos/titulo';
 import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import ContratoModal from '../contrato/ContratoModal';
+import { Button } from '@/components/ui';
 // Componentes de abas
 import DadosBasicosTab from './abas/DadosBasicosTab';
 import ContatoTab from './abas/ContatoTab';
@@ -327,21 +328,25 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
       modalId={formHook.isEditing ? "cliente-edit-modal" : "cliente-create-modal"}
       headerActions={
         <div className="d-flex gap-2">
-          <button
+          <Button
             type="button"
-            className="btn btn-secondary btn-sm"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
             onClick={handleClose}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={formHook.isSubmitting}
             onClick={formHook.handleSubmit}
-            className="btn btn-primary btn-sm"
-            disabled={formHook.isSubmitting}
           >
             Salvar
-          </button>
+          </Button>
         </div>
       }
     >

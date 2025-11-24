@@ -9,6 +9,7 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import DraggableModal from '@/components/common/DraggableModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import { Button } from '@/components/ui';
 import FormField from '@/components/ui/FormField';
 import EntitySelectField from '@/components/ui/EntitySelectField';
 import { DocumentoForm, DocumentoModalProps, DocumentoUnion } from './types';
@@ -347,8 +348,10 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
   const headerActions = (
     <div className="d-flex gap-2 align-items-center">
       <div className="dropdown">
-        <button 
-          className="btn btn-primary btn-sm dropdown-toggle" 
+        <Button 
+          variant="primary"
+          size="sm"
+          className="dropdown-toggle" 
           type="button" 
           onClick={(e) => {
             e.preventDefault();
@@ -356,9 +359,10 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
             setShowImprimirDropdown(!showImprimirDropdown);
           }}
           disabled={!isEditing || isGeneratingPdf}
+          isLoading={isGeneratingPdf}
         >
-          {isGeneratingPdf ? 'Gerando...' : 'Imprimir'}
-        </button>
+          Imprimir
+        </Button>
         {showImprimirDropdown && (
           <ul className="dropdown-menu show" style={{ display: 'block', position: 'absolute', zIndex: 1050 }}>
             {tipo === 'contrato' ? (
@@ -374,12 +378,25 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
         )}
       </div>
       
-      <button type="button" className="btn btn-primary btn-sm" onClick={handleSubmit} disabled={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}>
+      <Button 
+        type="button" 
+        variant="primary" 
+        size="sm" 
+        leftIcon={<i className="bi bi-check-lg"></i>}
+        onClick={handleSubmit} 
+        isLoading={createDocumentoMutation.isPending || updateDocumentoMutation.isPending}
+      >
         Salvar
-      </button>
-      <button type="button" className="btn btn-secondary btn-sm" onClick={handleClose}>
+      </Button>
+      <Button 
+        type="button" 
+        variant="secondary" 
+        size="sm" 
+        leftIcon={<i className="bi bi-x-lg"></i>}
+        onClick={handleClose}
+      >
         Cancelar
-      </button>
+      </Button>
     </div>
   );
 

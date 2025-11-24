@@ -1,6 +1,7 @@
 import React from 'react';
 import { FormValue } from '@/types/common';
 import FormField from '@/components/ui/FormField';
+import { Button } from '@/components/ui';
 import { BancoForm } from '../types';
 
 interface AsaasFormProps {
@@ -61,22 +62,25 @@ const AsaasForm: React.FC<AsaasFormProps> = ({
             autoComplete="off"
           />
           <div className="d-flex flex-wrap gap-2 mt-2">
-            <button
+            <Button
               type="button"
-              className="btn btn-outline-secondary btn-sm"
+              variant="outline-secondary"
+              size="sm"
               onClick={onGenerateWebhookSecret}
+              isLoading={isGeneratingSecret}
               disabled={isPending || isGeneratingSecret || !isBancoPersisted}
             >
-              {isGeneratingSecret ? 'Gerando...' : 'Gerar token'}
-            </button>
-            <button
+              Gerar token
+            </Button>
+            <Button
               type="button"
-              className="btn btn-outline-primary btn-sm"
+              variant="outline-primary"
+              size="sm"
               onClick={onCopyWebhookSecret}
               disabled={!formData.webhook_secret}
             >
               Copiar
-            </button>
+            </Button>
           </div>
           <small className="text-secondary d-block mt-1">
             {formData.webhook_secret
