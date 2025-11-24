@@ -192,11 +192,12 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     return tipos[tipo] || tipo;
   };
 
-  const handleSelect = () => {
-    if (selectedItem) {
+  const handleSelect = (selectedItems?: Plano[]) => {
+    const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+    if (item) {
       clearSelection();
       if (onSelectPlano) {
-        onSelectPlano(selectedItem);
+        onSelectPlano(item);
         onClose();
       }
     }
@@ -224,8 +225,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     {
       label: 'Inserir',
       variant: 'primary' as const,
-      disabled: () => !selectedItem,
-      action: handleSelect
+      disabled: (selectedItems: Plano[]) => selectedItems.length === 0 && !selectedItem,
+      action: (selectedItems: Plano[]) => handleSelect(selectedItems)
     }
   ] : [
     {

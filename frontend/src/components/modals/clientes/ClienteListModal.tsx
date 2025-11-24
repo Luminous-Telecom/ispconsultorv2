@@ -145,11 +145,12 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
   const deleteClienteMutation = useDeleteCliente();
 
-  const handleSelect = () => {
-    if (selectedItem) {
+  const handleSelect = (selectedItems?: Cliente[]) => {
+    const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+    if (item) {
       clearSelection();
       if (onSelectClient) {
-        onSelectClient(selectedItem);
+        onSelectClient(item);
         onClose();
       }
     }
@@ -193,8 +194,8 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
     {
       label: 'Inserir',
       variant: 'primary' as const,
-      disabled: () => !selectedItem,
-      action: handleSelect
+      disabled: (selectedItems: Cliente[]) => selectedItems.length === 0 && !selectedItem,
+      action: (selectedItems: Cliente[]) => handleSelect(selectedItems)
     }
   ] : [
     {

@@ -149,11 +149,12 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     to: 0
   };
 
-  const handleSelect = () => {
-    if (selectedBanco) {
+  const handleSelect = (selectedItems?: Banco[]) => {
+    const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedBanco;
+    if (item) {
       clearSelection();
       if (onSelectBanco) {
-        onSelectBanco(selectedBanco);
+        onSelectBanco(item);
         onClose();
       }
     }
@@ -181,8 +182,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     {
       label: 'Inserir',
       variant: 'primary' as const,
-      disabled: () => !selectedBanco,
-      action: handleSelect
+      disabled: (selectedItems: Banco[]) => selectedItems.length === 0 && !selectedBanco,
+      action: (selectedItems: Banco[]) => handleSelect(selectedItems)
     }
   ] : [
     {

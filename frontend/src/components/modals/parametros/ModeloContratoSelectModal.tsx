@@ -90,11 +90,12 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
 
   // Dados prontos para busca (não precisa filtrar/paginar manualmente - o Table faz isso)
 
-  const handleSelect = () => {
-    if (selectedItem) {
+  const handleSelect = (selectedItems?: DocumentoSistema[]) => {
+    const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : selectedItem;
+    if (item) {
       clearSelection();
       if (onSelect) {
-        onSelect(selectedItem);
+        onSelect(item);
         onClose();
       }
     }
@@ -112,8 +113,8 @@ const ModeloContratoSelectModal: React.FC<ModeloContratoSelectModalProps> = ({
     {
       label: 'Inserir',
       variant: 'primary' as const,
-      disabled: () => !selectedItem,
-      action: handleSelect
+      disabled: (selectedItems: DocumentoSistema[]) => selectedItems.length === 0 && !selectedItem,
+      action: (selectedItems: DocumentoSistema[]) => handleSelect(selectedItems)
     }
   ] : [];
 
