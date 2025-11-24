@@ -80,8 +80,8 @@ export class TermoContratoController {
 
   // Criar novo termo para um contrato
   static async create(req: Request, res: Response): Promise<void> {
+    const { contratoId } = req.params;
     try {
-      const { contratoId } = req.params;
       const { modelo_documento_id, tipo_termo, assinado } = req.body;
 
       // Validações
@@ -126,11 +126,30 @@ export class TermoContratoController {
       // O modelo_documento agora é sempre do tipo 'termo'
       const tipoTermo = req.body.tipo_termo || 'adesao';
 
+      // Determinar qual conteúdo usar baseado no tipo de termo
+      let conteudoTermo = '';
+      if (tipoTermo === 'adesao') {
+        conteudoTermo = modeloDocumento.conteudo_adesao || modeloDocumento.conteudo || '';
+      } else if (tipoTermo === 'permanencia') {
+        conteudoTermo = modeloDocumento.conteudo_permanencia || modeloDocumento.conteudo || '';
+      } else {
+        conteudoTermo = modeloDocumento.conteudo || '';
+      }
+
+      // Validar que temos conteúdo
+      if (!conteudoTermo || conteudoTermo.trim() === '') {
+        res.status(400).json({
+          success: false,
+          message: `O modelo de termo não possui conteúdo para o tipo '${tipoTermo}'. Verifique se o modelo possui conteúdo cadastrado.`
+        });
+        return;
+      }
+
       const termo = await TermoContrato.create({
         contrato_id: parseInt(contratoId),
         modelo_documento_id: modelo_documento_id,
         tipo_termo: tipoTermo as 'adesao' | 'permanencia' | 'cancelamento' | 'alteracao',
-        conteudo: modeloDocumento.conteudo,
+        conteudo: conteudoTermo,
         assinado: assinado || 'NAO',
         ativo: true
       });
@@ -143,6 +162,23 @@ export class TermoContratoController {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      // Tratar erro de constraint de unicidade
+      if (error instanceof Error && (error as any).name === 'SequelizeUniqueConstraintError') {
+        logger.warn('Tentativa de criar termo duplicado', {
+          context: 'TermoContratoController',
+          action: 'create',
+          contratoId,
+          tipoTermo: req.body.tipo_termo || 'adesao',
+          error: errorMessage
+        });
+        res.status(409).json({
+          success: false,
+          message: `Já existe um termo do tipo '${req.body.tipo_termo || 'adesao'}' para este contrato. Remova a constraint UNIQUE do banco de dados para permitir múltiplos termos do mesmo tipo.`
+        });
+        return;
+      }
+      
       logger.error('Erro ao criar termo', {
         context: 'TermoContratoController',
         action: 'create',

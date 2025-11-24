@@ -464,13 +464,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       dropdown: [
         {
           label: 'Via WhatsApp',
-          action: async () => {
-            if (selectedItems.length > 0) {
+          action: async (selectedItems?: Titulo[]) => {
+            const items = selectedItems || [];
+            if (items.length > 0) {
               try {
                 let successCount = 0;
                 let errorCount = 0;
                 
-                for (const item of selectedItems) {
+                for (const item of items) {
                   if (item.status === 'cancelado') continue;
                   try {
                     const response = await TituloService.enviarWhatsApp(item.id);
@@ -505,13 +506,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         },
         {
           label: 'Via Email',
-          action: async () => {
-            if (selectedItems.length > 0) {
+          action: async (selectedItems?: Titulo[]) => {
+            const items = selectedItems || [];
+            if (items.length > 0) {
               try {
                 let successCount = 0;
                 let errorCount = 0;
                 
-                for (const item of selectedItems) {
+                for (const item of items) {
                   if (item.status === 'cancelado') continue;
                   try {
                     const response = await TituloService.enviarEmail(item.id);
@@ -564,8 +566,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       label: 'Editar',
       action: (selectedItems: TermoContrato[]) => {
-        if (selectedItems.length > 0) {
-          const termo = selectedItems[0];
+        const termo = selectedItems && selectedItems.length > 0 ? selectedItems[0] : (selectedTermosItems.length > 0 ? selectedTermosItems[0] : null);
+        if (termo) {
           setEditingTermo(termo);
           setTermoFormData({
             assinado: termo.assinado,
@@ -573,20 +575,22 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           });
           setShowTermoModal(true);
         }
-      }
+      },
+      disabled: (selectedItems: TermoContrato[]) => selectedItems.length === 0 && selectedTermosItems.length === 0
     },
     {
       label: 'Deletar',
       variant: 'danger',
       action: async (selectedItems: TermoContrato[]) => {
-        if (selectedItems.length > 0) {
-          const confirmMessage = selectedItems.length === 1 
+        const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
+        if (items.length > 0) {
+          const confirmMessage = items.length === 1 
             ? 'Tem certeza que deseja deletar este termo?'
-            : `Tem certeza que deseja deletar ${selectedItems.length} termos?`;
+            : `Tem certeza que deseja deletar ${items.length} termos?`;
             
           if (window.confirm(confirmMessage)) {
             try {
-              for (const item of selectedItems) {
+              for (const item of items) {
                 await deleteTermoMutation.mutateAsync(item.id);
               }
               success('Termo(s) deletado(s) com sucesso!');
@@ -596,7 +600,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             }
           }
         }
-      }
+      },
+      disabled: (selectedItems: TermoContrato[]) => selectedItems.length === 0 && selectedTermosItems.length === 0
     },
     {
       label: 'Imprimir',

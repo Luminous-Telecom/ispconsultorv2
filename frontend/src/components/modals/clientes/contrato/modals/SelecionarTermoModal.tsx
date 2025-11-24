@@ -112,9 +112,10 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     per_page: tableFilters.limit
   };
 
-  const handleInsert = () => {
-    if (termoSelecionado) {
-      onSelect(termoSelecionado);
+  const handleInsert = (selectedItems?: Termo[]) => {
+    const item = selectedItems && selectedItems.length > 0 ? selectedItems[0] : termoSelecionado;
+    if (item) {
+      onSelect(item);
       clearSelection();
       onClose();
     }
@@ -132,8 +133,8 @@ const SelecionarTermoModal: React.FC<SelecionarTermoModalProps> = ({
     {
       label: 'Inserir',
       variant: 'primary' as const,
-      disabled: () => !termoSelecionado,
-      action: handleInsert
+      disabled: (selectedItems: Termo[]) => selectedItems.length === 0 && !termoSelecionado,
+      action: (selectedItems: Termo[]) => handleInsert(selectedItems)
     }
   ];
 

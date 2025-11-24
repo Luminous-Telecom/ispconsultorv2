@@ -59,7 +59,7 @@ export interface BulkAction<T = Record<string, unknown>> {
   };
   dropdown?: {
     label: string;
-    action: () => void;
+    action: (selectedItems?: T[]) => void;
   }[];
 }
 

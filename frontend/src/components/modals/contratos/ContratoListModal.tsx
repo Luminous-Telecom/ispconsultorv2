@@ -29,7 +29,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
-  const [selectedItems, setSelectedItems] = useState<Contrato[]>([]);
+  const [, setSelectedItems] = useState<Contrato[]>([]);
   const [showImprimirModal, setShowImprimirModal] = useState(false);
   // Estado local para PDFs de outros documentos (Termo de Adesão, Contrato Permanência)
   const [pdfUrlLocal, setPdfUrlLocal] = useState<string | null>(null);
@@ -279,9 +279,10 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       dropdown: [
         {
           label: 'Contrato',
-          action: async () => {
-            if (selectedItems.length > 0) {
-              const contrato = selectedItems[0];
+          action: async (selectedItems?: Contrato[]) => {
+            const items = selectedItems || [];
+            if (items.length > 0) {
+              const contrato = items[0];
               if (!contrato.cliente_id) {
                 error('Contrato sem cliente associado');
                 return;
@@ -296,9 +297,10 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         },
         {
           label: 'Termo de Adesão',
-          action: async () => {
-            if (selectedItems.length > 0) {
-              const contrato = selectedItems[0];
+          action: async (selectedItems?: Contrato[]) => {
+            const items = selectedItems || [];
+            if (items.length > 0) {
+              const contrato = items[0];
               
               if (!contrato.cliente_id) {
                 error('Contrato sem cliente associado');
@@ -378,9 +380,10 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         },
         {
           label: 'Contrato Permanência',
-          action: async () => {
-            if (selectedItems.length > 0) {
-              const contrato = selectedItems[0];
+          action: async (selectedItems?: Contrato[]) => {
+            const items = selectedItems || [];
+            if (items.length > 0) {
+              const contrato = items[0];
               
               if (!contrato.cliente_id) {
                 error('Contrato sem cliente associado');

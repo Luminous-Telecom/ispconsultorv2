@@ -1113,7 +1113,7 @@ function Table<T extends { id: number | string }>({
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                item.action();
+                                item.action(state.selectedItems);
                                 setOpenDropdown(null);
                               }}
                             >
