@@ -1,0 +1,7 @@
+{
+  "terminal.integrated.enablePersistentSessions": false,
+  "terminal.integrated.autoReveal": false,
+  "workbench.editor.enablePreview": false,
+  "terminal.integrated.enableMultiLinePasteWarning": false,
+  "terminal.integrated.wordSeparators": " ()[]{}'\"`─"
+}

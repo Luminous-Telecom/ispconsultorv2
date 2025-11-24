@@ -657,12 +657,13 @@ body {
   flex-shrink: 0;
 }
 
+
+
 .dashboard-date-input {
   width: 100%;
   min-width: 0;
   max-width: 100%;
   font-size: 16px; /* Previne zoom no iOS */
-  min-height: 44px; /* Touch target mínimo */
   padding: 0.5rem 0.75rem;
   box-sizing: border-box;
 }
