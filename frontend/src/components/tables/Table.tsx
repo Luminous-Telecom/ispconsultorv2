@@ -172,9 +172,6 @@ function Table<T extends { id: number | string }>({
       const dropdownElement = fabDropdownRef.current;
       if (!dropdownElement) return;
       
-      // Obter dimensões do dropdown para cálculo preciso
-      const dropdownHeight = dropdownElement.getBoundingClientRect().height || 200; // fallback se ainda não renderizado
-      
       // Procurar pelo rodapé (pagination)
       const paginationElement = document.querySelector('.table-mobile-pagination');
       const paginationRect = paginationElement ? paginationElement.getBoundingClientRect() : null;
@@ -263,9 +260,9 @@ function Table<T extends { id: number | string }>({
       const marginFromElement = 12;
       
       // Calcular posição do bottom para o dropdown
-      // referenceTop é a posição Y do topo do elemento de referência
+      // lowestTop é a posição Y do topo do elemento de referência (mais alto na tela)
       // Queremos posicionar o dropdown acima dele com uma margem
-      const bottomPosition = window.innerHeight - referenceTop + marginFromElement;
+      const bottomPosition = window.innerHeight - lowestTop + marginFromElement;
       
       // Garantir que o dropdown não fique muito alto (mínimo de 6rem = 96px do bottom)
       // Isso garante que o dropdown não fique muito acima, melhorando a usabilidade
