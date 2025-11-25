@@ -4,6 +4,7 @@ import { TituloItem } from '@/types/cliente';
 import Table from '@/components/tables/Table';
 import { FinanceiroTabProps } from '../types';
 import { TableColumn } from '@/components/tables/types';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   sortedData,
@@ -15,10 +16,11 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   onRefresh,
   columns
 }) => {
+  const isMobile = useIsMobile();
 
   return (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingBottom: isMobile ? '0' : undefined }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
           config={{
@@ -98,7 +100,7 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
 
         {/* Resumo Financeiro */}
         {sortedData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded" style={{ margin: '1rem', flexShrink: 0 }}>
+          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle text-muted me-2"></i>
               <span className="small text-muted">Legenda de cores</span>

@@ -13,6 +13,7 @@ import { TableConfig } from '@/components/tables/types';
 import { TituloModal } from '@/components/modals/titulos';
 import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface FinanceiroModalProps {
   show: boolean;
@@ -25,6 +26,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   onClose,
   onSelectTitulo
 }) => {
+  const isMobile = useIsMobile();
+  
   // Hook unificado para filtros, busca, ordenação e paginação
   const tableFilters = useTableFilters({
     initialSearch: '',
@@ -478,9 +481,10 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
         modalId="financeiro-modal"
         className="no-padding"
       >
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            <Table
+        <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+              <Table
               config={{
                 columns,
                 data: sortedData,
@@ -573,11 +577,11 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               onPageSizeChange={tableFilters.setLimit}
               onRefresh={refetch}
             />
-          </div>
+            </div>
 
-          {/* Resumo Financeiro */}
-          {filteredData.length > 0 && (
-            <div className="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+            {/* Resumo Financeiro */}
+            {filteredData.length > 0 && (
+              <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
               <div className="d-flex align-items-center">
                 <i className="bi bi-info-circle text-muted me-2"></i>
                 <span className="small text-muted">Legenda de cores</span>
@@ -625,6 +629,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               </div>
             </div>
           )}
+          </div>
         </div>
       </DraggableModal>
 

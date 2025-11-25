@@ -3,6 +3,7 @@ import { Contrato } from '@/hooks/useContratos';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 import Table from '@/components/tables/Table';
 import { ContratosTabProps } from '../types';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 const ContratosTab: React.FC<ContratosTabProps> = ({
   isLoadingContratos,
@@ -13,6 +14,8 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   setShowInativosContratos,
   onRefresh
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -205,7 +208,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
 
         {/* Resumo de Contratos */}
         {sortedContratosData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded" style={{ margin: '1rem', flexShrink: 0 }}>
+          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
             <div className="d-flex align-items-center">
               <i className="bi bi-info-circle text-muted me-2"></i>
               <span className="small text-muted">Resumo de contratos</span>

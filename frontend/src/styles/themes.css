@@ -695,6 +695,16 @@ body {
   animation: fadeIn 0.4s ease;
 }
 
+/* Mobile: remover padding-top do dashboard */
+@media (max-width: 767.98px) {
+  .dashboard-container {
+    padding-top: 0 !important;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
 .dashboard-container .container-fluid {
   padding-left: 0;
   padding-right: 0;
@@ -883,23 +893,17 @@ body {
 }
 
 .table-mobile-fab-dropdown {
-  position: absolute;
-  bottom: 64px;
-  right: 0;
+  /* Posição será definida dinamicamente via JavaScript */
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  min-width: 120px;
-  z-index: 2001; /* Acima do FAB container (2000) mas abaixo do dropdown de ações (99999) */
-}
-
-.table-mobile-fab-dropdown {
+  min-width: 200px;
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 0.375rem 0;
-  min-width: 200px;
+  z-index: 1001; /* Acima do rodapé (1000) */
 }
 
 .table-mobile-fab-dropdown .dropdown-item {
@@ -2323,6 +2327,17 @@ body {
   .main-content .container-fluid {
     padding-left: 0 !important;
     padding-right: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  /* Remover padding-top de todos os containers de páginas no mobile */
+  /* Conteúdo deve iniciar a partir do topo, logo após o header */
+  .main-content > *,
+  .main-content .dashboard-container,
+  .main-content [class*="container"],
+  .main-content [class*="Container"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -2461,7 +2476,7 @@ body {
   /* Apenas dentro de .tab-content para não afetar listagens gerais */
   .responsive-dialog-mobile-content .tab-content .table-mobile-container {
     padding: 0 !important;
-    padding-bottom: 4.5rem !important; /* Manter espaço para paginação */
+    padding-bottom: 0.5rem !important; /* Espaço para paginação */
   }
 
   /* Garantir que dropdowns apareçam corretamente no mobile */
@@ -2484,11 +2499,12 @@ body {
   }
 
   /* Remover margin dos resumos dentro das abas no mobile */
-  .responsive-dialog-mobile-content .tab-content .row > [class*="col-"] > div[style*="margin"] {
+  /* EXCEÇÃO: financeiro-resumo precisa manter margin-bottom para respeitar paginação */
+  .responsive-dialog-mobile-content .tab-content .row > [class*="col-"] > div[style*="margin"]:not(.financeiro-resumo) {
     margin-left: 0 !important;
     margin-right: 0 !important;
     margin-top: 0 !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0 !important;
   }
 
   /* Remover padding dos containers de resumo */
@@ -3864,6 +3880,13 @@ select:focus,
   overflow: visible; /* Garantir que dropdown não seja cortado pelo container */
 }
 
+/* Mobile: remover padding-top do table-mobile-container para iniciar do topo */
+@media (max-width: 767.98px) {
+  .main-content .table-mobile-container {
+    padding-top: 0 !important;
+  }
+}
+
 .table-mobile-loading,
 .table-mobile-empty {
   text-align: center;
@@ -4102,12 +4125,33 @@ select:focus,
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   padding: 0;
-  z-index: 1000 !important;
+  z-index: 1 !important; /* Baixo o suficiente para não sobrepor nada, mas sempre visível */
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+/* Garantir que elementos de resumo tenham espaço suficiente acima da paginação no mobile */
+@media (max-width: 767.98px) {
+  /* Elementos de resumo (Resumo de contratos, Resumo Financeiro, etc) */
+  .financeiro-resumo {
+    margin-bottom: 3rem !important; /* Espaço suficiente para a paginação fixa */
+  }
+  
+  /* Fallback para elementos com bg-light rounded */
+  div.bg-light.rounded.financeiro-resumo {
+    margin-bottom: 3rem !important;
+  }
+
+  /* Garantir que resumos dentro de tab-content e responsive-dialog também respeitem */
+  .responsive-dialog-mobile-content .financeiro-resumo,
+  .responsive-dialog-mobile-content .tab-content .financeiro-resumo,
+  .tab-content .financeiro-resumo,
+  [class*="col-"] .financeiro-resumo {
+    margin-bottom: 3rem !important;
+  }
 }
 
 .table-mobile-pagination .d-flex {
