@@ -94,6 +94,7 @@ function Table<T extends { id: number | string }>({
   // Refs para calcular posição do dropdown
   const dropdownRefs = useRef<Map<number | string, HTMLDivElement>>(new Map());
   const buttonRefs = useRef<Map<number | string, HTMLButtonElement>>(new Map());
+  const fabDropdownRef = useRef<HTMLDivElement | null>(null);
   
   // Calcular posição do dropdown para evitar sobreposição com paginação
   useEffect(() => {
@@ -162,6 +163,108 @@ function Table<T extends { id: number | string }>({
       window.removeEventListener('resize', updatePosition);
     };
   }, [isMobile, openActionDropdown]);
+
+  // Calcular posição do dropdown do FAB para evitar sobreposição com legendas/resumos e paginação
+  useEffect(() => {
+    if (!isMobile || !isFabOpen || !fabDropdownRef.current) return;
+    
+    const updateFabPosition = () => {
+      const dropdownElement = fabDropdownRef.current;
+      if (!dropdownElement) return;
+      
+      // Procurar pelo rodapé (pagination)
+      const paginationElement = document.querySelector('.table-mobile-pagination');
+      const paginationRect = paginationElement ? paginationElement.getBoundingClientRect() : null;
+      
+      // Procurar por todos os elementos de resumo/legenda usando a classe financeiro-resumo
+      const resumoElements = Array.from(document.querySelectorAll('.financeiro-resumo'));
+      let highestResumoRect: DOMRect | null = null;
+      let highestResumoBottom = 0;
+      
+      // Encontrar o resumo mais baixo (maior valor de bottom) que esteja visível
+      // Queremos o resumo que esteja mais próximo da parte inferior da tela
+      for (const el of resumoElements) {
+        const rect = el.getBoundingClientRect();
+        // Verificar se está visível e dentro da viewport
+        if (rect.height > 0 && rect.top >= 0 && rect.top < window.innerHeight) {
+          // Considerar o resumo que tenha o bottom mais próximo da parte inferior da tela
+          if (rect.bottom > highestResumoBottom) {
+            highestResumoBottom = rect.bottom;
+            highestResumoRect = rect;
+          }
+        }
+      }
+      
+      // Determinar qual elemento usar como referência (resumo ou paginação)
+      // Usar o elemento que estiver mais alto na tela (menor valor de top)
+      let referenceRect: DOMRect | null = null;
+      
+      if (highestResumoRect && paginationRect) {
+        // Comparar a posição do topo de ambos e usar o que estiver mais alto
+        // Queremos posicionar o dropdown acima do elemento que estiver mais alto
+        const resumoTop = highestResumoRect.top;
+        const paginationTop = paginationRect.top;
+        if (resumoTop < paginationTop) {
+          // Resumo está mais alto, usar resumo
+          referenceRect = highestResumoRect;
+        } else {
+          // Paginação está mais alta, usar paginação
+          referenceRect = paginationRect;
+        }
+      } else if (highestResumoRect) {
+        // Apenas resumo visível
+        referenceRect = highestResumoRect;
+      } else if (paginationRect) {
+        // Apenas paginação visível
+        referenceRect = paginationRect;
+      }
+      
+      if (!referenceRect) {
+        // Se não encontrar paginação nem resumo, posicionar acima do botão FAB
+        dropdownElement.style.setProperty('position', 'fixed', 'important');
+        dropdownElement.style.setProperty('bottom', '7.5rem', 'important');
+        dropdownElement.style.setProperty('right', '1rem', 'important');
+        dropdownElement.style.setProperty('z-index', '1001', 'important');
+        dropdownElement.style.setProperty('left', 'auto', 'important');
+        return;
+      }
+      
+      // Margem entre dropdown e elemento (aumentada para dar mais espaço)
+      const marginFromElement = 16;
+      
+      // Calcular posição do bottom para o dropdown
+      // Se estiver usando resumo, posicionar acima do topo do resumo
+      // Se estiver usando paginação, posicionar acima do topo da paginação
+      const referenceTop = referenceRect.top;
+      const bottomPosition = window.innerHeight - referenceTop + marginFromElement;
+      
+      // Garantir que o dropdown não fique muito alto (mínimo de 5rem = 80px do bottom)
+      const minBottomPositionPx = 80;
+      const finalBottomPosition = Math.max(bottomPosition, minBottomPositionPx);
+      
+      dropdownElement.style.setProperty('position', 'fixed', 'important');
+      dropdownElement.style.setProperty('bottom', `${finalBottomPosition}px`, 'important');
+      dropdownElement.style.setProperty('right', '1rem', 'important');
+      dropdownElement.style.setProperty('z-index', '1001', 'important'); // Acima do rodapé (1000)
+      dropdownElement.style.setProperty('left', 'auto', 'important');
+      dropdownElement.style.setProperty('top', 'auto', 'important');
+    };
+    
+    // Pequeno delay para garantir que o DOM está atualizado
+    const timeoutId = setTimeout(() => {
+      updateFabPosition();
+      requestAnimationFrame(updateFabPosition);
+    }, 0);
+    
+    window.addEventListener('scroll', updateFabPosition, true);
+    window.addEventListener('resize', updateFabPosition);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('scroll', updateFabPosition, true);
+      window.removeEventListener('resize', updateFabPosition);
+    };
+  }, [isMobile, isFabOpen]);
   
   const {
     columns,
@@ -1421,7 +1524,10 @@ function Table<T extends { id: number | string }>({
                   className="table-mobile-fab-overlay"
                   onClick={() => setIsFabOpen(false)}
                 />
-                <div className="table-mobile-fab-dropdown">
+                <div 
+                  ref={fabDropdownRef}
+                  className="table-mobile-fab-dropdown"
+                >
                   {fabActions.map((bulkAction, index) => {
                     const isNewButton = bulkAction.label.toLowerCase().includes('nova') || bulkAction.label.toLowerCase().includes('novo');
                     const isExcluirButton = bulkAction.label.toLowerCase().includes('excluir');
