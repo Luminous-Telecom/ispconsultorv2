@@ -172,89 +172,122 @@ function Table<T extends { id: number | string }>({
       const dropdownElement = fabDropdownRef.current;
       if (!dropdownElement) return;
       
+      // Obter dimensões do dropdown para cálculo preciso
+      const dropdownHeight = dropdownElement.getBoundingClientRect().height || 200; // fallback se ainda não renderizado
+      
       // Procurar pelo rodapé (pagination)
       const paginationElement = document.querySelector('.table-mobile-pagination');
       const paginationRect = paginationElement ? paginationElement.getBoundingClientRect() : null;
       
       // Procurar por todos os elementos de resumo/legenda usando a classe financeiro-resumo
-      const resumoElements = Array.from(document.querySelectorAll('.financeiro-resumo'));
-      let highestResumoRect: DOMRect | null = null;
-      let highestResumoBottom = 0;
+      // Buscar no contexto da tabela atual e também globalmente para garantir que encontramos todos
+      const tableContainer = dropdownElement.closest('.table-container, [class*="table"]');
+      const resumoSelectors = [
+        '.financeiro-resumo',
+        'div.financeiro-resumo',
+        '.bg-light.rounded.financeiro-resumo'
+      ];
       
-      // Encontrar o resumo mais baixo (maior valor de bottom) que esteja visível
-      // Queremos o resumo que esteja mais próximo da parte inferior da tela
-      for (const el of resumoElements) {
-        const rect = el.getBoundingClientRect();
-        // Verificar se está visível e dentro da viewport
-        if (rect.height > 0 && rect.top >= 0 && rect.top < window.innerHeight) {
-          // Considerar o resumo que tenha o bottom mais próximo da parte inferior da tela
-          if (rect.bottom > highestResumoBottom) {
-            highestResumoBottom = rect.bottom;
-            highestResumoRect = rect;
+      let visibleResumos: Array<{ rect: DOMRect; element: Element }> = [];
+      
+      // Buscar resumos em diferentes contextos para garantir que encontramos todos
+      for (const selector of resumoSelectors) {
+        const resumoElements = Array.from(
+          tableContainer 
+            ? tableContainer.querySelectorAll(selector)
+            : document.querySelectorAll(selector)
+        );
+        
+        for (const el of resumoElements) {
+          const rect = el.getBoundingClientRect();
+          // Verificar se está visível e dentro da viewport
+          // Considerar também elementos que estão parcialmente visíveis
+          const isVisible = rect.height > 0 && 
+                           rect.width > 0 && 
+                           rect.top < window.innerHeight && 
+                           rect.bottom > 0;
+          
+          if (isVisible) {
+            // Evitar duplicatas verificando se já existe um resumo com as mesmas coordenadas
+            const alreadyAdded = visibleResumos.some(
+              existing => existing.rect.top === rect.top && existing.rect.left === rect.left
+            );
+            
+            if (!alreadyAdded) {
+              visibleResumos.push({ rect, element: el });
+            }
           }
         }
       }
       
-      // Determinar qual elemento usar como referência (resumo ou paginação)
-      // Usar o elemento que estiver mais alto na tela (menor valor de top)
+      // Encontrar o elemento mais alto na tela (menor valor de top) entre resumos e paginação
+      // O dropdown deve aparecer acima deste elemento
+      // Se há um resumo visível, ele provavelmente está acima da paginação
+      // Queremos posicionar o dropdown acima do elemento que está mais alto (menor top)
       let referenceRect: DOMRect | null = null;
+      let lowestTop = window.innerHeight; // Inicializar com o bottom da tela, queremos o menor top
       
-      if (highestResumoRect && paginationRect) {
-        // Comparar a posição do topo de ambos e usar o que estiver mais alto
-        // Queremos posicionar o dropdown acima do elemento que estiver mais alto
-        const resumoTop = highestResumoRect.top;
-        const paginationTop = paginationRect.top;
-        if (resumoTop < paginationTop) {
-          // Resumo está mais alto, usar resumo
-          referenceRect = highestResumoRect;
-        } else {
-          // Paginação está mais alta, usar paginação
-          referenceRect = paginationRect;
+      // Verificar resumos visíveis - encontrar o que está mais alto na tela (menor top)
+      for (const { rect } of visibleResumos) {
+        // O elemento com o menor top está mais alto na tela
+        // Queremos posicionar o dropdown acima dele
+        if (rect.top >= 0 && rect.top < lowestTop) {
+          lowestTop = rect.top;
+          referenceRect = rect;
         }
-      } else if (highestResumoRect) {
-        // Apenas resumo visível
-        referenceRect = highestResumoRect;
-      } else if (paginationRect) {
-        // Apenas paginação visível
-        referenceRect = paginationRect;
       }
       
+      // Verificar paginação - comparar com o resumo mais alto
+      if (paginationRect) {
+        // Se a paginação está mais alta (top menor), usar ela
+        // Geralmente a paginação está fixa no bottom, então seu top é maior que o dos resumos
+        // Mas queremos garantir que o dropdown fique acima de qualquer elemento visível
+        if (paginationRect.top >= 0 && paginationRect.top < lowestTop) {
+          lowestTop = paginationRect.top;
+          referenceRect = paginationRect;
+        }
+      }
+      
+      // Se não encontrou nenhum elemento de referência, usar posição padrão
       if (!referenceRect) {
-        // Se não encontrar paginação nem resumo, posicionar acima do botão FAB
         dropdownElement.style.setProperty('position', 'fixed', 'important');
         dropdownElement.style.setProperty('bottom', '7.5rem', 'important');
         dropdownElement.style.setProperty('right', '1rem', 'important');
         dropdownElement.style.setProperty('z-index', '1001', 'important');
         dropdownElement.style.setProperty('left', 'auto', 'important');
+        dropdownElement.style.setProperty('top', 'auto', 'important');
         return;
       }
       
-      // Margem entre dropdown e elemento (aumentada para dar mais espaço)
-      const marginFromElement = 16;
+      // Margem entre dropdown e elemento de referência (em pixels)
+      const marginFromElement = 12;
       
       // Calcular posição do bottom para o dropdown
-      // Se estiver usando resumo, posicionar acima do topo do resumo
-      // Se estiver usando paginação, posicionar acima do topo da paginação
-      const referenceTop = referenceRect.top;
+      // referenceTop é a posição Y do topo do elemento de referência
+      // Queremos posicionar o dropdown acima dele com uma margem
       const bottomPosition = window.innerHeight - referenceTop + marginFromElement;
       
-      // Garantir que o dropdown não fique muito alto (mínimo de 5rem = 80px do bottom)
-      const minBottomPositionPx = 80;
+      // Garantir que o dropdown não fique muito alto (mínimo de 6rem = 96px do bottom)
+      // Isso garante que o dropdown não fique muito acima, melhorando a usabilidade
+      const minBottomPositionPx = 96;
       const finalBottomPosition = Math.max(bottomPosition, minBottomPositionPx);
       
+      // Aplicar estilos de posicionamento
       dropdownElement.style.setProperty('position', 'fixed', 'important');
       dropdownElement.style.setProperty('bottom', `${finalBottomPosition}px`, 'important');
       dropdownElement.style.setProperty('right', '1rem', 'important');
       dropdownElement.style.setProperty('z-index', '1001', 'important'); // Acima do rodapé (1000)
       dropdownElement.style.setProperty('left', 'auto', 'important');
       dropdownElement.style.setProperty('top', 'auto', 'important');
+      dropdownElement.style.setProperty('max-height', 'none', 'important');
     };
     
-    // Pequeno delay para garantir que o DOM está atualizado
+    // Executar imediatamente e depois com delay para garantir que o DOM está atualizado
+    updateFabPosition();
     const timeoutId = setTimeout(() => {
       updateFabPosition();
       requestAnimationFrame(updateFabPosition);
-    }, 0);
+    }, 50);
     
     window.addEventListener('scroll', updateFabPosition, true);
     window.addEventListener('resize', updateFabPosition);
