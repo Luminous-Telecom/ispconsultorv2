@@ -3665,6 +3665,10 @@ select:focus,
     padding-right: 0;
   }
 
+  .dashboard-hero {
+    margin-top: 0.5rem;
+  }
+
   .dashboard-hero-body {
     padding: 0.75rem;
   }
