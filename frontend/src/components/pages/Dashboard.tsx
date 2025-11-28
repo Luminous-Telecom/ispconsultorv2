@@ -78,7 +78,7 @@ const Dashboard: React.FC = () => {
                   Atualizado em {lastUpdatedDate} às {lastUpdatedTime}
                 </p>
               </div>
-              <div className="d-flex flex-column flex-sm-row flex-wrap gap-3 w-100 w-lg-auto">
+            <div className="dashboard-hero-stats w-100">
                 <div className="dashboard-hero-stat">
                   <span className="dashboard-hero-label">Faturamento total</span>
                   <strong className="dashboard-hero-value">{formatCurrency(stats.receitaPagaPeriodo)}</strong>
