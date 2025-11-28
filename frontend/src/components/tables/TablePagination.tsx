@@ -214,17 +214,36 @@ const TablePagination: React.FC<TablePaginationProps> = ({
     );
   }
 
+  const hasMetaContent = showPageInfo || showPageSizeSelector;
+
   return (
-    <div className={`table-pagination d-flex justify-content-between align-items-center ${className}`}>
-      <div className="d-flex align-items-center gap-3">
-        {renderPageInfo()}
-        {renderPageSizeSelector()}
+    <>
+      <div className={`table-pagination d-none d-md-flex justify-content-between align-items-center ${className}`}>
+        <div className="d-flex align-items-center gap-3">
+          {renderPageInfo()}
+          {renderPageSizeSelector()}
+        </div>
+        
+        <div className="d-flex align-items-center gap-1">
+          {renderNavigationButtons()}
+        </div>
       </div>
-      
-      <div className="d-flex align-items-center gap-1">
-        {renderNavigationButtons()}
+
+      <div className="mobile-pagination-placeholder d-md-none" aria-hidden="true" />
+
+      <div className={`table-pagination-mobile d-flex flex-column d-md-none ${className}`}>
+        {hasMetaContent && (
+          <div className="mobile-pagination-meta">
+            {renderPageInfo()}
+            {renderPageSizeSelector()}
+          </div>
+        )}
+
+        <div className="pagination-nav-wrapper">
+          {renderNavigationButtons()}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
