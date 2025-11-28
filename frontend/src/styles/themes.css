@@ -2476,7 +2476,6 @@ body {
   /* Apenas dentro de .tab-content para não afetar listagens gerais */
   .responsive-dialog-mobile-content .tab-content .table-mobile-container {
     padding: 0 !important;
-    padding-bottom: 0.5rem !important; /* Espaço para paginação */
   }
 
   /* Garantir que dropdowns apareçam corretamente no mobile */
@@ -3877,6 +3876,13 @@ select:focus,
   overflow: visible; /* Garantir que dropdown não seja cortado pelo container */
 }
 
+/* Remover padding-bottom do table-mobile-container dentro de modais */
+.modal-body .table-mobile-container,
+.modal-content .table-mobile-container,
+.responsive-dialog-mobile-content .table-mobile-container {
+  padding-bottom: 0 !important;
+}
+
 /* Mobile: remover padding-top do table-mobile-container para iniciar do topo */
 @media (max-width: 767.98px) {
   .main-content .table-mobile-container {
@@ -4073,13 +4079,6 @@ select:focus,
   z-index: auto;
 }
 
-.table-mobile-container {
-  padding: 0.5rem;
-  padding-bottom: 4.5rem;
-  overflow: visible;
-  position: relative;
-  z-index: auto;
-}
 
 .table-mobile-dropdown-item {
   width: 100%;
