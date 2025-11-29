@@ -4148,6 +4148,16 @@ select:focus,
   [class*="col-"] .financeiro-resumo {
     margin-bottom: 3rem !important;
   }
+
+  /* Resumo de totais de contratos */
+  .contrato-totais-resumo {
+    margin-bottom: 3rem !important; /* Espaço suficiente para a paginação fixa */
+  }
+
+  /* Garantir que totais dentro de responsive-dialog também respeitem */
+  .responsive-dialog-mobile-content .contrato-totais-resumo {
+    margin-bottom: 3rem !important;
+  }
 }
 
 .table-mobile-pagination .d-flex {
