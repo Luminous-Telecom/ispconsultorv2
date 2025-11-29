@@ -216,8 +216,46 @@ export class SelfUpdateService {
       if (!restartResult.success) {
         // Se restart também falhar, tentar start usando ecosystem.config.js
         logger.warn('PM2 restart falhou, tentando start com ecosystem.config.js');
+        
+        // Verificar se ecosystem.config.js existe
+        const ecosystemPath = path.join(this.projectRoot, 'ecosystem.config.js');
+        if (!fs.existsSync(ecosystemPath)) {
+          logger.error('ecosystem.config.js não encontrado', { 
+            path: ecosystemPath,
+            projectRoot: this.projectRoot,
+          });
+          return {
+            success: false,
+            stdout: '',
+            stderr: `ecosystem.config.js não encontrado em ${ecosystemPath}. Verifique se o arquivo existe no diretório raiz do projeto.`,
+            error: 'ecosystem.config.js não encontrado',
+          };
+        }
+        
+        // Tentar start com ecosystem.config.js usando --only
+        logger.info('Tentando PM2 start com --only', { processName: this.pm2ProcessName });
         const startCommand = `pm2 start ecosystem.config.js --only ${this.pm2ProcessName}`;
-        return this.executeCommand(startCommand, this.projectRoot, 'PM2 Start');
+        const startResult = await this.executeCommand(startCommand, this.projectRoot, 'PM2 Start');
+        
+        // Se start com --only falhar, tentar start sem filtro (inicia todos os processos)
+        if (!startResult.success) {
+          logger.warn('PM2 start com --only falhou, tentando start sem filtro', {
+            error: startResult.error || startResult.stderr,
+          });
+          const startAllCommand = `pm2 start ecosystem.config.js`;
+          const startAllResult = await this.executeCommand(startAllCommand, this.projectRoot, 'PM2 Start (todos)');
+          
+          // Se ainda falhar, tentar start direto do script
+          if (!startAllResult.success) {
+            logger.warn('PM2 start com ecosystem.config.js falhou, tentando start direto do script');
+            const directStartCommand = `pm2 start ${path.join(this.backendPath, 'dist', 'index.js')} --name ${this.pm2ProcessName} --cwd ${this.backendPath}`;
+            return this.executeCommand(directStartCommand, this.projectRoot, 'PM2 Start (direto)');
+          }
+          
+          return startAllResult;
+        }
+        
+        return startResult;
       }
       
       return restartResult;
