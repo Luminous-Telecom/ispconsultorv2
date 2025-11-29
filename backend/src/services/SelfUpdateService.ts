@@ -186,15 +186,66 @@ export class SelfUpdateService {
   private findGitRoot(startPath: string): string | null {
     let currentPath = path.resolve(startPath);
     const rootPath = path.parse(currentPath).root;
+    const searchedPaths: string[] = [];
+    
+    logger.info('Iniciando busca por repositório Git', {
+      startPath,
+      resolvedPath: currentPath,
+      rootPath,
+    });
+    
+    // Verificar se o diretório inicial existe
+    if (!fs.existsSync(currentPath)) {
+      logger.error('Diretório inicial não existe', { currentPath });
+      return null;
+    }
     
     while (currentPath !== rootPath) {
+      searchedPaths.push(currentPath);
       const gitDir = path.join(currentPath, '.git');
+      
+      logger.debug('Verificando diretório', {
+        currentPath,
+        gitDir,
+        exists: fs.existsSync(gitDir),
+      });
+      
       if (fs.existsSync(gitDir)) {
-        logger.info('Repositório Git encontrado', { gitRoot: currentPath });
-        return currentPath;
+        // Verificar se é realmente um diretório Git (pode ser um arquivo worktree)
+        const gitStat = fs.statSync(gitDir);
+        if (gitStat.isDirectory() || gitStat.isFile()) {
+          logger.info('Repositório Git encontrado', {
+            gitRoot: currentPath,
+            gitDir,
+            isDirectory: gitStat.isDirectory(),
+            isFile: gitStat.isFile(),
+            searchedPaths: searchedPaths.length,
+          });
+          return currentPath;
+        }
       }
-      currentPath = path.dirname(currentPath);
+      
+      const parentPath = path.dirname(currentPath);
+      if (parentPath === currentPath) {
+        // Evitar loop infinito
+        break;
+      }
+      currentPath = parentPath;
     }
+    
+    // Verificar também a raiz do sistema
+    searchedPaths.push(rootPath);
+    const rootGitDir = path.join(rootPath, '.git');
+    if (fs.existsSync(rootGitDir)) {
+      logger.info('Repositório Git encontrado na raiz do sistema', { gitRoot: rootPath });
+      return rootPath;
+    }
+    
+    logger.error('Repositório Git não encontrado em nenhum diretório pesquisado', {
+      startPath,
+      searchedPaths,
+      totalPaths: searchedPaths.length,
+    });
     
     return null;
   }
@@ -203,32 +254,87 @@ export class SelfUpdateService {
    * Executa git pull na branch especificada
    */
   private async gitPull(branch: string = 'main'): Promise<CommandResult> {
-    // Tentar encontrar o repositório Git
-    let gitRoot = this.projectRoot;
-    const gitDir = path.join(gitRoot, '.git');
+    // Tentar encontrar o repositório Git usando git rev-parse primeiro (mais confiável)
+    let gitRoot: string | null = null;
     
-    if (!fs.existsSync(gitDir)) {
-      logger.warn('Diretório .git não encontrado no projectRoot, procurando em diretórios pais', {
-        projectRoot: this.projectRoot,
-      });
-      
-      const foundGitRoot = this.findGitRoot(this.projectRoot);
-      if (foundGitRoot) {
-        gitRoot = foundGitRoot;
-        logger.info('Repositório Git encontrado em diretório pai', { gitRoot });
-      } else {
-        logger.error('Diretório .git não encontrado', {
-          projectRoot: this.projectRoot,
-          backendPath: this.backendPath,
-          searchedFrom: this.projectRoot,
-        });
-        return {
-          success: false,
-          stdout: '',
-          stderr: `Diretório .git não encontrado. Procurado em ${this.projectRoot} e diretórios pais. Certifique-se de que o repositório Git está configurado corretamente em produção.`,
-          error: 'Repositório Git não encontrado',
-        };
+    // Lista de diretórios para tentar git rev-parse
+    const directoriesToTry = [this.projectRoot, this.backendPath];
+    
+    for (const dir of directoriesToTry) {
+      if (!fs.existsSync(dir)) {
+        logger.debug('Diretório não existe, pulando', { dir });
+        continue;
       }
+      
+      try {
+        // Tentar usar git rev-parse para encontrar o top-level do repositório
+        // Isso funciona mesmo se o .git estiver em um diretório diferente
+        const { stdout: gitTopLevel } = await execAsync('git rev-parse --show-toplevel', {
+          cwd: dir,
+          timeout: 5000,
+        });
+        
+        if (gitTopLevel && gitTopLevel.trim()) {
+          gitRoot = gitTopLevel.trim();
+          logger.info('Repositório Git encontrado usando git rev-parse', {
+            gitRoot,
+            triedFrom: dir,
+            projectRoot: this.projectRoot,
+          });
+          break;
+        }
+      } catch (error) {
+        logger.debug('git rev-parse falhou neste diretório', {
+          dir,
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        });
+      }
+    }
+    
+    // Se git rev-parse não funcionou, tentar busca manual
+    if (!gitRoot) {
+      const gitDir = path.join(this.projectRoot, '.git');
+      
+      if (fs.existsSync(gitDir)) {
+        gitRoot = this.projectRoot;
+        logger.info('Repositório Git encontrado no projectRoot', { gitRoot });
+      } else {
+        logger.warn('Diretório .git não encontrado no projectRoot, procurando em diretórios pais', {
+          projectRoot: this.projectRoot,
+          gitDir,
+        });
+        
+        const foundGitRoot = this.findGitRoot(this.projectRoot);
+        if (foundGitRoot) {
+          gitRoot = foundGitRoot;
+          logger.info('Repositório Git encontrado em diretório pai', { gitRoot });
+        } else {
+          logger.error('Diretório .git não encontrado', {
+            projectRoot: this.projectRoot,
+            backendPath: this.backendPath,
+            searchedFrom: this.projectRoot,
+          });
+          return {
+            success: false,
+            stdout: '',
+            stderr: `Diretório .git não encontrado. Procurado em ${this.projectRoot} e diretórios pais. Certifique-se de que o repositório Git está configurado corretamente em produção. O repositório de produção deve ser um clone Git válido.`,
+            error: 'Repositório Git não encontrado',
+          };
+        }
+      }
+    }
+    
+    if (!gitRoot) {
+      logger.error('Não foi possível determinar o diretório raiz do Git', {
+        projectRoot: this.projectRoot,
+        backendPath: this.backendPath,
+      });
+      return {
+        success: false,
+        stdout: '',
+        stderr: 'Não foi possível determinar o diretório raiz do repositório Git. Verifique se o repositório está configurado corretamente.',
+        error: 'Repositório Git não encontrado',
+      };
     }
 
     // Verificar configuração do Git
