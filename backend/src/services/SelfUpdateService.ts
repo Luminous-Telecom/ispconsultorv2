@@ -129,6 +129,36 @@ export class SelfUpdateService {
   }
 
   /**
+   * Verifica configuração do Git
+   */
+  private async checkGitConfig(): Promise<{ valid: boolean; remote?: string; branch?: string }> {
+    try {
+      // Verificar remote
+      const { stdout: remoteUrl } = await execAsync('git config --get remote.origin.url', {
+        cwd: this.projectRoot,
+        timeout: 5000,
+      });
+      
+      // Verificar branch atual
+      const { stdout: currentBranch } = await execAsync('git rev-parse --abbrev-ref HEAD', {
+        cwd: this.projectRoot,
+        timeout: 5000,
+      });
+      
+      return {
+        valid: true,
+        remote: remoteUrl.trim(),
+        branch: currentBranch.trim(),
+      };
+    } catch (error) {
+      logger.error('Erro ao verificar configuração do Git', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      });
+      return { valid: false };
+    }
+  }
+
+  /**
    * Executa git pull na branch especificada
    */
   private async gitPull(branch: string = 'main'): Promise<CommandResult> {
@@ -144,8 +174,65 @@ export class SelfUpdateService {
       };
     }
 
+    // Verificar configuração do Git
+    const gitConfig = await this.checkGitConfig();
+    if (!gitConfig.valid) {
+      logger.error('Configuração do Git inválida', { projectRoot: this.projectRoot });
+      return {
+        success: false,
+        stdout: '',
+        stderr: 'Configuração do Git inválida. Verifique se o repositório está configurado corretamente.',
+        error: 'Configuração do Git inválida',
+      };
+    }
+
+    logger.info('Configuração do Git verificada', {
+      remote: gitConfig.remote,
+      currentBranch: gitConfig.branch,
+      targetBranch: branch,
+    });
+
+    // Tentar fazer fetch primeiro para atualizar referências remotas
+    logger.info('Executando git fetch antes do pull');
+    const fetchResult = await this.executeCommand('git fetch origin', this.projectRoot, 'Git Fetch');
+    
+    if (!fetchResult.success) {
+      logger.warn('Git fetch falhou, mas continuando com pull', {
+        error: fetchResult.error || fetchResult.stderr,
+      });
+    }
+
+    // Executar git pull
     const command = `git pull origin ${branch}`;
-    return this.executeCommand(command, this.projectRoot, 'Git Pull');
+    const pullResult = await this.executeCommand(command, this.projectRoot, 'Git Pull');
+    
+    // Se pull falhar, tentar verificar se há mudanças locais não commitadas
+    if (!pullResult.success) {
+      try {
+        const { stdout: status } = await execAsync('git status --porcelain', {
+          cwd: this.projectRoot,
+          timeout: 5000,
+        });
+        
+        if (status.trim()) {
+          logger.warn('Há mudanças locais não commitadas', { status: status.trim() });
+          // Tentar fazer stash e pull
+          logger.info('Tentando fazer stash das mudanças locais');
+          await execAsync('git stash', { cwd: this.projectRoot, timeout: 10000 });
+          const pullAfterStash = await this.executeCommand(command, this.projectRoot, 'Git Pull (após stash)');
+          if (pullAfterStash.success) {
+            logger.info('Git pull bem-sucedido após stash');
+            return pullAfterStash;
+          }
+        }
+      } catch (error) {
+        logger.error('Erro ao verificar status do Git', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        });
+      }
+    }
+    
+    return pullResult;
   }
 
   /**
