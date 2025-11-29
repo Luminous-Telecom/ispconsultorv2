@@ -255,135 +255,42 @@ function Table<T extends { id: number | string }>({
     };
   }, [isMobile, openActionDropdown]);
 
-  // Calcular posição do dropdown do FAB para evitar sobreposição com legendas/resumos e paginação
+  // Calcular posição do dropdown do FAB
   useEffect(() => {
-    if (!isMobile || !isFabOpen || !fabDropdownRef.current) return;
+    if (!isMobile || !isFabOpen || !fabDropdownRef.current || !fabContainerRef.current) return;
     
-    const updateFabPosition = () => {
+    const updateDropdownPosition = () => {
       const dropdownElement = fabDropdownRef.current;
-      if (!dropdownElement) return;
+      const fabContainer = fabContainerRef.current;
       
-      // Procurar pelo rodapé (pagination)
-      const paginationElement = document.querySelector('.table-mobile-pagination');
-      const paginationRect = paginationElement ? paginationElement.getBoundingClientRect() : null;
+      if (!dropdownElement || !fabContainer) return;
       
-      // Procurar por todos os elementos de resumo/legenda usando a classe financeiro-resumo
-      // Buscar no contexto da tabela atual e também globalmente para garantir que encontramos todos
-      const tableContainer = dropdownElement.closest('.table-container, [class*="table"]');
-      const resumoSelectors = [
-        '.financeiro-resumo',
-        'div.financeiro-resumo',
-        '.bg-light.rounded.financeiro-resumo'
-      ];
+      const fabRect = fabContainer.getBoundingClientRect();
       
-      let visibleResumos: Array<{ rect: DOMRect; element: Element }> = [];
+      // Posicionar o dropdown acima do botão FAB
+      // bottom do dropdown = viewport height - top do FAB + margem (8px)
+      const bottomPosition = window.innerHeight - fabRect.top + 8;
       
-      // Buscar resumos em diferentes contextos para garantir que encontramos todos
-      for (const selector of resumoSelectors) {
-        const resumoElements = Array.from(
-          tableContainer 
-            ? tableContainer.querySelectorAll(selector)
-            : document.querySelectorAll(selector)
-        );
-        
-        for (const el of resumoElements) {
-          const rect = el.getBoundingClientRect();
-          // Verificar se está visível e dentro da viewport
-          // Considerar também elementos que estão parcialmente visíveis
-          const isVisible = rect.height > 0 && 
-                           rect.width > 0 && 
-                           rect.top < window.innerHeight && 
-                           rect.bottom > 0;
-          
-          if (isVisible) {
-            // Evitar duplicatas verificando se já existe um resumo com as mesmas coordenadas
-            const alreadyAdded = visibleResumos.some(
-              existing => existing.rect.top === rect.top && existing.rect.left === rect.left
-            );
-            
-            if (!alreadyAdded) {
-              visibleResumos.push({ rect, element: el });
-            }
-          }
-        }
-      }
-      
-      // Encontrar o elemento mais alto na tela (menor valor de top) entre resumos e paginação
-      // O dropdown deve aparecer acima deste elemento
-      // Se há um resumo visível, ele provavelmente está acima da paginação
-      // Queremos posicionar o dropdown acima do elemento que está mais alto (menor top)
-      let referenceRect: DOMRect | null = null;
-      let lowestTop = window.innerHeight; // Inicializar com o bottom da tela, queremos o menor top
-      
-      // Verificar resumos visíveis - encontrar o que está mais alto na tela (menor top)
-      for (const { rect } of visibleResumos) {
-        // O elemento com o menor top está mais alto na tela
-        // Queremos posicionar o dropdown acima dele
-        if (rect.top >= 0 && rect.top < lowestTop) {
-          lowestTop = rect.top;
-          referenceRect = rect;
-        }
-      }
-      
-      // Verificar paginação - comparar com o resumo mais alto
-      if (paginationRect) {
-        // Se a paginação está mais alta (top menor), usar ela
-        // Geralmente a paginação está fixa no bottom, então seu top é maior que o dos resumos
-        // Mas queremos garantir que o dropdown fique acima de qualquer elemento visível
-        if (paginationRect.top >= 0 && paginationRect.top < lowestTop) {
-          lowestTop = paginationRect.top;
-          referenceRect = paginationRect;
-        }
-      }
-      
-      // Se não encontrou nenhum elemento de referência, usar posição padrão
-      if (!referenceRect) {
-        dropdownElement.style.setProperty('position', 'fixed', 'important');
-        dropdownElement.style.setProperty('bottom', '7.5rem', 'important');
-        dropdownElement.style.setProperty('right', '1rem', 'important');
-        dropdownElement.style.setProperty('z-index', '1001', 'important');
-        dropdownElement.style.setProperty('left', 'auto', 'important');
-        dropdownElement.style.setProperty('top', 'auto', 'important');
-        return;
-      }
-      
-      // Margem entre dropdown e elemento de referência (em pixels)
-      const marginFromElement = 12;
-      
-      // Calcular posição do bottom para o dropdown
-      // lowestTop é a posição Y do topo do elemento de referência (mais alto na tela)
-      // Queremos posicionar o dropdown acima dele com uma margem
-      const bottomPosition = window.innerHeight - lowestTop + marginFromElement;
-      
-      // Garantir que o dropdown não fique muito alto (mínimo de 6rem = 96px do bottom)
-      // Isso garante que o dropdown não fique muito acima, melhorando a usabilidade
-      const minBottomPositionPx = 96;
-      const finalBottomPosition = Math.max(bottomPosition, minBottomPositionPx);
-      
-      // Aplicar estilos de posicionamento
       dropdownElement.style.setProperty('position', 'fixed', 'important');
-      dropdownElement.style.setProperty('bottom', `${finalBottomPosition}px`, 'important');
+      dropdownElement.style.setProperty('bottom', `${bottomPosition}px`, 'important');
       dropdownElement.style.setProperty('right', '1rem', 'important');
-      dropdownElement.style.setProperty('z-index', '1001', 'important'); // Acima do rodapé (1000)
-      dropdownElement.style.setProperty('left', 'auto', 'important');
-      dropdownElement.style.setProperty('top', 'auto', 'important');
-      dropdownElement.style.setProperty('max-height', 'none', 'important');
+      dropdownElement.style.setProperty('z-index', '1001', 'important');
+      
+      // Limitar altura para não sair da tela no topo
+      // Altura máxima = espaço disponível acima do FAB - margem superior (20px)
+      const maxH = Math.max(100, fabRect.top - 20);
+      dropdownElement.style.setProperty('max-height', `${maxH}px`, 'important');
     };
+
+    updateDropdownPosition();
     
-    // Executar imediatamente e depois com delay para garantir que o DOM está atualizado
-    updateFabPosition();
-    const timeoutId = setTimeout(() => {
-      updateFabPosition();
-      requestAnimationFrame(updateFabPosition);
-    }, 50);
-    
-    window.addEventListener('scroll', updateFabPosition, true);
-    window.addEventListener('resize', updateFabPosition);
+    // Atualizar ao redimensionar ou rolar
+    window.addEventListener('resize', updateDropdownPosition);
+    window.addEventListener('scroll', updateDropdownPosition, true);
     
     return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('scroll', updateFabPosition, true);
-      window.removeEventListener('resize', updateFabPosition);
+      window.removeEventListener('resize', updateDropdownPosition);
+      window.removeEventListener('scroll', updateDropdownPosition, true);
     };
   }, [isMobile, isFabOpen]);
   

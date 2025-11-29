@@ -850,6 +850,7 @@ body {
   bottom: 3.5rem;
   right: 1rem;
   z-index: 1000; /* Acima da paginação (1000) mas abaixo do dropdown de ações (99999) */
+  transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
 }
 
 /* Nota: Posicionamento dinâmico do FAB é feito via JavaScript em Table.tsx
