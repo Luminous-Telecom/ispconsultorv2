@@ -55,10 +55,29 @@ export class SelfUpdateService {
     
     this.pm2ProcessName = process.env.PM2_PROCESS_NAME || 'BackNet-backend';
     
+    // Validar se os caminhos existem (mas não lançar erro, apenas logar)
+    // Em produção, os caminhos podem estar corretos mas o código ainda não foi deployado
+    if (!fs.existsSync(this.projectRoot)) {
+      logger.warn('projectRoot não existe', { 
+        projectRoot: this.projectRoot,
+        currentDir: __dirname,
+      });
+    }
+    
+    if (!fs.existsSync(this.backendPath)) {
+      logger.warn('backendPath não existe', { 
+        backendPath: this.backendPath,
+        currentDir: __dirname,
+      });
+    }
+    
     logger.info('SelfUpdateService inicializado', {
       projectRoot: this.projectRoot,
       backendPath: this.backendPath,
       pm2ProcessName: this.pm2ProcessName,
+      projectRootExists: fs.existsSync(this.projectRoot),
+      backendPathExists: fs.existsSync(this.backendPath),
+      currentDir: __dirname,
     });
   }
 

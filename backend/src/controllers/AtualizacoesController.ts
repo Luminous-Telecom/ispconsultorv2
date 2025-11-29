@@ -265,13 +265,35 @@ export class AtualizacoesController {
         },
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       logger.error('Erro inesperado durante atualização', {
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: errorMessage,
+        stack: errorStack,
+        branch,
+        usuario: (req as AuthenticatedRequest).user,
       });
+
+      // Retornar mensagem mais específica se possível
+      let userMessage = 'Erro interno do servidor durante a atualização';
+      
+      if (errorMessage.includes('ENOENT') || errorMessage.includes('não encontrado')) {
+        userMessage = 'Arquivo ou diretório não encontrado. Verifique se o repositório está configurado corretamente.';
+      } else if (errorMessage.includes('permission denied') || errorMessage.includes('EACCES')) {
+        userMessage = 'Erro de permissão. Verifique as permissões do diretório e do usuário que executa o processo.';
+      } else if (errorMessage.includes('git')) {
+        userMessage = 'Erro ao executar Git. Verifique se o repositório está configurado corretamente e se há permissões adequadas.';
+      } else if (errorMessage.includes('npm')) {
+        userMessage = 'Erro ao executar npm. Verifique se o npm está instalado e acessível.';
+      } else if (errorMessage.includes('pm2')) {
+        userMessage = 'Erro ao executar PM2. Verifique se o PM2 está instalado e o processo está configurado corretamente.';
+      }
 
       res.status(500).json({
         success: false,
-        message: 'Erro interno do servidor durante a atualização',
+        message: userMessage,
+        error: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
       });
     }
   }
