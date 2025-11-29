@@ -81,13 +81,16 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
               }
             }
             // Caso 3: response.data.data tem versao_atual (normalização dupla)
-            else if ('data' in backendResponse && backendResponse.data && typeof backendResponse.data === 'object') {
-              const nestedData = backendResponse.data as BackendAtualizacoesResponse;
-              if ('versao_atual' in nestedData && nestedData.versao_atual) {
-                versao = nestedData.versao_atual;
-              }
-              if ('data' in nestedData && Array.isArray(nestedData.data)) {
-                atualizacoesArray = nestedData.data;
+            else if ('data' in backendResponse) {
+              const responseWithData = backendResponse as { data: unknown };
+              if (responseWithData.data && typeof responseWithData.data === 'object' && !Array.isArray(responseWithData.data)) {
+                const nestedData = responseWithData.data as BackendAtualizacoesResponse;
+                if ('versao_atual' in nestedData && nestedData.versao_atual) {
+                  versao = nestedData.versao_atual;
+                }
+                if ('data' in nestedData && Array.isArray(nestedData.data)) {
+                  atualizacoesArray = nestedData.data;
+                }
               }
             }
           }
