@@ -8,6 +8,12 @@ on:
       - main
 
 # 2. Define o Job (Trabalho) de Deploy
+# IMPORTANTE: Este workflow copia todos os arquivos necessários para o self-update funcionar:
+# - ecosystem.config.js (para PM2 reload)
+# - backend/package.json e package-lock.json (para npm install)
+# - backend/tsconfig.json (para build)
+# - backend/migrations, config/, .sequelizerc (para migrations)
+# - backend/dist (código compilado)
 jobs:
   deploy:
     runs-on: ubuntu-latest # O ambiente onde o código será executado
@@ -243,6 +249,13 @@ jobs:
             cp ../backend/package-lock.json backend/package-lock.json
             cp ../backend/env.example backend/env.example
             
+            # Verificar se package.json foi copiado corretamente (necessário para npm install no self-update)
+            if [ ! -f "backend/package.json" ]; then
+              echo "⚠ ERRO: backend/package.json não foi copiado - self-update não funcionará!"
+              exit 1
+            fi
+            echo "✓ backend/package.json copiado (necessário para self-update)"
+            
             # Verificar se foi copiado corretamente
             echo "=== Verificando cópia ==="
             if [ -d "backend/dist" ]; then
@@ -265,6 +278,7 @@ jobs:
           fi
           
           # SEMPRE copiar arquivos necessários para migrations e configuração do Sequelize
+          # Esses arquivos são necessários para o self-update funcionar corretamente
           echo "Copiando arquivos de configuração e migrations do Sequelize..."
           
           # Criar diretório config se não existir
@@ -286,13 +300,27 @@ jobs:
             echo "⚠ backend/.sequelizerc não encontrado"
           fi
           
-          # Copiar migrations (necessário para executar migrations)
+          # Copiar migrations (necessário para executar migrations no self-update)
           if [ -d "../backend/migrations" ]; then
             rm -rf backend/migrations
             cp -r ../backend/migrations backend/migrations
             echo "✓ backend/migrations copiado"
           else
             echo "⚠ backend/migrations não encontrado"
+          fi
+          
+          # Copiar tsconfig.json do backend (necessário para build durante self-update)
+          if [ -f "../backend/tsconfig.json" ]; then
+            cp ../backend/tsconfig.json backend/tsconfig.json
+            echo "✓ backend/tsconfig.json copiado"
+          else
+            echo "⚠ backend/tsconfig.json não encontrado"
+          fi
+          
+          # Copiar .gitignore do backend (para manter consistência)
+          if [ -f "../backend/.gitignore" ]; then
+            cp ../backend/.gitignore backend/.gitignore
+            echo "✓ backend/.gitignore copiado"
           fi
           
           # Copiar build do frontend para frontend/ (se build foi executado)
@@ -372,41 +400,47 @@ jobs:
           ls -la backend/ | grep -E "(Dockerfile|dockerignore)" || echo "Nenhum arquivo Docker encontrado em backend/"
           ls -la frontend/ | grep -E "(Dockerfile|dockerignore)" || echo "Nenhum arquivo Docker encontrado em frontend/"
           
-          # Copiar arquivos de configuração e documentação na raiz
+          # SEMPRE copiar arquivos de configuração essenciais para self-update
+          # Esses arquivos são necessários para o self-update funcionar corretamente
+          echo "Copiando arquivos de configuração essenciais para self-update..."
+          
+          # ecosystem.config.js (CRÍTICO para PM2 reload no self-update)
+          if [ -f "../ecosystem.config.js" ]; then
+            cp ../ecosystem.config.js ecosystem.config.js
+            echo "✓ ecosystem.config.js copiado (necessário para PM2)"
+          else
+            echo "⚠ ERRO: ecosystem.config.js não encontrado - self-update não funcionará!"
+          fi
+          
+          # .gitignore (manter consistência)
+          if [ -f "../.gitignore" ]; then
+            cp ../.gitignore .gitignore
+            echo "✓ .gitignore copiado"
+          fi
+          
+          # Copiar outros arquivos de configuração apenas se houver mudanças
           if [ "${{ steps.changes.outputs.config_changed }}" == "true" ]; then
-            echo "Copiando arquivos de configuração e documentação..."
+            echo "Copiando outros arquivos de configuração e documentação..."
             
             # README.md
             if [ -f "../README.md" ]; then
               cp ../README.md README.md
-              echo "README.md copiado"
+              echo "✓ README.md copiado"
             fi
             
             # docker-compose.yaml
             if [ -f "../docker-compose.yaml" ]; then
               cp ../docker-compose.yaml docker-compose.yaml
-              echo "docker-compose.yaml copiado"
-            fi
-            
-            # ecosystem.config.js
-            if [ -f "../ecosystem.config.js" ]; then
-              cp ../ecosystem.config.js ecosystem.config.js
-              echo "ecosystem.config.js copiado"
-            fi
-            
-            # .gitignore
-            if [ -f "../.gitignore" ]; then
-              cp ../.gitignore .gitignore
-              echo ".gitignore copiado"
+              echo "✓ docker-compose.yaml copiado"
             fi
             
             # package.json da raiz (se existir)
             if [ -f "../package.json" ]; then
               cp ../package.json package.json
-              echo "package.json copiado"
+              echo "✓ package.json copiado"
             fi
           else
-            echo "Nenhuma alteração em arquivos de configuração/documentação"
+            echo "Nenhuma alteração em outros arquivos de configuração/documentação"
           fi
       
       - name: Commit e Push para Produção
