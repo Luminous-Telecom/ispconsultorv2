@@ -12,6 +12,7 @@ import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
 import ContratoModal from '@/components/modals/clientes/contrato/ContratoModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface ContratoListModalProps {
   show: boolean;
@@ -26,6 +27,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   onSelectContrato,
   title = "Contratos"
 }) => {
+  const isMobile = useIsMobile();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedContratoId, setSelectedContratoId] = useState<number | null>(null);
@@ -525,20 +527,24 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         
         {/* Valor total mensal e descontos - acima da paginação */}
         <div 
-          className="p-2 border-top contrato-totais-resumo" 
+          className="p-3 bg-light rounded contrato-totais-resumo" 
           style={{ 
             flexShrink: 0,
-            backgroundColor: 'var(--bg-primary)',
-            borderTopColor: 'var(--border-color)'
+            marginTop: isMobile ? '0.25rem' : '1rem',
+            marginBottom: isMobile ? '3rem' : '1rem',
+            marginLeft: isMobile ? '0.5rem' : '1rem',
+            marginRight: isMobile ? '0.5rem' : '1rem'
           }}
         >
-          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-2">
-            <span className="small text-muted mb-1 mb-sm-0" style={{ color: 'var(--text-secondary)' }}>Valor Total Mensal:</span>
-            <span className="small fw-bold" style={{ color: 'var(--text-primary)' }}>{formatCurrency(valorTotalMensal)}</span>
-          </div>
-          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center">
-            <span className="small text-muted mb-1 mb-sm-0" style={{ color: 'var(--text-secondary)' }}>Valor Total Descontos:</span>
-            <span className="small fw-bold" style={{ color: 'var(--text-primary)' }}>{formatCurrency(valorTotalDescontos)}</span>
+          <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
+            <div className="text-end">
+              <div className="small text-muted">Valor Total Mensal:</div>
+              <strong>{formatCurrency(valorTotalMensal)}</strong>
+            </div>
+            <div className="text-end">
+              <div className="small text-muted">Valor Total Descontos:</div>
+              <strong>{formatCurrency(valorTotalDescontos)}</strong>
+            </div>
           </div>
         </div>
       </div>
