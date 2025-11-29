@@ -255,10 +255,24 @@ export class SelfUpdateService {
    */
   private async gitPull(branch: string = 'main'): Promise<CommandResult> {
     // Tentar encontrar o repositório Git usando git rev-parse primeiro (mais confiável)
+    // git rev-parse funciona mesmo se executado de qualquer subdiretório do repositório
     let gitRoot: string | null = null;
     
-    // Lista de diretórios para tentar git rev-parse
-    const directoriesToTry = [this.projectRoot, this.backendPath];
+    // Lista de diretórios para tentar git rev-parse (em ordem de prioridade)
+    // Começar pelo diretório atual (__dirname) que é onde o código está rodando
+    const currentDir = __dirname;
+    const directoriesToTry = [
+      currentDir,           // Diretório atual do código (mais provável de funcionar)
+      this.backendPath,     // Diretório do backend
+      this.projectRoot,     // Diretório raiz do projeto
+    ];
+    
+    logger.info('Tentando encontrar repositório Git usando git rev-parse', {
+      directoriesToTry,
+      currentDir,
+      backendPath: this.backendPath,
+      projectRoot: this.projectRoot,
+    });
     
     for (const dir of directoriesToTry) {
       if (!fs.existsSync(dir)) {
@@ -268,7 +282,7 @@ export class SelfUpdateService {
       
       try {
         // Tentar usar git rev-parse para encontrar o top-level do repositório
-        // Isso funciona mesmo se o .git estiver em um diretório diferente
+        // Isso funciona mesmo se executado de qualquer subdiretório do repositório clonado
         const { stdout: gitTopLevel } = await execAsync('git rev-parse --show-toplevel', {
           cwd: dir,
           timeout: 5000,
@@ -280,6 +294,7 @@ export class SelfUpdateService {
             gitRoot,
             triedFrom: dir,
             projectRoot: this.projectRoot,
+            backendPath: this.backendPath,
           });
           break;
         }
