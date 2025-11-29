@@ -150,12 +150,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
 
         {/* Resumo Financeiro */}
         {filteredData.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded financeiro-resumo" style={{ flexShrink: 0, marginBottom: isMobile ? '3rem' : '1rem', marginTop: isMobile ? '0.25rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
-            <div className="d-flex align-items-center">
-              <i className="bi bi-info-circle text-muted me-2"></i>
-              <span className="small text-muted">Legenda de cores</span>
-            </div>
-            <div className="d-flex gap-4">
+          <div className="d-flex justify-content-end align-items-center p-3 bg-light rounded financeiro-resumo" style={{ flexShrink: 0, marginBottom: isMobile ? '3rem' : '1rem', marginTop: isMobile ? '0.25rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+            <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
               <div className="text-end">
                 <div className="small text-muted">Valor:</div>
                 <strong>R$ {filteredData.reduce((sum: number, item: Titulo) => {
