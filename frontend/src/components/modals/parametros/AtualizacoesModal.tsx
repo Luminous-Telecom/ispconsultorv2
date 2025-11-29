@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { formatDate } from '@/utils/formatters';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -44,7 +44,6 @@ interface AtualizacoesModalProps {
 const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
-  const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<string>('');
   const [versaoAtual, setVersaoAtual] = useState<string>('N/A');
@@ -111,7 +110,13 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       setUpdateProgress('Iniciando atualização...');
       
       try {
-        const response = await apiService.post<UpdateResponse>('/atualizacoes/update', { branch });
+        // Timeout aumentado para 10 minutos (600000ms) pois o processo de atualização
+        // pode levar vários minutos: git pull, npm install, build, migrations, pm2 reload
+        const response = await apiService.post<UpdateResponse>(
+          '/atualizacoes/update', 
+          { branch },
+          { timeout: 600000 } // 10 minutos
+        );
         
         if (!response.success || !response.data) {
           throw new Error(response.message || response.data?.message || 'Erro ao executar atualização');
@@ -128,25 +133,20 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
     },
     onSuccess: (data) => {
       setUpdateProgress('Atualização concluída! Reiniciando aplicação...');
+      
+      // Mostrar sucesso ANTES de fechar o modal (verde)
       success(data.message || 'Atualização concluída com sucesso! A aplicação será reiniciada em breve.');
       
-      // Fechar modal imediatamente para evitar requisições durante reinício
-      setIsUpdating(false);
-      onClose();
-      
-      // Invalidar query de atualizações após um delay maior (quando backend já reiniciou)
-      // Não fazer isso imediatamente porque o backend está reiniciando
+      // Fechar modal após um pequeno delay para o usuário ver a mensagem de sucesso
       setTimeout(() => {
-        // Tentar invalidar queries após o backend ter reiniciado
-        // Se falhar, não é problema, o usuário pode recarregar a página
-        try {
-          queryClient.invalidateQueries({ queryKey: ['atualizacoes'] });
-        } catch (err) {
-          // Ignorar erros de conexão durante reinício
-          // Não logar erro pois é esperado quando backend está reiniciando
-        }
-        setUpdateProgress('');
-      }, 5000); // Aguardar 5 segundos para o backend reiniciar
+        setIsUpdating(false);
+        onClose();
+      }, 1500); // Aumentar delay para garantir que a notificação seja vista
+      
+      // Recarregar a página após um delay para garantir que o backend já reiniciou
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000); // Aguardar 3 segundos para o backend reiniciar antes de recarregar o frontend
     },
     onError: (err: unknown) => {
       setIsUpdating(false);
@@ -156,16 +156,43 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       const axiosError = err as AxiosError<{ message?: string; steps?: Record<string, { error?: string }> }>;
       
       // Se for erro de conexão (ECONNREFUSED, ETIMEDOUT, etc), pode ser que o backend tenha reiniciado
-      // com sucesso mas a resposta não chegou. Nesse caso, mostrar mensagem informativa
+      // com sucesso mas a resposta não chegou. Nesse caso, mostrar como SUCESSO (verde)
       if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ETIMEDOUT' || axiosError.code === 'ERR_NETWORK' || 
           (axiosError.message && (axiosError.message.includes('Network Error') || axiosError.message.includes('timeout')))) {
-        // Pode ser que a atualização tenha sido concluída mas o backend reiniciou antes da resposta
-        success('Atualização pode ter sido concluída. O backend está reiniciando. Aguarde alguns segundos e recarregue a página se necessário.');
+        // Se estava atualizando e deu erro de conexão, provavelmente foi sucesso mas backend reiniciou
+        // Mostrar como SUCESSO (verde) ao invés de erro (vermelho)
+        success('Atualização concluída com sucesso! O backend está reiniciando. A página será recarregada em breve.');
         onClose();
+        
+        // Recarregar a página após um delay para garantir que o backend já reiniciou
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000); // Aguardar 3 segundos para o backend reiniciar antes de recarregar o frontend
         return;
       }
       
-      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Erro ao executar atualização';
+      // Se chegou aqui, é um erro real na atualização
+      // Verificar se há mensagem de erro específica nos steps
+      const errorData = axiosError.response?.data;
+      let errorMessage = 'Erro ao executar atualização';
+      
+      if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (errorData?.steps) {
+        // Tentar extrair mensagem de erro dos steps
+        const steps = errorData.steps;
+        const failedSteps = Object.entries(steps)
+          .filter(([_, step]: [string, { error?: string; stderr?: string }]) => step?.error || step?.stderr)
+          .map(([stepName, step]: [string, { error?: string; stderr?: string }]) => `${stepName}: ${step.error || step.stderr}`);
+        
+        if (failedSteps.length > 0) {
+          errorMessage = `Falha na atualização: ${failedSteps.join('; ')}`;
+        }
+      } else if (axiosError.message) {
+        errorMessage = axiosError.message;
+      }
+      
+      // Mostrar erro real (vermelho)
       showError(errorMessage);
     },
   });

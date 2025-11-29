@@ -256,10 +256,12 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
   // Métodos de conveniência
   const success = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
     const opts = typeof options === 'number' ? { duration: options } : options;
+    // Garantir que type sempre seja 'success', mesmo se opts tiver type diferente
+    const { type: _type, ...restOpts } = opts;
     return addNotification({
-      type: 'success',
+      ...restOpts,
+      type: 'success', // Sempre forçar tipo 'success' (verde)
       message,
-      ...opts,
     });
   }, [addNotification]);
 
