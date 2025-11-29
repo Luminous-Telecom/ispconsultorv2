@@ -173,11 +173,68 @@ export class SelfUpdateService {
   }
 
   /**
+   * Verifica se o processo PM2 existe
+   */
+  private async checkPM2Process(): Promise<{ exists: boolean; processInfo?: string }> {
+    try {
+      const { stdout } = await execAsync(`pm2 list`, {
+        cwd: this.projectRoot,
+        maxBuffer: 1024 * 1024, // 1MB
+      });
+      
+      // Verificar se o processo está na lista
+      const processExists = stdout.includes(this.pm2ProcessName);
+      
+      return {
+        exists: processExists,
+        processInfo: processExists ? stdout : undefined,
+      };
+    } catch (error) {
+      logger.error('Erro ao verificar processos PM2', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      });
+      return { exists: false };
+    }
+  }
+
+  /**
    * Reinicia o processo no PM2
    */
   private async pm2Reload(): Promise<CommandResult> {
+    // Verificar se o processo existe antes de tentar reload
+    const processCheck = await this.checkPM2Process();
+    
+    if (!processCheck.exists) {
+      logger.warn('Processo PM2 não encontrado, tentando restart', {
+        processName: this.pm2ProcessName,
+      });
+      
+      // Se não existe, tentar restart (pode ser que o processo não esteja rodando)
+      const restartCommand = `pm2 restart ${this.pm2ProcessName}`;
+      const restartResult = await this.executeCommand(restartCommand, this.projectRoot, 'PM2 Restart');
+      
+      if (!restartResult.success) {
+        // Se restart também falhar, tentar start usando ecosystem.config.js
+        logger.warn('PM2 restart falhou, tentando start com ecosystem.config.js');
+        const startCommand = `pm2 start ecosystem.config.js --only ${this.pm2ProcessName}`;
+        return this.executeCommand(startCommand, this.projectRoot, 'PM2 Start');
+      }
+      
+      return restartResult;
+    }
+
+    // Se o processo existe, tentar reload (zero-downtime)
     const command = `pm2 reload ${this.pm2ProcessName}`;
-    return this.executeCommand(command, this.projectRoot, 'PM2 Reload');
+    const reloadResult = await this.executeCommand(command, this.projectRoot, 'PM2 Reload');
+    
+    // Se reload falhar, tentar restart como fallback
+    if (!reloadResult.success) {
+      logger.warn('PM2 reload falhou, tentando restart como fallback');
+      const restartCommand = `pm2 restart ${this.pm2ProcessName}`;
+      return this.executeCommand(restartCommand, this.projectRoot, 'PM2 Restart (fallback)');
+    }
+    
+    return reloadResult;
   }
 
   /**
