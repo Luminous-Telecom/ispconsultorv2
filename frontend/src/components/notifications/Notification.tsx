@@ -82,7 +82,9 @@ const Notification: React.FC<NotificationProps> = ({
   };
 
   // Garantir que o tipo seja sempre o correto (forçar se necessário)
-  const notificationType = config.type || 'info';
+  // Se o config.type não existir ou for diferente do esperado, usar 'info' como padrão
+  // Mas SEMPRE respeitar o config.type se ele existir
+  const notificationType = (config.type || 'info') as 'success' | 'error' | 'warning' | 'info' | 'loading';
   
   // Obter ícone baseado no tipo
   const getIcon = () => {

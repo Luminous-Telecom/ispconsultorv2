@@ -112,27 +112,34 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       setUpdateProgress('Iniciando atualização...');
       setUpdateLogs(['Iniciando processo de atualização...']);
       
-      try {
-        // Timeout aumentado para 10 minutos (600000ms) pois o processo de atualização
-        // pode levar vários minutos: git pull, npm install, build, migrations, pm2 reload
-        const response = await apiService.post<UpdateResponse>(
-          '/atualizacoes/update', 
-          { branch },
-          { timeout: 600000 } // 10 minutos
-        );
-        
-        if (!response.success || !response.data) {
-          throw new Error(response.message || response.data?.message || 'Erro ao executar atualização');
-        }
-        
-        // Se response.data já é UpdateResponse, retornar diretamente
-        // Se response.data tem a estrutura { success, message, steps }, usar response.data
-        return response.data;
-      } catch (error) {
-        // Se for erro de conexão, pode ser que o backend tenha reiniciado com sucesso
-        // mas a resposta não chegou. Vamos tratar isso no onError
-        throw error;
+      // Timeout aumentado para 10 minutos (600000ms) pois o processo de atualização
+      // pode levar vários minutos: git pull, npm install, build, migrations, pm2 reload
+      const response = await apiService.post<UpdateResponse>(
+        '/atualizacoes/update', 
+        { branch },
+        { timeout: 600000 } // 10 minutos
+      );
+      
+      // Se a resposta indica erro, lançar exceção
+      if (response.success === false) {
+        throw new Error(response.message || 'Erro ao executar atualização');
       }
+      
+      // Retornar response.data se existir, senão construir a partir da resposta
+      if (response.data && typeof response.data === 'object') {
+        const updateResponse = response.data as UpdateResponse;
+        if (updateResponse.success === false) {
+          throw new Error(updateResponse.message || 'Erro ao executar atualização');
+        }
+        return updateResponse;
+      }
+      
+      // Fallback: construir UpdateResponse a partir da resposta
+      return {
+        success: true,
+        message: response.message || 'Atualização concluída com sucesso',
+        steps: {},
+      } as UpdateResponse;
     },
     onSuccess: (data) => {
       // Adicionar logs dos steps executados
@@ -186,12 +193,10 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       setUpdateLogs(logs);
       setUpdateProgress('Atualização concluída! Backend reiniciado com sucesso.');
       
-      // Mostrar sucesso ANTES de fechar o modal (verde)
-      // Usar ID único e duração maior para garantir que apareça corretamente
+      // Mostrar notificação de sucesso
       success(data.message || 'Atualização concluída com sucesso! A aplicação será reiniciada em breve.', {
         id: `update-success-${Date.now()}`,
-        duration: 5000, // 5 segundos para garantir que seja vista
-        type: 'success' // Forçar explicitamente
+        duration: 5000,
       });
       
       // Fechar modal após um pequeno delay para o usuário ver a mensagem de sucesso

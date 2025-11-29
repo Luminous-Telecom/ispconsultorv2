@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
+import axios from 'axios';
 import { logger } from '../utils/logger';
 
 const execAsync = promisify(exec);
@@ -33,6 +34,8 @@ export class SelfUpdateService {
   private readonly projectRoot: string;
   private readonly backendPath: string;
   private readonly pm2ProcessName: string;
+  private readonly backendPort: number;
+  private readonly backendUrl: string;
 
   constructor() {
     const currentDir = __dirname;
@@ -58,6 +61,11 @@ export class SelfUpdateService {
     this.backendPath = backendRoot || path.resolve(this.projectRoot, 'backend');
 
     this.pm2ProcessName = process.env.PM2_PROCESS_NAME || 'BackNet-backend';
+    
+    // 3. Configurar URL do backend para health check
+    this.backendPort = parseInt(process.env.PORT || '3001', 10);
+    // Usar localhost para health check interno (mesmo servidor)
+    this.backendUrl = `http://localhost:${this.backendPort}`;
     
     logger.info('SelfUpdateService Configurado', {
       currentDir,
@@ -648,6 +656,67 @@ export class SelfUpdateService {
   }
 
   /**
+   * Aguarda o backend estar pronto após PM2 reload
+   * Faz requisições ao endpoint /health até receber resposta 200
+   */
+  private async waitForBackendReady(maxAttempts: number = 30, delayMs: number = 1000): Promise<boolean> {
+    logger.info('Aguardando backend estar pronto após PM2 reload', {
+      maxAttempts,
+      delayMs,
+      healthUrl: `${this.backendUrl}/health`,
+    });
+
+    for (let i = 0; i < maxAttempts; i++) {
+      // Tentar ambos os endpoints de health check
+      const healthEndpoints = [`${this.backendUrl}/health`, `${this.backendUrl}/api/health`];
+      let healthCheckSuccess = false;
+      
+      for (const healthUrl of healthEndpoints) {
+        try {
+          // Tentar fazer uma requisição simples ao health check do backend
+          const response = await axios.get(healthUrl, {
+            timeout: 2000,
+            validateStatus: (status) => status === 200,
+          });
+
+          // Aceitar tanto 'ok' quanto 'OK' como status válido
+          if (response.status === 200 && (response.data?.status === 'ok' || response.data?.status === 'OK')) {
+            logger.info('Backend está pronto após PM2 reload', {
+              attempts: i + 1,
+              maxAttempts,
+              responseTime: `${(i + 1) * delayMs}ms`,
+              healthUrl,
+            });
+            return true;
+          }
+        } catch (error) {
+          // Continuar tentando o próximo endpoint
+          continue;
+        }
+      }
+      
+      // Se nenhum endpoint respondeu, aguardar antes de tentar novamente
+      if (i < maxAttempts - 1) {
+        // Não logar nas primeiras tentativas para não poluir os logs
+        if (i === 0 || i === 4 || i === 9) {
+          logger.debug('Backend ainda não está pronto, aguardando...', {
+            attempt: i + 1,
+            maxAttempts,
+          });
+        }
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+
+    logger.warn('Backend não respondeu após múltiplas tentativas', {
+      maxAttempts,
+      totalWaitTime: `${maxAttempts * delayMs}ms`,
+      healthUrl: `${this.backendUrl}/health`,
+    });
+    return false;
+  }
+
+  /**
    * Verifica se os comandos necessários estão disponíveis
    */
   private async verifyCommands(): Promise<{ success: boolean; missing: string[] }> {
@@ -758,11 +827,34 @@ export class SelfUpdateService {
   }
 
   /**
-   * Reinicia o PM2 após confirmação de sucesso
-   * Este método deve ser chamado após o frontend receber a resposta de sucesso
+   * Reinicia o PM2 e aguarda o backend estar pronto
+   * Este método aguarda o PM2 reload completar E o backend estar pronto antes de retornar
    */
   async reloadPM2(): Promise<CommandResult> {
-    return this.pm2Reload();
+    // Executar PM2 reload
+    const reloadResult = await this.pm2Reload();
+    
+    // Se o reload foi bem-sucedido, aguardar o backend estar pronto
+    if (reloadResult.success) {
+      logger.info('PM2 reload executado com sucesso, aguardando backend estar pronto...');
+      const isReady = await this.waitForBackendReady();
+      
+      if (!isReady) {
+        logger.warn('Backend pode não estar completamente pronto após PM2 reload', {
+          stdout: reloadResult.stdout,
+          stderr: reloadResult.stderr,
+        });
+        // Retornar sucesso parcial com aviso
+        return {
+          ...reloadResult,
+          stderr: reloadResult.stderr + '\nAviso: Backend pode não estar completamente pronto após múltiplas tentativas de health check',
+        };
+      }
+      
+      logger.info('PM2 reload concluído e backend está pronto para receber requisições');
+    }
+    
+    return reloadResult;
   }
 }
 

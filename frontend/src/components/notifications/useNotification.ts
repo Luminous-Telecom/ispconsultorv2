@@ -56,21 +56,14 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
     const id = config.id || generateId();
     const now = Date.now();
     
-    // Garantir que o type do config sempre sobrescreva o defaultConfig
-    // Remover type tanto do defaultConfig quanto do config para evitar conflitos
+    // Remover type do defaultConfig para evitar conflitos
     const { type: _defaultType, ...defaultConfigWithoutType } = defaultConfig;
-    const { type: configType, ...configWithoutType } = config;
     
-    // Usar o type do config (que sempre será 'success' quando chamado via success())
-    // Se não tiver type no config, usar 'info' como padrão
-    const finalType = configType || 'info';
-    
+    // Construir config final, garantindo que type do config sobrescreva tudo
     const notificationState: NotificationState = {
       id,
       config: {
         ...defaultConfigWithoutType,
-        ...configWithoutType,
-        // Aplicar propriedades específicas do config (usando valores originais do config)
         position: config.position || defaultPosition,
         animation: config.animation || defaultAnimation,
         size: config.size || defaultSize,
@@ -80,8 +73,8 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
         closeOnClick: config.closeOnClick !== undefined ? config.closeOnClick : closeOnClick,
         showProgress: config.showProgress !== undefined ? config.showProgress : showProgress,
         zIndex: config.zIndex || zIndex,
-        // DEFINIR type POR ÚLTIMO para garantir que não seja sobrescrito por nenhuma outra propriedade
-        type: finalType,
+        ...config,
+        type: config.type || 'info', // Garantir que type sempre exista
       },
       isVisible: true,
       isAnimating: false,
@@ -268,17 +261,13 @@ export const useNotification = (options: UseNotificationOptions = {}): UseNotifi
   // Métodos de conveniência
   const success = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
     const opts = typeof options === 'number' ? { duration: options } : options;
-    // Garantir que type sempre seja 'success', mesmo se opts tiver type diferente
-    const { type: _type, ...restOpts } = opts;
+    const { type: _type, ...restOpts } = opts; // Remover type se existir
     
-    // Criar objeto de configuração SEM type primeiro, depois adicionar type por último
-    const notificationConfig: NotificationConfig = {
+    return addNotification({
       ...restOpts,
       message,
-      type: 'success', // SEMPRE forçar tipo 'success' (verde) - DEVE SER O ÚLTIMO
-    };
-    
-    return addNotification(notificationConfig);
+      type: 'success', // Sempre forçar tipo 'success'
+    });
   }, [addNotification]);
 
   const error = useCallback((message: string, options: Partial<NotificationConfig> | number = {}) => {
