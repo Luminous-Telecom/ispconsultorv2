@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Buscar histórico completo para comparação precisa
+          fetch-tags: true  # Buscar tags para determinar última versão
         
       # Configura o ambiente Node.js
       - name: Configurar Node.js
@@ -158,9 +159,35 @@ jobs:
             PREV_COMMIT="${{ steps.changes.outputs.prev_commit }}"
             CURRENT_COMMIT="${{ steps.changes.outputs.current_commit }}"
             
-            # Obter versão atual do package.json
-            OLD_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
-            echo "📦 Versão atual: ${OLD_VERSION}"
+            # Obter versão atual da última tag Git do repositório de produção
+            # Buscar tags remotas do repositório de produção para pegar a versão mais recente
+            GITHUB_REPO_PROD="Luminous-Telecom/backnet.prod"
+            GITHUB_TOKEN_PROD="${{ secrets.PROD_PAT }}"
+            
+            # Buscar última tag do repositório de produção via API do GitHub
+            echo "🔍 Buscando última tag do repositório de produção..."
+            LAST_TAG_RESPONSE=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN_PROD}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPO_PROD}/tags?per_page=1" 2>/dev/null || echo "[]")
+            
+            LAST_TAG=$(echo "${LAST_TAG_RESPONSE}" | node -e "
+              try {
+                const tags = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+                if (tags && Array.isArray(tags) && tags.length > 0 && tags[0].name) {
+                  console.log(tags[0].name);
+                }
+              } catch(e) {}
+            " 2>/dev/null || echo "")
+            
+            if [ -n "${LAST_TAG}" ] && [ "${LAST_TAG}" != "null" ] && [ "${LAST_TAG}" != "" ]; then
+              # Remover 'v' do início da tag e qualquer sufixo
+              OLD_VERSION=$(echo "${LAST_TAG}" | sed 's/^v//' | sed 's/-.*//')
+              echo "📦 Versão atual (última tag produção): ${OLD_VERSION} (tag: ${LAST_TAG})"
+            else
+              # Fallback: usar versão do package.json
+              OLD_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
+              echo "📦 Versão atual (package.json): ${OLD_VERSION} (nenhuma tag encontrada no repositório de produção)"
+            fi
             
             # Determinar range de commits para análise
             if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ] || [ "${PREV_COMMIT}" == "0000000000000000000000000000000000000000" ]; then
