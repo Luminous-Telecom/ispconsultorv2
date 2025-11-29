@@ -847,10 +847,10 @@ body {
 /* Botão FAB suspenso no canto inferior direito (mobile) */
 .table-mobile-fab-container {
   position: fixed;
-  bottom: 3.5rem;
+  bottom: 4.5rem; /* Valor inicial ajustado para 72px (mais próximo do real com paginação) */
   right: 1rem;
   z-index: 1000; /* Acima da paginação (1000) mas abaixo do dropdown de ações (99999) */
-  transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+  transition: bottom 0.2s ease-out; /* Transição mais rápida para ajuste imperceptível */
 }
 
 /* Nota: Posicionamento dinâmico do FAB é feito via JavaScript em Table.tsx

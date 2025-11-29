@@ -147,9 +147,12 @@ function Table<T extends { id: number | string }>({
       fabContainer.style.bottom = `${bottomValue}px`;
     };
 
-    // Atualizar posição inicial após um pequeno delay para garantir que o DOM está renderizado
-    const initialTimeout = setTimeout(updateFabPosition, 100);
+    // Executar imediatamente para evitar "pulo" visual
+    updateFabPosition();
 
+    // Reforçar após pequeno delay para garantir que o DOM está totalmente renderizado/estilizado
+    const initialTimeout = setTimeout(updateFabPosition, 50);
+    
     // Observar mudanças nas legendas (MutationObserver)
     const observer = new MutationObserver(updateFabPosition);
     
