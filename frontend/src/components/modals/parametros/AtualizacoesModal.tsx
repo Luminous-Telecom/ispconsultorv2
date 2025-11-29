@@ -403,7 +403,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {[...atualizacoes].reverse().map((atualizacao: Atualizacao) => {
+              {atualizacoes.map((atualizacao: Atualizacao) => {
                 const badge = getTipoBadge(atualizacao.tipo);
                 return (
                   <div key={atualizacao.versao} className="border" style={{ 

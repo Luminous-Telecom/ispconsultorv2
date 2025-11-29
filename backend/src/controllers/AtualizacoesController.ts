@@ -68,8 +68,15 @@ export class AtualizacoesController {
         return;
       }
       
+      // Ordenar releases por data de publicação (mais recentes primeiro)
+      const sortedReleases = [...response.data].sort((a, b) => {
+        const dateA = new Date(a.published_at).getTime();
+        const dateB = new Date(b.published_at).getTime();
+        return dateB - dateA; // Ordem decrescente (mais recentes primeiro)
+      });
+      
       // Converter releases do GitHub para formato do sistema
-      const atualizacoes = response.data.map((release, index) => {
+      const atualizacoes = sortedReleases.map((release, index) => {
         const tagVersion = release.tag_name.replace(/^v/i, ''); // Remove 'v' do início
         const publishedDate = new Date(release.published_at);
         
