@@ -98,35 +98,62 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       setIsUpdating(true);
       setUpdateProgress('Iniciando atualização...');
       
-      const response = await apiService.post<UpdateResponse>('/atualizacoes/update', { branch });
-      
-      if (!response.success || !response.data) {
-        throw new Error(response.message || response.data?.message || 'Erro ao executar atualização');
+      try {
+        const response = await apiService.post<UpdateResponse>('/atualizacoes/update', { branch });
+        
+        if (!response.success || !response.data) {
+          throw new Error(response.message || response.data?.message || 'Erro ao executar atualização');
+        }
+        
+        // Se response.data já é UpdateResponse, retornar diretamente
+        // Se response.data tem a estrutura { success, message, steps }, usar response.data
+        return response.data;
+      } catch (error) {
+        // Se for erro de conexão, pode ser que o backend tenha reiniciado com sucesso
+        // mas a resposta não chegou. Vamos tratar isso no onError
+        throw error;
       }
-      
-      // Se response.data já é UpdateResponse, retornar diretamente
-      // Se response.data tem a estrutura { success, message, steps }, usar response.data
-      return response.data;
     },
     onSuccess: (data) => {
       setUpdateProgress('Atualização concluída! Reiniciando aplicação...');
       success(data.message || 'Atualização concluída com sucesso! A aplicação será reiniciada em breve.');
       
-      // Invalidar query de atualizações para recarregar após reinício
-      queryClient.invalidateQueries({ queryKey: ['atualizacoes'] });
+      // Fechar modal imediatamente para evitar requisições durante reinício
+      setIsUpdating(false);
+      onClose();
       
-      // Fechar modal após alguns segundos
+      // Invalidar query de atualizações após um delay maior (quando backend já reiniciou)
+      // Não fazer isso imediatamente porque o backend está reiniciando
       setTimeout(() => {
-        setIsUpdating(false);
+        // Tentar invalidar queries após o backend ter reiniciado
+        // Se falhar, não é problema, o usuário pode recarregar a página
+        try {
+          queryClient.invalidateQueries({ queryKey: ['atualizacoes'] });
+        } catch (err) {
+          // Ignorar erros de conexão durante reinício
+          console.debug('Não foi possível invalidar queries (backend reiniciando)');
+        }
         setUpdateProgress('');
-        onClose();
-      }, 3000);
+      }, 5000); // Aguardar 5 segundos para o backend reiniciar
     },
     onError: (err: unknown) => {
       setIsUpdating(false);
       setUpdateProgress('');
+      
+      // Verificar se é erro de conexão (backend reiniciando)
       const axiosError = err as AxiosError<{ message?: string; steps?: Record<string, { error?: string }> }>;
-      const errorMessage = axiosError.response?.data?.message || 'Erro ao executar atualização';
+      
+      // Se for erro de conexão (ECONNREFUSED, ETIMEDOUT, etc), pode ser que o backend tenha reiniciado
+      // com sucesso mas a resposta não chegou. Nesse caso, mostrar mensagem informativa
+      if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ETIMEDOUT' || axiosError.code === 'ERR_NETWORK' || 
+          (axiosError.message && (axiosError.message.includes('Network Error') || axiosError.message.includes('timeout')))) {
+        // Pode ser que a atualização tenha sido concluída mas o backend reiniciou antes da resposta
+        success('Atualização pode ter sido concluída. O backend está reiniciando. Aguarde alguns segundos e recarregue a página se necessário.');
+        onClose();
+        return;
+      }
+      
+      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Erro ao executar atualização';
       showError(errorMessage);
     },
   });
