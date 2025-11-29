@@ -62,7 +62,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
           // response.data contém a resposta do backend após normalização
           // Pode ser: { success: true, data: [...], versao_atual: '...' } ou
           // { success: true, data: { success: true, data: [...], versao_atual: '...' } }
-          const backendResponse = response.data as any;
+          const backendResponse = response.data as BackendAtualizacoesResponse | { data: BackendAtualizacoesResponse } | Atualizacao[];
           
           // Tentar extrair versão e dados de diferentes estruturas possíveis
           if (backendResponse && typeof backendResponse === 'object') {
