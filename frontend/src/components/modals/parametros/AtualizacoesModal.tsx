@@ -60,33 +60,33 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
           let versao: string = 'N/A';
           
           // response.data contém a resposta do backend após normalização
-          // Pode ser: { success: true, data: [...], versao_atual: '...' } ou
-          // { success: true, data: { success: true, data: [...], versao_atual: '...' } }
+          // Backend retorna: { success: true, data: [...], versao_atual: '...' }
+          // Após normalização: response.data pode ser o objeto completo
           const backendResponse = response.data;
           
           // Tentar extrair versão e dados de diferentes estruturas possíveis
           if (backendResponse && typeof backendResponse === 'object') {
-            // Caso 1: Se é array diretamente
+            // Caso 1: Se é array diretamente (não esperado, mas possível)
             if (Array.isArray(backendResponse)) {
               atualizacoesArray = backendResponse;
             }
             // Caso 2: response.data tem versao_atual diretamente (BackendAtualizacoesResponse)
-            else if ('versao_atual' in backendResponse && 'data' in backendResponse) {
+            // Este é o caso esperado: { success: true, data: [...], versao_atual: '...' }
+            else if ('versao_atual' in backendResponse) {
               const typedResponse = backendResponse as BackendAtualizacoesResponse;
-              if (typedResponse.versao_atual) {
-                versao = typedResponse.versao_atual;
-              }
+              versao = typedResponse.versao_atual || 'N/A';
               if (Array.isArray(typedResponse.data)) {
                 atualizacoesArray = typedResponse.data;
               }
             }
             // Caso 3: response.data.data tem versao_atual (normalização dupla)
+            // Se o ResponseTransformer envolveu novamente: { data: { success: true, data: [...], versao_atual: '...' } }
             else if ('data' in backendResponse) {
               const responseWithData = backendResponse as { data: unknown };
               if (responseWithData.data && typeof responseWithData.data === 'object' && !Array.isArray(responseWithData.data)) {
                 const nestedData = responseWithData.data as BackendAtualizacoesResponse;
-                if ('versao_atual' in nestedData && nestedData.versao_atual) {
-                  versao = nestedData.versao_atual;
+                if ('versao_atual' in nestedData) {
+                  versao = nestedData.versao_atual || 'N/A';
                 }
                 if ('data' in nestedData && Array.isArray(nestedData.data)) {
                   atualizacoesArray = nestedData.data;
@@ -95,10 +95,8 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             }
           }
           
-          // Salvar versão atual do sistema
-          if (versao && versao !== 'N/A') {
-            setVersaoAtual(versao);
-          }
+          // Salvar versão atual do sistema (sempre, mesmo se for 'N/A')
+          setVersaoAtual(versao);
           
           return atualizacoesArray;
         }
