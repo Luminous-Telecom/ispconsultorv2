@@ -152,6 +152,8 @@ export class AtualizacoesController {
    * Requer autenticação e permissão de admin
    */
   static async update(req: Request, res: Response): Promise<void> {
+    let branch = 'main';
+    
     try {
       // Verificar se o usuário é admin
       if (!AtualizacoesController.isAdmin(req)) {
@@ -162,7 +164,7 @@ export class AtualizacoesController {
         return;
       }
 
-      const { branch = 'main' } = req.body;
+      branch = req.body?.branch || 'main';
 
       // Validar branch
       if (typeof branch !== 'string' || !branch.trim()) {
