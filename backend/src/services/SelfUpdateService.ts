@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
+import fs from 'fs';
 import { logger } from '../utils/logger';
 
 const execAsync = promisify(exec);
@@ -39,24 +40,26 @@ export class SelfUpdateService {
     // Se estiver compilado: backend/dist/src/services -> volta 4 níveis -> raiz
     const currentDir = __dirname;
     
+    logger.info('Inicializando SelfUpdateService', { currentDir });
+    
     // Verifica se estamos no diretório dist (compilado) ou src (desenvolvimento)
     if (currentDir.includes('/dist/') || currentDir.includes('\\dist\\')) {
       // Compilado: backend/dist/src/services -> volta 4 níveis
       this.projectRoot = path.resolve(currentDir, '../../../..');
+      this.backendPath = path.resolve(currentDir, '../../..');
     } else {
       // Desenvolvimento: backend/src/services -> volta 3 níveis
       this.projectRoot = path.resolve(currentDir, '../../..');
-    }
-    
-    // O backendPath é sempre o diretório onde está o package.json do backend
-    // Se estamos em dist, volta 1 nível. Se estamos em src, volta 2 níveis.
-    if (currentDir.includes('/dist/') || currentDir.includes('\\dist\\')) {
-      this.backendPath = path.resolve(currentDir, '../../..');
-    } else {
       this.backendPath = path.resolve(currentDir, '../..');
     }
     
     this.pm2ProcessName = process.env.PM2_PROCESS_NAME || 'BackNet-backend';
+    
+    logger.info('SelfUpdateService inicializado', {
+      projectRoot: this.projectRoot,
+      backendPath: this.backendPath,
+      pm2ProcessName: this.pm2ProcessName,
+    });
   }
 
   /**
@@ -68,6 +71,18 @@ export class SelfUpdateService {
     description: string
   ): Promise<CommandResult> {
     try {
+      // Verificar se o diretório existe
+      if (!fs.existsSync(cwd)) {
+        const errorMsg = `Diretório não existe: ${cwd}`;
+        logger.error(`Erro ao executar: ${description}`, { error: errorMsg });
+        return {
+          success: false,
+          stdout: '',
+          stderr: errorMsg,
+          error: errorMsg,
+        };
+      }
+
       logger.info(`Executando: ${description}`, { command, cwd });
 
       const { stdout, stderr } = await execAsync(command, {
@@ -92,12 +107,16 @@ export class SelfUpdateService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorOutput = error as { stdout?: string; stderr?: string };
+      const errorOutput = error as { stdout?: string; stderr?: string; code?: number };
 
+      // Log detalhado do erro
       logger.error(`Erro ao executar: ${description}`, {
         error: errorMessage,
+        code: errorOutput.code,
         stdoutLength: errorOutput.stdout?.length || 0,
         stderrLength: errorOutput.stderr?.length || 0,
+        stdout: errorOutput.stdout?.substring(0, 500) || '', // Primeiros 500 chars
+        stderr: errorOutput.stderr?.substring(0, 500) || '', // Primeiros 500 chars
       });
 
       return {
@@ -113,6 +132,18 @@ export class SelfUpdateService {
    * Executa git pull na branch especificada
    */
   private async gitPull(branch: string = 'main'): Promise<CommandResult> {
+    // Verificar se é um repositório git válido
+    const gitDir = path.join(this.projectRoot, '.git');
+    if (!fs.existsSync(gitDir)) {
+      logger.error('Diretório .git não encontrado', { projectRoot: this.projectRoot });
+      return {
+        success: false,
+        stdout: '',
+        stderr: `Diretório .git não encontrado em ${this.projectRoot}. Certifique-se de que está em um repositório Git válido.`,
+        error: 'Repositório Git não encontrado',
+      };
+    }
+
     const command = `git pull origin ${branch}`;
     return this.executeCommand(command, this.projectRoot, 'Git Pull');
   }
@@ -150,10 +181,47 @@ export class SelfUpdateService {
   }
 
   /**
+   * Verifica se os comandos necessários estão disponíveis
+   */
+  private async verifyCommands(): Promise<{ success: boolean; missing: string[] }> {
+    const commands = ['git', 'npm', 'pm2'];
+    const missing: string[] = [];
+
+    for (const cmd of commands) {
+      try {
+        await execAsync(`which ${cmd}`, { timeout: 5000 });
+      } catch {
+        missing.push(cmd);
+      }
+    }
+
+    if (missing.length > 0) {
+      logger.error('Comandos necessários não encontrados', { missing });
+    }
+
+    return { success: missing.length === 0, missing };
+  }
+
+  /**
    * Executa o processo completo de atualização
    * Retorna o resultado ANTES de reiniciar o PM2 para que o frontend possa exibir feedback
    */
   async executeUpdate(branch: string = 'main'): Promise<UpdateResult> {
+    // Verificar se os comandos necessários estão disponíveis
+    const commandCheck = await this.verifyCommands();
+    if (!commandCheck.success) {
+      return {
+        success: false,
+        message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
+        steps: {
+          gitPull: { success: false, stdout: '', stderr: `Comandos faltando: ${commandCheck.missing.join(', ')}` },
+          npmInstall: { success: false, stdout: '', stderr: '' },
+          build: { success: false, stdout: '', stderr: '' },
+          migrate: { success: false, stdout: '', stderr: '' },
+        },
+      };
+    }
+
     const steps = {
       gitPull: await this.gitPull(branch),
       npmInstall: { success: false, stdout: '', stderr: '' } as CommandResult,

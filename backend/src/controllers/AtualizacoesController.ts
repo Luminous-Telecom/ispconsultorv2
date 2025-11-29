@@ -178,8 +178,34 @@ export class AtualizacoesController {
         usuario: (req as AuthenticatedRequest).user,
       });
 
-      const updateService = new SelfUpdateService();
-      const result = await updateService.executeUpdate(branch);
+      let updateService: SelfUpdateService;
+      try {
+        updateService = new SelfUpdateService();
+      } catch (error) {
+        logger.error('Erro ao criar SelfUpdateService', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        });
+        res.status(500).json({
+          success: false,
+          message: `Erro ao inicializar serviço de atualização: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        });
+        return;
+      }
+
+      let result;
+      try {
+        result = await updateService.executeUpdate(branch);
+      } catch (error) {
+        logger.error('Erro inesperado ao executar atualização', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        res.status(500).json({
+          success: false,
+          message: `Erro inesperado durante atualização: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        });
+        return;
+      }
 
       if (!result.success) {
         logger.error('Falha no processo de atualização', {
