@@ -110,8 +110,12 @@ function Table<T extends { id: number | string }>({
       const tableContainer = fabContainer.closest('.table-container, .table-mobile-container') || fabContainer.parentElement;
       const paginationEl = tableContainer ? tableContainer.querySelector('.table-mobile-pagination') : null;
       
-      // Se tiver paginação visível, usa a altura dela. Se não, usa 16px (margem padrão do CSS)
-      const baseBottom = (paginationEl && paginationEl.clientHeight > 0) ? paginationEl.clientHeight : 16;
+      // Se tiver paginação visível, usa a altura dela (mínimo 56px). Se não, usa 16px (margem padrão)
+      let baseBottom = 16;
+      if (paginationEl && paginationEl.clientHeight > 0) {
+        // Garantir que não fique em cima da paginação (altura mínima de segurança 56px ~ 3.5rem)
+        baseBottom = Math.max(paginationEl.clientHeight, 56) + 8; // +8px de respiro
+      }
 
       let bottomValue = baseBottom;
 
