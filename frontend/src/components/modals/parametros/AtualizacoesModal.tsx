@@ -14,7 +14,7 @@ interface Atualizacao {
   tipo: 'feature' | 'bugfix' | 'security' | 'melhoria';
 }
 
-interface AtualizacoesResponse {
+interface BackendAtualizacoesResponse {
   success: boolean;
   data: Atualizacao[];
   versao_atual: string;
@@ -51,16 +51,16 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       try {
         // Buscar da API usando apiService
         // Backend retorna: { success: true, data: Atualizacao[], versao_atual: string }
-        // ApiClient retorna: ApiResponse<{ success: true, data: [...], versao_atual: '...' }>
+        // ApiClient retorna: ApiResponse<BackendAtualizacoesResponse>
         // Então: response = { success: true, data: { success: true, data: [...], versao_atual: '...' } }
-        const response = await apiService.get<{ success: boolean; data: Atualizacao[]; versao_atual: string }>('/atualizacoes');
+        const response = await apiService.get<BackendAtualizacoesResponse>('/atualizacoes');
         
         if (response.success && response.data) {
           let atualizacoesArray: Atualizacao[] = [];
           let versao: string = 'N/A';
           
           // response.data contém a resposta do backend: { success: true, data: [...], versao_atual: '...' }
-          const backendResponse = response.data as any;
+          const backendResponse = response.data as BackendAtualizacoesResponse;
           
           // Verificar se tem propriedade 'data' (array) e 'versao_atual'
           if (backendResponse && typeof backendResponse === 'object') {
