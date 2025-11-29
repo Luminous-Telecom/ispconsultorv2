@@ -539,8 +539,10 @@ jobs:
       - name: Criar Release no GitHub
         if: success()
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PROD_PAT }}
         run: |
+          cd deployment
+          
           # Obter versão do package.json (prioridade: backend > frontend)
           if [ -f "backend/package.json" ]; then
             VERSION=$(node -p "require('./backend/package.json').version")
@@ -554,11 +556,12 @@ jobs:
           COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
           TAG_NAME="v${VERSION}-${COMMIT_HASH}"
           
-          # Criar tag e push
-          git tag -a "${TAG_NAME}" -m "${COMMIT_MESSAGE}" 2>/dev/null || echo "Tag já existe"
+          # Criar tag no repositório de produção
+          echo "=== Criando tag ${TAG_NAME} ==="
+          git tag -a "${TAG_NAME}" -m "${COMMIT_MESSAGE}" 2>/dev/null || echo "Tag já existe localmente"
           git push origin "${TAG_NAME}" 2>/dev/null || echo "Tag já existe no remoto"
           
-          # Criar release usando API do GitHub
+          # Criar release usando API do GitHub no repositório de produção
           RELEASE_BODY="${COMMIT_MESSAGE}
 
           **Detalhes:**
@@ -567,44 +570,65 @@ jobs:
           - Data: ${{ steps.commit_info.outputs.date }}
           - Workflow: ${{ github.workflow }}"
           
+          echo "=== Criando release ${TAG_NAME} no repositório Luminous-Telecom/backnet.prod ==="
+          
           # Criar release via API usando Node.js para escapar JSON corretamente
           node -e "
             const https = require('https');
+            
+            const releaseBody = \`${RELEASE_BODY}\`;
             const data = JSON.stringify({
               tag_name: '${TAG_NAME}',
               name: 'Release ${TAG_NAME}',
-              body: \`${RELEASE_BODY}\`,
+              body: releaseBody,
               draft: false,
               prerelease: false
             });
             
             const options = {
               hostname: 'api.github.com',
-              path: '/repos/${{ github.repository }}/releases',
+              path: '/repos/Luminous-Telecom/backnet.prod/releases',
               method: 'POST',
               headers: {
-                'Authorization': 'token ${GITHUB_TOKEN}',
+                'Authorization': 'token ' + process.env.GITHUB_TOKEN,
                 'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'GitHub-Actions',
                 'Content-Type': 'application/json',
-                'Content-Length': data.length
+                'Content-Length': Buffer.byteLength(data)
               }
             };
             
             const req = https.request(options, (res) => {
-              if (res.statusCode === 201) {
-                console.log('Release criada com sucesso');
-              } else {
-                console.log('Release já existe ou erro:', res.statusCode);
-              }
+              let responseData = '';
+              
+              res.on('data', (chunk) => {
+                responseData += chunk;
+              });
+              
+              res.on('end', () => {
+                if (res.statusCode === 201) {
+                  console.log('✓ Release criada com sucesso');
+                  const release = JSON.parse(responseData);
+                  console.log('Release URL:', release.html_url);
+                } else if (res.statusCode === 422) {
+                  console.log('⚠ Release já existe (422)');
+                } else {
+                  console.log('⚠ Erro ao criar release. Status:', res.statusCode);
+                  console.log('Resposta:', responseData);
+                }
+              });
             });
             
             req.on('error', (e) => {
-              console.log('Erro ao criar release:', e.message);
+              console.error('✗ Erro ao criar release:', e.message);
+              process.exit(1);
             });
             
             req.write(data);
             req.end();
-          " || echo "Erro ao criar release"
+          "
+          
+          echo "=== Release processada ==="
       
       - name: Limpar pastas de build
         run: |
