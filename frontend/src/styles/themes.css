@@ -852,6 +852,9 @@ body {
   z-index: 1000; /* Acima da paginação (1000) mas abaixo do dropdown de ações (99999) */
 }
 
+/* Nota: Posicionamento dinâmico do FAB é feito via JavaScript em Table.tsx
+   para ajustar automaticamente quando há legendas visíveis */
+
 .table-mobile-fab-btn {
   width: 56px;
   height: 56px;

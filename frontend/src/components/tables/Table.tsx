@@ -95,6 +95,93 @@ function Table<T extends { id: number | string }>({
   const dropdownRefs = useRef<Map<number | string, HTMLDivElement>>(new Map());
   const buttonRefs = useRef<Map<number | string, HTMLButtonElement>>(new Map());
   const fabDropdownRef = useRef<HTMLDivElement | null>(null);
+  const fabContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Ajustar posição do FAB dinamicamente quando há legendas visíveis
+  useEffect(() => {
+    if (!isMobile || !fabContainerRef.current) return;
+
+    const updateFabPosition = () => {
+      const fabContainer = fabContainerRef.current;
+      if (!fabContainer) return;
+
+      // Pegar altura real da paginação se existir e estiver visível dentro do mesmo contexto
+      // Buscar paginação no mesmo contexto da tabela para evitar pegar de outras tabelas
+      const tableContainer = fabContainer.closest('.table-container, .table-mobile-container') || fabContainer.parentElement;
+      const paginationEl = tableContainer ? tableContainer.querySelector('.table-mobile-pagination') : null;
+      
+      // Se tiver paginação visível, usa a altura dela. Se não, usa 16px (margem padrão do CSS)
+      const baseBottom = (paginationEl && paginationEl.clientHeight > 0) ? paginationEl.clientHeight : 16;
+
+      let bottomValue = baseBottom;
+
+      // Restringir busca de legendas ao contexto atual (Modal ou Página) para evitar pegar elementos de fundo
+      const contextContainer = fabContainer.closest('.modal-content, .responsive-dialog-mobile-content, .main-content, .card') || document.body;
+      const legendas = contextContainer.querySelectorAll('.financeiro-resumo, .contrato-totais-resumo');
+      
+      const viewportHeight = window.innerHeight;
+      const fabMargin = 12;
+
+      legendas.forEach((legenda) => {
+        const rect = legenda.getBoundingClientRect();
+        
+        // Verificar se a legenda está visível e na parte inferior da tela
+        // 1. Altura > 0 e largura > 0 (visível)
+        // 2. Topo abaixo da metade da tela (para evitar elementos no topo)
+        // 3. Topo visível dentro da viewport
+        if (rect.height > 0 && rect.width > 0 && rect.top > (viewportHeight / 2) && rect.top < viewportHeight) {
+          // Se a legenda está visível no fundo, o FAB deve ficar acima dela
+          const distFromBottom = viewportHeight - rect.top;
+          const neededBottom = distFromBottom + fabMargin;
+          
+          if (neededBottom > bottomValue) {
+            bottomValue = neededBottom;
+          }
+        }
+      });
+      
+      fabContainer.style.bottom = `${bottomValue}px`;
+    };
+
+    // Atualizar posição inicial após um pequeno delay para garantir que o DOM está renderizado
+    const initialTimeout = setTimeout(updateFabPosition, 100);
+
+    // Observar mudanças nas legendas (MutationObserver)
+    const observer = new MutationObserver(updateFabPosition);
+    
+    // Observar mudanças no DOM (quando legendas aparecem/desaparecem ou mudam posição)
+    const targetNode = document.body;
+    observer.observe(targetNode, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+
+    // Observar mudanças de scroll e resize (usar debounce para performance)
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(updateFabPosition, 50);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', updateFabPosition);
+    window.addEventListener('orientationchange', updateFabPosition);
+
+    // Atualizar periodicamente para garantir que está correto (fallback)
+    const intervalId = setInterval(updateFabPosition, 1000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateFabPosition);
+      window.removeEventListener('orientationchange', updateFabPosition);
+      clearInterval(intervalId);
+      clearTimeout(scrollTimeout);
+    };
+  }, [isMobile]);
   
   // Calcular posição do dropdown para evitar sobreposição com paginação
   useEffect(() => {
@@ -1528,7 +1615,7 @@ function Table<T extends { id: number | string }>({
         if (fabActions.length === 0) return null;
         
         return (
-          <div className="table-mobile-fab-container">
+          <div ref={fabContainerRef} className="table-mobile-fab-container">
             {/* Botão FAB principal */}
             <button
               type="button"
