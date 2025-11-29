@@ -14,6 +14,12 @@ interface Atualizacao {
   tipo: 'feature' | 'bugfix' | 'security' | 'melhoria';
 }
 
+interface AtualizacoesResponse {
+  success: boolean;
+  data: Atualizacao[];
+  versao_atual: string;
+}
+
 interface UpdateResponse {
   success: boolean;
   message: string;
@@ -36,6 +42,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<string>('');
+  const [versaoAtual, setVersaoAtual] = useState<string>('N/A');
 
   // Query para buscar atualizações
   const { data: atualizacoes, isLoading, error } = useQuery<Atualizacao[]>({
@@ -43,17 +50,36 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
     queryFn: async (): Promise<Atualizacao[]> => {
       try {
         // Buscar da API usando apiService
-        const response = await apiService.get<{ success: boolean; data: Atualizacao[] }>('/atualizacoes');
-        // Retornar data.data pois a API retorna { success: true, data: [...] }
+        // Backend retorna: { success: true, data: Atualizacao[], versao_atual: string }
+        // ApiClient retorna: ApiResponse<{ success: true, data: [...], versao_atual: '...' }>
+        // Então: response = { success: true, data: { success: true, data: [...], versao_atual: '...' } }
+        const response = await apiService.get<{ success: boolean; data: Atualizacao[]; versao_atual: string }>('/atualizacoes');
+        
         if (response.success && response.data) {
-          // Se response.data já é um array, retornar diretamente
-          // Se response.data tem uma propriedade data, retornar response.data.data
-          if (Array.isArray(response.data)) {
-            return response.data;
+          let atualizacoesArray: Atualizacao[] = [];
+          let versao: string = 'N/A';
+          
+          // response.data contém a resposta do backend: { success: true, data: [...], versao_atual: '...' }
+          const backendResponse = response.data as any;
+          
+          // Verificar se tem propriedade 'data' (array) e 'versao_atual'
+          if (backendResponse && typeof backendResponse === 'object') {
+            if (backendResponse.data && Array.isArray(backendResponse.data)) {
+              atualizacoesArray = backendResponse.data;
+              versao = backendResponse.versao_atual || 'N/A';
+            } 
+            // Se response.data é diretamente um array (caso o ResponseTransformer não tenha normalizado)
+            else if (Array.isArray(backendResponse)) {
+              atualizacoesArray = backendResponse;
+            }
           }
-          if (response.data.data && Array.isArray(response.data.data)) {
-            return response.data.data;
+          
+          // Salvar versão atual do sistema
+          if (versao && versao !== 'N/A') {
+            setVersaoAtual(versao);
           }
+          
+          return atualizacoesArray;
         }
         return [];
       } catch (err) {
@@ -189,10 +215,10 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
                 padding: '0.5rem 1.5rem',
                 minWidth: '200px'
               }}>
-                <span className="text-muted small d-block mb-1" style={{ fontSize: '0.7rem' }}>Versão Atual</span>
+                <span className="text-muted small d-block mb-1" style={{ fontSize: '0.7rem' }}>Versão Atual do Sistema</span>
                 <h6 className="mb-0 fw-bold text-primary" style={{ fontSize: '1rem' }}>
                   <i className="bi bi-check-circle-fill text-success me-1" style={{ fontSize: '0.875rem' }}></i>
-                  v{atualizacoes[atualizacoes.length - 1].versao}
+                  v{versaoAtual}
                 </h6>
               </div>
             </div>

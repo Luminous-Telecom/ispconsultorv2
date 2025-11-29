@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { logger } from '../utils/logger';
 import axios from 'axios';
+import path from 'path';
+import fs from 'fs';
 import { SelfUpdateService } from '../services/SelfUpdateService';
 import { AuthenticatedRequest } from '../types/auth';
 
@@ -107,10 +109,36 @@ export class AtualizacoesController {
         repo: githubRepo 
       });
 
+      // Obter versão atual do sistema (package.json do backend)
+      // Em desenvolvimento: __dirname = backend/src/controllers -> volta 2 níveis = backend/package.json
+      // Em produção: __dirname = backend/dist/src/controllers -> volta 3 níveis = backend/package.json
+      let versaoAtual = 'N/A';
+      try {
+        const isCompiled = __dirname.includes('/dist/') || __dirname.includes('\\dist\\');
+        const packageJsonPath = isCompiled 
+          ? path.join(__dirname, '../../../package.json')  // Compilado: volta 3 níveis
+          : path.join(__dirname, '../../package.json');    // Desenvolvimento: volta 2 níveis
+        
+        if (fs.existsSync(packageJsonPath)) {
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+          versaoAtual = packageJson.version || 'N/A';
+          logger.info('Versão do sistema obtida do package.json', { 
+            versao: versaoAtual,
+            path: packageJsonPath 
+          });
+        } else {
+          logger.warn('package.json não encontrado', { path: packageJsonPath });
+        }
+      } catch (error) {
+        logger.warn('Erro ao ler versão do package.json', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        });
+      }
+
       res.json({
         success: true,
         data: atualizacoes,
-        versao_atual: atualizacoes[0]?.versao || 'N/A'
+        versao_atual: versaoAtual
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
