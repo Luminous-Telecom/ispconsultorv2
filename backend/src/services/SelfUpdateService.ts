@@ -35,50 +35,64 @@ export class SelfUpdateService {
   private readonly pm2ProcessName: string;
 
   constructor() {
-    // Detecta o diretório raiz do projeto
-    // Se estiver em desenvolvimento: backend/src/services -> volta 3 níveis -> raiz
-    // Se estiver compilado: backend/dist/src/services -> volta 4 níveis -> raiz
     const currentDir = __dirname;
-    
     logger.info('Inicializando SelfUpdateService', { currentDir });
     
-    // Verifica se estamos no diretório dist (compilado) ou src (desenvolvimento)
-    if (currentDir.includes('/dist/') || currentDir.includes('\\dist\\')) {
-      // Compilado: backend/dist/src/services -> volta 4 níveis
-      this.projectRoot = path.resolve(currentDir, '../../../..');
-      this.backendPath = path.resolve(currentDir, '../../..');
-    } else {
-      // Desenvolvimento: backend/src/services -> volta 3 níveis
-      this.projectRoot = path.resolve(currentDir, '../../..');
-      this.backendPath = path.resolve(currentDir, '../..');
-    }
+    // 1. Encontrar a raiz do Git (onde está a pasta .git)
+    // Isso vai procurar em /opt/backnet.prod/backend/dist/..., subir até achar /opt/backnet.prod
+    const gitRoot = this.findPathWith(currentDir, '.git');
     
+    if (gitRoot) {
+      this.projectRoot = gitRoot;
+    } else {
+      // Fallback de emergência se não achar (mas o findPathWith deve achar)
+      this.projectRoot = path.resolve(currentDir, '../../..');
+      logger.error('CRÍTICO: Não foi possível encontrar a pasta .git automaticamente.');
+    }
+
+    // 2. Definir onde o backend roda (para npm install, build, migrations)
+    // O backend está dentro da pasta 'backend' relativa ao git root?
+    // Se o script está rodando, ele já está dentro do backend.
+    // Vamos procurar o package.json mais próximo do script atual.
+    const backendRoot = this.findPathWith(currentDir, 'package.json');
+    this.backendPath = backendRoot || path.resolve(this.projectRoot, 'backend');
+
     this.pm2ProcessName = process.env.PM2_PROCESS_NAME || 'BackNet-backend';
     
-    // Validar se os caminhos existem (mas não lançar erro, apenas logar)
-    // Em produção, os caminhos podem estar corretos mas o código ainda não foi deployado
-    if (!fs.existsSync(this.projectRoot)) {
-      logger.warn('projectRoot não existe', { 
-        projectRoot: this.projectRoot,
-        currentDir: __dirname,
-      });
-    }
-    
-    if (!fs.existsSync(this.backendPath)) {
-      logger.warn('backendPath não existe', { 
-        backendPath: this.backendPath,
-        currentDir: __dirname,
-      });
-    }
-    
-    logger.info('SelfUpdateService inicializado', {
-      projectRoot: this.projectRoot,
-      backendPath: this.backendPath,
-      pm2ProcessName: this.pm2ProcessName,
-      projectRootExists: fs.existsSync(this.projectRoot),
-      backendPathExists: fs.existsSync(this.backendPath),
-      currentDir: __dirname,
+    logger.info('SelfUpdateService Configurado', {
+      currentDir,
+      projectRoot: this.projectRoot, // Deve ser /opt/backnet.prod
+      backendPath: this.backendPath, // Deve ser /opt/backnet.prod/backend
+      hasGit: fs.existsSync(path.join(this.projectRoot, '.git')),
+      hasPackageJson: fs.existsSync(path.join(this.backendPath, 'package.json'))
     });
+  }
+
+  /**
+   * Sobe os diretórios recursivamente procurando por um arquivo ou pasta específica
+   */
+  private findPathWith(startPath: string, targetItem: string): string | null {
+    let currentPath = startPath;
+    const rootPath = path.parse(startPath).root; // Ex: /
+
+    // Loop para subir diretórios até chegar na raiz do sistema
+    while (currentPath !== rootPath) {
+      const targetPath = path.join(currentPath, targetItem);
+      
+      if (fs.existsSync(targetPath)) {
+        return currentPath;
+      }
+      
+      // Sobe um nível
+      currentPath = path.dirname(currentPath);
+    }
+
+    // Verifica a raiz do sistema também
+    if (fs.existsSync(path.join(rootPath, targetItem))) {
+      return rootPath;
+    }
+
+    return null;
   }
 
   /**
