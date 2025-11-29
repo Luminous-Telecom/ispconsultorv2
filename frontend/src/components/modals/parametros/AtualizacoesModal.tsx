@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { apiService } from '@/services/api';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import DraggableModal from '@/components/common/DraggableModal';
+import { ApiResponse } from '@/types/api';
 
 interface Atualizacao {
   versao: string;
@@ -18,6 +19,10 @@ interface BackendAtualizacoesResponse {
   success: boolean;
   data: Atualizacao[];
   versao_atual: string;
+}
+
+interface ApiResponseWithVersao extends ApiResponse<Atualizacao[]> {
+  versao_atual?: string;
 }
 
 interface UpdateResponse {
@@ -53,49 +58,37 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
         // Backend retorna: { success: true, data: Atualizacao[], versao_atual: string }
         // ApiClient retorna: ApiResponse<BackendAtualizacoesResponse>
         // Então: response = { success: true, data: { success: true, data: [...], versao_atual: '...' } }
-        const response = await apiService.get<BackendAtualizacoesResponse>('/atualizacoes');
+        const response = await apiService.get<Atualizacao[]>('/atualizacoes') as ApiResponseWithVersao;
         
-        if (response.success && response.data) {
+        if (response.success) {
           let atualizacoesArray: Atualizacao[] = [];
           let versao: string = 'N/A';
           
-          // response.data contém a resposta do backend após normalização
           // Backend retorna: { success: true, data: [...], versao_atual: '...' }
-          // Após normalização: response.data pode ser o objeto completo
-          const backendResponse = response.data;
+          // ResponseTransformer.normalize pode colocar apenas o array em response.data
+          // Mas versao_atual pode estar em response diretamente (não normalizado)
           
-          // Tentar extrair versão e dados de diferentes estruturas possíveis
-          if (backendResponse && typeof backendResponse === 'object') {
-            // Caso 1: Se é array diretamente (não esperado, mas possível)
-            if (Array.isArray(backendResponse)) {
-              atualizacoesArray = backendResponse;
+          // Caso 1: versao_atual está diretamente em response (não foi normalizado)
+          if (response.versao_atual) {
+            versao = response.versao_atual;
+          }
+          
+          // Caso 2: response.data é o array diretamente (ResponseTransformer normalizou)
+          if (Array.isArray(response.data)) {
+            atualizacoesArray = response.data;
+          }
+          // Caso 3: response.data é o objeto completo com data e versao_atual
+          else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+            const backendResponse = response.data as BackendAtualizacoesResponse;
+            if (backendResponse.versao_atual) {
+              versao = backendResponse.versao_atual;
             }
-            // Caso 2: response.data tem versao_atual diretamente (BackendAtualizacoesResponse)
-            // Este é o caso esperado: { success: true, data: [...], versao_atual: '...' }
-            else if ('versao_atual' in backendResponse) {
-              const typedResponse = backendResponse as BackendAtualizacoesResponse;
-              versao = typedResponse.versao_atual || 'N/A';
-              if (Array.isArray(typedResponse.data)) {
-                atualizacoesArray = typedResponse.data;
-              }
-            }
-            // Caso 3: response.data.data tem versao_atual (normalização dupla)
-            // Se o ResponseTransformer envolveu novamente: { data: { success: true, data: [...], versao_atual: '...' } }
-            else if ('data' in backendResponse) {
-              const responseWithData = backendResponse as { data: unknown };
-              if (responseWithData.data && typeof responseWithData.data === 'object' && !Array.isArray(responseWithData.data)) {
-                const nestedData = responseWithData.data as BackendAtualizacoesResponse;
-                if ('versao_atual' in nestedData) {
-                  versao = nestedData.versao_atual || 'N/A';
-                }
-                if ('data' in nestedData && Array.isArray(nestedData.data)) {
-                  atualizacoesArray = nestedData.data;
-                }
-              }
+            if (Array.isArray(backendResponse.data)) {
+              atualizacoesArray = backendResponse.data;
             }
           }
           
-          // Salvar versão atual do sistema (sempre, mesmo se for 'N/A')
+          // Salvar versão atual do sistema
           setVersaoAtual(versao);
           
           return atualizacoesArray;

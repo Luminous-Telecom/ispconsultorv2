@@ -472,6 +472,79 @@ export class SelfUpdateService {
   }
 
   /**
+   * Atualiza a versão no package.json baseado no commit hash do Git
+   */
+  private async updateVersion(): Promise<CommandResult> {
+    try {
+      // Obter commit hash do Git
+      const { stdout: commitHash } = await execAsync('git rev-parse --short HEAD', {
+        cwd: this.projectRoot,
+        timeout: 5000,
+      });
+
+      const hash = commitHash.trim();
+      if (!hash) {
+        logger.warn('Não foi possível obter commit hash do Git');
+        return {
+          success: true,
+          stdout: 'Commit hash não disponível, versão não atualizada',
+          stderr: '',
+        };
+      }
+
+      // Ler package.json
+      const packageJsonPath = path.join(this.backendPath, 'package.json');
+      if (!fs.existsSync(packageJsonPath)) {
+        logger.warn('package.json não encontrado para atualizar versão');
+        return {
+          success: true,
+          stdout: 'package.json não encontrado, versão não atualizada',
+          stderr: '',
+        };
+      }
+
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      const oldVersion = packageJson.version;
+      const baseVersion = packageJson.version.split('-')[0]; // Ex: "1.0.0" de "1.0.0-hash"
+      const newVersion = `${baseVersion}-${hash}`;
+
+      // Atualizar versão apenas se for diferente
+      if (packageJson.version !== newVersion) {
+        packageJson.version = newVersion;
+        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n', 'utf8');
+        logger.info('Versão atualizada no package.json', {
+          oldVersion,
+          newVersion,
+          commitHash: hash,
+        });
+        return {
+          success: true,
+          stdout: `Versão atualizada: ${newVersion}`,
+          stderr: '',
+        };
+      } else {
+        logger.debug('Versão já está atualizada', { version: newVersion });
+        return {
+          success: true,
+          stdout: `Versão já está atualizada: ${newVersion}`,
+          stderr: '',
+        };
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.warn('Erro ao atualizar versão no package.json', {
+        error: errorMessage,
+      });
+      // Não falhar o processo se a atualização de versão falhar
+      return {
+        success: true,
+        stdout: 'Erro ao atualizar versão, mas processo continua',
+        stderr: errorMessage,
+      };
+    }
+  }
+
+  /**
    * Verifica se o processo PM2 existe
    */
   private async checkPM2Process(): Promise<{ exists: boolean; processInfo?: string }> {
@@ -630,6 +703,19 @@ export class SelfUpdateService {
         message: `Falha ao executar git pull: ${steps.gitPull.error || steps.gitPull.stderr}`,
         steps,
       };
+    }
+
+    // Passo 1.5: Atualizar versão no package.json baseado no commit atual (após git pull)
+    logger.info('Atualizando versão no package.json baseado no commit do Git');
+    const updateVersionResult = await this.updateVersion();
+    if (!updateVersionResult.success) {
+      logger.warn('Falha ao atualizar versão, mas continuando o processo', {
+        error: updateVersionResult.error || updateVersionResult.stderr,
+      });
+    } else {
+      logger.info('Versão atualizada com sucesso', {
+        newVersion: updateVersionResult.stdout,
+      });
     }
 
     // Passo 2: NPM Install

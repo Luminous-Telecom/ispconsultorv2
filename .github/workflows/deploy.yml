@@ -147,6 +147,15 @@ jobs:
             # (pois o backend integra o frontend no build)
             echo "Building backend..."
             npm ci --prefix backend
+            
+            # Atualizar versão no package.json baseado no commit hash
+            echo "Atualizando versão no package.json..."
+            COMMIT_HASH=$(git rev-parse --short HEAD)
+            BASE_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
+            NEW_VERSION="${BASE_VERSION}-${COMMIT_HASH}"
+            node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('backend/package.json', 'utf8')); pkg.version = '${NEW_VERSION}'; fs.writeFileSync('backend/package.json', JSON.stringify(pkg, null, 2) + '\n');"
+            echo "✓ Versão atualizada: ${NEW_VERSION}"
+            
             npm run build --prefix backend
             
             # Verificar se backend foi buildado
