@@ -94,6 +94,10 @@ jobs:
           echo "config_changed=${CONFIG_CHANGED}" >> $GITHUB_OUTPUT
           echo "docker_changed=${DOCKER_CHANGED}" >> $GITHUB_OUTPUT
           
+          # Salvar commits para uso no incremento de versão
+          echo "prev_commit=${PREV_COMMIT}" >> $GITHUB_OUTPUT
+          echo "current_commit=${CURRENT_COMMIT}" >> $GITHUB_OUTPUT
+          
           echo "=== RESUMO DAS MUDANÇAS DETECTADAS ==="
           echo "Backend alterado: ${BACKEND_CHANGED}"
           echo "Frontend alterado: ${FRONTEND_CHANGED}"
@@ -148,13 +152,113 @@ jobs:
             echo "Building backend..."
             npm ci --prefix backend
             
-            # Atualizar versão no package.json baseado no commit hash
-            echo "Atualizando versão no package.json..."
-            COMMIT_HASH=$(git rev-parse --short HEAD)
-            BASE_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
-            NEW_VERSION="${BASE_VERSION}-${COMMIT_HASH}"
-            node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('backend/package.json', 'utf8')); pkg.version = '${NEW_VERSION}'; fs.writeFileSync('backend/package.json', JSON.stringify(pkg, null, 2) + '\n');"
-            echo "✓ Versão atualizada: ${NEW_VERSION}"
+            # Incrementar versão automaticamente baseado em commits e arquivos alterados
+            # Segue padrão Semantic Versioning: MAIOR.MENOR.CORREÇÃO (ex: 1.0.0)
+            echo "=== Incrementando versão automaticamente ==="
+            PREV_COMMIT="${{ steps.changes.outputs.prev_commit }}"
+            CURRENT_COMMIT="${{ steps.changes.outputs.current_commit }}"
+            
+            # Obter versão atual do package.json
+            OLD_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
+            echo "📦 Versão atual: ${OLD_VERSION}"
+            
+            # Determinar range de commits para análise
+            if [ -z "${PREV_COMMIT}" ] || [ "${PREV_COMMIT}" == "${CURRENT_COMMIT}" ] || [ "${PREV_COMMIT}" == "0000000000000000000000000000000000000000" ]; then
+              COMMIT_RANGE="-1"
+              echo "🔍 Analisando último commit apenas"
+            else
+              COMMIT_RANGE="${PREV_COMMIT}..${CURRENT_COMMIT}"
+              echo "🔍 Analisando commits: ${COMMIT_RANGE}"
+            fi
+            
+            # Obter mensagens de commit
+            COMMITS=$(git log ${COMMIT_RANGE} --pretty=format:"%s" 2>/dev/null || echo "")
+            
+            # Analisar commits para determinar tipo de incremento
+            HAS_BREAKING=false
+            HAS_FEATURE=false
+            HAS_FIX=false
+            
+            while IFS= read -r commit; do
+              COMMIT_LOWER=$(echo "${commit}" | tr '[:upper:]' '[:lower:]')
+              
+              # Verificar breaking changes
+              if echo "${COMMIT_LOWER}" | grep -qE "(breaking|breaking change|^major:|^major |!)"; then
+                HAS_BREAKING=true
+                echo "  🚨 Breaking change detectado: ${commit}"
+              fi
+              
+              # Verificar novas funcionalidades
+              if echo "${COMMIT_LOWER}" | grep -qE "^(feat|feature|add|new)[: ]"; then
+                HAS_FEATURE=true
+                echo "  ✨ Feature detectada: ${commit}"
+              fi
+              
+              # Verificar correções
+              if echo "${COMMIT_LOWER}" | grep -qE "^(fix|bugfix|patch)[: ]"; then
+                HAS_FIX=true
+                echo "  🔧 Fix detectado: ${commit}"
+              fi
+            done <<< "${COMMITS}"
+            
+            # Determinar tipo de incremento
+            INCREMENT_TYPE="patch"
+            if [ "${HAS_BREAKING}" = "true" ]; then
+              INCREMENT_TYPE="major"
+              echo "🚨 Incremento MAIOR detectado (breaking change)"
+            elif [ "${HAS_FEATURE}" = "true" ]; then
+              INCREMENT_TYPE="minor"
+              echo "✨ Incremento MENOR detectado (nova funcionalidade)"
+            elif [ "${HAS_FIX}" = "true" ]; then
+              INCREMENT_TYPE="patch"
+              echo "🔧 Incremento CORREÇÃO detectado (bug fix)"
+            else
+              # Se não detectar nada específico mas houver commits, incrementar patch
+              if [ -n "${COMMITS}" ]; then
+                INCREMENT_TYPE="patch"
+                echo "📝 Incremento CORREÇÃO (mudanças detectadas)"
+              else
+                echo "⚠ Nenhuma mudança detectada, mantendo versão"
+                INCREMENT_TYPE="none"
+              fi
+            fi
+            
+            # Incrementar versão se necessário
+            if [ "${INCREMENT_TYPE}" != "none" ]; then
+              VERSION=$(node -e "
+                const version = '${OLD_VERSION}';
+                const [major, minor, patch] = version.split('.').map(Number);
+                const type = '${INCREMENT_TYPE}';
+                let newVersion;
+                if (type === 'major') {
+                  newVersion = \`\${major + 1}.0.0\`;
+                } else if (type === 'minor') {
+                  newVersion = \`\${major}.\${minor + 1}.0\`;
+                } else {
+                  newVersion = \`\${major}.\${minor}.\${patch + 1}\`;
+                }
+                console.log(newVersion);
+              ")
+              
+              echo "✅ Nova versão: ${OLD_VERSION} → ${VERSION}"
+              
+              # Atualizar package.json
+              node -e "
+                const fs = require('fs');
+                const path = './backend/package.json';
+                const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+                pkg.version = '${VERSION}';
+                fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
+              "
+            else
+              VERSION="${OLD_VERSION}"
+              echo "✓ Mantendo versão: ${VERSION}"
+            fi
+            
+            # Salvar versão para uso posterior
+            echo "VERSION=${VERSION}" >> $GITHUB_ENV
+            echo "OLD_VERSION=${OLD_VERSION}" >> $GITHUB_ENV
+            echo "INCREMENT_TYPE=${INCREMENT_TYPE}" >> $GITHUB_ENV
             
             npm run build --prefix backend
             
@@ -553,17 +657,24 @@ jobs:
           cd deployment
           
           # Obter versão do package.json (prioridade: backend > frontend)
-          if [ -f "backend/package.json" ]; then
-            VERSION=$(node -p "require('./backend/package.json').version")
+          # Usar versão incrementada do ambiente se disponível, senão ler do package.json
+          if [ -n "${{ env.VERSION }}" ]; then
+            CLEAN_VERSION="${{ env.VERSION }}"
+            echo "✓ Usando versão incrementada do workflow: ${CLEAN_VERSION}"
+          elif [ -f "backend/package.json" ]; then
+            CLEAN_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
+            echo "✓ Versão obtida do package.json: ${CLEAN_VERSION}"
           elif [ -f "frontend/package.json" ]; then
-            VERSION=$(node -p "require('./frontend/package.json').version")
+            CLEAN_VERSION=$(node -p "require('./frontend/package.json').version.split('-')[0]")
+            echo "✓ Versão obtida do frontend package.json: ${CLEAN_VERSION}"
           else
-            VERSION="1.0.0"
+            CLEAN_VERSION="1.0.0"
+            echo "⚠ Versão não encontrada, usando padrão: ${CLEAN_VERSION}"
           fi
           
           COMMIT_HASH=${{ steps.commit_info.outputs.hash }}
           COMMIT_MESSAGE="${{ steps.commit_info.outputs.message }}"
-          TAG_NAME="v${VERSION}-${COMMIT_HASH}"
+          TAG_NAME="v${CLEAN_VERSION}"
           
           # Criar tag no repositório de produção
           echo "=== Criando tag ${TAG_NAME} ==="

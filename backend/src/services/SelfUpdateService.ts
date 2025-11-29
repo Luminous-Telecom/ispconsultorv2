@@ -480,26 +480,11 @@ export class SelfUpdateService {
   }
 
   /**
-   * Atualiza a versão no package.json baseado no commit hash do Git
+   * Limpa a versão no package.json removendo commit hash (mantém apenas SemVer)
+   * Segue padrão Semantic Versioning: MAIOR.MENOR.CORREÇÃO (ex: 1.0.0)
    */
   private async updateVersion(): Promise<CommandResult> {
     try {
-      // Obter commit hash do Git
-      const { stdout: commitHash } = await execAsync('git rev-parse --short HEAD', {
-        cwd: this.projectRoot,
-        timeout: 5000,
-      });
-
-      const hash = commitHash.trim();
-      if (!hash) {
-        logger.warn('Não foi possível obter commit hash do Git');
-        return {
-          success: true,
-          stdout: 'Commit hash não disponível, versão não atualizada',
-          stderr: '',
-        };
-      }
-
       // Ler package.json
       const packageJsonPath = path.join(this.backendPath, 'package.json');
       if (!fs.existsSync(packageJsonPath)) {
@@ -513,28 +498,43 @@ export class SelfUpdateService {
 
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
       const oldVersion = packageJson.version;
-      const baseVersion = packageJson.version.split('-')[0]; // Ex: "1.0.0" de "1.0.0-hash"
-      const newVersion = `${baseVersion}-${hash}`;
-
-      // Atualizar versão apenas se for diferente
-      if (packageJson.version !== newVersion) {
-        packageJson.version = newVersion;
-        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n', 'utf8');
-        logger.info('Versão atualizada no package.json', {
-          oldVersion,
-          newVersion,
-          commitHash: hash,
+      
+      // Extrair apenas a versão SemVer (remover qualquer sufixo após hífen)
+      // Ex: "1.0.0-19a35e97" -> "1.0.0"
+      // Ex: "1.0.0" -> "1.0.0"
+      const baseVersion = packageJson.version.split('-')[0];
+      
+      // Validar formato SemVer básico (MAIOR.MENOR.CORREÇÃO)
+      const semverPattern = /^\d+\.\d+\.\d+$/;
+      if (!semverPattern.test(baseVersion)) {
+        logger.warn('Versão no package.json não segue formato SemVer', {
+          version: baseVersion,
         });
         return {
           success: true,
-          stdout: `Versão atualizada: ${newVersion}`,
+          stdout: `Versão não segue SemVer (${baseVersion}), mantendo como está`,
+          stderr: '',
+        };
+      }
+
+      // Atualizar versão apenas se houver sufixo para remover
+      if (packageJson.version !== baseVersion) {
+        packageJson.version = baseVersion;
+        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n', 'utf8');
+        logger.info('Versão limpa no package.json (SemVer sem hash)', {
+          oldVersion,
+          newVersion: baseVersion,
+        });
+        return {
+          success: true,
+          stdout: `Versão atualizada para SemVer: ${baseVersion}`,
           stderr: '',
         };
       } else {
-        logger.debug('Versão já está atualizada', { version: newVersion });
+        logger.debug('Versão já está em formato SemVer', { version: baseVersion });
         return {
           success: true,
-          stdout: `Versão já está atualizada: ${newVersion}`,
+          stdout: `Versão já está em formato SemVer: ${baseVersion}`,
           stderr: '',
         };
       }
@@ -774,16 +774,18 @@ export class SelfUpdateService {
       };
     }
 
-    // Passo 1.5: Atualizar versão no package.json baseado no commit atual (após git pull)
-    logger.info('Atualizando versão no package.json baseado no commit do Git');
+    // Passo 1.5: Limpar versão no package.json removendo commit hash (manter apenas SemVer)
+    // Nota: A versão já deve estar em formato SemVer correto após git pull
+    // Este passo apenas garante que não há sufixos indesejados
+    logger.info('Verificando versão no package.json (formato SemVer)');
     const updateVersionResult = await this.updateVersion();
     if (!updateVersionResult.success) {
-      logger.warn('Falha ao atualizar versão, mas continuando o processo', {
+      logger.warn('Falha ao verificar versão, mas continuando o processo', {
         error: updateVersionResult.error || updateVersionResult.stderr,
       });
     } else {
-      logger.info('Versão atualizada com sucesso', {
-        newVersion: updateVersionResult.stdout,
+      logger.info('Versão verificada com sucesso', {
+        versionInfo: updateVersionResult.stdout,
       });
     }
 

@@ -141,9 +141,12 @@ export class AtualizacoesController {
           const packageJsonPath = path.join(backendRoot, 'package.json');
           if (fs.existsSync(packageJsonPath)) {
             const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-            versaoAtual = packageJson.version || 'N/A';
+            // Extrair apenas versão SemVer (remover qualquer sufixo após hífen)
+            const rawVersion = packageJson.version || 'N/A';
+            versaoAtual = rawVersion.split('-')[0]; // Remove commit hash se existir
             logger.info('Versão do sistema obtida do package.json', { 
               versao: versaoAtual,
+              versaoOriginal: rawVersion,
               path: packageJsonPath,
               backendRoot
             });
