@@ -62,30 +62,33 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
           // response.data contém a resposta do backend após normalização
           // Pode ser: { success: true, data: [...], versao_atual: '...' } ou
           // { success: true, data: { success: true, data: [...], versao_atual: '...' } }
-          const backendResponse = response.data as BackendAtualizacoesResponse | { data: BackendAtualizacoesResponse } | Atualizacao[];
+          const backendResponse = response.data;
           
           // Tentar extrair versão e dados de diferentes estruturas possíveis
           if (backendResponse && typeof backendResponse === 'object') {
-            // Caso 1: response.data tem versao_atual diretamente
-            if ('versao_atual' in backendResponse && backendResponse.versao_atual) {
-              versao = backendResponse.versao_atual;
-            }
-            // Caso 2: response.data.data tem versao_atual (normalização dupla)
-            else if (backendResponse.data && typeof backendResponse.data === 'object' && 'versao_atual' in backendResponse.data) {
-              versao = backendResponse.data.versao_atual || 'N/A';
-            }
-            
-            // Extrair array de atualizações
-            if (backendResponse.data && Array.isArray(backendResponse.data)) {
-              atualizacoesArray = backendResponse.data;
-            } 
-            // Se backendResponse.data.data existe e é array (normalização dupla)
-            else if (backendResponse.data && typeof backendResponse.data === 'object' && Array.isArray(backendResponse.data.data)) {
-              atualizacoesArray = backendResponse.data.data;
-            }
-            // Se response.data é diretamente um array
-            else if (Array.isArray(backendResponse)) {
+            // Caso 1: Se é array diretamente
+            if (Array.isArray(backendResponse)) {
               atualizacoesArray = backendResponse;
+            }
+            // Caso 2: response.data tem versao_atual diretamente (BackendAtualizacoesResponse)
+            else if ('versao_atual' in backendResponse && 'data' in backendResponse) {
+              const typedResponse = backendResponse as BackendAtualizacoesResponse;
+              if (typedResponse.versao_atual) {
+                versao = typedResponse.versao_atual;
+              }
+              if (Array.isArray(typedResponse.data)) {
+                atualizacoesArray = typedResponse.data;
+              }
+            }
+            // Caso 3: response.data.data tem versao_atual (normalização dupla)
+            else if ('data' in backendResponse && backendResponse.data && typeof backendResponse.data === 'object') {
+              const nestedData = backendResponse.data as BackendAtualizacoesResponse;
+              if ('versao_atual' in nestedData && nestedData.versao_atual) {
+                versao = nestedData.versao_atual;
+              }
+              if ('data' in nestedData && Array.isArray(nestedData.data)) {
+                atualizacoesArray = nestedData.data;
+              }
             }
           }
           
