@@ -59,16 +59,31 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
           let atualizacoesArray: Atualizacao[] = [];
           let versao: string = 'N/A';
           
-          // response.data contém a resposta do backend: { success: true, data: [...], versao_atual: '...' }
-          const backendResponse = response.data as BackendAtualizacoesResponse;
+          // response.data contém a resposta do backend após normalização
+          // Pode ser: { success: true, data: [...], versao_atual: '...' } ou
+          // { success: true, data: { success: true, data: [...], versao_atual: '...' } }
+          const backendResponse = response.data as any;
           
-          // Verificar se tem propriedade 'data' (array) e 'versao_atual'
+          // Tentar extrair versão e dados de diferentes estruturas possíveis
           if (backendResponse && typeof backendResponse === 'object') {
+            // Caso 1: response.data tem versao_atual diretamente
+            if ('versao_atual' in backendResponse && backendResponse.versao_atual) {
+              versao = backendResponse.versao_atual;
+            }
+            // Caso 2: response.data.data tem versao_atual (normalização dupla)
+            else if (backendResponse.data && typeof backendResponse.data === 'object' && 'versao_atual' in backendResponse.data) {
+              versao = backendResponse.data.versao_atual || 'N/A';
+            }
+            
+            // Extrair array de atualizações
             if (backendResponse.data && Array.isArray(backendResponse.data)) {
               atualizacoesArray = backendResponse.data;
-              versao = backendResponse.versao_atual || 'N/A';
             } 
-            // Se response.data é diretamente um array (caso o ResponseTransformer não tenha normalizado)
+            // Se backendResponse.data.data existe e é array (normalização dupla)
+            else if (backendResponse.data && typeof backendResponse.data === 'object' && Array.isArray(backendResponse.data.data)) {
+              atualizacoesArray = backendResponse.data.data;
+            }
+            // Se response.data é diretamente um array
             else if (Array.isArray(backendResponse)) {
               atualizacoesArray = backendResponse;
             }
