@@ -81,13 +81,16 @@ const Notification: React.FC<NotificationProps> = ({
     config.onActionClick?.(action);
   };
 
+  // Garantir que o tipo seja sempre o correto (forçar se necessário)
+  const notificationType = config.type || 'info';
+  
   // Obter ícone baseado no tipo
   const getIcon = () => {
     if (config.icon) {
       return config.icon;
     }
 
-    switch (config.type) {
+    switch (notificationType) {
       case 'success':
         return 'check-circle-fill';
       case 'error':
@@ -104,10 +107,10 @@ const Notification: React.FC<NotificationProps> = ({
   };
 
   // Obter classes CSS
-  const getNotificationClasses = () => {
+  const getNotificationClasses = (): string[] => {
     const classes = ['notification'];
     
-    classes.push(`notification-${config.type}`);
+    classes.push(`notification-${notificationType}`);
     classes.push(`notification-${config.size}`);
     classes.push(`notification-${config.animation}`);
     
@@ -131,7 +134,7 @@ const Notification: React.FC<NotificationProps> = ({
       classes.push(className);
     }
     
-    return classes.join(' ');
+    return classes;
   };
 
   // Obter estilos
@@ -210,10 +213,21 @@ const Notification: React.FC<NotificationProps> = ({
     );
   };
 
+  const notificationClasses = getNotificationClasses();
+  
+  // Verificar se a classe está correta baseada no tipo
+  const expectedClass = `notification-${notificationType}`;
+  const hasCorrectClass = notificationClasses.includes(expectedClass);
+  
+  // Se não tiver a classe correta, adicionar
+  const finalClasses = hasCorrectClass 
+    ? notificationClasses 
+    : notificationClasses.filter((c: string) => !c.startsWith('notification-')).concat(expectedClass);
+
   return (
     <div
       ref={notificationRef}
-      className={getNotificationClasses()}
+      className={finalClasses.join(' ')}
       style={getNotificationStyles()}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -223,11 +237,12 @@ const Notification: React.FC<NotificationProps> = ({
       role="alert"
       aria-live="polite"
       tabIndex={config.closeOnClick ? 0 : -1}
+      data-notification-type={notificationType}
     >
       <div className="notification-content">
         {/* Ícone */}
         <div className="notification-icon">
-          {config.type === 'loading' ? (
+          {notificationType === 'loading' ? (
             <i className={`bi bi-${getIcon()} notification-loading-icon`}></i>
           ) : (
             <i className={`bi bi-${getIcon()}`}></i>

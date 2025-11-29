@@ -268,6 +268,7 @@ export class AtualizacoesController {
             return {
               step: key,
               success: step?.success ?? false,
+              error: step?.error || step?.stderr,
             };
           }),
         });
@@ -278,18 +279,26 @@ export class AtualizacoesController {
           steps: {
             gitPull: {
               success: result.steps.gitPull.success,
+              stdout: result.steps.gitPull.stdout,
+              stderr: result.steps.gitPull.stderr,
               error: result.steps.gitPull.error || result.steps.gitPull.stderr,
             },
             npmInstall: {
               success: result.steps.npmInstall.success,
+              stdout: result.steps.npmInstall.stdout,
+              stderr: result.steps.npmInstall.stderr,
               error: result.steps.npmInstall.error || result.steps.npmInstall.stderr,
             },
             build: {
               success: result.steps.build.success,
+              stdout: result.steps.build.stdout,
+              stderr: result.steps.build.stderr,
               error: result.steps.build.error || result.steps.build.stderr,
             },
             migrate: {
               success: result.steps.migrate.success,
+              stdout: result.steps.migrate.stdout,
+              stderr: result.steps.migrate.stderr,
               error: result.steps.migrate.error || result.steps.migrate.stderr,
             },
           },
@@ -297,25 +306,60 @@ export class AtualizacoesController {
         return;
       }
 
-      // Se chegou até aqui, tudo deu certo
-      // Retornar sucesso ANTES de reiniciar o PM2
-      logger.info('Atualização concluída com sucesso, aguardando reinicialização do PM2');
+      // Se chegou até aqui, tudo deu certo até as migrations
+      // Agora aguardar o PM2 reload completar ANTES de retornar sucesso
+      logger.info('Atualização concluída com sucesso, iniciando reinicialização do PM2');
 
-      // Reiniciar PM2 em background (não aguardar resposta)
-      updateService.reloadPM2().catch((error) => {
+      // Aguardar PM2 reload completar antes de retornar resposta
+      // Isso garante que o frontend só receba sucesso depois que o backend já reiniciou
+      let pm2ReloadResult;
+      try {
+        pm2ReloadResult = await updateService.reloadPM2();
+        logger.info('PM2 reload concluído com sucesso');
+      } catch (error) {
         logger.error('Erro ao reiniciar PM2 após atualização', {
           error: error instanceof Error ? error.message : 'Erro desconhecido',
         });
-      });
+        // Se PM2 reload falhar, ainda retornar sucesso parcial
+        // mas incluir informação sobre o PM2 reload
+        pm2ReloadResult = {
+          success: false,
+          stdout: '',
+          stderr: error instanceof Error ? error.message : 'Erro desconhecido ao reiniciar PM2',
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        };
+      }
 
+      // Retornar sucesso APÓS PM2 reload completar
       res.json({
         success: true,
         message: result.message,
         steps: {
-          gitPull: { success: result.steps.gitPull.success },
-          npmInstall: { success: result.steps.npmInstall.success },
-          build: { success: result.steps.build.success },
-          migrate: { success: result.steps.migrate.success },
+          gitPull: {
+            success: result.steps.gitPull.success,
+            stdout: result.steps.gitPull.stdout,
+            stderr: result.steps.gitPull.stderr,
+          },
+          npmInstall: {
+            success: result.steps.npmInstall.success,
+            stdout: result.steps.npmInstall.stdout,
+            stderr: result.steps.npmInstall.stderr,
+          },
+          build: {
+            success: result.steps.build.success,
+            stdout: result.steps.build.stdout,
+            stderr: result.steps.build.stderr,
+          },
+          migrate: {
+            success: result.steps.migrate.success,
+            stdout: result.steps.migrate.stdout,
+            stderr: result.steps.migrate.stderr,
+          },
+          pm2Reload: {
+            success: pm2ReloadResult.success,
+            stdout: pm2ReloadResult.stdout,
+            stderr: pm2ReloadResult.stderr,
+          },
         },
       });
     } catch (error) {

@@ -29,10 +29,11 @@ interface UpdateResponse {
   success: boolean;
   message: string;
   steps: {
-    gitPull: { success: boolean };
-    npmInstall: { success: boolean };
-    build: { success: boolean };
-    migrate: { success: boolean };
+    gitPull: { success: boolean; stdout?: string; stderr?: string; error?: string };
+    npmInstall: { success: boolean; stdout?: string; stderr?: string; error?: string };
+    build: { success: boolean; stdout?: string; stderr?: string; error?: string };
+    migrate: { success: boolean; stdout?: string; stderr?: string; error?: string };
+    pm2Reload?: { success: boolean; stdout?: string; stderr?: string; error?: string };
   };
 }
 
@@ -47,6 +48,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<string>('');
   const [versaoAtual, setVersaoAtual] = useState<string>('N/A');
+  const [updateLogs, setUpdateLogs] = useState<string[]>([]);
 
   // Query para buscar atualizações
   const { data: atualizacoes, isLoading, error } = useQuery<Atualizacao[]>({
@@ -108,6 +110,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
     mutationFn: async (branch: string = 'main'): Promise<UpdateResponse> => {
       setIsUpdating(true);
       setUpdateProgress('Iniciando atualização...');
+      setUpdateLogs(['Iniciando processo de atualização...']);
       
       try {
         // Timeout aumentado para 10 minutos (600000ms) pois o processo de atualização
@@ -132,10 +135,64 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       }
     },
     onSuccess: (data) => {
-      setUpdateProgress('Atualização concluída! Reiniciando aplicação...');
+      // Adicionar logs dos steps executados
+      const logs: string[] = [...updateLogs];
+      logs.push('✓ Atualização concluída com sucesso!');
+      
+      if (data.steps) {
+        if (data.steps.gitPull?.success) {
+          logs.push('✓ Git Pull: concluído');
+          if (data.steps.gitPull.stdout) {
+            const lines = data.steps.gitPull.stdout.split('\n').filter(l => l.trim()).slice(-3);
+            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
+          }
+        }
+        if (data.steps.npmInstall?.success) {
+          logs.push('✓ NPM Install: concluído');
+          if (data.steps.npmInstall.stdout) {
+            const lines = data.steps.npmInstall.stdout.split('\n').filter(l => l.trim()).slice(-3);
+            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
+          }
+        }
+        if (data.steps.build?.success) {
+          logs.push('✓ Build: concluído');
+          if (data.steps.build.stdout) {
+            const lines = data.steps.build.stdout.split('\n').filter(l => l.trim()).slice(-3);
+            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
+          }
+        }
+        if (data.steps.migrate?.success) {
+          logs.push('✓ Migrations: concluído');
+          if (data.steps.migrate.stdout) {
+            const lines = data.steps.migrate.stdout.split('\n').filter(l => l.trim()).slice(-3);
+            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
+          }
+        }
+        if (data.steps.pm2Reload?.success) {
+          logs.push('✓ PM2 Reload: concluído');
+          if (data.steps.pm2Reload.stdout) {
+            const lines = data.steps.pm2Reload.stdout.split('\n').filter(l => l.trim()).slice(-3);
+            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
+          }
+        } else if (data.steps.pm2Reload && !data.steps.pm2Reload.success) {
+          logs.push('⚠ PM2 Reload: concluído com avisos');
+          if (data.steps.pm2Reload.stderr) {
+            const lines = data.steps.pm2Reload.stderr.split('\n').filter(l => l.trim()).slice(-3);
+            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
+          }
+        }
+      }
+      
+      setUpdateLogs(logs);
+      setUpdateProgress('Atualização concluída! Backend reiniciado com sucesso.');
       
       // Mostrar sucesso ANTES de fechar o modal (verde)
-      success(data.message || 'Atualização concluída com sucesso! A aplicação será reiniciada em breve.');
+      // Usar ID único e duração maior para garantir que apareça corretamente
+      success(data.message || 'Atualização concluída com sucesso! A aplicação será reiniciada em breve.', {
+        id: `update-success-${Date.now()}`,
+        duration: 5000, // 5 segundos para garantir que seja vista
+        type: 'success' // Forçar explicitamente
+      });
       
       // Fechar modal após um pequeno delay para o usuário ver a mensagem de sucesso
       setTimeout(() => {
@@ -155,21 +212,25 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       // Verificar se é erro de conexão (backend reiniciando)
       const axiosError = err as AxiosError<{ message?: string; steps?: Record<string, { error?: string }> }>;
       
-      // Se for erro de conexão (ECONNREFUSED, ETIMEDOUT, etc), pode ser que o backend tenha reiniciado
-      // com sucesso mas a resposta não chegou. Nesse caso, mostrar como SUCESSO (verde)
+      // Se for erro de conexão após iniciar atualização, pode ser que o backend tenha reiniciado
+      // mas isso não deveria acontecer mais, pois agora aguardamos o PM2 reload completar
+      // Se acontecer, tratar como erro real
       if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ETIMEDOUT' || axiosError.code === 'ERR_NETWORK' || 
-          (axiosError.message && (axiosError.message.includes('Network Error') || axiosError.message.includes('timeout')))) {
-        // Se estava atualizando e deu erro de conexão, provavelmente foi sucesso mas backend reiniciou
-        // Mostrar como SUCESSO (verde) ao invés de erro (vermelho)
-        success('Atualização concluída com sucesso! O backend está reiniciando. A página será recarregada em breve.');
-        onClose();
+          axiosError.code === 'ECONNABORTED' ||
+          (axiosError.message && (axiosError.message.includes('Network Error') || axiosError.message.includes('timeout') || axiosError.message.includes('aborted')))) {
+        // Se estava atualizando e deu erro de conexão, pode ser timeout ou erro real
+        // Adicionar log de erro aos logs
+        const logs: string[] = [...updateLogs];
+        logs.push('✗ Erro de conexão durante atualização');
+        logs.push('⚠ A atualização pode ter sido concluída, mas a conexão foi perdida');
+        setUpdateLogs(logs);
         
-        // Recarregar a página após um delay para garantir que o backend já reiniciou
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000); // Aguardar 3 segundos para o backend reiniciar antes de recarregar o frontend
+        // Mostrar como aviso, não como erro definitivo
+        showError('Erro de conexão durante atualização. Verifique se o backend reiniciou corretamente.');
         return;
       }
+      
+      // Se chegou aqui, é um erro real na atualização
       
       // Se chegou aqui, é um erro real na atualização
       // Verificar se há mensagem de erro específica nos steps
@@ -202,6 +263,8 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
       return;
     }
 
+    // Limpar logs anteriores
+    setUpdateLogs([]);
     updateMutation.mutate('main');
   };
 
@@ -311,14 +374,26 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
             {/* Progresso da Atualização */}
             {isUpdating && updateProgress && (
-              <div className="alert alert-info d-flex align-items-center mb-3" role="alert">
-                <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-                  <span className="visually-hidden">Carregando...</span>
+              <div className="alert alert-info mb-3" role="alert">
+                <div className="d-flex align-items-center mb-2">
+                  <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
+                    <span className="visually-hidden">Carregando...</span>
+                  </div>
+                  <div className="flex-grow-1">
+                    <strong>Atualizando sistema...</strong>
+                    <p className="mb-0 small mt-1">{updateProgress}</p>
+                  </div>
                 </div>
-                <div className="flex-grow-1">
-                  <strong>Atualizando sistema...</strong>
-                  <p className="mb-0 small mt-1">{updateProgress}</p>
-                </div>
+                {/* Logs da atualização */}
+                {updateLogs.length > 0 && (
+                  <div className="mt-2" style={{ maxHeight: '200px', overflowY: 'auto', backgroundColor: '#f8f9fa', padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                    {updateLogs.map((log, index) => (
+                      <div key={index} className={log.startsWith('✗') ? 'text-danger' : log.startsWith('✓') ? 'text-success' : 'text-muted'}>
+                        {log}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
