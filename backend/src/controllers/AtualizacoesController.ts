@@ -114,20 +114,44 @@ export class AtualizacoesController {
       // Em produção: __dirname = backend/dist/src/controllers -> volta 3 níveis = backend/package.json
       let versaoAtual = 'N/A';
       try {
-        const isCompiled = __dirname.includes('/dist/') || __dirname.includes('\\dist\\');
-        const packageJsonPath = isCompiled 
-          ? path.join(__dirname, '../../../package.json')  // Compilado: volta 3 níveis
-          : path.join(__dirname, '../../package.json');    // Desenvolvimento: volta 2 níveis
+        // Usar busca dinâmica para encontrar package.json (mesma lógica do SelfUpdateService)
+        const findPathWith = (startPath: string, targetItem: string): string | null => {
+          let currentPath = startPath;
+          const rootPath = path.parse(startPath).root;
+          
+          while (currentPath !== rootPath) {
+            const targetPath = path.join(currentPath, targetItem);
+            if (fs.existsSync(targetPath)) {
+              return currentPath;
+            }
+            currentPath = path.dirname(currentPath);
+          }
+          
+          if (fs.existsSync(path.join(rootPath, targetItem))) {
+            return rootPath;
+          }
+          
+          return null;
+        };
         
-        if (fs.existsSync(packageJsonPath)) {
-          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-          versaoAtual = packageJson.version || 'N/A';
-          logger.info('Versão do sistema obtida do package.json', { 
-            versao: versaoAtual,
-            path: packageJsonPath 
-          });
+        // Procurar package.json a partir do diretório atual
+        const backendRoot = findPathWith(__dirname, 'package.json');
+        
+        if (backendRoot) {
+          const packageJsonPath = path.join(backendRoot, 'package.json');
+          if (fs.existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+            versaoAtual = packageJson.version || 'N/A';
+            logger.info('Versão do sistema obtida do package.json', { 
+              versao: versaoAtual,
+              path: packageJsonPath,
+              backendRoot
+            });
+          } else {
+            logger.warn('package.json não encontrado no caminho calculado', { path: packageJsonPath });
+          }
         } else {
-          logger.warn('package.json não encontrado', { path: packageJsonPath });
+          logger.warn('Diretório com package.json não encontrado', { searchedFrom: __dirname });
         }
       } catch (error) {
         logger.warn('Erro ao ler versão do package.json', {
