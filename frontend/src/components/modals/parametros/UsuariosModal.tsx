@@ -203,7 +203,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: true,
+              multiSelect: false,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,

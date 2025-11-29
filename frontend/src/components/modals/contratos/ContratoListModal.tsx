@@ -486,7 +486,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: !onSelectContrato,
+              multiSelect: false,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,

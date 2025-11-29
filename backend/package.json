@@ -1,6 +1,6 @@
 {
   "name": "BackNet-backend",
-  "version": "1.0.0-afb3e52d",
+  "version": "1.0.0-19a35e97",
   "description": "Backend API para ERP Assessoria",
   "main": "dist/index.js",
   "scripts": {
