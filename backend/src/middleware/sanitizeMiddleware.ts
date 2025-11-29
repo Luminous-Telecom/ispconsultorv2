@@ -94,21 +94,10 @@ export const sanitizeMiddleware = (options: {
 /**
  * Middleware padrão de sanitização
  * Remove HTML e caracteres perigosos de todos os inputs
+ * Campos de HTML (conteudo, mensagem_padrao, etc) são tratados automaticamente pelo sanitizeObject
  */
 export const defaultSanitizeMiddleware = sanitizeMiddleware({
   allowHtml: false,
-  sanitizeBody: true,
-  sanitizeQuery: true,
-  sanitizeParams: true
-});
-
-/**
- * Middleware de sanitização que permite HTML
- * Útil para campos que precisam de HTML (ex: editor de texto rico)
- * Ainda remove scripts e eventos perigosos
- */
-export const htmlSanitizeMiddleware = sanitizeMiddleware({
-  allowHtml: true,
   sanitizeBody: true,
   sanitizeQuery: true,
   sanitizeParams: true

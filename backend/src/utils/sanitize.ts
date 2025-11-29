@@ -35,9 +35,13 @@ export function sanitizeString(input: string | null | undefined, allowHtml = fal
       .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove event handlers
       .replace(/javascript:/gi, '') // Remove javascript: protocol
       .replace(/data:text\/html/gi, ''); // Remove data URIs perigosos
+    
+    // Para HTML, NÃO remover espaços múltiplos nem fazer trim
+    // pois isso pode quebrar a formatação do HTML
+    return sanitized;
   }
 
-  // Remover espaços múltiplos e trim
+  // Remover espaços múltiplos e trim apenas para texto sem HTML
   sanitized = sanitized.replace(/\s+/g, ' ').trim();
 
   return sanitized;
@@ -171,6 +175,17 @@ export function sanitizeObject<T extends Record<string, unknown>>(
 
   // Campos que são URLs e não devem ter / escapado
   const urlFields = ['url_retorno', 'url_boleto', 'api_url', 'url', 'webhook_url', 'notification_url', 'redirect_url', 'callback_url'];
+  
+  // Campos que contêm HTML e devem ser preservados mesmo quando allowHtml=false
+  const htmlFields = [
+    'conteudo', 
+    'conteudo_contrato', 
+    'conteudo_adesao', 
+    'conteudo_permanencia', 
+    'modelo',
+    'mensagem_padrao',
+    'mensagem_manual'
+  ];
 
   for (const key in sanitized) {
     if (Object.prototype.hasOwnProperty.call(sanitized, key)) {
@@ -180,6 +195,9 @@ export function sanitizeObject<T extends Record<string, unknown>>(
         // Para campos de URL, usar sanitizeUrl que não escapa barras
         if (urlFields.includes(key.toLowerCase())) {
           (sanitized as Record<string, unknown>)[key] = sanitizeUrl(value);
+        } else if (htmlFields.includes(key.toLowerCase())) {
+          // Campos de HTML: permitir HTML mas remover scripts e eventos perigosos
+          (sanitized as Record<string, unknown>)[key] = sanitizeString(value, true);
         } else {
           // Sanitizar outras strings normalmente
           (sanitized as Record<string, unknown>)[key] = sanitizeString(value, allowHtml);
@@ -197,9 +215,11 @@ export function sanitizeObject<T extends Record<string, unknown>>(
         // Sanitizar arrays
         (sanitized as Record<string, unknown>)[key] = value.map((item) => {
           if (typeof item === 'string') {
-            // Verificar se é campo de URL
             if (urlFields.includes(key.toLowerCase())) {
               return sanitizeUrl(item);
+            }
+            if (htmlFields.includes(key.toLowerCase())) {
+              return sanitizeString(item, true);
             }
             return sanitizeString(item, allowHtml);
           } else if (typeof item === 'object' && item !== null) {
@@ -212,26 +232,6 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   }
 
   return sanitized;
-}
-
-/**
- * Remove caracteres SQL perigosos de uma string
- * Protege contra SQL Injection básico
- * @param input - String a ser sanitizada
- * @returns String sanitizada
- */
-export function sanitizeSql(input: string | null | undefined): string {
-  if (!input || typeof input !== 'string') {
-    return '';
-  }
-
-  // Remover caracteres perigosos para SQL
-  return input
-    .replace(/['";\\]/g, '') // Remove aspas e ponto e vírgula
-    .replace(/--/g, '') // Remove comentários SQL
-    .replace(/\/\*/g, '') // Remove comentários SQL
-    .replace(/\*\//g, '') // Remove comentários SQL
-    .replace(/;/g, ''); // Remove ponto e vírgula
 }
 
 /**

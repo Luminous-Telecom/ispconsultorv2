@@ -149,6 +149,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Middleware de sanitização de inputs
 // Deve vir depois do parsing de JSON mas antes das rotas
+// O sanitizeObject já trata campos de HTML automaticamente (conteudo, conteudo_contrato, etc)
 app.use(defaultSanitizeMiddleware);
 
 // Middleware de CSRF Protection (opcional - apenas se ENABLE_CSRF=true)
