@@ -131,7 +131,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
           queryClient.invalidateQueries({ queryKey: ['atualizacoes'] });
         } catch (err) {
           // Ignorar erros de conexão durante reinício
-          console.debug('Não foi possível invalidar queries (backend reiniciando)');
+          // Não logar erro pois é esperado quando backend está reiniciando
         }
         setUpdateProgress('');
       }, 5000); // Aguardar 5 segundos para o backend reiniciar
