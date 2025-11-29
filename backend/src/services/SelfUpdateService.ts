@@ -142,14 +142,19 @@ export class SelfUpdateService {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorOutput = error as { stdout?: string; stderr?: string; code?: number };
 
-      // Log detalhado do erro
+      // Log detalhado do erro com mais informações
+      const stderrPreview = errorOutput.stderr?.substring(0, 2000) || ''; // Primeiros 2000 chars
+      const stdoutPreview = errorOutput.stdout?.substring(0, 2000) || ''; // Primeiros 2000 chars
+      
       logger.error(`Erro ao executar: ${description}`, {
         error: errorMessage,
         code: errorOutput.code,
+        command,
+        cwd,
         stdoutLength: errorOutput.stdout?.length || 0,
         stderrLength: errorOutput.stderr?.length || 0,
-        stdout: errorOutput.stdout?.substring(0, 500) || '', // Primeiros 500 chars
-        stderr: errorOutput.stderr?.substring(0, 500) || '', // Primeiros 500 chars
+        stdout: stdoutPreview,
+        stderr: stderrPreview,
       });
 
       return {
@@ -440,6 +445,20 @@ export class SelfUpdateService {
    * Executa o build da aplicação
    */
   private async build(): Promise<CommandResult> {
+    // Verificar se o diretório src existe antes de tentar fazer build
+    const srcPath = path.join(this.backendPath, 'src');
+    if (!fs.existsSync(srcPath)) {
+      logger.warn('Diretório src não encontrado, pulando build (já está compilado?)', {
+        backendPath: this.backendPath,
+        srcPath,
+      });
+      return {
+        success: true,
+        stdout: 'Build pulado: código já está compilado (diretório src não encontrado)',
+        stderr: '',
+      };
+    }
+
     const command = 'npm run build';
     return this.executeCommand(command, this.backendPath, 'Build');
   }
