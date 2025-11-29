@@ -150,17 +150,19 @@ export class SelfUpdateService {
   /**
    * Verifica configuração do Git
    */
-  private async checkGitConfig(): Promise<{ valid: boolean; remote?: string; branch?: string }> {
+  private async checkGitConfig(gitRoot?: string): Promise<{ valid: boolean; remote?: string; branch?: string }> {
+    const root = gitRoot || this.projectRoot;
+    
     try {
       // Verificar remote
       const { stdout: remoteUrl } = await execAsync('git config --get remote.origin.url', {
-        cwd: this.projectRoot,
+        cwd: root,
         timeout: 5000,
       });
       
       // Verificar branch atual
       const { stdout: currentBranch } = await execAsync('git rev-parse --abbrev-ref HEAD', {
-        cwd: this.projectRoot,
+        cwd: root,
         timeout: 5000,
       });
       
@@ -171,6 +173,7 @@ export class SelfUpdateService {
       };
     } catch (error) {
       logger.error('Erro ao verificar configuração do Git', {
+        gitRoot: root,
         error: error instanceof Error ? error.message : 'Erro desconhecido',
       });
       return { valid: false };
@@ -178,25 +181,60 @@ export class SelfUpdateService {
   }
 
   /**
+   * Encontra o diretório raiz do repositório Git
+   */
+  private findGitRoot(startPath: string): string | null {
+    let currentPath = path.resolve(startPath);
+    const rootPath = path.parse(currentPath).root;
+    
+    while (currentPath !== rootPath) {
+      const gitDir = path.join(currentPath, '.git');
+      if (fs.existsSync(gitDir)) {
+        logger.info('Repositório Git encontrado', { gitRoot: currentPath });
+        return currentPath;
+      }
+      currentPath = path.dirname(currentPath);
+    }
+    
+    return null;
+  }
+
+  /**
    * Executa git pull na branch especificada
    */
   private async gitPull(branch: string = 'main'): Promise<CommandResult> {
-    // Verificar se é um repositório git válido
-    const gitDir = path.join(this.projectRoot, '.git');
+    // Tentar encontrar o repositório Git
+    let gitRoot = this.projectRoot;
+    const gitDir = path.join(gitRoot, '.git');
+    
     if (!fs.existsSync(gitDir)) {
-      logger.error('Diretório .git não encontrado', { projectRoot: this.projectRoot });
-      return {
-        success: false,
-        stdout: '',
-        stderr: `Diretório .git não encontrado em ${this.projectRoot}. Certifique-se de que está em um repositório Git válido.`,
-        error: 'Repositório Git não encontrado',
-      };
+      logger.warn('Diretório .git não encontrado no projectRoot, procurando em diretórios pais', {
+        projectRoot: this.projectRoot,
+      });
+      
+      const foundGitRoot = this.findGitRoot(this.projectRoot);
+      if (foundGitRoot) {
+        gitRoot = foundGitRoot;
+        logger.info('Repositório Git encontrado em diretório pai', { gitRoot });
+      } else {
+        logger.error('Diretório .git não encontrado', {
+          projectRoot: this.projectRoot,
+          backendPath: this.backendPath,
+          searchedFrom: this.projectRoot,
+        });
+        return {
+          success: false,
+          stdout: '',
+          stderr: `Diretório .git não encontrado. Procurado em ${this.projectRoot} e diretórios pais. Certifique-se de que o repositório Git está configurado corretamente em produção.`,
+          error: 'Repositório Git não encontrado',
+        };
+      }
     }
 
     // Verificar configuração do Git
-    const gitConfig = await this.checkGitConfig();
+    const gitConfig = await this.checkGitConfig(gitRoot);
     if (!gitConfig.valid) {
-      logger.error('Configuração do Git inválida', { projectRoot: this.projectRoot });
+      logger.error('Configuração do Git inválida', { gitRoot });
       return {
         success: false,
         stdout: '',
@@ -206,6 +244,7 @@ export class SelfUpdateService {
     }
 
     logger.info('Configuração do Git verificada', {
+      gitRoot,
       remote: gitConfig.remote,
       currentBranch: gitConfig.branch,
       targetBranch: branch,
@@ -213,7 +252,7 @@ export class SelfUpdateService {
 
     // Tentar fazer fetch primeiro para atualizar referências remotas
     logger.info('Executando git fetch antes do pull');
-    const fetchResult = await this.executeCommand('git fetch origin', this.projectRoot, 'Git Fetch');
+    const fetchResult = await this.executeCommand('git fetch origin', gitRoot, 'Git Fetch');
     
     if (!fetchResult.success) {
       logger.warn('Git fetch falhou, mas continuando com pull', {
@@ -223,13 +262,13 @@ export class SelfUpdateService {
 
     // Executar git pull
     const command = `git pull origin ${branch}`;
-    const pullResult = await this.executeCommand(command, this.projectRoot, 'Git Pull');
+    const pullResult = await this.executeCommand(command, gitRoot, 'Git Pull');
     
     // Se pull falhar, tentar verificar se há mudanças locais não commitadas
     if (!pullResult.success) {
       try {
         const { stdout: status } = await execAsync('git status --porcelain', {
-          cwd: this.projectRoot,
+          cwd: gitRoot,
           timeout: 5000,
         });
         
@@ -237,8 +276,8 @@ export class SelfUpdateService {
           logger.warn('Há mudanças locais não commitadas', { status: status.trim() });
           // Tentar fazer stash e pull
           logger.info('Tentando fazer stash das mudanças locais');
-          await execAsync('git stash', { cwd: this.projectRoot, timeout: 10000 });
-          const pullAfterStash = await this.executeCommand(command, this.projectRoot, 'Git Pull (após stash)');
+          await execAsync('git stash', { cwd: gitRoot, timeout: 10000 });
+          const pullAfterStash = await this.executeCommand(command, gitRoot, 'Git Pull (após stash)');
           if (pullAfterStash.success) {
             logger.info('Git pull bem-sucedido após stash');
             return pullAfterStash;
