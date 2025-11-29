@@ -12,13 +12,15 @@ interface BancoListModalProps {
   onClose: () => void;
   onSelectBanco?: (banco: Banco) => void;
   title?: string;
+  skipWrapper?: boolean;
 }
 
 const BancoListModal: React.FC<BancoListModalProps> = ({ 
   show, 
   onClose, 
   onSelectBanco,
-  title = "Selecionar Banco"
+  title = "Selecionar Banco",
+  skipWrapper = false
 }) => {
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
@@ -241,6 +243,7 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         refreshQueryKeys={['bancos']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}
+        skipWrapper={skipWrapper}
       />
 
       {/* Modal Unificado (Criação e Edição) */}

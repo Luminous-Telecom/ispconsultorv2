@@ -39,7 +39,6 @@ export interface ListModalProps<T> {
   limit?: number;
   onLimitChange?: (limit: number) => void;
   onRefresh?: () => void;
-  // Props para refresh automático
   refreshQueryKeys?: string[];
   refreshQueryFn?: () => void;
   bulkActions?: Array<{
@@ -48,4 +47,5 @@ export interface ListModalProps<T> {
     disabled?: (() => boolean) | ((selectedItems: T[]) => boolean);
     action: (() => void) | ((selectedItems: T[]) => void);
   }>;
+  skipWrapper?: boolean;
 }

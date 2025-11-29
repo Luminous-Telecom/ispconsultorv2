@@ -5,6 +5,7 @@ import { NotificationProvider } from './components/notifications/NotificationPro
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DashboardFiltersProvider } from './contexts/DashboardFiltersContext';
 import { TableHeaderProvider } from './contexts/TableHeaderContext';
+import { ModalProvider } from './contexts/ModalContext';
 import Loading from './components/common/Loading';
 import ProtectionLayer from './components/common/ProtectionLayer';
 import Layout from './components/layout/Layout';
@@ -69,7 +70,9 @@ function App() {
                   <Route path="/adm" element={
                     <DashboardFiltersProvider>
                       <TableHeaderProvider>
-                        <Layout />
+                        <ModalProvider>
+                          <Layout />
+                        </ModalProvider>
                       </TableHeaderProvider>
                     </DashboardFiltersProvider>
                   }>

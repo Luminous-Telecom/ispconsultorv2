@@ -19,13 +19,15 @@ interface ContratoListModalProps {
   onClose: () => void;
   onSelectContrato?: (contrato: Contrato) => void;
   title?: string;
+  skipWrapper?: boolean;
 }
 
 const ContratoListModal: React.FC<ContratoListModalProps> = ({
   show,
   onClose,
   onSelectContrato,
-  title = "Contratos"
+  title = "Contratos",
+  skipWrapper = false
 }) => {
   const isMobile = useIsMobile();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -468,17 +470,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   ];
 
 
-  // Removido headerActions - botões agora ficam apenas na div interna do Table
-
-  return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title={title}
-      size="lg"
-      modalId="contrato-list-modal"
-      className="no-padding"
-    >
+  const modalContent = (
+    <>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
         <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           <Table
@@ -493,7 +486,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               hover: true,
               responsive: true,
               selectable: true,
-              multiSelect: !onSelectContrato, // Seleção múltipla se não for modo de seleção única
+              multiSelect: !onSelectContrato,
               bulkActions: bulkActions.map(action => ({
                 key: action.label.toLowerCase().replace(/\s+/g, '-'),
                 label: action.label,
@@ -506,10 +499,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
             tableId="contrato-list-modal"
             onSelectionChange={(items) => {
               setSelectedItems(items);
-              // Se é modo seleção única (onSelectContrato presente)
               if (onSelectContrato) {
                 if (items.length > 0) {
-                  // Sempre pega o último item selecionado (mais recente)
                   const selectedItem = items[items.length - 1];
                   onSelectContrato(selectedItem);
                   onClose();
@@ -517,7 +508,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               }
             }}
             onRowClick={onSelectContrato ? (item) => {
-              // Clique na linha seleciona e fecha quando em modo seleção
               onSelectContrato(item);
               onClose();
             } : undefined}
@@ -525,7 +515,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           />
         </div>
         
-        {/* Valor total mensal e descontos - acima da paginação */}
         <div 
           className="p-3 bg-light rounded contrato-totais-resumo" 
           style={{ 
@@ -549,7 +538,6 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         </div>
       </div>
 
-      {/* Modal de Contrato (criação e edição unificados) */}
       <ContratoModal
         show={showCreateModal || showEditModal}
         clienteId={undefined}
@@ -560,12 +548,10 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           setSelectedContratoId(null);
         }}
         onSuccess={() => {
-          // Não fechar o modal automaticamente - permitir criar múltiplos contratos
           refetch();
         }}
       />
 
-      {/* Modal de Impressão */}
       {(impressaoHook.pdfUrl || pdfUrlLocal) && (
         <ImprimirModal
           show={showImprimirModal}
@@ -580,6 +566,23 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           pdfUrl={impressaoHook.pdfUrl || pdfUrlLocal || null}
         />
       )}
+    </>
+  );
+
+  if (skipWrapper) {
+    return modalContent;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title={title}
+      size="lg"
+      modalId="contrato-list-modal"
+      className="no-padding"
+    >
+      {modalContent}
     </DraggableModal>
   );
 };

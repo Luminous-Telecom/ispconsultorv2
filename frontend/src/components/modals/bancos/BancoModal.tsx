@@ -203,56 +203,22 @@ const BancoModal: React.FC<BancoModalProps> = ({
     }
   };
 
-  if (isEdit && isLoading) {
-    return (
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title="Banco"
-        modalId="banco-modal-loading"
-      >
+  // Renderizar conteúdo baseado no estado
+  const renderContent = () => {
+    // Estado de loading
+    if (isEdit && isLoading) {
+      return (
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
             <span className="visually-hidden">Carregando...</span>
           </div>
           <p className="mt-2">Carregando dados do banco...</p>
         </div>
-      </DraggableModal>
-    );
-  }
+      );
+    }
 
-  return (
-    <DraggableModal
-      show={show}
-      onClose={handleCancel}
-      title="Banco"
-      size="xl"
-      modalId="banco-modal"
-      headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={handleCancel}
-            disabled={formHook.isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="banco-form"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={formHook.isSubmitting}
-          >
-            Salvar
-          </Button>
-        </div>
-      }
-    >
+    // Conteúdo normal do formulário
+    return (
       <form id="banco-form" onSubmit={formHook.handleSubmit}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Navegação por Abas */}
@@ -331,6 +297,45 @@ const BancoModal: React.FC<BancoModalProps> = ({
           </div>
         </div>
       </form>
+    );
+  };
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={handleCancel}
+      title="Banco"
+      size="xl"
+      modalId="banco-modal"
+      headerActions={
+        // Mostrar headerActions apenas quando não estiver carregando
+        !(isEdit && isLoading) ? (
+          <div className="d-flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leftIcon={<i className="bi bi-x-lg"></i>}
+              onClick={handleCancel}
+              disabled={formHook.isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="banco-form"
+              variant="primary"
+              size="sm"
+              leftIcon={<i className="bi bi-check-lg"></i>}
+              isLoading={formHook.isSubmitting}
+            >
+              Salvar
+            </Button>
+          </div>
+        ) : undefined
+      }
+    >
+      {renderContent()}
     </DraggableModal>
   );
 };

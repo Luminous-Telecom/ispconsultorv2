@@ -22,13 +22,15 @@ interface ClienteListModalProps {
   onClose: () => void;
   onSelectClient?: (cliente: Cliente) => void;
   title?: string;
+  skipWrapper?: boolean;
 }
 
 const ClienteListModal: React.FC<ClienteListModalProps> = ({ 
   show, 
   onClose, 
   onSelectClient,
-  title = "Selecionar Cliente"
+  title = "Selecionar Cliente",
+  skipWrapper = false
 }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -250,6 +252,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         refreshQueryKeys={['clientes']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}
+        skipWrapper={skipWrapper}
       />
 
       {/* Modal de Criação */}

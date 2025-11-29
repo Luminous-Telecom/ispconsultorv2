@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
 import { useNotificationContext } from '../notifications/NotificationProvider';
 import NotificationContainer from '../notifications/NotificationContainer';
@@ -6,30 +6,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 import DropdownMenu from '../common/DropdownMenu';
 import { Button } from '../ui';
 import { useDashboardFilters } from '@/contexts/DashboardFiltersContext';
-import Loading from '../common/Loading';
 import { authService, CurrentUser } from '@/services/authService';
 import { getAuthToken } from '@/services/core';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useTableHeader, TableHeaderProvider } from '@/contexts/TableHeaderContext';
-
-// Modais com lazy loading (code splitting) - carregados apenas quando necessário
-// Named exports
-const ClienteListModal = lazy(() => import('../modals/clientes').then(m => ({ default: m.ClienteListModal })));
-const PlanoListModal = lazy(() => import('../modals/planos').then(m => ({ default: m.PlanoListModal })));
-const BancoListModal = lazy(() => import('../modals/bancos').then(m => ({ default: m.BancoListModal })));
-const DadosEmpresaModal = lazy(() => import('../modals/empresa/empresa').then(m => ({ default: m.DadosEmpresaModal })));
-const ServidorEmailModal = lazy(() => import('../modals/parametros/servidor-email').then(m => ({ default: m.ServidorEmailModal })));
-const ServidorWhatsappModal = lazy(() => import('../modals/parametros/servidor-whatsapp').then(m => ({ default: m.ServidorWhatsappModal })));
-const DocumentosSistemaModal = lazy(() => import('../modals/parametros/documentos-sistema').then(m => ({ default: m.DocumentosSistemaModal })));
-
-// Default exports
-const ContratoListModal = lazy(() => import('../modals/contratos/ContratoListModal'));
-const FinanceiroModal = lazy(() => import('../modals/financeiro/FinanceiroModal'));
-const UsuariosModal = lazy(() => import('../modals/parametros/UsuariosModal'));
-const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSistemaModal'));
-const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
-const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
-const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
+import { useTableHeader } from '@/contexts/TableHeaderContext';
+import { useModal, type ModalType } from '@/contexts/ModalContext';
+import SingleModalWrapper from '../common/SingleModalWrapper';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -59,8 +41,8 @@ const Layout: React.FC = () => {
   // Table header context (para botões de busca e reload)
   const tableHeader = useTableHeader();
   
-  // Estado para controlar qual modal está aberto (apenas um por vez)
-  const [activeModal, setActiveModal] = useState<string | null>(null);
+  // Usar o contexto de modais (gerenciado pelo ModalProvider)
+  const { openModal } = useModal();
 
   // Fechar menu de usuário ao clicar fora
   useEffect(() => {
@@ -116,13 +98,9 @@ const Layout: React.FC = () => {
     loadCurrentUser();
   }, []);
   
-  // Funções helper para abrir/fechar modais
-  const openModal = (modalName: string) => {
-    setActiveModal(modalName);
-  };
-  
-  const closeModal = () => {
-    setActiveModal(null);
+  // Funções helper para abrir modais (usando o contexto)
+  const handleOpenModal = (modalName: string) => {
+    openModal(modalName as ModalType);
   };
 
   useEffect(() => {
@@ -148,23 +126,23 @@ const Layout: React.FC = () => {
   };
 
   const menuItems = [
-    { path: '/clientes', icon: 'bi-people', label: 'Clientes', isModal: true, modalHandler: () => openModal('clientes') },
-    { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => openModal('planos') },
-    { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => openModal('bancos') },
-    { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: true, modalHandler: () => openModal('contratos') },
-    { path: '/financeiro', icon: 'bi-cash-coin', label: 'Financeiro', isModal: true, modalHandler: () => openModal('financeiro') },
-    { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => openModal('dados-empresa') },
+    { path: '/clientes', icon: 'bi-people', label: 'Clientes', isModal: true, modalHandler: () => handleOpenModal('clientes') },
+    { path: '/planos', icon: 'bi-wifi', label: 'Planos', isModal: true, modalHandler: () => handleOpenModal('planos') },
+    { path: '/bancos', icon: 'bi-bank', label: 'Bancos', isModal: true, modalHandler: () => handleOpenModal('bancos') },
+    { path: '/contratos', icon: 'bi-file-earmark-text', label: 'Contratos', isModal: true, modalHandler: () => handleOpenModal('contratos') },
+    { path: '/financeiro', icon: 'bi-cash-coin', label: 'Financeiro', isModal: true, modalHandler: () => handleOpenModal('financeiro') },
+    { path: '/dados-empresa', icon: 'bi-building', label: 'Dados da Empresa', isModal: true, modalHandler: () => handleOpenModal('dados-empresa') },
   ];
 
   const parametrosDropdownItems = [
-    { id: 'usuarios', label: 'Usuários', icon: 'bi-people', onClick: () => openModal('usuarios') },
-    { id: 'recursos-sistema', label: 'Recursos do Sistema', icon: 'bi-gear', onClick: () => openModal('recursos-sistema') },
-    { id: 'agendador-tarefas', label: 'Agendador de Tarefas', icon: 'bi-clock-history', onClick: () => openModal('agendador-tarefas') },
-    { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => openModal('servidor-email') },
-    { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', icon: 'bi-whatsapp', onClick: () => openModal('servidor-whatsapp') },
-    { id: 'documentos-sistema', label: 'Documentos do Sistema', icon: 'bi-file-earmark-text', onClick: () => openModal('documentos-sistema') },
-    { id: 'dias-vencimento', label: 'Dias de Vencimento', icon: 'bi-calendar', onClick: () => openModal('dias-vencimento') },
-    { id: 'atualizacoes', label: 'Atualizações', icon: 'bi-arrow-up-circle', onClick: () => openModal('atualizacoes') },
+    { id: 'usuarios', label: 'Usuários', icon: 'bi-people', onClick: () => handleOpenModal('usuarios') },
+    { id: 'recursos-sistema', label: 'Recursos do Sistema', icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
+    { id: 'agendador-tarefas', label: 'Agendador de Tarefas', icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
+    { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },
+    { id: 'servidor-whatsapp', label: 'Servidor de WhatsApp', icon: 'bi-whatsapp', onClick: () => handleOpenModal('servidor-whatsapp') },
+    { id: 'documentos-sistema', label: 'Documentos do Sistema', icon: 'bi-file-earmark-text', onClick: () => handleOpenModal('documentos-sistema') },
+    { id: 'dias-vencimento', label: 'Dias de Vencimento', icon: 'bi-calendar', onClick: () => handleOpenModal('dias-vencimento') },
+    { id: 'atualizacoes', label: 'Atualizações', icon: 'bi-arrow-up-circle', onClick: () => handleOpenModal('atualizacoes') },
   ];
 
   return (
@@ -542,169 +520,9 @@ const Layout: React.FC = () => {
             onActionClick={() => {}}
           />
 
-      {/* Modais renderizados condicionalmente apenas quando necessário (com lazy loading) */}
-      {/* NOTA: Cada modal é envolvido em um TableHeaderProvider para criar um contexto isolado.
-          Isso impede que a tabela dentro do modal entre em conflito com a tabela do Dashboard ou outros componentes
-          que utilizam o contexto global do Layout. */}
-      
-      {activeModal === 'clientes' && (
-        <Suspense fallback={<Loading message="Carregando clientes..." />}>
-          <TableHeaderProvider>
-            <ClienteListModal
-              show={true}
-              onClose={closeModal}
-              title="Clientes"
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'planos' && (
-        <Suspense fallback={<Loading message="Carregando planos..." />}>
-          <TableHeaderProvider>
-            <PlanoListModal
-              show={true}
-              onClose={closeModal}
-              title="Planos"
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'bancos' && (
-        <Suspense fallback={<Loading message="Carregando bancos..." />}>
-          <TableHeaderProvider>
-            <BancoListModal
-              show={true}
-              onClose={closeModal}
-              title="Bancos"
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'contratos' && (
-        <Suspense fallback={<Loading message="Carregando contratos..." />}>
-          <TableHeaderProvider>
-            <ContratoListModal
-              show={true}
-              onClose={closeModal}
-              title="Contratos"
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'financeiro' && (
-        <Suspense fallback={<Loading message="Carregando financeiro..." />}>
-          <TableHeaderProvider>
-            <FinanceiroModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'dados-empresa' && (
-        <Suspense fallback={<Loading message="Carregando dados da empresa..." />}>
-          <TableHeaderProvider>
-            <DadosEmpresaModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {/* Modais de Parâmetros */}
-      {activeModal === 'usuarios' && (
-        <Suspense fallback={<Loading message="Carregando usuários..." />}>
-          <TableHeaderProvider>
-            <UsuariosModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'recursos-sistema' && (
-        <Suspense fallback={<Loading message="Carregando recursos do sistema..." />}>
-          <TableHeaderProvider>
-            <RecursosSistemaModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'servidor-email' && (
-        <Suspense fallback={<Loading message="Carregando servidor de e-mail..." />}>
-          <TableHeaderProvider>
-            <ServidorEmailModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'servidor-whatsapp' && (
-        <Suspense fallback={<Loading message="Carregando servidor de WhatsApp..." />}>
-          <TableHeaderProvider>
-            <ServidorWhatsappModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'documentos-sistema' && (
-        <Suspense fallback={<Loading message="Carregando documentos do sistema..." />}>
-          <TableHeaderProvider>
-            <DocumentosSistemaModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-      
-      {activeModal === 'dias-vencimento' && (
-        <Suspense fallback={<Loading message="Carregando dias de vencimento..." />}>
-          <TableHeaderProvider>
-            <DiasVencimentoModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-
-      {activeModal === 'atualizacoes' && (
-        <Suspense fallback={<Loading message="Carregando atualizações..." />}>
-          <TableHeaderProvider>
-            <AtualizacoesModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
-
-      {activeModal === 'agendador-tarefas' && (
-        <Suspense fallback={<Loading message="Carregando agendador de tarefas..." />}>
-          <TableHeaderProvider>
-            <AgendadorTarefasModal
-              show={true}
-              onClose={closeModal}
-            />
-          </TableHeaderProvider>
-        </Suspense>
-      )}
+      {/* Single Modal Wrapper - Mantém o shell do modal sempre montado */}
+      {/* Elimina flickering ao trocar entre modais, pois apenas o conteúdo interno muda */}
+      <SingleModalWrapper />
 
     </div>
   );

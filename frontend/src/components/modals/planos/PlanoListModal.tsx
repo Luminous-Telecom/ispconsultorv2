@@ -14,13 +14,15 @@ interface PlanoListModalProps {
   onClose: () => void;
   onSelectPlano?: (plano: Plano) => void;
   title?: string;
+  skipWrapper?: boolean;
 }
 
 const PlanoListModal: React.FC<PlanoListModalProps> = ({ 
   show, 
   onClose, 
   onSelectPlano,
-  title = "Selecionar Plano"
+  title = "Selecionar Plano",
+  skipWrapper = false
 }) => {
   const queryClient = useQueryClient();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -281,6 +283,7 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         refreshQueryKeys={['planos']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}
+        skipWrapper={skipWrapper}
       />
 
       {/* Modal de Criação/Edição unificado */}

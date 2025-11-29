@@ -19,16 +19,16 @@ interface FinanceiroModalProps {
   show: boolean;
   onClose: () => void;
   onSelectTitulo?: (titulo: Titulo) => void;
+  skipWrapper?: boolean;
 }
 
 const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   show,
   onClose,
-  onSelectTitulo
+  onSelectTitulo,
+  skipWrapper = false
 }) => {
   const isMobile = useIsMobile();
-  
-  // Hook unificado para filtros, busca, ordenação e paginação
   const tableFilters = useTableFilters({
     initialSearch: '',
     initialPage: 1,
@@ -47,17 +47,12 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [showReceberModal, setShowReceberModal] = useState(false);
   
-  /**
-   * Interface para parcela selecionada no modal de recebimento
-   */
   interface SelectedParcela {
     id: number;
     numero_titulo: string;
     valor_parcela: number;
     data_vencimento: string;
-    cliente?: {
-      razao_social: string;
-    };
+    cliente?: { razao_social: string };
   }
   
   const [selectedParcela, setSelectedParcela] = useState<SelectedParcela | null>(null);
@@ -471,20 +466,11 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     ];
   }, [isGeneratingPdf, success, error, queryClient, refetch, handleImprimirSelecionados, handleImprimirTodosEmAberto]);
 
-  return (
-    <>
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title="Financeiro - Títulos"
-        size="xl"
-        modalId="financeiro-modal"
-        className="no-padding"
-      >
-        <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-              <Table
+  const modalContent = (
+    <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="col-12" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          <Table
               config={{
                 columns,
                 data: sortedData,
@@ -579,57 +565,124 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
             />
             </div>
 
-            {/* Resumo Financeiro */}
-            {filteredData.length > 0 && (
-              <div className="d-flex justify-content-end align-items-center p-3 bg-light rounded financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
-                <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
-                <div className="text-end">
-                  <div className="small text-muted">Valor:</div>
-                  <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                    return sum + Number(item.valor_final || item.valor || 0);
-                  }, 0))}</strong>
-                </div>
-                <div className="text-end">
-                  <div className="small text-muted">Valor baixado:</div>
-                  <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                    // Considerar apenas valor_pago se existir e for maior que 0
-                    const valorPago = Number(item.valor_pago || 0);
-                    if (valorPago > 0) {
-                      return sum + valorPago;
-                    }
-                    return sum;
-                  }, 0))}</strong>
-                </div>
-                <div className="text-end">
-                  <div className="small text-muted">Valor aberto:</div>
-                  <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                    // Considerar apenas títulos pendentes ou vencidos (não pagos e não cancelados)
-                    if (item.status === 'pago' || item.status === 'cancelado') {
-                      return sum;
-                    }
-                    // Calcular valor aberto: valor final - valor pago
-                    const valorFinal = Number(item.valor_final || item.valor || 0);
-                    const valorPago = Number(item.valor_pago || 0);
-                    const valorAberto = valorFinal - valorPago;
-                    return sum + (valorAberto > 0 ? valorAberto : 0);
-                  }, 0))}</strong>
-                </div>
-                {showCancelados && (
-                  <div className="text-end">
-                    <div className="small text-muted">Valor cancelado:</div>
-                    <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
-                      return sum + (item.status === 'cancelado' ? Number(item.valor_final || item.valor || 0) : 0);
-                    }, 0))}</strong>
-                  </div>
-                )}
+        {/* Resumo Financeiro */}
+        {filteredData.length > 0 && (
+          <div className="d-flex justify-content-end align-items-center p-3 bg-light rounded financeiro-resumo" style={{ marginTop: isMobile ? '0.25rem' : '1rem', marginBottom: isMobile ? '3rem' : '1rem', marginLeft: isMobile ? '0.5rem' : '1rem', marginRight: isMobile ? '0.5rem' : '1rem' }}>
+            <div className="d-flex flex-wrap gap-2 gap-md-4 justify-content-end">
+              <div className="text-end">
+                <div className="small text-muted">Valor:</div>
+                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                  return sum + Number(item.valor_final || item.valor || 0);
+                }, 0))}</strong>
               </div>
+              <div className="text-end">
+                <div className="small text-muted">Valor baixado:</div>
+                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                  // Considerar apenas valor_pago se existir e for maior que 0
+                  const valorPago = Number(item.valor_pago || 0);
+                  if (valorPago > 0) {
+                    return sum + valorPago;
+                  }
+                  return sum;
+                }, 0))}</strong>
+              </div>
+              <div className="text-end">
+                <div className="small text-muted">Valor aberto:</div>
+                <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                  // Considerar apenas títulos pendentes ou vencidos (não pagos e não cancelados)
+                  if (item.status === 'pago' || item.status === 'cancelado') {
+                    return sum;
+                  }
+                  // Calcular valor aberto: valor final - valor pago
+                  const valorFinal = Number(item.valor_final || item.valor || 0);
+                  const valorPago = Number(item.valor_pago || 0);
+                  const valorAberto = valorFinal - valorPago;
+                  return sum + (valorAberto > 0 ? valorAberto : 0);
+                }, 0))}</strong>
+              </div>
+              {showCancelados && (
+                <div className="text-end">
+                  <div className="small text-muted">Valor cancelado:</div>
+                  <strong>{formatCurrency(filteredData.reduce((sum: number, item: Titulo) => {
+                    return sum + (item.status === 'cancelado' ? Number(item.valor_final || item.valor || 0) : 0);
+                  }, 0))}</strong>
+                </div>
+              )}
             </div>
-          )}
           </div>
-        </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (skipWrapper) {
+    return (
+      <>
+        {modalContent}
+        {showTituloEditModal && (
+          <TituloModal
+            show={showTituloEditModal}
+            onClose={() => {
+              setShowTituloEditModal(false);
+              setSelectedTituloId(null);
+            }}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
+              refetch();
+              setShowTituloEditModal(false);
+              setSelectedTituloId(null);
+            }}
+            tituloId={selectedTituloId}
+          />
+        )}
+
+        {showReceberModal && selectedParcela && (
+          <ReceberModal
+            isOpen={showReceberModal}
+            onClose={() => {
+              setShowReceberModal(false);
+              setSelectedParcela(null);
+            }}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['titulos-financeiro'] });
+              refetch();
+              setShowReceberModal(false);
+              setSelectedParcela(null);
+            }}
+            parcela={selectedParcela}
+          />
+        )}
+
+        {showImprimirModal && pdfUrl && (
+          <ImprimirModal
+            show={showImprimirModal}
+            onClose={() => {
+              setShowImprimirModal(false);
+              if (pdfUrl) {
+                window.URL.revokeObjectURL(pdfUrl);
+                setPdfUrl(null);
+              }
+            }}
+            pdfUrl={pdfUrl}
+          />
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <DraggableModal
+        show={show}
+        onClose={onClose}
+        title="Financeiro - Títulos"
+        size="xl"
+        modalId="financeiro-modal"
+        className="no-padding"
+      >
+        {modalContent}
       </DraggableModal>
 
-      {/* Modais auxiliares */}
       {showTituloEditModal && (
         <TituloModal
           show={showTituloEditModal}

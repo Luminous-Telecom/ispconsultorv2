@@ -291,305 +291,324 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     }
   ];
 
-  if (formHook.isLoadingCliente && formHook.isEditing) {
-    return (
-      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl" modalId="cliente-modal-loading">
+  // Handler para limpar estado ao fechar
+  const handleClose = () => {
+    onClose();
+  };
+
+  // Determinar título dinamicamente
+  const modalTitle = formHook.isLoadingCliente && formHook.isEditing
+    ? 'Cliente'
+    : (!formHook.cliente && formHook.isEditing)
+    ? 'Cliente'
+    : (formHook.isEditing ? 'Editar Cliente' : 'Novo Cliente');
+
+  // Renderizar conteúdo baseado no estado
+  const renderContent = () => {
+    // Estado de loading
+    if (formHook.isLoadingCliente && formHook.isEditing) {
+      return (
         <div className="text-center p-4">
           <div className="spinner-border" role="status">
             <span className="visually-hidden">Carregando...</span>
           </div>
           <p className="mt-2">Carregando dados do cliente...</p>
         </div>
-      </DraggableModal>
-    );
-  }
+      );
+    }
 
-  if (!formHook.cliente && formHook.isEditing) {
-    return (
-      <DraggableModal show={show} onClose={onClose} title="Cliente" size="xl" modalId="cliente-modal-error">
+    // Estado de erro (cliente não encontrado)
+    if (!formHook.cliente && formHook.isEditing) {
+      return (
         <div className="text-center p-4">
           <p>Cliente não encontrado.</p>
         </div>
-      </DraggableModal>
-    );
-  }
+      );
+    }
 
-  // Handler para limpar estado ao fechar
-  const handleClose = () => {
-    onClose();
+    // Conteúdo normal do formulário
+    return (
+      <>
+        <div style={{ 
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          {/* Navegação por Abas - Fixa */}
+          <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ 
+            flexShrink: 0, 
+            marginBottom: isMobile ? '1rem' : 0, 
+            marginTop: isMobile ? '0' : '1rem', 
+            marginLeft: isMobile ? '0' : '1rem', 
+            marginRight: isMobile ? '0' : '1rem',
+            ...(isMobile && {
+              display: 'flex',
+              flexWrap: 'nowrap',
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch'
+            })
+          }}>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dados-basicos')}
+                type="button"
+              >
+                Dados Básicos
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
+                onClick={() => setActiveTab('contato')}
+                type="button"
+              >
+                Contato
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
+                onClick={() => setActiveTab('endereco')}
+                type="button"
+              >
+                Endereço
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
+                onClick={() => setActiveTab('contratos')}
+                type="button"
+                disabled={!canEditContratosFinanceiro}
+              >
+                Contratos
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
+                onClick={() => setActiveTab('financeiro')}
+                type="button"
+                disabled={!canEditContratosFinanceiro}
+              >
+                Financeiro
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'observacoes' ? 'active' : ''}`}
+                onClick={() => setActiveTab('observacoes')}
+                type="button"
+              >
+                Observações
+              </button>
+            </li>
+          </ul>
+
+          {/* Conteúdo das Abas - Com Scroll */}
+          <div 
+            className="tab-content" 
+            id="clienteTabContent" 
+            style={{ 
+              flex: 1, 
+              overflow: (activeTab === 'contratos' || activeTab === 'financeiro') ? 'hidden' : 'auto', 
+              // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
+              padding: (activeTab === 'contratos' || activeTab === 'financeiro') ? '0' : (isMobile ? '0' : '16px'), 
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            {/* Aba Dados Básicos */}
+            {activeTab === 'dados-basicos' && (
+              <DadosBasicosTab
+                formData={formHook.formData}
+                errors={formHook.errors}
+                handleInputChange={formHook.handleInputChange}
+                isSubmitting={formHook.isSubmitting}
+                formPrefix={formPrefix}
+              />
+            )}
+
+            {/* Aba Contato */}
+            {activeTab === 'contato' && (
+              <ContatoTab
+                formData={formHook.formData}
+                errors={formHook.errors}
+                handleInputChange={formHook.handleInputChange}
+                isSubmitting={formHook.isSubmitting}
+                formPrefix={formPrefix}
+              />
+            )}
+
+            {/* Aba Endereço */}
+            {activeTab === 'endereco' && (
+              <EnderecoTab
+                formData={formHook.formData}
+                errors={formHook.errors}
+                handleInputChange={formHook.handleInputChange}
+                isSubmitting={formHook.isSubmitting}
+                formPrefix={formPrefix}
+              />
+            )}
+
+            {/* Aba Contratos */}
+            {activeTab === 'contratos' && (
+              <ContratosTab
+                isLoadingContratos={contratosHook.isLoadingContratos}
+                sortedContratosData={contratosHook.sortedContratosData}
+                selectedContratosItems={bulkActionsHook.selectedContratosItems}
+                setSelectedContratosItems={bulkActionsHook.setSelectedContratosItems}
+                contratosBulkActions={bulkActionsHook.contratosBulkActions}
+                showInativosContratos={contratosHook.showInativosContratos}
+                setShowInativosContratos={contratosHook.setShowInativosContratos}
+                onRefresh={() => contratosHook.refetchContratos()}
+                onShowCreateModal={() => setShowContratoCreateModal(true)}
+                onShowEditModal={(contratoId) => {
+                  setSelectedContratoId(contratoId);
+                  setShowContratoEditModal(true);
+                }}
+                isGeneratingPdf={impressaoHook.isGeneratingPdf}
+              />
+            )}
+
+            {/* Aba Financeiro */}
+            {activeTab === 'financeiro' && (
+              <FinanceiroTab
+                sortedData={sortedData}
+                isLoadingParcelas={isLoadingParcelas}
+                selectedItems={bulkActionsHook.selectedItems}
+                setSelectedItems={bulkActionsHook.setSelectedItems}
+                bulkActions={bulkActionsHook.titulosBulkActions}
+                showCancelados={showCancelados}
+                setShowCancelados={setShowCancelados}
+                onRefresh={() => refetchParcelas()}
+                isGeneratingPdf={impressaoHook.isGeneratingPdf}
+                columns={columns}
+              />
+            )}
+
+            {/* Aba Observações */}
+            {activeTab === "observacoes" && (
+              <ObservacoesTab
+                formData={formHook.formData}
+                errors={formHook.errors}
+                handleInputChange={formHook.handleInputChange}
+                isSubmitting={formHook.isSubmitting}
+                formPrefix={formPrefix}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Modal de edição de título */}
+        <TituloModal
+          show={showTituloEditModal}
+          tituloId={selectedTituloId || null}
+          onClose={() => {
+            setShowTituloEditModal(false);
+            setSelectedTituloId(null);
+            refetchParcelas();
+          }}
+          onSuccess={() => {
+            setShowTituloEditModal(false);
+            setSelectedTituloId(null);
+            refetchParcelas();
+          }}
+        />
+
+        {/* Modal para receber */}
+        <ReceberModal
+          isOpen={showReceberModal}
+          onClose={() => {
+            setShowReceberModal(false);
+            setSelectedParcela(null);
+          }}
+          parcela={selectedParcela ? {
+            id: selectedParcela.id,
+            numero_titulo: (selectedParcela.numero_titulo || selectedParcela.numero_parcela || `Título ${selectedParcela.id}`).toString(),
+            valor_parcela: selectedParcela.valor || selectedParcela.valor_parcela,
+            data_vencimento: selectedParcela.data_vencimento,
+            cliente: (() => {
+              const cliente = selectedParcela.cliente || (selectedParcela.carne as { cliente?: { razao_social: string } })?.cliente;
+              if (cliente && typeof cliente === 'object' && 'razao_social' in cliente) {
+                return cliente as { razao_social: string };
+              }
+              return undefined;
+            })()
+          } : null}
+          onSuccess={() => {
+            setShowReceberModal(false);
+            setSelectedParcela(null);
+            refetchParcelas();
+          }}
+        />
+
+        {/* Modal de contrato (criação e edição unificados) */}
+        <ContratoModal
+          show={showContratoCreateModal || showContratoEditModal}
+          clienteId={formHook.cliente?.id || formHook.createdClienteId || undefined}
+          contratoId={showContratoEditModal ? selectedContratoId : null}
+          onClose={() => {
+            setShowContratoCreateModal(false);
+            setShowContratoEditModal(false);
+            setSelectedContratoId(null);
+          }}
+          onSuccess={() => {
+            // Não fechar o modal automaticamente - permitir criar múltiplos contratos
+          }}
+        />
+
+        {/* Modal de impressão */}
+        <ImprimirModal
+          show={impressaoHook.showImprimirModal}
+          onClose={impressaoHook.handleCloseImprimirModal}
+          pdfUrl={impressaoHook.pdfUrl}
+          title="Visualizar Documento"
+          modalId="cliente-imprimir-modal"
+        />
+      </>
+    );
   };
 
   return (
     <DraggableModal
       show={show}
       onClose={handleClose}
-      title={formHook.isEditing ? 'Editar Cliente' : 'Novo Cliente'}
+      title={modalTitle}
       size="xl"
       modalId={formHook.isEditing ? "cliente-edit-modal" : "cliente-create-modal"}
       headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={handleClose}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={formHook.isSubmitting}
-            onClick={formHook.handleSubmit}
-          >
-            Salvar
-          </Button>
-        </div>
+        // Mostrar headerActions apenas quando não estiver carregando ou em erro
+        !(formHook.isLoadingCliente && formHook.isEditing) && 
+        !(!formHook.cliente && formHook.isEditing) ? (
+          <div className="d-flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leftIcon={<i className="bi bi-x-lg"></i>}
+              onClick={handleClose}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              leftIcon={<i className="bi bi-check-lg"></i>}
+              isLoading={formHook.isSubmitting}
+              onClick={formHook.handleSubmit}
+            >
+              Salvar
+            </Button>
+          </div>
+        ) : undefined
       }
     >
-      <div style={{ 
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        {/* Navegação por Abas - Fixa */}
-        <ul className="nav nav-tabs" id="clienteTabs" role="tablist" style={{ 
-          flexShrink: 0, 
-          marginBottom: isMobile ? '1rem' : 0, 
-          marginTop: isMobile ? '0' : '1rem', 
-          marginLeft: isMobile ? '0' : '1rem', 
-          marginRight: isMobile ? '0' : '1rem',
-          ...(isMobile && {
-            display: 'flex',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            WebkitOverflowScrolling: 'touch'
-          })
-        }}>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'dados-basicos' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dados-basicos')}
-              type="button"
-            >
-              Dados Básicos
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'contato' ? 'active' : ''}`}
-              onClick={() => setActiveTab('contato')}
-              type="button"
-            >
-              Contato
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'endereco' ? 'active' : ''}`}
-              onClick={() => setActiveTab('endereco')}
-              type="button"
-            >
-              Endereço
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'contratos' ? 'active' : ''}`}
-              onClick={() => setActiveTab('contratos')}
-              type="button"
-              disabled={!canEditContratosFinanceiro}
-            >
-              Contratos
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'financeiro' ? 'active' : ''}`}
-              onClick={() => setActiveTab('financeiro')}
-              type="button"
-              disabled={!canEditContratosFinanceiro}
-            >
-              Financeiro
-            </button>
-          </li>
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${activeTab === 'observacoes' ? 'active' : ''}`}
-              onClick={() => setActiveTab('observacoes')}
-              type="button"
-            >
-              Observações
-            </button>
-          </li>
-        </ul>
-
-        {/* Conteúdo das Abas - Com Scroll */}
-        <div 
-          className="tab-content" 
-          id="clienteTabContent" 
-          style={{ 
-            flex: 1, 
-            overflow: (activeTab === 'contratos' || activeTab === 'financeiro') ? 'hidden' : 'auto', 
-            // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-            padding: (activeTab === 'contratos' || activeTab === 'financeiro') ? '0' : (isMobile ? '0' : '16px'), 
-            minHeight: 0,
-            display: 'flex',
-            flexDirection: 'column'
-          }}
-        >
-          {/* Aba Dados Básicos */}
-          {activeTab === 'dados-basicos' && (
-            <DadosBasicosTab
-              formData={formHook.formData}
-              errors={formHook.errors}
-              handleInputChange={formHook.handleInputChange}
-              isSubmitting={formHook.isSubmitting}
-              formPrefix={formPrefix}
-            />
-          )}
-
-          {/* Aba Contato */}
-          {activeTab === 'contato' && (
-            <ContatoTab
-              formData={formHook.formData}
-              errors={formHook.errors}
-              handleInputChange={formHook.handleInputChange}
-              isSubmitting={formHook.isSubmitting}
-              formPrefix={formPrefix}
-            />
-          )}
-
-          {/* Aba Endereço */}
-          {activeTab === 'endereco' && (
-            <EnderecoTab
-              formData={formHook.formData}
-              errors={formHook.errors}
-              handleInputChange={formHook.handleInputChange}
-              isSubmitting={formHook.isSubmitting}
-              formPrefix={formPrefix}
-            />
-          )}
-
-          {/* Aba Contratos */}
-          {activeTab === 'contratos' && (
-            <ContratosTab
-              isLoadingContratos={contratosHook.isLoadingContratos}
-              sortedContratosData={contratosHook.sortedContratosData}
-              selectedContratosItems={bulkActionsHook.selectedContratosItems}
-              setSelectedContratosItems={bulkActionsHook.setSelectedContratosItems}
-              contratosBulkActions={bulkActionsHook.contratosBulkActions}
-              showInativosContratos={contratosHook.showInativosContratos}
-              setShowInativosContratos={contratosHook.setShowInativosContratos}
-              onRefresh={() => contratosHook.refetchContratos()}
-              onShowCreateModal={() => setShowContratoCreateModal(true)}
-              onShowEditModal={(contratoId) => {
-                setSelectedContratoId(contratoId);
-                setShowContratoEditModal(true);
-              }}
-              isGeneratingPdf={impressaoHook.isGeneratingPdf}
-            />
-          )}
-
-          {/* Aba Financeiro */}
-          {activeTab === 'financeiro' && (
-            <FinanceiroTab
-              sortedData={sortedData}
-              isLoadingParcelas={isLoadingParcelas}
-              selectedItems={bulkActionsHook.selectedItems}
-              setSelectedItems={bulkActionsHook.setSelectedItems}
-              bulkActions={bulkActionsHook.titulosBulkActions}
-              showCancelados={showCancelados}
-              setShowCancelados={setShowCancelados}
-              onRefresh={() => refetchParcelas()}
-              isGeneratingPdf={impressaoHook.isGeneratingPdf}
-              columns={columns}
-            />
-          )}
-
-          {/* Aba Observações */}
-          {activeTab === "observacoes" && (
-            <ObservacoesTab
-              formData={formHook.formData}
-              errors={formHook.errors}
-              handleInputChange={formHook.handleInputChange}
-              isSubmitting={formHook.isSubmitting}
-              formPrefix={formPrefix}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Modal de edição de título */}
-      <TituloModal
-        show={showTituloEditModal}
-        tituloId={selectedTituloId || null}
-        onClose={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-          refetchParcelas();
-        }}
-        onSuccess={() => {
-          setShowTituloEditModal(false);
-          setSelectedTituloId(null);
-          refetchParcelas();
-        }}
-      />
-
-      {/* Modal para receber */}
-      <ReceberModal
-        isOpen={showReceberModal}
-        onClose={() => {
-          setShowReceberModal(false);
-          setSelectedParcela(null);
-        }}
-        parcela={selectedParcela ? {
-          id: selectedParcela.id,
-          numero_titulo: (selectedParcela.numero_titulo || selectedParcela.numero_parcela || `Título ${selectedParcela.id}`).toString(),
-          valor_parcela: selectedParcela.valor || selectedParcela.valor_parcela,
-          data_vencimento: selectedParcela.data_vencimento,
-          cliente: (() => {
-            const cliente = selectedParcela.cliente || (selectedParcela.carne as { cliente?: { razao_social: string } })?.cliente;
-            if (cliente && typeof cliente === 'object' && 'razao_social' in cliente) {
-              return cliente as { razao_social: string };
-            }
-            return undefined;
-          })()
-        } : null}
-        onSuccess={() => {
-          setShowReceberModal(false);
-          setSelectedParcela(null);
-          refetchParcelas();
-        }}
-      />
-
-      {/* Modal de contrato (criação e edição unificados) */}
-      <ContratoModal
-        show={showContratoCreateModal || showContratoEditModal}
-        clienteId={formHook.cliente?.id || formHook.createdClienteId || undefined}
-        contratoId={showContratoEditModal ? selectedContratoId : null}
-        onClose={() => {
-          setShowContratoCreateModal(false);
-          setShowContratoEditModal(false);
-          setSelectedContratoId(null);
-        }}
-        onSuccess={() => {
-          // Não fechar o modal automaticamente - permitir criar múltiplos contratos
-        }}
-      />
-
-      {/* Modal de impressão */}
-      <ImprimirModal
-        show={impressaoHook.showImprimirModal}
-        onClose={impressaoHook.handleCloseImprimirModal}
-        pdfUrl={impressaoHook.pdfUrl}
-        title="Visualizar Documento"
-        modalId="cliente-imprimir-modal"
-      />
+      {renderContent()}
     </DraggableModal>
   );
 };
