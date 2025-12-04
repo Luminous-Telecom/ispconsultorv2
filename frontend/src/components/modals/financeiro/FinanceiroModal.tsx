@@ -218,6 +218,18 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
       render: (item: Titulo) => <span>{item.id}</span>
     },
     {
+      key: 'cliente',
+      label: 'Cliente',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => {
+        if (item.cliente) {
+          return item.cliente.razao_social || item.cliente.nome_fantasia || '-';
+        }
+        return '-';
+      }
+    },
+    {
       key: 'contrato_id',
       label: 'Contrato',
       sortable: true,
