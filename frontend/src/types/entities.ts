@@ -415,6 +415,7 @@ export interface RotinaAgendada {
   hora_execucao: string;
   ativo: boolean;
   ultima_execucao?: string;
+  ultima_execucao_formatada?: string | null;
   proxima_execucao?: string;
   total_execucoes: number;
   execucoes_com_sucesso: number;

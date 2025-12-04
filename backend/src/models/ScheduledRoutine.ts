@@ -55,11 +55,20 @@ export class ScheduledRoutine extends Model<ScheduledRoutineAttributes, Schedule
   }
 
   /**
-   * Sobrescrever toJSON para incluir created_at_formatada
+   * Formata ultima_execucao para exibição (sem conversão de timezone)
+   */
+  getUltimaExecucaoFormatada(): string | null {
+    if (!this.ultima_execucao) return null;
+    return formatCreatedAt(this.getDataValue('ultima_execucao'));
+  }
+
+  /**
+   * Sobrescrever toJSON para incluir created_at_formatada e ultima_execucao_formatada
    */
   toJSON(): Record<string, unknown> {
     const json = this.get({ plain: true }) as unknown as Record<string, unknown>;
     json.created_at_formatada = this.getCreatedAtFormatada();
+    json.ultima_execucao_formatada = this.getUltimaExecucaoFormatada();
     return json;
   }
 }

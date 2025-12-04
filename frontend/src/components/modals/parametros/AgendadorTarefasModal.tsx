@@ -72,6 +72,19 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         render: (item: RotinaAgendada) => item.proxima_execucao ? formatDateTime(item.proxima_execucao) : '-'
       },
       {
+        key: 'ultima_execucao',
+        label: 'Última Execução',
+        sortable: true,
+        render: (item: RotinaAgendada & { ultima_execucao_formatada?: string | null }) => {
+          // Usar ultima_execucao_formatada se disponível (vem do backend já formatada)
+          if (item.ultima_execucao_formatada) {
+            return item.ultima_execucao_formatada;
+          }
+          // Fallback para formatDateTime se não tiver formato do backend
+          return item.ultima_execucao ? formatDateTime(item.ultima_execucao) : '-';
+        }
+      },
+      {
         key: 'ativo',
         label: 'Status',
         sortable: true,
