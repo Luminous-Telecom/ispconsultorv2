@@ -30,7 +30,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "BROWSER=none BROWSER_ARGS='' craco start",
+    "dev": "cross-env BROWSER=none BROWSER_ARGS='' craco start",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
@@ -57,6 +57,7 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
+    "cross-env": "^10.1.0",
     "webpack-bundle-analyzer": "^4.10.2"
   }
 }
