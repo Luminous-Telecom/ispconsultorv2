@@ -30,28 +30,21 @@ export class PaymentCommonService {
   }
 
   /**
-   * Normaliza data de pagamento preservando hora (para webhooks)
-   * Evita problemas de timezone interpretando a data como local, não UTC
+   * Normaliza data de pagamento preservando hora exatamente como vem do banco
+   * Sempre interpreta como hora local, ignorando qualquer timezone na string
    */
   static normalizePaymentDate(value: string | Date | null | undefined): Date | null {
     if (!value) return null;
     
     if (typeof value === 'string') {
-      // Tentar parsear como ISO string com timezone explícito primeiro
-      // Formato: "2025-11-28T14:30:00" ou "2025-11-28T14:30:00Z" ou "2025-11-28T14:30:00-03:00"
-      const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?(?:Z|([+-]\d{2}):(\d{2}))?$/);
+      // Parsear manualmente para sempre usar componentes locais, ignorando timezone
+      // Formato: "2025-11-28T14:30:00" ou "2025-11-28T14:30:00Z" ou "2025-11-28T14:30:00-03:00" ou "2025-11-28 14:30:00"
+      const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?(?:Z|([+-]\d{2}):(\d{2}))?$/);
       
       if (isoMatch) {
-        const [, year, month, day, hour, minute, second, millisecond, tzSign, tzHour, tzMinute] = isoMatch;
+        // Ignorar timezone completamente - sempre usar como hora local
+        const [, year, month, day, hour, minute, second, millisecond] = isoMatch;
         
-        // Se tem timezone explícito (Z ou +/-HH:MM), usar new Date normalmente
-        if (tzSign === 'Z' || tzSign) {
-          const date = new Date(value);
-          return !isNaN(date.getTime()) ? date : null;
-        }
-        
-        // Se NÃO tem timezone, interpretar como hora LOCAL (não UTC)
-        // Criar Date usando componentes diretamente para evitar conversão de timezone
         const yearNum = parseInt(year, 10);
         const monthNum = parseInt(month, 10) - 1; // JavaScript months são 0-indexed
         const dayNum = parseInt(day, 10);
@@ -60,10 +53,18 @@ export class PaymentCommonService {
         const secondNum = parseInt(second, 10);
         const millisecondNum = millisecond ? parseInt(millisecond, 10) : 0;
         
+        // Criar Date usando componentes locais diretamente (ignora timezone)
         return new Date(yearNum, monthNum, dayNum, hourNum, minuteNum, secondNum, millisecondNum);
       }
       
-      // Se não é formato ISO, tentar parsear normalmente
+      // Se não é formato ISO conhecido, tentar parsear como data simples
+      const simpleDateMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (simpleDateMatch) {
+        const [, year, month, day] = simpleDateMatch;
+        return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+      }
+      
+      // Fallback: tentar parsear normalmente (mas pode ter problemas de timezone)
       const date = new Date(value);
       return !isNaN(date.getTime()) ? date : null;
     }
