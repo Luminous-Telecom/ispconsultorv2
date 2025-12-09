@@ -691,8 +691,8 @@ function Table<T extends { id: number | string }>({
                       }
                       
                       return (
-                        <div key={column.key} className={`table-mobile-field ${key.includes('id') ? 'field-id' : ''} ${key.includes('razao') || key.includes('nome') ? 'field-name' : ''}`}>
-                          {!key.includes('id') && <span className="field-label">{label}:</span>}
+                        <div key={column.key} className={`table-mobile-field`}>
+                          <span className="field-label">{label}:</span>
                           <span className="field-value">{displayValue}</span>
                         </div>
                       );
