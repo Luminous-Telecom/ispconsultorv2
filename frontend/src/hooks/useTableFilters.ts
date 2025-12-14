@@ -161,8 +161,8 @@ export const useTableFilters = <
   const {
     initialSearch = '',
     initialFilters = {} as TFilters,
-    initialSortColumn = '',
-    initialSortDirection = 'asc',
+    initialSortColumn = 'id',
+    initialSortDirection = 'desc',
     initialPage = 1,
     initialLimit = 15,
     searchDebounceMs = 300,

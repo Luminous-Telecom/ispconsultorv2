@@ -169,11 +169,15 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
 
   // Ordenar dados
   const sortedData = useMemo(() => {
-    if (!state.sortColumn || !sortable) return filteredData;
+    if (!sortable) return filteredData;
+
+    // Se não há coluna de ordenação especificada, usar ordenação padrão por ID decrescente
+    const sortColumn = state.sortColumn || 'id';
+    const sortDirection = state.sortColumn ? state.sortDirection : 'desc';
 
     return [...filteredData].sort((a, b) => {
-      const aValue = a[state.sortColumn as keyof T];
-      const bValue = b[state.sortColumn as keyof T];
+      const aValue = a[sortColumn as keyof T];
+      const bValue = b[sortColumn as keyof T];
 
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;
@@ -189,7 +193,7 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
         comparison = String(aValue).localeCompare(String(bValue));
       }
 
-      return state.sortDirection === 'asc' ? comparison : -comparison;
+      return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [filteredData, state.sortColumn, state.sortDirection, sortable]);
 
