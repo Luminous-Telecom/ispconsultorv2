@@ -33,6 +33,7 @@ export interface DadosEmpresa {
   responsavel_nome: string;
   responsavel_cpf: string;
   responsavel_cargo: string;
+  responsavel_assinatura?: string;
   logo?: string;
 }
 
@@ -56,6 +57,7 @@ export interface UpdateDadosEmpresa {
   responsavel_nome?: string;
   responsavel_cpf?: string;
   responsavel_cargo?: string;
+  responsavel_assinatura?: string;
   logo?: string;
 }
 
@@ -105,6 +107,7 @@ export class DadosEmpresaService {
           responsavel_nome: '',
           responsavel_cpf: '',
           responsavel_cargo: '',
+          responsavel_assinatura: undefined,
           logo: undefined,
         };
       }
@@ -130,13 +133,14 @@ export class DadosEmpresaService {
         celular: '',
         email: '',
         site: '',
-        responsavel_nome: '',
-        responsavel_cpf: '',
-        responsavel_cargo: '',
-        logo: undefined,
-      };
+          responsavel_nome: '',
+          responsavel_cpf: '',
+          responsavel_cargo: '',
+          responsavel_assinatura: undefined,
+          logo: undefined,
+        };
+      }
     }
-  }
 
   static async update(data: UpdateDadosEmpresa): Promise<DadosEmpresa> {
     const response = await apiService.put<DadosEmpresa>('/dados-empresa', data);
@@ -185,5 +189,54 @@ export class DadosEmpresaService {
     }
     
     throw new Error(response.message || 'Falha no upload da logo');
+  }
+
+  static async uploadAssinatura(file: File): Promise<{ success: boolean; responsavel_assinatura: string }> {
+    const formData = new FormData();
+    formData.append('assinatura', file);
+    
+    const response = await apiService.post<{ success: boolean; responsavel_assinatura: string }>(
+      '/dados-empresa/assinatura',
+      formData
+    );
+    
+    // Se resposta já tem success: false, lançar erro
+    if (response.success === false) {
+      throw new Error(response.message || 'Falha no upload da assinatura');
+    }
+    
+    // Tentar extrair assinatura de diferentes formatos de resposta
+    let assinatura: string | undefined;
+    
+    // Formato 1: response.data.responsavel_assinatura (quando ResponseTransformer envolve)
+    if (response.data && typeof response.data === 'object') {
+      const data = response.data as Record<string, unknown>;
+      
+      // Se data tem responsavel_assinatura diretamente
+      if ('responsavel_assinatura' in data && typeof data.responsavel_assinatura === 'string') {
+        assinatura = data.responsavel_assinatura;
+      }
+      // Se data tem um objeto aninhado com responsavel_assinatura
+      else if (data.data && typeof data.data === 'object' && data.data !== null) {
+        const nestedData = data.data as Record<string, unknown>;
+        if ('responsavel_assinatura' in nestedData && typeof nestedData.responsavel_assinatura === 'string') {
+          assinatura = nestedData.responsavel_assinatura;
+        }
+      }
+    }
+    
+    // Formato 2: response.responsavel_assinatura (resposta direta do backend)
+    if (!assinatura && 'responsavel_assinatura' in response) {
+      const responseData = response as unknown as { responsavel_assinatura?: string };
+      if (typeof responseData.responsavel_assinatura === 'string') {
+        assinatura = responseData.responsavel_assinatura;
+      }
+    }
+    
+    if (assinatura) {
+      return { success: true, responsavel_assinatura: assinatura };
+    }
+    
+    throw new Error(response.message || 'Falha no upload da assinatura');
   }
 }

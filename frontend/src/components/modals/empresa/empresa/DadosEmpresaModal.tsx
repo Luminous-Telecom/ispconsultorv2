@@ -27,8 +27,8 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
   const { data: dadosEmpresa } = useQuery({
     queryKey: ['dados-empresa'],
     queryFn: () => DadosEmpresaService.get(),
-    staleTime: 60 * 1000,
-    refetchOnMount: false,
+    staleTime: 0, // Sempre buscar dados atualizados
+    refetchOnMount: true,
   });
 
   // Mutation para atualizar dados da empresa
@@ -66,6 +66,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     responsavel_nome: '',
     responsavel_cpf: '',
     responsavel_cargo: '',
+    responsavel_assinatura: undefined,
     logo: undefined,
   };
 
@@ -106,6 +107,21 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
     } catch (err) {
       const apiError = err as ApiError;
       const errorMessage = apiError.message || 'Erro ao enviar a logo';
+      error(errorMessage);
+    }
+  };
+
+  const onAssinaturaChange = async (file: File | null) => {
+    try {
+      if (!file) return;
+      
+      const resp = await DadosEmpresaService.uploadAssinatura(file);
+      setDados(prev => ({ ...prev, responsavel_assinatura: resp.responsavel_assinatura }));
+      success('Assinatura atualizada com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['dados-empresa'] });
+    } catch (err) {
+      const apiError = err as ApiError;
+      const errorMessage = apiError.message || 'Erro ao enviar a assinatura';
       error(errorMessage);
     }
   };
@@ -242,6 +258,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
                 dados={dados}
                 onChange={handleInputChange}
                 isPending={updateDadosMutation.isPending}
+                onAssinaturaChange={onAssinaturaChange}
               />
             )}
           </form>

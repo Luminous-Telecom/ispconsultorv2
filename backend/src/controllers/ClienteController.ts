@@ -262,13 +262,7 @@ export class ClienteController {
     try {
       // Normalizar CNPJ (remover HTML entities se houver)
       const bodyNormalizado = { ...req.body };
-      if (bodyNormalizado.cnpj && typeof bodyNormalizado.cnpj === 'string') {
-        // Decodificar HTML entities (ex: &#x2F; -> /)
-        bodyNormalizado.cnpj = bodyNormalizado.cnpj
-          .replace(/&#x2F;/g, '/')
-          .replace(/&#47;/g, '/')
-          .replace(/&sol;/g, '/');
-      }
+      // CNPJ não precisa mais de decodificação - sanitize não codifica mais barras
 
       // Validar dados
       const { error, value } = ClienteController.createSchema.validate(bodyNormalizado);
@@ -345,13 +339,7 @@ export class ClienteController {
 
       // Normalizar CNPJ (remover HTML entities se houver)
       const bodyNormalizado = { ...req.body };
-      if (bodyNormalizado.cnpj && typeof bodyNormalizado.cnpj === 'string') {
-        // Decodificar HTML entities (ex: &#x2F; -> /)
-        bodyNormalizado.cnpj = bodyNormalizado.cnpj
-          .replace(/&#x2F;/g, '/')
-          .replace(/&#47;/g, '/')
-          .replace(/&sol;/g, '/');
-      }
+      // CNPJ não precisa mais de decodificação - sanitize não codifica mais barras
 
       // Validar dados
       logger.debug('Validando dados do cliente', {

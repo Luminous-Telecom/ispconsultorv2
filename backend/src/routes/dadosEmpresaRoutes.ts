@@ -33,6 +33,24 @@ const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer
   }
 };
 
+// Filtro para aceitar apenas PNG (para assinatura)
+const pngFileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  // Aceitar PNG e variações comuns
+  const allowedMimes = ['image/png', 'image/x-png'];
+  const allowedExtensions = ['.png'];
+  
+  const isValidMime = allowedMimes.includes(file.mimetype);
+  const isValidExtension = allowedExtensions.some(ext => 
+    file.originalname.toLowerCase().endsWith(ext)
+  );
+  
+  if (isValidMime || isValidExtension) {
+    cb(null, true);
+  } else {
+    cb(new Error('Apenas arquivos PNG são permitidos para assinatura'));
+  }
+};
+
 const upload = multer({ 
   storage,
   fileFilter,
@@ -82,5 +100,59 @@ router.post('/logo', (req, res, next) => {
     next();
   });
 }, DadosEmpresaController.uploadLogo);
+
+// Upload específico para assinatura (apenas PNG)
+const uploadAssinatura = multer({ 
+  storage,
+  fileFilter: pngFileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
+  }
+});
+
+// POST /api/dados-empresa/assinatura - Upload da assinatura do responsável
+router.post('/assinatura', (req, res, next) => {
+  uploadAssinatura.single('assinatura')(req, res, (err) => {
+    if (err) {
+      // Tratar erros do multer
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          res.status(400).json({ 
+            success: false,
+            message: 'Arquivo muito grande. Tamanho máximo: 10MB' 
+          });
+          return;
+        }
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+          res.status(400).json({ 
+            success: false,
+            message: 'Campo de arquivo inválido. Use o campo "assinatura"' 
+          });
+          return;
+        }
+        res.status(400).json({ 
+          success: false,
+          message: `Erro no upload: ${err.message}` 
+        });
+        return;
+      }
+      // Erro de validação de tipo de arquivo
+      res.status(400).json({ 
+        success: false,
+        message: err.message || 'Erro ao processar arquivo' 
+      });
+      return;
+    }
+    // Verificar se o arquivo foi recebido
+    if (!req.file) {
+      res.status(400).json({ 
+        success: false,
+        message: 'Nenhum arquivo foi enviado' 
+      });
+      return;
+    }
+    next();
+  });
+}, DadosEmpresaController.uploadAssinatura);
 
 export default router;

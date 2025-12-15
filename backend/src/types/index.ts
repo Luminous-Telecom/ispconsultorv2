@@ -152,6 +152,10 @@ export interface DadosEmpresa extends BaseEntity {
   bairro?: string;
   cidade?: string;
   estado?: string;
+  responsavel_nome?: string;
+  responsavel_cpf?: string;
+  responsavel_cargo?: string;
+  responsavel_assinatura?: string;
   logo?: string;
   observacoes?: string;
 }

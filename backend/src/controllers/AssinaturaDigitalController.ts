@@ -701,20 +701,9 @@ export class AssinaturaDigitalController {
         || req.body?.certificated_pdf_url
         || req.body?.pdf_assinado_url;
       
-      // Decodificar HTML entities (ex: &#x2F; -> /, &amp; -> &, etc)
-      const decodeHtmlEntities = (str: string | null | undefined): string | null => {
-        if (!str) return null;
-        return String(str)
-          .replace(/&#x2F;/g, '/')
-          .replace(/&#x27;/g, "'")
-          .replace(/&quot;/g, '"')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&amp;/g, '&');
-      };
-      
-      const signingUrl = decodeHtmlEntities(signingUrlRaw) || undefined;
-      const certificatedPdfUrl = decodeHtmlEntities(certificatedPdfUrlRaw) || undefined;
+      // URLs não precisam mais de decodificação - sanitize não codifica mais barras
+      const signingUrl = signingUrlRaw || undefined;
+      const certificatedPdfUrl = certificatedPdfUrlRaw || undefined;
       
       // Verificar também o status do assignment dentro do object
       const assignmentCompletedCount = req.body?.object?.assignment?.summary?.completed_count;

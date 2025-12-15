@@ -298,6 +298,10 @@ export interface DadosEmpresa {
   bairro?: string;
   cidade?: string;
   estado?: string;
+  responsavel_nome?: string;
+  responsavel_cpf?: string;
+  responsavel_cargo?: string;
+  responsavel_assinatura?: string;
   logo?: string;
   created_at?: string;
   created_at_formatada?: string | null;

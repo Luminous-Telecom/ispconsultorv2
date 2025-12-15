@@ -20,14 +20,14 @@ export function sanitizeString(input: string | null | undefined, allowHtml = fal
   if (!allowHtml) {
     // Remover todas as tags HTML
     sanitized = sanitized.replace(/<[^>]*>/g, '');
-    // Escapar caracteres HTML especiais
+    // Escapar caracteres HTML especiais (exceto / que não precisa ser codificado)
     sanitized = sanitized
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
+      .replace(/'/g, '&#x27;');
+    // Removido: .replace(/\//g, '&#x2F;') - não codificar barras, causa problemas em URLs e paths
   } else {
     // Permitir HTML mas remover scripts e eventos perigosos
     sanitized = sanitized
@@ -173,8 +173,12 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   const { allowHtml = false, deep = true } = options;
   const sanitized = { ...obj } as T;
 
-  // Campos que são URLs e não devem ter / escapado
+  // Campos que são URLs/paths e não devem ter / escapado nem HTML encoding
   const urlFields = ['url_retorno', 'url_boleto', 'api_url', 'url', 'webhook_url', 'notification_url', 'redirect_url', 'callback_url', 'assinatura_digital_api_url', 'url_assinatura', 'pdf_assinado_url'];
+  
+  // Campos que não devem ter nenhuma sanitização (caminhos de arquivo gerados pelo sistema)
+  // Apenas remover caracteres de controle perigosos, sem HTML encoding
+  const noSanitizeFields = ['logo', 'responsavel_assinatura'];
   
   // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, etc)
   const noHtmlEncodeFields = ['cpf_cnpj_assinante', 'cpf_cnpj', 'cnpj', 'cpf'];
@@ -195,8 +199,12 @@ export function sanitizeObject<T extends Record<string, unknown>>(
       const value = sanitized[key];
 
       if (typeof value === 'string') {
-        // Para campos de URL, usar sanitizeUrl que não escapa barras
-        if (urlFields.includes(key.toLowerCase())) {
+        // Campos que não devem ter nenhuma sanitização
+        if (noSanitizeFields.includes(key.toLowerCase())) {
+          // Apenas remover caracteres de controle perigosos
+          (sanitized as Record<string, unknown>)[key] = value.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
+        } else if (urlFields.includes(key.toLowerCase())) {
+          // Para campos de URL, usar sanitizeUrl que não escapa barras
           (sanitized as Record<string, unknown>)[key] = sanitizeUrl(value);
         } else if (noHtmlEncodeFields.includes(key.toLowerCase())) {
           // Campos que não devem ter HTML encoding (apenas remover caracteres de controle)

@@ -34,21 +34,24 @@ export function useFormReset<T>({
     const typedData = data as Record<string, unknown>;
     const typedInitialData = initialData as Record<string, unknown>;
     
-    const result = Object.keys(typedData).reduce((acc, key) => {
+    // Começar com os dados iniciais para garantir que todos os campos sejam preservados
+    const result = { ...typedInitialData } as Record<string, unknown>;
+    
+    // Sobrescrever com os dados recebidos
+    Object.keys(typedData).forEach((key) => {
       const value = typedData[key];
       const initialValue = typedInitialData[key];
       
       // Se o valor inicial é string, garantir que seja string
       if (typeof initialValue === 'string') {
-        acc[key] = ensureString(value);
+        result[key] = ensureString(value);
       } else {
-        acc[key] = value;
+        // Preservar o valor recebido
+        result[key] = value;
       }
-      
-      return acc;
-    }, {} as Record<string, unknown>) as T;
+    });
     
-    return result;
+    return result as T;
   }, [initialData]);
 
   useEffect(() => {

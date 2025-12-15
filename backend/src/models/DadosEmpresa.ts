@@ -31,6 +31,7 @@ export class DadosEmpresa extends Model<
   declare responsavel_nome: string;
   declare responsavel_cpf: string;
   declare responsavel_cargo: string | null;
+  declare responsavel_assinatura: string | null;
   declare logo: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
@@ -117,6 +118,10 @@ DadosEmpresa.init(
       allowNull: false
     },
     responsavel_cargo: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    responsavel_assinatura: {
       type: DataTypes.STRING,
       allowNull: true
     },

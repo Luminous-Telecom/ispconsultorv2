@@ -26,27 +26,27 @@ export class DadosEmpresaController {
       responsavel_nome: '',
       responsavel_cpf: '',
       responsavel_cargo: '',
+      responsavel_assinatura: null as string | null,
       logo: null as string | null
     };
   }
 
-  // Construir URL completa para logo
-  private static buildLogoUrl(req: Request, logoPath: string | null): string | null {
-    if (!logoPath) return null;
-    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) return logoPath;
+  // Construir URL completa para logo ou assinatura
+  private static buildUrl(req: Request, path: string | null): string | null {
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    return `${baseUrl}${logoPath}`;
+    return `${baseUrl}${path}`;
   }
 
   // Converter URL completa para caminho relativo
-  private static normalizeLogoPath(logo: string | null | undefined): string | null {
-    if (!logo || typeof logo !== 'string') return null;
-    if (!logo.startsWith('http://') && !logo.startsWith('https://')) return logo;
+  private static normalizePath(path: string | null | undefined): string | null {
+    if (!path || typeof path !== 'string') return null;
+    if (!path.startsWith('http://') && !path.startsWith('https://')) return path;
     try {
-      const url = new URL(logo);
-      return url.pathname;
+      return new URL(path).pathname;
     } catch {
-      return logo;
+      return path;
     }
   }
   // Rota pública para o site - retorna apenas dados não sensíveis
@@ -59,14 +59,15 @@ export class DadosEmpresaController {
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
-      dadosEmpresaJson.logo = DadosEmpresaController.buildLogoUrl(req, dadosEmpresaJson.logo);
+      dadosEmpresaJson.logo = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.logo);
 
       // Criar objeto apenas com dados públicos (sem dados sensíveis)
       const { 
         id: _id, 
         responsavel_nome: _responsavel_nome, 
         responsavel_cpf: _responsavel_cpf, 
-        responsavel_cargo: _responsavel_cargo, 
+        responsavel_cargo: _responsavel_cargo,
+        responsavel_assinatura: _responsavel_assinatura,
         inscricao_estadual: _inscricao_estadual, 
         inscricao_municipal, 
         created_at, 
@@ -108,7 +109,8 @@ export class DadosEmpresaController {
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
-      dadosEmpresaJson.logo = DadosEmpresaController.buildLogoUrl(req, dadosEmpresaJson.logo);
+      dadosEmpresaJson.logo = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.logo);
+      dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.responsavel_assinatura);
 
       // Retornar dados completos apenas para requisições autenticadas do sistema
       res.json(dadosEmpresaJson);
@@ -128,7 +130,9 @@ export class DadosEmpresaController {
   static async update(req: Request, res: Response): Promise<void> {
     try {
       const dadosAtualizados = { ...req.body };
-      dadosAtualizados.logo = DadosEmpresaController.normalizeLogoPath(dadosAtualizados.logo);
+      
+      dadosAtualizados.logo = DadosEmpresaController.normalizePath(dadosAtualizados.logo);
+      dadosAtualizados.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosAtualizados.responsavel_assinatura);
 
       let dadosEmpresa = await DadosEmpresa.findOne();
 
@@ -140,7 +144,8 @@ export class DadosEmpresaController {
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
-      dadosEmpresaJson.logo = DadosEmpresaController.buildLogoUrl(req, dadosEmpresaJson.logo);
+      dadosEmpresaJson.logo = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.logo);
+      dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.responsavel_assinatura);
 
       res.json(dadosEmpresaJson);
     } catch (error) {
@@ -222,7 +227,7 @@ export class DadosEmpresaController {
         await dadosEmpresa.update({ logo: filePath });
       }
 
-      const logoUrl = DadosEmpresaController.buildLogoUrl(req, filePath);
+      const logoUrl = DadosEmpresaController.buildUrl(req, filePath);
       res.json({ success: true, logo: logoUrl });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -261,6 +266,89 @@ export class DadosEmpresaController {
         stack: errorStack
       });
       res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  }
+
+  static async uploadAssinatura(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.file) {
+        // Verificar se é erro do multer
+        interface MulterErrorBody {
+          error?: string;
+        }
+        const body = req.body as MulterErrorBody;
+        if (body && body.error) {
+          res.status(400).json({ 
+            success: false,
+            message: body.error 
+          });
+          return;
+        }
+        res.status(400).json({ 
+          success: false,
+          message: 'Arquivo não enviado' 
+        });
+        return;
+      }
+
+      // Validar tipo de arquivo - apenas PNG (validação adicional)
+      const allowedMimes = ['image/png', 'image/x-png'];
+      if (!allowedMimes.includes(req.file.mimetype) && !req.file.originalname.toLowerCase().endsWith('.png')) {
+        // Deletar arquivo inválido se foi salvo
+        if (req.file.path) {
+          try {
+            const fs = require('fs');
+            if (fs.existsSync(req.file.path)) {
+              fs.unlinkSync(req.file.path);
+            }
+          } catch {}
+        }
+        res.status(400).json({ 
+          success: false,
+          message: 'Tipo de arquivo inválido. Apenas arquivos PNG são permitidos' 
+        });
+        return;
+      }
+
+      const filePath = `/uploads/empresa/${req.file.filename}`;
+      let dadosEmpresa = await DadosEmpresa.findOne();
+
+      if (!dadosEmpresa) {
+        dadosEmpresa = await DadosEmpresa.create({ ...DadosEmpresaController.getDefaultData(), responsavel_assinatura: filePath });
+      } else {
+        // Deletar assinatura antiga se existir
+        if (dadosEmpresa.responsavel_assinatura) {
+          try {
+            const fs = require('fs');
+            const path = require('path');
+            const oldAssinaturaPath = dadosEmpresa.responsavel_assinatura.startsWith('/') 
+              ? path.join(process.cwd(), dadosEmpresa.responsavel_assinatura)
+              : path.join(process.cwd(), dadosEmpresa.responsavel_assinatura);
+            if (fs.existsSync(oldAssinaturaPath)) {
+              fs.unlinkSync(oldAssinaturaPath);
+            }
+          } catch (err) {
+            // Ignorar erro ao deletar assinatura antiga
+          }
+        }
+        await dadosEmpresa.update({ responsavel_assinatura: filePath });
+      }
+
+      const assinaturaUrl = DadosEmpresaController.buildUrl(req, filePath);
+      res.json({ success: true, responsavel_assinatura: assinaturaUrl });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Erro ao fazer upload da assinatura', {
+        context: 'DadosEmpresaController',
+        action: 'uploadAssinatura',
+        error: errorMessage,
+        stack: errorStack
+      });
+      res.status(500).json({ 
+        success: false,
+        message: errorMessage 
+      });
     }
   }
 }
