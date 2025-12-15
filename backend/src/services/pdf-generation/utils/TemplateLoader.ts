@@ -35,7 +35,16 @@ export class TemplateLoader {
       }
     }
     
-    // Procura o primeiro caminho que tenha o arquivo CSS
+    // Procura o primeiro caminho que tenha tanto o arquivo CSS quanto os templates
+    for (const possiblePath of possiblePaths) {
+      const stylesPath = path.join(possiblePath, 'styles', 'document.css');
+      const templatesPath = path.join(possiblePath, 'templates', 'base.html');
+      if (fs.existsSync(stylesPath) && fs.existsSync(templatesPath)) {
+        return possiblePath;
+      }
+    }
+    
+    // Se não encontrou ambos, procura apenas pelo CSS (fallback)
     for (const possiblePath of possiblePaths) {
       const stylesPath = path.join(possiblePath, 'styles', 'document.css');
       if (fs.existsSync(stylesPath)) {
@@ -76,7 +85,7 @@ export class TemplateLoader {
     const templatePath = path.join(this.TEMPLATES_DIR, `${templateName}.html`);
     
     if (!fs.existsSync(templatePath)) {
-      throw new Error(`Template não encontrado: ${templateName}`);
+      throw new Error(`Template não encontrado: ${templateName} (caminho: ${templatePath})`);
     }
 
     const content = fs.readFileSync(templatePath, 'utf-8');
