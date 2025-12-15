@@ -174,7 +174,10 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   const sanitized = { ...obj } as T;
 
   // Campos que são URLs e não devem ter / escapado
-  const urlFields = ['url_retorno', 'url_boleto', 'api_url', 'url', 'webhook_url', 'notification_url', 'redirect_url', 'callback_url'];
+  const urlFields = ['url_retorno', 'url_boleto', 'api_url', 'url', 'webhook_url', 'notification_url', 'redirect_url', 'callback_url', 'assinatura_digital_api_url', 'url_assinatura', 'pdf_assinado_url'];
+  
+  // Campos que não devem ter HTML encoding (CPF/CNPJ, códigos, etc)
+  const noHtmlEncodeFields = ['cpf_cnpj_assinante', 'cpf_cnpj', 'cnpj', 'cpf'];
   
   // Campos que contêm HTML e devem ser preservados mesmo quando allowHtml=false
   const htmlFields = [
@@ -195,6 +198,9 @@ export function sanitizeObject<T extends Record<string, unknown>>(
         // Para campos de URL, usar sanitizeUrl que não escapa barras
         if (urlFields.includes(key.toLowerCase())) {
           (sanitized as Record<string, unknown>)[key] = sanitizeUrl(value);
+        } else if (noHtmlEncodeFields.includes(key.toLowerCase())) {
+          // Campos que não devem ter HTML encoding (apenas remover caracteres de controle)
+          (sanitized as Record<string, unknown>)[key] = value.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
         } else if (htmlFields.includes(key.toLowerCase())) {
           // Campos de HTML: permitir HTML mas remover scripts e eventos perigosos
           (sanitized as Record<string, unknown>)[key] = sanitizeString(value, true);
@@ -217,6 +223,9 @@ export function sanitizeObject<T extends Record<string, unknown>>(
           if (typeof item === 'string') {
             if (urlFields.includes(key.toLowerCase())) {
               return sanitizeUrl(item);
+            }
+            if (noHtmlEncodeFields.includes(key.toLowerCase())) {
+              return item.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
             }
             if (htmlFields.includes(key.toLowerCase())) {
               return sanitizeString(item, true);

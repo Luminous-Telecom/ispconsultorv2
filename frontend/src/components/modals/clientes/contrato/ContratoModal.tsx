@@ -8,7 +8,7 @@ import { useContratoForm } from '@/hooks/useContratoForm';
 import { useTermosContrato, useDeleteTermoContrato } from '@/hooks/useTermosContrato';
 import { TermoContrato } from '@/services/termoContratoService';
 import { TituloService } from '@/services/tituloService';
-import { Titulo, Plano } from '@/types';
+import { Titulo, Plano, Cliente } from '@/types';
 import ModeloTermoService from '@/services/modeloTermoService';
 import DocumentoSistemaService, { DocumentoSistema } from '@/services/documentoSistemaService';
 import { DiasVencimentoService } from '@/services/diasVencimentoService';
@@ -33,7 +33,7 @@ import ContratoTab from './abas/ContratoTab';
 import TermosTab from './abas/TermosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
 import ServicosAdicionaisTab from './abas/ServicosAdicionaisTab';
-import { TermoEditModal, SelecionarTermoModal, ServicoAdicionalModal } from './modals';
+import { TermoEditModal, SelecionarTermoModal, ServicoAdicionalModal, EnviarAssinaturaModal } from './modals';
 import { BulkAction } from './types';
 
 interface ContratoModalProps {
@@ -90,6 +90,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [activeTab, setActiveTab] = useState('contrato');
   const [showTermoModal, setShowTermoModal] = useState(false);
   const [showSelecionarTermoModal, setShowSelecionarTermoModal] = useState(false);
+  const [showEnviarAssinaturaModal, setShowEnviarAssinaturaModal] = useState(false);
+  const [termoParaAssinatura, setTermoParaAssinatura] = useState<TermoContrato | null>(null);
   const [editingTermo, setEditingTermo] = useState<TermoContrato | null>(null);
   const [termoFormData, setTermoFormData] = useState({
     assinado: 'NAO' as 'SIM' | 'NAO',
@@ -630,6 +632,22 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
           }
         }
       }
+    },
+    {
+      label: 'Enviar para Assinatura',
+      variant: 'info',
+      disabled: (selectedItems: TermoContrato[]) => {
+        const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
+        return items.length === 0 || items[0]?.assinado === 'SIM';
+      },
+      action: (selectedItems: TermoContrato[]) => {
+        const items = selectedItems && selectedItems.length > 0 ? selectedItems : selectedTermosItems;
+        if (items.length > 0) {
+          const termo = items[0];
+          setTermoParaAssinatura(termo);
+          setShowEnviarAssinaturaModal(true);
+        }
+      }
     }
   ] : [];
 
@@ -915,7 +933,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       key: 'data_aceite',
       label: 'Data Aceite',
       sortable: true,
-      render: (item: TermoContrato) => formatDate(item.data_aceite)
+      render: (item: TermoContrato) => formatDateTime(item.data_aceite)
     },
     { key: 'aceito_por', label: 'Aceito Por', sortable: true, render: (item: TermoContrato) => item.aceito_por || '-' },
     {
@@ -1311,6 +1329,21 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             onSuccess={() => {
               queryClient.invalidateQueries({ queryKey: ['contrato-planos-adicionais', internalContratoId] });
               refetchServicosAdicionais();
+            }}
+          />
+
+          <EnviarAssinaturaModal
+            show={showEnviarAssinaturaModal}
+            onClose={() => {
+              setShowEnviarAssinaturaModal(false);
+              setTermoParaAssinatura(null);
+            }}
+            termo={termoParaAssinatura}
+            cliente={contratoData?.cliente as Cliente | undefined}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['termos-contrato', internalContratoId] });
+              queryClient.invalidateQueries({ queryKey: ['assinaturas-digital'] });
+              refetchTermos();
             }}
           />
 

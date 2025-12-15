@@ -597,9 +597,9 @@ function Table<T extends { id: number | string }>({
               />
             ))}
           
-          {/* Coluna de ações - apenas no mobile */}
-          {isMobile && (
-            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '50px', textAlign: 'right', textTransform: 'none' }}>
+          {/* Coluna de ações */}
+          {_actions.length > 0 && (
+            <th className="py-1 px-2" style={{ fontSize: '0.75rem', padding: '0.5rem', width: '150px', textAlign: 'right', textTransform: 'none' }}>
               Ações
             </th>
           )}
@@ -894,7 +894,7 @@ function Table<T extends { id: number | string }>({
       return (
         <tbody>
           <tr>
-            <td colSpan={columns.length + (selectable ? 1 : 0)} className="text-center">
+            <td colSpan={columns.length + (selectable ? 1 : 0) + (_actions.length > 0 ? 1 : 0)} className="text-center">
               <div className="spinner-border spinner-border-sm" role="status">
                 <span className="visually-hidden">Carregando...</span>
               </div>
@@ -908,7 +908,7 @@ function Table<T extends { id: number | string }>({
       return (
         <tbody>
           <tr>
-            <td colSpan={columns.length + (selectable ? 1 : 0)} className="text-center">
+            <td colSpan={columns.length + (selectable ? 1 : 0) + (_actions.length > 0 ? 1 : 0)} className="text-center">
               {emptyMessage}
             </td>
           </tr>
@@ -956,7 +956,11 @@ function Table<T extends { id: number | string }>({
                     className="form-check-input"
                     type="checkbox"
                     checked={isSelected}
-                    onChange={() => tableActions.toggleSelection(item)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      tableActions.toggleSelection(item);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                     id={`${uniqueTableId}-checkbox-${item.id}`}
                     name={`${uniqueTableId}-checkbox-${item.id}`}
                   />
@@ -985,7 +989,89 @@ function Table<T extends { id: number | string }>({
                   </td>
                 ))}
               
-              {/* Coluna de ações - apenas no mobile */}
+              {/* Coluna de ações */}
+              {_actions.length > 0 && (
+                <td 
+                  className="py-1 px-2"
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '0.5rem',
+                    backgroundColor: isSelected ? '#0d6efd' : 'inherit',
+                    color: isSelected ? 'white' : 'inherit',
+                    width: '50px',
+                    textAlign: 'right',
+                    position: 'relative',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="table-actions-desktop">
+                    <button
+                      type="button"
+                      className="table-action-menu-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenActionDropdown(openActionDropdown === item.id ? null : item.id);
+                      }}
+                      aria-label="Menu de ações"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                      </svg>
+                    </button>
+                    
+                    {openActionDropdown === item.id && (
+                      <>
+                        <div 
+                          className="table-dropdown-overlay"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenActionDropdown(null);
+                          }}
+                        />
+                        <div className="table-dropdown">
+                          {_actions
+                            .filter(action => {
+                              if (typeof action.hidden === 'function') {
+                                return !action.hidden(item);
+                              }
+                              return !action.hidden;
+                            })
+                            .map((action) => {
+                              const isDisabled = typeof action.disabled === 'function' 
+                                ? action.disabled(item) 
+                                : action.disabled;
+                              
+                              return (
+                                <button
+                                  key={action.key}
+                                  type="button"
+                                  className={`table-dropdown-item ${action.variant === 'danger' ? 'danger' : ''}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenActionDropdown(null);
+                                    if (!isDisabled && onActionClick) {
+                                      onActionClick(action, item, index);
+                                    } else if (!isDisabled && action.onClick) {
+                                      action.onClick(item, index);
+                                    }
+                                  }}
+                                  disabled={isDisabled}
+                                >
+                                  {action.icon && <i className={action.icon}></i>}
+                                  <span>{action.label}</span>
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </td>
+              )}
+              
+              {/* Coluna de ações - mobile dropdown */}
               {isMobile && (
                 <td 
                   className="py-1 px-2"

@@ -327,6 +327,46 @@ export interface ModeloDocumento {
 }
 
 // ============================================
+// Assinatura Digital
+// ============================================
+export interface AssinaturaDigital {
+  id: number;
+  termo_contrato_id: number | null;
+  cliente_id: number | null;
+  documento_tipo: 'termo' | 'contrato' | 'outro';
+  documento_id: number | null;
+  api_provider: 'assinafy' | 'zapsign' | 'govbr' | 'outro';
+  api_document_id: string | null;
+  api_signature_id: string | null;
+  status: 'pendente' | 'enviado' | 'assinado' | 'cancelado' | 'expirado' | 'erro';
+  url_assinatura: string | null;
+  email_assinante: string | null;
+  nome_assinante: string | null;
+  cpf_cnpj_assinante: string | null;
+  data_envio: string | null;
+  data_assinatura: string | null;
+  data_expiracao: string | null;
+  pdf_assinado_url: string | null;
+  pdf_assinado_base64: string | null;
+  metadata: string | null;
+  erro_mensagem: string | null;
+  created_at?: string;
+  created_at_formatada?: string | null;
+  updated_at?: string;
+  termoContrato?: {
+    id: number;
+    tipo_termo: string;
+    assinado: string;
+  };
+  cliente?: {
+    id: number;
+    nome: string;
+    email: string;
+    cpf_cnpj: string;
+  };
+}
+
+// ============================================
 // Types Auxiliares
 // ============================================
 
@@ -336,6 +376,8 @@ export type StatusPlano = Plano['status'];
 export type TipoServico = Plano['tipo_servico'];
 export type Periodicidade = NonNullable<Plano['periodicidade']>;
 export type TipoBanco = Banco['tipo_banco'];
+export type StatusAssinaturaDigital = AssinaturaDigital['status'];
+export type ApiProviderAssinatura = AssinaturaDigital['api_provider'];
 
 // ============================================
 // DTOs (Data Transfer Objects) - Usar sufixo Data conforme convenções

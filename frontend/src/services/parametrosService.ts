@@ -8,6 +8,12 @@ export interface Parametros {
   titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
   total_titulos_financeiro: number;
+  assinatura_digital_habilitado?: boolean;
+  assinatura_digital_api_provider?: string;
+  assinatura_digital_api_key?: string;
+  assinatura_digital_api_url?: string;
+  assinatura_digital_account_id?: string;
+  assinatura_digital_dias_expiracao_padrao?: number;
   created_at?: string;
   updated_at?: string;
 }

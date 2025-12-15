@@ -31,8 +31,10 @@ export const copyProtectionMiddleware = (req: Request, res: Response, next: Next
   // Use header name in lowercase to satisfy tools that expect lowercase keys
   res.setHeader('x-content-type-options', 'nosniff');
   
-  // Não aplicar headers de frame para rotas de PDF
-  if (!isPdfRoute) {
+  // Não aplicar headers de frame para rotas de PDF e download de arquivos de cliente
+  const isClienteArquivoDownload = req.path.startsWith('/api/cliente-arquivos/') && req.path.includes('/download');
+  
+  if (!isPdfRoute && !isClienteArquivoDownload) {
     res.setHeader('X-Frame-Options', 'DENY');
     if (process.env.NODE_ENV !== 'production') {
       res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');

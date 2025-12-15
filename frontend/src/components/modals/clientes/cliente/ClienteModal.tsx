@@ -23,6 +23,7 @@ import EnderecoTab from './abas/EnderecoTab';
 import ContratosTab from './abas/ContratosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
 import ObservacoesTab from './abas/ObservacoesTab';
+import ArquivosTab from './abas/ArquivosTab';
 
 interface ClienteModalProps {
   show: boolean;
@@ -405,6 +406,16 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 Observações
               </button>
             </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'arquivos' ? 'active' : ''}`}
+                onClick={() => setActiveTab('arquivos')}
+                type="button"
+                disabled={!canEditContratosFinanceiro}
+              >
+                Arquivos
+              </button>
+            </li>
           </ul>
 
           {/* Conteúdo das Abas - Com Scroll */}
@@ -498,6 +509,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 handleInputChange={formHook.handleInputChange}
                 isSubmitting={formHook.isSubmitting}
                 formPrefix={formPrefix}
+              />
+            )}
+
+            {/* Aba Arquivos */}
+            {activeTab === "arquivos" && (
+              <ArquivosTab
+                clienteId={effectiveClienteIdForParcelas}
               />
             )}
           </div>

@@ -337,6 +337,10 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
   disableVariables = false
 }, ref) => {
   const editorInstanceRef = useRef<ClassicEditor | null>(null);
+  
+  // Garantir que value e placeholder sejam sempre strings para evitar erros no CKEditor
+  const safeValue = typeof value === 'string' ? value : '';
+  const safePlaceholder = typeof placeholder === 'string' ? placeholder : 'Digite aqui...';
 
   // Adiciona as fontes e estilos no head do documento
   React.useEffect(() => {
@@ -526,7 +530,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
               }
             ]
           },
-          placeholder: placeholder,
+          placeholder: safePlaceholder,
           htmlSupport: {
             allow: [
               {
@@ -555,7 +559,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
             ]
           }
         }}
-        data={value}
+        data={safeValue}
         id={id}
         aria-labelledby={ariaLabelledBy}
         onReady={(editor) => {
@@ -591,7 +595,8 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
         }}
         onChange={(event, editor) => {
           const data = editor.getData();
-          onChange(data);
+          // Garantir que sempre passamos uma string válida
+          onChange(typeof data === 'string' ? data : '');
         }}
       />
     </div>

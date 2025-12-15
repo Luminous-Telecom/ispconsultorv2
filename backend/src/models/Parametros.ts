@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
+import { ASSINAFY_API_URL_DEFAULT } from '../services/AssinafyService';
 
 interface ParametrosAttributes {
   id: number;
@@ -9,6 +10,12 @@ interface ParametrosAttributes {
   titulos_vence_domingo: boolean;
   auto_lancamento_titulos: boolean;
   total_titulos_financeiro: number;
+  assinatura_digital_habilitado?: boolean;
+  assinatura_digital_api_provider?: string;
+  assinatura_digital_api_key?: string;
+  assinatura_digital_api_url?: string;
+  assinatura_digital_account_id?: string;
+  assinatura_digital_dias_expiracao_padrao?: number;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -23,6 +30,12 @@ class Parametros extends Model<ParametrosAttributes, ParametrosCreationAttribute
   public titulos_vence_domingo!: boolean;
   public auto_lancamento_titulos!: boolean;
   public total_titulos_financeiro!: number;
+  public assinatura_digital_habilitado?: boolean;
+  public assinatura_digital_api_provider?: string;
+  public assinatura_digital_api_key?: string;
+  public assinatura_digital_api_url?: string;
+  public assinatura_digital_account_id?: string;
+  public assinatura_digital_dias_expiracao_padrao?: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -63,6 +76,35 @@ Parametros.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 12
+    },
+    assinatura_digital_habilitado: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    assinatura_digital_api_provider: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: 'assinafy'
+    },
+    assinatura_digital_api_key: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    assinatura_digital_api_url: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: ASSINAFY_API_URL_DEFAULT
+    },
+    assinatura_digital_account_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Workspace Account ID da Assinafy'
+    },
+    assinatura_digital_dias_expiracao_padrao: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 30
     },
     created_at: {
       type: DataTypes.DATE,

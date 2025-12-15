@@ -11,7 +11,10 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/health/i },
   { path: /^\/api\/auth\/login$/i },
   { path: /^\/webhook(\/.*)?$/i },
+  { path: /^\/api\/assinaturas-digital\/webhook$/i }, // Webhook da Assinafy (público)
   { path: /^\/uploads(\/.*)?$/i },
+  // Download de arquivos de cliente (visualização pública controlada)
+  { method: 'GET', path: /^\/api\/cliente-arquivos\/\d+\/download\/?$/i },
   { method: 'GET', path: /^\/api\/dados-empresa\/public\/?$/i }, // GET dados públicos da empresa (para site público)
   { method: 'GET', path: /^\/api\/dados-empresa\/logo\/?$/i }, // GET logo da empresa (público)
   { method: 'GET', path: /^\/api\/pagamento\/\d+\/[a-f0-9]+$/i }, // GET página pública de pagamento
@@ -37,8 +40,28 @@ const isPublicRoute = (req: Request): boolean => {
 };
 
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  const cleanedPath = req.originalUrl.split('?')[0];
+  // Permitir downloads públicos de arquivos de cliente (visualização)
+  if (req.method === 'GET' && /^\/api\/cliente-arquivos\/\d+\/download\/?$/.test(cleanedPath)) {
+    logger.info('AuthMiddleware - rota de download de cliente liberada sem auth', {
+      originalUrl: req.originalUrl,
+      cleanedPath
+    });
+    return next();
+  }
+
   const isApiRequest = /^\/api\//i.test(req.originalUrl);
   const isPublic = isPublicRoute(req);
+
+  // Debug: verificar rotas de cliente-arquivos download
+  if (req.originalUrl.includes('/cliente-arquivos/') && req.originalUrl.includes('/download')) {
+    logger.info('AuthMiddleware - verificando rota cliente-arquivos download', {
+      originalUrl: req.originalUrl,
+      cleanedPath: req.originalUrl.split('?')[0],
+      isApiRequest,
+      isPublic
+    });
+  }
 
   // Se não for requisição de API ou for rota pública, permitir acesso sem autenticação
   if (!isApiRequest || isPublic) {

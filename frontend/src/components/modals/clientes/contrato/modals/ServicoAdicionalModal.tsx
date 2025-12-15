@@ -143,6 +143,29 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
     }
   };
 
+  const headerActions = (
+    <div className="d-flex gap-2">
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={onClose}
+        disabled={createMutation.isPending || updateMutation.isPending}
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        form="servico-adicional-form"
+        variant="primary"
+        size="sm"
+        isLoading={createMutation.isPending || updateMutation.isPending}
+      >
+        Salvar
+      </Button>
+    </div>
+  );
+
   return (
     <>
       <DraggableModal
@@ -150,8 +173,9 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
         onClose={onClose}
         title={editingServico ? 'Editar Serviço Adicional' : 'Novo Serviço Adicional'}
         size="lg"
+        headerActions={headerActions}
       >
-        <form onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+        <form id="servico-adicional-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
           <div className="row">
             <div className="col-md-12 mb-3">
               <EntitySelectField
@@ -235,25 +259,6 @@ const ServicoAdicionalModal: React.FC<ServicoAdicionalModalProps> = ({
                 onChange={(value) => setObservacoes(value as string)}
               />
             </div>
-          </div>
-
-          <div className="d-flex justify-content-end gap-2 mt-3">
-            <Button 
-              type="button" 
-              variant="secondary" 
-              leftIcon={<i className="bi bi-x-lg"></i>}
-              onClick={onClose}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              variant="primary"
-              leftIcon={<i className="bi bi-check-lg"></i>}
-              isLoading={createMutation.isPending || updateMutation.isPending}
-            >
-              {editingServico ? 'Salvar' : 'Criar Serviço'}
-            </Button>
           </div>
         </form>
       </DraggableModal>

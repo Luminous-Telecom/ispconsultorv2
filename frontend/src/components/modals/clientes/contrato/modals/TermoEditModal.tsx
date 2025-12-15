@@ -72,14 +72,38 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
     }
   };
 
+  const headerActions = (
+    <div className="d-flex gap-2">
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={onClose}
+        disabled={createTermoMutation.isPending || updateTermoMutation.isPending}
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        form="termo-edit-form"
+        variant="primary"
+        size="sm"
+        isLoading={createTermoMutation.isPending || updateTermoMutation.isPending}
+      >
+        Salvar
+      </Button>
+    </div>
+  );
+
   return (
     <DraggableModal
       show={show}
       onClose={onClose}
       title={editingTermo ? "Editar Termo" : "Novo Termo"}
       size="lg"
+      headerActions={headerActions}
     >
-      <form onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
+      <form id="termo-edit-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         <div className="row">
           <div className="col-md-12">
             <EntitySelectField
@@ -131,25 +155,6 @@ const TermoEditModal: React.FC<TermoEditModalProps> = ({
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="d-flex justify-content-end gap-2 mt-4">
-          <Button 
-            type="button" 
-            variant="secondary"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={onClose}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            type="submit" 
-            variant="primary"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={createTermoMutation.isPending || updateTermoMutation.isPending}
-          >
-            {editingTermo ? 'Atualizar' : 'Salvar'}
-          </Button>
         </div>
       </form>
     </DraggableModal>

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { logger } from '../utils/logger';
 import clienteRoutes from './clienteRoutes';
 import planoRoutes from './planoRoutes';
 import bancoRoutes from './bancoRoutes';
@@ -25,6 +26,8 @@ import atualizacoesRoutes from './atualizacoesRoutes';
 import authRoutes from './authRoutes';
 import pagamentoPublicoRoutes from './pagamentoPublicoRoutes';
 import healthRoutes from './healthRoutes';
+import assinaturaDigitalRoutes from './assinaturaDigitalRoutes';
+import clienteArquivoRoutes from './clienteArquivoRoutes';
 
 const router = Router();
 
@@ -54,11 +57,16 @@ const routes = [
     { path: '/api/termos-contrato', route: termosContratoRoutes },
     { path: '/api/modelos-termo', route: modelosTermoRoutes },
     { path: '/api/atualizacoes', route: atualizacoesRoutes },
+    { path: '/api/assinaturas-digital', route: assinaturaDigitalRoutes },
+    // IMPORTANTE: cliente-arquivos deve vir ANTES de /api para evitar conflito
+    // Registrar manualmente ANTES de /api para garantir ordem
+    { path: '/api/cliente-arquivos', route: clienteArquivoRoutes },
 
     // Rotas de webhook
     { path: '/webhook', route: webhookRoutes },
     
-    // Rotas públicas de pagamento
+    // Rotas públicas de pagamento (deve vir DEPOIS de rotas específicas)
+    // IMPORTANTE: Esta rota genérica /api deve vir POR ÚLTIMO para não capturar rotas específicas
     { path: '/api', route: pagamentoPublicoRoutes },
     
     // Rotas de health check (sem /api para facilitar monitoramento)
@@ -66,7 +74,18 @@ const routes = [
 ];
 
 routes.forEach(({ path, route }) => {
-  router.use(path, route);
+  router.use(path, (req, res, next) => {
+    if (path === '/api/cliente-arquivos') {
+      logger.info('Router cliente-arquivos interceptando', { 
+        path, 
+        reqPath: req.path, 
+        originalUrl: req.originalUrl,
+        method: req.method,
+        baseUrl: req.baseUrl
+      });
+    }
+    route(req, res, next);
+  });
 });
 
 export default router;

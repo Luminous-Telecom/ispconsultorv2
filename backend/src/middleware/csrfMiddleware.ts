@@ -124,7 +124,7 @@ export function csrfProtectionMiddleware(req: Request, res: Response, next: Next
   }
 
   // Rotas públicas (webhooks, pagamento público) não precisam CSRF
-  const publicRoutes = ['/webhook', '/api/pagamento', '/health', '/metrics'];
+  const publicRoutes = ['/webhook', '/api/pagamento', '/api/assinaturas-digital/webhook', '/health', '/metrics'];
   const isPublicRoute = publicRoutes.some(route => req.path.startsWith(route));
   
   if (isPublicRoute) {

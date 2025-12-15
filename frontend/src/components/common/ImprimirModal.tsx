@@ -24,6 +24,47 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
     if (show && pdfUrl) {
       setHasError(false);
       setIsLoading(true);
+      
+      // Adicionar listener para erros de carregamento de recursos
+      const handleResourceError = (event: ErrorEvent) => {
+        // eslint-disable-next-line no-console
+        console.error('[ImprimirModal] Erro ao carregar recurso', {
+          message: event.message,
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          error: event.error,
+          pdfUrl
+        });
+        
+        // Verificar se o erro é relacionado ao PDF
+        if (event.filename && event.filename.includes('cliente-arquivos')) {
+          // eslint-disable-next-line no-console
+          console.error('[ImprimirModal] Erro relacionado ao PDF do cliente-arquivos', {
+            filename: event.filename,
+            pdfUrl
+          });
+          setIsLoading(false);
+          setHasError(true);
+        }
+      };
+      
+      // Adicionar listener para erros não capturados
+      const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+        // eslint-disable-next-line no-console
+        console.error('[ImprimirModal] Promise rejeitada', {
+          reason: event.reason,
+          pdfUrl
+        });
+      };
+      
+      window.addEventListener('error', handleResourceError);
+      window.addEventListener('unhandledrejection', handleUnhandledRejection);
+      
+      return () => {
+        window.removeEventListener('error', handleResourceError);
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      };
     }
   }, [show, pdfUrl]);
 
@@ -38,7 +79,13 @@ const ImprimirModal: React.FC<ImprimirModalProps> = ({
     setHasError(false);
   };
 
-  const handleIframeError = () => {
+  const handleIframeError = (event: React.SyntheticEvent<HTMLIFrameElement, Event>) => {
+    // eslint-disable-next-line no-console
+    console.error('[ImprimirModal] Erro ao carregar iframe', { 
+      event, 
+      pdfUrl,
+      error: 'Erro ao carregar iframe'
+    });
     setIsLoading(false);
     setHasError(true);
   };

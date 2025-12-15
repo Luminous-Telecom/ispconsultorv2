@@ -16,6 +16,8 @@ import { ModeloTermo } from './ModeloTermo';
 import { Usuario } from './Usuario';
 import { ContratoPlanoAdicional } from './ContratoPlanoAdicional';
 import { Auditoria } from './Auditoria';
+import { AssinaturaDigital } from './AssinaturaDigital';
+import { ClienteArquivo } from './ClienteArquivo';
 //
 // Importar associações específicas
 import './associations';
@@ -143,6 +145,27 @@ ModeloDocumento.hasMany(TermoContrato, {
   as: 'termosContrato'
 });
 
+// AssinaturaDigital
+TermoContrato.hasMany(AssinaturaDigital, {
+  foreignKey: 'termo_contrato_id',
+  as: 'assinaturas'
+});
+
+AssinaturaDigital.belongsTo(TermoContrato, {
+  foreignKey: 'termo_contrato_id',
+  as: 'termoContrato'
+});
+
+Cliente.hasMany(AssinaturaDigital, {
+  foreignKey: 'cliente_id',
+  as: 'assinaturas'
+});
+
+AssinaturaDigital.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente'
+});
+
 // ScheduledRoutine
 ScheduledRoutine.hasMany(RoutineExecutionLog, {
   foreignKey: 'routine_id',
@@ -184,5 +207,7 @@ export {
   TermoContrato,
   ModeloTermo,
   Usuario,
-  Auditoria
+  Auditoria,
+  AssinaturaDigital,
+  ClienteArquivo
 };

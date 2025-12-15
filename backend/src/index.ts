@@ -71,17 +71,18 @@ const PORT = process.env.PORT;
 app.set('trust proxy', 1);
 
 // Middleware de segurança
-// Aplicar helmet com exceção para rotas de PDF
+// Aplicar helmet com exceção para rotas de PDF e arquivos de cliente
 app.use((req, res, next) => {
-  // Não aplicar frameguard para rotas de PDF do webhook
+  // Não aplicar frameguard para rotas de PDF do webhook e download de arquivos
   const isPdfRoute = req.path.startsWith('/webhook/integration/pdf/');
+  const isClienteArquivoDownload = req.path.startsWith('/api/cliente-arquivos/') && req.path.includes('/download');
   
-  if (isPdfRoute) {
-    // Para rotas de PDF, usar helmet sem frameguard
+  if (isPdfRoute || isClienteArquivoDownload) {
+    // Para rotas de PDF e arquivos de cliente, usar helmet sem frameguard
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       contentSecurityPolicy: false,
-      frameguard: false, // Desabilitar completamente para PDF
+      frameguard: false, // Desabilitar completamente para permitir iframe
       noSniff: true,
       xssFilter: false,
       referrerPolicy: { policy: 'no-referrer' },

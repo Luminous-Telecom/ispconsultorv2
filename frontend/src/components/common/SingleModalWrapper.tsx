@@ -19,6 +19,7 @@ const RecursosSistemaModal = lazy(() => import('../modals/parametros/RecursosSis
 const DiasVencimentoModal = lazy(() => import('../modals/parametros/DiasVencimentoModal'));
 const AtualizacoesModal = lazy(() => import('../modals/parametros/AtualizacoesModal'));
 const AgendadorTarefasModal = lazy(() => import('../modals/parametros/AgendadorTarefasModal'));
+const AssinaturaDigitalModal = lazy(() => import('../modals/parametros/AssinaturaDigitalModal'));
 
 interface ModalComponentProps {
   show: boolean;
@@ -50,6 +51,7 @@ const MODAL_CONFIGS: Record<string, ModalConfig> = {
   'dias-vencimento': { component: DiasVencimentoModal, title: 'Dias de Vencimento', loadingMessage: 'Carregando dias de vencimento...' },
   atualizacoes: { component: AtualizacoesModal, title: 'Atualizações', loadingMessage: 'Carregando atualizações...' },
   'agendador-tarefas': { component: AgendadorTarefasModal, title: 'Agendador de Tarefas', loadingMessage: 'Carregando agendador de tarefas...' },
+  'assinatura-digital': { component: AssinaturaDigitalModal, title: 'Assinatura Digital', loadingMessage: 'Carregando configurações de assinatura digital...' },
 };
 
 const SingleModalWrapper: React.FC = () => {
