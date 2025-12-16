@@ -15,8 +15,8 @@ const Login: React.FC = () => {
   useEffect(() => {
     const fetchClientIp = async () => {
       try {
-        const baseUrl = API_CONFIG.BASE_URL_WITHOUT_API || '';
-        const response = await fetch(`${baseUrl}/client-ip`);
+        // Usar URL relativa para funcionar em qualquer ambiente
+        const response = await fetch('/client-ip');
         const data = await response.json();
         if (data.success && data.ip) {
           setClientIp(data.ip);
