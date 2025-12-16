@@ -5,16 +5,10 @@ import { DocumentoTabProps } from '../types';
 const AdesaoTab: React.FC<DocumentoTabProps> = ({
   value,
   onChange,
-  onInsertVariable,
   editorKey,
   placeholder = "Digite o conteúdo do termo de adesão..."
 }) => {
   const editorRef = useRef<RichTextEditorRef | null>(null);
-  
-  const handleInsertVariable = (variable: string) => {
-    editorRef.current?.insertVariable?.(variable);
-    onInsertVariable?.(variable);
-  };
 
   return (
     <RichTextEditor
@@ -27,7 +21,6 @@ const AdesaoTab: React.FC<DocumentoTabProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       height="100%"
-      onInsertVariable={handleInsertVariable}
     />
   );
 };

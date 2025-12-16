@@ -25,7 +25,6 @@ export interface DocumentoModalProps {
 export interface DocumentoTabProps {
   value: string;
   onChange: (value: string) => void;
-  onInsertVariable?: (variable: string) => void;
   editorKey: string;
   placeholder?: string;
 }

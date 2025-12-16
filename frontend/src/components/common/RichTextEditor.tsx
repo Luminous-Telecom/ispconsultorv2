@@ -33,7 +33,6 @@ interface RichTextEditorProps {
   id?: string;
   name?: string;
   ariaLabelledBy?: string;
-  onInsertVariable?: (variable: string) => void;
 }
 
 interface RichTextEditorRef {
@@ -47,76 +46,28 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
   height = '250px',
   id,
   name: _name,
-  ariaLabelledBy,
-  onInsertVariable
+  ariaLabelledBy
 }, ref) => {
   const editorRef = useRef<TinyMCEEditor | null>(null);
   
-  // Decodificar entidades HTML antes de passar para o editor
   const decodeHtmlEntities = (text: string): string => {
     const textarea = document.createElement('textarea');
     textarea.innerHTML = text;
     return textarea.value;
   };
   
-  // Formatar HTML com indentação adequada
-  const formatHtml = (html: string): string => {
-    if (!html || !html.trim()) return html;
-    
-    // Elementos de bloco que devem ter quebra de linha
-    const blockElements = ['div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'tfoot', 'blockquote', 'pre', 'figure'];
-    
-    // Adicionar quebras de linha após tags de fechamento de elementos de bloco
-    let formatted = html.replace(/(<\/(div|p|h[1-6]|ul|ol|li|table|tr|td|th|thead|tbody|tfoot|blockquote|pre|figure|br)[^>]*>)/gi, '$1\n');
-    
-    // Adicionar quebras de linha antes de tags de abertura de elementos de bloco
-    formatted = formatted.replace(/(<)(div|p|h[1-6]|ul|ol|li|table|tr|td|th|thead|tbody|tfoot|blockquote|pre|figure)[^>]*(>)/gi, '\n$1$2$3');
-    
-    // Limpar múltiplas quebras de linha consecutivas (máximo 2)
-    formatted = formatted.replace(/\n{3,}/g, '\n\n');
-    
-    // Adicionar indentação básica
-    const lines = formatted.split('\n');
-    let indent = 0;
-    const tab = '  ';
-    const result: string[] = [];
-    
-    lines.forEach((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) {
-        result.push('');
-        return;
-      }
-      
-      // Diminuir indentação antes de tags de fechamento
-      if (trimmed.match(/^<\//)) {
-        indent = Math.max(0, indent - 1);
-      }
-      
-      result.push(tab.repeat(indent) + trimmed);
-      
-      // Aumentar indentação após tags de abertura (exceto self-closing)
-      if (trimmed.match(/^<[^/!]/) && !trimmed.match(/\/>$/)) {
-        const tagName = trimmed.match(/^<(\w+)/)?.[1]?.toLowerCase();
-        if (tagName && blockElements.includes(tagName)) {
-          indent++;
-        }
-      }
-    });
-    
-    return result.join('\n').trim();
+  // Remover blob URLs inválidos do conteúdo
+  const cleanBlobUrls = (html: string): string => {
+    if (!html) return html;
+    // Remover imagens com blob URLs inválidos
+    return html.replace(/<img[^>]*src=["']blob:[^"']*["'][^>]*>/gi, '');
   };
   
-  const safeValue = typeof value === 'string' ? decodeHtmlEntities(value) : '';
-  const safePlaceholder = typeof placeholder === 'string' ? placeholder : 'Digite aqui...';
+  const safeValue = value ? cleanBlobUrls(decodeHtmlEntities(value)) : '';
+  const safePlaceholder = placeholder || 'Digite aqui...';
 
   const insertVariable = (variable: string) => {
-    if (editorRef.current) {
-      editorRef.current.insertContent(variable);
-    }
-    if (onInsertVariable) {
-      onInsertVariable(variable);
-    }
+    editorRef.current?.insertContent(variable);
   };
 
   useImperativeHandle(ref, () => ({
@@ -172,26 +123,14 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
             .line-height-2 { line-height: 2.0 !important; }
           `,
           setup: (editor) => {
-            // Função auxiliar para aplicar estilo de fonte
+            // Aplicar estilo de fonte
             const applyFontFamily = (fontFamily: string) => {
-              editor.execCommand('mceToggleFormat', false, 'fontname');
-              const selectedText = editor.selection.getContent();
-              if (selectedText) {
-                editor.execCommand('mceReplaceContent', false, `<span style="font-family: ${fontFamily}">${selectedText}</span>`);
-              } else {
-                editor.dom.setStyle(editor.selection.getNode(), 'font-family', fontFamily);
-              }
+              editor.dom.setStyle(editor.selection.getNode(), 'font-family', fontFamily);
             };
 
-            // Função auxiliar para aplicar tamanho de fonte
+            // Aplicar tamanho de fonte
             const applyFontSize = (fontSize: string) => {
-              editor.execCommand('mceToggleFormat', false, 'fontsize');
-              const selectedText = editor.selection.getContent();
-              if (selectedText) {
-                editor.execCommand('mceReplaceContent', false, `<span style="font-size: ${fontSize}">${selectedText}</span>`);
-              } else {
-                editor.dom.setStyle(editor.selection.getNode(), 'font-size', fontSize);
-              }
+              editor.dom.setStyle(editor.selection.getNode(), 'font-size', fontSize);
             };
 
             // Interface para variáveis
@@ -209,22 +148,16 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
               [key: string]: CategoriaVariaveis;
             }
 
-            // Função para buscar variáveis do backend
+            // Buscar variáveis do backend
             const buscarVariaveis = async (): Promise<VariaveisData> => {
               const { defaultApiClient } = await import('../../services/core');
+              const response = await defaultApiClient.get<VariaveisData>('/modelos-documento/variaveis');
               
-              try {
-                const response = await defaultApiClient.get<VariaveisData>('/modelos-documento/variaveis');
-                
-                if (response.success && response.data) {
-                  return response.data;
-                }
-                
-                throw new Error(response.message || 'Não foi possível carregar variáveis');
-              } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao buscar variáveis';
-                throw new Error(errorMessage);
+              if (response.success && response.data) {
+                return response.data;
               }
+              
+              throw new Error(response.message || 'Não foi possível carregar variáveis');
             };
 
             // Botão de variáveis
@@ -237,25 +170,18 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
                   const items: Array<{ type: 'menuitem' | 'separator'; text?: string; onAction?: () => void }> = [];
 
                   Object.entries(variaveisData).forEach(([_categoryKey, categoryData]) => {
-                    if (categoryData && categoryData.variaveis && Array.isArray(categoryData.variaveis) && categoryData.variaveis.length > 0) {
-                      // Adicionar separador antes de cada categoria (exceto a primeira)
+                    if (categoryData?.variaveis?.length > 0) {
                       if (items.length > 0) {
                         items.push({ type: 'separator' });
                       }
 
-                      // Adicionar variáveis da categoria
                       categoryData.variaveis.forEach((variable) => {
-                        if (variable && variable.variavel) {
-                          const variavelValue = variable.variavel; // Capturar valor para evitar closure
+                        if (variable?.variavel) {
+                          const variavelValue = variable.variavel;
                           items.push({
                             type: 'menuitem',
                             text: `${variavelValue} - ${variable.descricao || ''}`,
-                            onAction: () => {
-                              // Inserir conteúdo diretamente
-                              editor.insertContent(variavelValue);
-                              // Não chamar onInsertVariable aqui para evitar loop
-                              // O onEditorChange já será disparado automaticamente
-                            }
+                            onAction: () => editor.insertContent(variavelValue)
                           });
                         }
                       });
@@ -338,44 +264,34 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
               document.head.appendChild(style);
             });
             
-            // Interceptar quando o código fonte é aberto para formatar o HTML
-            editor.on('ExecCommand', (e) => {
-              if (e.command === 'mceCodeEditor') {
-                setTimeout(() => {
-                  try {
-                    // Acessar a janela do editor de código usando a API correta
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const windowManager = editor.windowManager as { windows?: Array<{ getEl?: () => HTMLElement | null }> };
-                    const codeWindow = windowManager.windows?.[0];
-                    if (codeWindow) {
-                      const el = codeWindow.getEl?.();
-                      const iframe = el?.querySelector('iframe') as HTMLIFrameElement | null;
-                      if (iframe && iframe.contentWindow) {
-                        const textarea = iframe.contentWindow.document.querySelector('textarea') as HTMLTextAreaElement | null;
-                        if (textarea) {
-                          const currentContent = textarea.value;
-                          const formatted = formatHtml(currentContent);
-                          textarea.value = formatted;
-                        }
-                      }
-                    }
-                  } catch (error) {
-                    // Ignorar erros de formatação
-                  }
-                }, 200);
-              }
-            });
           },
           images_upload_handler: async (blobInfo) => {
-            return new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const base64data = reader.result as string;
-                resolve(base64data);
-              };
-              reader.onerror = reject;
-              reader.readAsDataURL(blobInfo.blob());
+            const { API_CONFIG } = await import('../../config/api');
+            const { getAuthToken } = await import('../../services/core');
+            
+            const formData = new FormData();
+            formData.append('image', blobInfo.blob(), blobInfo.filename());
+            
+            const response = await fetch(`${API_CONFIG.BASE_URL}/modelos-documento/upload-imagem`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${getAuthToken() || ''}`
+              },
+              body: formData
             });
+            
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.message || `Erro ao fazer upload: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success || !data.url) {
+              throw new Error(data.message || 'URL da imagem não retornada pelo servidor');
+            }
+            
+            return data.url;
           },
           image_advtab: true,
           image_caption: true,

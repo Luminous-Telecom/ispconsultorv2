@@ -294,9 +294,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
     onClose();
   };
 
-  const handleInsertVariable = (_variable: string) => {
-    // Esta função será passada para as abas se necessário
-  };
 
   const getContentByType = (documentoTipo: 'contrato' | 'adesao' | 'permanencia') => {
     switch (documentoTipo) {
@@ -457,7 +454,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                     <ContratoTab
                       value={formData.conteudo_contrato}
                       onChange={(value) => setFormData(prev => ({ ...prev, conteudo_contrato: value }))}
-                      onInsertVariable={handleInsertVariable}
                       editorKey={`${isEditing ? currentDocumento?.id : 'create'}-contrato`}
                     />
                   )}
@@ -465,7 +461,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                     <AdesaoTab
                       value={formData.conteudo_adesao}
                       onChange={(value) => setFormData(prev => ({ ...prev, conteudo_adesao: value }))}
-                      onInsertVariable={handleInsertVariable}
                       editorKey={`${isEditing ? currentDocumento?.id : 'create'}-adesao`}
                     />
                   )}
@@ -473,7 +468,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                     <PermanenciaTab
                       value={formData.conteudo_permanencia}
                       onChange={(value) => setFormData(prev => ({ ...prev, conteudo_permanencia: value }))}
-                      onInsertVariable={handleInsertVariable}
                       editorKey={`${isEditing ? currentDocumento?.id : 'create'}-permanencia`}
                     />
                   )}
@@ -482,7 +476,6 @@ const DocumentoModal: React.FC<DocumentoModalProps> = ({ show, onClose, document
                 <ConteudoTab
                   value={formData.conteudo}
                   onChange={(value) => setFormData(prev => ({ ...prev, conteudo: value }))}
-                  onInsertVariable={handleInsertVariable}
                   editorKey={`${isEditing ? currentDocumento?.id : 'create'}-conteudo`}
                   placeholder={`Digite o conteúdo do ${getTipoLabel(tipo).toLowerCase()}...`}
                 />

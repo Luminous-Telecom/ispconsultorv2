@@ -5,16 +5,10 @@ import { DocumentoTabProps } from '../types';
 const ConteudoTab: React.FC<DocumentoTabProps> = ({
   value,
   onChange,
-  onInsertVariable,
   editorKey,
   placeholder = "Digite o conteúdo do documento..."
 }) => {
   const editorRef = useRef<RichTextEditorRef | null>(null);
-  
-  const handleInsertVariable = (variable: string) => {
-    editorRef.current?.insertVariable?.(variable);
-    onInsertVariable?.(variable);
-  };
 
   return (
     <RichTextEditor
@@ -27,7 +21,6 @@ const ConteudoTab: React.FC<DocumentoTabProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       height="100%"
-      onInsertVariable={handleInsertVariable}
     />
   );
 };

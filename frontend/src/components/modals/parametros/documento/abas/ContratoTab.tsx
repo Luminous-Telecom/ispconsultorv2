@@ -5,15 +5,9 @@ import { DocumentoTabProps } from '../types';
 const ContratoTab: React.FC<DocumentoTabProps> = ({
   value,
   onChange,
-  onInsertVariable,
   editorKey
 }) => {
   const editorRef = useRef<RichTextEditorRef | null>(null);
-  
-  const handleInsertVariable = (variable: string) => {
-    editorRef.current?.insertVariable?.(variable);
-    onInsertVariable?.(variable);
-  };
 
   return (
     <RichTextEditor
@@ -26,7 +20,6 @@ const ContratoTab: React.FC<DocumentoTabProps> = ({
       onChange={onChange}
       placeholder="Digite o conteúdo do modelo de contrato..."
       height="100%"
-      onInsertVariable={handleInsertVariable}
     />
   );
 };

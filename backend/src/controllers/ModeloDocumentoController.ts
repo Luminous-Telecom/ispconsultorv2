@@ -766,5 +766,60 @@ export class ModeloDocumentoController {
       });
     }
   }
+
+  /**
+   * Upload de imagem para documentos
+   */
+  static async uploadImagem(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({ 
+          success: false,
+          message: 'Arquivo não enviado' 
+        });
+        return;
+      }
+
+      // Validar tipo de arquivo
+      const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedMimes.includes(req.file.mimetype)) {
+        // Deletar arquivo inválido se foi salvo
+        if (req.file.path) {
+          try {
+            const fs = require('fs');
+            if (fs.existsSync(req.file.path)) {
+              fs.unlinkSync(req.file.path);
+            }
+          } catch {}
+        }
+        res.status(400).json({ 
+          success: false,
+          message: 'Tipo de arquivo inválido. Apenas imagens são permitidas (JPG, PNG, GIF, WEBP)' 
+        });
+        return;
+      }
+
+      const filePath = `/uploads/documentos/${req.file.filename}`;
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const imageUrl = `${baseUrl}${filePath}`;
+
+      res.json({ 
+        success: true, 
+        url: imageUrl,
+        path: filePath
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao fazer upload de imagem', {
+        context: 'ModeloDocumentoController',
+        action: 'uploadImagem',
+        error: errorMessage
+      });
+      res.status(500).json({ 
+        success: false,
+        message: errorMessage 
+      });
+    }
+  }
 }
 
