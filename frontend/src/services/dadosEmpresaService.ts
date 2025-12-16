@@ -3,9 +3,8 @@ import axios from 'axios';
 import { API_CONFIG } from '../config/api';
 
 // Cliente axios específico para rotas públicas (sem autenticação)
-// Usar API_CONFIG.BASE_URL para funcionar em desenvolvimento e produção
 const publicApiClient = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
+  baseURL: typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api',
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',

@@ -15,7 +15,14 @@ export class ApiClient {
   private api: AxiosInstance;
 
   constructor(config?: ApiClientConfig) {
-    const baseURL = config?.baseURL || API_CONFIG.BASE_URL || '/api';
+    let baseURL = config?.baseURL;
+    if (!baseURL) {
+      if (typeof window !== 'undefined') {
+        baseURL = `${window.location.origin}/api`;
+      } else {
+        baseURL = '/api';
+      }
+    }
 
     this.api = axios.create({
       baseURL,

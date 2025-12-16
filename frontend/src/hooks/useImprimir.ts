@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { useNotificationContext } from '../components/notifications/NotificationProvider';
-import { getApiBaseUrl } from '../utils/urlUtils';
 
 interface UseImprimirProps {
   itemType: 'contrato' | 'titulo' | 'recibo' | 'carta';
@@ -26,24 +25,16 @@ export const useImprimir = ({ itemType, filterCondition: _filterCondition, filte
     }
   }, [itemType]);
 
-  const getBaseUrl = useCallback(() => {
-    let apiUrl = getApiBaseUrl();
-    if (apiUrl.endsWith('/api')) {
-      apiUrl = apiUrl.slice(0, -4);
-    }
-    return apiUrl;
-  }, []);
-
   const handleImprimirSelecionados = useCallback((ids: string) => {
     if (!ids) {
       error( `Nenhum ${itemType} selecionado`);
       return;
     }
 
-    const baseUrl = getBaseUrl();
-    const url = `${baseUrl}${getApiUrl()}?ids=${ids}&print=true`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}${getApiUrl()}?ids=${ids}&print=true`;
     window.open(url, '_blank');
-  }, [itemType, getApiUrl, getBaseUrl, error]);
+  }, [itemType, getApiUrl, error]);
 
   const handleImprimirTodos = useCallback((ids: string) => {
     if (!ids) {
@@ -51,10 +42,10 @@ export const useImprimir = ({ itemType, filterCondition: _filterCondition, filte
       return;
     }
 
-    const baseUrl = getBaseUrl();
-    const url = `${baseUrl}${getApiUrl()}?ids=${ids}&print=true`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}${getApiUrl()}?ids=${ids}&print=true`;
     window.open(url, '_blank');
-  }, [itemType, filterLabel, getApiUrl, getBaseUrl, error]);
+  }, [itemType, filterLabel, getApiUrl, error]);
 
   return {
     handleImprimirSelecionados,

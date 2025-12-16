@@ -4,7 +4,7 @@
  */
 import { BaseService, defaultApiClient } from './core';
 import { CarneParcela, CarneParcelaFilters, PaginatedResponse, CreateCarneParcela, ApiResponse, Titulo } from '../types';
-import { API_CONFIG, API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
 import { ResponseTransformer } from './core/ResponseTransformer';
 import { ErrorHandler } from './core/ErrorHandler';
 import { AxiosError } from 'axios';
@@ -162,11 +162,11 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
       
       // Usar axios diretamente para evitar problemas com o interceptor
       const axios = (await import('axios')).default;
-      const baseURL = API_CONFIG.BASE_URL;
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const token = localStorage.getItem('auth_token');
       
       // Timeout aumentado para 120 segundos (2 minutos) pois geração de múltiplos PDFs pode demorar
-      const response = await axios.get(`${baseURL}${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
+      const response = await axios.get(`${origin}/api${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
         responseType: 'blob',
         timeout: 120000, // 120 segundos
         headers: {
@@ -383,7 +383,8 @@ export class TituloService {
    * Visualizar boleto na web
    */
   static getBoletoUrl(id: number): string {
-    return `${API_CONFIG.BASE_URL_WITHOUT_API}/boleto/web/${id}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/boleto/web/${id}`;
   }
 
   /**

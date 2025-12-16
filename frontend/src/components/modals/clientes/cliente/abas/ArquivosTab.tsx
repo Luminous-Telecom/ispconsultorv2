@@ -3,7 +3,6 @@ import { useClienteArquivos } from '@/hooks/useClienteArquivos';
 import { ClienteArquivo } from '@/services/clienteArquivoService';
 import { formatDateTime } from '@/utils/formatters';
 import Table from '@/components/tables/Table';
-import { API_CONFIG } from '@/config/api';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import AdicionarArquivoModal from './AdicionarArquivoModal';
 
@@ -22,15 +21,15 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
   });
 
   const handleDownload = useCallback((arquivo: ClienteArquivo) => {
-    const baseURL = API_CONFIG.BASE_URL;
-    const url = `${baseURL}/cliente-arquivos/${arquivo.id}/download`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}/api/cliente-arquivos/${arquivo.id}/download`;
     window.open(url, '_blank');
   }, []);
 
   const handleView = useCallback((arquivo: ClienteArquivo) => {
-    const baseURL = API_CONFIG.BASE_URL;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
     // Adicionar query param view=true para permitir exibição em iframe
-    const url = `${baseURL}/cliente-arquivos/${arquivo.id}/download?view=true`;
+    const url = `${origin}/api/cliente-arquivos/${arquivo.id}/download?view=true`;
     
     // Verificar se é imagem para abrir em nova aba
     const mimeType = (arquivo.mime_type || '').toLowerCase();

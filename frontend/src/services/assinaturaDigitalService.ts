@@ -1,5 +1,4 @@
 import { apiService } from './api';
-import { API_CONFIG } from '../config/api';
 import { AssinaturaDigital } from '../types/entities';
 
 export interface EnviarAssinaturaRequest {
@@ -77,9 +76,9 @@ export class AssinaturaDigitalService {
 
   static async baixarPdfAssinado(id: number): Promise<void> {
     try {
-      const token = localStorage.getItem('token');
-      const baseURL = API_CONFIG.BASE_URL;
-      const url = `${baseURL}/assinaturas-digital/${id}/download`;
+      const token = localStorage.getItem('auth_token');
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const url = `${origin}/api/assinaturas-digital/${id}/download`;
       
       const response = await fetch(url, {
         method: 'GET',

@@ -1,5 +1,4 @@
 import { apiService } from './api';
-import { API_CONFIG } from '@/config/api';
 
 export interface ClienteArquivo {
   id: number;
@@ -107,8 +106,8 @@ class ClienteArquivoService {
    * Obtém URL de download do arquivo
    */
   static getDownloadUrl(id: number): string {
-    const baseURL = API_CONFIG.BASE_URL;
-    return `${baseURL}/cliente-arquivos/${id}/download`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}/api/cliente-arquivos/${id}/download`;
   }
 }
 

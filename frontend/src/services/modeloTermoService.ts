@@ -1,6 +1,5 @@
 import { defaultApiClient } from './core';
 import axios from 'axios';
-import { API_CONFIG } from '../config/api';
 
 export interface ModeloTermo {
   id: number;
@@ -81,7 +80,8 @@ class ModeloTermoService {
   static async generatePdf(id: number): Promise<Blob> {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await axios.get(`${API_CONFIG.BASE_URL}${this.baseUrl}/${id}/pdf`, {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const response = await axios.get(`${origin}/api${this.baseUrl}/${id}/pdf`, {
         responseType: 'blob',
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
@@ -107,7 +107,8 @@ class ModeloTermoService {
 
   static async generateTestPdf(id: number, clienteId: number): Promise<Blob> {
     const token = localStorage.getItem('auth_token');
-    const response = await axios.post(`${API_CONFIG.BASE_URL}${this.baseUrl}/${id}/pdf/test`, 
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const response = await axios.post(`${origin}/api${this.baseUrl}/${id}/pdf/test`, 
       { clienteId },
       { 
         responseType: 'blob',
@@ -122,7 +123,8 @@ class ModeloTermoService {
   static async generatePdfWithContrato(id: number, contratoId: number): Promise<Blob> {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await axios.post(`${API_CONFIG.BASE_URL}${this.baseUrl}/${id}/pdf/contrato/${contratoId}`, {}, {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const response = await axios.post(`${origin}/api${this.baseUrl}/${id}/pdf/contrato/${contratoId}`, {}, {
         responseType: 'blob',
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''

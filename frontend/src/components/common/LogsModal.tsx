@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DraggableModal from './DraggableModal';
 import Table from '../tables/Table';
-import { API_CONFIG } from '@/config/api';
 import { formatDateTime } from '@/utils/formatters';
 
 interface LogsModalProps {
@@ -93,7 +92,8 @@ const LogsModal: React.FC<LogsModalProps> = ({
     
     setLoading(true);
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/scheduler/logs/${routineId}`);
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const response = await fetch(`${origin}/api/scheduler/logs/${routineId}`);
       const data = await response.json();
       
       if (data.success) {

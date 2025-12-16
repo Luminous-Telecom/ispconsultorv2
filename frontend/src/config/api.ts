@@ -30,24 +30,27 @@ const getDynamicConfig = (): AppConfig => {
 
 export const API_CONFIG = {
   get BASE_URL() {
+    if (typeof window === 'undefined') {
+      return '/api';
+    }
+    const origin = window.location.origin;
     const config = getDynamicConfig();
     const apiUrl = config.REACT_APP_API_URL || '/api';
     
-    // Se for URL absoluta em desenvolvimento local, usar como está
-    if (process.env.NODE_ENV === 'development' && 
-        apiUrl && 
-        (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
+    // Se for URL absoluta, usar como está
+    if (apiUrl && (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
       return apiUrl;
     }
     
-    // Em produção ou quando for relativa, garantir que comece com /
-    return ensureRelativeUrl(apiUrl) || '/api';
+    // Construir URL completa com origin
+    const path = ensureRelativeUrl(apiUrl) || '/api';
+    return `${origin}${path}`;
   },
   get BASE_URL_WITHOUT_API() {
-    const url = this.BASE_URL;
-    return url.endsWith('/api') 
-      ? (url === '/api' ? '/' : url.slice(0, -4))
-      : url;
+    if (typeof window === 'undefined') {
+      return '/';
+    }
+    return window.location.origin;
   },
   get TIMEOUT() {
     return Number(getDynamicConfig().REACT_APP_API_TIMEOUT || '10000');
@@ -60,8 +63,18 @@ export const API_CONFIG = {
   },
 };
 
-export const getApiUrl = (endpoint: string) => `${API_CONFIG.BASE_URL_WITHOUT_API}${endpoint}`;
-export const getCepUrl = (cep: string) => `${API_CONFIG.BASE_URL}/buscar-cep/${cep}`;
+export const getApiUrl = (endpoint: string) => {
+  if (typeof window === 'undefined') {
+    return endpoint;
+  }
+  return `${window.location.origin}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+};
+export const getCepUrl = (cep: string) => {
+  if (typeof window === 'undefined') {
+    return `/api/buscar-cep/${cep}`;
+  }
+  return `${window.location.origin}/api/buscar-cep/${cep}`;
+};
 
 export const API_ENDPOINTS = {
   CLIENTES: '/clientes',
