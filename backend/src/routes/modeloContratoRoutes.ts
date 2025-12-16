@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { ModeloContratoController } from '../controllers/DocumentoSistemaController';
-import { uploadWord } from '../utils/uploadConfig';
 
 const router = Router();
 
@@ -13,9 +12,6 @@ router.get('/tipos', ModeloContratoController.getTypes);
 router.get('/variaveis', ModeloContratoController.listarVariaveis);
 router.get('/tipo/:tipo', ModeloContratoController.getByType);
 router.get('/tipo/:tipo/padrao', ModeloContratoController.getDefaultByType);
-
-// Rota para converter arquivo Word para HTML
-router.post('/converter-word', uploadWord.single('file'), ModeloContratoController.convertWordToHtml);
 
 // Rotas para modelos específicos
 router.post('/modelo-contrato-conteudo', ModeloContratoController.saveModeloContratoConteudo);

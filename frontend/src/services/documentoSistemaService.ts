@@ -102,24 +102,6 @@ class DocumentoSistemaService {
     };
   }
 
-  static async convertWordToHtml(file: File): Promise<{ success: boolean; data: { html: string }; message: string }> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const axios = (await import('axios')).default;
-    const baseURL = API_CONFIG.BASE_URL;
-    const token = localStorage.getItem('auth_token');
-    
-    const response = await axios.post(`${baseURL}/modelos-documento/converter-word`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      }
-    });
-
-    return response.data;
-  }
-
   static async generatePdf(id: number): Promise<Blob> {
     try {
       const response = await apiService.get<Blob>(`/modelos-documento/${id}/pdf`, {

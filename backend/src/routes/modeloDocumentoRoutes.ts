@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { ModeloDocumentoController } from '../controllers/ModeloDocumentoController';
-import { uploadWord } from '../utils/uploadConfig';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -78,9 +77,6 @@ router.post('/upload-imagem', (req, res, next) => {
     next();
   });
 }, ModeloDocumentoController.uploadImagem);
-
-// Rota para converter arquivo Word para HTML
-router.post('/converter-word', uploadWord.single('file'), ModeloDocumentoController.convertWordToHtml);
 
 // Rotas para modelos específicos
 router.post('/modelo-contrato-conteudo', ModeloDocumentoController.saveModeloContratoConteudo);
