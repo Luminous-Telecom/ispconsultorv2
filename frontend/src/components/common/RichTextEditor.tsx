@@ -63,7 +63,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
     let cleaned = html.replace(/<img[^>]*src=["']blob:[^"']*["'][^>]*>/gi, '');
     // Converter URLs absolutas (http:// ou https://) para relativas
     // Captura o protocolo, host e porta, mantendo apenas o path
-    cleaned = cleaned.replace(/https?:\/\/[^\/"'\s>]+(\/[^"'\s>]*)/gi, '$1');
+    cleaned = cleaned.replace(/https?:\/\/[^/"'\s>]+(\/[^"'\s>]*)/gi, '$1');
     return cleaned;
   };
   
