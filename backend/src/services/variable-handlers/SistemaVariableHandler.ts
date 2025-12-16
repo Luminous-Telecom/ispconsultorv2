@@ -63,8 +63,9 @@ export class SistemaVariableHandler implements VariableHandler {
 
     let assinaturaUrl = empresa.responsavel_assinatura;
     if (!assinaturaUrl.startsWith('http://') && !assinaturaUrl.startsWith('https://')) {
-      // Se baseUrl não foi fornecido no contexto, usar undefined (links relativos)
-      const baseUrl = context.baseUrl || undefined;
+      // Se baseUrl não foi fornecido, manter URL relativa
+      // O Puppeteer pode não conseguir carregar, mas evita URLs hardcoded
+      const baseUrl = context.baseUrl;
       if (baseUrl) {
         assinaturaUrl = `${baseUrl}${assinaturaUrl}`;
       }
@@ -97,8 +98,9 @@ export class SistemaVariableHandler implements VariableHandler {
 
     let assinaturaUrl = assinaturaCliente.caminho;
     if (!assinaturaUrl.startsWith('http://') && !assinaturaUrl.startsWith('https://')) {
-      // Se baseUrl não foi fornecido no contexto, usar undefined (links relativos)
-      const baseUrl = context.baseUrl || undefined;
+      // Se baseUrl não foi fornecido, manter URL relativa
+      // O Puppeteer pode não conseguir carregar, mas evita URLs hardcoded
+      const baseUrl = context.baseUrl;
       if (baseUrl) {
         assinaturaUrl = `${baseUrl}${assinaturaUrl}`;
       }

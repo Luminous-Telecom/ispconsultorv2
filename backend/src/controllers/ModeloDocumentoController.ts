@@ -397,12 +397,15 @@ export class ModeloDocumentoController {
         }
 
         // Processar variáveis do documento
+        // Detectar baseUrl da requisição para URLs absolutas de assinaturas
+        const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
           documento.conteudo,
           {
             cliente,
             contrato: contrato || undefined
-          }
+          },
+          baseUrl
         );
       }
 
@@ -688,12 +691,15 @@ export class ModeloDocumentoController {
         });
 
         // Processar variáveis do documento
+        // Detectar baseUrl da requisição para URLs absolutas de assinaturas
+        const baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : undefined;
         conteudoProcessado = await VariaveisDocumentoService.processarVariaveis(
           conteudo,
           {
             cliente,
             contrato: contrato || undefined
-          }
+          },
+          baseUrl
         );
       }
 
