@@ -151,10 +151,12 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
             'insertdatetime', 'media', 'table', 'wordcount'
           ],
-          toolbar: 'undo redo | blocks | ' +
+          toolbar: 'undo redo | blocks | fontfamily fontsize | ' +
             'bold italic underline | alignleft aligncenter ' +
             'alignright alignjustify | bullist numlist outdent indent | ' +
             'removeformat | link image table | code',
+          font_family_formats: 'Arial=arial,helvetica,sans-serif; Courier New=courier new,courier; Georgia=georgia,palatino; Helvetica=helvetica; Impact=impact,chicago; Tahoma=tahoma,arial,helvetica,sans-serif; Times New Roman=times new roman,times; Trebuchet MS=trebuchet ms,geneva; Verdana=verdana,geneva',
+          font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 20pt 24pt 28pt 32pt 36pt 48pt 60pt 72pt',
           placeholder: safePlaceholder,
           content_style: `
             body { 
@@ -169,6 +171,68 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
             .line-height-2 { line-height: 2.0 !important; }
           `,
           setup: (editor) => {
+            // Função auxiliar para aplicar estilo de fonte
+            const applyFontFamily = (fontFamily: string) => {
+              editor.execCommand('mceToggleFormat', false, 'fontname');
+              const selectedText = editor.selection.getContent();
+              if (selectedText) {
+                editor.execCommand('mceReplaceContent', false, `<span style="font-family: ${fontFamily}">${selectedText}</span>`);
+              } else {
+                editor.dom.setStyle(editor.selection.getNode(), 'font-family', fontFamily);
+              }
+            };
+
+            // Função auxiliar para aplicar tamanho de fonte
+            const applyFontSize = (fontSize: string) => {
+              editor.execCommand('mceToggleFormat', false, 'fontsize');
+              const selectedText = editor.selection.getContent();
+              if (selectedText) {
+                editor.execCommand('mceReplaceContent', false, `<span style="font-size: ${fontSize}">${selectedText}</span>`);
+              } else {
+                editor.dom.setStyle(editor.selection.getNode(), 'font-size', fontSize);
+              }
+            };
+
+            // Botão de fonte com dropdown
+            editor.ui.registry.addMenuButton('fontfamily', {
+              text: 'Fonte',
+              tooltip: 'Fonte',
+              fetch: (callback) => {
+                const fonts = [
+                  { name: 'Arial', value: 'arial,helvetica,sans-serif' },
+                  { name: 'Courier New', value: 'courier new,courier' },
+                  { name: 'Georgia', value: 'georgia,palatino' },
+                  { name: 'Helvetica', value: 'helvetica' },
+                  { name: 'Impact', value: 'impact,chicago' },
+                  { name: 'Tahoma', value: 'tahoma,arial,helvetica,sans-serif' },
+                  { name: 'Times New Roman', value: 'times new roman,times' },
+                  { name: 'Trebuchet MS', value: 'trebuchet ms,geneva' },
+                  { name: 'Verdana', value: 'verdana,geneva' }
+                ];
+                const items = fonts.map(font => ({
+                  type: 'menuitem' as const,
+                  text: font.name,
+                  onAction: () => applyFontFamily(font.value)
+                }));
+                callback(items);
+              }
+            });
+
+            // Botão de tamanho com dropdown
+            editor.ui.registry.addMenuButton('fontsize', {
+              text: 'Tamanho',
+              tooltip: 'Tamanho da Fonte',
+              fetch: (callback) => {
+                const sizes = ['8pt', '10pt', '12pt', '14pt', '16pt', '18pt', '20pt', '24pt', '28pt', '32pt', '36pt', '48pt', '60pt', '72pt'];
+                const items = sizes.map(size => ({
+                  type: 'menuitem' as const,
+                  text: size,
+                  onAction: () => applyFontSize(size)
+                }));
+                callback(items);
+              }
+            });
+
             editor.on('init', () => {
               const style = document.createElement('style');
               style.id = 'tinymce-print-styles';
