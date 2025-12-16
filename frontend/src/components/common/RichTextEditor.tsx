@@ -56,15 +56,12 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
     return textarea.value;
   };
   
-  // Remover blob URLs inválidos e converter URLs absolutas para relativas
+  // Remover apenas blob URLs inválidos (não converter URLs absolutas válidas)
   const cleanBlobUrls = (html: string): string => {
     if (!html) return html;
-    // Remover imagens com blob URLs inválidos
-    let cleaned = html.replace(/<img[^>]*src=["']blob:[^"']*["'][^>]*>/gi, '');
-    // Converter URLs absolutas (http:// ou https://) para relativas
-    // Captura o protocolo, host e porta, mantendo apenas o path
-    cleaned = cleaned.replace(/https?:\/\/[^/"'\s>]+(\/[^"'\s>]*)/gi, '$1');
-    return cleaned;
+    // Remover apenas imagens com blob URLs inválidos
+    // Não converter URLs absolutas - elas são necessárias para o PDF
+    return html.replace(/<img[^>]*src=["']blob:[^"']*["'][^>]*>/gi, '');
   };
   
   const safeValue = value ? cleanBlobUrls(decodeHtmlEntities(value)) : '';
@@ -296,7 +293,12 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
               throw new Error(data.message || 'URL da imagem não retornada pelo servidor');
             }
             
-            return data.url;
+            // Converter URL relativa para absoluta usando window.location.origin
+            const imageUrl = data.url.startsWith('/') 
+              ? `${window.location.origin}${data.url}`
+              : data.url;
+            
+            return imageUrl;
           },
           image_advtab: true,
           image_caption: true,
