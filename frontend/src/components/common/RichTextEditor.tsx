@@ -56,11 +56,15 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
     return textarea.value;
   };
   
-  // Remover blob URLs inválidos do conteúdo
+  // Remover blob URLs inválidos e converter URLs absolutas para relativas
   const cleanBlobUrls = (html: string): string => {
     if (!html) return html;
     // Remover imagens com blob URLs inválidos
-    return html.replace(/<img[^>]*src=["']blob:[^"']*["'][^>]*>/gi, '');
+    let cleaned = html.replace(/<img[^>]*src=["']blob:[^"']*["'][^>]*>/gi, '');
+    // Converter URLs absolutas (http:// ou https://) para relativas
+    // Captura o protocolo, host e porta, mantendo apenas o path
+    cleaned = cleaned.replace(/https?:\/\/[^\/"'\s>]+(\/[^"'\s>]*)/gi, '$1');
+    return cleaned;
   };
   
   const safeValue = value ? cleanBlobUrls(decodeHtmlEntities(value)) : '';
