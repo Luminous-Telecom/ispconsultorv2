@@ -1,5 +1,4 @@
 import { apiService } from './api';
-import { API_CONFIG } from '../config/api';
 import type { ApiResponse } from '../types';
 import { extractApiErrorMessage } from '../utils/apiErrorHelper';
 import { CONTEXT_ERROR_MESSAGES } from '../constants/ErrorMessages';
