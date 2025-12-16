@@ -17,9 +17,8 @@ dist/
 *.tsbuildinfo
 
 # Uploads
-uploads/empresa/*
-uploads/temp/*
-uploads/clientes/*
+uploads/*
+
 
 # Test coverage
 coverage/
