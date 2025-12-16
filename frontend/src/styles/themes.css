@@ -3197,7 +3197,6 @@ button.dropdown-toggle .bi-chevron-down,
 }
 
 .ck.ck-search > .ck-labeled-field-view.ck-search__query_with-reset .ck-search__reset {
-  /* Firefox não suporta min-height: auto; usar 0 como reset seguro */
   min-height: 0 !important;
 }
 
@@ -3238,40 +3237,24 @@ button.dropdown-toggle .bi-chevron-down,
   white-space: pre-wrap !important;
 }
 
-/* Safari 15.4+ needs `match-parent` for text-align in some table headers
-   and we also want -webkit-match-parent support. Place `inherit` last as
-   requested for compatibility. This rule overrides compiled/bootstrap
-   defaults where necessary. */
+/* Compatibilidade Safari para text-align em tabelas */
 th {
   text-align: -webkit-match-parent;
   text-align: match-parent;
 }
 
-/* Mitigar `forced-color-adjust` vindo de CSS de terceiros (ex.: CKEditor build).
-   Alguns builds definem `forced-color-adjust: preserve-parent-color` que não é
-   suportado em todos os navegadores. Aplicamos um override carregado depois
-   para evitar efeitos indesejados em navegadores que não implementam a
-   propriedade corretamente. */
+/* Correção forced-color-adjust do CKEditor */
 @media (forced-colors: active) {
   .ck .ck-placeholder,
   .ck.ck-placeholder {
-    /* Use auto para deixar o user agent decidir; navegadores que não suportam
-       simplesmente ignoram esta propriedade. */
     forced-color-adjust: auto;
   }
 }
 
-/* Override para animação de upload do CKEditor - usa transform em vez de width/height
-   para evitar repaint/reflow e melhorar performance */
+/* Animação de upload do CKEditor */
 @keyframes ck-upload-complete-icon-check {
-  0% {
-    opacity: 1;
-    transform: scale(0);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0% { opacity: 1; transform: scale(0); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 .ckeditor-wrapper .ck-source-editing-area textarea:focus {

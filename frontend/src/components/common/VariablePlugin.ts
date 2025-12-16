@@ -21,6 +21,11 @@ export default class VariablePlugin extends Plugin {
   }
 
   init() {
+    // eslint-disable-next-line no-console
+    console.log('[VariablePlugin] Inicializando plugin');
+    // eslint-disable-next-line no-console
+    console.log('[VariablePlugin] Editor locale uiLanguage:', this.editor.locale?.uiLanguage);
+    
     const editor = this.editor;
     let currentDropdown: HTMLElement | null = null;
 
@@ -43,46 +48,42 @@ export default class VariablePlugin extends Plugin {
 
     // Adiciona o botão de variáveis à barra de ferramentas
     editor.ui.componentFactory.add('variables', locale => {
-      const buttonView = new ButtonView(locale);
+      // eslint-disable-next-line no-console
+      console.log('[VariablePlugin] Criando botão de variáveis');
+      
+      // Garantir que temos um locale válido
+      const validLocale = locale || editor.locale;
+      
+      const buttonView = new ButtonView(validLocale);
 
-      // Configurar o botão principal
+      // Usar ícone SVG em vez de texto para evitar problemas com TemplateToBinding
+      // Criar um SVG simples para o botão
+      const iconSvg = `
+        <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 4h14v2H3V4zm0 4h14v2H3V8zm0 4h14v2H3v-2zm0 4h14v2H3v-2z"/>
+        </svg>
+      `;
+      
       buttonView.set({
-        label: 'Variáveis',
-        withText: true,
-        tooltip: true,
+        icon: iconSvg,
+        tooltip: 'Variáveis',
         isToggleable: true
       });
-
-
-      // Adicionar setinha após o botão ser renderizado
+      
+      // Garantir que o tooltip seja uma string válida após renderização
       buttonView.on('render', () => {
         const buttonElement = buttonView.element;
-        if (buttonElement && !buttonElement.querySelector('.ck-button__arrow')) {
-          // Adicionar classe de dropdown ao botão
-          buttonElement.classList.add('ck-dropdown__button');
-          
-          // Criar a setinha
-          const arrow = document.createElement('span');
-          arrow.className = 'ck-button__arrow';
-          arrow.style.cssText = 'margin-left: 8px; display: inline-flex; align-items: center;';
-          
-          // SVG da setinha (igual ao do CKEditor)
-          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-          svg.setAttribute('viewBox', '0 0 10 10');
-          svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-          svg.style.cssText = 'width: 10px; height: 10px;';
-          
-          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          path.setAttribute('d', 'M.941 4.523a.75.75 0 1 1 1.06-1.06l3.006 3.005 3.005-3.005a.75.75 0 1 1 1.06 1.06l-3.549 3.55a.75.75 0 0 1-1.168-.136L.941 4.523z');
-          
-          svg.appendChild(path);
-          arrow.appendChild(svg);
-          buttonElement.appendChild(arrow);
+        if (buttonElement) {
+          buttonElement.setAttribute('title', 'Variáveis');
+          buttonElement.setAttribute('aria-label', 'Inserir variáveis');
         }
       });
 
-      // Ação ao clicar no botão - criar dropdown que se parece com o "Choose heading"
+      // Ação ao clicar no botão
       buttonView.on('execute', async () => {
+        // eslint-disable-next-line no-console
+        console.log('[VariablePlugin] Botão clicado');
+        
         // Se já existe um dropdown aberto, fechar
         if (currentDropdown) {
           currentDropdown.remove();
@@ -96,72 +97,49 @@ export default class VariablePlugin extends Plugin {
         // Buscar variáveis do backend
         let variaveisData: VariaveisData;
         try {
+          // eslint-disable-next-line no-console
+          console.log('[VariablePlugin] Buscando variáveis do backend...');
           variaveisData = await buscarVariaveis();
-        } catch {
+          // eslint-disable-next-line no-console
+          console.log('[VariablePlugin] Variáveis recebidas:', Object.keys(variaveisData || {}));
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('[VariablePlugin] Erro ao buscar variáveis:', error);
           buttonView.isOn = false;
           return;
         }
 
-        // Criar um dropdown que se parece exatamente com o "Choose heading"
+        // Criar dropdown
         const dropdown = document.createElement('div');
         dropdown.className = 'ck-dropdown ck-dropdown_open';
-        dropdown.style.cssText = `
-          position: absolute;
-          top: 100%;
-          left: 0;
-          z-index: 1000;
-          background: white;
-          border: 1px solid #c4c4c4;
-          border-radius: 4px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          min-width: 200px;
-          max-height: 300px;
-          overflow-y: auto;
-        `;
+        dropdown.style.cssText = 'position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #c4c4c4; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); min-width: 200px; max-height: 300px; overflow-y: auto;';
 
         // Usar dados do backend diretamente
         const categories = variaveisData;
 
         Object.entries(categories).forEach(([_categoryKey, categoryData]: [string, CategoriaVariaveis]) => {
-          if (categoryData.variaveis && categoryData.variaveis.length > 0) {
+          if (categoryData && categoryData.variaveis && Array.isArray(categoryData.variaveis) && categoryData.variaveis.length > 0) {
             // Adicionar categoria
             const categoryDiv = document.createElement('div');
-            categoryDiv.style.cssText = `
-              padding: 8px 12px 4px 12px;
-              font-size: 11px;
-              font-weight: 600;
-              color: #999;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            `;
-            categoryDiv.textContent = categoryData.titulo;
+            categoryDiv.style.cssText = 'padding: 8px 12px 4px 12px; font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase;';
+            const titulo = categoryData.titulo || '';
+            categoryDiv.textContent = titulo;
             dropdown.appendChild(categoryDiv);
 
             // Adicionar variáveis da categoria
             categoryData.variaveis.forEach((variable: Variavel) => {
+              if (!variable || !variable.variavel) {
+                return;
+              }
+              
               const item = document.createElement('div');
               item.className = 'ck-dropdown__item';
-              item.style.cssText = `
-                padding: 6px 12px;
-                cursor: pointer;
-                font-size: 13px;
-                color: #333;
-                border-bottom: 1px solid #f0f0f0;
-                transition: background-color 0.2s;
-                font-family: 'Courier New', monospace;
-              `;
+              item.style.cssText = 'padding: 6px 12px; cursor: pointer; font-size: 13px; color: #333; border-bottom: 1px solid #f0f0f0; font-family: monospace;';
               item.textContent = variable.variavel;
-
-              // Hover effect
-              item.addEventListener('mouseenter', () => {
-                item.style.backgroundColor = '#f0f0f0';
-              });
-              item.addEventListener('mouseleave', () => {
-                item.style.backgroundColor = 'transparent';
-              });
-
-              // Click event
-              item.addEventListener('click', () => {
+              
+              item.onmouseenter = () => item.style.backgroundColor = '#f0f0f0';
+              item.onmouseleave = () => item.style.backgroundColor = 'transparent';
+              item.onclick = () => {
                 editor.model.change(writer => {
                   const insertPosition = editor.model.document.selection.getFirstPosition();
                   if (insertPosition) {
@@ -171,8 +149,8 @@ export default class VariablePlugin extends Plugin {
                 dropdown.remove();
                 currentDropdown = null;
                 buttonView.isOn = false;
-              });
-
+              };
+              
               dropdown.appendChild(item);
             });
           }
@@ -194,9 +172,7 @@ export default class VariablePlugin extends Plugin {
               document.removeEventListener('click', removeDropdown);
             }
           };
-          setTimeout(() => {
-            document.addEventListener('click', removeDropdown);
-          }, 100);
+          document.addEventListener('click', removeDropdown);
         }
       });
 
