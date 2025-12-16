@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { authService } from '@/services/authService';
 import { removeAuthToken } from '@/services/core';
-import { API_CONFIG } from '@/config/api';
 import './Login.css';
 
 const Login: React.FC = () => {
