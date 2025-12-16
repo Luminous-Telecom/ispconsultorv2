@@ -118,8 +118,8 @@ export class TituloCRUDController {
         return;
       }
 
-      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-      const linkPagamento = gerarLinkPagamentoPublico(titulo.id, baseUrl);
+      // Gerar link relativo de pagamento (não precisa de baseUrl)
+      const linkPagamento = gerarLinkPagamentoPublico(titulo.id);
 
       const tituloComLink = {
         ...titulo.toJSON(),
@@ -485,8 +485,8 @@ export class TituloCRUDController {
         return;
       }
 
-      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-      const link = gerarLinkPagamentoPublico(tituloId, baseUrl);
+      // Gerar link relativo de pagamento (não precisa de baseUrl)
+      const link = gerarLinkPagamentoPublico(tituloId);
 
       res.json({ success: true, data: { titulo_id: tituloId, link: link, numero_titulo: titulo.numero_titulo }, message: 'Link de pagamento gerado com sucesso' });
     } catch (error: unknown) {

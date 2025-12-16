@@ -3,16 +3,21 @@ const path = require('path');
 const fs = require('fs');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
 const app = express();
 require('dotenv').config();
 
-const PORT = process.env.PORT;
-const BACKEND_URL = process.env.BACKEND_URL;
+// Porta padrão do frontend (pode ser sobrescrita por variável de ambiente se necessário)
+const PORT = process.env.PORT || 3000;
 
-if (!PORT || !BACKEND_URL) {
-  console.error('Erro: Variáveis PORT e BACKEND_URL devem estar definidas no .env');
-  process.exit(1);
-}
+// URL do backend hardcoded (não precisa de variável de ambiente)
+// Em produção, o backend geralmente está na mesma origem, mas o proxy pode ser configurado
+// Em desenvolvimento, o backend geralmente está em localhost:3001
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 const buildPath = path.join(__dirname, 'build');
 

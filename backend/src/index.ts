@@ -44,18 +44,8 @@ if (!process.env.PORT) {
   process.exit(1);
 }
 
-// FRONTEND_URL é opcional quando o frontend está integrado
-// Se não definida, assume que o frontend está sendo servido pelo próprio backend
-if (!process.env.FRONTEND_URL && process.env.NODE_ENV !== 'production') {
-  logger.warn('FRONTEND_URL não definida. Frontend será servido pelo backend.');
-}
-
-// Validar REACT_APP_API_URL quando frontend está integrado
-if (!process.env.FRONTEND_URL) {
-  if (!process.env.REACT_APP_API_URL) {
-    logger.warn('REACT_APP_API_URL deve ser definida nas variáveis de ambiente para o frontend funcionar corretamente.');
-  }
-}
+// URLs são detectadas automaticamente a partir da requisição
+// Não precisa de variáveis de ambiente para URLs
 
 if (!process.env.JWT_SECRET) {
   logger.error('JWT_SECRET não definida nas variáveis de ambiente');
@@ -111,15 +101,9 @@ app.use((req, res, next) => {
 });
 
 // Middleware de CORS
-// Aceitar origens definidas nas variáveis de ambiente ou mesma origem quando frontend integrado
-const corsOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.PRODUCTION_URL,
-  process.env.CORS_ORIGIN
-].filter((url): url is string => Boolean(url));
-
+// Aceitar todas as origens (em produção, o Nginx controla o CORS)
 app.use(cors({
-  origin: corsOrigins.length > 0 ? corsOrigins : true, // Aceitar todas as origens quando frontend integrado (via Nginx)
+  origin: true, // Aceitar todas as origens (Nginx controla em produção)
   credentials: true,
   exposedHeaders: ['Content-Disposition'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -227,28 +211,15 @@ logger.info('Middleware de proteção DDoS habilitado', {
 app.use('/api', rateLimitMiddleware());
 
 app.get('/config.js', (req, res) => {
-  let apiUrl = process.env.REACT_APP_API_URL;
-  
-  if (!apiUrl || apiUrl.trim() === '') {
-    apiUrl = '/api';
-  } else if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
-    try {
-      const urlObj = new URL(apiUrl);
-      apiUrl = urlObj.pathname || '/api';
-    } catch {
-      apiUrl = '/api';
-    }
-  }
-  
-  if (!apiUrl.startsWith('/')) {
-    apiUrl = '/' + apiUrl;
-  }
+  // URL da API sempre relativa (hardcoded)
+  const apiUrl = '/api';
 
+  // Valores padrão hardcoded (não precisa de variáveis de ambiente)
   const configJs = `window.__APP_CONFIG__ = {
     REACT_APP_API_URL: '${apiUrl}',
-    REACT_APP_API_TIMEOUT: '${process.env.REACT_APP_API_TIMEOUT || '10000'}',
-    REACT_APP_API_RETRY_ATTEMPTS: '${process.env.REACT_APP_API_RETRY_ATTEMPTS || '3'}',
-    REACT_APP_API_RETRY_DELAY: '${process.env.REACT_APP_API_RETRY_DELAY || '1000'}'
+    REACT_APP_API_TIMEOUT: '10000',
+    REACT_APP_API_RETRY_ATTEMPTS: '3',
+    REACT_APP_API_RETRY_DELAY: '1000'
   };`;
 
   res.setHeader('Content-Type', 'application/javascript');

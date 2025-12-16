@@ -998,16 +998,8 @@ export class IntegrationWebhookController {
           expiresAt
         });
 
-        // Construir URL do PDF baseada no request atual
-        // Usar BASE_URL do .env se disponível, senão construir a partir do request
-        let baseUrl = process.env.BASE_URL;
-        if (!baseUrl) {
-          // Construir URL a partir do request (protocol + host)
-          const protocol = req.protocol || 'http';
-          const host = req.get('host') || '';
-          baseUrl = `${protocol}://${host}`;
-        }
-        const pdfUrl = `${baseUrl}/webhook/integration/pdf/${token}`;
+        // URL relativa para o PDF (não precisa de baseUrl)
+        const pdfUrl = `/webhook/integration/pdf/${token}`;
 
         res.json({
           success: true,

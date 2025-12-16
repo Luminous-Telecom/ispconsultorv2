@@ -31,20 +31,14 @@ export const frontendMiddleware = (): express.RequestHandler => {
     lastModified: true,
   });
 
-  // Função para gerar config.js dinamicamente baseado nas variáveis de ambiente
+  // Função para gerar config.js com valores padrão hardcoded
   const generateConfig = (): string => {
-    // Obter URL da API das variáveis de ambiente (obrigatório - sem fallback hardcoded)
-    const apiUrl = process.env.REACT_APP_API_URL || '';
-    
-    const timeout = process.env.REACT_APP_API_TIMEOUT || '10000';
-    const retryAttempts = process.env.REACT_APP_API_RETRY_ATTEMPTS || '3';
-    const retryDelay = process.env.REACT_APP_API_RETRY_DELAY || '1000';
-
+    // Valores padrão hardcoded (não precisa de variáveis de ambiente)
     return `window.__APP_CONFIG__ = {
-      REACT_APP_API_URL: '${apiUrl}',
-      REACT_APP_API_TIMEOUT: '${timeout}',
-      REACT_APP_API_RETRY_ATTEMPTS: '${retryAttempts}',
-      REACT_APP_API_RETRY_DELAY: '${retryDelay}'
+      REACT_APP_API_URL: '/api',
+      REACT_APP_API_TIMEOUT: '10000',
+      REACT_APP_API_RETRY_ATTEMPTS: '3',
+      REACT_APP_API_RETRY_DELAY: '1000'
     };`;
   };
 

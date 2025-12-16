@@ -15,7 +15,16 @@ export function converterLogoParaBase64(logo: string): string {
   
   try {
     // Lógica de conversão para base64 (mantida a original)
-    let cleanPath = logo.startsWith('http') ? new URL(logo).pathname : logo;
+    // Se for URL absoluta, extrair pathname; caso contrário, usar como está
+    let cleanPath = logo;
+    if (logo.startsWith('http://') || logo.startsWith('https://')) {
+      try {
+        cleanPath = new URL(logo).pathname;
+      } catch {
+        // Se falhar ao criar URL, usar logo original
+        cleanPath = logo;
+      }
+    }
     const fileName = cleanPath.split('/').pop() || '';
     
     if (fileName.includes('efi.png')) return getLogoBancoPadrao('efi');
@@ -94,7 +103,8 @@ export function gerarLinkPagamentoPublico(tituloId: number, baseUrl?: string): s
   const secret = process.env.JWT_SECRET || 'default-secret';
   const token = crypto.createHmac('sha256', secret).update(String(tituloId)).digest('hex').substring(0, 16);
   
-  const frontendUrl = process.env.FRONTEND_URL || process.env.REACT_APP_URL || 'http://localhost:3000';
-  return `${frontendUrl}/pagamento/${tituloId}/${token}`;
+  // URL do frontend detectada automaticamente da requisição ou padrão relativo
+  // Em produção, será a mesma origem (Nginx serve frontend e backend)
+  return `/pagamento/${tituloId}/${token}`;
 }
 

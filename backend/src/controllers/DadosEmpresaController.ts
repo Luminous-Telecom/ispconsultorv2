@@ -31,23 +31,11 @@ export class DadosEmpresaController {
     };
   }
 
-  // Construir URL completa para logo ou assinatura
-  private static buildUrl(req: Request, path: string | null): string | null {
-    if (!path) return null;
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    return `${baseUrl}${path}`;
-  }
-
-  // Converter URL completa para caminho relativo
+  // Garantir que o path seja relativo e comece com /
   private static normalizePath(path: string | null | undefined): string | null {
     if (!path || typeof path !== 'string') return null;
-    if (!path.startsWith('http://') && !path.startsWith('https://')) return path;
-    try {
-      return new URL(path).pathname;
-    } catch {
-      return path;
-    }
+    // Garantir que o path comece com /
+    return path.startsWith('/') ? path : `/${path}`;
   }
   // Rota pública para o site - retorna apenas dados não sensíveis
   static async getPublic(req: Request, res: Response): Promise<void> {
@@ -59,7 +47,7 @@ export class DadosEmpresaController {
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
-      dadosEmpresaJson.logo = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.logo);
+      dadosEmpresaJson.logo = DadosEmpresaController.normalizePath(dadosEmpresaJson.logo);
 
       // Criar objeto apenas com dados públicos (sem dados sensíveis)
       const { 
@@ -109,8 +97,8 @@ export class DadosEmpresaController {
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
-      dadosEmpresaJson.logo = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.logo);
-      dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.responsavel_assinatura);
+      dadosEmpresaJson.logo = DadosEmpresaController.normalizePath(dadosEmpresaJson.logo);
+      dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosEmpresaJson.responsavel_assinatura);
 
       // Retornar dados completos apenas para requisições autenticadas do sistema
       res.json(dadosEmpresaJson);
@@ -144,8 +132,8 @@ export class DadosEmpresaController {
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
-      dadosEmpresaJson.logo = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.logo);
-      dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.buildUrl(req, dadosEmpresaJson.responsavel_assinatura);
+      dadosEmpresaJson.logo = DadosEmpresaController.normalizePath(dadosEmpresaJson.logo);
+      dadosEmpresaJson.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosEmpresaJson.responsavel_assinatura);
 
       res.json(dadosEmpresaJson);
     } catch (error) {
@@ -227,8 +215,7 @@ export class DadosEmpresaController {
         await dadosEmpresa.update({ logo: filePath });
       }
 
-      const logoUrl = DadosEmpresaController.buildUrl(req, filePath);
-      res.json({ success: true, logo: logoUrl });
+      res.json({ success: true, logo: filePath });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
@@ -334,8 +321,7 @@ export class DadosEmpresaController {
         await dadosEmpresa.update({ responsavel_assinatura: filePath });
       }
 
-      const assinaturaUrl = DadosEmpresaController.buildUrl(req, filePath);
-      res.json({ success: true, responsavel_assinatura: assinaturaUrl });
+      res.json({ success: true, responsavel_assinatura: filePath });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;

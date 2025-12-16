@@ -63,7 +63,8 @@ export class SistemaVariableHandler implements VariableHandler {
 
     let assinaturaUrl = empresa.responsavel_assinatura;
     if (!assinaturaUrl.startsWith('http://') && !assinaturaUrl.startsWith('https://')) {
-      const baseUrl = context.baseUrl || process.env.BASE_URL;
+      // Se baseUrl não foi fornecido no contexto, usar undefined (links relativos)
+      const baseUrl = context.baseUrl || undefined;
       if (baseUrl) {
         assinaturaUrl = `${baseUrl}${assinaturaUrl}`;
       }
@@ -96,7 +97,8 @@ export class SistemaVariableHandler implements VariableHandler {
 
     let assinaturaUrl = assinaturaCliente.caminho;
     if (!assinaturaUrl.startsWith('http://') && !assinaturaUrl.startsWith('https://')) {
-      const baseUrl = context.baseUrl || process.env.BASE_URL;
+      // Se baseUrl não foi fornecido no contexto, usar undefined (links relativos)
+      const baseUrl = context.baseUrl || undefined;
       if (baseUrl) {
         assinaturaUrl = `${baseUrl}${assinaturaUrl}`;
       }

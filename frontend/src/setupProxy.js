@@ -1,7 +1,9 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
-  const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+  // URL do backend hardcoded (não precisa de variável de ambiente)
+  // Em desenvolvimento, o backend geralmente está em localhost:3001
+  const backendUrl = 'http://localhost:3001';
   
   // Proxy para API
   app.use(

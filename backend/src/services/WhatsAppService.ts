@@ -133,12 +133,9 @@ export class WhatsAppService {
           ? ({ id: titulo.contrato_id } as Contrato)
           : undefined;
         
-        const baseUrl = process.env.BASE_URL;
-        if (!baseUrl) {
-          logger.error('BASE_URL não configurada nas variáveis de ambiente');
-          erros++;
-          continue;
-        }
+        // baseUrl não é mais necessário - links serão relativos
+        // Em produção, o navegador resolve automaticamente
+        const baseUrl = undefined; // Links serão relativos
         
         const msg = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
           cliente,
@@ -340,11 +337,8 @@ export class WhatsAppService {
       await this.delay(INTERACTION_DELAY_MS);
 
             try {
-              const baseUrl = process.env.BASE_URL;
-              if (!baseUrl) {
-                logger.warn('BASE_URL não configurada, pulando processamento de variáveis');
-                continue;
-              }
+              // baseUrl não é mais necessário - links serão relativos
+              const baseUrl = undefined;
               const texto = await VariaveisDocumentoService.processarVariaveis(interacao, {
                 cliente,
                 contrato,
@@ -521,23 +515,20 @@ export class WhatsAppService {
 
     // BUTTONS com URL dinâmica - se o template tiver botão URL, precisamos enviar o parâmetro
     // O template fatura_pdf tem um botão URL com {{1}} na URL que precisa do path completo do link de pagamento
-    // Gerar link de pagamento público completo e extrair o path (sem o domínio)
+    // Gerar link de pagamento público e extrair o path (sem o domínio)
     try {
-      const baseUrl = process.env.BASE_URL;
-      if (!baseUrl) {
-        logger.warn('BASE_URL não configurada, não será possível gerar link de pagamento no template');
-        return components;
-      }
-      
       if (!titulo?.id) {
         return components;
       }
       
-      const linkPagamento = gerarLinkPagamentoPublico(titulo.id, baseUrl);
-      const pathCompleto = new URL(linkPagamento).pathname;
+      // Gerar link relativo de pagamento
+      const linkPagamento = gerarLinkPagamentoPublico(titulo.id);
       
-      if (pathCompleto) {
-        const pathParaTemplate = pathCompleto.startsWith('/') ? pathCompleto.substring(1) : pathCompleto;
+      // Extrair pathname diretamente (linkPagamento já é relativo como /pagamento/...)
+      // Remover a barra inicial para o template do WhatsApp
+      const pathParaTemplate = linkPagamento.startsWith('/') ? linkPagamento.substring(1) : linkPagamento;
+      
+      if (pathParaTemplate) {
         components.push({
           type: 'button',
           sub_type: 'url',
@@ -598,10 +589,8 @@ export class WhatsAppService {
         ? ({ id: titulo.contrato_id } as Contrato)
         : undefined;
       
-      const baseUrl = process.env.BASE_URL;
-      if (!baseUrl) {
-        return { sucesso: false, mensagem: 'BASE_URL não configurada' };
-      }
+      // baseUrl não é mais necessário - links serão relativos
+      const baseUrl = undefined;
 
       const telefone = this.formatarTelefone(cliente.telefone);
       

@@ -15,16 +15,16 @@ declare global {
 
 const getDynamicConfig = (): AppConfig => {
   // SEMPRE priorizar window.__APP_CONFIG__ (configuração dinâmica do backend)
-  // process.env só é usado como fallback em desenvolvimento local
+  // Valores padrão hardcoded (não precisa de variáveis de ambiente)
   if (typeof window !== 'undefined' && window.__APP_CONFIG__) {
     return window.__APP_CONFIG__;
   }
-  // Fallback apenas para desenvolvimento local (quando não há window.__APP_CONFIG__)
+  // Fallback com valores padrão (não depende de .env)
   return {
-    REACT_APP_API_URL: process.env.REACT_APP_API_URL || '/api',
-    REACT_APP_API_TIMEOUT: process.env.REACT_APP_API_TIMEOUT || '10000',
-    REACT_APP_API_RETRY_ATTEMPTS: process.env.REACT_APP_API_RETRY_ATTEMPTS || '3',
-    REACT_APP_API_RETRY_DELAY: process.env.REACT_APP_API_RETRY_DELAY || '1000',
+    REACT_APP_API_URL: '/api',
+    REACT_APP_API_TIMEOUT: '10000',
+    REACT_APP_API_RETRY_ATTEMPTS: '3',
+    REACT_APP_API_RETRY_DELAY: '1000',
   };
 };
 

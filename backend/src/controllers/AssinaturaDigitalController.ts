@@ -239,7 +239,8 @@ export class AssinaturaDigitalController {
       }
 
       if (conteudoHtml && cliente) {
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+        // baseUrl não é mais necessário - links serão relativos
+        const baseUrl = undefined;
         const contratoRef = contrato ? { id: contrato.id } : undefined;
 
         conteudoHtml = await VariaveisDocumentoService.processarVariaveis(

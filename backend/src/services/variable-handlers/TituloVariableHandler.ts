@@ -112,7 +112,8 @@ export class TituloVariableHandler implements VariableHandler {
    * Gera link de pagamento público
    */
   private gerarLinkPagamento(titulo: Titulo, baseUrl?: string): string {
-    const urlFinal = baseUrl || process.env.BASE_URL || 'http://localhost:3001';
+    // Se baseUrl não foi fornecido, usar relativo (será resolvido pelo navegador)
+    const urlFinal = baseUrl || undefined;
     return gerarLinkPagamentoPublico(titulo.id, urlFinal);
   }
 

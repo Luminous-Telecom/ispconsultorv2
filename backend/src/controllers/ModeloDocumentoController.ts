@@ -753,8 +753,8 @@ export class ModeloDocumentoController {
       }
 
       const filePath = `/uploads/documentos/${req.file.filename}`;
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const imageUrl = `${baseUrl}${filePath}`;
+      // URL relativa (não precisa de baseUrl)
+      const imageUrl = filePath;
 
       res.json({ 
         success: true, 

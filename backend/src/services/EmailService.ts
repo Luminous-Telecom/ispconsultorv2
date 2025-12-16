@@ -112,8 +112,9 @@ export class EmailService {
         if (mensagem?.mensagem_padrao) {
           const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
           
-          // Obter baseUrl para gerar link de pagamento
-          const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+          // baseUrl não é necessário - links serão relativos
+          // Em produção, o navegador resolve automaticamente
+          const baseUrl = undefined;
           
           corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagem.mensagem_padrao, {
             cliente,
@@ -289,10 +290,9 @@ export class EmailService {
         ? { id: titulo.contrato_id } 
         : undefined;
       
-      const baseUrl = process.env.BASE_URL;
-      if (!baseUrl) {
-        return { sucesso: false, mensagem: 'BASE_URL não configurada' };
-      }
+      // baseUrl não é mais necessário - links serão relativos
+      // Em produção, o navegador resolve automaticamente
+      const baseUrl = undefined; // Links serão relativos
       
       const corpoHtml = await VariaveisDocumentoService.processarVariaveis(mensagemTexto, {
         cliente,
