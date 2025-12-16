@@ -151,10 +151,11 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
             'insertdatetime', 'media', 'table', 'wordcount'
           ],
+          toolbar_mode: 'wrap',
           toolbar: 'undo redo | blocks | fontfamily fontsize | ' +
             'bold italic underline | alignleft aligncenter ' +
             'alignright alignjustify | bullist numlist outdent indent | ' +
-            'removeformat | link image table | code',
+            'removeformat | link image table | variables | code',
           font_family_formats: 'Arial=arial,helvetica,sans-serif; Courier New=courier new,courier; Georgia=georgia,palatino; Helvetica=helvetica; Impact=impact,chicago; Tahoma=tahoma,arial,helvetica,sans-serif; Times New Roman=times new roman,times; Trebuchet MS=trebuchet ms,geneva; Verdana=verdana,geneva',
           font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 20pt 24pt 28pt 32pt 36pt 48pt 60pt 72pt',
           placeholder: safePlaceholder,
@@ -192,6 +193,92 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
                 editor.dom.setStyle(editor.selection.getNode(), 'font-size', fontSize);
               }
             };
+
+            // Interface para variáveis
+            interface Variavel {
+              variavel: string;
+              descricao: string;
+            }
+
+            interface CategoriaVariaveis {
+              titulo: string;
+              variaveis: Variavel[];
+            }
+
+            interface VariaveisData {
+              [key: string]: CategoriaVariaveis;
+            }
+
+            // Função para buscar variáveis do backend
+            const buscarVariaveis = async (): Promise<VariaveisData> => {
+              const { defaultApiClient } = await import('../../services/core');
+              
+              try {
+                const response = await defaultApiClient.get<VariaveisData>('/modelos-documento/variaveis');
+                
+                if (response.success && response.data) {
+                  return response.data;
+                }
+                
+                throw new Error(response.message || 'Não foi possível carregar variáveis');
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao buscar variáveis';
+                throw new Error(errorMessage);
+              }
+            };
+
+            // Botão de variáveis
+            editor.ui.registry.addMenuButton('variables', {
+              text: 'Variáveis',
+              tooltip: 'Inserir Variáveis',
+              fetch: async (callback) => {
+                try {
+                  const variaveisData = await buscarVariaveis();
+                  const items: Array<{ type: 'menuitem' | 'separator'; text?: string; onAction?: () => void }> = [];
+
+                  Object.entries(variaveisData).forEach(([_categoryKey, categoryData]) => {
+                    if (categoryData && categoryData.variaveis && Array.isArray(categoryData.variaveis) && categoryData.variaveis.length > 0) {
+                      // Adicionar separador antes de cada categoria (exceto a primeira)
+                      if (items.length > 0) {
+                        items.push({ type: 'separator' });
+                      }
+
+                      // Adicionar variáveis da categoria
+                      categoryData.variaveis.forEach((variable) => {
+                        if (variable && variable.variavel) {
+                          const variavelValue = variable.variavel; // Capturar valor para evitar closure
+                          items.push({
+                            type: 'menuitem',
+                            text: `${variavelValue} - ${variable.descricao || ''}`,
+                            onAction: () => {
+                              // Inserir conteúdo diretamente
+                              editor.insertContent(variavelValue);
+                              // Não chamar onInsertVariable aqui para evitar loop
+                              // O onEditorChange já será disparado automaticamente
+                            }
+                          });
+                        }
+                      });
+                    }
+                  });
+
+                  callback(items);
+                } catch (error) {
+                  callback([
+                    {
+                      type: 'menuitem',
+                      text: 'Erro ao carregar variáveis',
+                      onAction: () => {
+                        editor.notificationManager.open({
+                          text: error instanceof Error ? error.message : 'Erro desconhecido',
+                          type: 'error'
+                        });
+                      }
+                    }
+                  ]);
+                }
+              }
+            });
 
             // Botão de fonte com dropdown
             editor.ui.registry.addMenuButton('fontfamily', {
