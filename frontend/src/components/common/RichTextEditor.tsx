@@ -97,6 +97,8 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
           language: 'pt_BR',
           height: height,
           menubar: false,
+          skin: false,
+          content_css: false,
           plugins: [
             'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
