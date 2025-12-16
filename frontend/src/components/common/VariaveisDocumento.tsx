@@ -20,8 +20,7 @@ const VariaveisDocumento: React.FC<VariaveisDocumentoProps> = ({ onInserirVariav
   const { data: variaveisData, isLoading } = useQuery({
     queryKey: ['variaveis-documento'],
     queryFn: async () => {
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const response = await axios.get(`${origin}/api/modelos-documento/variaveis`);
+      const response = await axios.get('/api/modelos-documento/variaveis');
       return response.data.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutos

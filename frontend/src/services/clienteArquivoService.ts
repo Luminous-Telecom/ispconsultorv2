@@ -106,8 +106,7 @@ class ClienteArquivoService {
    * Obtém URL de download do arquivo
    */
   static getDownloadUrl(id: number): string {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    return `${origin}/api/cliente-arquivos/${id}/download`;
+    return `/api/cliente-arquivos/${id}/download`;
   }
 }
 

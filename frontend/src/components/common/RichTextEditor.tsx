@@ -271,8 +271,7 @@ const RichTextEditorInner: React.ForwardRefRenderFunction<RichTextEditorRef, Ric
             const formData = new FormData();
             formData.append('image', blobInfo.blob(), blobInfo.filename());
             
-            const origin = typeof window !== 'undefined' ? window.location.origin : '';
-            const response = await fetch(`${origin}/api/modelos-documento/upload-imagem`, {
+            const response = await fetch('/api/modelos-documento/upload-imagem', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${getAuthToken() || ''}`

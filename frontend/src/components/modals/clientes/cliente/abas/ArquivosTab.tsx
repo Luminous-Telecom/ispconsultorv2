@@ -21,15 +21,13 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
   });
 
   const handleDownload = useCallback((arquivo: ClienteArquivo) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const url = `${origin}/api/cliente-arquivos/${arquivo.id}/download`;
+    const url = `/api/cliente-arquivos/${arquivo.id}/download`;
     window.open(url, '_blank');
   }, []);
 
   const handleView = useCallback((arquivo: ClienteArquivo) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
     // Adicionar query param view=true para permitir exibição em iframe
-    const url = `${origin}/api/cliente-arquivos/${arquivo.id}/download?view=true`;
+    const url = `/api/cliente-arquivos/${arquivo.id}/download?view=true`;
     
     // Verificar se é imagem para abrir em nova aba
     const mimeType = (arquivo.mime_type || '').toLowerCase();

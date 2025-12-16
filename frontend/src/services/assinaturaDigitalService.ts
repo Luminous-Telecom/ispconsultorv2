@@ -77,8 +77,7 @@ export class AssinaturaDigitalService {
   static async baixarPdfAssinado(id: number): Promise<void> {
     try {
       const token = localStorage.getItem('auth_token');
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const url = `${origin}/api/assinaturas-digital/${id}/download`;
+      const url = `/api/assinaturas-digital/${id}/download`;
       
       const response = await fetch(url, {
         method: 'GET',

@@ -92,8 +92,7 @@ const LogsModal: React.FC<LogsModalProps> = ({
     
     setLoading(true);
     try {
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const response = await fetch(`${origin}/api/scheduler/logs/${routineId}`);
+      const response = await fetch(`/api/scheduler/logs/${routineId}`);
       const data = await response.json();
       
       if (data.success) {

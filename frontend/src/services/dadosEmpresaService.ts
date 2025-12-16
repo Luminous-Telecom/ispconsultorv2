@@ -4,7 +4,7 @@ import { API_CONFIG } from '../config/api';
 
 // Cliente axios específico para rotas públicas (sem autenticação)
 const publicApiClient = axios.create({
-  baseURL: typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api',
+  baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',

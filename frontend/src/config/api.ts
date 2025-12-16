@@ -30,36 +30,21 @@ const getDynamicConfig = (): AppConfig => {
 
 export const API_CONFIG = {
   get BASE_URL() {
-    if (typeof window === 'undefined') {
-      return '/api';
-    }
     const config = getDynamicConfig();
     const apiUrl = config.REACT_APP_API_URL || '/api';
     
-    // Se for URL absoluta, usar como está (desenvolvimento com backend em porta diferente)
-    if (apiUrl && (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
-      return apiUrl;
+    // Remover protocolo se houver
+    let path = apiUrl;
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      const url = new URL(path);
+      path = url.pathname || '/api';
     }
     
-    // Em produção ou quando for relativa, usar window.location.origin
-    const origin = window.location.origin;
-    const path = ensureRelativeUrl(apiUrl) || '/api';
-    return `${origin}${path}`;
+    // Garantir que seja relativa
+    return ensureRelativeUrl(path) || '/api';
   },
   get BASE_URL_WITHOUT_API() {
-    if (typeof window === 'undefined') {
-      return '/';
-    }
-    const config = getDynamicConfig();
-    const apiUrl = config.REACT_APP_API_URL || '/api';
-    
-    // Se for URL absoluta, remover /api do final
-    if (apiUrl && (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
-      return apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
-    }
-    
-    // Caso contrário, usar window.location.origin
-    return window.location.origin;
+    return '/';
   },
   get TIMEOUT() {
     return Number(getDynamicConfig().REACT_APP_API_TIMEOUT || '10000');
@@ -73,16 +58,10 @@ export const API_CONFIG = {
 };
 
 export const getApiUrl = (endpoint: string) => {
-  if (typeof window === 'undefined') {
-    return endpoint;
-  }
-  return `${window.location.origin}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+  return endpoint.startsWith('/') ? endpoint : '/' + endpoint;
 };
 export const getCepUrl = (cep: string) => {
-  if (typeof window === 'undefined') {
-    return `/api/buscar-cep/${cep}`;
-  }
-  return `${window.location.origin}/api/buscar-cep/${cep}`;
+  return `/api/buscar-cep/${cep}`;
 };
 
 export const API_ENDPOINTS = {

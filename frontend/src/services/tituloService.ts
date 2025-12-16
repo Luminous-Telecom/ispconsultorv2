@@ -162,11 +162,10 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
       
       // Usar axios diretamente para evitar problemas com o interceptor
       const axios = (await import('axios')).default;
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const token = localStorage.getItem('auth_token');
       
       // Timeout aumentado para 120 segundos (2 minutos) pois geração de múltiplos PDFs pode demorar
-      const response = await axios.get(`${origin}/api${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
+      const response = await axios.get(`/api${API_ENDPOINTS.TITULOS}/boletos-multiplos-pdf?ids=${idsParam}`, {
         responseType: 'blob',
         timeout: 120000, // 120 segundos
         headers: {
@@ -383,8 +382,7 @@ export class TituloService {
    * Visualizar boleto na web
    */
   static getBoletoUrl(id: number): string {
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    return `${origin}/boleto/web/${id}`;
+    return `/boleto/web/${id}`;
   }
 
   /**

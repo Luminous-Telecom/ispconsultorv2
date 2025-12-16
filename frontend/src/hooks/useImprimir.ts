@@ -31,8 +31,7 @@ export const useImprimir = ({ itemType, filterCondition: _filterCondition, filte
       return;
     }
 
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const url = `${origin}${getApiUrl()}?ids=${ids}&print=true`;
+    const url = `${getApiUrl()}?ids=${ids}&print=true`;
     window.open(url, '_blank');
   }, [itemType, getApiUrl, error]);
 
@@ -42,8 +41,7 @@ export const useImprimir = ({ itemType, filterCondition: _filterCondition, filte
       return;
     }
 
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const url = `${origin}${getApiUrl()}?ids=${ids}&print=true`;
+    const url = `${getApiUrl()}?ids=${ids}&print=true`;
     window.open(url, '_blank');
   }, [itemType, filterLabel, getApiUrl, error]);
 

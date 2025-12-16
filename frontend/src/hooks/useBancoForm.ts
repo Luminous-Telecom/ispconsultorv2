@@ -60,7 +60,7 @@ const initialFormData: BancoForm = {
   identificador_conta: '',
   client_id_producao: '',
   client_secret_producao: '',
-  url_retorno: `${typeof window !== 'undefined' ? window.location.origin : ''}/webhook/efi`,
+  url_retorno: '/webhook/efi',
   repassar_email_cliente: false,
   percentual_multa: 2,
   percentual_juros: 0.03,
@@ -103,7 +103,7 @@ const mapBancoToForm = (banco: Banco): BancoForm => ({
   identificador_conta: banco.identificador_conta || '',
   client_id_producao: banco.client_id_producao || '',
   client_secret_producao: banco.client_secret_producao || '',
-  url_retorno: banco.url_retorno || `${typeof window !== 'undefined' ? window.location.origin : ''}/webhook/efi`,
+  url_retorno: banco.url_retorno || '/webhook/efi',
   repassar_email_cliente: banco.repassar_email_cliente ?? false,
   percentual_multa: banco.percentual_multa || 2,
   percentual_juros: banco.percentual_juros || 0.03,
@@ -276,7 +276,7 @@ export const useBancoForm = ({
       };
       const codigo = codigos[String(normalizedValue)] || '';
       setValue('codigo', codigo, { shouldValidate: false });
-      setValue('url_retorno', `${typeof window !== 'undefined' ? window.location.origin : ''}/webhook/${normalizedValue}`, { shouldValidate: false });
+      setValue('url_retorno', `/webhook/${normalizedValue}`, { shouldValidate: false });
     }
     
     // Trigger validação do campo (assíncrono mas não bloqueia)
