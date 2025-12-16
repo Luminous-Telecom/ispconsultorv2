@@ -33,16 +33,16 @@ export const API_CONFIG = {
     if (typeof window === 'undefined') {
       return '/api';
     }
-    const origin = window.location.origin;
     const config = getDynamicConfig();
     const apiUrl = config.REACT_APP_API_URL || '/api';
     
-    // Se for URL absoluta, usar como está
+    // Se for URL absoluta, usar como está (desenvolvimento com backend em porta diferente)
     if (apiUrl && (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
       return apiUrl;
     }
     
-    // Construir URL completa com origin
+    // Em produção ou quando for relativa, usar window.location.origin
+    const origin = window.location.origin;
     const path = ensureRelativeUrl(apiUrl) || '/api';
     return `${origin}${path}`;
   },
@@ -50,6 +50,15 @@ export const API_CONFIG = {
     if (typeof window === 'undefined') {
       return '/';
     }
+    const config = getDynamicConfig();
+    const apiUrl = config.REACT_APP_API_URL || '/api';
+    
+    // Se for URL absoluta, remover /api do final
+    if (apiUrl && (apiUrl.startsWith('http://') || apiUrl.startsWith('https://'))) {
+      return apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
+    }
+    
+    // Caso contrário, usar window.location.origin
     return window.location.origin;
   },
   get TIMEOUT() {
