@@ -10,6 +10,18 @@ import { getMetrics, isMetricsEnabled } from '../utils/metrics';
 const router = Router();
 
 /**
+ * Função para obter IP do cliente
+ */
+function getClientIp(req: Request): string | null {
+  return (
+    (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+    (req.headers['x-real-ip'] as string) ||
+    req.socket.remoteAddress ||
+    null
+  );
+}
+
+/**
  * Health check básico
  */
 router.get('/health', async (_req: Request, res: Response): Promise<void> => {
@@ -107,6 +119,28 @@ if (isMetricsEnabled()) {
     }
   });
 }
+
+/**
+ * Endpoint para obter IP do cliente
+ */
+router.get('/client-ip', (req: Request, res: Response): void => {
+  try {
+    const ip = getClientIp(req);
+    res.json({
+      success: true,
+      ip: ip || 'Não disponível'
+    });
+  } catch (error) {
+    logger.error('Erro ao obter IP do cliente', {
+      context: 'HealthRoutes',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
+    res.status(500).json({
+      success: false,
+      ip: 'Erro ao obter IP'
+    });
+  }
+});
 
 export default router;
 
