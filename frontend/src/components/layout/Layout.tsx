@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTableHeader } from '@/contexts/TableHeaderContext';
 import { useModal, type ModalType } from '@/contexts/ModalContext';
 import SingleModalWrapper from '../common/SingleModalWrapper';
+import DocumentosSistemaModal from '../modals/parametros/documentos-sistema/DocumentosSistemaModal';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -42,7 +43,7 @@ const Layout: React.FC = () => {
   const tableHeader = useTableHeader();
   
   // Usar o contexto de modais (gerenciado pelo ModalProvider)
-  const { openModal } = useModal();
+  const { openModal, activeModal, closeModal } = useModal();
 
   // Fechar menu de usuário ao clicar fora
   useEffect(() => {
@@ -524,6 +525,12 @@ const Layout: React.FC = () => {
       {/* Single Modal Wrapper - Mantém o shell do modal sempre montado */}
       {/* Elimina flickering ao trocar entre modais, pois apenas o conteúdo interno muda */}
       <SingleModalWrapper />
+
+      {/* DocumentosSistemaModal - Renderizado diretamente (não usa SingleModalWrapper) */}
+      <DocumentosSistemaModal
+        show={activeModal === 'documentos-sistema'}
+        onClose={closeModal}
+      />
 
     </div>
   );
