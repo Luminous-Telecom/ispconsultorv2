@@ -27,8 +27,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
   const [nome, setNome] = useState<string>('');
   const [tipo, setTipo] = useState<'documento' | 'foto' | 'assinatura' | 'outro'>('documento');
   const [descricao, setDescricao] = useState<string>('');
-  const [arquivoBase64, setArquivoBase64] = useState<string>('');
-  const [mimeType, setMimeType] = useState<string>('');
+  const [arquivo, setArquivo] = useState<File | null>(null);
   const [nomeArquivo, setNomeArquivo] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,8 +36,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
       setNome('');
       setTipo('documento');
       setDescricao('');
-      setArquivoBase64('');
-      setMimeType('');
+      setArquivo(null);
       setNomeArquivo('');
       setIsSubmitting(false);
     }
@@ -48,30 +46,24 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
     const file = value as File | null;
     if (!file || !(file instanceof File)) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setArquivoBase64(base64);
-      setMimeType(file.type);
-      setNomeArquivo(file.name);
-      
-      // Se nome não foi preenchido, usar nome do arquivo
-      if (!nome) {
-        setNome(file.name);
-      }
+    setArquivo(file);
+    setNomeArquivo(file.name);
+    
+    // Se nome não foi preenchido, usar nome do arquivo
+    if (!nome) {
+      setNome(file.name);
+    }
 
-      // Detectar tipo automaticamente se for imagem
-      if (file.type.startsWith('image/')) {
-        setTipo('foto');
-      }
-    };
-    reader.readAsDataURL(file);
+    // Detectar tipo automaticamente se for imagem
+    if (file.type.startsWith('image/')) {
+      setTipo('foto');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!arquivoBase64) {
+    if (!arquivo) {
       error('Selecione um arquivo');
       return;
     }
@@ -88,8 +80,7 @@ const AdicionarArquivoModal: React.FC<AdicionarArquivoModalProps> = ({
         cliente_id: clienteId,
         nome: nome.trim(),
         tipo,
-        arquivo_base64: arquivoBase64,
-        mime_type: mimeType,
+        arquivo,
         descricao: descricao.trim() || undefined,
         origem: 'manual'
       });

@@ -29,6 +29,7 @@
     "tinymce": "^7.9.1",
     "tinymce-i18n": "^25.11.17",
     "typescript": "^4.9.5",
+    "viewerjs": "^1.11.7",
     "zod": "^4.1.12"
   },
   "scripts": {

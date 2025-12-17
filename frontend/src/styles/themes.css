@@ -684,30 +684,12 @@ body {
   padding: 0;
 }
 
-/* Desktop: adicionar padding em todas as direções para espaçamento (mesma distância dos gráficos) */
-@media (min-width: 768px) {
-  .main-content {
-    padding: 0.5rem;
-  }
-}
-
 /* Container do dashboard - margens laterais consistentes */
 .dashboard-container {
   padding: 0.5rem;
   animation: fadeIn 0.4s ease;
 }
 
-/* Desktop: quando dentro do main-content, adicionar pequena margem lateral */
-@media (min-width: 768px) {
-  .main-content .dashboard-container {
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-}
 
 /* Mobile: remover padding-top do dashboard */
 @media (max-width: 767.98px) {

@@ -1,14 +1,15 @@
 import { ClienteArquivo } from '../models/ClienteArquivo';
-import { Op } from 'sequelize';
+import { Cliente } from '../models/Cliente';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import { logger } from '../utils/logger';
 
 export interface CreateClienteArquivoData {
   cliente_id: number;
   nome: string;
   tipo: 'documento' | 'foto' | 'assinatura' | 'outro';
-  arquivo_base64: string;
+  arquivo: Express.Multer.File;
   mime_type?: string;
   descricao?: string;
   origem?: 'manual' | 'assinatura_digital' | 'sistema';
@@ -37,29 +38,69 @@ export class ClienteArquivoService {
   }
 
   /**
-   * Salva arquivo em base64 no sistema de arquivos
+   * Converte base64 para arquivo temporário (para compatibilidade com código legado)
    */
-  private static async saveFile(base64Data: string, clienteId: number, nome: string): Promise<string> {
-    await this.ensureUploadDir();
-    
-    // Remover prefixo data:image/... ou data:application/...
+  private static async base64ToTempFile(base64Data: string, nome: string, mimeType: string): Promise<Express.Multer.File> {
     const base64Content = base64Data.replace(/^data:.*,/, '');
+    
+    if (!base64Content || base64Content.trim() === '') {
+      throw new Error('Conteúdo base64 inválido ou vazio');
+    }
+
     const buffer = Buffer.from(base64Content, 'base64');
+    const tempDir = os.tmpdir();
+    const ext = path.extname(nome) || (mimeType === 'application/pdf' ? '.pdf' : '');
+    const baseName = path.basename(nome, ext).replace(/[^a-zA-Z0-9.-]/g, '_');
+    const tempFileName = `${baseName}_${Date.now()}${ext}`;
+    const tempFilePath = path.join(tempDir, tempFileName);
     
-    // Criar diretório do cliente se não existir
-    const clienteDir = path.join(this.UPLOAD_DIR, String(clienteId));
-    await fs.mkdir(clienteDir, { recursive: true });
+    await fs.writeFile(tempFilePath, buffer);
     
-    // Gerar nome único para o arquivo
-    const timestamp = Date.now();
-    const sanitizedNome = nome.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const fileName = `${timestamp}_${sanitizedNome}`;
-    const filePath = path.join(clienteDir, fileName);
+    return {
+      fieldname: 'arquivo',
+      originalname: nome,
+      encoding: '7bit',
+      mimetype: mimeType,
+      destination: tempDir,
+      filename: tempFileName,
+      path: tempFilePath,
+      size: buffer.length
+    } as Express.Multer.File;
+  }
+
+  /**
+   * Cria arquivo a partir de base64 (método auxiliar para compatibilidade)
+   */
+  static async createFromBase64(data: {
+    cliente_id: number;
+    nome: string;
+    tipo: 'documento' | 'foto' | 'assinatura' | 'outro';
+    arquivo_base64: string;
+    mime_type?: string;
+    descricao?: string;
+    origem?: 'manual' | 'assinatura_digital' | 'sistema';
+    referencia_id?: number;
+    referencia_tipo?: string;
+  }): Promise<ClienteArquivo> {
+    // Converter base64 para arquivo temporário
+    const tempFile = await this.base64ToTempFile(
+      data.arquivo_base64,
+      data.nome,
+      data.mime_type || 'application/octet-stream'
+    );
     
-    await fs.writeFile(filePath, buffer);
-    
-    // Retornar caminho relativo (sem incluir 'clientes' pois UPLOAD_DIR já tem)
-    return path.join(String(clienteId), fileName);
+    // Usar o método create normal
+    return this.create({
+      cliente_id: data.cliente_id,
+      nome: data.nome,
+      tipo: data.tipo,
+      arquivo: tempFile,
+      mime_type: data.mime_type,
+      descricao: data.descricao,
+      origem: data.origem,
+      referencia_id: data.referencia_id,
+      referencia_tipo: data.referencia_tipo
+    });
   }
 
   /**
@@ -93,26 +134,55 @@ export class ClienteArquivoService {
    * Cria novo arquivo
    */
   static async create(data: CreateClienteArquivoData): Promise<ClienteArquivo> {
-    const caminho = await this.saveFile(
-      data.arquivo_base64,
-      data.cliente_id,
-      data.nome
-    );
-    
-    const tamanho = Buffer.from(data.arquivo_base64.replace(/^data:.*,/, ''), 'base64').length;
-    
-    return ClienteArquivo.create({
-      cliente_id: data.cliente_id,
-      nome: data.nome,
-      tipo: data.tipo,
-      caminho,
-      tamanho,
-      mime_type: data.mime_type || null,
-      descricao: data.descricao || null,
-      origem: data.origem || 'manual',
-      referencia_id: data.referencia_id || null,
-      referencia_tipo: data.referencia_tipo || null
-    });
+    try {
+      // Verificar se o cliente existe
+      const cliente = await Cliente.findByPk(data.cliente_id);
+      if (!cliente) {
+        throw new Error(`Cliente com ID ${data.cliente_id} não encontrado`);
+      }
+
+      // Validar arquivo
+      if (!data.arquivo) {
+        throw new Error('Arquivo é obrigatório');
+      }
+
+      // O multer já salvou o arquivo no diretório correto
+      const clienteDir = path.join(this.UPLOAD_DIR, String(data.cliente_id));
+      const fileName = path.basename(data.arquivo.path);
+      
+      // Se não estiver no diretório do cliente, mover
+      if (!data.arquivo.path.startsWith(clienteDir)) {
+        await this.ensureUploadDir();
+        await fs.mkdir(clienteDir, { recursive: true });
+        await fs.rename(data.arquivo.path, path.join(clienteDir, fileName));
+      }
+      
+      const caminho = path.join(String(data.cliente_id), fileName);
+      
+      // Obter tamanho do arquivo
+      const tamanho = data.arquivo.size;
+      
+      return await ClienteArquivo.create({
+        cliente_id: data.cliente_id,
+        nome: data.nome,
+        tipo: data.tipo,
+        caminho,
+        tamanho,
+        mime_type: data.mime_type || data.arquivo.mimetype || null,
+        descricao: data.descricao || null,
+        origem: data.origem || 'manual',
+        referencia_id: data.referencia_id || null,
+        referencia_tipo: data.referencia_tipo || null
+      });
+    } catch (error) {
+      logger.error('Erro ao criar arquivo do cliente', {
+        cliente_id: data.cliente_id,
+        nome: data.nome,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw error;
+    }
   }
 
   /**
@@ -167,21 +237,12 @@ export class ClienteArquivoService {
     
     const filePath = path.join(this.UPLOAD_DIR, caminhoRelativo);
     
-    logger.info('Tentando ler arquivo', { 
-      id, 
-      caminhoOriginal: arquivo.caminho,
-      caminhoRelativo,
-      filePath,
-      uploadDir: this.UPLOAD_DIR
-    });
-    
     try {
       return await fs.readFile(filePath);
     } catch (error) {
       logger.error('Erro ao ler arquivo do sistema de arquivos', {
         id,
-        caminhoOriginal: arquivo.caminho,
-        caminhoRelativo,
+        caminho: arquivo.caminho,
         filePath,
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       });

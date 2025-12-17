@@ -166,6 +166,17 @@ AssinaturaDigital.belongsTo(Cliente, {
   as: 'cliente'
 });
 
+// ClienteArquivo
+Cliente.hasMany(ClienteArquivo, {
+  foreignKey: 'cliente_id',
+  as: 'arquivos'
+});
+
+ClienteArquivo.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente'
+});
+
 // ScheduledRoutine
 ScheduledRoutine.hasMany(RoutineExecutionLog, {
   foreignKey: 'routine_id',

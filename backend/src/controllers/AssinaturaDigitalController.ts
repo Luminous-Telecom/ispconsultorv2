@@ -867,8 +867,8 @@ export class AssinaturaDigitalController {
               ? pdfBase64ParaSalvar 
               : `data:application/pdf;base64,${pdfBase64ParaSalvar}`;
             
-            // Criar registro de arquivo do cliente
-            await ClienteArquivoService.create({
+            // Criar registro de arquivo do cliente usando método auxiliar para base64
+            await ClienteArquivoService.createFromBase64({
               cliente_id: assinatura.cliente_id,
               nome: nomeArquivo,
               tipo: 'assinatura',

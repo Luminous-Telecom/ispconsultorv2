@@ -4,6 +4,7 @@ import { ClienteArquivo } from '@/services/clienteArquivoService';
 import { formatDateTime } from '@/utils/formatters';
 import Table from '@/components/tables/Table';
 import ImprimirModal from '@/components/common/ImprimirModal';
+import ImageViewerModal from '@/components/common/ImageViewerModal';
 import AdicionarArquivoModal from './AdicionarArquivoModal';
 
 interface ArquivosTabProps {
@@ -11,41 +12,48 @@ interface ArquivosTabProps {
 }
 
 const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
-  const [_selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
+  const [selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewTitle, setPreviewTitle] = useState<string>('Visualizar Documento');
   const [showAdicionarModal, setShowAdicionarModal] = useState(false);
 
   const { arquivos, isLoading, refetch, deleteMutation } = useClienteArquivos({
     clienteId: clienteId || undefined
   });
 
+  const isImageFile = useCallback((arquivo: ClienteArquivo): boolean => {
+    const mimeType = (arquivo.mime_type || '').toLowerCase();
+    const nomeArquivo = (arquivo.nome || '').toLowerCase();
+    return mimeType.includes('image') || /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico)$/i.test(nomeArquivo);
+  }, []);
+
   const handleDownload = useCallback((arquivo: ClienteArquivo) => {
-    const url = `/api/cliente-arquivos/${arquivo.id}/download`;
-    window.open(url, '_blank');
+    window.open(`/api/cliente-arquivos/${arquivo.id}/download`, '_blank');
   }, []);
 
   const handleView = useCallback((arquivo: ClienteArquivo) => {
-    // Adicionar query param view=true para permitir exibição em iframe
     const url = `/api/cliente-arquivos/${arquivo.id}/download?view=true`;
+    const isImage = isImageFile(arquivo);
     
-    // Verificar se é imagem para abrir em nova aba
-    const mimeType = (arquivo.mime_type || '').toLowerCase();
-    const nomeArquivo = (arquivo.nome || '').toLowerCase();
-    const isImage = mimeType.includes('image') || /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico)$/i.test(nomeArquivo);
+    setPreviewUrl(url);
+    setPreviewTitle(isImage ? `Visualizar Imagem - ${arquivo.nome}` : `Visualizar Documento - ${arquivo.nome}`);
     
     if (isImage) {
-      // Para imagens, abrir em nova aba
-      window.open(url, '_blank');
+      setShowImagePreview(true);
     } else {
-      // Para outros arquivos (PDF, etc), abrir no modal
-      setPreviewUrl(url);
       setShowPreview(true);
     }
-  }, []);
+  }, [isImageFile]);
 
   const handleClosePreview = useCallback(() => {
     setShowPreview(false);
+    setPreviewUrl(null);
+  }, []);
+
+  const handleCloseImagePreview = useCallback(() => {
+    setShowImagePreview(false);
     setPreviewUrl(null);
   }, []);
 
@@ -136,29 +144,13 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
         key: 'view',
         label: 'Visualizar',
         variant: 'info' as const,
-        disabled: (selectedItems: ClienteArquivo[]) => {
-          if (selectedItems.length === 0) return true;
-          // Verificar se pelo menos um arquivo pode ser visualizado
-          return !selectedItems.some(item => {
+        disabled: (items: ClienteArquivo[]) => {
+          if (items.length === 0) return true;
+          const extensoesVisiveis = /\.(pdf|jpg|jpeg|png|gif|bmp|webp|svg|ico|mp4|webm|ogg|mov|avi|txt|csv|json|xml|html|css|js|md)$/i;
+          return !items.some(item => {
             const mimeType = (item.mime_type || '').toLowerCase();
-            const nomeArquivo = (item.nome || '').toLowerCase();
-            const extensoesVisiveis = [
-              '.pdf', 
-              '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico',
-              '.mp4', '.webm', '.ogg', '.mov', '.avi',
-              '.txt', '.csv', '.json', '.xml', '.html', '.css', '.js', '.md'
-            ];
-            const temExtensaoVisivel = extensoesVisiveis.some(ext => nomeArquivo.endsWith(ext));
-            const isPdf = mimeType.includes('pdf') || nomeArquivo.endsWith('.pdf');
-            const isImage = mimeType.includes('image') || /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico)$/i.test(nomeArquivo);
-            const isVideo = mimeType.includes('video') || /\.(mp4|webm|ogg|mov|avi)$/i.test(nomeArquivo);
-            const isText = mimeType.includes('text') || 
-                          mimeType.includes('csv') || 
-                          mimeType.includes('json') || 
-                          mimeType.includes('xml') || 
-                          mimeType.includes('html') ||
-                          /\.(txt|csv|json|xml|html|css|js|md)$/i.test(nomeArquivo);
-            return isPdf || isImage || isVideo || isText || temExtensaoVisivel;
+            return extensoesVisiveis.test(item.nome) || 
+                   /pdf|image|video|text/.test(mimeType);
           });
         },
         onClick: async (selectedItems: ClienteArquivo[]) => {
@@ -196,7 +188,7 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
     ],
     searchPlaceholder: 'Buscar arquivos...',
     emptyMessage: 'Nenhum arquivo encontrado'
-  }), [arquivos, deleteMutation, handleDownload, handleView, setShowAdicionarModal]);
+  }), [arquivos, deleteMutation, handleDownload, handleView]);
 
   if (!clienteId) {
     return (
@@ -231,13 +223,22 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
         />
       )}
 
-      {/* Modal de visualização */}
+      {/* Modal de visualização de documentos (PDF, etc) */}
       <ImprimirModal
         show={showPreview}
         onClose={handleClosePreview}
         pdfUrl={previewUrl}
-        title="Visualizar Documento"
+        title={previewTitle}
         modalId="arquivo-preview-modal"
+      />
+
+      {/* Modal de visualização de imagens com zoom */}
+      <ImageViewerModal
+        show={showImagePreview}
+        onClose={handleCloseImagePreview}
+        imageUrl={previewUrl}
+        title={previewTitle}
+        modalId="image-viewer-modal"
       />
     </div>
   );

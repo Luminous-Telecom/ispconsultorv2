@@ -20,8 +20,7 @@ export interface CreateClienteArquivoRequest {
   cliente_id: number;
   nome: string;
   tipo: 'documento' | 'foto' | 'assinatura' | 'outro';
-  arquivo_base64: string;
-  mime_type?: string;
+  arquivo: File;
   descricao?: string;
   origem?: 'manual' | 'assinatura_digital' | 'sistema';
   referencia_id?: number;
@@ -75,7 +74,21 @@ class ClienteArquivoService {
    * Cria novo arquivo
    */
   static async create(data: CreateClienteArquivoRequest): Promise<ClienteArquivoResponse> {
-    const response = await apiService.post<ClienteArquivoResponse>('/cliente-arquivos', data);
+    const formData = new FormData();
+    formData.append('arquivo', data.arquivo);
+    formData.append('cliente_id', data.cliente_id.toString());
+    formData.append('nome', data.nome);
+    formData.append('tipo', data.tipo);
+    if (data.descricao) formData.append('descricao', data.descricao);
+    if (data.origem) formData.append('origem', data.origem);
+    if (data.referencia_id) formData.append('referencia_id', data.referencia_id.toString());
+    if (data.referencia_tipo) formData.append('referencia_tipo', data.referencia_tipo);
+
+    const response = await apiService.post<ClienteArquivoResponse>('/cliente-arquivos', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return {
       success: response.success || true,
       data: (response.data as unknown as ClienteArquivoResponse).data || response.data as unknown as ClienteArquivo,
