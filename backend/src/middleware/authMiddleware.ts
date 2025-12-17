@@ -8,6 +8,7 @@ interface AuthenticatedRequest extends Request {
 
 const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/health$/i },
+  { path: /^\/client-ip$/i },
   { path: /^\/api\/health/i },
   { path: /^\/api\/auth\/login$/i },
   { path: /^\/webhook(\/.*)?$/i },

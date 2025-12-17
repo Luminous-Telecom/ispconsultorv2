@@ -16,8 +16,11 @@ const Login: React.FC = () => {
       try {
         // Usar URL relativa para funcionar em qualquer ambiente
         const response = await fetch('/client-ip');
+        if (!response.ok) {
+          return;
+        }
         const data = await response.json();
-        if (data.success && data.ip) {
+        if (data.success && data.ip && data.ip !== 'Não disponível') {
           setClientIp(data.ip);
         }
       } catch (err) {

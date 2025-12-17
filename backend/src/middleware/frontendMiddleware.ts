@@ -45,8 +45,8 @@ export const frontendMiddleware = (): express.RequestHandler => {
   return (req: Request, res: Response, next: NextFunction) => {
     const urlPath = req.path;
 
-    // Se for rota da API, webhook, boleto, health, config.js ou uploads, passar para o próximo middleware
-    if (urlPath.startsWith('/api') || urlPath.startsWith('/webhook') || urlPath.startsWith('/boleto') || urlPath === '/health' || urlPath === '/config.js' || urlPath.startsWith('/uploads')) {
+    // Se for rota da API, webhook, boleto, health, client-ip, config.js ou uploads, passar para o próximo middleware
+    if (urlPath.startsWith('/api') || urlPath.startsWith('/webhook') || urlPath.startsWith('/boleto') || urlPath === '/health' || urlPath === '/client-ip' || urlPath === '/config.js' || urlPath.startsWith('/uploads')) {
       return next();
     }
 
