@@ -245,21 +245,6 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 // Usar rotas da aplicação
 app.use(routes);
 
-// Rota de CEP (seguindo padrão PHP)
-app.get('/api/buscar-cep/:cep', (req, res) => {
-  res.json({ success: true, message: 'Buscar CEP - Em desenvolvimento' });
-});
-
-
-// Rota de health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
 // Middleware global de tratamento de erros
 // Deve ser o último middleware antes do frontend
 import { errorHandlerMiddleware } from './middleware/errorHandlerMiddleware';

@@ -61,7 +61,7 @@ export const getApiUrl = (endpoint: string) => {
   return endpoint.startsWith('/') ? endpoint : '/' + endpoint;
 };
 export const getCepUrl = (cep: string) => {
-  return `/api/buscar-cep/${cep}`;
+  return `/api/clientes/buscar-cep/${cep}`;
 };
 
 export const API_ENDPOINTS = {

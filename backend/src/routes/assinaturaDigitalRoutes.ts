@@ -5,7 +5,6 @@ const router = Router();
 
 // Webhook - deve vir ANTES das rotas com :id para evitar conflito
 router.options('/webhook', AssinaturaDigitalController.webhookOptions);
-router.get('/webhook', AssinaturaDigitalController.webhookTest);
 router.post('/webhook', AssinaturaDigitalController.webhook);
 
 // Rotas para assinatura digital

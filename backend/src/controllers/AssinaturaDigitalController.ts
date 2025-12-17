@@ -7,11 +7,66 @@ import { Contrato } from '../models/Contrato';
 import { ClienteArquivo } from '../models/ClienteArquivo';
 import { ModeloDocumento } from '../models/ModeloDocumento';
 import { AssinafyService } from '../services/AssinafyService';
+import { ZapsignService } from '../services/ZapsignService';
 import { ClienteArquivoService } from '../services/clienteArquivoService';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import Parametros from '../models/Parametros';
 
+// Tipo para serviços de assinatura digital
+type SignatureService = AssinafyService | ZapsignService;
+
 export class AssinaturaDigitalController {
+  /**
+   * Obtém o serviço de assinatura digital correto baseado no provider configurado
+   * @param providerForced - Provider específico a ser usado (opcional, para casos onde já sabemos qual usar)
+   */
+  private static async getSignatureService(providerForced?: 'assinafy' | 'zapsign'): Promise<SignatureService | null> {
+    try {
+      const parametros = await Parametros.findOne();
+      
+      if (!parametros || !parametros.assinatura_digital_api_key) {
+        return null;
+      }
+
+      const provider = providerForced || parametros.assinatura_digital_api_provider || 'assinafy';
+
+      switch (provider) {
+        case 'zapsign':
+          return await ZapsignService.createFromDatabase();
+        case 'assinafy':
+        default:
+          return await AssinafyService.createFromDatabase();
+      }
+    } catch (error) {
+      logger.error('Erro ao obter serviço de assinatura digital:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Verifica se a assinatura digital está habilitada
+   */
+  private static async isSignatureEnabled(): Promise<boolean> {
+    try {
+      const parametros = await Parametros.findOne();
+      const enabled = parametros?.assinatura_digital_habilitado ?? false;
+      return enabled;
+    } catch (error) {
+      logger.error('Erro ao verificar se assinatura digital está habilitada:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtém o serviço de geração de PDF (pode ser qualquer um, pois o método é estático)
+   */
+  private static async gerarPdfBase64(
+    conteudoHtml: string,
+    nomeArquivo: string
+  ): Promise<string> {
+    // Usar AssinafyService para geração de PDF (método estático, não depende do provider)
+    return await AssinafyService.gerarPdfBase64(conteudoHtml, nomeArquivo);
+  }
   /**
    * Lista todas as assinaturas
    */
@@ -220,7 +275,7 @@ export class AssinaturaDigitalController {
         }
       }
 
-      const isEnabled = await AssinafyService.isEnabled();
+      const isEnabled = await AssinaturaDigitalController.isSignatureEnabled();
       if (!isEnabled) {
         res.status(400).json({
           success: false,
@@ -229,14 +284,17 @@ export class AssinaturaDigitalController {
         return;
       }
 
-      const assinafyService = await AssinafyService.createFromDatabase();
-      if (!assinafyService) {
+      const signatureService = await AssinaturaDigitalController.getSignatureService();
+      if (!signatureService) {
         res.status(500).json({
           success: false,
-          message: 'API Key do Assinafy não configurada. Configure em Parâmetros > Assinatura Digital'
+          message: 'API Key não configurada. Configure em Parâmetros > Assinatura Digital'
         });
         return;
       }
+
+      const parametros = await Parametros.findOne();
+      const provider = parametros?.assinatura_digital_api_provider || 'assinafy';
 
       if (conteudoHtml && cliente) {
         // baseUrl não é mais necessário - links serão relativos
@@ -254,16 +312,15 @@ export class AssinaturaDigitalController {
         );
       }
 
-      const pdfBase64 = await AssinafyService.gerarPdfBase64(
+      const pdfBase64 = await AssinaturaDigitalController.gerarPdfBase64(
         conteudoHtml || '<html><body><h1>Documento para assinatura</h1></body></html>',
         `termo-${termo_contrato_id || 'documento'}.pdf`
       );
 
-      const parametros = await Parametros.findOne();
       const diasExpiracaoFinal = (dias_expiracao as number) || parametros?.assinatura_digital_dias_expiracao_padrao || 30;
       const dataExpiracao = new Date();
       dataExpiracao.setDate(dataExpiracao.getDate() + diasExpiracaoFinal);
-      const uploadResult = await assinafyService.uploadDocumento({
+      const uploadResult = await signatureService.uploadDocumento({
         name: `Termo de Contrato ${termo_contrato_id || 'Documento'}`,
         file: pdfBase64
       });
@@ -279,7 +336,7 @@ export class AssinaturaDigitalController {
       const documentId = uploadResult.data.id;
       const cpfCnpjLimpo = cpf_cnpj_assinante?.replace(/[.\-\/\s]/g, '') || '';
 
-      assinafyService.processarDocumentoEmBackground(documentId, {
+      signatureService.processarDocumentoEmBackground(documentId, {
         name: `Termo de Contrato ${termo_contrato_id || 'Documento'}`,
         file: pdfBase64,
         signers: [{
@@ -303,7 +360,7 @@ export class AssinaturaDigitalController {
         cliente_id: cliente?.id || cliente_id || null,
         documento_tipo: termo_contrato_id ? 'termo' : 'outro' as const,
         documento_id: termo_contrato_id || null,
-        api_provider: 'assinafy' as const,
+        api_provider: provider as 'assinafy' | 'zapsign' | 'govbr' | 'outro',
         api_document_id: documentId,
         status: 'enviado' as const,
         url_assinatura: null,
@@ -373,17 +430,19 @@ export class AssinaturaDigitalController {
         statusAtual: assinatura.status
       });
 
-      const assinafyService = await AssinafyService.createFromDatabase();
-      if (!assinafyService) {
-        logger.error('Não foi possível criar serviço Assinafy para consulta de status');
+      const signatureService = await AssinaturaDigitalController.getSignatureService(
+        assinatura.api_provider as 'assinafy' | 'zapsign'
+      );
+      if (!signatureService) {
+        logger.error('Não foi possível criar serviço de assinatura digital para consulta de status');
         res.status(500).json({
           success: false,
-          message: 'API Key do Assinafy não configurada. Configure em Parâmetros > Assinatura Digital'
+          message: 'API Key não configurada. Configure em Parâmetros > Assinatura Digital'
         });
         return;
       }
 
-      const resultado = await assinafyService.consultarStatus(assinatura.api_document_id);
+      const resultado = await signatureService.consultarStatus(assinatura.api_document_id);
 
       if (resultado.success && resultado.data) {
         const statusAnterior = assinatura.status;
@@ -519,17 +578,19 @@ export class AssinaturaDigitalController {
         apiDocumentId: assinatura.api_document_id
       });
 
-      const assinafyService = await AssinafyService.createFromDatabase();
-      if (!assinafyService) {
-        logger.error('Não foi possível criar serviço Assinafy para download');
+      const signatureService = await AssinaturaDigitalController.getSignatureService(
+        assinatura.api_provider as 'assinafy' | 'zapsign'
+      );
+      if (!signatureService) {
+        logger.error('Não foi possível criar serviço de assinatura digital para download');
         res.status(500).json({
           success: false,
-          message: 'API Key do Assinafy não configurada. Configure em Parâmetros > Assinatura Digital'
+          message: 'API Key não configurada. Configure em Parâmetros > Assinatura Digital'
         });
         return;
       }
 
-      const pdfBuffer = await assinafyService.baixarPdfAssinado(assinatura.api_document_id);
+      const pdfBuffer = await signatureService.baixarPdfAssinado(assinatura.api_document_id);
 
       if (!pdfBuffer) {
         logger.error('Falha ao baixar PDF assinado da API', {
@@ -608,15 +669,17 @@ export class AssinaturaDigitalController {
           assinaturaId: id,
           apiDocumentId: assinatura.api_document_id
         });
-        const assinafyService = await AssinafyService.createFromDatabase();
-        if (assinafyService) {
-          const resultado = await assinafyService.cancelarAssinatura(assinatura.api_document_id);
+        const signatureService = await AssinaturaDigitalController.getSignatureService(
+          assinatura.api_provider as 'assinafy' | 'zapsign'
+        );
+        if (signatureService) {
+          const resultado = await signatureService.cancelarAssinatura(assinatura.api_document_id);
           logger.info('Resultado do cancelamento na API', {
             assinaturaId: id,
             sucesso: resultado.success
           });
         } else {
-          logger.warn('Não foi possível criar serviço Assinafy para cancelamento', {
+          logger.warn('Não foi possível criar serviço de assinatura digital para cancelamento', {
             assinaturaId: id
           });
         }
@@ -660,26 +723,7 @@ export class AssinaturaDigitalController {
   }
 
   /**
-   * Endpoint de teste para verificar se webhook está acessível
-   */
-  static async webhookTest(req: Request, res: Response): Promise<void> {
-    logger.info('Teste de webhook recebido', {
-      method: req.method,
-      headers: req.headers,
-      ip: req.ip,
-      userAgent: req.get('user-agent')
-    });
-    
-    res.status(200).json({
-      success: true,
-      message: 'Webhook endpoint está acessível',
-      timestamp: new Date().toISOString(),
-      url: req.url
-    });
-  }
-
-  /**
-   * Webhook para receber atualizações da API Assinafy
+   * Webhook para receber atualizações das APIs de assinatura digital (Assinafy e ZAPSIGN)
    */
   static async webhook(req: Request, res: Response): Promise<void> {
     try {
@@ -689,34 +733,77 @@ export class AssinaturaDigitalController {
         message: 'Webhook recebido'
       });
 
-      // O Assinafy envia o ID do documento em object.id, não em id (que é o ID do evento)
-      const documentId = req.body?.object?.id || req.body?.document_id || req.body?.id || req.body?.data?.id || req.body?.data?.document_id;
-      const status = req.body?.object?.status || req.body?.status || req.body?.data?.status;
-      const signedPdf = req.body?.signed_pdf || req.body?.signedPdf;
-      const event = req.body?.event || req.body?.type || req.body?.data?.event;
-      
-      // Extrair URLs do webhook e decodificar HTML entities
-      const signingUrlRaw = req.body?.object?.signing_url || req.body?.signing_url;
-      const certificatedPdfUrlRaw = req.body?.object?.artifacts?.certificated 
-        || req.body?.object?.download_url 
-        || req.body?.certificated_pdf_url
-        || req.body?.pdf_assinado_url;
-      
-      // URLs não precisam mais de decodificação - sanitize não codifica mais barras
-      const signingUrl = signingUrlRaw || undefined;
-      const certificatedPdfUrl = certificatedPdfUrlRaw || undefined;
-      
-      // Verificar também o status do assignment dentro do object
-      const assignmentCompletedCount = req.body?.object?.assignment?.summary?.completed_count;
-      const assignmentSignerCount = req.body?.object?.assignment?.summary?.signer_count;
+      // Detectar provider baseado na estrutura do webhook
+      // Assinafy: geralmente tem object.id, object.status
+      // ZAPSIGN: geralmente tem document_id, status direto no body
+      let documentId: string | undefined;
+      let status: string | undefined;
+      let signedPdf: string | undefined;
+      let event: string | undefined;
+      let signingUrl: string | undefined;
+      let certificatedPdfUrl: string | undefined;
+      let assignmentCompletedCount: number | undefined;
+      let assignmentSignerCount: number | undefined;
+      let provider: 'assinafy' | 'zapsign' | undefined;
 
+      // Tentar detectar Assinafy (estrutura com object)
+      if (req.body?.object?.id) {
+        provider = 'assinafy';
+        documentId = req.body.object.id;
+        status = req.body.object.status;
+        event = req.body.event || req.body.type;
+        signingUrl = req.body.object.signing_url;
+        certificatedPdfUrl = req.body.object.artifacts?.certificated 
+          || req.body.object.download_url;
+        assignmentCompletedCount = req.body.object.assignment?.summary?.completed_count;
+        assignmentSignerCount = req.body.object.assignment?.summary?.signer_count;
+        signedPdf = req.body.signed_pdf || req.body.signedPdf;
+      }
+      // Tentar detectar ZAPSIGN (estrutura mais simples)
+      else if (req.body?.document_id || req.body?.id) {
+        provider = 'zapsign';
+        documentId = req.body.document_id || req.body.id;
+        status = req.body.status;
+        event = req.body.event || req.body.type;
+        signingUrl = req.body.signing_url || req.body.url;
+        certificatedPdfUrl = req.body.download_url || req.body.pdf_url;
+        signedPdf = req.body.signed_pdf || req.body.pdf_base64;
+      }
+      // Fallback: tentar campos genéricos
+      else {
+        documentId = req.body?.document_id || req.body?.id || req.body?.data?.id || req.body?.data?.document_id;
+        status = req.body?.status || req.body?.data?.status;
+        event = req.body?.event || req.body?.type || req.body?.data?.event;
+        signingUrl = req.body?.signing_url || req.body?.url;
+        certificatedPdfUrl = req.body?.download_url || req.body?.pdf_url || req.body?.certificated_pdf_url;
+        signedPdf = req.body?.signed_pdf || req.body?.signedPdf || req.body?.pdf_base64;
+      }
 
       if (!documentId) {
         logger.warn('Webhook recebido sem document_id', {
-          body: req.body
+          body: req.body,
+          provider: provider || 'desconhecido'
         });
         return;
       }
+
+      // Se não detectou provider, tentar identificar pela assinatura no banco
+      if (!provider) {
+        const assinatura = await AssinaturaDigital.findOne({
+          where: { api_document_id: String(documentId) },
+          attributes: ['api_provider']
+        });
+        if (assinatura) {
+          provider = assinatura.api_provider as 'assinafy' | 'zapsign';
+        }
+      }
+
+      logger.info('Webhook recebido', {
+        documentId,
+        provider: provider || 'desconhecido',
+        status,
+        event
+      });
 
       // Processar em background
       AssinaturaDigitalController.processarWebhookEmBackground(
@@ -727,11 +814,13 @@ export class AssinaturaDigitalController {
         assignmentCompletedCount,
         assignmentSignerCount,
         signingUrl,
-        certificatedPdfUrl
+        certificatedPdfUrl,
+        provider
       )
         .catch(error => {
           logger.error('Erro ao processar webhook em background', {
             documentId,
+            provider: provider || 'desconhecido',
             error: error instanceof Error ? error.message : 'Erro desconhecido',
             stack: error instanceof Error ? error.stack : undefined
           });
@@ -761,7 +850,8 @@ export class AssinaturaDigitalController {
     assignmentCompletedCount?: number,
     assignmentSignerCount?: number,
     signingUrl?: string,
-    certificatedPdfUrl?: string
+    certificatedPdfUrl?: string,
+    provider?: 'assinafy' | 'zapsign'
   ): Promise<void> {
 
     // Buscar assinatura com diferentes formatos do ID
@@ -796,8 +886,14 @@ export class AssinaturaDigitalController {
     }
 
     // Verificar se documento foi assinado - apenas quando realmente estiver completo
-    // O webhook document_ready com status certificated indica que todos assinaram
-    const isAssinado = status === 'certificated' || event === 'document_ready';
+    // Assinafy: status 'certificated' ou event 'document_ready'
+    // ZAPSIGN: status 'signed' ou 'completed'
+    const isAssinado = 
+      status === 'certificated' || 
+      event === 'document_ready' ||
+      status === 'signed' ||
+      status === 'completed' ||
+      (provider === 'zapsign' && (status === 'signed' || status === 'completed'));
 
     if (isAssinado && assinatura.status !== 'assinado') {
       const dadosParaAtualizar: Record<string, unknown> = {
@@ -818,9 +914,11 @@ export class AssinaturaDigitalController {
       } else if (!assinatura.pdf_assinado_base64) {
         // Tentar baixar PDF se não foi fornecido no webhook e não há base64 salvo
         try {
-          const assinafyService = await AssinafyService.createFromDatabase();
-          if (assinafyService) {
-            const pdfBuffer = await assinafyService.baixarPdfAssinado(documentId);
+          const signatureService = await AssinaturaDigitalController.getSignatureService(
+            assinatura.api_provider as 'assinafy' | 'zapsign'
+          );
+          if (signatureService) {
+            const pdfBuffer = await signatureService.baixarPdfAssinado(documentId);
             if (pdfBuffer) {
               const base64 = pdfBuffer.toString('base64');
               dadosParaAtualizar.pdf_assinado_base64 = base64;
