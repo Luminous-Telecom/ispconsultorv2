@@ -44,25 +44,11 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
   const cleanedPath = req.originalUrl.split('?')[0];
   // Permitir downloads públicos de arquivos de cliente (visualização)
   if (req.method === 'GET' && /^\/api\/cliente-arquivos\/\d+\/download\/?$/.test(cleanedPath)) {
-    logger.info('AuthMiddleware - rota de download de cliente liberada sem auth', {
-      originalUrl: req.originalUrl,
-      cleanedPath
-    });
     return next();
   }
 
   const isApiRequest = /^\/api\//i.test(req.originalUrl);
   const isPublic = isPublicRoute(req);
-
-  // Debug: verificar rotas de cliente-arquivos download
-  if (req.originalUrl.includes('/cliente-arquivos/') && req.originalUrl.includes('/download')) {
-    logger.info('AuthMiddleware - verificando rota cliente-arquivos download', {
-      originalUrl: req.originalUrl,
-      cleanedPath: req.originalUrl.split('?')[0],
-      isApiRequest,
-      isPublic
-    });
-  }
 
   // Se não for requisição de API ou for rota pública, permitir acesso sem autenticação
   if (!isApiRequest || isPublic) {

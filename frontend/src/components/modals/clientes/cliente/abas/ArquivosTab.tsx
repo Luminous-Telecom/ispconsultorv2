@@ -12,7 +12,7 @@ interface ArquivosTabProps {
 }
 
 const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
-  const [selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
+  const [_selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

@@ -74,18 +74,7 @@ const routes = [
 ];
 
 routes.forEach(({ path, route }) => {
-  router.use(path, (req, res, next) => {
-    if (path === '/api/cliente-arquivos') {
-      logger.info('Router cliente-arquivos interceptando', { 
-        path, 
-        reqPath: req.path, 
-        originalUrl: req.originalUrl,
-        method: req.method,
-        baseUrl: req.baseUrl
-      });
-    }
-    route(req, res, next);
-  });
+  router.use(path, route);
 });
 
 export default router;
