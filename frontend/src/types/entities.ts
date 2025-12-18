@@ -339,7 +339,7 @@ export interface AssinaturaDigital {
   cliente_id: number | null;
   documento_tipo: 'termo' | 'contrato' | 'outro';
   documento_id: number | null;
-  api_provider: 'assinafy' | 'zapsign' | 'govbr' | 'outro';
+  api_provider: 'assinafy' | 'zapsign';
   api_document_id: string | null;
   api_signature_id: string | null;
   status: 'pendente' | 'enviado' | 'assinado' | 'cancelado' | 'expirado' | 'erro';

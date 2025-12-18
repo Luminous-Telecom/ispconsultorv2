@@ -272,6 +272,10 @@ const startServer = async () => {
     await sequelize.authenticate();
     logger.info('Conexão com o banco estabelecida com sucesso');
 
+    // NOTA: Não usar sequelize.sync() ou model.sync() aqui
+    // Todas as tabelas devem ser criadas/alteradas apenas através de migrations
+    // Execute: npx sequelize-cli db:migrate
+
     server = app.listen(PORT, async () => {
       if (!server) return;
       

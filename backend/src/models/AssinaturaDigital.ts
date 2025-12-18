@@ -20,7 +20,7 @@ export class AssinaturaDigital extends Model<
   declare cliente_id: number | null;
   declare documento_tipo: 'termo' | 'contrato' | 'outro';
   declare documento_id: number | null;
-  declare api_provider: 'assinafy' | 'zapsign' | 'govbr' | 'outro';
+  declare api_provider: 'assinafy' | 'zapsign';
   declare api_document_id: string | null;
   declare api_signature_id: string | null;
   declare status: 'pendente' | 'enviado' | 'assinado' | 'cancelado' | 'expirado' | 'erro';
@@ -121,7 +121,7 @@ AssinaturaDigital.init(
       allowNull: true
     },
     api_provider: {
-      type: DataTypes.ENUM('assinafy', 'zapsign', 'govbr', 'outro'),
+      type: DataTypes.ENUM('assinafy', 'zapsign'),
       allowNull: false,
       defaultValue: 'assinafy'
     },

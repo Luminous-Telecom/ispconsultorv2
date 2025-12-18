@@ -51,7 +51,6 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
   const isApiRequest = /^\/api\//i.test(req.originalUrl);
   const isPublic = isPublicRoute(req);
 
-  // Se não for requisição de API ou for rota pública, permitir acesso sem autenticação
   if (!isApiRequest || isPublic) {
     next();
     return;
@@ -71,7 +70,6 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
   const authHeader = req.get('Authorization');
 
   if (!authHeader?.startsWith('Bearer ')) {
-    // Bloquear todas as rotas da API sem retornar informação
     res.status(404).end();
     return;
   }
@@ -86,8 +84,6 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     logger.warn('Falha na validação do token JWT', {
       message: error instanceof Error ? error.message : 'Erro desconhecido',
     });
-
-    // Bloquear todas as rotas da API sem retornar informação
     res.status(404).end();
   }
 };

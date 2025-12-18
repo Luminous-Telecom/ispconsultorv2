@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { logger } from '../utils/logger';
 import { PDFGenerationService } from './pdf-generation/PDFGenerationService';
-import Parametros from '../models/Parametros';
+import AssinaturaDigitalProvider from '../models/AssinaturaDigitalProvider';
 import { AssinaturaDigital } from '../models/AssinaturaDigital';
 
 interface ZapsignConfig {
@@ -77,33 +77,20 @@ export class ZapsignService {
    */
   static async createFromDatabase(): Promise<ZapsignService | null> {
     try {
-      const parametros = await Parametros.findOne();
+      const provider = await AssinaturaDigitalProvider.findOne({
+        where: { provider: 'zapsign' }
+      });
       
-      if (!parametros || !parametros.assinatura_digital_api_key) {
+      if (!provider || !provider.habilitado || !provider.api_key) {
         return null;
       }
 
-      // Verificar se o provider está correto
-      const provider = parametros.assinatura_digital_api_provider;
-      if (provider !== 'zapsign') {
-        logger.warn('ZapsignService criado mas provider não é zapsign', {
-          provider: provider,
-          esperado: 'zapsign'
-        });
-      }
-
-      // Usar URL hardcoded baseada no provider, não a URL do banco
-      // Verificar se há parâmetro para ambiente (sandbox/produção)
-      // Por padrão, usar sandbox se não especificado
-      const ambiente = parametros.assinatura_digital_api_url?.includes('sandbox') ? 'sandbox' : 
-                      parametros.assinatura_digital_api_url?.includes('api.zapsign.com.br') ? 'production' : 
-                      'sandbox'; // padrão sandbox
-      
-      const apiUrl = ambiente === 'production' ? ZAPSIGN_API_URL_PRODUCTION : ZAPSIGN_API_URL_SANDBOX;
-      
+      // Usar URL hardcoded baseada no provider
+      // Por padrão, usar sandbox
+      const apiUrl = ZAPSIGN_API_URL_SANDBOX;
 
       return new ZapsignService({
-        apiKey: parametros.assinatura_digital_api_key,
+        apiKey: provider.api_key,
         apiUrl: apiUrl
       });
     } catch (error) {
@@ -117,10 +104,10 @@ export class ZapsignService {
    */
   static async isEnabled(): Promise<boolean> {
     try {
-      const parametros = await Parametros.findOne();
-      const enabled = parametros?.assinatura_digital_habilitado ?? false;
-      const provider = parametros?.assinatura_digital_api_provider;
-      return enabled && provider === 'zapsign';
+      const provider = await AssinaturaDigitalProvider.findOne({
+        where: { provider: 'zapsign' }
+      });
+      return provider?.habilitado === true && !!provider?.api_key;
     } catch (error) {
       logger.error('Erro ao verificar se assinatura digital está habilitada:', error);
       return false;
@@ -224,18 +211,6 @@ export class ZapsignService {
   ): Promise<void> {
     // Não é mais necessário - email já é enviado automaticamente no upload
     return;
-  }
-
-  /**
-   * Envia documento para assinatura (método completo)
-   * Upload com signers - email enviado automaticamente
-   */
-  async enviarDocumento(documento: ZapsignDocument): Promise<ZapsignResponse> {
-    return this.uploadDocumento({
-      name: documento.name,
-      file: documento.file,
-      signers: documento.signers
-    });
   }
 
   /**

@@ -18,6 +18,7 @@ import { ContratoPlanoAdicional } from './ContratoPlanoAdicional';
 import { Auditoria } from './Auditoria';
 import { AssinaturaDigital } from './AssinaturaDigital';
 import { ClienteArquivo } from './ClienteArquivo';
+import AssinaturaDigitalProvider from './AssinaturaDigitalProvider';
 //
 // Importar associações específicas
 import './associations';
@@ -220,5 +221,6 @@ export {
   Usuario,
   Auditoria,
   AssinaturaDigital,
-  ClienteArquivo
+  ClienteArquivo,
+  AssinaturaDigitalProvider
 };

@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { logger } from '../utils/logger';
 import { PDFGenerationService } from './pdf-generation/PDFGenerationService';
-import Parametros from '../models/Parametros';
+import AssinaturaDigitalProvider from '../models/AssinaturaDigitalProvider';
 import { AssinaturaDigital } from '../models/AssinaturaDigital';
 
 interface AssinafyConfig {
@@ -81,31 +81,22 @@ export class AssinafyService {
    */
   static async createFromDatabase(): Promise<AssinafyService | null> {
     try {
-      const parametros = await Parametros.findOne();
+      const provider = await AssinaturaDigitalProvider.findOne({
+        where: { provider: 'assinafy' }
+      });
       
-      if (!parametros || !parametros.assinatura_digital_api_key) {
+      if (!provider || !provider.habilitado || !provider.api_key) {
         return null;
       }
 
-
-      // Usar URL hardcoded baseada no provider, não a URL do banco
-      // Verificar se há parâmetro para ambiente (staging/produção)
-      // Por padrão, usar produção se não especificado
-      const ambiente = parametros.assinatura_digital_api_url?.includes('staging') ? 'staging' : 'production';
-      
-      const apiUrl = ambiente === 'staging' ? ASSINAFY_API_URL_STAGING : ASSINAFY_API_URL_PRODUCTION;
-      
-      logger.info('Criando AssinafyService com URL hardcoded por provider', {
-        provider: 'assinafy',
-        ambiente: ambiente,
-        apiUrl: apiUrl,
-        urlBancoIgnorada: parametros.assinatura_digital_api_url
-      });
+      // Usar URL hardcoded baseada no provider
+      // Por padrão, usar produção
+      const apiUrl = ASSINAFY_API_URL_PRODUCTION;
 
       return new AssinafyService({
-        apiKey: parametros.assinatura_digital_api_key,
+        apiKey: provider.api_key,
         apiUrl: apiUrl,
-        accountId: parametros.assinatura_digital_account_id || undefined
+        accountId: provider.account_id || undefined
       });
     } catch (error) {
       logger.error('Erro ao criar AssinafyService do banco:', error);
@@ -118,9 +109,10 @@ export class AssinafyService {
    */
   static async isEnabled(): Promise<boolean> {
     try {
-      const parametros = await Parametros.findOne();
-      const enabled = parametros?.assinatura_digital_habilitado ?? false;
-      return enabled;
+      const provider = await AssinaturaDigitalProvider.findOne({
+        where: { provider: 'assinafy' }
+      });
+      return provider?.habilitado === true && !!provider?.api_key;
     } catch (error) {
       logger.error('Erro ao verificar se assinatura digital está habilitada:', error);
       return false;
@@ -388,179 +380,6 @@ export class AssinafyService {
       throw error;
     }
   }
-
-  /**
-   * Envia documento para assinatura (método completo - mantido para compatibilidade)
-   * Fluxo correto conforme documentação oficial:
-   * 1. Upload do documento: POST /accounts/:account_id/documents (multipart/form-data)
-   * 2. Criar signers: POST /accounts/:account_id/signers (JSON)
-   * 3. Criar assignment: POST /documents/:document_id/assignments (JSON)
-   */
-  async enviarDocumento(documento: AssinafyDocument): Promise<AssinafyResponse> {
-    try {
-      if (!this.accountId) {
-        throw new Error('Workspace Account ID não configurado. Configure em Parâmetros > Assinatura Digital');
-      }
-
-      // PASSO 1: Upload do documento (multipart/form-data)
-      const FormData = require('form-data');
-      const formData = new FormData();
-      
-      // Converter base64 para buffer
-      const base64Data = documento.file.replace(/^data:.*,/, '');
-      const pdfBuffer = Buffer.from(base64Data, 'base64');
-      
-      formData.append('file', pdfBuffer, {
-        filename: documento.name.endsWith('.pdf') ? documento.name : `${documento.name}.pdf`,
-        contentType: 'application/pdf'
-      });
-      
-      const uploadResponse = await this.api.post(`/accounts/${this.accountId}/documents`, formData, {
-        headers: {
-          ...formData.getHeaders()
-        }
-      });
-      
-      const documentId = uploadResponse.data?.id || uploadResponse.data?.data?.id;
-      if (!documentId) {
-        throw new Error('Documento enviado mas ID não retornado pela API');
-      }
-      
-      const initialStatus = uploadResponse.data?.status || uploadResponse.data?.data?.status;
-      
-      // Aguardar documento estar pronto (sair de metadata_processing/uploading)
-      // Status válidos: uploaded, metadata_ready
-      const statusValidos = ['uploaded', 'metadata_ready'];
-      let documentStatus = initialStatus;
-      let tentativas = 0;
-      const maxTentativas = 30; // 30 tentativas = ~30 segundos
-      
-      if (!statusValidos.includes(documentStatus)) {
-        while (!statusValidos.includes(documentStatus) && tentativas < maxTentativas) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          tentativas++;
-          
-          try {
-            const statusResponse = await this.api.get(`/documents/${documentId}`);
-            const responseData = statusResponse.data?.data || statusResponse.data;
-            documentStatus = responseData?.status || documentStatus;
-          } catch (error) {
-            // Continuar tentando silenciosamente
-          }
-        }
-      }
-      
-      // PASSO 2: Criar signers
-      const signerIds: string[] = [];
-      
-      for (const signer of documento.signers) {
-        try {
-          const signerPayload = {
-            full_name: signer.name,
-            email: signer.email
-          };
-          
-          const signerResponse = await this.api.post(this.getAccountPath('/signers'), signerPayload);
-          const responseData = signerResponse.data?.data || signerResponse.data;
-          const signerId = responseData?.id || signerResponse.data?.id;
-          
-          if (signerId) {
-            signerIds.push(signerId);
-          }
-        } catch (error) {
-          const axiosError = error as { 
-            response?: { 
-              status?: number; 
-              data?: unknown;
-              statusText?: string;
-            };
-            message?: string;
-          };
-          
-          const statusCode = axiosError?.response?.status;
-          const responseData = axiosError?.response?.data as { message?: string } | undefined;
-          const errorMessage = responseData?.message || '';
-          
-          // Verificar se o erro é porque o signer já existe
-          const signerJaExiste = statusCode === 400 && (
-            errorMessage.includes('já existe') ||
-            errorMessage.includes('already exists')
-          );
-          
-          if (signerJaExiste) {
-            const signerIdExistente = await this.buscarSignerPorEmail(signer.email);
-            if (signerIdExistente) {
-              signerIds.push(signerIdExistente);
-              continue;
-            }
-          }
-          
-          logger.error('Erro ao criar signer', { email: signer.email });
-        }
-      }
-      
-      if (signerIds.length === 0) {
-        throw new Error('Nenhum signer foi criado com sucesso. Verifique os logs acima para detalhes dos erros.');
-      }
-      
-      
-      // PASSO 3: Criar assignment (enviar para assinatura)
-      const assignmentPayload: Record<string, unknown> = {
-        method: 'virtual',
-        signer_ids: signerIds
-      };
-      
-      if (documento.expiresAt) {
-        assignmentPayload.expires_at = documento.expiresAt;
-      }
-      
-      if (documento.message) {
-        assignmentPayload.message = documento.message;
-      }
-      
-      const assignmentResponse = await this.api.post(`/documents/${documentId}/assignments`, assignmentPayload);
-      
-      
-      const documentData = uploadResponse.data?.data || uploadResponse.data;
-      const signingUrl = documentData?.signing_url || null;
-      const finalStatus = documentData?.status || 'pending_signature';
-      
-      return {
-        success: true,
-        data: {
-          id: documentId,
-          url: signingUrl,
-          status: finalStatus
-        }
-      };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const axiosError = error as { 
-        response?: { 
-          status?: number; 
-          data?: unknown;
-          statusText?: string;
-        };
-        request?: unknown;
-        code?: string;
-      };
-      
-      const responseData = axiosError?.response?.data as { message?: string; error?: string } | undefined;
-      const detailedMessage = responseData?.message || responseData?.error || errorMessage;
-      
-      logger.error('Erro ao enviar documento para Assinafy:', {
-        error: errorMessage,
-        statusCode: axiosError?.response?.status
-      });
-      
-      return {
-        success: false,
-        error: errorMessage,
-        message: detailedMessage
-      };
-    }
-  }
-
 
   /**
    * Consulta status de um documento

@@ -26,6 +26,7 @@ import authRoutes from './authRoutes';
 import pagamentoPublicoRoutes from './pagamentoPublicoRoutes';
 import healthRoutes from './healthRoutes';
 import assinaturaDigitalRoutes from './assinaturaDigitalRoutes';
+import assinaturaDigitalProviderRoutes from './assinaturaDigitalProviderRoutes';
 import clienteArquivoRoutes from './clienteArquivoRoutes';
 
 const router = Router();
@@ -58,6 +59,7 @@ const routes = [
     { path: '/api/atualizacoes', route: atualizacoesRoutes },
     { path: '/api/assinaturas-digital', route: assinaturaDigitalRoutes },
     { path: '/api/assinatura-digital', route: assinaturaDigitalRoutes }, // Alias sem "s" para compatibilidade
+    { path: '/api/assinatura-digital-providers', route: assinaturaDigitalProviderRoutes },
     // IMPORTANTE: cliente-arquivos deve vir ANTES de /api para evitar conflito
     // Registrar manualmente ANTES de /api para garantir ordem
     { path: '/api/cliente-arquivos', route: clienteArquivoRoutes },

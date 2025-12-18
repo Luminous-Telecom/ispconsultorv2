@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { ParametrosService } from '@/services/parametrosService';
+import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from '@/services/assinaturaDigitalProviderService';
 import { useFormReset } from '@/hooks/useFormReset';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
@@ -21,46 +21,80 @@ interface AssinaturaDigitalForm {
   diasExpiracaoPadrao: number;
 }
 
+const initialFormData: AssinaturaDigitalForm = {
+  habilitado: false,
+  apiProvider: 'assinafy',
+  apiKey: '',
+  accountId: '',
+  diasExpiracaoPadrao: 30
+};
+
 const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, onClose }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
 
-  const initialFormData: AssinaturaDigitalForm = {
-    habilitado: false,
-    apiProvider: 'assinafy',
-    apiKey: '',
-    accountId: '',
-    diasExpiracaoPadrao: 30
-  };
-
   const [formData, setFormData] = useState<AssinaturaDigitalForm>(initialFormData);
   const [showApiKey, setShowApiKey] = useState(false);
 
-  // Buscar parâmetros
-  const { data: parametrosResponse, isLoading } = useQuery({
-    queryKey: ['parametros'],
-    queryFn: () => ParametrosService.get(),
-    staleTime: 60 * 1000,
+  // Buscar provider atual (usar enabled para evitar chamadas desnecessárias)
+  const { data: providerResponse, isLoading, refetch } = useQuery({
+    queryKey: ['assinatura-digital-provider', formData.apiProvider],
+    queryFn: async () => {
+      try {
+        return await AssinaturaDigitalProviderService.getByProvider(formData.apiProvider as AssinaturaDigitalProviderType);
+      } catch (error) {
+        // Se o provider não existir (404), retornar undefined (não é erro crítico)
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status === 404) {
+          return { success: false, data: undefined };
+        }
+        throw error; // Re-lançar outros erros
+      }
+    },
+    staleTime: 0, // Sempre buscar dados frescos quando o provider mudar
     refetchOnMount: true,
+    retry: false, // Não tentar novamente se não encontrar (pode não existir ainda)
+    enabled: show && !!formData.apiProvider, // Só buscar quando o modal estiver aberto
   });
 
   const parametros = useMemo(() => {
-    if (!parametrosResponse?.data) return undefined;
-    const p = parametrosResponse.data;
+    if (!providerResponse?.data) return undefined;
+    const p = providerResponse.data;
     return {
-      habilitado: p.assinatura_digital_habilitado ?? false,
-      apiProvider: p.assinatura_digital_api_provider || 'assinafy',
-      apiKey: p.assinatura_digital_api_key || '',
-      accountId: p.assinatura_digital_account_id || '',
-      diasExpiracaoPadrao: p.assinatura_digital_dias_expiracao_padrao || 30
+      habilitado: p.habilitado ?? false,
+      apiProvider: p.provider || formData.apiProvider, // Usar o provider do formData se não vier do backend
+      apiKey: p.api_key || '',
+      accountId: p.account_id || '',
+      diasExpiracaoPadrao: p.dias_expiracao_padrao || 30
     };
-  }, [parametrosResponse?.data]);
+  }, [providerResponse?.data, formData.apiProvider]);
 
   const customFormData = useMemo(() => {
-    if (!parametros) return undefined;
+    if (!parametros) {
+      // Se não há dados do provider, retornar dados iniciais com o provider selecionado
+      return {
+        ...initialFormData,
+        apiProvider: formData.apiProvider
+      };
+    }
     return parametros;
-  }, [parametros]);
+  }, [parametros, formData.apiProvider]);
+
+  // Atualizar formData quando o provider mudar ou quando os dados chegarem
+  useEffect(() => {
+    if (show && customFormData) {
+      setFormData(customFormData);
+    }
+  }, [show, customFormData]);
+
+  // Quando o provider mudar, buscar os dados do novo provider
+  useEffect(() => {
+    if (show && formData.apiProvider) {
+      queryClient.invalidateQueries({ queryKey: ['assinatura-digital-provider', formData.apiProvider] });
+      refetch();
+    }
+  }, [formData.apiProvider, show, queryClient, refetch]);
 
   useFormReset({
     show,
@@ -71,44 +105,36 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
 
   const updateMutation = useMutation({
     mutationFn: async (data: AssinaturaDigitalForm) => {
-      const currentParams = parametrosResponse?.data;
-      if (!currentParams) {
-        throw new Error('Parâmetros não encontrados');
-      }
-
-      // Preparar dados para envio (remover campos undefined)
-      const dadosParaEnvio: Record<string, unknown> = {
-        validar_cpf_cnpj: currentParams.validar_cpf_cnpj,
-        validar_cep: currentParams.validar_cep,
-        titulos_vence_sabado: currentParams.titulos_vence_sabado,
-        titulos_vence_domingo: currentParams.titulos_vence_domingo,
-        auto_lancamento_titulos: currentParams.auto_lancamento_titulos,
-        total_titulos_financeiro: currentParams.total_titulos_financeiro,
-        assinatura_digital_habilitado: data.habilitado,
-        assinatura_digital_api_provider: data.apiProvider,
-        assinatura_digital_dias_expiracao_padrao: data.diasExpiracaoPadrao
+      // Preparar dados para envio (converter null para undefined)
+      const dadosParaEnvio: {
+        habilitado: boolean;
+        api_key?: string;
+        account_id?: string;
+        dias_expiracao_padrao: number;
+      } = {
+        habilitado: data.habilitado,
+        dias_expiracao_padrao: data.diasExpiracaoPadrao
       };
 
       // Adicionar api_key apenas se não estiver vazio
       if (data.apiKey) {
-        dadosParaEnvio.assinatura_digital_api_key = data.apiKey;
+        dadosParaEnvio.api_key = data.apiKey;
       }
 
       // Adicionar account_id apenas se não estiver vazio
       if (data.accountId) {
-        dadosParaEnvio.assinatura_digital_account_id = data.accountId;
+        dadosParaEnvio.account_id = data.accountId;
       }
 
-      // Manter URL da API do banco (não atualizar pelo frontend)
-      if (currentParams.assinatura_digital_api_url) {
-        dadosParaEnvio.assinatura_digital_api_url = currentParams.assinatura_digital_api_url;
-      }
-
-      await ParametrosService.update(dadosParaEnvio);
+      // Usar upsert para criar ou atualizar
+      await AssinaturaDigitalProviderService.upsert(
+        data.apiProvider as AssinaturaDigitalProviderType,
+        dadosParaEnvio
+      );
     },
     onSuccess: () => {
       success('Configurações de assinatura digital atualizadas com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['parametros'] });
+      queryClient.invalidateQueries({ queryKey: ['assinatura-digital-provider'] });
     },
     onError: (error: unknown) => {
       const axiosError = error as AxiosError<{ message?: string; details?: unknown }>;
@@ -229,10 +255,8 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 onChange={(e) => setFormData(prev => ({ ...prev, apiProvider: e.target.value }))}
                 disabled={updateMutation.isPending}
               >
-                <option value="assinafy">Assinafy (Recomendado - 100 assinaturas/mês grátis)</option>
-                <option value="zapsign">ZapSign</option>
-                <option value="govbr">Gov.br (Apenas órgãos públicos)</option>
-                <option value="outro">Outro</option>
+                <option value="assinafy">Assinafy (100 assinaturas/mês grátis)</option>
+                <option value="zapsign">ZapSign (5 assinaturas/mês grátis)</option>
               </select>
               <div style={{ color: '#6c757d', fontSize: '0.875rem' }}>
                 Selecione o provedor de API para assinatura digital
@@ -299,8 +323,6 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                   </>
                 )}
                 {formData.apiProvider === 'zapsign' && 'Obtenha sua API Key no painel do ZapSign'}
-                {formData.apiProvider === 'govbr' && 'Configure conforme documentação do Gov.br'}
-                {formData.apiProvider === 'outro' && 'Configure conforme documentação do seu provedor'}
               </div>
             </div>
 

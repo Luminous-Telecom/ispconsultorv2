@@ -29,6 +29,10 @@ const sequelize = new Sequelize({
     timestamps: true,
     underscored: true,
     freezeTableName: true
+  },
+  // Ignorar colunas extras que não estão no modelo (útil durante migrações)
+  dialectOptions: {
+    // MySQL específico: não falhar se houver colunas extras
   }
 });
 

@@ -3,7 +3,6 @@ import Parametros from '../models/Parametros';
 import Joi from 'joi';
 import { logger } from '../utils/logger';
 import { cache } from '../utils/cache';
-import { ASSINAFY_API_URL_DEFAULT } from '../services/AssinafyService';
 
 export class ParametrosController {
   // Schema de validação
@@ -13,13 +12,7 @@ export class ParametrosController {
     titulos_vence_sabado: Joi.boolean().optional(),
     titulos_vence_domingo: Joi.boolean().optional(),
     auto_lancamento_titulos: Joi.boolean().optional(),
-    total_titulos_financeiro: Joi.number().integer().min(1).max(24).optional(),
-    assinatura_digital_habilitado: Joi.boolean().optional(),
-    assinatura_digital_api_provider: Joi.string().valid('assinafy', 'zapsign', 'govbr', 'outro').optional(),
-    assinatura_digital_api_key: Joi.string().allow('').optional(),
-    assinatura_digital_api_url: Joi.string().allow('').optional(),
-    assinatura_digital_account_id: Joi.string().allow('').optional(),
-    assinatura_digital_dias_expiracao_padrao: Joi.number().integer().min(1).max(365).optional()
+    total_titulos_financeiro: Joi.number().integer().min(1).max(24).optional()
   }).min(1).unknown(true);
 
   // Obter parâmetros (sempre retorna o primeiro registro)
@@ -33,7 +26,10 @@ export class ParametrosController {
         return res.json(cached);
       }
 
-      let parametros = await Parametros.findOne();
+      let parametros = await Parametros.findOne({
+        // Selecionar apenas as colunas que existem no modelo
+        attributes: ['id', 'validar_cpf_cnpj', 'validar_cep', 'titulos_vence_sabado', 'titulos_vence_domingo', 'auto_lancamento_titulos', 'total_titulos_financeiro', 'created_at', 'updated_at']
+      });
 
       // Se não existir, criar com valores padrão
       if (!parametros) {
@@ -43,18 +39,24 @@ export class ParametrosController {
           titulos_vence_sabado: false,
           titulos_vence_domingo: false,
           auto_lancamento_titulos: false,
-          total_titulos_financeiro: 12,
-          assinatura_digital_habilitado: false,
-          assinatura_digital_api_provider: 'assinafy',
-          assinatura_digital_api_key: undefined,
-          assinatura_digital_api_url: ASSINAFY_API_URL_DEFAULT,
-          assinatura_digital_dias_expiracao_padrao: 30
+          total_titulos_financeiro: 12
         });
       }
 
+      // Garantir que apenas os campos do modelo sejam retornados
       const response = {
         success: true,
-        data: parametros
+        data: {
+          id: parametros.id,
+          validar_cpf_cnpj: parametros.validar_cpf_cnpj,
+          validar_cep: parametros.validar_cep,
+          titulos_vence_sabado: parametros.titulos_vence_sabado,
+          titulos_vence_domingo: parametros.titulos_vence_domingo,
+          auto_lancamento_titulos: parametros.auto_lancamento_titulos,
+          total_titulos_financeiro: parametros.total_titulos_financeiro,
+          created_at: parametros.created_at,
+          updated_at: parametros.updated_at
+        }
       };
 
       // Cachear por 15 minutos (parâmetros raramente mudam)
@@ -114,35 +116,6 @@ export class ParametrosController {
 
       let parametros = await Parametros.findOne();
 
-      // Verificar se há alterações relacionadas à assinatura digital
-      const temAlteracaoAssinaturaDigital = 
-        req.body.assinatura_digital_habilitado !== undefined ||
-        req.body.assinatura_digital_api_provider !== undefined ||
-        req.body.assinatura_digital_api_key !== undefined ||
-        req.body.assinatura_digital_api_url !== undefined ||
-        req.body.assinatura_digital_dias_expiracao_padrao !== undefined;
-
-      // Definir URL padrão baseada no provedor se não fornecida
-      if (req.body.assinatura_digital_api_provider && !req.body.assinatura_digital_api_url) {
-        const urlsPorProvider: Record<string, string> = {
-          assinafy: ASSINAFY_API_URL_DEFAULT.replace('/v1', ''),
-          zapsign: 'https://sandbox.api.zapsign.com.br/api/v1',
-          govbr: 'https://api.gov.br',
-          outro: ''
-        };
-        req.body.assinatura_digital_api_url = urlsPorProvider[req.body.assinatura_digital_api_provider] || '';
-      }
-
-      if (temAlteracaoAssinaturaDigital) {
-        logger.info('Atualizando configurações de assinatura digital', {
-          habilitado: req.body.assinatura_digital_habilitado,
-          provider: req.body.assinatura_digital_api_provider,
-          temApiKey: !!req.body.assinatura_digital_api_key,
-          apiUrl: req.body.assinatura_digital_api_url,
-          diasExpiracao: req.body.assinatura_digital_dias_expiracao_padrao
-        });
-      }
-
       // Se não existir, criar
       if (!parametros) {
         parametros = await Parametros.create({
@@ -151,30 +124,13 @@ export class ParametrosController {
           titulos_vence_sabado: req.body.titulos_vence_sabado ?? false,
           titulos_vence_domingo: req.body.titulos_vence_domingo ?? false,
           auto_lancamento_titulos: req.body.auto_lancamento_titulos ?? false,
-          total_titulos_financeiro: req.body.total_titulos_financeiro ?? 12,
-          assinatura_digital_habilitado: req.body.assinatura_digital_habilitado ?? false,
-          assinatura_digital_api_provider: req.body.assinatura_digital_api_provider ?? 'assinafy',
-          assinatura_digital_api_key: req.body.assinatura_digital_api_key ?? undefined,
-          assinatura_digital_api_url: req.body.assinatura_digital_api_url 
-            ? req.body.assinatura_digital_api_url.trim().replace(/^[&|]+|[&|]+$/g, '').replace(/\/+$/, '')
-            : ASSINAFY_API_URL_DEFAULT.replace('/v1', ''),
-          assinatura_digital_dias_expiracao_padrao: req.body.assinatura_digital_dias_expiracao_padrao ?? 30
+          total_titulos_financeiro: req.body.total_titulos_financeiro ?? 12
         });
-        logger.info('Parâmetros criados com configurações de assinatura digital');
       } else {
-        // Atualizar - sanitizar URL se presente
-        const updateData = { ...req.body };
-        if (updateData.assinatura_digital_api_url) {
-          updateData.assinatura_digital_api_url = updateData.assinatura_digital_api_url
-            .trim()
-            .replace(/^[&|]+|[&|]+$/g, '')
-            .replace(/\/+$/, '');
-        }
-        
-        await parametros.update(updateData);
+        // Atualizar
+        await parametros.update(req.body);
         logger.info('Parâmetros atualizados', {
-          camposAtualizados: Object.keys(updateData),
-          apiUrlSanitizada: updateData.assinatura_digital_api_url
+          camposAtualizados: Object.keys(req.body)
         });
       }
 
