@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { logger } from '../utils/logger';
 import clienteRoutes from './clienteRoutes';
 import planoRoutes from './planoRoutes';
 import bancoRoutes from './bancoRoutes';
@@ -58,6 +57,7 @@ const routes = [
     { path: '/api/modelos-termo', route: modelosTermoRoutes },
     { path: '/api/atualizacoes', route: atualizacoesRoutes },
     { path: '/api/assinaturas-digital', route: assinaturaDigitalRoutes },
+    { path: '/api/assinatura-digital', route: assinaturaDigitalRoutes }, // Alias sem "s" para compatibilidade
     // IMPORTANTE: cliente-arquivos deve vir ANTES de /api para evitar conflito
     // Registrar manualmente ANTES de /api para garantir ordem
     { path: '/api/cliente-arquivos', route: clienteArquivoRoutes },

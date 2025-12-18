@@ -194,6 +194,7 @@ app.use(ddosProtectionMiddleware({
     '/health',
     '/api/health',
     '/webhook',
+    '/api/assinaturas-digital/webhook', // Webhooks de assinatura digital não devem ter proteção DDoS
     '/config.js',
     '/uploads',
     '/api/titulos/boletos-multiplos-pdf', // Geração de PDF pode demorar mais que 15s

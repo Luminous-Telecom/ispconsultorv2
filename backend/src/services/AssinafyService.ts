@@ -43,8 +43,14 @@ interface AssinafyResponse {
  * Documentação: https://assinafy.com.br/docs
  * 
  * Plano gratuito: 100 assinaturas/mês
+ * 
+ * URLs por ambiente:
+ * - Produção: https://api.assinafy.com.br/v1
+ * - Staging: https://app-staging.assinafy.com.br/v1
  */
-export const ASSINAFY_API_URL_DEFAULT = 'https://api.assinafy.com.br/v1';
+export const ASSINAFY_API_URL_PRODUCTION = 'https://api.assinafy.com.br/v1';
+export const ASSINAFY_API_URL_STAGING = 'https://app-staging.assinafy.com.br/v1';
+export const ASSINAFY_API_URL_DEFAULT = ASSINAFY_API_URL_PRODUCTION;
 
 export class AssinafyService {
   private api: AxiosInstance;
@@ -82,9 +88,23 @@ export class AssinafyService {
       }
 
 
+      // Usar URL hardcoded baseada no provider, não a URL do banco
+      // Verificar se há parâmetro para ambiente (staging/produção)
+      // Por padrão, usar produção se não especificado
+      const ambiente = parametros.assinatura_digital_api_url?.includes('staging') ? 'staging' : 'production';
+      
+      const apiUrl = ambiente === 'staging' ? ASSINAFY_API_URL_STAGING : ASSINAFY_API_URL_PRODUCTION;
+      
+      logger.info('Criando AssinafyService com URL hardcoded por provider', {
+        provider: 'assinafy',
+        ambiente: ambiente,
+        apiUrl: apiUrl,
+        urlBancoIgnorada: parametros.assinatura_digital_api_url
+      });
+
       return new AssinafyService({
         apiKey: parametros.assinatura_digital_api_key,
-        apiUrl: ASSINAFY_API_URL_DEFAULT,
+        apiUrl: apiUrl,
         accountId: parametros.assinatura_digital_account_id || undefined
       });
     } catch (error) {
@@ -569,8 +589,10 @@ export class AssinafyService {
 
   /**
    * Baixa PDF assinado
+   * @param documentId - ID do documento
+   * @param url - URL direta do PDF (opcional, não usado pelo Assinafy)
    */
-  async baixarPdfAssinado(documentId: string): Promise<Buffer | null> {
+  async baixarPdfAssinado(documentId: string, url?: string): Promise<Buffer | null> {
     try {
       const response = await this.api.get(`/documents/${documentId}/download/certificated`, {
         responseType: 'arraybuffer'

@@ -42,6 +42,7 @@ const generalLimiter = rateLimit({
   skip: (req: Request) => {
     // Rotas que não devem ter rate limiting
     const skipRoutes = [
+      '/api/assinaturas-digital/webhook', // Webhooks de assinatura digital não devem ter rate limit
       '/health',
       '/api/health',
       '/webhook',

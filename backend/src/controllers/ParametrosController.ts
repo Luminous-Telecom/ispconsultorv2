@@ -126,7 +126,7 @@ export class ParametrosController {
       if (req.body.assinatura_digital_api_provider && !req.body.assinatura_digital_api_url) {
         const urlsPorProvider: Record<string, string> = {
           assinafy: ASSINAFY_API_URL_DEFAULT.replace('/v1', ''),
-          zapsign: 'https://api.zapsign.com.br',
+          zapsign: 'https://sandbox.api.zapsign.com.br/api/v1',
           govbr: 'https://api.gov.br',
           outro: ''
         };

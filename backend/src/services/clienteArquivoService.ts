@@ -38,16 +38,13 @@ export class ClienteArquivoService {
   }
 
   /**
-   * Converte base64 para arquivo temporário (para compatibilidade com código legado)
+   * Converte Buffer para arquivo temporário
    */
-  private static async base64ToTempFile(base64Data: string, nome: string, mimeType: string): Promise<Express.Multer.File> {
-    const base64Content = base64Data.replace(/^data:.*,/, '');
-    
-    if (!base64Content || base64Content.trim() === '') {
-      throw new Error('Conteúdo base64 inválido ou vazio');
+  private static async bufferToTempFile(buffer: Buffer, nome: string, mimeType: string): Promise<Express.Multer.File> {
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Buffer inválido ou vazio');
     }
 
-    const buffer = Buffer.from(base64Content, 'base64');
     const tempDir = os.tmpdir();
     const ext = path.extname(nome) || (mimeType === 'application/pdf' ? '.pdf' : '');
     const baseName = path.basename(nome, ext).replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -66,6 +63,55 @@ export class ClienteArquivoService {
       path: tempFilePath,
       size: buffer.length
     } as Express.Multer.File;
+  }
+
+  /**
+   * Converte base64 para arquivo temporário (para compatibilidade com código legado)
+   */
+  private static async base64ToTempFile(base64Data: string, nome: string, mimeType: string): Promise<Express.Multer.File> {
+    const base64Content = base64Data.replace(/^data:.*,/, '');
+    
+    if (!base64Content || base64Content.trim() === '') {
+      throw new Error('Conteúdo base64 inválido ou vazio');
+    }
+
+    const buffer = Buffer.from(base64Content, 'base64');
+    return this.bufferToTempFile(buffer, nome, mimeType);
+  }
+
+  /**
+   * Cria arquivo a partir de Buffer (método direto para PDFs binários)
+   */
+  static async createFromBuffer(data: {
+    cliente_id: number;
+    nome: string;
+    tipo: 'documento' | 'foto' | 'assinatura' | 'outro';
+    arquivo_buffer: Buffer;
+    mime_type?: string;
+    descricao?: string;
+    origem?: 'manual' | 'assinatura_digital' | 'sistema';
+    referencia_id?: number;
+    referencia_tipo?: string;
+  }): Promise<ClienteArquivo> {
+    // Converter Buffer para arquivo temporário
+    const tempFile = await this.bufferToTempFile(
+      data.arquivo_buffer,
+      data.nome,
+      data.mime_type || 'application/octet-stream'
+    );
+    
+    // Usar o método create normal
+    return this.create({
+      cliente_id: data.cliente_id,
+      nome: data.nome,
+      tipo: data.tipo,
+      arquivo: tempFile,
+      mime_type: data.mime_type,
+      descricao: data.descricao,
+      origem: data.origem,
+      referencia_id: data.referencia_id,
+      referencia_tipo: data.referencia_tipo
+    });
   }
 
   /**
@@ -149,12 +195,34 @@ export class ClienteArquivoService {
       // O multer já salvou o arquivo no diretório correto
       const clienteDir = path.join(this.UPLOAD_DIR, String(data.cliente_id));
       const fileName = path.basename(data.arquivo.path);
+      const destinoPath = path.join(clienteDir, fileName);
       
-      // Se não estiver no diretório do cliente, mover
+      // Se não estiver no diretório do cliente, copiar e depois deletar o original
       if (!data.arquivo.path.startsWith(clienteDir)) {
         await this.ensureUploadDir();
         await fs.mkdir(clienteDir, { recursive: true });
-        await fs.rename(data.arquivo.path, path.join(clienteDir, fileName));
+        
+        // Usar copyFile ao invés de rename para evitar erro EXDEV (cross-device link)
+        // Isso é necessário quando o arquivo temporário está em /tmp e o destino em outro sistema de arquivos
+        try {
+          await fs.copyFile(data.arquivo.path, destinoPath);
+          // Tentar deletar o arquivo temporário (não crítico se falhar)
+          try {
+            await fs.unlink(data.arquivo.path);
+          } catch (unlinkError) {
+            logger.warn('Não foi possível deletar arquivo temporário', {
+              tempPath: data.arquivo.path,
+              error: unlinkError instanceof Error ? unlinkError.message : 'Erro desconhecido'
+            });
+          }
+        } catch (copyError) {
+          logger.error('Erro ao copiar arquivo', {
+            origem: data.arquivo.path,
+            destino: destinoPath,
+            error: copyError instanceof Error ? copyError.message : 'Erro desconhecido'
+          });
+          throw copyError;
+        }
       }
       
       const caminho = path.join(String(data.cliente_id), fileName);

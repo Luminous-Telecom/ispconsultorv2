@@ -12,7 +12,10 @@ const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/health/i },
   { path: /^\/api\/auth\/login$/i },
   { path: /^\/webhook(\/.*)?$/i },
-  { path: /^\/api\/assinaturas-digital\/webhook$/i }, // Webhook da Assinafy (público)
+  { path: /^\/api\/assinaturas?-digital\/webhook/i }, // Webhooks de assinatura digital (com ou sem "s") - aceita qualquer path depois
+  { path: /^\/api\/assinaturas?-digital\/webhook\/.*$/i }, // Webhooks de assinatura digital com qualquer provider (zapsign, assinafy, etc)
+  { path: /^\/api\/assinatura-digital\/webhook/i }, // Alias sem "s" - aceita qualquer path depois
+  { path: /^\/api\/assinatura-digital\/webhook\/.*$/i }, // Alias sem "s" com qualquer provider
   { path: /^\/uploads(\/.*)?$/i },
   // Download de arquivos de cliente (visualização pública controlada)
   { method: 'GET', path: /^\/api\/cliente-arquivos\/\d+\/download\/?$/i },
@@ -31,18 +34,16 @@ const isPublicRoute = (req: Request): boolean => {
   const method = req.method.toUpperCase();
   
   return PUBLIC_ROUTES.some(({ method: routeMethod, path }) => {
-    // Se a rota especifica um método, verificar se corresponde
     if (routeMethod && routeMethod.toUpperCase() !== method) {
       return false;
     }
-    // Se não especifica método, aceitar qualquer método
     return path.test(cleanedPath);
   });
 };
 
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   const cleanedPath = req.originalUrl.split('?')[0];
-  // Permitir downloads públicos de arquivos de cliente (visualização)
+  
   if (req.method === 'GET' && /^\/api\/cliente-arquivos\/\d+\/download\/?$/.test(cleanedPath)) {
     return next();
   }
