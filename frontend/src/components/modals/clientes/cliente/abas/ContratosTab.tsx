@@ -24,6 +24,60 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           config={{
             columns: [
               { key: 'id', label: 'ID', sortable: true, searchable: true, render: (contrato: Contrato) => contrato.id },
+              {
+                key: 'endereco',
+                label: 'Endereço',
+                sortable: false,
+                searchable: false,
+                render: (contrato: Contrato) => (
+                  <span>{contrato.cliente?.endereco || '-'}</span>
+                )
+              },
+              {
+                key: 'numero',
+                label: 'Número',
+                sortable: false,
+                searchable: false,
+                render: (contrato: Contrato) => (
+                  <span>{contrato.cliente?.numero || '-'}</span>
+                )
+              },
+              {
+                key: 'complemento',
+                label: 'Complemento',
+                sortable: false,
+                searchable: false,
+                render: (contrato: Contrato) => (
+                  <span>{contrato.cliente?.complemento || '-'}</span>
+                )
+              },
+              {
+                key: 'bairro',
+                label: 'Bairro',
+                sortable: false,
+                searchable: false,
+                render: (contrato: Contrato) => (
+                  <span>{contrato.cliente?.bairro || '-'}</span>
+                )
+              },
+              {
+                key: 'cidade',
+                label: 'Cidade',
+                sortable: false,
+                searchable: false,
+                render: (contrato: Contrato) => (
+                  <span>{contrato.cliente?.cidade || '-'}</span>
+                )
+              },
+              {
+                key: 'estado',
+                label: 'Estado',
+                sortable: false,
+                searchable: false,
+                render: (contrato: Contrato) => (
+                  <span>{contrato.cliente?.estado || '-'}</span>
+                )
+              },
               { 
                 key: 'plano_nome', 
                 label: 'Plano', 

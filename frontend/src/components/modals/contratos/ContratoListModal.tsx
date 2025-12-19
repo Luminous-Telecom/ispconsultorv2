@@ -160,6 +160,60 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
       )
     },
     {
+      key: 'endereco',
+      label: 'Endereço',
+      sortable: false,
+      searchable: false,
+      render: (item: Contrato) => (
+        <span>{item.cliente?.endereco || '-'}</span>
+      )
+    },
+    {
+      key: 'numero',
+      label: 'Número',
+      sortable: false,
+      searchable: false,
+      render: (item: Contrato) => (
+        <span>{item.cliente?.numero || '-'}</span>
+      )
+    },
+    {
+      key: 'complemento',
+      label: 'Complemento',
+      sortable: false,
+      searchable: false,
+      render: (item: Contrato) => (
+        <span>{item.cliente?.complemento || '-'}</span>
+      )
+    },
+    {
+      key: 'bairro',
+      label: 'Bairro',
+      sortable: false,
+      searchable: false,
+      render: (item: Contrato) => (
+        <span>{item.cliente?.bairro || '-'}</span>
+      )
+    },
+    {
+      key: 'cidade',
+      label: 'Cidade',
+      sortable: false,
+      searchable: false,
+      render: (item: Contrato) => (
+        <span>{item.cliente?.cidade || '-'}</span>
+      )
+    },
+    {
+      key: 'estado',
+      label: 'Estado',
+      sortable: false,
+      searchable: false,
+      render: (item: Contrato) => (
+        <span>{item.cliente?.estado || '-'}</span>
+      )
+    },
+    {
       key: 'plano_nome',
       label: 'Plano',
       sortable: true,

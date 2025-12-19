@@ -23,6 +23,12 @@ export interface Contrato {
     id: number;
     razao_social: string;
     nome_fantasia: string;
+    endereco?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    estado?: string;
   };
   plano?: {
     id: number;

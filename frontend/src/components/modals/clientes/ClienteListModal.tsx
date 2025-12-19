@@ -15,6 +15,12 @@ interface Cliente {
   email: string;
   whatsapp?: string;
   ativo: boolean;
+  endereco?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
 }
 
 interface ClienteListModalProps {
@@ -107,6 +113,54 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         sortable: false,
         render: (item: Cliente) => (
           <span className="text-nowrap">{item.whatsapp || '-'}</span>
+        )
+      },
+      {
+        key: 'endereco',
+        label: 'Endereço',
+        sortable: true,
+        render: (item: Cliente) => (
+          <span>{item.endereco || '-'}</span>
+        )
+      },
+      {
+        key: 'numero',
+        label: 'Número',
+        sortable: true,
+        render: (item: Cliente) => (
+          <span>{item.numero || '-'}</span>
+        )
+      },
+      {
+        key: 'complemento',
+        label: 'Complemento',
+        sortable: true,
+        render: (item: Cliente) => (
+          <span>{item.complemento || '-'}</span>
+        )
+      },
+      {
+        key: 'bairro',
+        label: 'Bairro',
+        sortable: true,
+        render: (item: Cliente) => (
+          <span>{item.bairro || '-'}</span>
+        )
+      },
+      {
+        key: 'cidade',
+        label: 'Cidade',
+        sortable: true,
+        render: (item: Cliente) => (
+          <span>{item.cidade || '-'}</span>
+        )
+      },
+      {
+        key: 'estado',
+        label: 'Estado',
+        sortable: true,
+        render: (item: Cliente) => (
+          <span>{item.estado || '-'}</span>
         )
       },
       {

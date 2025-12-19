@@ -742,6 +742,60 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       render: (item: Titulo) => item.contrato_id || '-'
     },
     {
+      key: 'endereco',
+      label: 'Endereço',
+      sortable: false,
+      searchable: false,
+      render: (item: Titulo) => (
+        <span>{item.cliente?.endereco || '-'}</span>
+      )
+    },
+    {
+      key: 'numero',
+      label: 'Número',
+      sortable: false,
+      searchable: false,
+      render: (item: Titulo) => (
+        <span>{item.cliente?.numero || '-'}</span>
+      )
+    },
+    {
+      key: 'complemento',
+      label: 'Complemento',
+      sortable: false,
+      searchable: false,
+      render: (item: Titulo) => (
+        <span>{item.cliente?.complemento || '-'}</span>
+      )
+    },
+    {
+      key: 'bairro',
+      label: 'Bairro',
+      sortable: false,
+      searchable: false,
+      render: (item: Titulo) => (
+        <span>{item.cliente?.bairro || '-'}</span>
+      )
+    },
+    {
+      key: 'cidade',
+      label: 'Cidade',
+      sortable: false,
+      searchable: false,
+      render: (item: Titulo) => (
+        <span>{item.cliente?.cidade || '-'}</span>
+      )
+    },
+    {
+      key: 'estado',
+      label: 'Estado',
+      sortable: false,
+      searchable: false,
+      render: (item: Titulo) => (
+        <span>{item.cliente?.estado || '-'}</span>
+      )
+    },
+    {
       key: 'status',
       label: 'Status',
       sortable: true,
