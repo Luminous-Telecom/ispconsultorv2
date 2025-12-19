@@ -27,7 +27,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               {
                 key: 'endereco',
                 label: 'Endereço',
-                sortable: false,
+                sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
                   <span>{contrato.cliente?.endereco || '-'}</span>
@@ -36,7 +36,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               {
                 key: 'numero',
                 label: 'Número',
-                sortable: false,
+                sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
                   <span>{contrato.cliente?.numero || '-'}</span>
@@ -45,7 +45,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               {
                 key: 'complemento',
                 label: 'Complemento',
-                sortable: false,
+                sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
                   <span>{contrato.cliente?.complemento || '-'}</span>
@@ -54,7 +54,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               {
                 key: 'bairro',
                 label: 'Bairro',
-                sortable: false,
+                sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
                   <span>{contrato.cliente?.bairro || '-'}</span>
@@ -63,7 +63,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               {
                 key: 'cidade',
                 label: 'Cidade',
-                sortable: false,
+                sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
                   <span>{contrato.cliente?.cidade || '-'}</span>
@@ -72,7 +72,7 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               {
                 key: 'estado',
                 label: 'Estado',
-                sortable: false,
+                sortable: true,
                 searchable: false,
                 render: (contrato: Contrato) => (
                   <span>{contrato.cliente?.estado || '-'}</span>
@@ -200,7 +200,14 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
               // Adicionar campos virtuais para busca funcionar com campos aninhados
               plano_nome: contrato.plano?.nome_plano || '',
               banco_nome: contrato.bancoBoleto?.nome || '',
-              plano_valor_mensal: contrato.plano?.valor_mensal || 0
+              plano_valor_mensal: contrato.plano?.valor_mensal || 0,
+              // Campos de endereço para ordenação
+              endereco: contrato.cliente?.endereco || '',
+              numero: contrato.cliente?.numero || '',
+              complemento: contrato.cliente?.complemento || '',
+              bairro: contrato.cliente?.bairro || '',
+              cidade: contrato.cliente?.cidade || '',
+              estado: contrato.cliente?.estado || ''
             })),
             customFilters: (data: (Contrato & { plano_nome?: string; banco_nome?: string })[]) => {
               // Filtrar inativos se necessário (a busca e ordenação serão feitas pelo Table internamente)

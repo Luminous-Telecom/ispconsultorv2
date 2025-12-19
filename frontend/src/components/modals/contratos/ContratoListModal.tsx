@@ -100,7 +100,14 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         // Campos numéricos para ordenação
         valor_plano_num: c.plano?.valor_mensal ? Number(c.plano.valor_mensal) : 0,
         desconto_num: descontoValor,
-        valor_final_num: c.valor_final ? Number(c.valor_final) : 0
+        valor_final_num: c.valor_final ? Number(c.valor_final) : 0,
+        // Campos de endereço para ordenação
+        endereco: c.cliente?.endereco || '',
+        numero: c.cliente?.numero || '',
+        complemento: c.cliente?.complemento || '',
+        bairro: c.cliente?.bairro || '',
+        cidade: c.cliente?.cidade || '',
+        estado: c.cliente?.estado || ''
       };
     });
   }, [contratos]);
@@ -162,7 +169,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     {
       key: 'endereco',
       label: 'Endereço',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Contrato) => (
         <span>{item.cliente?.endereco || '-'}</span>
@@ -171,7 +178,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     {
       key: 'numero',
       label: 'Número',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Contrato) => (
         <span>{item.cliente?.numero || '-'}</span>
@@ -180,7 +187,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     {
       key: 'complemento',
       label: 'Complemento',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Contrato) => (
         <span>{item.cliente?.complemento || '-'}</span>
@@ -189,7 +196,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     {
       key: 'bairro',
       label: 'Bairro',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Contrato) => (
         <span>{item.cliente?.bairro || '-'}</span>
@@ -198,7 +205,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     {
       key: 'cidade',
       label: 'Cidade',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Contrato) => (
         <span>{item.cliente?.cidade || '-'}</span>
@@ -207,7 +214,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
     {
       key: 'estado',
       label: 'Estado',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Contrato) => (
         <span>{item.cliente?.estado || '-'}</span>

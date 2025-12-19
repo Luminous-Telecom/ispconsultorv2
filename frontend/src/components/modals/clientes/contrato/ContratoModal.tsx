@@ -744,7 +744,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       key: 'endereco',
       label: 'Endereço',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Titulo) => (
         <span>{item.cliente?.endereco || '-'}</span>
@@ -753,7 +753,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       key: 'numero',
       label: 'Número',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Titulo) => (
         <span>{item.cliente?.numero || '-'}</span>
@@ -762,7 +762,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       key: 'complemento',
       label: 'Complemento',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Titulo) => (
         <span>{item.cliente?.complemento || '-'}</span>
@@ -771,7 +771,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       key: 'bairro',
       label: 'Bairro',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Titulo) => (
         <span>{item.cliente?.bairro || '-'}</span>
@@ -780,7 +780,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       key: 'cidade',
       label: 'Cidade',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Titulo) => (
         <span>{item.cliente?.cidade || '-'}</span>
@@ -789,7 +789,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     {
       key: 'estado',
       label: 'Estado',
-      sortable: false,
+      sortable: true,
       searchable: false,
       render: (item: Titulo) => (
         <span>{item.cliente?.estado || '-'}</span>
@@ -1007,17 +1007,29 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   ];
 
   // Não filtrar cancelados aqui - deixar o FinanceiroTab gerenciar através do showCancelados
-  const filteredData = isEditMode && titulosData?.data 
-    ? titulosData.data
-    : [];
+  // Adicionar campos virtuais para ordenação funcionar com campos aninhados (endereço do cliente)
+  const sortedData = useMemo(() => {
+    const filteredData = isEditMode && titulosData?.data 
+      ? titulosData.data
+      : [];
+    
+    if (!filteredData || filteredData.length === 0) return [];
+    
+    return filteredData.map((titulo: Titulo) => ({
+      ...titulo,
+      // Campos de endereço para ordenação
+      endereco: titulo.cliente?.endereco || '',
+      numero: titulo.cliente?.numero || '',
+      complemento: titulo.cliente?.complemento || '',
+      bairro: titulo.cliente?.bairro || '',
+      cidade: titulo.cliente?.cidade || '',
+      estado: titulo.cliente?.estado || ''
+    }));
+  }, [isEditMode, titulosData?.data]);
   
   const filteredTermosData = isEditMode && termosArray.length > 0
     ? termosArray.filter((termo: TermoContrato) => termo.ativo)
     : [];
-
-  // Não ordenar aqui - deixar o Table gerenciar a ordenação através das colunas sortable
-  // Apenas passar os dados filtrados, o Table fará a ordenação inicial e permitirá mudanças pelo usuário
-  const sortedData = filteredData;
   const sortedTermosData = [...filteredTermosData].sort((a: TermoContrato, b: TermoContrato) => (b.id || 0) - (a.id || 0));
   
   // Dados de serviços adicionais
