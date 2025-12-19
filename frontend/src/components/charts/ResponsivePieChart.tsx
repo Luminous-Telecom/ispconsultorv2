@@ -51,9 +51,8 @@ const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hid
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         // Altura baseada no número de itens
-        const itemHeight = 32;
-        const gap = 8;
-        const calculatedHeight = data.length * (itemHeight + gap) - gap;
+        const itemHeight = 22;
+        const calculatedHeight = data.length * itemHeight;
         setDimensions({ 
           width: rect.width || 200, 
           height: calculatedHeight || itemHeight 
@@ -82,11 +81,10 @@ const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hid
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
     // Configurações de estilo
-    const itemHeight = 32;
-    const gap = 8;
-    const colorSize = 12;
+    const itemHeight = 22;
+    const colorSize = 10;
     const colorMargin = 8;
-    const fontSize = 11;
+    const fontSize = 10;
     const fontFamily = 'system-ui, -apple-system, sans-serif';
 
     ctx.font = `${fontSize}px ${fontFamily}`;
@@ -125,7 +123,7 @@ const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hid
       }
 
       ctx.globalAlpha = 1;
-      y += itemHeight + gap;
+      y += itemHeight;
     });
   }, [data, title, hiddenItems, dimensions, getTextColor]);
 
@@ -207,9 +205,8 @@ const PieLegendCanvas: React.FC<PieLegendCanvasProps> = memo(({ data, title, hid
     const rect = canvas.getBoundingClientRect();
     const clickY = e.clientY - rect.top;
 
-    const itemHeight = 32;
-    const gap = 8;
-    const totalItemHeight = itemHeight + gap;
+    const itemHeight = 22;
+    const totalItemHeight = itemHeight;
 
     const clickedIndex = Math.floor(clickY / totalItemHeight);
     if (clickedIndex >= 0 && clickedIndex < data.length) {
