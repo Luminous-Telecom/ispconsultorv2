@@ -11,6 +11,7 @@ import { Button } from '@/components/ui';
 interface RecursosSistemaModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
 }
 
 interface ParametrosForm {
@@ -22,7 +23,7 @@ interface ParametrosForm {
   total_titulos_financeiro: number;
 }
 
-const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClose }) => {
+const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClose, skipWrapper = false }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -80,14 +81,9 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
     }
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      await updateParametrosMutation.mutateAsync(formData);
-    } catch (error) {
-      // Erro já tratado no mutation
-    }
+    updateParametrosMutation.mutate(formData);
   };
 
   const handleCheckboxChange = (field: keyof ParametrosForm) => {
@@ -107,56 +103,15 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
     }
   };
 
-  if (isLoading) {
-    return (
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title="Recursos do Sistema"
-        size="md"
-        modalId="recursos-sistema-modal"
-      >
+  const modalContent = (
+    <>
+      {isLoading ? (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Carregando...</span>
           </div>
         </div>
-      </DraggableModal>
-    );
-  }
-
-  return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title="Recursos do Sistema"
-      size="md"
-      modalId="recursos-sistema-modal"
-      headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={onClose}
-            disabled={updateParametrosMutation.isPending}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="recursos-sistema-form"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            isLoading={updateParametrosMutation.isPending}
-          >
-            Salvar
-          </Button>
-        </div>
-      }
-    >
+      ) : (
       <form id="recursos-sistema-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         <div>
           <div className="card mb-3">
@@ -284,6 +239,47 @@ const RecursosSistemaModal: React.FC<RecursosSistemaModalProps> = ({ show, onClo
           </div>
         </div>
       </form>
+      )}
+    </>
+  );
+
+  if (skipWrapper) {
+    return modalContent;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title="Recursos do Sistema"
+      size="md"
+      modalId="recursos-sistema-modal"
+      headerActions={
+        <div className="d-flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
+            onClick={onClose}
+            disabled={updateParametrosMutation.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="recursos-sistema-form"
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            isLoading={updateParametrosMutation.isPending}
+          >
+            Salvar
+          </Button>
+        </div>
+      }
+    >
+      {modalContent}
     </DraggableModal>
   );
 };

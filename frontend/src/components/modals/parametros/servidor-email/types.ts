@@ -15,6 +15,7 @@ export interface ServidorEmailForm {
 export interface ServidorEmailModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
 }
 
 export interface ServidorTabProps {

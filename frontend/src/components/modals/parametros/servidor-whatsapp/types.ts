@@ -12,6 +12,7 @@ export interface ServidorWhatsAppForm {
 export interface ServidorWhatsappModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
 }
 
 export interface ServidorTabProps {

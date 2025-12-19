@@ -14,11 +14,13 @@ import UsuarioFormModal from './UsuarioFormModal';
 interface UsuariosModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
 }
 
 const UsuariosModal: React.FC<UsuariosModalProps> = ({
   show,
-  onClose
+  onClose,
+  skipWrapper = false
 }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -180,15 +182,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     }
   ];
 
-  return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title="Usuários"
-      size="lg"
-      modalId="usuarios-modal"
-      className="no-padding"
-    >
+  const modalContent = (
+    <>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1, overflow: 'auto' }}>
           <Table
@@ -238,6 +233,23 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
           refetch();
         }}
       />
+    </>
+  );
+
+  if (skipWrapper) {
+    return modalContent;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title="Usuários"
+      size="lg"
+      modalId="usuarios-modal"
+      className="no-padding"
+    >
+      {modalContent}
     </DraggableModal>
   );
 };

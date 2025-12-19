@@ -17,7 +17,7 @@ interface GrupoVariaveis {
   variaveis: Array<{ variavel: string; descricao: string }>;
 }
 
-const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onClose }) => {
+const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onClose, skipWrapper = false }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -282,74 +282,15 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
     }
   };
 
-  if (isLoading) {
-    return (
-      <DraggableModal
-        show={show}
-        onClose={handleClose}
-        title="Servidor de WhatsApp"
-        size="lg"
-        modalId="servidor-whatsapp-modal"
-      >
+  const modalContent = (
+    <>
+      {isLoading ? (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Carregando...</span>
           </div>
         </div>
-      </DraggableModal>
-    );
-  }
-
-  return (
-    <>
-    <DraggableModal
-      show={show}
-      onClose={handleClose}
-      title="Servidor de WhatsApp - Evolution API"
-      size="lg"
-      modalId="servidor-whatsapp-modal"
-      headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            onClick={(e) => {
-              if (activeTab === 'servidor') {
-                const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
-                form?.requestSubmit();
-              } else {
-                e.preventDefault();
-                handleSaveMensagem();
-              }
-            }}
-            isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
-          >
-            Salvar
-          </Button>
-          <Button
-            type="button"
-            variant="outline-danger"
-            size="sm"
-            onClick={handleReset}
-            disabled={saveServidorMutation.isPending}
-          >
-            {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={handleClose}
-            disabled={saveServidorMutation.isPending}
-          >
-            Fechar
-          </Button>
-        </div>
-      }
-    >
+      ) : (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Navegação de Abas */}
         <ul className="nav nav-tabs" role="tablist" style={{ 
@@ -443,13 +384,72 @@ const ServidorWhatsappModal: React.FC<ServidorWhatsappModalProps> = ({ show, onC
           )}
         </div>
       </div>
-    </DraggableModal>
-    {showTemplatesModal && (
-      <TemplatesModal
-        show={showTemplatesModal}
-        onClose={() => setShowTemplatesModal(false)}
-      />
-    )}
+      )}
+      {showTemplatesModal && (
+        <TemplatesModal
+          show={showTemplatesModal}
+          onClose={() => setShowTemplatesModal(false)}
+        />
+      )}
+    </>
+  );
+
+  if (skipWrapper) {
+    return modalContent;
+  }
+
+  return (
+    <>
+      <DraggableModal
+        show={show}
+        onClose={handleClose}
+        title="Servidor de WhatsApp - Evolution API"
+        size="lg"
+        modalId="servidor-whatsapp-modal"
+        headerActions={
+          <div className="d-flex gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              leftIcon={<i className="bi bi-check-lg"></i>}
+              onClick={(e) => {
+                if (activeTab === 'servidor') {
+                  const form = document.getElementById('servidor-whatsapp-form') as HTMLFormElement;
+                  form?.requestSubmit();
+                } else {
+                  e.preventDefault();
+                  handleSaveMensagem();
+                }
+              }}
+              isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+            >
+              Salvar
+            </Button>
+            <Button
+              type="button"
+              variant="outline-danger"
+              size="sm"
+              onClick={handleReset}
+              disabled={saveServidorMutation.isPending}
+            >
+              {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leftIcon={<i className="bi bi-x-lg"></i>}
+              onClick={handleClose}
+              disabled={saveServidorMutation.isPending}
+            >
+              Fechar
+            </Button>
+          </div>
+        }
+      >
+        {modalContent}
+      </DraggableModal>
     </>
   );
 };

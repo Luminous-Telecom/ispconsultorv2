@@ -9,7 +9,7 @@ import { ServidorEmailForm, ServidorEmailModalProps } from './types';
 import ServidorTab from './abas/ServidorTab';
 import MensagensTab from './abas/MensagensTab';
 
-const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }) => {
+const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose, skipWrapper = false }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -161,72 +161,15 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  if (isLoading) {
-    return (
-      <DraggableModal
-        show={show}
-        onClose={handleClose}
-        title="Servidor de E-Mail"
-        size="lg"
-        modalId="servidor-email-modal"
-      >
+  const modalContent = (
+    <>
+      {isLoading ? (
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Carregando...</span>
           </div>
         </div>
-      </DraggableModal>
-    );
-  }
-
-  return (
-    <DraggableModal
-      show={show}
-      onClose={handleClose}
-      title="Servidor de E-Mail"
-      size="xl"
-      modalId="servidor-email-modal"
-      headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            leftIcon={<i className="bi bi-check-lg"></i>}
-            onClick={() => {
-              if (activeTab === 'servidor') {
-                const form = document.getElementById('servidor-email-form') as HTMLFormElement;
-                form?.requestSubmit();
-              } else {
-                handleSaveMensagem();
-              }
-            }}
-            isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
-          >
-            Salvar
-          </Button>
-          <Button
-            type="button"
-            variant="outline-danger"
-            size="sm"
-            onClick={handleReset}
-            disabled={saveServidorMutation.isPending}
-          >
-            {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            leftIcon={<i className="bi bi-x-lg"></i>}
-            onClick={handleClose}
-            disabled={saveServidorMutation.isPending}
-          >
-            Fechar
-          </Button>
-        </div>
-      }
-    >
+      ) : (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Navegação de Abas */}
         <ul className="nav nav-tabs" role="tablist" style={{ 
@@ -307,6 +250,63 @@ const ServidorEmailModal: React.FC<ServidorEmailModalProps> = ({ show, onClose }
           </form>
         </div>
       </div>
+      )}
+    </>
+  );
+
+  if (skipWrapper) {
+    return modalContent;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={handleClose}
+      title="Servidor de E-Mail"
+      size="xl"
+      modalId="servidor-email-modal"
+      headerActions={
+        <div className="d-flex gap-2">
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            leftIcon={<i className="bi bi-check-lg"></i>}
+            onClick={() => {
+              if (activeTab === 'servidor') {
+                const form = document.getElementById('servidor-email-form') as HTMLFormElement;
+                form?.requestSubmit();
+              } else {
+                handleSaveMensagem();
+              }
+            }}
+            isLoading={saveServidorMutation.isPending || saveMensagemMutation.isPending}
+          >
+            Salvar
+          </Button>
+          <Button
+            type="button"
+            variant="outline-danger"
+            size="sm"
+            onClick={handleReset}
+            disabled={saveServidorMutation.isPending}
+          >
+            {servidorAtivo?.data ? 'Remover Servidor' : 'Limpar'}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            leftIcon={<i className="bi bi-x-lg"></i>}
+            onClick={handleClose}
+            disabled={saveServidorMutation.isPending}
+          >
+            Fechar
+          </Button>
+        </div>
+      }
+    >
+      {modalContent}
     </DraggableModal>
   );
 };

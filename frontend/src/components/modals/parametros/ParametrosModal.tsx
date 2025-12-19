@@ -90,11 +90,10 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   };
 
   const handleNumberChange = (field: keyof ParametrosForm, value: string) => {
-    const numValue = parseInt(value) || 0;
-    setFormData(prev => ({
-      ...prev,
-      [field]: numValue
-    }));
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue)) {
+      setFormData(prev => ({ ...prev, [field]: numValue }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -103,36 +102,11 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
   };
 
   const handleCancel = () => {
-    if (parametros?.data) {
-      setFormData({
-        validar_cpf_cnpj: parametros.data.validar_cpf_cnpj ?? true,
-        validar_cep: parametros.data.validar_cep ?? false,
-        titulos_vence_sabado: parametros.data.titulos_vence_sabado ?? false,
-        titulos_vence_domingo: parametros.data.titulos_vence_domingo ?? false,
-        auto_lancamento_titulos: parametros.data.auto_lancamento_titulos ?? false,
-        total_titulos_financeiro: parametros.data.total_titulos_financeiro ?? 12
-      });
+    if (customFormData) {
+      setFormData(customFormData);
     }
     onClose();
   };
-
-  if (isLoading) {
-    return (
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title="Parâmetros"
-        size="md"
-        modalId="parametros-modal-loading"
-      >
-        <div className="text-center p-4">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
-        </div>
-      </DraggableModal>
-    );
-  }
 
   return (
     <DraggableModal
@@ -166,6 +140,13 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
         </div>
       }
     >
+      {isLoading ? (
+        <div className="text-center p-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Carregando...</span>
+          </div>
+        </div>
+      ) : (
       <form id="parametros-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         <div>
           <div className="card mb-3">
@@ -294,6 +275,7 @@ const ParametrosModal: React.FC<ParametrosModalProps> = ({ show, onClose }) => {
         </div>
 
       </form>
+      )}
     </DraggableModal>
   );
 };

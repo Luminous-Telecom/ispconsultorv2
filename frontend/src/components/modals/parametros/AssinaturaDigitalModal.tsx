@@ -4,13 +4,13 @@ import { AxiosError } from 'axios';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { AssinaturaDigitalProviderService, AssinaturaDigitalProviderType } from '@/services/assinaturaDigitalProviderService';
-import { useFormReset } from '@/hooks/useFormReset';
 import DraggableModal from '@/components/common/DraggableModal';
 import { Button } from '@/components/ui';
 
 interface AssinaturaDigitalModalProps {
   show: boolean;
   onClose: () => void;
+  skipWrapper?: boolean;
 }
 
 interface AssinaturaDigitalForm {
@@ -29,7 +29,7 @@ const initialFormData: AssinaturaDigitalForm = {
   diasExpiracaoPadrao: 30
 };
 
-const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, onClose }) => {
+const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, onClose, skipWrapper = false }) => {
   const isMobile = useIsMobile();
   const { success, error: showError } = useNotificationContext();
   const queryClient = useQueryClient();
@@ -60,95 +60,64 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
 
   // Determinar o provider inicial: usar o habilitado se existir, senão usar o padrão
   const initialProvider = useMemo(() => {
-    if (enabledProviderResponse?.data?.provider) {
-      return enabledProviderResponse.data.provider;
-    }
-    return 'assinafy' as AssinaturaDigitalProviderType;
+    return enabledProviderResponse?.data?.provider || 'assinafy' as AssinaturaDigitalProviderType;
   }, [enabledProviderResponse?.data?.provider]);
 
-  // Provider a ser usado: o selecionado no formData
-  const currentProvider = formData.apiProvider || 'assinafy';
-
-  // Buscar provider atual (usar enabled para evitar chamadas desnecessárias)
-  const { data: providerResponse, isLoading, refetch } = useQuery({
-    queryKey: ['assinatura-digital-provider', currentProvider],
+  // Buscar provider atual
+  const { data: providerResponse, isLoading } = useQuery({
+    queryKey: ['assinatura-digital-provider', formData.apiProvider],
     queryFn: async () => {
       try {
-        return await AssinaturaDigitalProviderService.getByProvider(currentProvider as AssinaturaDigitalProviderType);
+        return await AssinaturaDigitalProviderService.getByProvider(formData.apiProvider as AssinaturaDigitalProviderType);
       } catch (error) {
-        // Se o provider não existir (404), retornar undefined (não é erro crítico)
         const axiosError = error as { response?: { status?: number } };
         if (axiosError.response?.status === 404) {
           return { success: false, data: undefined };
         }
-        throw error; // Re-lançar outros erros
+        throw error;
       }
     },
-    staleTime: 0, // Sempre buscar dados frescos quando o provider mudar
+    staleTime: 0,
     refetchOnMount: true,
-    retry: false, // Não tentar novamente se não encontrar (pode não existir ainda)
-    enabled: show && !!currentProvider, // Só buscar quando o modal estiver aberto
+    retry: false,
+    enabled: show && !!formData.apiProvider,
   });
 
-  const parametros = useMemo(() => {
-    if (!providerResponse?.data) return undefined;
+  const customFormData = useMemo(() => {
+    if (!providerResponse?.data) {
+      return { ...initialFormData, apiProvider: formData.apiProvider };
+    }
     const p = providerResponse.data;
     return {
       habilitado: p.habilitado ?? false,
-      apiProvider: p.provider || currentProvider, // Usar o provider atual
+      apiProvider: p.provider || formData.apiProvider,
       apiKey: p.api_key || '',
       accountId: p.account_id || '',
       diasExpiracaoPadrao: p.dias_expiracao_padrao || 30
     };
-  }, [providerResponse?.data, currentProvider]);
+  }, [providerResponse?.data, formData.apiProvider]);
 
-  const customFormData = useMemo(() => {
-    if (!parametros) {
-      // Se não há dados do provider, retornar dados iniciais com o provider atual
-      return {
-        ...initialFormData,
-        apiProvider: currentProvider
-      };
-    }
-    return parametros;
-  }, [parametros, currentProvider]);
-
-  // Definir provider inicial quando o modal abrir e o provider habilitado for encontrado
+  // Definir provider inicial quando o modal abrir
   useEffect(() => {
     if (show && initialProvider && !isLoadingEnabled) {
-      // Quando o modal abrir, definir o provider habilitado como inicial
-      setFormData(prev => ({
-        ...prev,
-        apiProvider: initialProvider
-      }));
+      setFormData(prev => {
+        if (prev.apiProvider === initialFormData.apiProvider) {
+          return { ...prev, apiProvider: initialProvider };
+        }
+        return prev;
+      });
     }
   }, [show, initialProvider, isLoadingEnabled]);
 
-  // Atualizar formData quando os dados do provider chegarem
+  // Atualizar formData quando os dados chegarem
   useEffect(() => {
     if (show && customFormData) {
       setFormData(customFormData);
     }
   }, [show, customFormData]);
 
-  // Quando o provider mudar, buscar os dados do novo provider
-  useEffect(() => {
-    if (show && currentProvider) {
-      queryClient.invalidateQueries({ queryKey: ['assinatura-digital-provider', currentProvider] });
-      refetch();
-    }
-  }, [currentProvider, show, queryClient, refetch]);
-
-  useFormReset({
-    show,
-    initialData: initialFormData,
-    setFormData,
-    customData: customFormData
-  });
-
   const updateMutation = useMutation({
     mutationFn: async (data: AssinaturaDigitalForm) => {
-      // Preparar dados para envio (converter null para undefined)
       const dadosParaEnvio: {
         habilitado: boolean;
         api_key?: string;
@@ -159,17 +128,9 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
         dias_expiracao_padrao: data.diasExpiracaoPadrao
       };
 
-      // Adicionar api_key apenas se não estiver vazio
-      if (data.apiKey) {
-        dadosParaEnvio.api_key = data.apiKey;
-      }
+      if (data.apiKey) dadosParaEnvio.api_key = data.apiKey;
+      if (data.accountId) dadosParaEnvio.account_id = data.accountId;
 
-      // Adicionar account_id apenas se não estiver vazio
-      if (data.accountId) {
-        dadosParaEnvio.account_id = data.accountId;
-      }
-
-      // Usar upsert para criar ou atualizar
       await AssinaturaDigitalProviderService.upsert(
         data.apiProvider as AssinaturaDigitalProviderType,
         dadosParaEnvio
@@ -180,27 +141,8 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
       queryClient.invalidateQueries({ queryKey: ['assinatura-digital-provider'] });
     },
     onError: (error: unknown) => {
-      const axiosError = error as AxiosError<{ message?: string; details?: unknown }>;
-      const errorData = axiosError?.response?.data;
-      const message = errorData?.message || 'Erro ao atualizar configurações';
-      const details = errorData?.details;
-      
-      // Montar mensagem de erro detalhada
-      let errorMessage = message;
-      if (details) {
-        if (Array.isArray(details)) {
-          const detailMessages = details.map((d: { field?: string; message?: string }) => 
-            d.field ? `${d.field}: ${d.message || ''}` : d.message || ''
-          ).filter(Boolean);
-          if (detailMessages.length > 0) {
-            errorMessage = `${message}\n${detailMessages.join('\n')}`;
-          }
-        } else {
-          errorMessage = `${message}: ${JSON.stringify(details)}`;
-        }
-      }
-      
-      showError(errorMessage);
+      const axiosError = error as AxiosError<{ message?: string }>;
+      showError(axiosError?.response?.data?.message || 'Erro ao atualizar configurações');
     }
   });
 
@@ -210,60 +152,21 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
   };
 
   const handleCancel = () => {
-    if (parametros) {
-      setFormData(parametros);
+    if (customFormData) {
+      setFormData(customFormData);
     }
     onClose();
   };
 
-  if (isLoading || isLoadingEnabled) {
-    return (
-      <DraggableModal
-        show={show}
-        onClose={onClose}
-        title="Assinatura Digital"
-        size="md"
-        modalId="assinatura-digital-modal-loading"
-      >
+  const modalContent = (
+    <>
+      {(isLoading || isLoadingEnabled) ? (
         <div className="text-center p-4">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Carregando...</span>
           </div>
         </div>
-      </DraggableModal>
-    );
-  }
-
-  return (
-    <DraggableModal
-      show={show}
-      onClose={onClose}
-      title="Assinatura Digital Eletrônica"
-      size="md"
-      modalId="assinatura-digital-modal"
-      headerActions={
-        <div className="d-flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={handleCancel}
-            disabled={updateMutation.isPending}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="assinatura-digital-form"
-            variant="primary"
-            size="sm"
-            isLoading={updateMutation.isPending}
-          >
-            Salvar
-          </Button>
-        </div>
-      }
-    >
+      ) : (
       <form id="assinatura-digital-form" onSubmit={handleSubmit} style={{ padding: isMobile ? '0' : '16px' }}>
         <div className="card mb-3">
           <div className="card-header">
@@ -399,6 +302,46 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
           </div>
         )}
       </form>
+      )}
+    </>
+  );
+
+  if (skipWrapper) {
+    return modalContent;
+  }
+
+  return (
+    <DraggableModal
+      show={show}
+      onClose={onClose}
+      title="Assinatura Digital Eletrônica"
+      size="md"
+      modalId="assinatura-digital-modal"
+      headerActions={
+        <div className="d-flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleCancel}
+            disabled={updateMutation.isPending || isLoading || isLoadingEnabled}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="assinatura-digital-form"
+            variant="primary"
+            size="sm"
+            isLoading={updateMutation.isPending}
+            disabled={isLoading || isLoadingEnabled}
+          >
+            Salvar
+          </Button>
+        </div>
+      }
+    >
+      {modalContent}
     </DraggableModal>
   );
 };
