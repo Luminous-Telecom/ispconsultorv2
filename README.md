@@ -71,11 +71,151 @@ O script irá:
 - Adicionar repositório oficial do Elasticsearch
 - Instalar e configurar o Elasticsearch
 - Configurar JVM (heap size)
+- Configurar `network.host: 127.0.0.1` (apenas localhost)
+- Configurar `xpack.security.enabled: true` (segurança habilitada)
+- Configurar `xpack.ml.enabled: false` (ML desabilitado)
+- Gerar senha aleatória e configurar usuário `elastic`
+- Salvar credenciais no `.env` do backend automaticamente
 - Iniciar o serviço automaticamente
 
-**Nota:** O script requer permissões de root (sudo). Se o Elasticsearch já estiver instalado, o script detecta e não faz nada.
+**Nota:** O script requer permissões de root (sudo). Se o Elasticsearch já estiver instalado, o script detecta e configura automaticamente.
 
-Para mais detalhes sobre configuração manual, consulte: `backend/src/services/elasticsearch/README.md`
+#### Instalação Manual do Elasticsearch
+
+Se preferir instalar manualmente:
+
+**1. Instalar dependências:**
+```bash
+sudo apt update
+sudo apt install -y curl wget apt-transport-https ca-certificates gnupg lsb-release
+```
+
+**2. Adicionar repositório do Elasticsearch:**
+```bash
+# Remover chave antiga se existir
+sudo rm -f /usr/share/keyrings/elasticsearch-keyring.gpg
+
+# Baixar e instalar chave GPG
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+
+# Adicionar repositório
+echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list > /dev/null
+```
+
+**3. Instalar Elasticsearch:**
+```bash
+sudo apt update
+sudo apt install -y elasticsearch
+```
+
+**4. Configurar Elasticsearch:**
+```bash
+# Editar arquivo de configuração
+sudo nano /etc/elasticsearch/elasticsearch.yml
+```
+
+Adicione ou modifique as seguintes linhas:
+```yaml
+# Endereço de rede (apenas localhost para segurança)
+network.host: 127.0.0.1
+
+# Porta HTTP
+http.port: 9200
+
+# Habilitar segurança
+xpack.security.enabled: true
+
+# Desabilitar Machine Learning
+xpack.ml.enabled: false
+```
+
+**5. Configurar JVM (memória):**
+```bash
+# Criar arquivo de configuração de heap
+sudo mkdir -p /etc/elasticsearch/jvm.options.d
+sudo tee /etc/elasticsearch/jvm.options.d/heap.options > /dev/null << 'EOF'
+# Configuração de heap do Elasticsearch
+# Ajuste conforme a memória disponível do servidor
+-Xms512m
+-Xmx512m
+EOF
+```
+
+**6. Iniciar e habilitar Elasticsearch:**
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable elasticsearch
+sudo systemctl start elasticsearch
+```
+
+**7. Aguardar Elasticsearch inicializar:**
+```bash
+# Aguardar alguns segundos para o Elasticsearch iniciar completamente
+sleep 10
+
+# Verificar se está respondendo
+curl http://localhost:9200
+```
+
+**8. Configurar senha do usuário `elastic`:**
+
+**Opção A: Usando elasticsearch-reset-password (Recomendado)**
+```bash
+# Gerar senha aleatória
+ELASTICSEARCH_PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-32)
+
+# Configurar senha
+echo "$ELASTICSEARCH_PASSWORD" | sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i -b
+
+# Anotar a senha gerada
+echo "Senha do Elasticsearch: $ELASTICSEARCH_PASSWORD"
+```
+
+**Opção B: Usando API do Elasticsearch (se segurança ainda não estiver totalmente habilitada)**
+```bash
+# Gerar senha aleatória
+ELASTICSEARCH_PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-32)
+
+# Configurar senha via API (apenas se ainda não tiver senha configurada)
+curl -X POST "http://localhost:9200/_security/user/elastic/_password" \
+  -H "Content-Type: application/json" \
+  -d "{\"password\":\"$ELASTICSEARCH_PASSWORD\"}"
+
+# Anotar a senha gerada
+echo "Senha do Elasticsearch: $ELASTICSEARCH_PASSWORD"
+```
+
+**9. Configurar variáveis no `.env` do backend:**
+
+Adicione as seguintes variáveis no arquivo `backend/.env`:
+
+```env
+# Configurações do Elasticsearch (Auditoria)
+ELASTICSEARCH_NODE=http://localhost:9200
+ELASTICSEARCH_INDEX_NAME=backnet-auditoria
+ELASTICSEARCH_USERNAME=elastic
+ELASTICSEARCH_PASSWORD=<senha_gerada_acima>
+```
+
+**10. Verificar instalação:**
+```bash
+# Verificar status do serviço
+sudo systemctl status elasticsearch
+
+# Testar conexão com autenticação
+curl -u elastic:<senha> http://localhost:9200
+
+# Verificar índices
+curl -u elastic:<senha> http://localhost:9200/_cat/indices?v
+```
+
+**Troubleshooting:**
+- Se o Elasticsearch não iniciar, verifique os logs: `sudo journalctl -u elasticsearch -n 50`
+- Se houver erro de memória, ajuste `-Xms` e `-Xmx` em `/etc/elasticsearch/jvm.options.d/heap.options`
+- Se houver erro de permissões, verifique: `sudo chown -R elasticsearch:elasticsearch /var/lib/elasticsearch /var/log/elasticsearch`
+- Se não conseguir conectar, verifique se `network.host: 127.0.0.1` está configurado corretamente
+
+Para mais detalhes sobre configuração avançada, consulte: `backend/src/services/elasticsearch/README.md`
 
 ### 1. Instalar Node.js e NPM
 
