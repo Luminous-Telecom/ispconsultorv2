@@ -503,10 +503,17 @@ export class SelfUpdateService {
     const envPath = path.join(this.backendPath, '.env');
     
     try {
+      logger.info('Verificando arquivo .env para configuração do Elasticsearch', {
+        envPath,
+        backendPath: this.backendPath,
+        envExists: fs.existsSync(envPath),
+      });
+
       // Verificar se o arquivo .env existe
       if (!fs.existsSync(envPath)) {
         logger.warn('Arquivo .env não encontrado, pulando configuração do Elasticsearch', {
           envPath,
+          backendPath: this.backendPath,
         });
         return {
           success: true,
@@ -517,6 +524,11 @@ export class SelfUpdateService {
 
       // Ler conteúdo do .env
       const envContent = fs.readFileSync(envPath, 'utf8');
+      
+      logger.debug('Conteúdo do .env lido', {
+        contentLength: envContent.length,
+        hasElasticsearchNode: envContent.includes('ELASTICSEARCH_NODE'),
+      });
       
       // Verificar se as variáveis já existem
       if (envContent.includes('ELASTICSEARCH_NODE')) {
@@ -536,28 +548,45 @@ ELASTICSEARCH_NODE=http://localhost:9200
 ELASTICSEARCH_INDEX_NAME=backnet-auditoria
 `;
 
-      fs.appendFileSync(envPath, elasticsearchConfig, 'utf8');
+      // Verificar se o arquivo termina com quebra de linha
+      const needsNewline = !envContent.endsWith('\n');
+      const configToAdd = needsNewline ? elasticsearchConfig : elasticsearchConfig.substring(1);
+
+      fs.appendFileSync(envPath, configToAdd, 'utf8');
       
-      logger.info('Variáveis do Elasticsearch adicionadas ao .env', {
+      // Verificar se foi adicionado corretamente
+      const updatedContent = fs.readFileSync(envPath, 'utf8');
+      const wasAdded = updatedContent.includes('ELASTICSEARCH_NODE');
+      
+      if (!wasAdded) {
+        throw new Error('Falha ao adicionar variáveis do Elasticsearch ao .env');
+      }
+      
+      logger.info('Variáveis do Elasticsearch adicionadas ao .env com sucesso', {
         envPath,
+        fileSize: updatedContent.length,
       });
 
       return {
         success: true,
-        stdout: 'Variáveis do Elasticsearch adicionadas ao .env',
+        stdout: `Variáveis do Elasticsearch adicionadas ao .env em ${envPath}`,
         stderr: '',
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       logger.error('Erro ao configurar variáveis do Elasticsearch no .env', {
         envPath,
+        backendPath: this.backendPath,
         error: errorMessage,
+        stack: errorStack,
       });
       
       return {
         success: false,
         stdout: '',
-        stderr: errorMessage,
+        stderr: `Erro ao adicionar variáveis ao .env: ${errorMessage}`,
         error: errorMessage,
       };
     }
@@ -907,7 +936,17 @@ ELASTICSEARCH_INDEX_NAME=backnet-auditoria
       });
     }
 
-    // Passo 0.5: Configurar variáveis do Elasticsearch no .env
+    // Passo 1: Git Pull (PRIMEIRO, para ter o código mais recente)
+    if (!steps.gitPull.success) {
+      return {
+        success: false,
+        message: `Falha ao executar git pull: ${steps.gitPull.error || steps.gitPull.stderr}`,
+        steps,
+      };
+    }
+
+    // Passo 1.5: Configurar variáveis do Elasticsearch no .env (DEPOIS do git pull)
+    // Isso garante que qualquer correção no método seja aplicada
     logger.info('Configurando variáveis do Elasticsearch no .env...');
     const envConfigResult = await this.configureElasticsearchEnv();
     if (!envConfigResult.success) {
@@ -917,16 +956,8 @@ ELASTICSEARCH_INDEX_NAME=backnet-auditoria
     } else {
       logger.info('Variáveis do Elasticsearch configuradas no .env', {
         output: envConfigResult.stdout,
+        envPath: path.join(this.backendPath, '.env'),
       });
-    }
-
-    // Passo 1: Git Pull
-    if (!steps.gitPull.success) {
-      return {
-        success: false,
-        message: `Falha ao executar git pull: ${steps.gitPull.error || steps.gitPull.stderr}`,
-        steps,
-      };
     }
 
     // Passo 1.5: Limpar versão no package.json removendo commit hash (manter apenas SemVer)
