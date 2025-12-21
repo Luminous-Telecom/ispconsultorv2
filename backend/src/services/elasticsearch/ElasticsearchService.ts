@@ -109,11 +109,34 @@ class ElasticsearchService {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       const errorStack = error instanceof Error ? error.stack : undefined;
       
+      // Extrair informações adicionais do erro
+      let errorDetails: any = {
+        message: errorMessage,
+      };
+      
+      // Se for erro do Elasticsearch, extrair mais detalhes
+      if (error && typeof error === 'object' && 'meta' in error) {
+        const meta = (error as any).meta;
+        if (meta) {
+          errorDetails.meta = {
+            statusCode: meta.statusCode,
+            body: meta.body,
+            headers: meta.headers,
+          };
+        }
+      }
+      
+      // Se for erro de conexão, incluir informações de rede
+      if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('ETIMEDOUT')) {
+        errorDetails.connectionError = true;
+        errorDetails.node = process.env.ELASTICSEARCH_NODE;
+      }
+      
       logger.warn('Falha ao verificar conexão com Elasticsearch', {
         context: 'ElasticsearchService',
         action: 'checkConnection',
         node: process.env.ELASTICSEARCH_NODE,
-        error: errorMessage,
+        error: errorDetails,
         stack: errorStack?.substring(0, 500) // Primeiros 500 chars do stack
       });
       return false;
