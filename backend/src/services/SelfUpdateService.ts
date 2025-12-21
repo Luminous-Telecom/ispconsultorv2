@@ -701,6 +701,7 @@ ELASTICSEARCH_INDEX_NAME=backnet-auditoria
 
   /**
    * Reinicia o processo no PM2
+   * Usa restart com --update-env para recarregar variáveis de ambiente do .env
    */
   private async pm2Reload(): Promise<CommandResult> {
     // Verificar se o processo existe antes de tentar reload
@@ -712,7 +713,7 @@ ELASTICSEARCH_INDEX_NAME=backnet-auditoria
       });
       
       // Se não existe, tentar restart (pode ser que o processo não esteja rodando)
-      const restartCommand = `pm2 restart ${this.pm2ProcessName}`;
+      const restartCommand = `pm2 restart ${this.pm2ProcessName} --update-env`;
       const restartResult = await this.executeCommand(restartCommand, this.projectRoot, 'PM2 Restart');
       
       if (!restartResult.success) {
@@ -736,7 +737,7 @@ ELASTICSEARCH_INDEX_NAME=backnet-auditoria
         
         // Tentar start com ecosystem.config.js usando --only
         logger.info('Tentando PM2 start com --only', { processName: this.pm2ProcessName });
-        const startCommand = `pm2 start ecosystem.config.js --only ${this.pm2ProcessName}`;
+        const startCommand = `pm2 start ecosystem.config.js --only ${this.pm2ProcessName} --update-env`;
         const startResult = await this.executeCommand(startCommand, this.projectRoot, 'PM2 Start');
         
         // Se start com --only falhar, tentar start sem filtro (inicia todos os processos)
@@ -744,13 +745,13 @@ ELASTICSEARCH_INDEX_NAME=backnet-auditoria
           logger.warn('PM2 start com --only falhou, tentando start sem filtro', {
             error: startResult.error || startResult.stderr,
           });
-          const startAllCommand = `pm2 start ecosystem.config.js`;
+          const startAllCommand = `pm2 start ecosystem.config.js --update-env`;
           const startAllResult = await this.executeCommand(startAllCommand, this.projectRoot, 'PM2 Start (todos)');
           
           // Se ainda falhar, tentar start direto do script
           if (!startAllResult.success) {
             logger.warn('PM2 start com ecosystem.config.js falhou, tentando start direto do script');
-            const directStartCommand = `pm2 start ${path.join(this.backendPath, 'dist', 'index.js')} --name ${this.pm2ProcessName} --cwd ${this.backendPath}`;
+            const directStartCommand = `pm2 start ${path.join(this.backendPath, 'dist', 'index.js')} --name ${this.pm2ProcessName} --cwd ${this.backendPath} --update-env`;
             return this.executeCommand(directStartCommand, this.projectRoot, 'PM2 Start (direto)');
           }
           
@@ -763,18 +764,20 @@ ELASTICSEARCH_INDEX_NAME=backnet-auditoria
       return restartResult;
     }
 
-    // Se o processo existe, tentar reload (zero-downtime)
-    const command = `pm2 reload ${this.pm2ProcessName}`;
-    const reloadResult = await this.executeCommand(command, this.projectRoot, 'PM2 Reload');
+    // Se o processo existe, usar restart com --update-env para recarregar variáveis de ambiente
+    // O reload não recarrega variáveis de ambiente do .env, então usamos restart
+    logger.info('Reiniciando PM2 com --update-env para recarregar variáveis de ambiente');
+    const command = `pm2 restart ${this.pm2ProcessName} --update-env`;
+    const restartResult = await this.executeCommand(command, this.projectRoot, 'PM2 Restart (com --update-env)');
     
-    // Se reload falhar, tentar restart como fallback
-    if (!reloadResult.success) {
-      logger.warn('PM2 reload falhou, tentando restart como fallback');
-      const restartCommand = `pm2 restart ${this.pm2ProcessName}`;
-      return this.executeCommand(restartCommand, this.projectRoot, 'PM2 Restart (fallback)');
+    // Se restart falhar, tentar reload como fallback (mas sem recarregar env)
+    if (!restartResult.success) {
+      logger.warn('PM2 restart com --update-env falhou, tentando reload como fallback');
+      const reloadCommand = `pm2 reload ${this.pm2ProcessName}`;
+      return this.executeCommand(reloadCommand, this.projectRoot, 'PM2 Reload (fallback)');
     }
     
-    return reloadResult;
+    return restartResult;
   }
 
   /**
