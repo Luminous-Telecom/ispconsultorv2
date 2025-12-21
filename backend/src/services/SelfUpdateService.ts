@@ -497,6 +497,73 @@ export class SelfUpdateService {
   }
 
   /**
+   * Adiciona variáveis do Elasticsearch ao .env do backend se não existirem
+   */
+  private async configureElasticsearchEnv(): Promise<CommandResult> {
+    const envPath = path.join(this.backendPath, '.env');
+    
+    try {
+      // Verificar se o arquivo .env existe
+      if (!fs.existsSync(envPath)) {
+        logger.warn('Arquivo .env não encontrado, pulando configuração do Elasticsearch', {
+          envPath,
+        });
+        return {
+          success: true,
+          stdout: 'Arquivo .env não encontrado, pulando configuração',
+          stderr: '',
+        };
+      }
+
+      // Ler conteúdo do .env
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      
+      // Verificar se as variáveis já existem
+      if (envContent.includes('ELASTICSEARCH_NODE')) {
+        logger.info('Variáveis do Elasticsearch já configuradas no .env');
+        return {
+          success: true,
+          stdout: 'Variáveis do Elasticsearch já configuradas',
+          stderr: '',
+        };
+      }
+
+      // Adicionar variáveis do Elasticsearch
+      const elasticsearchConfig = `
+
+# Configurações do Elasticsearch (Auditoria)
+ELASTICSEARCH_NODE=http://localhost:9200
+ELASTICSEARCH_INDEX_NAME=backnet-auditoria
+`;
+
+      fs.appendFileSync(envPath, elasticsearchConfig, 'utf8');
+      
+      logger.info('Variáveis do Elasticsearch adicionadas ao .env', {
+        envPath,
+      });
+
+      return {
+        success: true,
+        stdout: 'Variáveis do Elasticsearch adicionadas ao .env',
+        stderr: '',
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao configurar variáveis do Elasticsearch no .env', {
+        envPath,
+        error: errorMessage,
+      });
+      
+      return {
+        success: false,
+        stdout: '',
+        stderr: errorMessage,
+        error: errorMessage,
+      };
+    }
+  }
+
+  /**
    * Instala dependências npm
    */
   private async npmInstall(): Promise<CommandResult> {
@@ -834,6 +901,19 @@ export class SelfUpdateService {
     } else {
       logger.info('Elasticsearch verificado/instalado com sucesso', {
         output: steps.elasticsearch.stdout,
+      });
+    }
+
+    // Passo 0.5: Configurar variáveis do Elasticsearch no .env
+    logger.info('Configurando variáveis do Elasticsearch no .env...');
+    const envConfigResult = await this.configureElasticsearchEnv();
+    if (!envConfigResult.success) {
+      logger.warn('Falha ao configurar variáveis do Elasticsearch no .env, mas continuando o processo', {
+        error: envConfigResult.error || envConfigResult.stderr,
+      });
+    } else {
+      logger.info('Variáveis do Elasticsearch configuradas no .env', {
+        output: envConfigResult.stdout,
       });
     }
 
