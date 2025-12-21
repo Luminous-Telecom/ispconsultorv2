@@ -115,7 +115,8 @@ echo -e "${GREEN}✓ Configuração do Elasticsearch atualizada${NC}"
 # Verificar configuração aplicada
 echo "Verificando configuração aplicada..."
 if grep -qE "^network.host: (127.0.0.1|localhost)" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    echo -e "${GREEN}✓ network.host configurado corretamente para localhost${NC}"
+    echo -e "${GREEN}✓ network.host configurado corretamente para localhost (apenas interno)${NC}"
+    echo -e "${GREEN}✓ Elasticsearch só aceitará conexões de localhost (127.0.0.1)${NC}"
 else
     echo -e "${RED}✗ ERRO: network.host não está configurado corretamente!${NC}"
     echo "Configuração atual:"
@@ -124,6 +125,8 @@ fi
 
 # SEMPRE reiniciar Elasticsearch para aplicar configurações
 # Isso garante que as mudanças no elasticsearch.yml sejam aplicadas
+# Com network.host: 127.0.0.1, o Elasticsearch só escutará em localhost
+# e não aceitará conexões externas, sem precisar de firewall
 if systemctl is-active --quiet elasticsearch 2>/dev/null; then
     echo -e "${YELLOW}Elasticsearch está rodando. Reiniciando para aplicar configurações...${NC}"
     systemctl restart elasticsearch
@@ -138,32 +141,6 @@ fi
 
 # Garantir que inicia automaticamente no boot
 systemctl enable elasticsearch 2>/dev/null || true
-
-# Configurar firewall para bloquear acesso externo à porta 9200
-echo "Configurando firewall para bloquear acesso externo à porta 9200..."
-if command_exists ufw; then
-    # Verificar se a regra já existe
-    if ! ufw status | grep -q "9200" 2>/dev/null; then
-        # Bloquear porta 9200 para acesso externo
-        ufw deny 9200/tcp 2>/dev/null || true
-        echo -e "${GREEN}✓ Firewall UFW: Porta 9200 bloqueada para acesso externo${NC}"
-    else
-        echo -e "${GREEN}✓ Firewall UFW: Porta 9200 já está bloqueada${NC}"
-    fi
-elif command_exists firewall-cmd; then
-    # Firewalld (CentOS/RHEL)
-    firewall-cmd --permanent --remove-port=9200/tcp 2>/dev/null || true
-    firewall-cmd --reload 2>/dev/null || true
-    echo -e "${GREEN}✓ Firewall firewalld: Porta 9200 removida das regras${NC}"
-elif command_exists iptables; then
-    # iptables (fallback)
-    # Bloquear acesso externo à porta 9200, mas permitir localhost
-    iptables -C INPUT -p tcp --dport 9200 ! -s 127.0.0.1 -j DROP 2>/dev/null || \
-    iptables -A INPUT -p tcp --dport 9200 ! -s 127.0.0.1 -j DROP 2>/dev/null || true
-    echo -e "${GREEN}✓ Firewall iptables: Porta 9200 bloqueada para acesso externo${NC}"
-else
-    echo -e "${YELLOW}⚠ Nenhum firewall detectado. Configure manualmente para bloquear porta 9200 externamente${NC}"
-fi
 
 if [ "$ELASTICSEARCH_INSTALLED" = "false" ]; then
     echo -e "${YELLOW}Iniciando instalação do Elasticsearch...${NC}"
