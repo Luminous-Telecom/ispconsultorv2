@@ -112,6 +112,19 @@ chmod 660 "${ELASTICSEARCH_YML}" 2>/dev/null || true
 
 echo -e "${GREEN}✓ Configuração do Elasticsearch atualizada${NC}"
 
+# SEMPRE reiniciar Elasticsearch para aplicar configurações
+# Isso garante que as mudanças no elasticsearch.yml sejam aplicadas
+if systemctl is-active --quiet elasticsearch 2>/dev/null; then
+    echo -e "${YELLOW}Elasticsearch está rodando. Reiniciando para aplicar configurações...${NC}"
+    systemctl restart elasticsearch
+else
+    echo -e "${YELLOW}Iniciando Elasticsearch...${NC}"
+    systemctl start elasticsearch
+fi
+
+# Garantir que inicia automaticamente no boot
+systemctl enable elasticsearch 2>/dev/null || true
+
 if [ "$ELASTICSEARCH_INSTALLED" = "false" ]; then
     echo -e "${YELLOW}Iniciando instalação do Elasticsearch...${NC}"
 
@@ -160,10 +173,7 @@ if [ "$ELASTICSEARCH_INSTALLED" = "false" ]; then
 EOF
 fi
 
-
-# Iniciar Elasticsearch
-echo "Iniciando Elasticsearch..."
-systemctl start elasticsearch
+# Nota: O reinício do Elasticsearch já foi feito acima após aplicar configurações
 
 # Aguardar Elasticsearch iniciar completamente (pode levar até 60 segundos)
 echo "Aguardando Elasticsearch inicializar completamente..."
