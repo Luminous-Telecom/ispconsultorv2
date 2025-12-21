@@ -57,10 +57,15 @@ class ElasticsearchService {
 
       this.client = new Client(clientConfig);
       
+      // Log de configuração (sem senha por segurança)
+      const hasAuth = !!(process.env.ELASTICSEARCH_USERNAME && process.env.ELASTICSEARCH_PASSWORD);
+      
       logger.info('Cliente Elasticsearch inicializado', {
         context: 'ElasticsearchService',
         action: 'getClient',
-        node
+        node,
+        hasAuth,
+        username: process.env.ELASTICSEARCH_USERNAME || 'não configurado'
       });
 
       return this.client;
@@ -123,6 +128,14 @@ class ElasticsearchService {
             body: meta.body,
             headers: meta.headers,
           };
+          
+          // Verificar se é erro de autenticação
+          if (meta.statusCode === 401) {
+            errorDetails.authenticationError = true;
+            errorDetails.message = 'Erro de autenticação: Credenciais inválidas ou não configuradas';
+            errorDetails.hasUsername = !!process.env.ELASTICSEARCH_USERNAME;
+            errorDetails.hasPassword = !!process.env.ELASTICSEARCH_PASSWORD;
+          }
         }
       }
       
@@ -130,6 +143,13 @@ class ElasticsearchService {
       if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('ETIMEDOUT')) {
         errorDetails.connectionError = true;
         errorDetails.node = process.env.ELASTICSEARCH_NODE;
+      }
+      
+      // Verificar se é erro relacionado a autenticação na mensagem
+      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('authentication')) {
+        errorDetails.authenticationError = true;
+        errorDetails.hasUsername = !!process.env.ELASTICSEARCH_USERNAME;
+        errorDetails.hasPassword = !!process.env.ELASTICSEARCH_PASSWORD;
       }
       
       logger.warn('Falha ao verificar conexão com Elasticsearch', {
