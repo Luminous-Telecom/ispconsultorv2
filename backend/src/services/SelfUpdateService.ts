@@ -483,14 +483,34 @@ export class SelfUpdateService {
       });
     }
 
-    // Executar script de instalação (requer sudo)
+    // Verificar se está rodando como root (não precisa sudo)
+    let command: string;
+    try {
+      const { stdout: whoami } = await execAsync('whoami', { timeout: 2000 });
+      const isRoot = whoami.trim() === 'root';
+      
+      if (isRoot) {
+        logger.info('Processo rodando como root, executando script sem sudo');
+        command = `bash "${setupScriptPath}"`;
+      } else {
+        logger.info('Processo não é root, tentando executar com sudo');
+        command = `sudo bash "${setupScriptPath}"`;
+      }
+    } catch (error) {
+      // Se não conseguir verificar, tentar com sudo
+      logger.warn('Não foi possível verificar usuário, tentando com sudo', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      });
+      command = `sudo bash "${setupScriptPath}"`;
+    }
+    
+    // Executar script de instalação
     // O script verifica internamente se já está instalado e sai se estiver
-    // Usar sudo sem senha (NOPASSWD configurado) ou executar como root
     logger.info('Executando script de instalação do Elasticsearch', {
       scriptPath: setupScriptPath,
+      command,
     });
     
-    const command = `sudo bash "${setupScriptPath}"`;
     const result = await this.executeCommand(command, this.projectRoot, 'Elasticsearch Setup');
     
     // Log detalhado do resultado
