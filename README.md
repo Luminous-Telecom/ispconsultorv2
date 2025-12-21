@@ -53,6 +53,30 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 
 ## Instalação das Dependências do Sistema
 
+### 0. Instalar Elasticsearch (Opcional - para sistema de auditoria)
+
+O sistema possui um script automatizado para instalação do Elasticsearch:
+
+```bash
+# Executar script de instalação automática
+npm run setup:elasticsearch
+
+# Ou executar diretamente:
+sudo bash scripts/install-elasticsearch.sh
+```
+
+O script irá:
+- Verificar se o Elasticsearch já está instalado
+- Instalar dependências necessárias
+- Adicionar repositório oficial do Elasticsearch
+- Instalar e configurar o Elasticsearch
+- Configurar JVM (heap size)
+- Iniciar o serviço automaticamente
+
+**Nota:** O script requer permissões de root (sudo). Se o Elasticsearch já estiver instalado, o script detecta e não faz nada.
+
+Para mais detalhes sobre configuração manual, consulte: `backend/src/services/elasticsearch/README.md`
+
 ### 1. Instalar Node.js e NPM
 
 **Ubuntu/Debian:**
@@ -196,7 +220,27 @@ sudo yum install git -y
 git --version
 ```
 
-### 5. Instalar Nginx (Para Produção)
+### 5. Setup Automático Completo (Recomendado)
+
+Para instalar todas as dependências automaticamente após atualizar o sistema:
+
+```bash
+# Executar setup completo (instala Elasticsearch, dependências NPM e configura .env)
+npm run setup
+
+# Ou executar diretamente:
+sudo bash scripts/setup.sh
+```
+
+O script irá:
+- ✅ Instalar e configurar Elasticsearch
+- ✅ Instalar todas as dependências NPM (root, backend e frontend)
+- ✅ Criar arquivos `.env` a partir de `.env.example` se não existirem
+- ✅ Adicionar variáveis do Elasticsearch ao `.env` do backend
+
+**Nota:** O script requer permissões de root (sudo) para instalar o Elasticsearch.
+
+### 6. Instalar Nginx (Para Produção)
 
 **Ubuntu/Debian:**
 ```bash
@@ -1031,6 +1075,12 @@ pm2 startup
 | `DB_PASSWORD` | Senha do banco de dados | `sua-senha` |
 | `JWT_SECRET` | Segredo para tokens JWT | `string-aleatoria` |
 | `INTERNAL_WEBHOOK_SECRET` | Token fallback para webhooks | `string-aleatoria` |
+| `ELASTICSEARCH_NODE` | URL do nó Elasticsearch (opcional) | `http://localhost:9200` |
+| `ELASTICSEARCH_INDEX_NAME` | Nome do índice de auditoria | `backnet-auditoria` |
+| `ELASTICSEARCH_USERNAME` | Usuário do Elasticsearch (opcional) | `elastic` |
+| `ELASTICSEARCH_PASSWORD` | Senha do Elasticsearch (opcional) | `changeme` |
+| `ELASTICSEARCH_SSL` | Habilitar SSL/TLS (opcional) | `false` |
+| `ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED` | Rejeitar certificados não autorizados (opcional) | `true` |
 
 **⚠️ Sobre `REACT_APP_API_URL` no backend:**
 - Em produção: **SEMPRE** use `/api` (URL relativa)

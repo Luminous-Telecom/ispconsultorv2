@@ -8,6 +8,7 @@ export type ModalType =
   | 'financeiro'
   | 'dados-empresa'
   | 'usuarios'
+  | 'auditoria'
   | 'recursos-sistema'
   | 'servidor-email'
   | 'servidor-whatsapp'
@@ -15,6 +16,7 @@ export type ModalType =
   | 'dias-vencimento'
   | 'atualizacoes'
   | 'agendador-tarefas'
+  | 'assinatura-digital'
   | null;
 
 interface ModalContextType {

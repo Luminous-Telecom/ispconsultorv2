@@ -47,5 +47,7 @@ export interface ListModalProps<T> {
     disabled?: (() => boolean) | ((selectedItems: T[]) => boolean);
     action: (() => void) | ((selectedItems: T[]) => void);
   }>;
+  onAudit?: (item: T) => void;
+  auditEntity?: string;
   skipWrapper?: boolean;
 }

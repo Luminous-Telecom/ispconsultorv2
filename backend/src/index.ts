@@ -240,6 +240,11 @@ app.use(configProtectionMiddleware);
 
 app.use(authMiddleware);
 
+// Middleware de auditoria (deve vir depois do authMiddleware)
+import { auditCaptureMiddleware, auditLogMiddleware } from './middleware/auditMiddleware';
+app.use(auditCaptureMiddleware);
+app.use(auditLogMiddleware);
+
 // Servir arquivos estáticos (imagens, etc.)
 app.use('/images', express.static(path.join(__dirname, 'images')));
 

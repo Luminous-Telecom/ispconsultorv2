@@ -28,6 +28,7 @@ import healthRoutes from './healthRoutes';
 import assinaturaDigitalRoutes from './assinaturaDigitalRoutes';
 import assinaturaDigitalProviderRoutes from './assinaturaDigitalProviderRoutes';
 import clienteArquivoRoutes from './clienteArquivoRoutes';
+import auditoriaRoutes from './auditoriaRoutes';
 
 const router = Router();
 
@@ -63,6 +64,7 @@ const routes = [
     // IMPORTANTE: cliente-arquivos deve vir ANTES de /api para evitar conflito
     // Registrar manualmente ANTES de /api para garantir ordem
     { path: '/api/cliente-arquivos', route: clienteArquivoRoutes },
+    { path: '/api/auditoria', route: auditoriaRoutes },
 
     // Rotas de webhook
     { path: '/webhook', route: webhookRoutes },

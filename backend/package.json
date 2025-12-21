@@ -17,6 +17,7 @@
     "lint:fix": "eslint src --ext .ts --fix"
   },
   "dependencies": {
+    "@elastic/elasticsearch": "^8.19.1",
     "@types/qrcode": "^1.5.5",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",

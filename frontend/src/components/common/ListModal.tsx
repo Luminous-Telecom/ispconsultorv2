@@ -19,6 +19,8 @@ function ListModal<T extends { id: number | string }>({
   onLimitChange,
   onRefresh,
   bulkActions = [],
+  onAudit,
+  auditEntity,
   skipWrapper = false
 }: ListModalProps<T>) {
   const {
@@ -83,6 +85,8 @@ function ListModal<T extends { id: number | string }>({
         onPageChange={onPageChange}
         onPageSizeChange={onLimitChange}
         onRefresh={onRefresh}
+        onAudit={onAudit}
+        auditEntity={auditEntity}
       />
     </div>
   );

@@ -42,6 +42,8 @@ interface TableProps<T = Record<string, unknown>> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onRefresh?: () => void;
+  onAudit?: (item: T) => void;
+  auditEntity?: string;
   className?: string;
   tableId?: string;
   title?: string;
@@ -59,6 +61,8 @@ function Table<T extends { id: number | string }>({
   onPageChange,
   onPageSizeChange,
   onRefresh,
+  onAudit,
+  auditEntity,
   className = '',
   tableId,
   title
@@ -1260,6 +1264,24 @@ function Table<T extends { id: number | string }>({
         </div>
         
         <div className="d-flex align-items-center gap-2">
+          {/* Botão de auditar (apenas quando há 1 item selecionado) */}
+          {onAudit && auditEntity && state.selectedItems.length === 1 && (
+            <Button
+              variant="outline-info"
+              size="sm"
+              icon="shield-check"
+              onClick={() => {
+                const selectedItem = state.selectedItems[0];
+                if (selectedItem && onAudit) {
+                  onAudit(selectedItem);
+                }
+              }}
+              disabled={loading}
+              tooltip="Auditar registro selecionado"
+            >
+              Auditar
+            </Button>
+          )}
           {/* Botão de refresh */}
           <Button
             variant="outline-secondary"
@@ -1495,8 +1517,23 @@ function Table<T extends { id: number | string }>({
             </div>
           )}
 
-          {/* Botão de reload à direita */}
-          <div className="d-flex align-items-center">
+          {/* Botões de reload e auditar à direita */}
+          <div className="d-flex align-items-center gap-2">
+            {onAudit && auditEntity && state.selectedItems.length === 1 && (
+              <button 
+                type="button"
+                className="btn btn-outline-info btn-sm"
+                onClick={() => {
+                  const selectedItem = state.selectedItems[0];
+                  if (selectedItem && onAudit) {
+                    onAudit(selectedItem);
+                  }
+                }}
+                title={`Auditar registro selecionado`}
+              >
+                <i className="bi bi-shield-check"></i> Auditar
+              </button>
+            )}
             <button 
               type="button"
               className="btn btn-outline-secondary btn-sm"

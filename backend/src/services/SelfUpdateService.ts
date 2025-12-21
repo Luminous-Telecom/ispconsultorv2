@@ -18,6 +18,7 @@ interface UpdateResult {
   success: boolean;
   message: string;
   steps: {
+    elasticsearch?: CommandResult;
     gitPull: CommandResult;
     npmInstall: CommandResult;
     build: CommandResult;
@@ -442,6 +443,60 @@ export class SelfUpdateService {
   }
 
   /**
+   * Verifica e instala Elasticsearch se necessário
+   * Retorna sucesso mesmo se já estiver instalado
+   */
+  private async setupElasticsearch(): Promise<CommandResult> {
+    const setupScriptPath = path.join(this.projectRoot, 'scripts', 'install-elasticsearch.sh');
+    
+    // Verificar se o script existe
+    if (!fs.existsSync(setupScriptPath)) {
+      logger.warn('Script de instalação do Elasticsearch não encontrado, pulando...', {
+        scriptPath: setupScriptPath,
+      });
+      return {
+        success: true,
+        stdout: 'Script de instalação do Elasticsearch não encontrado, pulando...',
+        stderr: '',
+      };
+    }
+
+    // Verificar se o Elasticsearch já está instalado
+    try {
+      // Verificar se o pacote está instalado
+      const { stdout: dpkgOutput } = await execAsync('dpkg -l | grep elasticsearch || true', {
+        cwd: this.projectRoot,
+        timeout: 5000,
+      });
+      
+      // Verificar se o comando elasticsearch existe
+      const { stdout: whichOutput } = await execAsync('which elasticsearch || true', {
+        cwd: this.projectRoot,
+        timeout: 5000,
+      });
+
+      if (dpkgOutput.trim().includes('elasticsearch') || whichOutput.trim()) {
+        logger.info('Elasticsearch já está instalado, pulando instalação');
+        return {
+          success: true,
+          stdout: 'Elasticsearch já está instalado, nada a fazer',
+          stderr: '',
+        };
+      }
+    } catch (error) {
+      // Se houver erro na verificação, continuar com a instalação
+      logger.debug('Erro ao verificar Elasticsearch, tentando instalar', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      });
+    }
+
+    // Executar script de instalação (requer sudo)
+    // Nota: O script verifica internamente se já está instalado
+    const command = `sudo bash "${setupScriptPath}"`;
+    return this.executeCommand(command, this.projectRoot, 'Elasticsearch Setup');
+  }
+
+  /**
    * Instala dependências npm
    */
   private async npmInstall(): Promise<CommandResult> {
@@ -750,6 +805,7 @@ export class SelfUpdateService {
         success: false,
         message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
         steps: {
+          elasticsearch: { success: false, stdout: '', stderr: '' },
           gitPull: { success: false, stdout: '', stderr: `Comandos faltando: ${commandCheck.missing.join(', ')}` },
           npmInstall: { success: false, stdout: '', stderr: '' },
           build: { success: false, stdout: '', stderr: '' },
@@ -759,11 +815,27 @@ export class SelfUpdateService {
     }
 
     const steps = {
+      elasticsearch: { success: false, stdout: '', stderr: '' } as CommandResult,
       gitPull: await this.gitPull(branch),
       npmInstall: { success: false, stdout: '', stderr: '' } as CommandResult,
       build: { success: false, stdout: '', stderr: '' } as CommandResult,
       migrate: { success: false, stdout: '', stderr: '' } as CommandResult,
     };
+
+    // Passo 0: Verificar/Instalar Elasticsearch (apenas se não estiver instalado)
+    logger.info('Verificando Elasticsearch...');
+    steps.elasticsearch = await this.setupElasticsearch();
+    if (!steps.elasticsearch.success) {
+      // Não falhar o processo se a instalação do Elasticsearch falhar
+      // Pode ser que já esteja instalado ou que não seja necessário
+      logger.warn('Falha ao verificar/instalar Elasticsearch, mas continuando o processo', {
+        error: steps.elasticsearch.error || steps.elasticsearch.stderr,
+      });
+    } else {
+      logger.info('Elasticsearch verificado/instalado com sucesso', {
+        output: steps.elasticsearch.stdout,
+      });
+    }
 
     // Passo 1: Git Pull
     if (!steps.gitPull.success) {

@@ -137,6 +137,7 @@ const Layout: React.FC = () => {
 
   const parametrosDropdownItems = [
     { id: 'usuarios', label: 'Usuários', icon: 'bi-people', onClick: () => handleOpenModal('usuarios') },
+    { id: 'auditoria', label: 'Logs de Auditoria', icon: 'bi-shield-check', onClick: () => handleOpenModal('auditoria') },
     { id: 'recursos-sistema', label: 'Recursos do Sistema', icon: 'bi-gear', onClick: () => handleOpenModal('recursos-sistema') },
     { id: 'agendador-tarefas', label: 'Agendador de Tarefas', icon: 'bi-clock-history', onClick: () => handleOpenModal('agendador-tarefas') },
     { id: 'servidor-email', label: 'Servidor de E-Mail', icon: 'bi-envelope', onClick: () => handleOpenModal('servidor-email') },

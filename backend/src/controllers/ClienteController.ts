@@ -5,6 +5,7 @@ import { Op, WhereOptions } from 'sequelize';
 import Joi from 'joi';
 import axios from 'axios';
 import { logger } from '../utils/logger';
+import { setAuditData } from '../middleware/auditMiddleware';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -444,6 +445,9 @@ export class ClienteController {
         }
       }
 
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = cliente.toJSON() as Record<string, unknown>;
+      
       // Atualizar cliente
       logger.debug('Atualizando cliente no banco de dados', {
         context: 'ClienteController',
@@ -453,6 +457,15 @@ export class ClienteController {
       });
 
       await cliente.update(value);
+      
+      // Recarregar cliente para obter dados atualizados
+      await cliente.reload();
+      
+      // Capturar dados novos para auditoria
+      const dadosNovos = cliente.toJSON() as Record<string, unknown>;
+      
+      // Registrar dados para auditoria
+      setAuditData(req, dadosAnteriores, dadosNovos);
 
       logger.debug('Cliente atualizado com sucesso, buscando dados atualizados com relacionamentos', {
         context: 'ClienteController',
@@ -576,6 +589,10 @@ export class ClienteController {
         });
         return;
       }
+
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = cliente.toJSON() as Record<string, unknown>;
+      setAuditData(req, dadosAnteriores);
 
       // Excluir cliente
       await cliente.destroy();
