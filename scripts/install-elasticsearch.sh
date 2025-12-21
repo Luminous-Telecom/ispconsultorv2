@@ -61,19 +61,26 @@ if [ ! -f "${ELASTICSEARCH_YML}.backup" ]; then
     cp "${ELASTICSEARCH_YML}" "${ELASTICSEARCH_YML}.backup" 2>/dev/null || true
 fi
 
-# Desabilitar segurança (necessário para versões 8.x sem configuração de senha)
-if grep -q "^xpack.security.enabled: true" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    sed -i 's/^xpack.security.enabled: true/xpack.security.enabled: false/' "${ELASTICSEARCH_YML}"
-    echo -e "${GREEN}✓ Segurança desabilitada${NC}"
+# Configurar segurança (habilitar)
+if grep -q "^xpack.security.enabled: false" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    sed -i 's/^xpack.security.enabled: false/xpack.security.enabled: true/' "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ Segurança habilitada${NC}"
 elif ! grep -q "xpack.security.enabled" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    echo "xpack.security.enabled: false" >> "${ELASTICSEARCH_YML}"
-    echo -e "${GREEN}✓ Segurança desabilitada (adicionado)${NC}"
+    echo "xpack.security.enabled: true" >> "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ Segurança habilitada (adicionado)${NC}"
+elif ! grep -q "^xpack.security.enabled: true" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    # Se existe mas não está como true, atualizar
+    sed -i 's/^xpack.security.enabled:.*/xpack.security.enabled: true/' "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ Segurança atualizada para habilitada${NC}"
 fi
 
-if grep -q "^xpack.security.enrollment.enabled: true" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    sed -i 's/^xpack.security.enrollment.enabled: true/xpack.security.enrollment.enabled: false/' "${ELASTICSEARCH_YML}"
-elif ! grep -q "xpack.security.enrollment.enabled" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    echo "xpack.security.enrollment.enabled: false" >> "${ELASTICSEARCH_YML}"
+# Configurar Machine Learning (desabilitar)
+if grep -q "^xpack.ml.enabled: true" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    sed -i 's/^xpack.ml.enabled: true/xpack.ml.enabled: false/' "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ Machine Learning desabilitado${NC}"
+elif ! grep -q "xpack.ml.enabled" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    echo "xpack.ml.enabled: false" >> "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ Machine Learning desabilitado (adicionado)${NC}"
 fi
 
 # Configurar network.host (apenas localhost para segurança)
