@@ -448,26 +448,70 @@ export class SelfUpdateService {
    * O script verifica internamente se já está instalado
    */
   private async setupElasticsearch(): Promise<CommandResult> {
-    const setupScriptPath = path.join(this.projectRoot, 'scripts', 'install-elasticsearch.sh');
+    const scriptsDir = path.join(this.projectRoot, 'scripts');
+    const setupScriptPath = path.join(scriptsDir, 'install-elasticsearch.sh');
     
     logger.info('Iniciando verificação/instalação do Elasticsearch', {
       scriptPath: setupScriptPath,
       projectRoot: this.projectRoot,
+      scriptsDir,
       scriptExists: fs.existsSync(setupScriptPath),
+      scriptsDirExists: fs.existsSync(scriptsDir),
     });
+    
+    // Verificar se a pasta scripts existe, se não, criar
+    if (!fs.existsSync(scriptsDir)) {
+      logger.info('Pasta scripts não encontrada, criando...', {
+        scriptsDir,
+      });
+      try {
+        fs.mkdirSync(scriptsDir, { recursive: true });
+        logger.info('Pasta scripts criada com sucesso');
+      } catch (error) {
+        logger.error('Erro ao criar pasta scripts', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        });
+      }
+    }
     
     // Verificar se o script existe
     if (!fs.existsSync(setupScriptPath)) {
-      logger.warn('Script de instalação do Elasticsearch não encontrado', {
+      logger.warn('Script de instalação do Elasticsearch não encontrado após git pull', {
         scriptPath: setupScriptPath,
         projectRoot: this.projectRoot,
       });
-      return {
-        success: false,
-        stdout: '',
-        stderr: `Script de instalação não encontrado em: ${setupScriptPath}`,
-        error: 'Script não encontrado',
-      };
+      
+      // Tentar baixar o script diretamente do repositório
+      logger.info('Tentando baixar script do repositório...');
+      try {
+        const https = await import('https');
+        const fsPromises = await import('fs/promises');
+        
+        const scriptUrl = 'https://raw.githubusercontent.com/Luminous-Telecom/BackNet-ERP/main/scripts/install-elasticsearch.sh';
+        const response = await new Promise<Buffer>((resolve, reject) => {
+          https.get(scriptUrl, (res) => {
+            const chunks: Buffer[] = [];
+            res.on('data', (chunk) => chunks.push(chunk));
+            res.on('end', () => resolve(Buffer.concat(chunks)));
+            res.on('error', reject);
+          }).on('error', reject);
+        });
+        
+        await fsPromises.writeFile(setupScriptPath, response, { mode: 0o755 });
+        logger.info('Script baixado do repositório com sucesso', {
+          scriptPath: setupScriptPath,
+        });
+      } catch (downloadError) {
+        logger.error('Falha ao baixar script do repositório', {
+          error: downloadError instanceof Error ? downloadError.message : 'Erro desconhecido',
+        });
+        return {
+          success: false,
+          stdout: '',
+          stderr: `Script de instalação não encontrado e não foi possível baixar. Execute manualmente: sudo apt update && sudo apt install -y elasticsearch`,
+          error: 'Script não encontrado e download falhou',
+        };
+      }
     }
 
     // Verificar se o script tem permissão de execução
