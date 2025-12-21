@@ -661,8 +661,18 @@ export class SelfUpdateService {
         hasElasticsearchNode: envContent.includes('ELASTICSEARCH_NODE'),
       });
       
-      // Verificar se as variáveis já existem
-      if (envContent.includes('ELASTICSEARCH_NODE')) {
+      // Verificar se as variáveis já existem (mas pode precisar adicionar USERNAME/PASSWORD)
+      const hasNode = envContent.includes('ELASTICSEARCH_NODE');
+      const hasUsername = envContent.includes('ELASTICSEARCH_USERNAME');
+      const hasPassword = envContent.includes('ELASTICSEARCH_PASSWORD');
+      
+      // Verificar se já existe senha configurada (para reutilizar)
+      const existingPassword = envContent.match(/^ELASTICSEARCH_PASSWORD=(.+)$/m);
+      const password = existingPassword 
+        ? existingPassword[1].trim().replace(/^["']|["']$/g, '')
+        : this.generateRandomPassword();
+      
+      if (hasNode && hasUsername && hasPassword) {
         logger.info('Variáveis do Elasticsearch já configuradas no .env');
         return {
           success: true,
@@ -670,12 +680,30 @@ export class SelfUpdateService {
           stderr: '',
         };
       }
-
-      // Verificar se já existe senha configurada (para reutilizar)
-      const existingPassword = envContent.match(/^ELASTICSEARCH_PASSWORD=(.+)$/m);
-      const password = existingPassword 
-        ? existingPassword[1].trim().replace(/^["']|["']$/g, '')
-        : this.generateRandomPassword();
+      
+      // Se tem NODE mas não tem USERNAME/PASSWORD, adicionar apenas essas
+      if (hasNode && (!hasUsername || !hasPassword)) {
+        logger.info('Adicionando USERNAME e PASSWORD do Elasticsearch ao .env');
+        
+        if (!hasUsername) {
+          const needsNewline = !envContent.endsWith('\n');
+          const configToAdd = needsNewline ? `\nELASTICSEARCH_USERNAME=elastic\n` : `ELASTICSEARCH_USERNAME=elastic\n`;
+          fs.appendFileSync(envPath, configToAdd, 'utf8');
+        }
+        
+        if (!hasPassword) {
+          const needsNewline = !envContent.endsWith('\n');
+          const configToAdd = needsNewline ? `\nELASTICSEARCH_PASSWORD=${password}\n` : `ELASTICSEARCH_PASSWORD=${password}\n`;
+          fs.appendFileSync(envPath, configToAdd, 'utf8');
+        }
+        
+        logger.info('USERNAME e PASSWORD do Elasticsearch adicionados ao .env');
+        return {
+          success: true,
+          stdout: 'USERNAME e PASSWORD do Elasticsearch adicionados ao .env',
+          stderr: '',
+        };
+      }
 
       // Adicionar variáveis do Elasticsearch
       const elasticsearchConfig = `
