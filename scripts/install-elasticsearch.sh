@@ -49,13 +49,37 @@ if dpkg -l | grep -q "^ii.*elasticsearch" 2>/dev/null || command_exists elastics
     # Verificar se o serviço está rodando
     if systemctl is-active --quiet elasticsearch 2>/dev/null; then
         echo -e "${GREEN}Status: Rodando${NC}"
+        echo -e "${GREEN}Elasticsearch está instalado e rodando. Nada a fazer.${NC}"
+        exit 0
     else
         echo -e "${YELLOW}Status: Instalado mas não está rodando${NC}"
-        echo -e "${YELLOW}Para iniciar, execute: sudo systemctl start elasticsearch${NC}"
+        echo -e "${YELLOW}Iniciando serviço Elasticsearch...${NC}"
+        
+        # Tentar iniciar o serviço
+        if systemctl start elasticsearch 2>/dev/null; then
+            # Aguardar alguns segundos para o serviço iniciar
+            sleep 5
+            
+            # Verificar se iniciou com sucesso
+            if systemctl is-active --quiet elasticsearch 2>/dev/null; then
+                echo -e "${GREEN}✓ Elasticsearch iniciado com sucesso!${NC}"
+                echo -e "${GREEN}Status: $(systemctl is-active elasticsearch)${NC}"
+                
+                # Garantir que inicia automaticamente no boot
+                systemctl enable elasticsearch 2>/dev/null || true
+                
+                exit 0
+            else
+                echo -e "${RED}✗ Falha ao iniciar Elasticsearch${NC}"
+                echo "Verifique os logs com: journalctl -u elasticsearch -n 50"
+                exit 1
+            fi
+        else
+            echo -e "${RED}✗ Erro ao tentar iniciar Elasticsearch${NC}"
+            echo "Verifique os logs com: journalctl -u elasticsearch -n 50"
+            exit 1
+        fi
     fi
-    
-    echo -e "${GREEN}Nada a fazer. Saindo...${NC}"
-    exit 0
 fi
 
 echo -e "${YELLOW}Iniciando instalação do Elasticsearch...${NC}"
