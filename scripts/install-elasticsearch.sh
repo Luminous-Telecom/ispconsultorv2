@@ -37,7 +37,9 @@ fi
 
 # Verificar se o Elasticsearch já está instalado
 # Verifica se o pacote está instalado (mesmo que o serviço não esteja rodando)
+ELASTICSEARCH_INSTALLED=false
 if dpkg -l | grep -q "^ii.*elasticsearch" 2>/dev/null || command_exists elasticsearch; then
+    ELASTICSEARCH_INSTALLED=true
     echo -e "${GREEN}Elasticsearch já está instalado${NC}"
     
     # Tentar obter versão
@@ -45,90 +47,12 @@ if dpkg -l | grep -q "^ii.*elasticsearch" 2>/dev/null || command_exists elastics
     if [ ! -z "$ELASTICSEARCH_VERSION" ]; then
         echo -e "${GREEN}Versão instalada: $ELASTICSEARCH_VERSION${NC}"
     fi
-    
-    # Verificar se o serviço está rodando
-    if systemctl is-active --quiet elasticsearch 2>/dev/null; then
-        echo -e "${GREEN}Status: Rodando${NC}"
-        echo -e "${GREEN}Elasticsearch está instalado e rodando. Nada a fazer.${NC}"
-        exit 0
-    else
-        echo -e "${YELLOW}Status: Instalado mas não está rodando${NC}"
-        echo -e "${YELLOW}Iniciando serviço Elasticsearch...${NC}"
-        
-        # Tentar iniciar o serviço
-        if systemctl start elasticsearch 2>/dev/null; then
-            # Aguardar alguns segundos para o serviço iniciar
-            sleep 5
-            
-            # Verificar se iniciou com sucesso
-            if systemctl is-active --quiet elasticsearch 2>/dev/null; then
-                echo -e "${GREEN}✓ Elasticsearch iniciado com sucesso!${NC}"
-                echo -e "${GREEN}Status: $(systemctl is-active elasticsearch)${NC}"
-                
-                # Garantir que inicia automaticamente no boot
-                systemctl enable elasticsearch 2>/dev/null || true
-                
-                exit 0
-            else
-                echo -e "${RED}✗ Falha ao iniciar Elasticsearch${NC}"
-                echo "Verifique os logs com: journalctl -u elasticsearch -n 50"
-                exit 1
-            fi
-        else
-            echo -e "${RED}✗ Erro ao tentar iniciar Elasticsearch${NC}"
-            echo "Verifique os logs com: journalctl -u elasticsearch -n 50"
-            exit 1
-        fi
-    fi
+else
+    echo -e "${YELLOW}Elasticsearch não está instalado. Iniciando instalação...${NC}"
 fi
 
-echo -e "${YELLOW}Iniciando instalação do Elasticsearch...${NC}"
-
-# Atualizar pacotes
-echo "Atualizando lista de pacotes..."
-apt-get update -qq
-
-# Instalar dependências
-echo "Instalando dependências..."
-apt-get install -y -qq wget apt-transport-https ca-certificates gnupg lsb-release
-
-# Adicionar repositório do Elasticsearch
-echo "Adicionando repositório do Elasticsearch..."
-
-# Remover chave antiga se existir
-rm -f /usr/share/keyrings/elasticsearch-keyring.gpg
-
-# Baixar e instalar chave GPG
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
-
-# Adicionar repositório
-echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-8.x.list > /dev/null
-
-# Atualizar lista de pacotes novamente
-apt-get update -qq
-
-# Instalar Elasticsearch
-echo "Instalando Elasticsearch..."
-apt-get install -y -qq elasticsearch
-
-# Configurar Elasticsearch para iniciar automaticamente
-echo "Configurando Elasticsearch para iniciar automaticamente..."
-systemctl daemon-reload
-systemctl enable elasticsearch
-
-# Configurar JVM options (heap size)
-echo "Configurando opções JVM..."
-mkdir -p /etc/elasticsearch/jvm.options.d
-
-# Criar arquivo de configuração de heap
-cat > /etc/elasticsearch/jvm.options.d/heap.options << 'EOF'
-# Configuração de heap do Elasticsearch
-# Ajuste conforme a memória disponível do servidor
--Xms512m
--Xmx512m
-EOF
-
-# Configurar Elasticsearch (desabilitar segurança e configurar rede)
+# SEMPRE configurar elasticsearch.yml (mesmo se já estiver instalado)
+# Isso garante que as configurações estejam corretas
 echo "Configurando Elasticsearch..."
 ELASTICSEARCH_YML="/etc/elasticsearch/elasticsearch.yml"
 
@@ -138,31 +62,104 @@ if [ ! -f "${ELASTICSEARCH_YML}.backup" ]; then
 fi
 
 # Desabilitar segurança (necessário para versões 8.x sem configuração de senha)
-if ! grep -q "xpack.security.enabled" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+if grep -q "^xpack.security.enabled: true" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    sed -i 's/^xpack.security.enabled: true/xpack.security.enabled: false/' "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ Segurança desabilitada${NC}"
+elif ! grep -q "xpack.security.enabled" "${ELASTICSEARCH_YML}" 2>/dev/null; then
     echo "xpack.security.enabled: false" >> "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ Segurança desabilitada (adicionado)${NC}"
+fi
+
+if grep -q "^xpack.security.enrollment.enabled: true" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    sed -i 's/^xpack.security.enrollment.enabled: true/xpack.security.enrollment.enabled: false/' "${ELASTICSEARCH_YML}"
+elif ! grep -q "xpack.security.enrollment.enabled" "${ELASTICSEARCH_YML}" 2>/dev/null; then
     echo "xpack.security.enrollment.enabled: false" >> "${ELASTICSEARCH_YML}"
 fi
 
-# Configurar network.host se não estiver configurado
-if ! grep -q "^network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    if grep -q "^#network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-        sed -i 's/^#network.host:.*/network.host: 0.0.0.0/' "${ELASTICSEARCH_YML}"
-    else
-        echo "network.host: 0.0.0.0" >> "${ELASTICSEARCH_YML}"
+# Configurar network.host
+if grep -q "^network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    # Se já existe, verificar se está correto
+    if ! grep -q "^network.host: 0.0.0.0" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+        sed -i 's/^network.host:.*/network.host: 0.0.0.0/' "${ELASTICSEARCH_YML}"
+        echo -e "${GREEN}✓ network.host atualizado para 0.0.0.0${NC}"
     fi
+elif grep -q "^#network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    sed -i 's/^#network.host:.*/network.host: 0.0.0.0/' "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ network.host configurado para 0.0.0.0${NC}"
+else
+    echo "network.host: 0.0.0.0" >> "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ network.host adicionado: 0.0.0.0${NC}"
 fi
 
-# Configurar http.port se não estiver configurado
-if ! grep -q "^http.port:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    if grep -q "^#http.port:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-        sed -i 's/^#http.port:.*/http.port: 9200/' "${ELASTICSEARCH_YML}"
-    else
-        echo "http.port: 9200" >> "${ELASTICSEARCH_YML}"
+# Configurar http.port
+if grep -q "^http.port:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    # Se já existe, verificar se está correto
+    if ! grep -q "^http.port: 9200" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+        sed -i 's/^http.port:.*/http.port: 9200/' "${ELASTICSEARCH_YML}"
+        echo -e "${GREEN}✓ http.port atualizado para 9200${NC}"
     fi
+elif grep -q "^#http.port:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    sed -i 's/^#http.port:.*/http.port: 9200/' "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ http.port configurado para 9200${NC}"
+else
+    echo "http.port: 9200" >> "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ http.port adicionado: 9200${NC}"
 fi
 
 # Ajustar permissões
 chown elasticsearch:elasticsearch "${ELASTICSEARCH_YML}" 2>/dev/null || true
+chmod 660 "${ELASTICSEARCH_YML}" 2>/dev/null || true
+
+echo -e "${GREEN}✓ Configuração do Elasticsearch atualizada${NC}"
+
+if [ "$ELASTICSEARCH_INSTALLED" = "false" ]; then
+    echo -e "${YELLOW}Iniciando instalação do Elasticsearch...${NC}"
+
+    # Atualizar pacotes
+    echo "Atualizando lista de pacotes..."
+    apt-get update -qq
+
+    # Instalar dependências
+    echo "Instalando dependências..."
+    apt-get install -y -qq wget apt-transport-https ca-certificates gnupg lsb-release
+
+    # Adicionar repositório do Elasticsearch
+    echo "Adicionando repositório do Elasticsearch..."
+
+    # Remover chave antiga se existir
+    rm -f /usr/share/keyrings/elasticsearch-keyring.gpg
+
+    # Baixar e instalar chave GPG
+    wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+
+    # Adicionar repositório
+    echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-8.x.list > /dev/null
+
+    # Atualizar lista de pacotes novamente
+    apt-get update -qq
+
+    # Instalar Elasticsearch
+    echo "Instalando Elasticsearch..."
+    apt-get install -y -qq elasticsearch
+
+    # Configurar Elasticsearch para iniciar automaticamente
+    echo "Configurando Elasticsearch para iniciar automaticamente..."
+    systemctl daemon-reload
+    systemctl enable elasticsearch
+
+    # Configurar JVM options (heap size)
+    echo "Configurando opções JVM..."
+    mkdir -p /etc/elasticsearch/jvm.options.d
+
+    # Criar arquivo de configuração de heap
+    cat > /etc/elasticsearch/jvm.options.d/heap.options << 'EOF'
+# Configuração de heap do Elasticsearch
+# Ajuste conforme a memória disponível do servidor
+-Xms512m
+-Xmx512m
+EOF
+fi
+
 
 # Iniciar Elasticsearch
 echo "Iniciando Elasticsearch..."
