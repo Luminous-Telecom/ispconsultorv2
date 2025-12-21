@@ -213,28 +213,47 @@ echo ""
 
 # Tentar configurar senha no Elasticsearch se estiver pronto
 if [ "$ELASTICSEARCH_READY" = "true" ]; then
-    if command_exists elasticsearch-reset-password; then
-        echo -e "${YELLOW}Configurando senha do usuário 'elastic' no Elasticsearch...${NC}"
+    echo -e "${YELLOW}Configurando senha do usuário 'elastic' no Elasticsearch...${NC}"
+    
+    # Verificar se segurança está habilitada
+    SECURITY_ENABLED=$(curl -s http://localhost:9200/_security/_authenticate 2>/dev/null | grep -q "unauthenticated" && echo "false" || echo "true")
+    
+    if [ "$SECURITY_ENABLED" = "true" ]; then
+        echo -e "${GREEN}✓ Segurança está habilitada no Elasticsearch${NC}"
         
-        # Verificar se já existe senha configurada (tentando autenticar sem senha)
-        if curl -s -u elastic: http://localhost:9200 > /dev/null 2>&1; then
-            # Sem senha, precisa configurar
-            echo "$ELASTICSEARCH_PASSWORD" | elasticsearch-reset-password -u elastic -i -b 2>/dev/null && {
-                echo -e "${GREEN}✓ Senha configurada no Elasticsearch${NC}"
+        # Tentar configurar senha usando elasticsearch-reset-password
+        if command_exists elasticsearch-reset-password; then
+            echo -e "${YELLOW}Tentando configurar senha usando elasticsearch-reset-password...${NC}"
+            
+            # Tentar configurar senha (pode falhar se já tiver senha)
+            echo "$ELASTICSEARCH_PASSWORD" | sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i -b 2>&1 | grep -q "password" && {
+                echo -e "${GREEN}✓ Senha configurada no Elasticsearch usando elasticsearch-reset-password${NC}"
             } || {
-                echo -e "${YELLOW}⚠ Não foi possível configurar senha via elasticsearch-reset-password${NC}"
-                echo -e "${YELLOW}⚠ A senha será salva no .env, mas você precisará configurá-la manualmente no Elasticsearch${NC}"
+                echo -e "${YELLOW}⚠ Não foi possível configurar senha via elasticsearch-reset-password (pode já estar configurada)${NC}"
+                
+                # Tentar testar se a senha atual funciona
+                if curl -s -u "elastic:$ELASTICSEARCH_PASSWORD" http://localhost:9200 > /dev/null 2>&1; then
+                    echo -e "${GREEN}✓ Senha atual funciona!${NC}"
+                else
+                    echo -e "${YELLOW}⚠ Senha atual não funciona. Tentando usar senha padrão para resetar...${NC}"
+                    # Se tiver senha padrão conhecida, tentar resetar
+                    # Caso contrário, informar que precisa resetar manualmente
+                    echo -e "${YELLOW}⚠ Execute manualmente: sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i${NC}"
+                fi
             }
         else
-            echo -e "${GREEN}✓ Senha já configurada no Elasticsearch${NC}"
+            echo -e "${YELLOW}⚠ elasticsearch-reset-password não encontrado${NC}"
+            echo -e "${YELLOW}⚠ A senha será salva no .env, mas você precisará configurá-la manualmente no Elasticsearch${NC}"
+            echo -e "${YELLOW}⚠ Execute: sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i${NC}"
         fi
     else
-        echo -e "${YELLOW}⚠ elasticsearch-reset-password não encontrado${NC}"
-        echo -e "${YELLOW}⚠ A senha será salva no .env, mas você precisará configurá-la manualmente no Elasticsearch${NC}"
+        echo -e "${YELLOW}⚠ Segurança não está totalmente habilitada ainda${NC}"
+        echo -e "${YELLOW}⚠ A senha será salva no .env para uso futuro${NC}"
     fi
 else
     echo -e "${YELLOW}⚠ Elasticsearch não está respondendo após $MAX_WAIT segundos${NC}"
     echo -e "${YELLOW}⚠ A senha será salva no .env, mas você precisará configurá-la manualmente no Elasticsearch quando estiver pronto${NC}"
+    echo -e "${YELLOW}⚠ Execute: sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i${NC}"
 fi
 
 # SEMPRE salvar senha no .env do backend (mesmo se Elasticsearch não estiver pronto)
