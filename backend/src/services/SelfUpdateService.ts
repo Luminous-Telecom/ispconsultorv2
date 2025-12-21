@@ -671,12 +671,20 @@ export class SelfUpdateService {
         };
       }
 
+      // Verificar se já existe senha configurada (para reutilizar)
+      const existingPassword = envContent.match(/^ELASTICSEARCH_PASSWORD=(.+)$/m);
+      const password = existingPassword 
+        ? existingPassword[1].trim().replace(/^["']|["']$/g, '')
+        : this.generateRandomPassword();
+
       // Adicionar variáveis do Elasticsearch
       const elasticsearchConfig = `
 
 # Configurações do Elasticsearch (Auditoria)
 ELASTICSEARCH_NODE=http://localhost:9200
 ELASTICSEARCH_INDEX_NAME=backnet-auditoria
+ELASTICSEARCH_USERNAME=elastic
+ELASTICSEARCH_PASSWORD=${password}
 `;
 
       // Verificar se o arquivo termina com quebra de linha
@@ -721,6 +729,14 @@ ELASTICSEARCH_INDEX_NAME=backnet-auditoria
         error: errorMessage,
       };
     }
+  }
+
+  /**
+   * Gera senha aleatória para Elasticsearch
+   */
+  private generateRandomPassword(): string {
+    const crypto = require('crypto');
+    return crypto.randomBytes(24).toString('base64').replace(/[=+/]/g, '').substring(0, 32);
   }
 
   /**
