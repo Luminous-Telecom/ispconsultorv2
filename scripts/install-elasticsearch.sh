@@ -21,9 +21,18 @@ command_exists() {
 }
 
 # Verificar se está rodando como root
+# Se não for root, tentar executar com sudo (pode falhar se não tiver permissão)
 if [ "$EUID" -ne 0 ]; then 
-    echo -e "${RED}Por favor, execute como root (sudo)${NC}"
-    exit 1
+    echo -e "${YELLOW}Aviso: Não está rodando como root. Tentando com sudo...${NC}"
+    # Tentar executar o script novamente com sudo
+    if sudo -n true 2>/dev/null; then
+        # Sudo sem senha disponível, executar novamente com sudo
+        exec sudo bash "$0" "$@"
+    else
+        echo -e "${RED}Erro: Precisa de permissões de root para instalar Elasticsearch${NC}"
+        echo -e "${YELLOW}Execute manualmente: sudo bash $0${NC}"
+        exit 1
+    fi
 fi
 
 # Verificar se o Elasticsearch já está instalado
