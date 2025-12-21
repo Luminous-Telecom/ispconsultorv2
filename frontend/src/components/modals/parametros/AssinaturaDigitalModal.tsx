@@ -36,6 +36,7 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
 
   const [formData, setFormData] = useState<AssinaturaDigitalForm>(initialFormData);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<AssinaturaDigitalProviderType | null>(null);
 
   // Buscar provider habilitado quando o modal abrir
   const { data: enabledProviderResponse, isLoading: isLoadingEnabled } = useQuery({
@@ -63,12 +64,24 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
     return enabledProviderResponse?.data?.provider || 'assinafy' as AssinaturaDigitalProviderType;
   }, [enabledProviderResponse?.data?.provider]);
 
-  // Buscar provider atual
+  // Definir o provider selecionado quando o provider habilitado for carregado
+  useEffect(() => {
+    if (show && !isLoadingEnabled && initialProvider) {
+      setSelectedProvider(initialProvider);
+    } else if (!show) {
+      // Resetar quando o modal fechar
+      setSelectedProvider(null);
+      setFormData(initialFormData);
+    }
+  }, [show, initialProvider, isLoadingEnabled]);
+
+  // Buscar provider atual - só busca quando o provider selecionado estiver definido
   const { data: providerResponse, isLoading } = useQuery({
-    queryKey: ['assinatura-digital-provider', formData.apiProvider],
+    queryKey: ['assinatura-digital-provider', selectedProvider],
     queryFn: async () => {
+      if (!selectedProvider) return { success: false, data: undefined };
       try {
-        return await AssinaturaDigitalProviderService.getByProvider(formData.apiProvider as AssinaturaDigitalProviderType);
+        return await AssinaturaDigitalProviderService.getByProvider(selectedProvider);
       } catch (error) {
         const axiosError = error as { response?: { status?: number } };
         if (axiosError.response?.status === 404) {
@@ -80,41 +93,30 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
     staleTime: 0,
     refetchOnMount: true,
     retry: false,
-    enabled: show && !!formData.apiProvider,
+    enabled: show && !!selectedProvider, // Só buscar quando o modal estiver aberto e o provider selecionado
   });
 
-  const customFormData = useMemo(() => {
-    if (!providerResponse?.data) {
-      return { ...initialFormData, apiProvider: formData.apiProvider };
-    }
-    const p = providerResponse.data;
-    return {
-      habilitado: p.habilitado ?? false,
-      apiProvider: p.provider || formData.apiProvider,
-      apiKey: p.api_key || '',
-      accountId: p.account_id || '',
-      diasExpiracaoPadrao: p.dias_expiracao_padrao || 30
-    };
-  }, [providerResponse?.data, formData.apiProvider]);
-
-  // Definir provider inicial quando o modal abrir
+  // Atualizar formData quando os dados do provider chegarem
   useEffect(() => {
-    if (show && initialProvider && !isLoadingEnabled) {
-      setFormData(prev => {
-        if (prev.apiProvider === initialFormData.apiProvider) {
-          return { ...prev, apiProvider: initialProvider };
-        }
-        return prev;
-      });
+    if (show && selectedProvider && !isLoading) {
+      if (providerResponse?.data) {
+        const p = providerResponse.data;
+        setFormData({
+          habilitado: p.habilitado ?? false,
+          apiProvider: p.provider || selectedProvider,
+          apiKey: p.api_key || '',
+          accountId: p.account_id || '',
+          diasExpiracaoPadrao: p.dias_expiracao_padrao || 30
+        });
+      } else {
+        // Se não houver dados, usar valores padrão com o provider selecionado
+        setFormData({
+          ...initialFormData,
+          apiProvider: selectedProvider
+        });
+      }
     }
-  }, [show, initialProvider, isLoadingEnabled]);
-
-  // Atualizar formData quando os dados chegarem
-  useEffect(() => {
-    if (show && customFormData) {
-      setFormData(customFormData);
-    }
-  }, [show, customFormData]);
+  }, [show, selectedProvider, providerResponse?.data, isLoading]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: AssinaturaDigitalForm) => {
@@ -152,9 +154,6 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
   };
 
   const handleCancel = () => {
-    if (customFormData) {
-      setFormData(customFormData);
-    }
     onClose();
   };
 
@@ -198,7 +197,11 @@ const AssinaturaDigitalModal: React.FC<AssinaturaDigitalModalProps> = ({ show, o
                 className="form-select"
                 id="apiProvider"
                 value={formData.apiProvider}
-                onChange={(e) => setFormData(prev => ({ ...prev, apiProvider: e.target.value }))}
+                onChange={(e) => {
+                  const newProvider = e.target.value as AssinaturaDigitalProviderType;
+                  setSelectedProvider(newProvider);
+                  setFormData(prev => ({ ...prev, apiProvider: newProvider }));
+                }}
                 disabled={updateMutation.isPending}
               >
                 <option value="assinafy">Assinafy (100 assinaturas/mês grátis)</option>
