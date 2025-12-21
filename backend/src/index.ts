@@ -299,6 +299,27 @@ const startServer = async () => {
         logger.error('Erro ao iniciar agendador:', error);
       }
 
+      // Verificar conexão com Elasticsearch (assíncrono, não bloqueia startup)
+      try {
+        const { getElasticsearchService } = await import('./services/elasticsearch');
+        const elasticsearchService = getElasticsearchService();
+        
+        // Verificar conexão após um pequeno delay para dar tempo do Elasticsearch iniciar
+        setTimeout(async () => {
+          const isConnected = await elasticsearchService.checkConnection();
+          if (isConnected) {
+            await elasticsearchService.ensureIndex();
+            logger.info('Elasticsearch conectado e índice verificado');
+          } else {
+            logger.warn('Elasticsearch não está disponível. Logs de auditoria serão salvos em arquivo local.');
+          }
+        }, 3000); // Aguardar 3 segundos antes de verificar
+      } catch (error) {
+        logger.debug('Erro ao verificar Elasticsearch no startup (não crítico)', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
+      }
+
       logger.info(`Servidor iniciado e escutando requisições na porta ${PORT} (${process.env.NODE_ENV})`);
     });
   } catch (error) {

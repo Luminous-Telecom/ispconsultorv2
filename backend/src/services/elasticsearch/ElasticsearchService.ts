@@ -85,23 +85,36 @@ class ElasticsearchService {
     }
 
     try {
-      const response = await client.ping();
+      // Ping com timeout de 5 segundos
+      const response = await Promise.race([
+        client.ping(),
+        new Promise<boolean>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout ao conectar com Elasticsearch')), 5000)
+        )
+      ]) as boolean;
+      
       this.isConnected = response;
       
       if (this.isConnected) {
-        logger.debug('Conexão com Elasticsearch verificada', {
+        logger.info('Conexão com Elasticsearch verificada com sucesso', {
           context: 'ElasticsearchService',
-          action: 'checkConnection'
+          action: 'checkConnection',
+          node: process.env.ELASTICSEARCH_NODE
         });
       }
       
       return this.isConnected;
     } catch (error) {
       this.isConnected = false;
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       logger.warn('Falha ao verificar conexão com Elasticsearch', {
         context: 'ElasticsearchService',
         action: 'checkConnection',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        node: process.env.ELASTICSEARCH_NODE,
+        error: errorMessage,
+        stack: errorStack?.substring(0, 500) // Primeiros 500 chars do stack
       });
       return false;
     }
