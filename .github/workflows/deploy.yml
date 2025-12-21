@@ -698,9 +698,9 @@ jobs:
           cd deployment
           
           # Obter versão do package.json (prioridade: backend > frontend)
-          # Usar versão incrementada do ambiente se disponível, senão ler do package.json
-          if [ -n "${{ env.VERSION }}" ]; then
-            CLEAN_VERSION="${{ env.VERSION }}"
+          # Verificar se há variável de ambiente VERSION (definida durante build)
+          if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "" ]; then
+            CLEAN_VERSION="${VERSION}"
             echo "✓ Usando versão incrementada do workflow: ${CLEAN_VERSION}"
           elif [ -f "backend/package.json" ]; then
             CLEAN_VERSION=$(node -p "require('./backend/package.json').version.split('-')[0]")
