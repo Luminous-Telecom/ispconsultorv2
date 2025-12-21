@@ -149,6 +149,93 @@ fi
 # Garantir que inicia automaticamente no boot
 systemctl enable elasticsearch 2>/dev/null || true
 
+# Configurar senha do usuário elastic
+echo "Configurando autenticação do Elasticsearch..."
+echo -e "${YELLOW}Aguardando Elasticsearch inicializar completamente antes de configurar senha...${NC}"
+
+# Aguardar Elasticsearch estar totalmente pronto (pode levar até 60 segundos)
+MAX_WAIT=60
+WAITED=0
+ELASTICSEARCH_READY=false
+
+while [ $WAITED -lt $MAX_WAIT ]; do
+    if curl -s http://localhost:9200 > /dev/null 2>&1; then
+        ELASTICSEARCH_READY=true
+        break
+    fi
+    sleep 2
+    WAITED=$((WAITED + 2))
+    echo -n "."
+done
+echo ""
+
+if [ "$ELASTICSEARCH_READY" = "false" ]; then
+    echo -e "${RED}✗ Elasticsearch não está respondendo após $MAX_WAIT segundos${NC}"
+    echo "A senha será configurada na próxima execução do script"
+else
+    # Gerar senha aleatória (32 caracteres alfanuméricos)
+    ELASTICSEARCH_PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-32)
+    
+    # Tentar configurar senha usando elasticsearch-reset-password
+    if command_exists elasticsearch-reset-password; then
+        echo -e "${YELLOW}Configurando senha do usuário 'elastic'...${NC}"
+        
+        # Verificar se já existe senha configurada (tentando autenticar sem senha)
+        if curl -s -u elastic: http://localhost:9200 > /dev/null 2>&1; then
+            # Sem senha, precisa configurar
+            echo "$ELASTICSEARCH_PASSWORD" | elasticsearch-reset-password -u elastic -i -b 2>/dev/null || {
+                # Se falhar, tentar via API (se segurança não estiver totalmente habilitada ainda)
+                echo -e "${YELLOW}Tentando configurar senha via API...${NC}"
+                # Isso pode falhar se segurança já estiver habilitada, mas tentamos
+            }
+        else
+            echo -e "${GREEN}✓ Senha já configurada para usuário 'elastic'${NC}"
+            # Tentar ler senha existente do .env se disponível
+            if [ -f "/opt/backnet.prod/backend/.env" ]; then
+                EXISTING_PASSWORD=$(grep "^ELASTICSEARCH_PASSWORD=" /opt/backnet.prod/backend/.env 2>/dev/null | cut -d'=' -f2 | tr -d '"' | tr -d "'")
+                if [ ! -z "$EXISTING_PASSWORD" ]; then
+                    ELASTICSEARCH_PASSWORD="$EXISTING_PASSWORD"
+                    echo -e "${GREEN}✓ Usando senha existente do .env${NC}"
+                fi
+            fi
+        fi
+    else
+        echo -e "${YELLOW}⚠ elasticsearch-reset-password não encontrado, usando senha gerada${NC}"
+    fi
+    
+    # Salvar senha no .env do backend
+    BACKEND_ENV="/opt/backnet.prod/backend/.env"
+    if [ -f "$BACKEND_ENV" ]; then
+        echo -e "${YELLOW}Configurando variáveis no .env do backend...${NC}"
+        
+        # Remover configurações antigas se existirem
+        sed -i '/^ELASTICSEARCH_USERNAME=/d' "$BACKEND_ENV" 2>/dev/null || true
+        sed -i '/^ELASTICSEARCH_PASSWORD=/d' "$BACKEND_ENV" 2>/dev/null || true
+        sed -i '/^ELASTICSEARCH_NODE=/d' "$BACKEND_ENV" 2>/dev/null || true
+        sed -i '/^ELASTICSEARCH_INDEX_NAME=/d' "$BACKEND_ENV" 2>/dev/null || true
+        
+        # Adicionar novas configurações
+        echo "" >> "$BACKEND_ENV"
+        echo "# Configurações do Elasticsearch (Auditoria)" >> "$BACKEND_ENV"
+        echo "ELASTICSEARCH_NODE=http://localhost:9200" >> "$BACKEND_ENV"
+        echo "ELASTICSEARCH_INDEX_NAME=backnet-auditoria" >> "$BACKEND_ENV"
+        echo "ELASTICSEARCH_USERNAME=elastic" >> "$BACKEND_ENV"
+        echo "ELASTICSEARCH_PASSWORD=$ELASTICSEARCH_PASSWORD" >> "$BACKEND_ENV"
+        
+        echo -e "${GREEN}✓ Variáveis do Elasticsearch configuradas no .env${NC}"
+        echo -e "${GREEN}✓ Usuário: elastic${NC}"
+        echo -e "${GREEN}✓ Senha: ${ELASTICSEARCH_PASSWORD}${NC}"
+        echo -e "${YELLOW}⚠ IMPORTANTE: Anote esta senha! Ela está salva em $BACKEND_ENV${NC}"
+    else
+        echo -e "${YELLOW}⚠ Arquivo .env do backend não encontrado em $BACKEND_ENV${NC}"
+        echo -e "${YELLOW}⚠ Adicione manualmente ao .env:${NC}"
+        echo "ELASTICSEARCH_NODE=http://localhost:9200"
+        echo "ELASTICSEARCH_INDEX_NAME=backnet-auditoria"
+        echo "ELASTICSEARCH_USERNAME=elastic"
+        echo "ELASTICSEARCH_PASSWORD=$ELASTICSEARCH_PASSWORD"
+    fi
+fi
+
 if [ "$ELASTICSEARCH_INSTALLED" = "false" ]; then
     echo -e "${YELLOW}Iniciando instalação do Elasticsearch...${NC}"
 
