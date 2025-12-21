@@ -128,36 +128,90 @@ cat > /etc/elasticsearch/jvm.options.d/heap.options << 'EOF'
 -Xmx512m
 EOF
 
-# Configurar cluster name (opcional, já vem configurado)
-# Se quiser personalizar, descomente e ajuste:
-# sed -i 's/#cluster.name: my-application/cluster.name: backnet/' /etc/elasticsearch/elasticsearch.yml
+# Configurar Elasticsearch (desabilitar segurança e configurar rede)
+echo "Configurando Elasticsearch..."
+ELASTICSEARCH_YML="/etc/elasticsearch/elasticsearch.yml"
+
+# Backup do arquivo original
+if [ ! -f "${ELASTICSEARCH_YML}.backup" ]; then
+    cp "${ELASTICSEARCH_YML}" "${ELASTICSEARCH_YML}.backup" 2>/dev/null || true
+fi
+
+# Desabilitar segurança (necessário para versões 8.x sem configuração de senha)
+if ! grep -q "xpack.security.enabled" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    echo "xpack.security.enabled: false" >> "${ELASTICSEARCH_YML}"
+    echo "xpack.security.enrollment.enabled: false" >> "${ELASTICSEARCH_YML}"
+fi
+
+# Configurar network.host se não estiver configurado
+if ! grep -q "^network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    if grep -q "^#network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+        sed -i 's/^#network.host:.*/network.host: 0.0.0.0/' "${ELASTICSEARCH_YML}"
+    else
+        echo "network.host: 0.0.0.0" >> "${ELASTICSEARCH_YML}"
+    fi
+fi
+
+# Configurar http.port se não estiver configurado
+if ! grep -q "^http.port:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+    if grep -q "^#http.port:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+        sed -i 's/^#http.port:.*/http.port: 9200/' "${ELASTICSEARCH_YML}"
+    else
+        echo "http.port: 9200" >> "${ELASTICSEARCH_YML}"
+    fi
+fi
+
+# Ajustar permissões
+chown elasticsearch:elasticsearch "${ELASTICSEARCH_YML}" 2>/dev/null || true
 
 # Iniciar Elasticsearch
 echo "Iniciando Elasticsearch..."
 systemctl start elasticsearch
 
-# Aguardar Elasticsearch iniciar
-echo "Aguardando Elasticsearch iniciar..."
-sleep 10
+# Aguardar Elasticsearch iniciar completamente (pode levar até 60 segundos)
+echo "Aguardando Elasticsearch inicializar completamente..."
+MAX_WAIT=60
+WAITED=0
+while [ $WAITED -lt $MAX_WAIT ]; do
+    if curl -s http://localhost:9200 > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ Elasticsearch está respondendo!${NC}"
+        break
+    fi
+    sleep 2
+    WAITED=$((WAITED + 2))
+    echo -n "."
+done
+echo ""
 
-# Verificar status
-if systemctl is-active --quiet elasticsearch; then
+# Verificar status do serviço
+if ! systemctl is-active --quiet elasticsearch; then
+    echo -e "${RED}✗ Erro ao iniciar Elasticsearch${NC}"
+    echo "Verifique os logs com: journalctl -u elasticsearch -n 50"
+    exit 1
+fi
+
+# Verificar se está respondendo na API
+if curl -s http://localhost:9200 > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Elasticsearch instalado e rodando com sucesso!${NC}"
     
     # Mostrar informações
     ELASTICSEARCH_VERSION=$(elasticsearch --version 2>/dev/null | grep -oP 'version \K[0-9.]+' || echo "desconhecida")
     echo -e "${GREEN}Versão: $ELASTICSEARCH_VERSION${NC}"
     echo -e "${GREEN}Status: $(systemctl is-active elasticsearch)${NC}"
+    
+    # Testar API
     echo ""
-    echo "Para verificar a conexão, execute:"
+    echo "Testando API do Elasticsearch:"
+    curl -s http://localhost:9200 | head -5 || echo "Erro ao conectar"
+    echo ""
+else
+    echo -e "${YELLOW}⚠ Elasticsearch está rodando mas não está respondendo na API${NC}"
+    echo "Isso pode ser normal se ainda estiver inicializando."
+    echo "Aguarde alguns minutos e tente novamente:"
     echo "  curl http://localhost:9200"
     echo ""
     echo "Para ver os logs, execute:"
     echo "  journalctl -u elasticsearch -f"
-else
-    echo -e "${RED}✗ Erro ao iniciar Elasticsearch${NC}"
-    echo "Verifique os logs com: journalctl -u elasticsearch -n 50"
-    exit 1
 fi
 
 echo -e "${GREEN}=========================================="
