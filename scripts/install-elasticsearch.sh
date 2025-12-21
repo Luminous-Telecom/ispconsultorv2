@@ -76,19 +76,19 @@ elif ! grep -q "xpack.security.enrollment.enabled" "${ELASTICSEARCH_YML}" 2>/dev
     echo "xpack.security.enrollment.enabled: false" >> "${ELASTICSEARCH_YML}"
 fi
 
-# Configurar network.host
+# Configurar network.host (apenas localhost para segurança)
 if grep -q "^network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    # Se já existe, verificar se está correto
-    if ! grep -q "^network.host: 0.0.0.0" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-        sed -i 's/^network.host:.*/network.host: 0.0.0.0/' "${ELASTICSEARCH_YML}"
-        echo -e "${GREEN}✓ network.host atualizado para 0.0.0.0${NC}"
+    # Se já existe, verificar se está correto (127.0.0.1 ou localhost)
+    if ! grep -qE "^network.host: (127.0.0.1|localhost)" "${ELASTICSEARCH_YML}" 2>/dev/null; then
+        sed -i 's/^network.host:.*/network.host: 127.0.0.1/' "${ELASTICSEARCH_YML}"
+        echo -e "${GREEN}✓ network.host atualizado para 127.0.0.1 (apenas localhost)${NC}"
     fi
 elif grep -q "^#network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null; then
-    sed -i 's/^#network.host:.*/network.host: 0.0.0.0/' "${ELASTICSEARCH_YML}"
-    echo -e "${GREEN}✓ network.host configurado para 0.0.0.0${NC}"
+    sed -i 's/^#network.host:.*/network.host: 127.0.0.1/' "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ network.host configurado para 127.0.0.1 (apenas localhost)${NC}"
 else
-    echo "network.host: 0.0.0.0" >> "${ELASTICSEARCH_YML}"
-    echo -e "${GREEN}✓ network.host adicionado: 0.0.0.0${NC}"
+    echo "network.host: 127.0.0.1" >> "${ELASTICSEARCH_YML}"
+    echo -e "${GREEN}✓ network.host adicionado: 127.0.0.1 (apenas localhost)${NC}"
 fi
 
 # Configurar http.port
