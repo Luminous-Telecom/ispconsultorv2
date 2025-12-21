@@ -445,55 +445,69 @@ export class SelfUpdateService {
   /**
    * Verifica e instala Elasticsearch se necessário
    * Retorna sucesso mesmo se já estiver instalado
+   * O script verifica internamente se já está instalado
    */
   private async setupElasticsearch(): Promise<CommandResult> {
     const setupScriptPath = path.join(this.projectRoot, 'scripts', 'install-elasticsearch.sh');
     
+    logger.info('Iniciando verificação/instalação do Elasticsearch', {
+      scriptPath: setupScriptPath,
+      projectRoot: this.projectRoot,
+      scriptExists: fs.existsSync(setupScriptPath),
+    });
+    
     // Verificar se o script existe
     if (!fs.existsSync(setupScriptPath)) {
-      logger.warn('Script de instalação do Elasticsearch não encontrado, pulando...', {
+      logger.warn('Script de instalação do Elasticsearch não encontrado', {
         scriptPath: setupScriptPath,
+        projectRoot: this.projectRoot,
       });
       return {
-        success: true,
-        stdout: 'Script de instalação do Elasticsearch não encontrado, pulando...',
-        stderr: '',
+        success: false,
+        stdout: '',
+        stderr: `Script de instalação não encontrado em: ${setupScriptPath}`,
+        error: 'Script não encontrado',
       };
     }
 
-    // Verificar se o Elasticsearch já está instalado
+    // Verificar se o script tem permissão de execução
     try {
-      // Verificar se o pacote está instalado
-      const { stdout: dpkgOutput } = await execAsync('dpkg -l | grep elasticsearch || true', {
-        cwd: this.projectRoot,
-        timeout: 5000,
-      });
-      
-      // Verificar se o comando elasticsearch existe
-      const { stdout: whichOutput } = await execAsync('which elasticsearch || true', {
-        cwd: this.projectRoot,
-        timeout: 5000,
-      });
-
-      if (dpkgOutput.trim().includes('elasticsearch') || whichOutput.trim()) {
-        logger.info('Elasticsearch já está instalado, pulando instalação');
-        return {
-          success: true,
-          stdout: 'Elasticsearch já está instalado, nada a fazer',
-          stderr: '',
-        };
+      const stats = fs.statSync(setupScriptPath);
+      if (!(stats.mode & parseInt('111', 8))) {
+        logger.info('Adicionando permissão de execução ao script');
+        fs.chmodSync(setupScriptPath, '755');
       }
     } catch (error) {
-      // Se houver erro na verificação, continuar com a instalação
-      logger.debug('Erro ao verificar Elasticsearch, tentando instalar', {
+      logger.warn('Erro ao verificar/adicionar permissão de execução', {
         error: error instanceof Error ? error.message : 'Erro desconhecido',
       });
     }
 
     // Executar script de instalação (requer sudo)
-    // Nota: O script verifica internamente se já está instalado
+    // O script verifica internamente se já está instalado e sai se estiver
+    // Usar sudo sem senha (NOPASSWD configurado) ou executar como root
+    logger.info('Executando script de instalação do Elasticsearch', {
+      scriptPath: setupScriptPath,
+    });
+    
     const command = `sudo bash "${setupScriptPath}"`;
-    return this.executeCommand(command, this.projectRoot, 'Elasticsearch Setup');
+    const result = await this.executeCommand(command, this.projectRoot, 'Elasticsearch Setup');
+    
+    // Log detalhado do resultado
+    if (result.success) {
+      logger.info('Script de instalação do Elasticsearch executado com sucesso', {
+        stdout: result.stdout.substring(0, 500), // Primeiros 500 chars
+        hasStderr: !!result.stderr,
+      });
+    } else {
+      logger.error('Falha ao executar script de instalação do Elasticsearch', {
+        error: result.error,
+        stderr: result.stderr.substring(0, 1000), // Primeiros 1000 chars
+        stdout: result.stdout.substring(0, 500),
+      });
+    }
+    
+    return result;
   }
 
   /**
