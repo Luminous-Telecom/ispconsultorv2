@@ -540,6 +540,20 @@ jobs:
           ls -la backend/ | grep -E "(Dockerfile|dockerignore)" || echo "Nenhum arquivo Docker encontrado em backend/"
           ls -la frontend/ | grep -E "(Dockerfile|dockerignore)" || echo "Nenhum arquivo Docker encontrado em frontend/"
           
+          # SEMPRE copiar pasta scripts/ (CRÍTICO para instalação automática do Elasticsearch)
+          echo "Copiando pasta scripts/ para instalação automática..."
+          if [ -d "../scripts" ]; then
+            rm -rf scripts
+            cp -r ../scripts scripts
+            # Garantir permissões de execução nos scripts
+            chmod +x scripts/*.sh 2>/dev/null || true
+            echo "✓ Pasta scripts/ copiada (necessária para instalação automática do Elasticsearch)"
+            echo "Arquivos em scripts/:"
+            ls -la scripts/ | head -10
+          else
+            echo "⚠ Pasta scripts/ não encontrada - instalação automática do Elasticsearch não funcionará!"
+          fi
+          
           # SEMPRE copiar arquivos de configuração essenciais para self-update
           # Esses arquivos são necessários para o self-update funcionar corretamente
           echo "Copiando arquivos de configuração essenciais para self-update..."
