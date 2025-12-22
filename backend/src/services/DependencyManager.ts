@@ -37,7 +37,32 @@ export class DependencyManager {
    * Executa um comando e retorna o resultado
    */
   private async executeCommand(command: string, requiresSudo: boolean = false, useSudo: boolean = true): Promise<{ stdout: string; stderr: string; code: number }> {
-    const finalCommand = (requiresSudo && useSudo) ? `sudo ${command}` : command;
+    let finalCommand: string;
+    
+    if (requiresSudo && useSudo) {
+      // Se o comando já começa com 'bash -c' ou 'sh -c', extrair o script interno
+      // Procurar por: bash -c "..." ou sh -c "..."
+      const trimmed = command.trim();
+      if (trimmed.startsWith('bash -c ') || trimmed.startsWith('sh -c ')) {
+        // Encontrar a primeira aspa dupla após -c e a última aspa dupla
+        const firstQuote = trimmed.indexOf('"');
+        const lastQuote = trimmed.lastIndexOf('"');
+        
+        if (firstQuote > 0 && lastQuote > firstQuote) {
+          // Extrair o conteúdo entre as aspas
+          const scriptContent = trimmed.substring(firstQuote + 1, lastQuote);
+          // Usar JSON.stringify para escapar corretamente o comando para o shell
+          finalCommand = `sudo sh -c ${JSON.stringify(scriptContent)}`;
+        } else {
+          // Fallback: adicionar sudo na frente
+          finalCommand = `sudo ${command}`;
+        }
+      } else {
+        finalCommand = `sudo ${command}`;
+      }
+    } else {
+      finalCommand = command;
+    }
     
     try {
       const { stdout, stderr } = await execAsync(finalCommand, {
