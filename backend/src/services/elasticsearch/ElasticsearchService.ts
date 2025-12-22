@@ -183,8 +183,26 @@ class ElasticsearchService {
       const isHttps = node.toLowerCase().startsWith('https://');
       const useSsl = process.env.ELASTICSEARCH_SSL === 'true' || isHttps;
       
+      // Criar mensagem detalhada para o log
+      const errorType = errorDetails.sslError ? 'SSL/TLS' : 
+                       errorDetails.authenticationError ? 'Autenticação' :
+                       errorDetails.connectionError ? 'Conexão' : 'Desconhecido';
+      
+      const detailsMessage = [
+        `Tipo: ${errorType}`,
+        `Node: ${node}`,
+        `HTTPS: ${isHttps}`,
+        `SSL habilitado: ${useSsl}`,
+        `SSL rejectUnauthorized: ${process.env.ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED || 'não configurado'}`,
+        `Username: ${process.env.ELASTICSEARCH_USERNAME || 'não configurado'}`,
+        `Has Password: ${!!process.env.ELASTICSEARCH_PASSWORD}`,
+        `Erro: ${errorMessage}`,
+        errorDetails.suggestion ? `Sugestão: ${errorDetails.suggestion}` : '',
+        errorDetails.meta?.statusCode ? `HTTP Status: ${errorDetails.meta.statusCode}` : ''
+      ].filter(Boolean).join(' | ');
+      
       // Log mais detalhado
-      logger.warn('Falha ao verificar conexão com Elasticsearch', {
+      logger.warn(`Falha ao verificar conexão com Elasticsearch - ${detailsMessage}`, {
         context: 'ElasticsearchService',
         action: 'checkConnection',
         node,
