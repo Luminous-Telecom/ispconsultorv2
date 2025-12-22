@@ -54,11 +54,22 @@ class ElasticsearchService {
 
       // Configuração de SSL/TLS (se necessário ou se URL for HTTPS)
       if (useSsl) {
+        // Por padrão, aceitar certificados auto-assinados quando usar HTTPS
+        // Só rejeita se explicitamente configurado como 'true'
+        const rejectUnauthorized = process.env.ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED === 'true';
+        
         clientConfig.ssl = {
-          // Por padrão, aceitar certificados auto-assinados quando usar HTTPS
-          // Pode ser sobrescrito via ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED
-          rejectUnauthorized: process.env.ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED === 'true',
+          rejectUnauthorized: rejectUnauthorized,
         };
+        
+        // Log da configuração SSL (sem senha)
+        logger.debug('Configuração SSL do Elasticsearch', {
+          context: 'ElasticsearchService',
+          action: 'getClient',
+          isHttps,
+          useSsl,
+          rejectUnauthorized,
+        });
       }
 
       this.client = new Client(clientConfig);
@@ -153,9 +164,11 @@ class ElasticsearchService {
       }
       
       // Verificar erros relacionados a SSL/TLS
-      if (errorMessage.includes('certificate') || errorMessage.includes('SSL') || errorMessage.includes('TLS') || errorMessage.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE')) {
+      if (errorMessage.includes('certificate') || errorMessage.includes('SSL') || errorMessage.includes('TLS') || 
+          errorMessage.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') || errorMessage.includes('self signed') ||
+          errorMessage.includes('CERT') || errorMessage.includes('EPROTO')) {
         errorDetails.sslError = true;
-        errorDetails.suggestion = 'Verifique se ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED está configurado corretamente para certificados auto-assinados';
+        errorDetails.suggestion = 'Verifique se ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED está configurado como false para certificados auto-assinados';
       }
       
       // Verificar se é erro relacionado a autenticação na mensagem
@@ -168,17 +181,23 @@ class ElasticsearchService {
       // Incluir informações de configuração para debug
       const node = process.env.ELASTICSEARCH_NODE || 'não configurado';
       const isHttps = node.toLowerCase().startsWith('https://');
+      const useSsl = process.env.ELASTICSEARCH_SSL === 'true' || isHttps;
       
+      // Log mais detalhado
       logger.warn('Falha ao verificar conexão com Elasticsearch', {
         context: 'ElasticsearchService',
         action: 'checkConnection',
         node,
         isHttps,
+        useSsl,
+        sslRejectUnauthorized: process.env.ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED,
         hasUsername: !!process.env.ELASTICSEARCH_USERNAME,
         hasPassword: !!process.env.ELASTICSEARCH_PASSWORD,
-        sslEnabled: process.env.ELASTICSEARCH_SSL === 'true' || isHttps,
+        username: process.env.ELASTICSEARCH_USERNAME || 'não configurado',
         error: errorDetails,
-        stack: errorStack?.substring(0, 500) // Primeiros 500 chars do stack
+        errorMessage: errorMessage,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        stack: errorStack?.substring(0, 1000) // Primeiros 1000 chars do stack para mais detalhes
       });
       return false;
     }
