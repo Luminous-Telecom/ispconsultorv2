@@ -415,38 +415,6 @@ export class SelfUpdateService {
     const command = `git pull origin ${branch} --no-rebase`;
     const pullResult = await this.executeCommand(command, gitRoot, 'Git Pull');
     
-    // Após git pull, verificar se pasta scripts existe e criar se necessário
-    if (pullResult.success) {
-      const scriptsDir = path.join(gitRoot, 'scripts');
-      if (!fs.existsSync(scriptsDir)) {
-        logger.info('Pasta scripts não encontrada após git pull, criando...', {
-          scriptsDir,
-        });
-        try {
-          fs.mkdirSync(scriptsDir, { recursive: true });
-          logger.info('Pasta scripts criada');
-        } catch (error) {
-          logger.warn('Erro ao criar pasta scripts', {
-            error: error instanceof Error ? error.message : 'Erro desconhecido',
-          });
-        }
-      }
-      
-      // Verificar se arquivos da pasta scripts foram baixados
-      const expectedScripts = [
-        'README.md'
-      ];
-      
-      for (const scriptFile of expectedScripts) {
-        const scriptPath = path.join(scriptsDir, scriptFile);
-        if (!fs.existsSync(scriptPath)) {
-          logger.warn(`Script ${scriptFile} não encontrado após git pull`, {
-            scriptPath,
-          });
-        }
-      }
-    }
-    
     // Se pull falhar, tentar verificar se há mudanças locais não commitadas
     if (!pullResult.success) {
       try {

@@ -64,6 +64,12 @@ export async function installDependencyByName(
   const result = await manager.installDependency(dependency, options);
   
   if (!result.success) {
+    logger.error(`Falha ao instalar dependência ${name}`, {
+      dependency: dependency.name,
+      error: result.error,
+      message: result.message,
+      skipped: result.skipped
+    });
     throw new Error(result.error || result.message);
   }
 
