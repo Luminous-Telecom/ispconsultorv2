@@ -499,8 +499,12 @@ export class SelfUpdateService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       logger.error('Erro ao instalar Elasticsearch via DependencyManager', {
-        error: errorMessage
+        error: errorMessage,
+        stack: errorStack,
+        errorObject: error
       });
       
       return {
@@ -666,16 +670,42 @@ ELASTICSEARCH_PASSWORD=${password}
   private async build(): Promise<CommandResult> {
     // Verificar se o diretório src existe antes de tentar fazer build
     const srcPath = path.join(this.backendPath, 'src');
-    if (!fs.existsSync(srcPath)) {
-      logger.warn('Diretório src não encontrado, pulando build (já está compilado?)', {
+    const packageJsonPath = path.join(this.backendPath, 'package.json');
+    
+    // Verificar se package.json existe e se tem script de build
+    if (!fs.existsSync(packageJsonPath)) {
+      logger.warn('package.json não encontrado, pulando build', {
         backendPath: this.backendPath,
-        srcPath,
       });
       return {
         success: true,
-        stdout: 'Build pulado: código já está compilado (diretório src não encontrado)',
+        stdout: 'Build pulado: package.json não encontrado',
         stderr: '',
       };
+    }
+
+    // Verificar se tem script de build no package.json
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      if (!packageJson.scripts || !packageJson.scripts.build) {
+        logger.warn('Script de build não encontrado no package.json, pulando build');
+        return {
+          success: true,
+          stdout: 'Build pulado: script de build não encontrado',
+          stderr: '',
+        };
+      }
+    } catch (error) {
+      logger.warn('Erro ao ler package.json, tentando build mesmo assim', {
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+
+    if (!fs.existsSync(srcPath)) {
+      logger.warn('Diretório src não encontrado, mas tentando build mesmo assim', {
+        backendPath: this.backendPath,
+        srcPath,
+      });
     }
 
     const command = 'npm run build';

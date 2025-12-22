@@ -272,8 +272,10 @@ export class DependencyManager {
           logger.error(`Erro ao instalar ${dependency.name}`, {
             dependency: dependency.name,
             commandIndex: i + 1,
-            command: command.substring(0, 100),
-            error: result.stderr,
+            totalCommands: dependency.installCommands.length,
+            command: command.substring(0, 200),
+            error: result.stderr || 'Sem mensagem de erro',
+            stdout: result.stdout || '',
             exitCode: result.code
           });
 
@@ -283,6 +285,8 @@ export class DependencyManager {
             error: errorMessage,
             message: `Falha ao instalar ${dependency.name}: ${errorMessage}`
           };
+        } else {
+          logger.debug(`Comando ${i + 1}/${dependency.installCommands.length} executado com sucesso para ${dependency.name}`);
         }
       }
 
