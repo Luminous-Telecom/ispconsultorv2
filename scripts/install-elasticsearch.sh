@@ -47,6 +47,15 @@ if dpkg -l | grep -q "^ii.*elasticsearch" 2>/dev/null || command_exists elastics
     if [ ! -z "$ELASTICSEARCH_VERSION" ]; then
         echo -e "${GREEN}Versão instalada: $ELASTICSEARCH_VERSION${NC}"
     fi
+    
+    # Verificação rápida: se já está rodando e respondendo, pode pular algumas etapas
+    if systemctl is-active --quiet elasticsearch 2>/dev/null; then
+        if curl -s --max-time 2 http://localhost:9200 > /dev/null 2>&1 || \
+           curl -s -k --max-time 2 https://localhost:9200 > /dev/null 2>&1; then
+            echo -e "${GREEN}✓ Elasticsearch está rodando e respondendo${NC}"
+            # Pode pular algumas verificações desnecessárias
+        fi
+    fi
 else
     echo -e "${YELLOW}Elasticsearch não está instalado. Iniciando instalação...${NC}"
 fi
@@ -130,20 +139,31 @@ else
     grep "^network.host:" "${ELASTICSEARCH_YML}" 2>/dev/null || echo "network.host não encontrado"
 fi
 
-# SEMPRE reiniciar Elasticsearch para aplicar configurações
-# Isso garante que as mudanças no elasticsearch.yml sejam aplicadas
-# Com network.host: 127.0.0.1, o Elasticsearch só escutará em localhost
-# e não aceitará conexões externas, sem precisar de firewall
-if systemctl is-active --quiet elasticsearch 2>/dev/null; then
-    echo -e "${YELLOW}Elasticsearch está rodando. Reiniciando para aplicar configurações...${NC}"
-    systemctl restart elasticsearch
-    # Aguardar alguns segundos após reiniciar
-    sleep 3
-else
+# Verificar se precisa reiniciar Elasticsearch
+# Só reinicia se não estiver rodando ou se houver mudanças na configuração
+NEEDS_RESTART=false
+
+if ! systemctl is-active --quiet elasticsearch 2>/dev/null; then
+    # Se não estiver rodando, precisa iniciar
     echo -e "${YELLOW}Iniciando Elasticsearch...${NC}"
     systemctl start elasticsearch
+    NEEDS_RESTART=true
     # Aguardar alguns segundos após iniciar
     sleep 3
+else
+    # Se já estiver rodando, verificar se há mudanças na configuração
+    # Comparar hash do arquivo antes e depois (se houver mudanças, precisa reiniciar)
+    # Por enquanto, vamos verificar se o arquivo foi modificado recentemente
+    # Se o backup não existe ou foi criado agora, pode ter havido mudanças
+    if [ ! -f "${ELASTICSEARCH_YML}.backup" ] || \
+       [ "${ELASTICSEARCH_YML}" -nt "${ELASTICSEARCH_YML}.backup" ]; then
+        echo -e "${YELLOW}Configuração alterada, reiniciando Elasticsearch para aplicar...${NC}"
+        systemctl restart elasticsearch
+        NEEDS_RESTART=true
+        sleep 3
+    else
+        echo -e "${GREEN}✓ Elasticsearch já está rodando e configuração está atualizada${NC}"
+    fi
 fi
 
 # Garantir que inicia automaticamente no boot
@@ -194,29 +214,56 @@ if [ ! -z "$BACKEND_ENV" ] && [ -f "$BACKEND_ENV" ]; then
     fi
 fi
 
-# Aguardar Elasticsearch estar totalmente pronto (pode levar até 60 segundos)
-echo -e "${YELLOW}Aguardando Elasticsearch inicializar completamente antes de configurar senha...${NC}"
-MAX_WAIT=60
-WAITED=0
+# Verificar se Elasticsearch já está respondendo (HTTP ou HTTPS)
+echo -e "${YELLOW}Verificando se Elasticsearch está respondendo...${NC}"
 ELASTICSEARCH_READY=false
 
-while [ $WAITED -lt $MAX_WAIT ]; do
-    if curl -s http://localhost:9200 > /dev/null 2>&1; then
-        ELASTICSEARCH_READY=true
-        break
-    fi
-    sleep 2
-    WAITED=$((WAITED + 2))
-    echo -n "."
-done
-echo ""
+# Tentar HTTP primeiro (timeout curto)
+if curl -s --max-time 2 http://localhost:9200 > /dev/null 2>&1; then
+    ELASTICSEARCH_READY=true
+    echo -e "${GREEN}✓ Elasticsearch está respondendo em HTTP${NC}"
+# Tentar HTTPS se HTTP falhar (timeout curto)
+elif curl -s -k --max-time 2 https://localhost:9200 > /dev/null 2>&1; then
+    ELASTICSEARCH_READY=true
+    echo -e "${GREEN}✓ Elasticsearch está respondendo em HTTPS${NC}"
+else
+    # Se não estiver respondendo, aguardar inicialização (máximo 30 segundos)
+    echo -e "${YELLOW}Elasticsearch não está respondendo, aguardando inicialização...${NC}"
+    MAX_WAIT=30
+    WAITED=0
+    
+    while [ $WAITED -lt $MAX_WAIT ]; do
+        # Tentar HTTP
+        if curl -s --max-time 2 http://localhost:9200 > /dev/null 2>&1; then
+            ELASTICSEARCH_READY=true
+            echo -e "${GREEN}✓ Elasticsearch está respondendo em HTTP${NC}"
+            break
+        # Tentar HTTPS
+        elif curl -s -k --max-time 2 https://localhost:9200 > /dev/null 2>&1; then
+            ELASTICSEARCH_READY=true
+            echo -e "${GREEN}✓ Elasticsearch está respondendo em HTTPS${NC}"
+            break
+        fi
+        sleep 2
+        WAITED=$((WAITED + 2))
+        echo -n "."
+    done
+    echo ""
+fi
 
 # Tentar configurar senha no Elasticsearch se estiver pronto
 if [ "$ELASTICSEARCH_READY" = "true" ]; then
     echo -e "${YELLOW}Configurando senha do usuário 'elastic' no Elasticsearch...${NC}"
     
-    # Verificar se segurança está habilitada
-    SECURITY_ENABLED=$(curl -s http://localhost:9200/_security/_authenticate 2>/dev/null | grep -q "unauthenticated" && echo "false" || echo "true")
+    # Verificar se segurança está habilitada (tentar HTTP e HTTPS)
+    SECURITY_ENABLED="false"
+    if curl -s --max-time 2 http://localhost:9200/_security/_authenticate 2>/dev/null | grep -q "unauthenticated"; then
+        SECURITY_ENABLED="false"
+    elif curl -s -k --max-time 2 https://localhost:9200/_security/_authenticate 2>/dev/null | grep -q "unauthenticated"; then
+        SECURITY_ENABLED="false"
+    else
+        SECURITY_ENABLED="true"
+    fi
     
     if [ "$SECURITY_ENABLED" = "true" ]; then
         echo -e "${GREEN}✓ Segurança está habilitada no Elasticsearch${NC}"
@@ -231,8 +278,9 @@ if [ "$ELASTICSEARCH_READY" = "true" ]; then
             } || {
                 echo -e "${YELLOW}⚠ Não foi possível configurar senha via elasticsearch-reset-password (pode já estar configurada)${NC}"
                 
-                # Tentar testar se a senha atual funciona
-                if curl -s -u "elastic:$ELASTICSEARCH_PASSWORD" http://localhost:9200 > /dev/null 2>&1; then
+                # Tentar testar se a senha atual funciona (HTTP e HTTPS)
+                if curl -s --max-time 2 -u "elastic:$ELASTICSEARCH_PASSWORD" http://localhost:9200 > /dev/null 2>&1 || \
+                   curl -s -k --max-time 2 -u "elastic:$ELASTICSEARCH_PASSWORD" https://localhost:9200 > /dev/null 2>&1; then
                     echo -e "${GREEN}✓ Senha atual funciona!${NC}"
                 else
                     echo -e "${YELLOW}⚠ Senha atual não funciona. Tentando usar senha padrão para resetar...${NC}"
@@ -351,13 +399,22 @@ fi
 
 # Nota: O reinício do Elasticsearch já foi feito acima após aplicar configurações
 
-# Aguardar Elasticsearch iniciar completamente (pode levar até 60 segundos)
-echo "Aguardando Elasticsearch inicializar completamente..."
-MAX_WAIT=60
+# Verificar se Elasticsearch está respondendo (com timeout curto)
+echo "Verificando se Elasticsearch está respondendo..."
+MAX_WAIT=30
 WAITED=0
+ELASTICSEARCH_RESPONDING=false
+
 while [ $WAITED -lt $MAX_WAIT ]; do
-    if curl -s http://localhost:9200 > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ Elasticsearch está respondendo!${NC}"
+    # Tentar HTTP primeiro
+    if curl -s --max-time 2 http://localhost:9200 > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ Elasticsearch está respondendo em HTTP!${NC}"
+        ELASTICSEARCH_RESPONDING=true
+        break
+    # Tentar HTTPS
+    elif curl -s -k --max-time 2 https://localhost:9200 > /dev/null 2>&1; then
+        echo -e "${GREEN}✓ Elasticsearch está respondendo em HTTPS!${NC}"
+        ELASTICSEARCH_RESPONDING=true
         break
     fi
     sleep 2
@@ -365,6 +422,11 @@ while [ $WAITED -lt $MAX_WAIT ]; do
     echo -n "."
 done
 echo ""
+
+if [ "$ELASTICSEARCH_RESPONDING" = "false" ]; then
+    echo -e "${YELLOW}⚠ Elasticsearch não está respondendo após $MAX_WAIT segundos${NC}"
+    echo -e "${YELLOW}⚠ Pode estar ainda inicializando. Verifique manualmente com: curl http://localhost:9200${NC}"
+fi
 
 # Verificar status do serviço
 if ! systemctl is-active --quiet elasticsearch; then
