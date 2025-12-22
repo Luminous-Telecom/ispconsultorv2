@@ -308,6 +308,33 @@ fi
 if [ ! -z "$BACKEND_ENV" ] && [ -f "$BACKEND_ENV" ]; then
     echo -e "${YELLOW}Configurando variáveis no .env do backend...${NC}"
     
+    # Detectar se Elasticsearch está usando HTTP ou HTTPS
+    ELASTICSEARCH_PROTOCOL="http"
+    if [ "$ELASTICSEARCH_READY" = "true" ]; then
+        # Se está respondendo, verificar qual protocolo funciona
+        if curl -s --max-time 2 https://localhost:9200 > /dev/null 2>&1; then
+            ELASTICSEARCH_PROTOCOL="https"
+            echo -e "${GREEN}✓ Detectado: Elasticsearch está usando HTTPS${NC}"
+        elif curl -s --max-time 2 http://localhost:9200 > /dev/null 2>&1; then
+            ELASTICSEARCH_PROTOCOL="http"
+            echo -e "${GREEN}✓ Detectado: Elasticsearch está usando HTTP${NC}"
+        else
+            # Se não conseguir detectar, verificar configuração do elasticsearch.yml
+            if grep -q "xpack.security.http.ssl:" /etc/elasticsearch/elasticsearch.yml 2>/dev/null && \
+               ! grep -q "^xpack.security.http.ssl:.*false" /etc/elasticsearch/elasticsearch.yml 2>/dev/null; then
+                ELASTICSEARCH_PROTOCOL="https"
+                echo -e "${YELLOW}⚠ Configuração indica HTTPS, mas não está respondendo. Usando HTTPS.${NC}"
+            fi
+        fi
+    else
+        # Se não está respondendo, verificar configuração do elasticsearch.yml
+        if grep -q "xpack.security.http.ssl:" /etc/elasticsearch/elasticsearch.yml 2>/dev/null && \
+           ! grep -q "^xpack.security.http.ssl:.*false" /etc/elasticsearch/elasticsearch.yml 2>/dev/null; then
+            ELASTICSEARCH_PROTOCOL="https"
+            echo -e "${YELLOW}⚠ Configuração indica HTTPS. Usando HTTPS.${NC}"
+        fi
+    fi
+    
     # Remover configurações antigas se existirem
     sed -i '/^ELASTICSEARCH_USERNAME=/d' "$BACKEND_ENV" 2>/dev/null || true
     sed -i '/^ELASTICSEARCH_PASSWORD=/d' "$BACKEND_ENV" 2>/dev/null || true
@@ -318,7 +345,7 @@ if [ ! -z "$BACKEND_ENV" ] && [ -f "$BACKEND_ENV" ]; then
     # Adicionar novas configurações
     echo "" >> "$BACKEND_ENV"
     echo "# Configurações do Elasticsearch (Auditoria)" >> "$BACKEND_ENV"
-    echo "ELASTICSEARCH_NODE=http://localhost:9200" >> "$BACKEND_ENV"
+    echo "ELASTICSEARCH_NODE=${ELASTICSEARCH_PROTOCOL}://localhost:9200" >> "$BACKEND_ENV"
     echo "ELASTICSEARCH_INDEX_NAME=backnet-auditoria" >> "$BACKEND_ENV"
     echo "ELASTICSEARCH_USERNAME=elastic" >> "$BACKEND_ENV"
     echo "ELASTICSEARCH_PASSWORD=$ELASTICSEARCH_PASSWORD" >> "$BACKEND_ENV"
@@ -342,8 +369,15 @@ else
         echo "  - $path"
     done
     echo ""
+    # Detectar protocolo mesmo se .env não existir (para exibir na mensagem)
+    ELASTICSEARCH_PROTOCOL="http"
+    if grep -q "xpack.security.http.ssl:" /etc/elasticsearch/elasticsearch.yml 2>/dev/null && \
+       ! grep -q "^xpack.security.http.ssl:.*false" /etc/elasticsearch/elasticsearch.yml 2>/dev/null; then
+        ELASTICSEARCH_PROTOCOL="https"
+    fi
+    
     echo -e "${YELLOW}⚠ Adicione manualmente ao .env do backend:${NC}"
-    echo "ELASTICSEARCH_NODE=http://localhost:9200"
+    echo "ELASTICSEARCH_NODE=${ELASTICSEARCH_PROTOCOL}://localhost:9200"
     echo "ELASTICSEARCH_INDEX_NAME=backnet-auditoria"
     echo "ELASTICSEARCH_USERNAME=elastic"
     echo "ELASTICSEARCH_PASSWORD=$ELASTICSEARCH_PASSWORD"
