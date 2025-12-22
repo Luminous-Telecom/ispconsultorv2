@@ -634,50 +634,15 @@ ELASTICSEARCH_PASSWORD=${password}
 
   /**
    * Executa o build da aplicação
+   * Em produção, o código já vem compilado, então sempre retorna sucesso
    */
   private async build(): Promise<CommandResult> {
-    // Verificar se o diretório src existe antes de tentar fazer build
-    const srcPath = path.join(this.backendPath, 'src');
-    const packageJsonPath = path.join(this.backendPath, 'package.json');
-    
-    // Verificar se package.json existe e se tem script de build
-    if (!fs.existsSync(packageJsonPath)) {
-      logger.warn('package.json não encontrado, pulando build', {
-        backendPath: this.backendPath,
-      });
-      return {
-        success: true,
-        stdout: 'Build pulado: package.json não encontrado',
-        stderr: '',
-      };
-    }
-
-    // Verificar se tem script de build no package.json
-    try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-      if (!packageJson.scripts || !packageJson.scripts.build) {
-        logger.warn('Script de build não encontrado no package.json, pulando build');
-        return {
-          success: true,
-          stdout: 'Build pulado: script de build não encontrado',
-          stderr: '',
-        };
-      }
-    } catch (error) {
-      logger.warn('Erro ao ler package.json, tentando build mesmo assim', {
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
-    }
-
-    if (!fs.existsSync(srcPath)) {
-      logger.warn('Diretório src não encontrado, mas tentando build mesmo assim', {
-        backendPath: this.backendPath,
-        srcPath,
-      });
-    }
-
-    const command = 'npm run build';
-    return this.executeCommand(command, this.backendPath, 'Build');
+    logger.info('Build pulado: código já está compilado em produção');
+    return {
+      success: true,
+      stdout: 'Build pulado: código já está compilado',
+      stderr: '',
+    };
   }
 
   /**
