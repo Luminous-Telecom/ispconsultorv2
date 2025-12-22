@@ -48,10 +48,16 @@ class ElasticsearchService {
         };
       }
 
-      // Configuração de SSL/TLS (se necessário)
-      if (process.env.ELASTICSEARCH_SSL === 'true') {
+      // Detectar HTTPS automaticamente na URL ou usar variável de ambiente
+      const isHttps = node.toLowerCase().startsWith('https://');
+      const useSsl = process.env.ELASTICSEARCH_SSL === 'true' || isHttps;
+
+      // Configuração de SSL/TLS (se necessário ou se URL for HTTPS)
+      if (useSsl) {
         clientConfig.ssl = {
-          rejectUnauthorized: process.env.ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED !== 'false',
+          // Por padrão, aceitar certificados auto-assinados quando usar HTTPS
+          // Pode ser sobrescrito via ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED
+          rejectUnauthorized: process.env.ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED === 'true',
         };
       }
 
@@ -65,6 +71,7 @@ class ElasticsearchService {
         action: 'getClient',
         node,
         hasAuth,
+        hasSsl: useSsl,
         username: process.env.ELASTICSEARCH_USERNAME || 'não configurado'
       });
 
@@ -145,6 +152,12 @@ class ElasticsearchService {
         errorDetails.node = process.env.ELASTICSEARCH_NODE;
       }
       
+      // Verificar erros relacionados a SSL/TLS
+      if (errorMessage.includes('certificate') || errorMessage.includes('SSL') || errorMessage.includes('TLS') || errorMessage.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE')) {
+        errorDetails.sslError = true;
+        errorDetails.suggestion = 'Verifique se ELASTICSEARCH_SSL_REJECT_UNAUTHORIZED está configurado corretamente para certificados auto-assinados';
+      }
+      
       // Verificar se é erro relacionado a autenticação na mensagem
       if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('authentication')) {
         errorDetails.authenticationError = true;
@@ -152,10 +165,18 @@ class ElasticsearchService {
         errorDetails.hasPassword = !!process.env.ELASTICSEARCH_PASSWORD;
       }
       
+      // Incluir informações de configuração para debug
+      const node = process.env.ELASTICSEARCH_NODE || 'não configurado';
+      const isHttps = node.toLowerCase().startsWith('https://');
+      
       logger.warn('Falha ao verificar conexão com Elasticsearch', {
         context: 'ElasticsearchService',
         action: 'checkConnection',
-        node: process.env.ELASTICSEARCH_NODE,
+        node,
+        isHttps,
+        hasUsername: !!process.env.ELASTICSEARCH_USERNAME,
+        hasPassword: !!process.env.ELASTICSEARCH_PASSWORD,
+        sslEnabled: process.env.ELASTICSEARCH_SSL === 'true' || isHttps,
         error: errorDetails,
         stack: errorStack?.substring(0, 500) // Primeiros 500 chars do stack
       });
