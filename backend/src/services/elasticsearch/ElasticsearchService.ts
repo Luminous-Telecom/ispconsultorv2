@@ -71,6 +71,10 @@ class ElasticsearchService {
           rejectUnauthorized,
         });
       }
+      
+      // Configurar timeout de requisição
+      clientConfig.requestTimeout = 10000; // 10 segundos
+      clientConfig.pingTimeout = 10000; // 10 segundos
 
       this.client = new Client(clientConfig);
       
@@ -108,11 +112,11 @@ class ElasticsearchService {
     }
 
     try {
-      // Ping com timeout de 5 segundos
+      // Ping com timeout de 10 segundos (aumentado para dar mais tempo com SSL)
       const response = await Promise.race([
         client.ping(),
         new Promise<boolean>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout ao conectar com Elasticsearch')), 5000)
+          setTimeout(() => reject(new Error('Timeout ao conectar com Elasticsearch após 10 segundos')), 10000)
         )
       ]) as boolean;
       
