@@ -15,9 +15,7 @@
     "client": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "start": "cd backend && npm start",
-    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "setup:elasticsearch": "sudo bash scripts/install-elasticsearch.sh",
-    "setup": "sudo bash scripts/setup.sh"
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
   "keywords": [
     "erp",

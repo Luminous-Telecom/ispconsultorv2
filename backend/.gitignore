@@ -24,3 +24,6 @@ uploads/*
 coverage/
 
 scripts
+
+# Dependency versions tracking (local configuration)
+.dependency-versions.json

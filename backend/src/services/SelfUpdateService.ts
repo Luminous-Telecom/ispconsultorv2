@@ -434,8 +434,6 @@ export class SelfUpdateService {
       
       // Verificar se arquivos da pasta scripts foram baixados
       const expectedScripts = [
-        'install-elasticsearch.sh',
-        'setup.sh',
         'README.md'
       ];
       
@@ -480,151 +478,38 @@ export class SelfUpdateService {
 
   /**
    * Verifica e instala Elasticsearch se necessário
-   * Retorna sucesso mesmo se já estiver instalado
-   * O script verifica internamente se já está instalado
+   * Agora usa o DependencyManager
    */
   private async setupElasticsearch(): Promise<CommandResult> {
-    const scriptsDir = path.join(this.projectRoot, 'scripts');
-    const setupScriptPath = path.join(scriptsDir, 'install-elasticsearch.sh');
-    
-    logger.info('Iniciando verificação/instalação do Elasticsearch', {
-      scriptPath: setupScriptPath,
-      projectRoot: this.projectRoot,
-      scriptsDir,
-      scriptExists: fs.existsSync(setupScriptPath),
-      scriptsDirExists: fs.existsSync(scriptsDir),
-    });
-    
-    // Verificar se a pasta scripts existe, se não, criar
-    if (!fs.existsSync(scriptsDir)) {
-      logger.info('Pasta scripts não encontrada, criando...', {
-        scriptsDir,
-      });
-      try {
-        fs.mkdirSync(scriptsDir, { recursive: true });
-        logger.info('Pasta scripts criada com sucesso');
-      } catch (error) {
-        logger.error('Erro ao criar pasta scripts', {
-          error: error instanceof Error ? error.message : 'Erro desconhecido',
-        });
-      }
-    }
-    
-    // Verificar se o script existe
-    if (!fs.existsSync(setupScriptPath)) {
-      logger.warn('Script de instalação do Elasticsearch não encontrado após git pull', {
-        scriptPath: setupScriptPath,
-        projectRoot: this.projectRoot,
+    try {
+      logger.info('Iniciando verificação/instalação do Elasticsearch via DependencyManager');
+      
+      const { installDependencyByName } = await import('../utils/dependencyUtils');
+      await installDependencyByName('Elasticsearch', {
+        skipIfExists: true,
+        continueOnError: true,
+        useSudo: true
       });
       
-      // Tentar baixar o script diretamente do repositório
-      logger.info('Tentando baixar script do repositório...');
-      try {
-        const https = await import('https');
-        const fsPromises = await import('fs/promises');
-        
-        const scriptUrl = 'https://raw.githubusercontent.com/Luminous-Telecom/BackNet-ERP/main/scripts/install-elasticsearch.sh';
-        const response = await new Promise<Buffer>((resolve, reject) => {
-          https.get(scriptUrl, (res) => {
-            const chunks: Buffer[] = [];
-            res.on('data', (chunk) => chunks.push(chunk));
-            res.on('end', () => resolve(Buffer.concat(chunks)));
-            res.on('error', reject);
-          }).on('error', reject);
-        });
-        
-        await fsPromises.writeFile(setupScriptPath, response, { mode: 0o755 });
-        logger.info('Script baixado do repositório com sucesso', {
-          scriptPath: setupScriptPath,
-        });
-      } catch (downloadError) {
-        logger.error('Falha ao baixar script do repositório', {
-          error: downloadError instanceof Error ? downloadError.message : 'Erro desconhecido',
-        });
-        return {
-          success: false,
-          stdout: '',
-          stderr: `Script de instalação não encontrado e não foi possível baixar. Execute manualmente: sudo apt update && sudo apt install -y elasticsearch`,
-          error: 'Script não encontrado e download falhou',
-        };
-      }
-    }
-
-    // Verificar se o script tem permissão de execução
-    try {
-      const stats = fs.statSync(setupScriptPath);
-      if (!(stats.mode & parseInt('111', 8))) {
-        logger.info('Adicionando permissão de execução ao script');
-        fs.chmodSync(setupScriptPath, '755');
-      }
+      return {
+        success: true,
+        stdout: 'Elasticsearch verificado/instalado com sucesso',
+        stderr: '',
+        error: undefined
+      };
     } catch (error) {
-      logger.warn('Erro ao verificar/adicionar permissão de execução', {
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro ao instalar Elasticsearch via DependencyManager', {
+        error: errorMessage
       });
-    }
-
-    // Verificar se está rodando como root (não precisa sudo)
-    let command: string;
-    let needsSudo = false;
-    
-    try {
-      const { stdout: whoami } = await execAsync('whoami', { timeout: 2000 });
-      const isRoot = whoami.trim() === 'root';
       
-      if (isRoot) {
-        logger.info('Processo rodando como root, executando script sem sudo');
-        command = `bash "${setupScriptPath}"`;
-        needsSudo = false;
-      } else {
-        logger.info('Processo não é root, verificando se sudo está disponível sem senha');
-        // Verificar se sudo está disponível sem senha
-        try {
-          await execAsync('sudo -n true', { timeout: 2000 });
-          logger.info('Sudo disponível sem senha, executando script com sudo');
-          command = `sudo bash "${setupScriptPath}"`;
-          needsSudo = true;
-        } catch (sudoError) {
-          logger.error('Sudo requer senha ou não está configurado. Instalação do Elasticsearch falhará.', {
-            error: sudoError instanceof Error ? sudoError.message : 'Erro desconhecido',
-          });
-          // Tentar mesmo assim (pode funcionar se o script se reexecutar com sudo)
-          command = `sudo bash "${setupScriptPath}"`;
-          needsSudo = true;
-        }
-      }
-    } catch (error) {
-      // Se não conseguir verificar, tentar com sudo
-      logger.warn('Não foi possível verificar usuário, tentando com sudo', {
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-      });
-      command = `sudo bash "${setupScriptPath}"`;
-      needsSudo = true;
+      return {
+        success: false,
+        stdout: '',
+        stderr: errorMessage,
+        error: errorMessage
+      };
     }
-    
-    // Executar script de instalação
-    // O script verifica internamente se já está instalado e sai se estiver
-    logger.info('Executando script de instalação do Elasticsearch', {
-      scriptPath: setupScriptPath,
-      command,
-    });
-    
-    const result = await this.executeCommand(command, this.projectRoot, 'Elasticsearch Setup');
-    
-    // Log detalhado do resultado
-    if (result.success) {
-      logger.info('Script de instalação do Elasticsearch executado com sucesso', {
-        stdout: result.stdout.substring(0, 500), // Primeiros 500 chars
-        hasStderr: !!result.stderr,
-      });
-    } else {
-      logger.error('Falha ao executar script de instalação do Elasticsearch', {
-        error: result.error,
-        stderr: result.stderr.substring(0, 1000), // Primeiros 1000 chars
-        stdout: result.stdout.substring(0, 500),
-      });
-    }
-    
-    return result;
   }
 
   /**
