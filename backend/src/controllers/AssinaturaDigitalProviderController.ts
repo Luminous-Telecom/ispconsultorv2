@@ -199,15 +199,15 @@ export class AssinaturaDigitalProviderController {
           req as AuthenticatedRequest,
           'AssinaturaDigitalProvider',
           providerConfig.id,
-          dadosAnteriores as Record<string, unknown>,
-          providerConfig.toJSON() as Record<string, unknown>
+          dadosAnteriores as unknown as Record<string, unknown>,
+          providerConfig.toJSON() as unknown as Record<string, unknown>
         );
       } else if (created) {
         await registrarCriacao(
           req as AuthenticatedRequest,
           'AssinaturaDigitalProvider',
           providerConfig.id,
-          providerConfig.toJSON() as Record<string, unknown>
+          providerConfig.toJSON() as unknown as Record<string, unknown>
         );
       }
 
@@ -291,8 +291,8 @@ export class AssinaturaDigitalProviderController {
         req as AuthenticatedRequest,
         'AssinaturaDigitalProvider',
         providerConfig.id,
-        dadosAnteriores as Record<string, unknown>,
-        providerConfig.toJSON() as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>,
+        providerConfig.toJSON() as unknown as Record<string, unknown>
       );
 
       res.status(200).json({
@@ -343,7 +343,7 @@ export class AssinaturaDigitalProviderController {
         req as AuthenticatedRequest,
         'AssinaturaDigitalProvider',
         providerConfig.id,
-        dadosAnteriores as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>
       );
 
       res.status(200).json({

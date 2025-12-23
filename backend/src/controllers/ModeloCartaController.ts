@@ -87,7 +87,7 @@ export class ModeloCartaController {
         req as AuthenticatedRequest,
         'ModeloCarta',
         carta.id,
-        carta.toJSON() as Record<string, unknown>
+        carta.toJSON() as unknown as Record<string, unknown>
       );
 
       res.status(201).json({
@@ -130,8 +130,8 @@ export class ModeloCartaController {
         req as AuthenticatedRequest,
         'ModeloCarta',
         carta.id,
-        dadosAnteriores as Record<string, unknown>,
-        carta.toJSON() as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>,
+        carta.toJSON() as unknown as Record<string, unknown>
       );
 
       res.json({
@@ -172,7 +172,7 @@ export class ModeloCartaController {
         req as AuthenticatedRequest,
         'ModeloCarta',
         carta.id,
-        dadosAnteriores as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>
       );
 
       res.json({

@@ -105,7 +105,7 @@ export class ModeloTermoController {
         req as AuthenticatedRequest,
         'ModeloTermo',
         modelo.id,
-        modelo.toJSON() as Record<string, unknown>
+        modelo.toJSON() as unknown as Record<string, unknown>
       );
 
       res.status(201).json({
@@ -159,8 +159,8 @@ export class ModeloTermoController {
         req as AuthenticatedRequest,
         'ModeloTermo',
         modelo.id,
-        dadosAnteriores as Record<string, unknown>,
-        modelo.toJSON() as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>,
+        modelo.toJSON() as unknown as Record<string, unknown>
       );
 
       res.json({
@@ -207,7 +207,7 @@ export class ModeloTermoController {
         req as AuthenticatedRequest,
         'ModeloTermo',
         modelo.id,
-        dadosAnteriores as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>
       );
 
       res.json({

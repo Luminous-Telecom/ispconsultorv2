@@ -96,7 +96,7 @@ export class ModeloDocumentoController {
         req as AuthenticatedRequest,
         'ModeloDocumento',
         documento.id,
-        documento.toJSON() as Record<string, unknown>
+        documento.toJSON() as unknown as Record<string, unknown>
       );
 
       res.status(201).json({
@@ -149,8 +149,8 @@ export class ModeloDocumentoController {
         req as AuthenticatedRequest,
         'ModeloDocumento',
         documento.id,
-        dadosAnteriores as Record<string, unknown>,
-        documento.toJSON() as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>,
+        documento.toJSON() as unknown as Record<string, unknown>
       );
 
       res.json({
@@ -201,7 +201,7 @@ export class ModeloDocumentoController {
         req as AuthenticatedRequest,
         'ModeloDocumento',
         documento.id,
-        dadosAnteriores as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>
       );
 
       res.json({

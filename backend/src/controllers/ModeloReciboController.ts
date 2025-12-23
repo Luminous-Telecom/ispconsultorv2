@@ -87,7 +87,7 @@ export class ModeloReciboController {
         req as AuthenticatedRequest,
         'ModeloRecibo',
         recibo.id,
-        recibo.toJSON() as Record<string, unknown>
+        recibo.toJSON() as unknown as Record<string, unknown>
       );
 
       res.status(201).json({
@@ -130,8 +130,8 @@ export class ModeloReciboController {
         req as AuthenticatedRequest,
         'ModeloRecibo',
         recibo.id,
-        dadosAnteriores as Record<string, unknown>,
-        recibo.toJSON() as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>,
+        recibo.toJSON() as unknown as Record<string, unknown>
       );
 
       res.json({
@@ -172,7 +172,7 @@ export class ModeloReciboController {
         req as AuthenticatedRequest,
         'ModeloRecibo',
         recibo.id,
-        dadosAnteriores as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>
       );
 
       res.json({

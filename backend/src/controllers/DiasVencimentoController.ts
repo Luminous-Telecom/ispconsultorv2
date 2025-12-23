@@ -49,14 +49,18 @@ export class DiasVencimentoController {
 
       // Registrar auditoria para cada dia que mudou
       for (const diaNovo of dadosNovos) {
-        const diaAntigo = dadosAnteriores.find((d: { dia: number }) => d.dia === diaNovo.dia);
+        const diaAntigo = dadosAnteriores.find((d) => d.dia === diaNovo.dia);
         if (!diaAntigo || diaAntigo.ativo !== diaNovo.ativo) {
+          const dadosAnterioresAudit = diaAntigo 
+            ? (diaAntigo as unknown as Record<string, unknown>)
+            : ({ dia: diaNovo.dia, ativo: false } as Record<string, unknown>);
+          
           await registrarAtualizacao(
             req as AuthenticatedRequest,
             'DiasVencimento',
             diaNovo.id as number,
-            diaAntigo as Record<string, unknown> || { dia: diaNovo.dia, ativo: false },
-            diaNovo as Record<string, unknown>
+            dadosAnterioresAudit,
+            diaNovo as unknown as Record<string, unknown>
           );
         }
       }
@@ -85,8 +89,8 @@ export class DiasVencimentoController {
           req as AuthenticatedRequest,
           'DiasVencimento',
           dia.id,
-          { dia: dia.dia, ativo: false } as Record<string, unknown>,
-          dia.toJSON() as Record<string, unknown>
+          { dia: dia.dia, ativo: false } as unknown as Record<string, unknown>,
+          dia.toJSON() as unknown as Record<string, unknown>
         );
       }
 
