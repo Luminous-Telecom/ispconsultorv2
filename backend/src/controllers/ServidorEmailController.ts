@@ -102,7 +102,7 @@ export class ServidorEmailController {
         req as AuthenticatedRequest,
         'ServidorEmail',
         servidor.id,
-        servidor.toJSON() as Record<string, unknown>
+        servidor.toJSON() as unknown as Record<string, unknown>
       );
 
       res.status(201).json({
@@ -163,8 +163,8 @@ export class ServidorEmailController {
         req as AuthenticatedRequest,
         'ServidorEmail',
         servidor.id,
-        dadosAnteriores as Record<string, unknown>,
-        servidor.toJSON() as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>,
+        servidor.toJSON() as unknown as Record<string, unknown>
       );
 
       res.json({
@@ -215,7 +215,7 @@ export class ServidorEmailController {
         req as AuthenticatedRequest,
         'ServidorEmail',
         servidor.id,
-        dadosAnteriores as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>
       );
 
       res.json({
@@ -433,8 +433,8 @@ export class ServidorEmailController {
           req as AuthenticatedRequest,
           'ServidorEmail',
           servidor.id,
-          dadosAnteriores as Record<string, unknown>,
-          servidor.toJSON() as Record<string, unknown>
+          dadosAnteriores as unknown as Record<string, unknown>,
+          servidor.toJSON() as unknown as Record<string, unknown>
         );
         
         res.json({
@@ -467,7 +467,7 @@ export class ServidorEmailController {
           req as AuthenticatedRequest,
           'ServidorEmail',
           novoServidor.id,
-          novoServidor.toJSON() as Record<string, unknown>
+          novoServidor.toJSON() as unknown as Record<string, unknown>
         );
         
         res.status(201).json({
@@ -616,8 +616,8 @@ export class ServidorEmailController {
             req as AuthenticatedRequest,
             'MensagemEmail',
             mensagem.id,
-            dadosAnteriores as Record<string, unknown>,
-            mensagem.toJSON() as Record<string, unknown>
+            dadosAnteriores as unknown as Record<string, unknown>,
+            mensagem.toJSON() as unknown as Record<string, unknown>
           );
         } else {
           // Criar novo
@@ -629,7 +629,7 @@ export class ServidorEmailController {
             req as AuthenticatedRequest,
             'MensagemEmail',
             mensagem.id,
-            mensagem.toJSON() as Record<string, unknown>
+            mensagem.toJSON() as unknown as Record<string, unknown>
           );
         }
       } catch (dbError) {
