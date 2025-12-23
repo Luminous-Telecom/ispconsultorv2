@@ -264,7 +264,7 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   });
 
   const handleUpdate = () => {
-    if (!window.confirm('Tem certeza que deseja atualizar o sistema? Esta ação irá:\n\n1. Verificar/Instalar Elasticsearch (se necessário)\n2. Baixar as últimas alterações do repositório\n3. Atualizar dependências\n4. Compilar o código\n5. Executar migrations do banco de dados\n6. Reiniciar a aplicação\n\nO processo pode levar alguns minutos.')) {
+    if (!window.confirm('Tem certeza que deseja atualizar o sistema? Esta ação irá:\n\n1. Baixar as últimas alterações do repositório\n2. Atualizar dependências\n3. Compilar o código\n4. Executar migrations do banco de dados\n5. Reiniciar a aplicação\n\nO processo pode levar alguns minutos.')) {
       return;
     }
 

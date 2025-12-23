@@ -18,7 +18,6 @@ interface UpdateResult {
   success: boolean;
   message: string;
   steps: {
-    elasticsearch?: CommandResult;
     gitPull: CommandResult;
     npmInstall: CommandResult;
     build: CommandResult;
@@ -29,7 +28,8 @@ interface UpdateResult {
 
 /**
  * Service responsável por executar o self-update da aplicação
- * Executa os comandos na ordem: git pull -> npm install -> build -> migrations -> pm2 reload
+ * Executa os comandos na ordem: git pull -> npm install -> migrations -> pm2 reload
+ * Nota: Build não é executado pois o código já vem compilado em produção
  */
 export class SelfUpdateService {
   private readonly projectRoot: string;
@@ -444,185 +444,6 @@ export class SelfUpdateService {
     return pullResult;
   }
 
-  /**
-   * Verifica e instala Elasticsearch se necessário
-   * Agora usa o DependencyManager
-   */
-  private async setupElasticsearch(): Promise<CommandResult> {
-    try {
-      logger.info('Iniciando verificação/instalação do Elasticsearch via DependencyManager');
-      
-      const { installDependencyByName } = await import('../utils/dependencyUtils');
-      await installDependencyByName('Elasticsearch', {
-        skipIfExists: true,
-        continueOnError: true,
-        useSudo: true
-      });
-      
-      return {
-        success: true,
-        stdout: 'Elasticsearch verificado/instalado com sucesso',
-        stderr: '',
-        error: undefined
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error('Erro ao instalar Elasticsearch via DependencyManager', {
-        error: errorMessage,
-        stack: errorStack,
-        errorObject: error
-      });
-      
-      return {
-        success: false,
-        stdout: '',
-        stderr: errorMessage,
-        error: errorMessage
-      };
-    }
-  }
-
-  /**
-   * Adiciona variáveis do Elasticsearch ao .env do backend se não existirem
-   */
-  private async configureElasticsearchEnv(): Promise<CommandResult> {
-    const envPath = path.join(this.backendPath, '.env');
-    
-    try {
-      logger.info('Verificando arquivo .env para configuração do Elasticsearch', {
-        envPath,
-        backendPath: this.backendPath,
-        envExists: fs.existsSync(envPath),
-      });
-
-      // Verificar se o arquivo .env existe
-      if (!fs.existsSync(envPath)) {
-        logger.warn('Arquivo .env não encontrado, pulando configuração do Elasticsearch', {
-          envPath,
-          backendPath: this.backendPath,
-        });
-        return {
-          success: true,
-          stdout: 'Arquivo .env não encontrado, pulando configuração',
-          stderr: '',
-        };
-      }
-
-      // Ler conteúdo do .env
-      const envContent = fs.readFileSync(envPath, 'utf8');
-      
-      logger.debug('Conteúdo do .env lido', {
-        contentLength: envContent.length,
-        hasElasticsearchNode: envContent.includes('ELASTICSEARCH_NODE'),
-      });
-      
-      // Verificar se as variáveis já existem (mas pode precisar adicionar USERNAME/PASSWORD)
-      const hasNode = envContent.includes('ELASTICSEARCH_NODE');
-      const hasUsername = envContent.includes('ELASTICSEARCH_USERNAME');
-      const hasPassword = envContent.includes('ELASTICSEARCH_PASSWORD');
-      
-      // Verificar se já existe senha configurada (para reutilizar)
-      const existingPassword = envContent.match(/^ELASTICSEARCH_PASSWORD=(.+)$/m);
-      const password = existingPassword 
-        ? existingPassword[1].trim().replace(/^["']|["']$/g, '')
-        : this.generateRandomPassword();
-      
-      if (hasNode && hasUsername && hasPassword) {
-        logger.info('Variáveis do Elasticsearch já configuradas no .env');
-        return {
-          success: true,
-          stdout: 'Variáveis do Elasticsearch já configuradas',
-          stderr: '',
-        };
-      }
-      
-      // Se tem NODE mas não tem USERNAME/PASSWORD, adicionar apenas essas
-      if (hasNode && (!hasUsername || !hasPassword)) {
-        logger.info('Adicionando USERNAME e PASSWORD do Elasticsearch ao .env');
-        
-        if (!hasUsername) {
-          const needsNewline = !envContent.endsWith('\n');
-          const configToAdd = needsNewline ? `\nELASTICSEARCH_USERNAME=elastic\n` : `ELASTICSEARCH_USERNAME=elastic\n`;
-          fs.appendFileSync(envPath, configToAdd, 'utf8');
-        }
-        
-        if (!hasPassword) {
-          const needsNewline = !envContent.endsWith('\n');
-          const configToAdd = needsNewline ? `\nELASTICSEARCH_PASSWORD=${password}\n` : `ELASTICSEARCH_PASSWORD=${password}\n`;
-          fs.appendFileSync(envPath, configToAdd, 'utf8');
-        }
-        
-        logger.info('USERNAME e PASSWORD do Elasticsearch adicionados ao .env');
-        return {
-          success: true,
-          stdout: 'USERNAME e PASSWORD do Elasticsearch adicionados ao .env',
-          stderr: '',
-        };
-      }
-
-      // Adicionar variáveis do Elasticsearch
-      const elasticsearchConfig = `
-
-# Configurações do Elasticsearch (Auditoria)
-ELASTICSEARCH_NODE=http://localhost:9200
-ELASTICSEARCH_INDEX_NAME=backnet-auditoria
-ELASTICSEARCH_USERNAME=elastic
-ELASTICSEARCH_PASSWORD=${password}
-`;
-
-      // Verificar se o arquivo termina com quebra de linha
-      const needsNewline = !envContent.endsWith('\n');
-      const configToAdd = needsNewline ? elasticsearchConfig : elasticsearchConfig.substring(1);
-
-      fs.appendFileSync(envPath, configToAdd, 'utf8');
-      
-      // Verificar se foi adicionado corretamente
-      const updatedContent = fs.readFileSync(envPath, 'utf8');
-      const wasAdded = updatedContent.includes('ELASTICSEARCH_NODE');
-      
-      if (!wasAdded) {
-        throw new Error('Falha ao adicionar variáveis do Elasticsearch ao .env');
-      }
-      
-      logger.info('Variáveis do Elasticsearch adicionadas ao .env com sucesso', {
-        envPath,
-        fileSize: updatedContent.length,
-      });
-
-      return {
-        success: true,
-        stdout: `Variáveis do Elasticsearch adicionadas ao .env em ${envPath}`,
-        stderr: '',
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error('Erro ao configurar variáveis do Elasticsearch no .env', {
-        envPath,
-        backendPath: this.backendPath,
-        error: errorMessage,
-        stack: errorStack,
-      });
-      
-      return {
-        success: false,
-        stdout: '',
-        stderr: `Erro ao adicionar variáveis ao .env: ${errorMessage}`,
-        error: errorMessage,
-      };
-    }
-  }
-
-  /**
-   * Gera senha aleatória para Elasticsearch
-   */
-  private generateRandomPassword(): string {
-    const crypto = require('crypto');
-    return crypto.randomBytes(24).toString('base64').replace(/[=+/]/g, '').substring(0, 32);
-  }
 
   /**
    * Instala dependências npm
@@ -927,7 +748,6 @@ ELASTICSEARCH_PASSWORD=${password}
         success: false,
         message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
         steps: {
-          elasticsearch: { success: false, stdout: '', stderr: '' },
           gitPull: { success: false, stdout: '', stderr: `Comandos faltando: ${commandCheck.missing.join(', ')}` },
           npmInstall: { success: false, stdout: '', stderr: '' },
           build: { success: false, stdout: '', stderr: '' },
@@ -937,27 +757,11 @@ ELASTICSEARCH_PASSWORD=${password}
     }
 
     const steps = {
-      elasticsearch: { success: false, stdout: '', stderr: '' } as CommandResult,
       gitPull: await this.gitPull(branch),
       npmInstall: { success: false, stdout: '', stderr: '' } as CommandResult,
       build: { success: false, stdout: '', stderr: '' } as CommandResult,
       migrate: { success: false, stdout: '', stderr: '' } as CommandResult,
     };
-
-    // Passo 0: Verificar/Instalar Elasticsearch (apenas se não estiver instalado)
-    logger.info('Verificando Elasticsearch...');
-    steps.elasticsearch = await this.setupElasticsearch();
-    if (!steps.elasticsearch.success) {
-      // Não falhar o processo se a instalação do Elasticsearch falhar
-      // Pode ser que já esteja instalado ou que não seja necessário
-      logger.warn('Falha ao verificar/instalar Elasticsearch, mas continuando o processo', {
-        error: steps.elasticsearch.error || steps.elasticsearch.stderr,
-      });
-    } else {
-      logger.info('Elasticsearch verificado/instalado com sucesso', {
-        output: steps.elasticsearch.stdout,
-      });
-    }
 
     // Passo 1: Git Pull (PRIMEIRO, para ter o código mais recente)
     if (!steps.gitPull.success) {
@@ -966,21 +770,6 @@ ELASTICSEARCH_PASSWORD=${password}
         message: `Falha ao executar git pull: ${steps.gitPull.error || steps.gitPull.stderr}`,
         steps,
       };
-    }
-
-    // Passo 1.5: Configurar variáveis do Elasticsearch no .env (DEPOIS do git pull)
-    // Isso garante que qualquer correção no método seja aplicada
-    logger.info('Configurando variáveis do Elasticsearch no .env...');
-    const envConfigResult = await this.configureElasticsearchEnv();
-    if (!envConfigResult.success) {
-      logger.warn('Falha ao configurar variáveis do Elasticsearch no .env, mas continuando o processo', {
-        error: envConfigResult.error || envConfigResult.stderr,
-      });
-    } else {
-      logger.info('Variáveis do Elasticsearch configuradas no .env', {
-        output: envConfigResult.stdout,
-        envPath: path.join(this.backendPath, '.env'),
-      });
     }
 
     // Passo 1.5: Limpar versão no package.json removendo commit hash (manter apenas SemVer)
