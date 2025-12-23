@@ -18,6 +18,7 @@ function ListModal<T extends { id: number | string }>({
   limit: _limit = 15,
   onLimitChange,
   onRefresh,
+  refreshQueryFn,
   bulkActions = [],
   onAudit,
   auditEntity,
@@ -84,7 +85,7 @@ function ListModal<T extends { id: number | string }>({
         onSearch={onSearchChange}
         onPageChange={onPageChange}
         onPageSizeChange={onLimitChange}
-        onRefresh={onRefresh}
+        onRefresh={onRefresh || refreshQueryFn}
         onAudit={onAudit}
         auditEntity={auditEntity}
       />

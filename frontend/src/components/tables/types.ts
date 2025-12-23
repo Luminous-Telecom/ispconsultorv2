@@ -179,7 +179,7 @@ export interface UseTableOptions<T = Record<string, unknown>> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onRefresh?: () => void;
-  onAudit?: (item: T) => void;
+  onAudit?: (item: T) => void | Promise<void>;
   auditEntity?: string; // Nome da entidade para auditoria (ex: 'Cliente', 'Contrato')
 }
 
