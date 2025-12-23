@@ -9,6 +9,7 @@ import { Op, WhereOptions, Transaction } from 'sequelize';
 import * as Joi from 'joi';
 import { logger } from '../utils/logger';
 import { withTransaction } from '../utils/transaction';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
 
 export class ContratoController {
   // Função auxiliar para normalizar data (evitar problemas de timezone)
@@ -338,6 +339,14 @@ export class ContratoController {
         return { contrato, servicosAdicionais: servicosCriados };
       });
 
+      // Registrar auditoria
+      await registrarCriacao(
+        req,
+        'Contrato',
+        resultado.contrato.id,
+        resultado.contrato.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         message: `Contrato criado com sucesso${temServicosAdicionais ? ` e ${resultado.servicosAdicionais.length} serviço(s) adicional(is) vinculado(s)` : ''}`,
@@ -439,6 +448,9 @@ export class ContratoController {
         return;
       }
 
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = contrato.toJSON() as Record<string, unknown>;
+
       // Normalizar datas inválidas para null
       if (value.data_fim === 'Invalid date' || value.data_fim === '' || (typeof value.data_fim === 'string' && isNaN(Date.parse(value.data_fim)))) {
         delete value.data_fim;
@@ -478,6 +490,19 @@ export class ContratoController {
         const valorFinalArredondado = Math.round(novoValorFinal * 100) / 100;
         await contrato.update({ valor_final: valorFinalArredondado });
       }
+
+      // Recarregar contrato para obter dados atualizados
+      await contrato.reload();
+      
+      // Registrar auditoria
+      const dadosNovos = contrato.toJSON() as Record<string, unknown>;
+      await registrarAtualizacao(
+        req,
+        'Contrato',
+        contrato.id,
+        dadosAnteriores,
+        dadosNovos
+      );
 
       res.json({
         success: true,
@@ -524,6 +549,9 @@ export class ContratoController {
         }
       });
 
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = contrato.toJSON() as Record<string, unknown>;
+
       if (titulosCount > 0) {
         res.status(409).json({
           success: false,
@@ -532,6 +560,14 @@ export class ContratoController {
         });
         return;
       }
+
+      // Registrar auditoria
+      await registrarExclusao(
+        req,
+        'Contrato',
+        contrato.id,
+        dadosAnteriores
+      );
 
       await contrato.destroy();
 

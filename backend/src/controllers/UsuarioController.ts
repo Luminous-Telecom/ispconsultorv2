@@ -131,6 +131,15 @@ export class UsuarioController {
         ativo: value.ativo !== undefined ? value.ativo : true
       });
 
+      // Registrar auditoria
+      const { registrarCriacao } = await import('../services/AuditoriaService');
+      await registrarCriacao(
+        req,
+        'Usuario',
+        usuario.id,
+        { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         message: 'Usuário criado com sucesso',
@@ -168,6 +177,9 @@ export class UsuarioController {
         return;
       }
 
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+
       if (value.email && value.email !== usuario.email) {
         const emailExistente = await Usuario.findOne({
           where: { email: value.email }
@@ -193,6 +205,20 @@ export class UsuarioController {
       }
 
       await usuario.update(updateData);
+      
+      // Recarregar usuário para obter dados atualizados
+      await usuario.reload();
+      
+      // Registrar auditoria
+      const { registrarAtualizacao } = await import('../services/AuditoriaService');
+      const dadosNovos = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      await registrarAtualizacao(
+        req,
+        'Usuario',
+        usuario.id,
+        dadosAnteriores,
+        dadosNovos
+      );
 
       res.json({
         success: true,
@@ -221,6 +247,18 @@ export class UsuarioController {
         });
         return;
       }
+
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      
+      // Registrar auditoria
+      const { registrarExclusao } = await import('../services/AuditoriaService');
+      await registrarExclusao(
+        req,
+        'Usuario',
+        usuario.id,
+        dadosAnteriores
+      );
 
       await usuario.destroy();
 

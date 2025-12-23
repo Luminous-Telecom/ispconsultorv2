@@ -6,6 +6,7 @@ import Joi from 'joi';
 import axios from 'axios';
 import { logger } from '../utils/logger';
 import { setAuditData } from '../middleware/auditMiddleware';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
 
 export class ClienteController {
   // Schema de validação para criação
@@ -302,6 +303,16 @@ export class ClienteController {
         ]
       });
 
+      // Registrar auditoria
+      if (clienteCriado) {
+        await registrarCriacao(
+          req,
+          'Cliente',
+          clienteCriado.id,
+          clienteCriado.toJSON() as Record<string, unknown>
+        );
+      }
+
       res.status(201).json({
         success: true,
         data: clienteCriado,
@@ -466,6 +477,15 @@ export class ClienteController {
       
       // Registrar dados para auditoria
       setAuditData(req, dadosAnteriores, dadosNovos);
+      
+      // Registrar auditoria
+      await registrarAtualizacao(
+        req,
+        'Cliente',
+        cliente.id,
+        dadosAnteriores,
+        dadosNovos
+      );
 
       logger.debug('Cliente atualizado com sucesso, buscando dados atualizados com relacionamentos', {
         context: 'ClienteController',
@@ -593,6 +613,14 @@ export class ClienteController {
       // Capturar dados anteriores para auditoria
       const dadosAnteriores = cliente.toJSON() as Record<string, unknown>;
       setAuditData(req, dadosAnteriores);
+      
+      // Registrar auditoria
+      await registrarExclusao(
+        req,
+        'Cliente',
+        cliente.id,
+        dadosAnteriores
+      );
 
       // Excluir cliente
       await cliente.destroy();

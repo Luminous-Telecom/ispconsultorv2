@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types/auth';
 import { getElasticsearchService } from '../services/elasticsearch/ElasticsearchService';
 import { logger } from '../utils/logger';
+import { Auditoria } from '../models/Auditoria';
+import { Op, WhereOptions } from 'sequelize';
 
 export class AuditoriaController {
   /**
@@ -13,21 +15,15 @@ export class AuditoriaController {
       const client = elasticsearchService.getClient();
 
       if (!client) {
-        res.status(503).json({
-          success: false,
-          message: 'Elasticsearch não está configurado'
-        });
-        return;
+        // Fallback: buscar do banco de dados
+        return await AuditoriaController.listFromDatabase(req, res);
       }
 
       // Verificar conexão
       const isConnected = await elasticsearchService.checkConnection();
       if (!isConnected) {
-        res.status(503).json({
-          success: false,
-          message: 'Elasticsearch não está disponível'
-        });
-        return;
+        // Fallback: buscar do banco de dados
+        return await AuditoriaController.listFromDatabase(req, res);
       }
 
       // Parâmetros de paginação e filtros
@@ -125,6 +121,131 @@ export class AuditoriaController {
       logger.error('Erro ao buscar logs de auditoria', {
         context: 'AuditoriaController',
         action: 'list',
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar logs de auditoria',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Listar logs de auditoria do banco de dados (fallback quando Elasticsearch não está disponível)
+   */
+  static async listFromDatabase(req: Request, res: Response): Promise<void> {
+    try {
+      // Parâmetros de paginação e filtros
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 15;
+      const search = req.query.search as string;
+      const acao = req.query.acao as string;
+      const entidade = req.query.entidade as string;
+      const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id as string) : undefined;
+      const dataInicio = req.query.data_inicio as string;
+      const dataFim = req.query.data_fim as string;
+
+      const offset = (page - 1) * limit;
+
+      // Construir condições WHERE
+      const where: WhereOptions = {};
+
+      if (acao) {
+        where.acao = acao as any;
+      }
+
+      if (entidade) {
+        where.entidade = entidade;
+      }
+
+      if (usuario_id) {
+        where.usuario_id = usuario_id;
+      }
+
+      if (dataInicio || dataFim) {
+        where.created_at = {};
+        if (dataInicio) {
+          where.created_at[Op.gte] = new Date(dataInicio);
+        }
+        if (dataFim) {
+          where.created_at[Op.lte] = new Date(dataFim);
+        }
+      }
+
+      // Buscar logs
+      const { count, rows } = await Auditoria.findAndCountAll({
+        where,
+        order: [['created_at', 'DESC']],
+        limit,
+        offset
+      });
+
+      // Filtrar por busca se fornecido
+      let filteredRows = rows;
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filteredRows = rows.filter((log) => {
+          const observacoes = log.observacoes?.toLowerCase() || '';
+          const entidadeNome = log.entidade?.toLowerCase() || '';
+          const usuarioNome = (log.getUsuario && (log.getUsuario() as any)?.nome?.toLowerCase()) || '';
+          const usuarioEmail = (log.getUsuario && (log.getUsuario() as any)?.email?.toLowerCase()) || '';
+          
+          return observacoes.includes(searchLower) ||
+                 entidadeNome.includes(searchLower) ||
+                 usuarioNome.includes(searchLower) ||
+                 usuarioEmail.includes(searchLower);
+        });
+      }
+
+      // Mapear para formato esperado pelo frontend
+      const logs = await Promise.all(filteredRows.map(async (log) => {
+        let usuario = null;
+        try {
+          if (log.usuario_id) {
+            usuario = await log.getUsuario();
+          }
+        } catch (error) {
+          // Ignorar erro ao buscar usuário
+        }
+        
+        return {
+          id: log.id.toString(),
+          usuario_id: log.usuario_id,
+          usuario_nome: (usuario as any)?.nome || null,
+          usuario_email: (usuario as any)?.email || null,
+          acao: log.acao,
+          entidade: log.entidade,
+          entidade_id: log.entidade_id,
+          dados_anteriores: log.dados_anteriores,
+          dados_novos: log.dados_novos,
+          ip_address: log.ip_address,
+          user_agent: log.user_agent,
+          observacoes: log.observacoes,
+          timestamp: log.created_at.toISOString()
+        };
+      }));
+
+      const total = search ? filteredRows.length : count;
+
+      res.json({
+        success: true,
+        data: logs,
+        pagination: {
+          current_page: page,
+          last_page: Math.ceil(total / limit),
+          per_page: limit,
+          total,
+          from: total > 0 ? (page - 1) * limit + 1 : 0,
+          to: Math.min(page * limit, total)
+        }
+      });
+    } catch (error) {
+      logger.error('Erro ao buscar logs de auditoria do banco de dados', {
+        context: 'AuditoriaController',
+        action: 'listFromDatabase',
         error: error instanceof Error ? error.message : 'Erro desconhecido',
         stack: error instanceof Error ? error.stack : undefined
       });

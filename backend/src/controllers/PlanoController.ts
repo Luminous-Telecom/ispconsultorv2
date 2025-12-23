@@ -5,6 +5,7 @@ import { Op, WhereOptions, Order } from 'sequelize';
 import { sequelize } from '../config/database';
 import { logger } from '../utils/logger';
 import { cache } from '../utils/cache';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
 
 export class PlanoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -232,6 +233,14 @@ export class PlanoController {
       
       const plano = await Plano.create(body);
       
+      // Registrar auditoria
+      await registrarCriacao(
+        req,
+        'Plano',
+        plano.id,
+        plano.toJSON() as Record<string, unknown>
+      );
+      
       // Invalidar cache de planos após criar
       cache.deletePattern('planos:list:.*');
       
@@ -263,6 +272,9 @@ export class PlanoController {
         });
         return;
       }
+      
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = existingPlano.toJSON() as Record<string, unknown>;
       
       // Validar dados obrigatórios
       const { nome_plano, tipo_servico, valor_mensal } = req.body;
@@ -352,6 +364,18 @@ export class PlanoController {
 
       const plano = await Plano.findByPk(id);
       
+      // Registrar auditoria
+      if (plano) {
+        const dadosNovos = plano.toJSON() as Record<string, unknown>;
+        await registrarAtualizacao(
+          req,
+          'Plano',
+          plano.id,
+          dadosAnteriores,
+          dadosNovos
+        );
+      }
+      
       // Invalidar cache de planos após atualizar
       cache.deletePattern('planos:list:.*');
       
@@ -424,6 +448,17 @@ export class PlanoController {
         });
         return;
       }
+      
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = plano.toJSON() as Record<string, unknown>;
+      
+      // Registrar auditoria
+      await registrarExclusao(
+        req,
+        'Plano',
+        plano.id,
+        dadosAnteriores
+      );
       
       await plano.destroy();
       

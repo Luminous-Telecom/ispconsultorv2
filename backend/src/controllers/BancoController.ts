@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 import { Op, WhereOptions } from 'sequelize';
 import { randomBytes } from 'crypto';
 import { cache } from '../utils/cache';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
 
 export class BancoController {
   /**
@@ -171,6 +172,14 @@ export class BancoController {
       
       const banco = await Banco.create(dadosBanco);
       
+      // Registrar auditoria
+      await registrarCriacao(
+        req,
+        'Banco',
+        banco.id,
+        banco.toJSON() as Record<string, unknown>
+      );
+      
       logger.info('Banco criado com sucesso', {
         banco_id: banco.id,
         nome: banco.nome,
@@ -213,6 +222,9 @@ export class BancoController {
         res.status(404).json({ error: 'Banco não encontrado' });
         return;
       }
+      
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = banco.toJSON() as Record<string, unknown>;
       
       // Verificar se já existe outro banco com mesmo nome
       if (dadosBanco.nome && dadosBanco.nome !== banco.nome) {
@@ -265,6 +277,19 @@ export class BancoController {
       delete dadosParaAtualizar.has_client_secret_producao;
       
       await banco.update(dadosParaAtualizar);
+      
+      // Recarregar banco para obter dados atualizados
+      await banco.reload();
+      
+      // Registrar auditoria
+      const dadosNovos = banco.toJSON() as Record<string, unknown>;
+      await registrarAtualizacao(
+        req,
+        'Banco',
+        banco.id,
+        dadosAnteriores,
+        dadosNovos
+      );
       
       // Invalidar cache de bancos ativos se o status mudou
       if (dadosBanco.ativo !== undefined) {
@@ -319,6 +344,17 @@ export class BancoController {
         });
         return;
       }
+      
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = banco.toJSON() as Record<string, unknown>;
+      
+      // Registrar auditoria
+      await registrarExclusao(
+        req,
+        'Banco',
+        banco.id,
+        dadosAnteriores
+      );
       
       await banco.destroy();
       

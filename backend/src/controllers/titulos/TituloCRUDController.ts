@@ -10,6 +10,7 @@ import { normalizeDateForDb } from '../../utils/dateUtils';
 import { gerarLinkPagamentoPublico } from './TituloHelpers';
 import { TituloBulkController } from './TituloBulkController';
 import type { TituloComRelacoes } from './types';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../services/AuditoriaService';
 
 export class TituloCRUDController {
   
@@ -269,6 +270,14 @@ export class TituloCRUDController {
         }, { transaction });
       });
 
+      // Registrar auditoria
+      await registrarCriacao(
+        req,
+        'Titulo',
+        titulo.id,
+        titulo.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({ success: true, message: 'Título criado com sucesso', data: titulo });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -297,6 +306,9 @@ export class TituloCRUDController {
         res.status(404).json({ success: false, message: 'Título não encontrado' });
         return;
       }
+
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
 
       // Validações de status
       if (status === 'cancelado' && titulo.status === 'pago') {
@@ -357,6 +369,19 @@ export class TituloCRUDController {
         observacoes: observacoes !== undefined ? observacoes : titulo.observacoes
       });
 
+      // Recarregar título para obter dados atualizados
+      await titulo.reload();
+      
+      // Registrar auditoria
+      const dadosNovos = titulo.toJSON() as Record<string, unknown>;
+      await registrarAtualizacao(
+        req,
+        'Titulo',
+        titulo.id,
+        dadosAnteriores,
+        dadosNovos
+      );
+
       res.json({ success: true, message: 'Título atualizado com sucesso', data: titulo });
     } catch (error: unknown) {
       logger.error('Erro ao atualizar título', { error });
@@ -378,6 +403,9 @@ export class TituloCRUDController {
         return;
       }
 
+      // Capturar dados anteriores para auditoria
+      const dadosAnteriores = titulo.toJSON() as Record<string, unknown>;
+
       // Cancelar na API do banco
       if (titulo.charge_id && titulo.banco && ['efi', 'asaas'].includes(titulo.banco.tipo_banco ?? '')) {
         try {
@@ -388,6 +416,14 @@ export class TituloCRUDController {
           logger.warn('Erro ao cancelar título no gateway bancário', { titulo_id: titulo.id, error });
         }
       }
+
+      // Registrar auditoria
+      await registrarExclusao(
+        req,
+        'Titulo',
+        titulo.id,
+        dadosAnteriores
+      );
 
       // Deletar título
       await titulo.destroy();

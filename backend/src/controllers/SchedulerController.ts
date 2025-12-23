@@ -3,6 +3,7 @@ import { Op, WhereOptions } from 'sequelize';
 import { SchedulerService } from '../services/SchedulerService';
 import { ScheduledRoutine } from '../models';
 import { logger } from '../utils/logger';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
 
 export class SchedulerController {
   private schedulerService: SchedulerService;
@@ -116,6 +117,14 @@ export class SchedulerController {
 
       const routine = await this.schedulerService.createRoutine(routineData);
 
+      // Registrar auditoria
+      await registrarCriacao(
+        req,
+        'ScheduledRoutine',
+        routine.id,
+        routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>)
+      );
+
       res.status(201).json({
         success: true,
         message: 'Rotina criada com sucesso',
@@ -145,9 +154,21 @@ export class SchedulerController {
       const { id } = req.params;
       const updateData = req.body;
 
+      // Buscar rotina antes de atualizar para capturar dados anteriores
+      const routineBefore = await ScheduledRoutine.findByPk(Number(id));
+      const dadosAnteriores = routineBefore ? (routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>)) : {};
 
       const routine = await this.schedulerService.updateRoutine(Number(id), updateData);
 
+      // Registrar auditoria
+      const dadosNovos = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
+      await registrarAtualizacao(
+        req,
+        'ScheduledRoutine',
+        Number(id),
+        dadosAnteriores,
+        dadosNovos
+      );
 
       res.json({
         success: true,
@@ -177,6 +198,20 @@ export class SchedulerController {
   public async destroy(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+
+      // Buscar rotina antes de deletar para capturar dados anteriores
+      const routine = await ScheduledRoutine.findByPk(Number(id));
+      if (routine) {
+        const dadosAnteriores = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
+        
+        // Registrar auditoria
+        await registrarExclusao(
+          req,
+          'ScheduledRoutine',
+          Number(id),
+          dadosAnteriores
+        );
+      }
 
       await this.schedulerService.deleteRoutine(Number(id));
 
