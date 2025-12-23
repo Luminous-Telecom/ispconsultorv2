@@ -299,8 +299,6 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
               loading={isLoading}
               selectedItems={selectedItem ? [selectedItem] : []}
               onSelectionChange={handleSelectionChange}
-              search={tableFilters.search}
-              onSearchChange={tableFilters.setSearch}
               pagination={pagination}
               onPageChange={tableFilters.setPage}
               limit={tableFilters.limit}
