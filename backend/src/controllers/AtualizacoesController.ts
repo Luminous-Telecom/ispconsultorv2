@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { SelfUpdateService } from '../services/SelfUpdateService';
 import { AuthenticatedRequest } from '../types/auth';
+import { registrarCriacao } from '../services/AuditoriaService';
 
 interface GitHubRelease {
   tag_name: string;
@@ -339,6 +340,25 @@ export class AtualizacoesController {
           error: error instanceof Error ? error.message : 'Erro desconhecido',
         };
       }
+
+      // Registrar auditoria da atualização do sistema
+      const authenticatedReq = req as AuthenticatedRequest;
+      await registrarCriacao(
+        authenticatedReq,
+        'SistemaAtualizacao',
+        0,
+        {
+          branch,
+          steps: {
+            gitPull: { success: result.steps.gitPull.success },
+            npmInstall: { success: result.steps.npmInstall.success },
+            build: { success: result.steps.build.success },
+            migrate: { success: result.steps.migrate.success },
+            pm2Reload: { success: pm2ReloadResult.success }
+          },
+          message: result.message
+        } as Record<string, unknown>
+      );
 
       // Retornar sucesso APÓS PM2 reload completar
       res.json({

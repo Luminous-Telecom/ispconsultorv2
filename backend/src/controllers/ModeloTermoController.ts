@@ -6,6 +6,8 @@ import { Plano } from '../models/Plano';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
 import { logger } from '../utils/logger';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ModeloTermoController {
   // Listar todos os modelos de termo
@@ -99,6 +101,13 @@ export class ModeloTermoController {
         criptografia: false
       });
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'ModeloTermo',
+        modelo.id,
+        modelo.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         message: 'Modelo de termo criado com sucesso',
@@ -136,6 +145,7 @@ export class ModeloTermoController {
         return;
       }
 
+      const dadosAnteriores = modelo.toJSON();
       await modelo.update({
         nome,
         descricao,
@@ -143,6 +153,15 @@ export class ModeloTermoController {
         conteudo,
         ativo
       });
+      await modelo.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'ModeloTermo',
+        modelo.id,
+        dadosAnteriores as Record<string, unknown>,
+        modelo.toJSON() as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -181,7 +200,15 @@ export class ModeloTermoController {
         return;
       }
 
+      const dadosAnteriores = modelo.toJSON();
       await modelo.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'ModeloTermo',
+        modelo.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.json({
         success: true,

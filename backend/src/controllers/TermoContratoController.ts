@@ -3,6 +3,8 @@ import { TermoContrato } from '../models/TermoContrato';
 import { Contrato } from '../models/Contrato';
 import { ModeloDocumento } from '../models/ModeloDocumento';
 import { logger } from '../utils/logger';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class TermoContratoController {
   // Listar termos de um contrato específico
@@ -154,6 +156,13 @@ export class TermoContratoController {
         ativo: true
       });
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'TermoContrato',
+        termo.id,
+        termo.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         message: 'Termo criado com sucesso',
@@ -209,12 +218,23 @@ export class TermoContratoController {
         return;
       }
 
+      const dadosAnteriores = termo.toJSON();
+      
       // Atualizar apenas campos permitidos
       if (ativo !== undefined) termo.ativo = ativo;
       if (modelo_documento_id !== undefined) termo.modelo_documento_id = modelo_documento_id;
       if (assinado !== undefined) termo.assinado = assinado;
 
       await termo.save();
+      await termo.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'TermoContrato',
+        termo.id,
+        dadosAnteriores as Record<string, unknown>,
+        termo.toJSON() as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -342,7 +362,15 @@ export class TermoContratoController {
         return;
       }
 
+      const dadosAnteriores = termo.toJSON();
       await termo.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'TermoContrato',
+        termo.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.json({
         success: true,

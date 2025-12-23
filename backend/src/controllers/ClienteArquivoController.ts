@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { ClienteArquivoService, CreateClienteArquivoData, UpdateClienteArquivoData } from '../services/clienteArquivoService';
 import { logger } from '../utils/logger';
 import Joi from 'joi';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
+import { ClienteArquivo } from '../models/ClienteArquivo';
 
 export class ClienteArquivoController {
   private static createSchema = Joi.object({
@@ -121,6 +124,13 @@ export class ClienteArquivoController {
 
       const arquivo = await ClienteArquivoService.create(createData);
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'ClienteArquivo',
+        arquivo.id,
+        arquivo.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         message: 'Arquivo criado com sucesso',
@@ -152,7 +162,18 @@ export class ClienteArquivoController {
         return;
       }
 
+      const arquivoAntes = await ClienteArquivo.findByPk(Number(id));
+      const dadosAnteriores = arquivoAntes ? arquivoAntes.toJSON() : null;
+
       const arquivo = await ClienteArquivoService.update(Number(id), value as UpdateClienteArquivoData);
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'ClienteArquivo',
+        arquivo.id,
+        dadosAnteriores as Record<string, unknown>,
+        arquivo.toJSON() as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -174,7 +195,19 @@ export class ClienteArquivoController {
   static async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const arquivo = await ClienteArquivo.findByPk(Number(id));
+      const dadosAnteriores = arquivo ? arquivo.toJSON() : null;
+
       await ClienteArquivoService.delete(Number(id));
+
+      if (arquivo && dadosAnteriores) {
+        await registrarExclusao(
+          req as AuthenticatedRequest,
+          'ClienteArquivo',
+          arquivo.id,
+          dadosAnteriores as Record<string, unknown>
+        );
+      }
 
       res.json({
         success: true,

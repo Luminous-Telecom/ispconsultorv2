@@ -3,6 +3,8 @@ import { logger } from '../utils/logger';
 import AssinaturaDigitalProvider from '../models/AssinaturaDigitalProvider';
 import { Op } from 'sequelize';
 import Joi from 'joi';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class AssinaturaDigitalProviderController {
   private static updateSchema = Joi.object({
@@ -190,7 +192,23 @@ export class AssinaturaDigitalProviderController {
       });
 
       if (!created && Object.keys(updateData).length > 0) {
+        const dadosAnteriores = providerConfig.toJSON();
         await providerConfig.update(updateData);
+        await providerConfig.reload();
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'AssinaturaDigitalProvider',
+          providerConfig.id,
+          dadosAnteriores as Record<string, unknown>,
+          providerConfig.toJSON() as Record<string, unknown>
+        );
+      } else if (created) {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'AssinaturaDigitalProvider',
+          providerConfig.id,
+          providerConfig.toJSON() as Record<string, unknown>
+        );
       }
 
       if (value.habilitado === true) {
@@ -259,6 +277,7 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
+      const dadosAnteriores = providerConfig.toJSON();
       const updateData = AssinaturaDigitalProviderController.prepareUpdateData(value);
       await providerConfig.update(updateData);
 
@@ -267,6 +286,14 @@ export class AssinaturaDigitalProviderController {
       }
 
       await providerConfig.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'AssinaturaDigitalProvider',
+        providerConfig.id,
+        dadosAnteriores as Record<string, unknown>,
+        providerConfig.toJSON() as Record<string, unknown>
+      );
 
       res.status(200).json({
         success: true,
@@ -309,7 +336,15 @@ export class AssinaturaDigitalProviderController {
         return;
       }
 
+      const dadosAnteriores = providerConfig.toJSON();
       await providerConfig.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'AssinaturaDigitalProvider',
+        providerConfig.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.status(200).json({
         success: true,

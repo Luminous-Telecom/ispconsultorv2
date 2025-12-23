@@ -3,6 +3,8 @@ import Parametros from '../models/Parametros';
 import Joi from 'joi';
 import { logger } from '../utils/logger';
 import { cache } from '../utils/cache';
+import { registrarCriacao, registrarAtualizacao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ParametrosController {
   // Schema de validação
@@ -115,6 +117,7 @@ export class ParametrosController {
       }
 
       let parametros = await Parametros.findOne();
+      const dadosAnteriores = parametros ? parametros.toJSON() : null;
 
       // Se não existir, criar
       if (!parametros) {
@@ -126,12 +129,26 @@ export class ParametrosController {
           auto_lancamento_titulos: req.body.auto_lancamento_titulos ?? false,
           total_titulos_financeiro: req.body.total_titulos_financeiro ?? 12
         });
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'Parametros',
+          parametros.id,
+          parametros.toJSON() as unknown as Record<string, unknown>
+        );
       } else {
         // Atualizar
         await parametros.update(req.body);
+        await parametros.reload();
         logger.info('Parâmetros atualizados', {
           camposAtualizados: Object.keys(req.body)
         });
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'Parametros',
+          parametros.id,
+          dadosAnteriores as unknown as Record<string, unknown>,
+          parametros.toJSON() as unknown as Record<string, unknown>
+        );
       }
 
       // Invalidar cache após atualização

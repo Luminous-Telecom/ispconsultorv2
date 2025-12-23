@@ -5,6 +5,8 @@ import { MensagemWhatsApp } from '../models/MensagemWhatsApp';
 import { logger } from '../utils/logger';
 
 import { WhatsAppCloudService } from '../services/WhatsAppCloudService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ServidorWhatsAppController {
   /**
@@ -98,6 +100,13 @@ export class ServidorWhatsAppController {
 
       const servidor = await ServidorWhatsApp.create(servidorData);
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'ServidorWhatsApp',
+        servidor.id,
+        servidor.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         data: servidor,
@@ -140,7 +149,17 @@ export class ServidorWhatsAppController {
         return;
       }
 
+      const dadosAnteriores = servidor.toJSON();
       await servidor.update(servidorData);
+      await servidor.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'ServidorWhatsApp',
+        servidor.id,
+        dadosAnteriores as Record<string, unknown>,
+        servidor.toJSON() as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -183,7 +202,15 @@ export class ServidorWhatsAppController {
         return;
       }
 
+      const dadosAnteriores = servidor.toJSON();
       await servidor.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'ServidorWhatsApp',
+        servidor.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -324,6 +351,7 @@ export class ServidorWhatsAppController {
           servidorData.webhook_url = null;
         }
 
+        const dadosAnteriores = servidor.toJSON();
         await servidor.update(servidorData);
         
         // Recarregar o servidor para pegar os dados atualizados
@@ -332,6 +360,14 @@ export class ServidorWhatsAppController {
             exclude: ['evolution_api_key', 'whatsapp_cloud_token'], // Não retornar tokens
           },
         });
+        
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ServidorWhatsApp',
+          servidor.id,
+          dadosAnteriores as Record<string, unknown>,
+          servidor.toJSON() as Record<string, unknown>
+        );
         
         res.json({
           success: true,
@@ -378,6 +414,13 @@ export class ServidorWhatsAppController {
             exclude: ['evolution_api_key', 'whatsapp_cloud_token'],
           },
         });
+        
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ServidorWhatsApp',
+          novoServidor.id,
+          novoServidor.toJSON() as Record<string, unknown>
+        );
         
         res.status(201).json({
           success: true,
@@ -746,13 +789,30 @@ export class ServidorWhatsAppController {
         if (mensagem) {
           // Atualizar existente
           logger.info('Atualizando mensagem existente:', { id: mensagem.id, tipo });
+          const dadosAnteriores = mensagem.toJSON();
           await mensagem.update(mensagemData);
+          await mensagem.reload();
           logger.info('Mensagem atualizada com sucesso:', { id: mensagem.id });
+          
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'MensagemWhatsApp',
+            mensagem.id,
+            dadosAnteriores as Record<string, unknown>,
+            mensagem.toJSON() as Record<string, unknown>
+          );
         } else {
           // Criar novo
           logger.info('Criando nova mensagem:', { tipo });
           mensagem = await MensagemWhatsApp.create(mensagemData);
           logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
+          
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'MensagemWhatsApp',
+            mensagem.id,
+            mensagem.toJSON() as Record<string, unknown>
+          );
         }
       } catch (dbError) {
         const dbErrorMessage = dbError instanceof Error ? dbError.message : 'Erro desconhecido no banco';

@@ -6,6 +6,8 @@ import { Banco } from '../../models/Banco';
 import { logger } from '../../utils/logger';
 import { BancoApiService } from '../../services/BancoApiService';
 import { TituloComRelacoes } from './types';
+import { registrarAtualizacao } from '../../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../../types/auth';
 
 export class TituloBoletoController {
   
@@ -32,9 +34,19 @@ export class TituloBoletoController {
         return;
       }
 
+      const dadosAnteriores = titulo.toJSON();
       const dataPagamentoNormalizada = data_pagamento ? (typeof data_pagamento === 'string' ? new Date(data_pagamento) : data_pagamento) : undefined;
       
       await titulo.marcarComoPago(valor_pago, dataPagamentoNormalizada);
+      await titulo.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'Titulo',
+        titulo.id,
+        dadosAnteriores as Record<string, unknown>,
+        titulo.toJSON() as Record<string, unknown>
+      );
 
       res.json({ success: true, message: 'Título marcado como pago', data: titulo });
     } catch (error: unknown) {
@@ -56,7 +68,17 @@ export class TituloBoletoController {
         return;
       }
 
+      const dadosAnteriores = titulo.toJSON();
       await titulo.desmarcarPago();
+      await titulo.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'Titulo',
+        titulo.id,
+        dadosAnteriores as Record<string, unknown>,
+        titulo.toJSON() as Record<string, unknown>
+      );
 
       res.json({ success: true, message: 'Título desmarcado como pago', data: titulo });
     } catch (error: unknown) {
@@ -89,10 +111,20 @@ export class TituloBoletoController {
         const statusPago = resultado.data.status === 'paid' || resultado.data.status === 'settled';
         
         if (statusPago) {
+          const dadosAnteriores = titulo.toJSON();
           const valorPago = resultado.data.valor_pago || titulo.valor;
           const dataPagamento = resultado.data.data_pagamento ? new Date(resultado.data.data_pagamento as string | number) : new Date();
 
           await titulo.marcarComoPago(Number(valorPago), dataPagamento);
+          await titulo.reload();
+
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'Titulo',
+            titulo.id,
+            dadosAnteriores as Record<string, unknown>,
+            titulo.toJSON() as Record<string, unknown>
+          );
 
           res.json({
             success: true,
@@ -133,7 +165,17 @@ export class TituloBoletoController {
         return;
       }
 
+      const dadosAnteriores = titulo.toJSON();
       await titulo.desmarcarPago();
+      await titulo.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'Titulo',
+        titulo.id,
+        dadosAnteriores as Record<string, unknown>,
+        titulo.toJSON() as Record<string, unknown>
+      );
 
       res.json({ success: true, message: 'Título estornado com sucesso', data: titulo });
     } catch (error: unknown) {

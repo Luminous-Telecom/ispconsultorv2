@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { Parametro } from '../models/Parametro';
 import { logger } from '../utils/logger';
+import { registrarCriacao, registrarAtualizacao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ParametroController {
   
@@ -126,10 +128,20 @@ export class ParametroController {
         }
       }
 
+      const dadosAnteriores = parametro.toJSON();
       await parametro.update({
         valor: valorConvertido.toString(),
         ativo: ativo !== undefined ? ativo : parametro.ativo
       });
+      await parametro.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'Parametro',
+        parametro.id,
+        dadosAnteriores as unknown as Record<string, unknown>,
+        parametro.toJSON() as unknown as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -197,10 +209,20 @@ export class ParametroController {
             }
           }
 
+          const dadosAnteriores = parametro.toJSON();
           await parametro.update({
             valor: valorConvertido.toString(),
             ativo: ativo !== undefined ? ativo : parametro.ativo
           });
+          await parametro.reload();
+
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'Parametro',
+            parametro.id,
+            dadosAnteriores as unknown as Record<string, unknown>,
+            parametro.toJSON() as unknown as Record<string, unknown>
+          );
 
           results.push({
             chave,
@@ -298,14 +320,31 @@ export class ParametroController {
       const results = [];
 
       for (const param of parametrosPadrao) {
-        const [parametro] = await Parametro.findOrCreate({
+        const [parametro, created] = await Parametro.findOrCreate({
           where: { chave: param.chave },
           defaults: param
         });
 
         // Se já existia, atualizar com valores padrão
-        if (parametro.valor !== param.valor) {
+        if (!created && parametro.valor !== param.valor) {
+          const dadosAnteriores = parametro.toJSON();
           await parametro.update({ valor: param.valor });
+          await parametro.reload();
+          
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'Parametro',
+            parametro.id,
+            dadosAnteriores as unknown as Record<string, unknown>,
+            parametro.toJSON() as unknown as Record<string, unknown>
+          );
+        } else if (created) {
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'Parametro',
+            parametro.id,
+            parametro.toJSON() as unknown as Record<string, unknown>
+          );
         }
 
         results.push(parametro);

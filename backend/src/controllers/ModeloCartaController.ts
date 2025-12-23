@@ -6,6 +6,8 @@ import { Plano } from '../models/Plano';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ModeloCartaController {
   /**
@@ -81,6 +83,13 @@ export class ModeloCartaController {
         criptografia: criptografia || false,
       });
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'ModeloCarta',
+        carta.id,
+        carta.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         data: carta,
@@ -113,7 +122,17 @@ export class ModeloCartaController {
         return;
       }
 
+      const dadosAnteriores = carta.toJSON();
       await carta.update(updateData);
+      await carta.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'ModeloCarta',
+        carta.id,
+        dadosAnteriores as Record<string, unknown>,
+        carta.toJSON() as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -146,7 +165,15 @@ export class ModeloCartaController {
         return;
       }
 
+      const dadosAnteriores = carta.toJSON();
       await carta.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'ModeloCarta',
+        carta.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.json({
         success: true,

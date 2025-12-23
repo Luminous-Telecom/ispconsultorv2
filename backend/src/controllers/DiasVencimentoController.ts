@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { DiasVencimento } from '../models/DiasVencimento';
 import { logger } from '../utils/logger';
+import { registrarAtualizacao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class DiasVencimentoController {
   /**
@@ -33,10 +35,30 @@ export class DiasVencimentoController {
     try {
       const { dias } = req.body;
       
+      const diasAntes = await DiasVencimento.findAll();
+      const dadosAnteriores = diasAntes.map(d => d.toJSON());
+      
       await DiasVencimento.update({ ativo: false }, { where: {} });
       
       if (dias.length > 0) {
         await DiasVencimento.update({ ativo: true }, { where: { dia: dias } });
+      }
+
+      const diasDepois = await DiasVencimento.findAll();
+      const dadosNovos = diasDepois.map(d => d.toJSON());
+
+      // Registrar auditoria para cada dia que mudou
+      for (const diaNovo of dadosNovos) {
+        const diaAntigo = dadosAnteriores.find((d: { dia: number }) => d.dia === diaNovo.dia);
+        if (!diaAntigo || diaAntigo.ativo !== diaNovo.ativo) {
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'DiasVencimento',
+            diaNovo.id as number,
+            diaAntigo as Record<string, unknown> || { dia: diaNovo.dia, ativo: false },
+            diaNovo as Record<string, unknown>
+          );
+        }
       }
 
       res.json({ success: true, message: 'Dias de vencimento atualizados com sucesso' });
@@ -54,6 +76,18 @@ export class DiasVencimentoController {
       
       if (dias.length > 0) {
         await DiasVencimento.update({ ativo: true }, { where: { dia: dias } });
+      }
+
+      // Para create, usar update já que é a mesma lógica
+      const diasDepois = await DiasVencimento.findAll({ where: { ativo: true } });
+      for (const dia of diasDepois) {
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'DiasVencimento',
+          dia.id,
+          { dia: dia.dia, ativo: false } as Record<string, unknown>,
+          dia.toJSON() as Record<string, unknown>
+        );
       }
 
       res.status(201).json({ success: true, message: 'Dias de vencimento criados com sucesso' });

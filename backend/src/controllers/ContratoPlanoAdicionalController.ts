@@ -5,6 +5,8 @@ import { Plano } from '../models/Plano';
 import * as Joi from 'joi';
 import { logger } from '../utils/logger';
 import { isJoiError, getErrorMessage } from '../utils/errorUtils';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 //
 export class ContratoPlanoAdicionalController {
   // Schema de validação para criação
@@ -158,6 +160,13 @@ export class ContratoPlanoAdicionalController {
         ]
       });
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'ContratoPlanoAdicional',
+        servico.id,
+        servicoComPlano?.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         message: 'Serviço adicional vinculado com sucesso',
@@ -256,6 +265,14 @@ export class ContratoPlanoAdicionalController {
         ]
       });
 
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'ContratoPlanoAdicional',
+        servico.id,
+        servico.toJSON() as Record<string, unknown>,
+        servicoAtualizado?.toJSON() as Record<string, unknown>
+      );
+
       res.json({
         success: true,
         message: 'Serviço adicional atualizado com sucesso',
@@ -310,7 +327,15 @@ export class ContratoPlanoAdicionalController {
         return;
       }
 
+      const dadosAnteriores = servico.toJSON();
       await servico.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'ContratoPlanoAdicional',
+        servico.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.json({
         success: true,

@@ -4,6 +4,8 @@ import jwt, { JwtPayload, Secret, SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { logger } from '../utils/logger';
 import { Usuario } from '../models/Usuario';
+import { registrarLogin } from '../services/AuditoriaService';
+import type { AuthenticatedRequest as AuthRequest } from '../types/auth';
 
 interface AuthenticatedRequest extends Request {
   user?: JwtPayload | string;
@@ -99,6 +101,11 @@ export class AuthController {
         },
         { fields: ['ultimo_login'] }
       );
+
+      // Registrar login na auditoria
+      const authReq = req as unknown as AuthRequest;
+      authReq.user = { id: usuario.id, nome: usuario.nome, email: usuario.email };
+      await registrarLogin(authReq, usuario.id, 'Login realizado com sucesso');
 
       logger.info('Login realizado com sucesso', {
         usuario_id: usuario.id,

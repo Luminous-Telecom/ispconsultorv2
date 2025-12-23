@@ -6,6 +6,8 @@ import { Plano } from '../models/Plano';
 import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ModeloReciboController {
   /**
@@ -81,6 +83,13 @@ export class ModeloReciboController {
         criptografia: criptografia || false,
       });
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'ModeloRecibo',
+        recibo.id,
+        recibo.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         data: recibo,
@@ -113,7 +122,17 @@ export class ModeloReciboController {
         return;
       }
 
+      const dadosAnteriores = recibo.toJSON();
       await recibo.update(updateData);
+      await recibo.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'ModeloRecibo',
+        recibo.id,
+        dadosAnteriores as Record<string, unknown>,
+        recibo.toJSON() as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -146,7 +165,15 @@ export class ModeloReciboController {
         return;
       }
 
+      const dadosAnteriores = recibo.toJSON();
       await recibo.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'ModeloRecibo',
+        recibo.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.json({
         success: true,

@@ -8,6 +8,8 @@ import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService
 import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
 import * as fs from 'fs/promises';
 import { ValidationError } from 'sequelize';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ModeloContratoController {
   /**
@@ -90,6 +92,13 @@ export class ModeloContratoController {
 
       const documento = await ModeloContrato.create(documentoData);
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'ModeloContrato',
+        documento.id,
+        documento.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         data: documento,
@@ -132,7 +141,17 @@ export class ModeloContratoController {
         return;
       }
 
+      const dadosAnteriores = documento.toJSON();
       await documento.update(documentoData);
+      await documento.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'ModeloContrato',
+        documento.id,
+        dadosAnteriores as Record<string, unknown>,
+        documento.toJSON() as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -175,7 +194,15 @@ export class ModeloContratoController {
         return;
       }
 
+      const dadosAnteriores = documento.toJSON();
       await documento.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'ModeloContrato',
+        documento.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.json({
         success: true,

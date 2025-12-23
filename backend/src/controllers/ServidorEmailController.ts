@@ -6,6 +6,8 @@ import { formatDateTime } from '../utils/dateUtils';
 import nodemailer from 'nodemailer';
 import { Op } from 'sequelize';
 import { ValidationError } from 'sequelize';
+import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 export class ServidorEmailController {
   /**
@@ -96,6 +98,13 @@ export class ServidorEmailController {
 
       const servidor = await ServidorEmail.create(servidorData);
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'ServidorEmail',
+        servidor.id,
+        servidor.toJSON() as Record<string, unknown>
+      );
+
       res.status(201).json({
         success: true,
         data: servidor,
@@ -146,7 +155,17 @@ export class ServidorEmailController {
         );
       }
 
+      const dadosAnteriores = servidor.toJSON();
       await servidor.update(servidorData);
+      await servidor.reload();
+
+      await registrarAtualizacao(
+        req as AuthenticatedRequest,
+        'ServidorEmail',
+        servidor.id,
+        dadosAnteriores as Record<string, unknown>,
+        servidor.toJSON() as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -189,7 +208,15 @@ export class ServidorEmailController {
         return;
       }
 
+      const dadosAnteriores = servidor.toJSON();
       await servidor.destroy();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'ServidorEmail',
+        servidor.id,
+        dadosAnteriores as Record<string, unknown>
+      );
 
       res.json({
         success: true,
@@ -392,6 +419,7 @@ export class ServidorEmailController {
           delete servidorData.senha;
         }
 
+        const dadosAnteriores = servidor.toJSON();
         await servidor.update(servidorData);
         
         // Recarregar o servidor para pegar os dados atualizados
@@ -400,6 +428,14 @@ export class ServidorEmailController {
             exclude: ['senha'], // Não retornar a senha
           },
         });
+        
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'ServidorEmail',
+          servidor.id,
+          dadosAnteriores as Record<string, unknown>,
+          servidor.toJSON() as Record<string, unknown>
+        );
         
         res.json({
           success: true,
@@ -426,6 +462,13 @@ export class ServidorEmailController {
             exclude: ['senha'],
           },
         });
+        
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'ServidorEmail',
+          novoServidor.id,
+          novoServidor.toJSON() as Record<string, unknown>
+        );
         
         res.status(201).json({
           success: true,
@@ -564,13 +607,30 @@ export class ServidorEmailController {
         if (mensagem) {
           // Atualizar existente
           logger.info('Atualizando mensagem existente:', { id: mensagem.id, tipo });
+          const dadosAnteriores = mensagem.toJSON();
           await mensagem.update(mensagemData);
+          await mensagem.reload();
           logger.info('Mensagem atualizada com sucesso:', { id: mensagem.id });
+          
+          await registrarAtualizacao(
+            req as AuthenticatedRequest,
+            'MensagemEmail',
+            mensagem.id,
+            dadosAnteriores as Record<string, unknown>,
+            mensagem.toJSON() as Record<string, unknown>
+          );
         } else {
           // Criar novo
           logger.info('Criando nova mensagem:', { tipo });
           mensagem = await MensagemEmail.create(mensagemData);
           logger.info('Mensagem criada com sucesso:', { id: mensagem.id, tipo });
+          
+          await registrarCriacao(
+            req as AuthenticatedRequest,
+            'MensagemEmail',
+            mensagem.id,
+            mensagem.toJSON() as Record<string, unknown>
+          );
         }
       } catch (dbError) {
         const dbErrorMessage = dbError instanceof Error ? dbError.message : 'Erro desconhecido no banco';

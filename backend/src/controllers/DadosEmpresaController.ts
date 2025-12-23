@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { DadosEmpresa } from '../models/DadosEmpresa';
 import { logger } from '../utils/logger';
 import type { AuthenticatedRequest } from '../types/auth';
+import { registrarCriacao, registrarAtualizacao } from '../services/AuditoriaService';
 
 export class DadosEmpresaController {
   // Dados padrão para criação de empresa
@@ -123,12 +124,26 @@ export class DadosEmpresaController {
       dadosAtualizados.responsavel_assinatura = DadosEmpresaController.normalizePath(dadosAtualizados.responsavel_assinatura);
 
       let dadosEmpresa = await DadosEmpresa.findOne();
+      const dadosAnteriores = dadosEmpresa ? dadosEmpresa.toJSON() : null;
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresa.create(dadosAtualizados);
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'DadosEmpresa',
+          dadosEmpresa.id,
+          dadosEmpresa.toJSON() as Record<string, unknown>
+        );
       } else {
         await dadosEmpresa.update(dadosAtualizados);
         await dadosEmpresa.reload();
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'DadosEmpresa',
+          dadosEmpresa.id,
+          dadosAnteriores as Record<string, unknown>,
+          dadosEmpresa.toJSON() as Record<string, unknown>
+        );
       }
 
       const dadosEmpresaJson = dadosEmpresa.toJSON();
@@ -196,6 +211,12 @@ export class DadosEmpresaController {
 
       if (!dadosEmpresa) {
         dadosEmpresa = await DadosEmpresa.create({ ...DadosEmpresaController.getDefaultData(), logo: filePath });
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'DadosEmpresa',
+          dadosEmpresa.id,
+          dadosEmpresa.toJSON() as Record<string, unknown>
+        );
       } else {
         // Deletar logo antiga se existir
         if (dadosEmpresa.logo) {
@@ -212,7 +233,17 @@ export class DadosEmpresaController {
             // Ignorar erro ao deletar logo antiga
           }
         }
+        const dadosAnteriores = dadosEmpresa.toJSON();
         await dadosEmpresa.update({ logo: filePath });
+        await dadosEmpresa.reload();
+        
+        await registrarAtualizacao(
+          req as AuthenticatedRequest,
+          'DadosEmpresa',
+          dadosEmpresa.id,
+          dadosAnteriores as Record<string, unknown>,
+          dadosEmpresa.toJSON() as Record<string, unknown>
+        );
       }
 
       res.json({ success: true, logo: filePath });

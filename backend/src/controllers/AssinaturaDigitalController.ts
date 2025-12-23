@@ -11,6 +11,8 @@ import { ZapsignService } from '../services/ZapsignService';
 import { ClienteArquivoService } from '../services/clienteArquivoService';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import AssinaturaDigitalProvider from '../models/AssinaturaDigitalProvider';
+import { registrarCriacao, registrarExclusao } from '../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../types/auth';
 
 // Interface comum para serviços de assinatura digital
 interface ISignatureService {
@@ -378,6 +380,13 @@ export class AssinaturaDigitalController {
         data_expiracao: dataExpiracao
       });
 
+      await registrarCriacao(
+        req as AuthenticatedRequest,
+        'AssinaturaDigital',
+        assinatura.id,
+        assinatura.toJSON() as Record<string, unknown>
+      );
+
       res.json({
         success: true,
         message: 'Documento enviado para assinatura com sucesso',
@@ -596,8 +605,17 @@ export class AssinaturaDigitalController {
         }
       }
 
+      const dadosAnteriores = assinatura.toJSON();
       assinatura.status = 'cancelado';
       await assinatura.save();
+
+      await registrarExclusao(
+        req as AuthenticatedRequest,
+        'AssinaturaDigital',
+        assinatura.id,
+        dadosAnteriores as Record<string, unknown>,
+        'Assinatura cancelada'
+      );
 
       res.json({
         success: true,

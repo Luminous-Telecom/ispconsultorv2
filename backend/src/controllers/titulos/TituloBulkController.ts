@@ -8,6 +8,8 @@ import { logger } from '../../utils/logger';
 import { normalizeDateForDb } from '../../utils/dateUtils';
 import { titulosBulkCreateSchema } from '../../validators/titulo.validator';
 import { withTransaction } from '../../utils/transaction';
+import { registrarCriacao } from '../../services/AuditoriaService';
+import type { AuthenticatedRequest } from '../../types/auth';
 
 export class TituloBulkController {
   
@@ -92,6 +94,16 @@ export class TituloBulkController {
 
         return resultados;
       });
+
+      // Registrar auditoria para cada título criado
+      for (const titulo of titulosCriados) {
+        await registrarCriacao(
+          req as AuthenticatedRequest,
+          'Titulo',
+          titulo.id,
+          titulo.toJSON() as Record<string, unknown>
+        );
+      }
 
       const { metrics, isMetricsEnabled } = await import('../../utils/metrics');
       if (isMetricsEnabled() && metrics && titulosCriados.length > 0) {
