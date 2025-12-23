@@ -739,11 +739,22 @@ export class SelfUpdateService {
   /**
    * Executa o processo completo de atualização
    * Retorna o resultado ANTES de reiniciar o PM2 para que o frontend possa exibir feedback
+   * @param branch Branch do Git para atualizar
+   * @param onProgress Callback opcional para notificar progresso em tempo real
    */
-  async executeUpdate(branch: string = 'main'): Promise<UpdateResult> {
+  async executeUpdate(
+    branch: string = 'main',
+    onProgress?: (progress: { step: string; progress: number; message: string; logs?: string[] }) => void
+  ): Promise<UpdateResult> {
     // Verificar se os comandos necessários estão disponíveis
     const commandCheck = await this.verifyCommands();
     if (!commandCheck.success) {
+      onProgress?.({
+        step: 'verificacao',
+        progress: 0,
+        message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
+        logs: [`✗ Comandos faltando: ${commandCheck.missing.join(', ')}`]
+      });
       return {
         success: false,
         message: `Comandos necessários não encontrados: ${commandCheck.missing.join(', ')}`,
@@ -756,25 +767,55 @@ export class SelfUpdateService {
       };
     }
 
+    onProgress?.({
+      step: 'iniciando',
+      progress: 0,
+      message: 'Iniciando processo de atualização...',
+      logs: ['Iniciando processo de atualização...']
+    });
+
     const steps = {
-      gitPull: await this.gitPull(branch),
+      gitPull: { success: false, stdout: '', stderr: '' } as CommandResult,
       npmInstall: { success: false, stdout: '', stderr: '' } as CommandResult,
       build: { success: false, stdout: '', stderr: '' } as CommandResult,
       migrate: { success: false, stdout: '', stderr: '' } as CommandResult,
     };
 
     // Passo 1: Git Pull (PRIMEIRO, para ter o código mais recente)
+    onProgress?.({
+      step: 'gitPull',
+      progress: 10,
+      message: 'Baixando atualizações do repositório...',
+      logs: ['→ Executando git pull...']
+    });
+    steps.gitPull = await this.gitPull(branch);
     if (!steps.gitPull.success) {
+      onProgress?.({
+        step: 'gitPull',
+        progress: 10,
+        message: `Falha ao executar git pull: ${steps.gitPull.error || steps.gitPull.stderr}`,
+        logs: [`✗ Git Pull falhou: ${steps.gitPull.error || steps.gitPull.stderr}`]
+      });
       return {
         success: false,
         message: `Falha ao executar git pull: ${steps.gitPull.error || steps.gitPull.stderr}`,
         steps,
       };
     }
+    onProgress?.({
+      step: 'gitPull',
+      progress: 20,
+      message: 'Git pull concluído com sucesso',
+      logs: ['✓ Git Pull concluído']
+    });
 
     // Passo 1.5: Limpar versão no package.json removendo commit hash (manter apenas SemVer)
-    // Nota: A versão já deve estar em formato SemVer correto após git pull
-    // Este passo apenas garante que não há sufixos indesejados
+    onProgress?.({
+      step: 'versao',
+      progress: 25,
+      message: 'Verificando versão...',
+      logs: ['→ Verificando versão no package.json...']
+    });
     logger.info('Verificando versão no package.json (formato SemVer)');
     const updateVersionResult = await this.updateVersion();
     if (!updateVersionResult.success) {
@@ -788,36 +829,97 @@ export class SelfUpdateService {
     }
 
     // Passo 2: NPM Install
+    onProgress?.({
+      step: 'npmInstall',
+      progress: 30,
+      message: 'Instalando dependências...',
+      logs: ['→ Executando npm install...']
+    });
     steps.npmInstall = await this.npmInstall();
     if (!steps.npmInstall.success) {
+      onProgress?.({
+        step: 'npmInstall',
+        progress: 30,
+        message: `Falha ao instalar dependências: ${steps.npmInstall.error || steps.npmInstall.stderr}`,
+        logs: [`✗ NPM Install falhou: ${steps.npmInstall.error || steps.npmInstall.stderr}`]
+      });
       return {
         success: false,
         message: `Falha ao instalar dependências: ${steps.npmInstall.error || steps.npmInstall.stderr}`,
         steps,
       };
     }
+    onProgress?.({
+      step: 'npmInstall',
+      progress: 50,
+      message: 'Dependências instaladas com sucesso',
+      logs: ['✓ NPM Install concluído']
+    });
 
     // Passo 3: Build
+    onProgress?.({
+      step: 'build',
+      progress: 60,
+      message: 'Compilando código...',
+      logs: ['→ Executando build...']
+    });
     steps.build = await this.build();
     if (!steps.build.success) {
+      onProgress?.({
+        step: 'build',
+        progress: 60,
+        message: `Falha ao executar build: ${steps.build.error || steps.build.stderr}`,
+        logs: [`✗ Build falhou: ${steps.build.error || steps.build.stderr}`]
+      });
       return {
         success: false,
         message: `Falha ao executar build: ${steps.build.error || steps.build.stderr}`,
         steps,
       };
     }
+    onProgress?.({
+      step: 'build',
+      progress: 70,
+      message: 'Build concluído com sucesso',
+      logs: ['✓ Build concluído']
+    });
 
     // Passo 4: Migrations (CRÍTICO - se falhar, para tudo)
+    onProgress?.({
+      step: 'migrate',
+      progress: 75,
+      message: 'Executando migrations do banco de dados...',
+      logs: ['→ Executando migrations...']
+    });
     steps.migrate = await this.migrate();
     if (!steps.migrate.success) {
+      onProgress?.({
+        step: 'migrate',
+        progress: 75,
+        message: `Falha ao executar migrations: ${steps.migrate.error || steps.migrate.stderr}`,
+        logs: [`✗ Migrations falharam: ${steps.migrate.error || steps.migrate.stderr}`]
+      });
       return {
         success: false,
         message: `Falha ao executar migrations: ${steps.migrate.error || steps.migrate.stderr}. O processo foi interrompido por segurança.`,
         steps,
       };
     }
+    onProgress?.({
+      step: 'migrate',
+      progress: 85,
+      message: 'Migrations concluídas com sucesso',
+      logs: ['✓ Migrations concluídas']
+    });
 
     // Se chegou até aqui, tudo deu certo
+    onProgress?.({
+      step: 'concluido',
+      progress: 90,
+      message: 'Atualização concluída. Reiniciando aplicação...',
+      logs: ['✓ Todos os passos concluídos com sucesso', '→ Aguardando reinicialização do PM2...']
+    });
+    
     // Retorna sucesso ANTES de reiniciar o PM2
     return {
       success: true,
@@ -829,13 +931,26 @@ export class SelfUpdateService {
   /**
    * Reinicia o PM2 e aguarda o backend estar pronto
    * Este método aguarda o PM2 reload completar E o backend estar pronto antes de retornar
+   * @param onProgress Callback opcional para notificar progresso em tempo real
    */
-  async reloadPM2(): Promise<CommandResult> {
+  async reloadPM2(onProgress?: (progress: { step: string; progress: number; message: string; logs?: string[] }) => void): Promise<CommandResult> {
     // Executar PM2 reload
+    onProgress?.({
+      step: 'pm2Reload',
+      progress: 92,
+      message: 'Reiniciando aplicação (PM2)...',
+      logs: ['→ Executando PM2 reload...']
+    });
     const reloadResult = await this.pm2Reload();
     
     // Se o reload foi bem-sucedido, aguardar o backend estar pronto
     if (reloadResult.success) {
+      onProgress?.({
+        step: 'pm2Reload',
+        progress: 95,
+        message: 'Aguardando backend estar pronto...',
+        logs: ['✓ PM2 reload executado', '→ Aguardando backend responder...']
+      });
       logger.info('PM2 reload executado com sucesso, aguardando backend estar pronto...');
       const isReady = await this.waitForBackendReady();
       
@@ -844,6 +959,12 @@ export class SelfUpdateService {
           stdout: reloadResult.stdout,
           stderr: reloadResult.stderr,
         });
+        onProgress?.({
+          step: 'pm2Reload',
+          progress: 98,
+          message: 'Backend pode não estar completamente pronto',
+          logs: ['⚠ Backend pode não estar completamente pronto após múltiplas tentativas']
+        });
         // Retornar sucesso parcial com aviso
         return {
           ...reloadResult,
@@ -851,7 +972,20 @@ export class SelfUpdateService {
         };
       }
       
+      onProgress?.({
+        step: 'pm2Reload',
+        progress: 100,
+        message: 'Atualização concluída com sucesso!',
+        logs: ['✓ PM2 reload concluído', '✓ Backend está pronto', '✓ Atualização concluída com sucesso!']
+      });
       logger.info('PM2 reload concluído e backend está pronto para receber requisições');
+    } else {
+      onProgress?.({
+        step: 'pm2Reload',
+        progress: 92,
+        message: `Erro ao reiniciar PM2: ${reloadResult.error || reloadResult.stderr}`,
+        logs: [`✗ PM2 reload falhou: ${reloadResult.error || reloadResult.stderr}`]
+      });
     }
     
     return reloadResult;

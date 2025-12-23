@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { formatDate } from '@/utils/formatters';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { apiService } from '@/services/api';
 import { useNotificationContext } from '@/components/notifications/NotificationProvider';
 import DraggableModal from '@/components/common/DraggableModal';
 import { ApiResponse } from '@/types/api';
+import { API_CONFIG } from '@/config/api';
 
 interface Atualizacao {
   versao: string;
@@ -15,26 +15,8 @@ interface Atualizacao {
   tipo: 'feature' | 'bugfix' | 'security' | 'melhoria';
 }
 
-interface BackendAtualizacoesResponse {
-  success: boolean;
-  data: Atualizacao[];
-  versao_atual: string;
-}
-
 interface ApiResponseWithVersao extends ApiResponse<Atualizacao[]> {
   versao_atual?: string;
-}
-
-interface UpdateResponse {
-  success: boolean;
-  message: string;
-  steps: {
-    gitPull: { success: boolean; stdout?: string; stderr?: string; error?: string };
-    npmInstall: { success: boolean; stdout?: string; stderr?: string; error?: string };
-    build: { success: boolean; stdout?: string; stderr?: string; error?: string };
-    migrate: { success: boolean; stdout?: string; stderr?: string; error?: string };
-    pm2Reload?: { success: boolean; stdout?: string; stderr?: string; error?: string };
-  };
 }
 
 interface AtualizacoesModalProps {
@@ -47,219 +29,132 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
   const { success, error: showError } = useNotificationContext();
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<string>('');
+  const [updateProgressPercent, setUpdateProgressPercent] = useState<number>(0);
   const [versaoAtual, setVersaoAtual] = useState<string>('N/A');
   const [updateLogs, setUpdateLogs] = useState<string[]>([]);
 
-  // Query para buscar atualizações
   const { data: atualizacoes, isLoading, error } = useQuery<Atualizacao[]>({
     queryKey: ['atualizacoes'],
     queryFn: async (): Promise<Atualizacao[]> => {
-      try {
-        // Buscar da API usando apiService
-        // Backend retorna: { success: true, data: Atualizacao[], versao_atual: string }
-        // ApiClient retorna: ApiResponse<BackendAtualizacoesResponse>
-        // Então: response = { success: true, data: { success: true, data: [...], versao_atual: '...' } }
-        const response = await apiService.get<Atualizacao[]>('/atualizacoes') as ApiResponseWithVersao;
-        
-        if (response.success) {
-          let atualizacoesArray: Atualizacao[] = [];
-          let versao: string = 'N/A';
-          
-          // Backend retorna: { success: true, data: [...], versao_atual: '...' }
-          // ResponseTransformer.normalize pode colocar apenas o array em response.data
-          // Mas versao_atual pode estar em response diretamente (não normalizado)
-          
-          // Caso 1: versao_atual está diretamente em response (não foi normalizado)
-          if (response.versao_atual) {
-            versao = response.versao_atual;
-          }
-          
-          // Caso 2: response.data é o array diretamente (ResponseTransformer normalizou)
-          if (Array.isArray(response.data)) {
-            atualizacoesArray = response.data;
-          }
-          // Caso 3: response.data é o objeto completo com data e versao_atual
-          else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
-            const backendResponse = response.data as BackendAtualizacoesResponse;
-            if (backendResponse.versao_atual) {
-              versao = backendResponse.versao_atual;
-            }
-            if (Array.isArray(backendResponse.data)) {
-              atualizacoesArray = backendResponse.data;
-            }
-          }
-          
-          // Salvar versão atual do sistema
-          setVersaoAtual(versao);
-          
-          return atualizacoesArray;
-        }
-        return [];
-      } catch (err) {
-        // Se houver erro, lançar novamente para o React Query tratar
-        throw err;
+      const response = await apiService.get<Atualizacao[]>('/atualizacoes') as ApiResponseWithVersao;
+      
+      if (response.success) {
+        const atualizacoesArray = Array.isArray(response.data) ? response.data : [];
+        const versao = response.versao_atual || 'N/A';
+        setVersaoAtual(versao);
+        return atualizacoesArray;
       }
+      return [];
     },
     enabled: show,
     refetchOnWindowFocus: false,
-    retry: false, // Não tentar novamente se falhar
+    retry: false,
   });
 
-  // Mutation para executar atualização
-  const updateMutation = useMutation({
-    mutationFn: async (branch: string = 'main'): Promise<UpdateResponse> => {
+  const executeUpdateWithSSE = async (branch: string = 'main'): Promise<void> => {
+    return new Promise((resolve, reject) => {
       setIsUpdating(true);
       setUpdateProgress('Iniciando atualização...');
+      setUpdateProgressPercent(0);
       setUpdateLogs(['Iniciando processo de atualização...']);
-      
-      // Timeout aumentado para 10 minutos (600000ms) pois o processo de atualização
-      // pode levar vários minutos: git pull, npm install, build, migrations, pm2 reload
-      const response = await apiService.post<UpdateResponse>(
-        '/atualizacoes/update', 
-        { branch },
-        { timeout: 600000 } // 10 minutos
-      );
-      
-      // Se a resposta indica erro, lançar exceção
-      if (response.success === false) {
-        throw new Error(response.message || 'Erro ao executar atualização');
+
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        reject(new Error('Token de autenticação não encontrado'));
+        return;
       }
+
+      const url = `${API_CONFIG.BASE_URL}/atualizacoes/update-stream?branch=${encodeURIComponent(branch)}`;
       
-      // Retornar response.data se existir, senão construir a partir da resposta
-      if (response.data && typeof response.data === 'object') {
-        const updateResponse = response.data as UpdateResponse;
-        if (updateResponse.success === false) {
-          throw new Error(updateResponse.message || 'Erro ao executar atualização');
-        }
-        return updateResponse;
-      }
-      
-      // Fallback: construir UpdateResponse a partir da resposta
-      return {
-        success: true,
-        message: response.message || 'Atualização concluída com sucesso',
-        steps: {},
-      } as UpdateResponse;
-    },
-    onSuccess: (data) => {
-      // Adicionar logs dos steps executados
-      const logs: string[] = [...updateLogs];
-      logs.push('✓ Atualização concluída com sucesso!');
-      
-      if (data.steps) {
-        if (data.steps.gitPull?.success) {
-          logs.push('✓ Git Pull: concluído');
-          if (data.steps.gitPull.stdout) {
-            const lines = data.steps.gitPull.stdout.split('\n').filter(l => l.trim()).slice(-3);
-            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
+      fetch(url, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
-        }
-        if (data.steps.npmInstall?.success) {
-          logs.push('✓ NPM Install: concluído');
-          if (data.steps.npmInstall.stdout) {
-            const lines = data.steps.npmInstall.stdout.split('\n').filter(l => l.trim()).slice(-3);
-            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
+          
+          const reader = response.body?.getReader();
+          if (!reader) {
+            throw new Error('Response body não disponível');
           }
-        }
-        if (data.steps.build?.success) {
-          logs.push('✓ Build: concluído');
-          if (data.steps.build.stdout) {
-            const lines = data.steps.build.stdout.split('\n').filter(l => l.trim()).slice(-3);
-            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
-          }
-        }
-        if (data.steps.migrate?.success) {
-          logs.push('✓ Migrations: concluído');
-          if (data.steps.migrate.stdout) {
-            const lines = data.steps.migrate.stdout.split('\n').filter(l => l.trim()).slice(-3);
-            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
-          }
-        }
-        if (data.steps.pm2Reload?.success) {
-          logs.push('✓ PM2 Reload: concluído');
-          if (data.steps.pm2Reload.stdout) {
-            const lines = data.steps.pm2Reload.stdout.split('\n').filter(l => l.trim()).slice(-3);
-            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
-          }
-        } else if (data.steps.pm2Reload && !data.steps.pm2Reload.success) {
-          logs.push('⚠ PM2 Reload: concluído com avisos');
-          if (data.steps.pm2Reload.stderr) {
-            const lines = data.steps.pm2Reload.stderr.split('\n').filter(l => l.trim()).slice(-3);
-            lines.forEach(line => logs.push(`  → ${line.substring(0, 100)}`));
-          }
-        }
-      }
-      
-      setUpdateLogs(logs);
-      setUpdateProgress('Atualização concluída! Backend reiniciado com sucesso.');
-      
-      // Mostrar notificação de sucesso
-      success(data.message || 'Atualização concluída com sucesso! A aplicação será reiniciada em breve.', {
+
+          const decoder = new TextDecoder();
+          const processStream = async () => {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const lines = decoder.decode(value, { stream: true }).split('\n');
+                for (const line of lines) {
+                  if (!line.startsWith('data: ')) continue;
+                  
+                  try {
+                    const data = JSON.parse(line.substring(6));
+                    
+                    if (data.error) {
+                      setIsUpdating(false);
+                      setUpdateLogs(prev => [...prev, `✗ Erro: ${data.error}`]);
+                      reject(new Error(data.error));
+                      return;
+                    }
+
+                    if (data.step && data.progress !== undefined && data.message) {
+                      setUpdateProgress(data.message);
+                      setUpdateProgressPercent(data.progress);
+                      if (data.logs?.length) {
+                        setUpdateLogs(prev => [...prev, ...data.logs]);
+                      }
+                    }
+
+                    if (data.success || (data.step === 'finalizado' && data.progress === 100)) {
+                      setIsUpdating(false);
+                      setUpdateProgress('Atualização concluída!');
+                      setUpdateProgressPercent(100);
+                      resolve();
+                      return;
+                    }
+                  } catch {
+                    // Ignorar erros de parsing
+                  }
+                }
+              }
+            } catch (streamError) {
+              reject(streamError);
+            }
+          };
+
+          processStream();
+        })
+        .catch(error => {
+          setIsUpdating(false);
+          setUpdateProgress('');
+          setUpdateProgressPercent(0);
+          reject(error);
+        });
+    });
+  };
+
+  const updateMutation = useMutation({
+    mutationFn: (branch: string = 'main') => executeUpdateWithSSE(branch),
+    onSuccess: () => {
+      success('Atualização concluída com sucesso! A aplicação será reiniciada em breve.', {
         id: `update-success-${Date.now()}`,
         duration: 5000,
       });
-      
-      // Fechar modal após um pequeno delay para o usuário ver a mensagem de sucesso
       setTimeout(() => {
         setIsUpdating(false);
         onClose();
-      }, 1500); // Aumentar delay para garantir que a notificação seja vista
-      
-      // Recarregar a página após um delay para garantir que o backend já reiniciou
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000); // Aguardar 3 segundos para o backend reiniciar antes de recarregar o frontend
+        setTimeout(() => window.location.reload(), 1500);
+      }, 1500);
     },
     onError: (err: unknown) => {
       setIsUpdating(false);
       setUpdateProgress('');
-      
-      // Verificar se é erro de conexão (backend reiniciando)
-      const axiosError = err as AxiosError<{ message?: string; steps?: Record<string, { error?: string }> }>;
-      
-      // Se for erro de conexão após iniciar atualização, pode ser que o backend tenha reiniciado
-      // mas isso não deveria acontecer mais, pois agora aguardamos o PM2 reload completar
-      // Se acontecer, tratar como erro real
-      if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ETIMEDOUT' || axiosError.code === 'ERR_NETWORK' || 
-          axiosError.code === 'ECONNABORTED' ||
-          (axiosError.message && (axiosError.message.includes('Network Error') || axiosError.message.includes('timeout') || axiosError.message.includes('aborted')))) {
-        // Se estava atualizando e deu erro de conexão, pode ser timeout ou erro real
-        // Adicionar log de erro aos logs
-        const logs: string[] = [...updateLogs];
-        logs.push('✗ Erro de conexão durante atualização');
-        logs.push('⚠ A atualização pode ter sido concluída, mas a conexão foi perdida');
-        setUpdateLogs(logs);
-        
-        // Mostrar como aviso, não como erro definitivo
-        showError('Erro de conexão durante atualização. Verifique se o backend reiniciou corretamente.');
-        return;
-      }
-      
-      // Se chegou aqui, é um erro real na atualização
-      
-      // Se chegou aqui, é um erro real na atualização
-      // Verificar se há mensagem de erro específica nos steps
-      const errorData = axiosError.response?.data;
-      let errorMessage = 'Erro ao executar atualização';
-      
-      if (errorData?.message) {
-        errorMessage = errorData.message;
-      } else if (errorData?.steps) {
-        // Tentar extrair mensagem de erro dos steps
-        const steps = errorData.steps;
-        const failedSteps = Object.entries(steps)
-          .filter(([_, step]: [string, { error?: string; stderr?: string }]) => step?.error || step?.stderr)
-          .map(([stepName, step]: [string, { error?: string; stderr?: string }]) => `${stepName}: ${step.error || step.stderr}`);
-        
-        if (failedSteps.length > 0) {
-          errorMessage = `Falha na atualização: ${failedSteps.join('; ')}`;
-        }
-      } else if (axiosError.message) {
-        errorMessage = axiosError.message;
-      }
-      
-      // Mostrar erro real (vermelho)
-      showError(errorMessage);
+      const error = err instanceof Error ? err.message : 'Erro ao executar atualização';
+      showError(error);
     },
   });
 
@@ -307,23 +202,9 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
             <div className="flex-grow-1">
               <strong>Erro ao buscar atualizações</strong>
               <p className="mb-0 small mt-1">
-                {(() => {
-                  // Tentar extrair mensagem do erro
-                  if (error instanceof Error) {
-                    return error.message;
-                  }
-                  // Se for um objeto com propriedade message
-                  if (error && typeof error === 'object' && 'message' in error) {
-                    return String((error as { message: unknown }).message);
-                  }
-                  // Se for um objeto com propriedade response (AxiosError)
-                  if (error && typeof error === 'object' && 'response' in error) {
-                    const axiosError = error as { response?: { data?: { message?: string } } };
-                    return axiosError.response?.data?.message || 'Erro ao conectar com o servidor';
-                  }
-                  // Mensagem padrão
-                  return 'Verifique a conexão ou configure o GitHub corretamente. Configure as variáveis GITHUB_REPO e GITHUB_TOKEN no backend se necessário.';
-                })()}
+                {error instanceof Error 
+                  ? error.message 
+                  : 'Verifique a conexão ou configure o GitHub corretamente.'}
               </p>
             </div>
           </div>
@@ -379,21 +260,65 @@ const AtualizacoesModal: React.FC<AtualizacoesModalProps> = ({ show, onClose }) 
 
             {/* Progresso da Atualização */}
             {isUpdating && updateProgress && (
-              <div className="alert alert-info mb-3" role="alert">
+              <div 
+                className="mb-3" 
+                role="alert"
+                style={{
+                  backgroundColor: 'var(--bg-secondary)',
+                  border: '1px solid var(--info-color)',
+                  borderRadius: '0.375rem',
+                  padding: '1rem',
+                  color: 'var(--text-primary)'
+                }}
+              >
                 <div className="d-flex align-items-center mb-2">
                   <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
                     <span className="visually-hidden">Carregando...</span>
                   </div>
                   <div className="flex-grow-1">
-                    <strong>Atualizando sistema...</strong>
-                    <p className="mb-0 small mt-1">{updateProgress}</p>
+                    <strong style={{ color: 'var(--info-color)' }}>Atualizando sistema...</strong>
+                    <p className="mb-0 small mt-1" style={{ color: 'var(--text-secondary)' }}>{updateProgress}</p>
                   </div>
                 </div>
+                
+                {/* Barra de Progresso */}
+                <div className="mt-3 mb-2">
+                  <div 
+                    className="progress" 
+                    style={{ 
+                      height: '24px', 
+                      borderRadius: '0.375rem',
+                      backgroundColor: 'var(--bg-tertiary)'
+                    }}
+                  >
+                    <div 
+                      className="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                      role="progressbar" 
+                      style={{ width: `${updateProgressPercent}%` }}
+                      aria-valuenow={updateProgressPercent} 
+                      aria-valuemin={0} 
+                      aria-valuemax={100}
+                    >
+                      <span className="small fw-semibold" style={{ color: '#ffffff' }}>{updateProgressPercent}%</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Logs da atualização */}
                 {updateLogs.length > 0 && (
-                  <div className="mt-2" style={{ maxHeight: '200px', overflowY: 'auto', backgroundColor: '#f8f9fa', padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                  <div className="mt-2" style={{ 
+                    maxHeight: '200px', 
+                    overflowY: 'auto', 
+                    backgroundColor: 'var(--bg-secondary)', 
+                    color: 'var(--text-primary)',
+                    padding: '0.5rem', 
+                    borderRadius: '0.25rem', 
+                    fontSize: '0.75rem', 
+                    fontFamily: 'monospace',
+                    border: '1px solid var(--border-color)'
+                  }}>
                     {updateLogs.map((log, index) => (
-                      <div key={index} className={log.startsWith('✗') ? 'text-danger' : log.startsWith('✓') ? 'text-success' : 'text-muted'}>
+                      <div key={index} className={log.startsWith('✗') ? 'text-danger' : log.startsWith('✓') ? 'text-success' : log.startsWith('⚠') ? 'text-warning' : 'text-muted'}>
                         {log}
                       </div>
                     ))}

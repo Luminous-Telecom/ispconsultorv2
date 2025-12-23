@@ -211,8 +211,202 @@ export class AtualizacoesController {
   }
 
   /**
+   * Executa o self-update da aplicação com progresso em tempo real via SSE
+   * Requer autenticação e permissão de admin
+   */
+  static async updateStream(req: Request, res: Response): Promise<void> {
+    let branch = 'main';
+    
+    try {
+      // Verificar se o usuário é admin
+      if (!AtualizacoesController.isAdmin(req)) {
+        res.writeHead(403, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        });
+        res.write(`data: ${JSON.stringify({ error: 'Acesso negado. Apenas administradores podem executar atualizações.' })}\n\n`);
+        res.end();
+        return;
+      }
+
+      branch = (req.query?.branch as string) || req.body?.branch || 'main';
+
+      // Validar branch
+      if (typeof branch !== 'string' || !branch.trim()) {
+        res.writeHead(400, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        });
+        res.write(`data: ${JSON.stringify({ error: 'Branch inválida' })}\n\n`);
+        res.end();
+        return;
+      }
+
+      // Configurar headers para SSE
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no', // Desabilitar buffering do nginx
+      });
+
+      logger.info('Iniciando processo de atualização com SSE', {
+        branch,
+        usuario: (req as AuthenticatedRequest).user,
+      });
+
+      let updateService: SelfUpdateService;
+      try {
+        updateService = new SelfUpdateService();
+      } catch (error) {
+        logger.error('Erro ao criar SelfUpdateService', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        });
+        res.write(`data: ${JSON.stringify({ 
+          error: `Erro ao inicializar serviço de atualização: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+        })}\n\n`);
+        res.end();
+        return;
+      }
+
+      // Função para enviar progresso via SSE
+      const sendProgress = (progress: { step: string; progress: number; message: string; logs?: string[] }) => {
+        try {
+          res.write(`data: ${JSON.stringify(progress)}\n\n`);
+        } catch (err) {
+          logger.error('Erro ao enviar progresso via SSE', { error: err });
+        }
+      };
+
+      let result;
+      try {
+        result = await updateService.executeUpdate(branch, sendProgress);
+      } catch (error) {
+        logger.error('Erro inesperado ao executar atualização', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        sendProgress({
+          step: 'erro',
+          progress: 0,
+          message: `Erro inesperado durante atualização: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+          logs: [`✗ Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`]
+        });
+        res.end();
+        return;
+      }
+
+      if (!result.success) {
+        logger.error('Falha no processo de atualização', {
+          steps: Object.keys(result.steps).map(key => {
+            const step = result.steps[key as keyof typeof result.steps];
+            return {
+              step: key,
+              success: step?.success ?? false,
+              error: step?.error || step?.stderr,
+            };
+          }),
+        });
+
+        sendProgress({
+          step: 'erro',
+          progress: 0,
+          message: result.message,
+          logs: [`✗ ${result.message}`]
+        });
+        res.end();
+        return;
+      }
+
+      // Se chegou até aqui, tudo deu certo até as migrations
+      logger.info('Atualização concluída com sucesso, iniciando reinicialização do PM2');
+
+      // Aguardar PM2 reload completar
+      let pm2ReloadResult;
+      try {
+        pm2ReloadResult = await updateService.reloadPM2(sendProgress);
+        logger.info('PM2 reload concluído com sucesso');
+      } catch (error) {
+        logger.error('Erro ao reiniciar PM2 após atualização', {
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        });
+        pm2ReloadResult = {
+          success: false,
+          stdout: '',
+          stderr: error instanceof Error ? error.message : 'Erro desconhecido ao reiniciar PM2',
+          error: error instanceof Error ? error.message : 'Erro desconhecido',
+        };
+      }
+
+      // Registrar auditoria da atualização do sistema
+      const authenticatedReq = req as AuthenticatedRequest;
+      try {
+        await registrarCriacao(
+          authenticatedReq,
+          'SistemaAtualizacao',
+          0,
+          {
+            branch,
+            steps: {
+              gitPull: { success: result.steps.gitPull.success },
+              npmInstall: { success: result.steps.npmInstall.success },
+              build: { success: result.steps.build.success },
+              migrate: { success: result.steps.migrate.success },
+              pm2Reload: { success: pm2ReloadResult.success }
+            },
+            message: result.message
+          } as Record<string, unknown>
+        );
+      } catch (auditError) {
+        logger.warn('Erro ao registrar auditoria (não crítico)', { error: auditError });
+      }
+
+      // Enviar resultado final
+      sendProgress({
+        step: 'finalizado',
+        progress: 100,
+        message: 'Atualização concluída com sucesso!',
+        logs: ['✓ Atualização concluída com sucesso!']
+      });
+
+      res.write(`data: ${JSON.stringify({ 
+        success: true, 
+        message: result.message,
+        steps: {
+          gitPull: { success: result.steps.gitPull.success },
+          npmInstall: { success: result.steps.npmInstall.success },
+          build: { success: result.steps.build.success },
+          migrate: { success: result.steps.migrate.success },
+          pm2Reload: { success: pm2ReloadResult.success }
+        }
+      })}\n\n`);
+      res.end();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      logger.error('Erro inesperado durante atualização', {
+        error: errorMessage,
+        branch,
+        usuario: (req as AuthenticatedRequest).user,
+      });
+
+      try {
+        res.write(`data: ${JSON.stringify({ 
+          error: 'Erro interno do servidor durante a atualização',
+          details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+        })}\n\n`);
+        res.end();
+      } catch (writeError) {
+        logger.error('Erro ao escrever resposta SSE', { error: writeError });
+      }
+    }
+  }
+
+  /**
    * Executa o self-update da aplicação
    * Requer autenticação e permissão de admin
+   * @deprecated Use updateStream para progresso em tempo real
    */
   static async update(req: Request, res: Response): Promise<void> {
     let branch = 'main';
