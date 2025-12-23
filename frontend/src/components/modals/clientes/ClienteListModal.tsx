@@ -60,6 +60,8 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
       setShowPreview(true);
       success('PDF de auditoria gerado com sucesso!');
     } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[ClienteListModal] handleAudit - Erro:', err);
       showError('Erro ao gerar PDF de auditoria');
     }
   };

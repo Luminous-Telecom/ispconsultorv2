@@ -42,7 +42,7 @@ interface TableProps<T = Record<string, unknown>> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onRefresh?: () => void;
-  onAudit?: (item: T) => void;
+  onAudit?: (item: T) => void | Promise<void>;
   auditEntity?: string;
   className?: string;
   tableId?: string;
@@ -379,28 +379,6 @@ function Table<T extends { id: number | string }>({
     onRefresh,
   });
 
-  // Handler para o botão de auditar com gerenciamento de loading
-  const handleAuditClick = useCallback(async () => {
-    if (!onAudit || state.selectedItems.length !== 1) return;
-    
-    const selectedItem = state.selectedItems[0];
-    if (!selectedItem) return;
-    
-    setIsAuditing(true);
-    try {
-      const result = onAudit(selectedItem);
-      // Se retornar uma Promise, aguardar sua conclusão
-      if (result && typeof result.then === 'function') {
-        await result;
-      }
-    } catch (error) {
-      // Erro já será tratado pelo handler onAudit
-      console.error('Erro ao auditar:', error);
-    } finally {
-      setIsAuditing(false);
-    }
-  }, [onAudit, state.selectedItems]);
-
   // Refs para armazenar callbacks e evitar recriação
   const onRefreshRef = useRef(onRefresh);
   const onSearchRef = useRef(onSearch);
@@ -412,6 +390,42 @@ function Table<T extends { id: number | string }>({
     onSearchRef.current = onSearch;
     tableActionsRef.current = tableActions;
   }, [onRefresh, onSearch, tableActions]);
+
+  // Handler para o botão de auditar com gerenciamento de loading
+  const handleAuditClick = useCallback(async () => {
+    if (!onAudit || state.selectedItems.length !== 1) {
+      return;
+    }
+    
+    const selectedItem = state.selectedItems[0];
+    if (!selectedItem) {
+      return;
+    }
+    
+    setIsAuditing(true);
+    
+    try {
+      const result = onAudit(selectedItem);
+      
+      if (result instanceof Promise) {
+        await result;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      // Erro silencioso - a auditoria pode falhar sem quebrar a UI
+    } finally {
+      setIsAuditing(false);
+      
+      setTimeout(() => {
+        if (onRefreshRef.current) {
+          onRefreshRef.current();
+        } else if (tableActionsRef.current?.refresh) {
+          tableActionsRef.current.refresh();
+        }
+      }, 0);
+    }
+  }, [onAudit, state.selectedItems]);
 
   // Callbacks memoizados para evitar recriação
   const handleReloadClick = useCallback(() => {
@@ -1290,19 +1304,23 @@ function Table<T extends { id: number | string }>({
         
         <div className="d-flex align-items-center gap-2">
           {/* Botão de auditar (apenas quando há 1 item selecionado) */}
-          {onAudit && auditEntity && state.selectedItems.length === 1 && (
-            <Button
-              variant="outline-info"
-              size="sm"
-              icon="shield-check"
-              onClick={handleAuditClick}
-              disabled={loading || isAuditing}
-              isLoading={isAuditing}
-              tooltip="Auditar registro selecionado"
-            >
-              Auditar
-            </Button>
-          )}
+          {onAudit && auditEntity && state.selectedItems.length === 1 && (() => {
+            // eslint-disable-next-line no-console
+            console.log('[Table] Renderizando botão Auditar com props:', { isLoading: isAuditing, disabled: loading || isAuditing, variant: 'outline-info' });
+            return (
+              <Button
+                variant="outline-info"
+                size="sm"
+                icon="shield-check"
+                onClick={handleAuditClick}
+                disabled={loading || isAuditing}
+                isLoading={isAuditing}
+                tooltip="Auditar registro selecionado"
+              >
+                Auditar
+              </Button>
+            );
+          })()}
           {/* Botão de refresh */}
           <Button
             variant="outline-secondary"
@@ -1546,16 +1564,25 @@ function Table<T extends { id: number | string }>({
                 className="btn btn-outline-info btn-sm"
                 onClick={handleAuditClick}
                 disabled={loading || isAuditing}
-                title={`Auditar registro selecionado`}
+                title="Auditar registro selecionado"
               >
                 {isAuditing ? (
                   <>
                     <span 
-                      className="spinner-border spinner-border-sm me-2" 
-                      role="status" 
+                      className="me-2"
+                      style={{
+                        display: 'inline-block',
+                        width: '12px',
+                        height: '12px',
+                        border: '2px solid #0dcaf0',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.6s linear infinite'
+                      }}
+                      role="status"
                       aria-hidden="true"
                     />
-                    Auditar
+                    <span style={{ opacity: 0.8 }}>Aguardando...</span>
                   </>
                 ) : (
                   <>

@@ -63,6 +63,36 @@
   height: 1rem;
 }
 
+/* Animação do spinner */
+@keyframes spinner-border {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-border {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  vertical-align: text-bottom;
+  border: 0.25em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border 0.75s linear infinite;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.2em;
+}
+
 /* Checkbox inline */
 .form-check-inline {
   margin-right: 1rem;
@@ -193,6 +223,12 @@
 .btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+/* Garantir que spinner seja visível mesmo quando botão está desabilitado */
+.btn:disabled .spinner-border {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .form-control:disabled,
