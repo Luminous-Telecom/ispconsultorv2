@@ -104,7 +104,7 @@ export class ServidorWhatsAppController {
         req as AuthenticatedRequest,
         'ServidorWhatsApp',
         servidor.id,
-        servidor.toJSON() as Record<string, unknown>
+        servidor.toJSON() as unknown as Record<string, unknown>
       );
 
       res.status(201).json({
@@ -157,8 +157,8 @@ export class ServidorWhatsAppController {
         req as AuthenticatedRequest,
         'ServidorWhatsApp',
         servidor.id,
-        dadosAnteriores as Record<string, unknown>,
-        servidor.toJSON() as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>,
+        servidor.toJSON() as unknown as Record<string, unknown>
       );
 
       res.json({
@@ -209,7 +209,7 @@ export class ServidorWhatsAppController {
         req as AuthenticatedRequest,
         'ServidorWhatsApp',
         servidor.id,
-        dadosAnteriores as Record<string, unknown>
+        dadosAnteriores as unknown as Record<string, unknown>
       );
 
       res.json({
@@ -798,8 +798,8 @@ export class ServidorWhatsAppController {
             req as AuthenticatedRequest,
             'MensagemWhatsApp',
             mensagem.id,
-            dadosAnteriores as Record<string, unknown>,
-            mensagem.toJSON() as Record<string, unknown>
+            dadosAnteriores as unknown as Record<string, unknown>,
+            mensagem.toJSON() as unknown as Record<string, unknown>
           );
         } else {
           // Criar novo
@@ -811,7 +811,7 @@ export class ServidorWhatsAppController {
             req as AuthenticatedRequest,
             'MensagemWhatsApp',
             mensagem.id,
-            mensagem.toJSON() as Record<string, unknown>
+            mensagem.toJSON() as unknown as Record<string, unknown>
           );
         }
       } catch (dbError) {
