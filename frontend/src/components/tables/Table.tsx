@@ -95,6 +95,9 @@ function Table<T extends { id: number | string }>({
   // Estado para controlar qual dropdown de ações está aberto
   const [openActionDropdown, setOpenActionDropdown] = useState<number | string | null>(null);
   
+  // Estado para controlar loading do botão de auditar
+  const [isAuditing, setIsAuditing] = useState(false);
+  
   // Refs para calcular posição do dropdown
   const dropdownRefs = useRef<Map<number | string, HTMLDivElement>>(new Map());
   const buttonRefs = useRef<Map<number | string, HTMLButtonElement>>(new Map());
@@ -375,6 +378,28 @@ function Table<T extends { id: number | string }>({
     onPageSizeChange,
     onRefresh,
   });
+
+  // Handler para o botão de auditar com gerenciamento de loading
+  const handleAuditClick = useCallback(async () => {
+    if (!onAudit || state.selectedItems.length !== 1) return;
+    
+    const selectedItem = state.selectedItems[0];
+    if (!selectedItem) return;
+    
+    setIsAuditing(true);
+    try {
+      const result = onAudit(selectedItem);
+      // Se retornar uma Promise, aguardar sua conclusão
+      if (result && typeof result.then === 'function') {
+        await result;
+      }
+    } catch (error) {
+      // Erro já será tratado pelo handler onAudit
+      console.error('Erro ao auditar:', error);
+    } finally {
+      setIsAuditing(false);
+    }
+  }, [onAudit, state.selectedItems]);
 
   // Refs para armazenar callbacks e evitar recriação
   const onRefreshRef = useRef(onRefresh);
@@ -1270,13 +1295,9 @@ function Table<T extends { id: number | string }>({
               variant="outline-info"
               size="sm"
               icon="shield-check"
-              onClick={() => {
-                const selectedItem = state.selectedItems[0];
-                if (selectedItem && onAudit) {
-                  onAudit(selectedItem);
-                }
-              }}
-              disabled={loading}
+              onClick={handleAuditClick}
+              disabled={loading || isAuditing}
+              isLoading={isAuditing}
               tooltip="Auditar registro selecionado"
             >
               Auditar
@@ -1523,15 +1544,24 @@ function Table<T extends { id: number | string }>({
               <button 
                 type="button"
                 className="btn btn-outline-info btn-sm"
-                onClick={() => {
-                  const selectedItem = state.selectedItems[0];
-                  if (selectedItem && onAudit) {
-                    onAudit(selectedItem);
-                  }
-                }}
+                onClick={handleAuditClick}
+                disabled={loading || isAuditing}
                 title={`Auditar registro selecionado`}
               >
-                <i className="bi bi-shield-check"></i> Auditar
+                {isAuditing ? (
+                  <>
+                    <span 
+                      className="spinner-border spinner-border-sm me-2" 
+                      role="status" 
+                      aria-hidden="true"
+                    />
+                    Auditar
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-shield-check"></i> Auditar
+                  </>
+                )}
               </button>
             )}
             <button 

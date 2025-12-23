@@ -55,34 +55,7 @@ Sistema ERP completo para gestão de clientes, contratos e cobrança com integra
 
 ### 0. Instalar Elasticsearch (Opcional - para sistema de auditoria)
 
-O sistema possui um script automatizado para instalação do Elasticsearch:
-
-```bash
-# Executar script de instalação automática
-npm run setup:elasticsearch
-
-# Ou executar diretamente:
-sudo bash scripts/install-elasticsearch.sh
-```
-
-O script irá:
-- Verificar se o Elasticsearch já está instalado
-- Instalar dependências necessárias
-- Adicionar repositório oficial do Elasticsearch
-- Instalar e configurar o Elasticsearch
-- Configurar JVM (heap size)
-- Configurar `network.host: 127.0.0.1` (apenas localhost)
-- Configurar `xpack.security.enabled: true` (segurança habilitada)
-- Configurar `xpack.ml.enabled: false` (ML desabilitado)
-- Gerar senha aleatória e configurar usuário `elastic`
-- Salvar credenciais no `.env` do backend automaticamente
-- Iniciar o serviço automaticamente
-
-**Nota:** O script requer permissões de root (sudo). Se o Elasticsearch já estiver instalado, o script detecta e configura automaticamente.
-
-#### Instalação Manual do Elasticsearch
-
-Se preferir instalar manualmente:
+O Elasticsearch é usado para armazenar logs de auditoria do sistema. A instalação deve ser feita manualmente seguindo os passos abaixo:
 
 **1. Instalar dependências:**
 ```bash
@@ -119,11 +92,12 @@ Adicione ou modifique as seguintes linhas:
 # Endereço de rede (apenas localhost para segurança)
 network.host: 127.0.0.1
 
-# Porta HTTP
-http.port: 9200
-
-# Habilitar segurança
+# Habilitar segurança (autenticação)
 xpack.security.enabled: true
+
+# Desabilitar SSL/TLS (necessário quando segurança está habilitada)
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
 
 # Desabilitar Machine Learning
 xpack.ml.enabled: false
@@ -159,31 +133,23 @@ curl http://localhost:9200
 
 **8. Configurar senha do usuário `elastic`:**
 
-**Opção A: Usando elasticsearch-reset-password (Recomendado)**
+O Elasticsearch 8.x vem com segurança habilitada por padrão. É necessário configurar uma senha para o usuário `elastic`.
+
+**Gerar e configurar senha:**
 ```bash
-# Gerar senha aleatória
+# Gerar senha aleatória segura (32 caracteres)
 ELASTICSEARCH_PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-32)
 
-# Configurar senha
+# Configurar senha usando o utilitário do Elasticsearch
 echo "$ELASTICSEARCH_PASSWORD" | sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i -b
 
-# Anotar a senha gerada
+# IMPORTANTE: Anotar a senha gerada, você precisará dela para configurar o .env
+echo "════════════════════════════════════════"
 echo "Senha do Elasticsearch: $ELASTICSEARCH_PASSWORD"
+echo "════════════════════════════════════════"
 ```
 
-**Opção B: Usando API do Elasticsearch (se segurança ainda não estiver totalmente habilitada)**
-```bash
-# Gerar senha aleatória
-ELASTICSEARCH_PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-32)
-
-# Configurar senha via API (apenas se ainda não tiver senha configurada)
-curl -X POST "http://localhost:9200/_security/user/elastic/_password" \
-  -H "Content-Type: application/json" \
-  -d "{\"password\":\"$ELASTICSEARCH_PASSWORD\"}"
-
-# Anotar a senha gerada
-echo "Senha do Elasticsearch: $ELASTICSEARCH_PASSWORD"
-```
+**Nota:** Guarde a senha gerada, pois você precisará adicioná-la no arquivo `.env` do backend no próximo passo.
 
 **9. Configurar variáveis no `.env` do backend:**
 
@@ -360,27 +326,7 @@ sudo yum install git -y
 git --version
 ```
 
-### 5. Setup Automático Completo (Recomendado)
-
-Para instalar todas as dependências automaticamente após atualizar o sistema:
-
-```bash
-# Executar setup completo (instala Elasticsearch, dependências NPM e configura .env)
-npm run setup
-
-# Ou executar diretamente:
-sudo bash scripts/setup.sh
-```
-
-O script irá:
-- ✅ Instalar e configurar Elasticsearch
-- ✅ Instalar todas as dependências NPM (root, backend e frontend)
-- ✅ Criar arquivos `.env` a partir de `.env.example` se não existirem
-- ✅ Adicionar variáveis do Elasticsearch ao `.env` do backend
-
-**Nota:** O script requer permissões de root (sudo) para instalar o Elasticsearch.
-
-### 6. Instalar Nginx (Para Produção)
+### 5. Instalar Nginx (Para Produção)
 
 **Ubuntu/Debian:**
 ```bash
