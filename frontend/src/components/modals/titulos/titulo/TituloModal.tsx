@@ -24,7 +24,8 @@ const TituloModal: React.FC<TituloModalProps> = ({
   onSuccess,
   tituloId = null,
   clienteId,
-  contratoId
+  contratoId,
+  isAvulso = false
 }) => {
   const isMobile = useIsMobile();
   // Estado interno para controlar o tituloId após criação
@@ -51,6 +52,7 @@ const TituloModal: React.FC<TituloModalProps> = ({
     clienteId,
     contratoId,
     show,
+    isAvulso,
     onSuccess: () => {
       onSuccess?.();
     }

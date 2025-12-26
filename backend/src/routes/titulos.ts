@@ -23,6 +23,9 @@ router.put('/:id', TituloCRUDController.update);
 // Buscar títulos por contrato
 router.get('/contrato/:contratoId', TituloCRUDController.getByContrato);
 
+// Buscar títulos avulsos por contrato
+router.get('/contrato/:contratoId/avulsos', TituloCRUDController.getAvulsosByContrato);
+
 // Deletar título
 router.delete('/:id', TituloCRUDController.destroy);
 

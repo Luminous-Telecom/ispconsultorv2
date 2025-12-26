@@ -105,6 +105,7 @@ export interface Titulo {
   nosso_numero?: string;
   charge_id?: string;
   url_boleto?: string;
+  is_avulso?: boolean;
   created_at: string;
   updated_at?: string;
   

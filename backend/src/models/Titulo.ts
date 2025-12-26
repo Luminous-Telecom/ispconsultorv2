@@ -47,6 +47,7 @@ export class Titulo extends Model<
   declare charge_id: string | null;
   declare url_boleto: string | null;
   declare nosso_numero: string | null;
+  declare is_avulso: boolean;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -646,6 +647,12 @@ Titulo.init(
       type: DataTypes.STRING(50),
       allowNull: true,
       comment: 'Número do título gerado pelo nosso sistema'
+    },
+    is_avulso: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'Indica se o título foi criado manualmente (avulso) ou gerado automaticamente pelo sistema'
     },
     created_at: {
       type: DataTypes.DATE,

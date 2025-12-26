@@ -24,5 +24,6 @@ export interface TituloModalProps {
   tituloId?: number | null; // Para edição
   clienteId?: number; // Para criação com cliente específico
   contratoId?: number; // Para criação com contrato específico
+  isAvulso?: boolean; // Para marcar título como avulso
 }
 

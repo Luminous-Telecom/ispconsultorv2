@@ -23,6 +23,7 @@ interface UseTituloFormParams {
   contratoId?: number;
   show: boolean;
   onSuccess?: () => void;
+  isAvulso?: boolean;
 }
 
 interface UseTituloFormReturn {
@@ -63,7 +64,8 @@ export const useTituloForm = ({
   clienteId,
   contratoId,
   show,
-  onSuccess
+  onSuccess,
+  isAvulso = false
 }: UseTituloFormParams): UseTituloFormReturn => {
   const isEditing = !!tituloId;
   const { success, error } = useNotificationContext();
@@ -245,7 +247,7 @@ export const useTituloForm = ({
       updateTituloMutation.mutate(dataToSend);
     } else if (!isEditing && clienteId) {
       // Modo criação
-      const payload: Partial<CreateCarneParcela> & { cliente_id: number; contrato_id?: number } = {
+      const payload: Partial<CreateCarneParcela> & { cliente_id: number; contrato_id?: number; is_avulso?: boolean } = {
         plano_id: typedData.plano_id,
         data_vencimento: typedData.data_vencimento,
         observacoes: typedData.observacoes || undefined,
@@ -254,7 +256,8 @@ export const useTituloForm = ({
         acrescimo_percentual: (typedData.acrescimo_percentual || 0) > 0 ? typedData.acrescimo_percentual : undefined,
         acrescimo_valor: (typedData.acrescimo_valor || 0) > 0 ? typedData.acrescimo_valor : undefined,
         descricao: typedData.descricao || undefined,
-        cliente_id: clienteId
+        cliente_id: clienteId,
+        is_avulso: isAvulso || false
       };
       
       if (contratoId || typedData.contrato_id) {

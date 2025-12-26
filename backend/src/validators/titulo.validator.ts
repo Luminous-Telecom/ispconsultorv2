@@ -47,7 +47,8 @@ export const tituloCreateSchema = Joi.object({
   acrescimo_valor: Joi.number().min(0).precision(2).allow(null).optional(),
   desconto_percentual: Joi.number().min(0).max(100).precision(2).allow(null).optional(),
   desconto_valor: Joi.number().min(0).precision(2).allow(null).optional(),
-  observacoes: Joi.string().max(1000).allow(null, '').optional()
+  observacoes: Joi.string().max(1000).allow(null, '').optional(),
+  is_avulso: Joi.boolean().default(false).optional()
 });
 
 export const tituloUpdateSchema = Joi.object({

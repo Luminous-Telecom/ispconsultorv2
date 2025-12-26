@@ -33,6 +33,13 @@ class TituloServiceClass extends BaseService<CarneParcela, CreateCarneParcela, P
   }
 
   /**
+   * Buscar títulos avulsos por contrato (retorna Titulo[], não CarneParcela[])
+   */
+  async findAvulsosByContrato(contratoId: number): Promise<ApiResponse<Titulo[]>> {
+    return this.customGet<Titulo[]>(`/contrato/${contratoId}/avulsos`);
+  }
+
+  /**
    * Buscar parcelas vencidas
    */
   async findVencidas(): Promise<ApiResponse<CarneParcela[]>> {
@@ -231,6 +238,17 @@ export class TituloService {
    */
   static async findByContrato(contratoId: number): Promise<Titulo[]> {
     const response = await tituloServiceInstance.findByContrato(contratoId);
+    if (response.data && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
+  }
+
+  /**
+   * Buscar títulos avulsos por contrato (retorna Titulo[], não CarneParcela[])
+   */
+  static async findAvulsosByContrato(contratoId: number): Promise<Titulo[]> {
+    const response = await tituloServiceInstance.findAvulsosByContrato(contratoId);
     if (response.data && Array.isArray(response.data)) {
       return response.data;
     }

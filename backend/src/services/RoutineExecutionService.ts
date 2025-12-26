@@ -402,7 +402,8 @@ export class RoutineExecutionService {
                     status: 'pendente',
                     pago: false,
                     descricao: `${plano?.nome_plano || 'Mensalidade'}\n${formatDate(dataVencimento) || ''}`,
-                    numero_titulo: numeroTitulo
+                    numero_titulo: numeroTitulo,
+                    is_avulso: false
                   }, { transaction });
 
                   // Incrementar métrica de título gerado se métricas estiverem habilitadas

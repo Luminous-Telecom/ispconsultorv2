@@ -32,6 +32,7 @@ import '../../contratos/ContratoModals.css';
 import ContratoTab from './abas/ContratoTab';
 import TermosTab from './abas/TermosTab';
 import FinanceiroTab from './abas/FinanceiroTab';
+import FinanceiroAvulsoTab from './abas/FinanceiroAvulsoTab';
 import ServicosAdicionaisTab from './abas/ServicosAdicionaisTab';
 import { TermoEditModal, SelecionarTermoModal, ServicoAdicionalModal, EnviarAssinaturaModal } from './modals';
 import { BulkAction } from './types';
@@ -66,6 +67,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       setInternalContratoId(contratoId);
       setActiveTab('contrato');
       setShowCancelados(false);
+      setShowCanceladosAvulsos(false);
       setPage(1);
       setLimit(10);
     }
@@ -98,11 +100,13 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     termoCadastradoId: 0
   });
   const [showTituloCreateModal, setShowTituloCreateModal] = useState(false);
+  const [isCreatingAvulso, setIsCreatingAvulso] = useState(false);
   const [showTituloEditModal, setShowTituloEditModal] = useState(false);
   const [showReceberModal, setShowReceberModal] = useState(false);
   const [selectedTituloId, setSelectedTituloId] = useState<number | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<Titulo | null>(null);
   const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
+  const [selectedAvulsosItems, setSelectedAvulsosItems] = useState<Titulo[]>([]);
   const [selectedTermosItems, setSelectedTermosItems] = useState<TermoContrato[]>([]);
   const [selectedServicosAdicionaisItems, setSelectedServicosAdicionaisItems] = useState<ContratoPlanoAdicional[]>([]);
   
@@ -124,6 +128,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showCancelados, setShowCancelados] = useState(false);
+  const [showCanceladosAvulsos, setShowCanceladosAvulsos] = useState(false);
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
 
@@ -198,6 +203,17 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     queryKey: ['titulos', 'contrato', internalContratoId],
     queryFn: async () => {
       const titulos = await TituloService.findByContrato(internalContratoId!);
+      return { data: titulos };
+    },
+    enabled: isEditMode && !!internalContratoId,
+    staleTime: 30 * 1000,
+  });
+
+  // Buscar títulos avulsos do contrato (apenas no modo edição)
+  const { data: titulosAvulsosData, isLoading: isLoadingTitulosAvulsos, refetch: refetchTitulosAvulsos } = useQuery({
+    queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'],
+    queryFn: async () => {
+      const titulos = await TituloService.findAvulsosByContrato(internalContratoId!);
       return { data: titulos };
     },
     enabled: isEditMode && !!internalContratoId,
@@ -326,11 +342,67 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   };
 
+  // Funções para impressão de títulos avulsos
+  const handleImprimirSelecionadosAvulsos = async () => {
+    if (selectedAvulsosItems.length === 0) return;
+    setIsGeneratingPdfLocal(true);
+    try {
+      const ids = selectedAvulsosItems.map(item => item.id);
+      const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
+      
+      const url = window.URL.createObjectURL(pdfBlob);
+      if (pdfUrlLocal) {
+        window.URL.revokeObjectURL(pdfUrlLocal);
+      }
+      setPdfUrlLocal(url);
+      setShowPreview(true);
+      
+      success('Boletos selecionados gerados com sucesso!');
+    } catch (err) {
+      error('Erro ao gerar boletos selecionados');
+    } finally {
+      setIsGeneratingPdfLocal(false);
+    }
+  };
+
+  const handleImprimirTodosEmAbertoAvulsos = async () => {
+    if (!titulosAvulsosData?.data) {
+      success('Nenhum título encontrado');
+      return;
+    }
+    const titulosEmAberto = titulosAvulsosData.data.filter((titulo: Titulo) => 
+      titulo.status === 'pendente' || titulo.status === 'vencido'
+    );
+    if (titulosEmAberto.length === 0) {
+      success('Nenhum título em aberto encontrado');
+      return;
+    }
+    setIsGeneratingPdfLocal(true);
+    try {
+      const ids = titulosEmAberto.map((titulo: Titulo) => titulo.id);
+      const pdfBlob = await TituloService.gerarPdfBoletosMultiplos(ids);
+      
+      const url = window.URL.createObjectURL(pdfBlob);
+      if (pdfUrlLocal) {
+        window.URL.revokeObjectURL(pdfUrlLocal);
+      }
+      setPdfUrlLocal(url);
+      setShowPreview(true);
+      
+      success('Boletos em aberto gerados com sucesso!');
+    } catch (err) {
+      error('Erro ao gerar boletos em aberto');
+    } finally {
+      setIsGeneratingPdfLocal(false);
+    }
+  };
+
   // Bulk actions para títulos (apenas no modo edição)
   const bulkActions: BulkAction<Titulo>[] = isEditMode ? [
     {
       label: 'Novo',
       action: () => {
+        setIsCreatingAvulso(false);
         setShowTituloCreateModal(true);
       }
     },
@@ -454,6 +526,234 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
         {
           label: 'Abertos',
           action: handleImprimirTodosEmAberto
+        }
+      ]
+    },
+    {
+      label: 'Enviar',
+      variant: 'info',
+      disabled: (selectedItems: Titulo[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status === 'cancelado');
+      },
+      dropdown: [
+        {
+          label: 'Via WhatsApp',
+          action: async (selectedItems?: Titulo[]) => {
+            const items = selectedItems || [];
+            if (items.length > 0) {
+              try {
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const item of items) {
+                  if (item.status === 'cancelado') continue;
+                  try {
+                    const response = await TituloService.enviarWhatsApp(item.id);
+                    if (response.success) {
+                      successCount++;
+                    } else {
+                      errorCount++;
+                    }
+                  } catch (err) {
+                    errorCount++;
+                  }
+                }
+                
+                if (successCount > 0) {
+                  const message = successCount === 1 
+                    ? 'Mensagem enviada com sucesso!'
+                    : `${successCount} mensagens enviadas com sucesso!`;
+                  success(message);
+                }
+                
+                if (errorCount > 0) {
+                  const message = errorCount === 1 
+                    ? '1 mensagem não pôde ser enviada'
+                    : `${errorCount} mensagens não puderam ser enviadas`;
+                  error(message);
+                }
+              } catch (err) {
+                error('Erro ao enviar mensagens');
+              }
+            }
+          }
+        },
+        {
+          label: 'Via Email',
+          action: async (selectedItems?: Titulo[]) => {
+            const items = selectedItems || [];
+            if (items.length > 0) {
+              try {
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const item of items) {
+                  if (item.status === 'cancelado') continue;
+                  try {
+                    const response = await TituloService.enviarEmail(item.id);
+                    if (response.success) {
+                      successCount++;
+                    } else {
+                      errorCount++;
+                    }
+                  } catch (err) {
+                    errorCount++;
+                  }
+                }
+                
+                if (successCount > 0) {
+                  const message = successCount === 1 
+                    ? 'Email enviado com sucesso!'
+                    : `${successCount} emails enviados com sucesso!`;
+                  success(message);
+                }
+                
+                if (errorCount > 0) {
+                  const message = errorCount === 1 
+                    ? '1 email não pôde ser enviado'
+                    : `${errorCount} emails não puderam ser enviados`;
+                  error(message);
+                }
+              } catch (err) {
+                error('Erro ao enviar emails');
+              }
+            }
+          }
+        }
+      ]
+    }
+  ] : [];
+
+  // Bulk actions para títulos avulsos (apenas no modo edição)
+  const bulkActionsAvulsos: BulkAction<Titulo>[] = isEditMode ? [
+    {
+      label: 'Novo',
+      action: () => {
+        setIsCreatingAvulso(true);
+        setShowTituloCreateModal(true);
+      }
+    },
+    {
+      label: 'Editar',
+      action: (selectedItems: Titulo[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          setSelectedTituloId(item.id);
+          setShowTituloEditModal(true);
+        }
+      },
+      disabled: (selectedItems: Titulo[]) => selectedItems.length !== 1
+    },
+    {
+      label: 'Receber',
+      variant: 'success',
+      action: (selectedItems: Titulo[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          setSelectedParcela(item);
+          setShowReceberModal(true);
+        }
+      },
+      disabled: (selectedItems: Titulo[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
+      }
+    },
+    {
+      label: 'Cancelar',
+      variant: 'danger',
+      action: async (selectedItems: Titulo[]) => {
+        if (selectedItems.length > 0) {
+          const confirmMessage = selectedItems.length === 1 
+            ? 'Tem certeza que deseja cancelar este título?'
+            : `Tem certeza que deseja cancelar ${selectedItems.length} títulos?`;
+            
+          if (window.confirm(confirmMessage)) {
+            try {
+              let successCount = 0;
+              let errorCount = 0;
+              
+              for (const item of selectedItems) {
+                try {
+                  await TituloService.update(item.id, { status: 'cancelado' });
+                  successCount++;
+                } catch (err) {
+                  errorCount++;
+                }
+              }
+              
+              if (successCount > 0) {
+                const message = successCount === 1 
+                  ? 'Título cancelado com sucesso!'
+                  : `${successCount} títulos cancelados com sucesso!`;
+                success(message);
+              }
+              
+              if (errorCount > 0) {
+                const message = errorCount === 1 
+                  ? '1 título não pôde ser cancelado'
+                  : `${errorCount} títulos não puderam ser cancelados`;
+                error(message);
+              }
+              
+              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
+            } catch (err) {
+              error('Erro ao cancelar títulos');
+            }
+          }
+        }
+      },
+      disabled: (selectedItems: Titulo[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status === 'pago' || item.status === 'cancelado');
+      }
+    },
+    {
+      label: 'Estornar',
+      variant: 'warning',
+      action: async (selectedItems: Titulo[]) => {
+        if (selectedItems.length > 0) {
+          const item = selectedItems[0];
+          if (item.status === 'pago') {
+            const confirmar = window.confirm(
+              `Tem certeza que deseja estornar o título ${item.numero_titulo}?\n\n` +
+              `Valor: R$ ${item.valor_pago || item.valor}\n` +
+              `O título voltará para status PENDENTE.`
+            );
+            
+            if (confirmar) {
+              try {
+                await TituloService.estornar(item.id);
+                success('Título estornado com sucesso!');
+                queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
+              } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'Erro ao estornar título.';
+                error(errorMessage);
+              }
+            }
+          } else {
+            success('Só é possível estornar títulos que estão pagos');
+          }
+        }
+      },
+      disabled: (selectedItems: Titulo[]) => {
+        if (selectedItems.length === 0) return true;
+        return selectedItems.every(item => item.status !== 'pago');
+      }
+    },
+    {
+      label: (impressaoHook.isGeneratingPdf || isGeneratingPdfLocal) ? 'Gerando...' : 'Imprimir',
+      variant: 'primary',
+      disabled: () => impressaoHook.isGeneratingPdf || isGeneratingPdfLocal,
+      dropdown: [
+        {
+          label: 'Selecionados',
+          action: handleImprimirSelecionadosAvulsos
+        },
+        {
+          label: 'Abertos',
+          action: handleImprimirTodosEmAbertoAvulsos
         }
       ]
     },
@@ -725,7 +1025,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   ] : [];
 
-  // Colunas para a tabela de títulos
+  // Colunas para a tabela de títulos (com endereço)
   const columns = [
     { 
       key: 'id', 
@@ -890,6 +1190,113 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
     }
   ];
 
+  // Colunas para a tabela de títulos avulsos (sem endereço)
+  const columnsAvulsos = [
+    { 
+      key: 'id', 
+      label: 'ID', 
+      sortable: true, 
+      searchable: true,
+      render: (item: Titulo) => item.id 
+    },
+    {
+      key: 'contrato_id',
+      label: 'Contrato',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.contrato_id || '-'
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => (
+        <span className={`badge bg-${getStatusColor(item.status)}`}>{item.status}</span>
+      )
+    },
+    { 
+      key: 'plano', 
+      label: 'Plano', 
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.plano?.nome_plano || '-' 
+    },
+    { 
+      key: 'numero_titulo', 
+      label: 'Nº Título', 
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.numero_titulo || '-' 
+    },
+    {
+      key: 'data_vencimento',
+      label: 'Vencimento',
+      sortable: true,
+      searchable: false,
+      render: (item: Titulo) => formatDate(item.data_vencimento)
+    },
+    {
+      key: 'valor',
+      label: 'Valor',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => `R$ ${Number(item.valor || 0).toFixed(2)}`
+    },
+    {
+      key: 'valor_pago',
+      label: 'Valor baixado',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.status === 'pago' ? `R$ ${Number(item.valor_pago || item.valor || 0).toFixed(2)}` : 'R$ 0,00'
+    },
+    {
+      key: 'valor_aberto',
+      label: 'Valor aberto',
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => (item.status === 'pago' || item.status === 'cancelado') ? 'R$ 0,00' : `R$ ${Number(item.valor || 0).toFixed(2)}`
+    },
+    {
+      key: 'data_pagamento',
+      label: 'Data Pagamento',
+      sortable: true,
+      searchable: false,
+      render: (item: Titulo) => {
+        if (item.data_pagamento_formatada) {
+          return item.data_pagamento_formatada;
+        }
+        return item.data_pagamento ? formatDate(item.data_pagamento) : '-';
+      }
+    },
+    { 
+      key: 'charge_id', 
+      label: 'Charge ID', 
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.charge_id || '-' 
+    },
+    { 
+      key: 'nosso_numero', 
+      label: 'Nosso Número', 
+      sortable: true,
+      searchable: true,
+      render: (item: Titulo) => item.nosso_numero || '-' 
+    },
+    {
+      key: 'created_at',
+      label: 'Criado em',
+      sortable: true,
+      searchable: false,
+      render: (item: Titulo) => {
+        if (item.created_at_formatada) {
+          return item.created_at_formatada;
+        }
+        return item.created_at ? formatDateTime(item.created_at) : '-';
+      }
+    }
+  ];
+
   // Colunas para a tabela de serviços adicionais
   const servicosAdicionaisColumns = [
     { 
@@ -1026,6 +1433,17 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
       estado: titulo.cliente?.estado || ''
     }));
   }, [isEditMode, titulosData?.data]);
+
+  // Dados de títulos avulsos (sem campos de endereço)
+  const sortedAvulsosData = useMemo(() => {
+    const filteredData = isEditMode && titulosAvulsosData?.data 
+      ? titulosAvulsosData.data
+      : [];
+    
+    if (!filteredData || filteredData.length === 0) return [];
+    
+    return filteredData;
+  }, [isEditMode, titulosAvulsosData?.data]);
   
   const filteredTermosData = isEditMode && termosArray.length > 0
     ? termosArray.filter((termo: TermoContrato) => termo.ativo)
@@ -1171,6 +1589,21 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             </li>
             <li className="nav-item" role="presentation">
               <button
+                className={`nav-link ${activeTab === 'financeiro-avulso' ? 'active' : ''}`}
+                type="button"
+                onClick={() => {
+                  if (isEditMode) {
+                    setActiveTab('financeiro-avulso');
+                  }
+                }}
+                disabled={!isEditMode}
+                style={{ cursor: !isEditMode ? 'not-allowed' : 'pointer', opacity: !isEditMode ? 0.6 : 1 }}
+              >
+                Financeiro Avulso
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
                 className={`nav-link ${activeTab === 'servicos-adicionais' ? 'active' : ''}`}
                 type="button"
                 onClick={() => {
@@ -1191,9 +1624,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             className="tab-content" 
             style={{ 
               flex: 1, 
-              overflow: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'servicos-adicionais') ? 'hidden' : 'auto', 
+              overflow: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais') ? 'hidden' : 'auto', 
               // No mobile, ResponsiveDialog já aplica padding, então não aplicar aqui
-              padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'servicos-adicionais') ? '0' : (isMobile ? '0' : '16px'),
+              padding: (activeTab === 'termos' || activeTab === 'financeiro' || activeTab === 'financeiro-avulso' || activeTab === 'servicos-adicionais') ? '0' : (isMobile ? '0' : '16px'),
               minHeight: 0,
               display: 'flex',
               flexDirection: 'column'
@@ -1275,6 +1708,34 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               )
             )}
 
+            {/* Aba Financeiro Avulso */}
+            {activeTab === 'financeiro-avulso' && (
+              isEditMode ? (
+                <FinanceiroAvulsoTab
+                  isLoading={isLoadingTitulosAvulsos}
+                  bulkActions={bulkActionsAvulsos}
+                  limit={limit}
+                  setLimit={setLimit}
+                  page={page}
+                  setPage={setPage}
+                  sortedData={sortedAvulsosData}
+                  selectedItems={selectedAvulsosItems}
+                  setSelectedItems={setSelectedAvulsosItems}
+                  columns={columnsAvulsos}
+                  isGeneratingPdf={impressaoHook.isGeneratingPdf || isGeneratingPdfLocal}
+                  onRefresh={refetchTitulosAvulsos}
+                  showCancelados={showCanceladosAvulsos}
+                  setShowCancelados={setShowCanceladosAvulsos}
+                />
+              ) : (
+                <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
+                  <div className="text-center">
+                    <p className="text-muted">Crie o contrato primeiro para gerenciar títulos avulsos.</p>
+                  </div>
+                </div>
+              )
+            )}
+
             {/* Aba Serviços Adicionais */}
             {activeTab === 'servicos-adicionais' && (
               isEditMode ? (
@@ -1311,15 +1772,22 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             show={showTituloCreateModal}
             clienteId={contratoData?.cliente_id}
             contratoId={internalContratoId || undefined}
-            onClose={() => setShowTituloCreateModal(false)}
+            isAvulso={isCreatingAvulso}
+            onClose={() => {
+              setShowTituloCreateModal(false);
+              setIsCreatingAvulso(false);
+            }}
             onSuccess={() => {
               setShowTituloCreateModal(false);
+              setIsCreatingAvulso(false);
               queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId] });
+              queryClient.invalidateQueries({ queryKey: ['titulos', 'contrato', internalContratoId, 'avulsos'] });
               if (contratoData?.cliente_id) {
                 queryClient.invalidateQueries({ queryKey: ['titulos', { cliente_id: contratoData.cliente_id }] });
               }
               queryClient.invalidateQueries({ queryKey: ['titulos'] });
               refetchTitulos();
+              refetchTitulosAvulsos();
             }}
           />
 

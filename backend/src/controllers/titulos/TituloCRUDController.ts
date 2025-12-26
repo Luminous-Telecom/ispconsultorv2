@@ -162,7 +162,7 @@ export class TituloCRUDController {
         return;
       }
 
-      const { cliente_id, plano_id, contrato_id, data_vencimento, observacoes, desconto_percentual: dp, desconto_valor: dv, acrescimo_percentual: ap, acrescimo_valor: av, descricao, banco_id } = value;
+      const { cliente_id, plano_id, contrato_id, data_vencimento, observacoes, desconto_percentual: dp, desconto_valor: dv, acrescimo_percentual: ap, acrescimo_valor: av, descricao, banco_id, is_avulso } = value;
 
       const desconto_percentual = dp ? parseFloat(dp.toString()) : null;
       const desconto_valor = dv ? parseFloat(dv.toString()) : null;
@@ -266,7 +266,8 @@ export class TituloCRUDController {
           acrescimo_valor,
           descricao: descricao || null,
           status: 'pendente',
-          pago: false
+          pago: false,
+          is_avulso: is_avulso === true
         }, { transaction });
       });
 
@@ -449,7 +450,7 @@ export class TituloCRUDController {
       }
 
       const titulos = await Titulo.findAll({
-        where: { contrato_id: contratoId },
+        where: { contrato_id: contratoId, is_avulso: false },
         include: [
           { model: Cliente, as: 'cliente', where: { id: contrato.cliente_id }, attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'] },
           { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] },
@@ -461,6 +462,36 @@ export class TituloCRUDController {
       res.json({ success: true, data: titulos });
     } catch (error: unknown) {
       logger.error('Erro ao buscar títulos por contrato', { error });
+      res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+  }
+
+  /**
+   * Busca títulos avulsos por contrato
+   */
+  public static async getAvulsosByContrato(req: Request, res: Response): Promise<void> {
+    try {
+      const { contratoId } = req.params;
+
+      const contrato = await Contrato.findByPk(contratoId);
+      if (!contrato) {
+        res.status(404).json({ success: false, message: 'Contrato não encontrado' });
+        return;
+      }
+
+      const titulos = await Titulo.findAll({
+        where: { contrato_id: contratoId, is_avulso: true },
+        include: [
+          { model: Cliente, as: 'cliente', where: { id: contrato.cliente_id }, attributes: ['id', 'razao_social', 'nome_fantasia', 'cnpj'] },
+          { model: Plano, as: 'plano', attributes: ['id', 'nome_plano', 'valor_mensal'] },
+          { model: Banco, as: 'banco', attributes: ['id', 'nome', 'tipo_banco'] }
+        ],
+        order: [['data_vencimento', 'DESC']]
+      });
+
+      res.json({ success: true, data: titulos });
+    } catch (error: unknown) {
+      logger.error('Erro ao buscar títulos avulsos por contrato', { error });
       res.status(500).json({ success: false, message: 'Erro interno do servidor' });
     }
   }

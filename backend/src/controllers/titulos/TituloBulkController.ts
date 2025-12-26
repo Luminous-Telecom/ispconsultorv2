@@ -86,7 +86,8 @@ export class TituloBulkController {
             acrescimo_valor: dadosTitulo.acrescimo_valor || null,
             descricao: dadosTitulo.descricao || null,
             status: dadosTitulo.status || 'pendente',
-            pago: dadosTitulo.pago || false
+            pago: dadosTitulo.pago || false,
+            is_avulso: dadosTitulo.is_avulso === true
           }, { transaction });
 
           resultados.push(titulo);
