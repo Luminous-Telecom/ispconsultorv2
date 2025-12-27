@@ -356,7 +356,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 onClick={() => setActiveTab('dados-basicos')}
                 type="button"
               >
-                Dados Básicos
+                Cliente
               </button>
             </li>
             <li className="nav-item" role="presentation">
@@ -432,7 +432,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
               flexDirection: 'column'
             }}
           >
-            {/* Aba Dados Básicos */}
+            {/* Aba Cliente */}
             {activeTab === 'dados-basicos' && (
               <DadosBasicosTab
                 formData={formHook.formData}
