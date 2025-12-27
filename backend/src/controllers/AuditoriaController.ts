@@ -88,11 +88,11 @@ export class AuditoriaController {
       }
 
       if (acao) {
-        must.push({ term: { acao } });
+        must.push({ term: { acao: acao } });
       }
 
       if (entidade) {
-        must.push({ term: { entidade } });
+        must.push({ term: { entidade: entidade } });
       }
 
       if (usuario_id) {
@@ -483,7 +483,7 @@ export class AuditoriaController {
           query: {
             bool: {
               must: [
-                { term: { entidade } },
+                { term: { entidade: entidade as string } },
                 { term: { entidade_id: parseInt(entidade_id as string) } }
               ]
             }
@@ -554,28 +554,33 @@ export class AuditoriaController {
         return;
       }
 
-      // Buscar todos os logs
       const result = await client.search({
         index: elasticsearchService.getIndexName(),
         body: {
           query: {
             bool: {
               must: [
-                { term: { entidade } },
+                { term: { entidade: entidade as string } },
                 { term: { entidade_id: parseInt(entidade_id as string) } }
               ]
             }
           },
           sort: [
-            { timestamp: { order: 'asc' } }
+            { timestamp: { order: 'desc' } }
           ],
-          size: 1000
+          size: 200
         }
       });
 
-      const logs = result.hits.hits.map((hit: any) => hit._source);
+      const logs = [...result.hits.hits].reverse().map((hit: any) => hit._source);
 
       if (logs.length === 0) {
+        logger.warn('Nenhum log encontrado', {
+          context: 'AuditoriaController',
+          action: 'generatePdf',
+          entidade: entidade as string,
+          entidade_id: entidade_id as string
+        });
         res.status(404).json({
           success: false,
           message: 'Nenhum log de auditoria encontrado para este registro'
@@ -583,18 +588,14 @@ export class AuditoriaController {
         return;
       }
 
-      // Buscar dados da empresa para o cabeçalho do PDF
       const { DadosEmpresa } = await import('../models/DadosEmpresa');
       const dadosEmpresa = await DadosEmpresa.findOne();
 
-      // Gerar HTML do PDF
-      const html = AuditoriaController.generateAuditPdfHtml(logs, entidade as string, parseInt(entidade_id as string), dadosEmpresa);
-
-      // Gerar PDF usando PDFGenerationService com Puppeteer
+      const html = AuditoriaController.generateAuditPdfHtml(logs, entidade as string, dadosEmpresa);
       const { PDFGenerationService } = await import('../services/pdf-generation/PDFGenerationService');
       const pdfBuffer = await PDFGenerationService.generateFromHtml(
         html,
-        'puppeteer',
+        'html-pdf-node',
         {
           format: 'A4',
           margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
@@ -629,7 +630,6 @@ export class AuditoriaController {
   private static generateAuditPdfHtml(
     logs: any[],
     entidade: string,
-    entidadeId: number,
     dadosEmpresa: any
   ): string {
     // Função para escapar caracteres HTML
@@ -665,24 +665,42 @@ export class AuditoriaController {
       return acoes[acao] || acao;
     };
 
-    // Função auxiliar para formatar valor
-    const formatarValor = (value: unknown): string => {
+    // Função auxiliar para formatar valor (sem truncamento para campos importantes como 'conteudo')
+    const formatarValor = (value: unknown, fieldName: string = ''): string => {
       if (value === null || value === undefined) return '';
       if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
-      if (typeof value === 'object') return JSON.stringify(value, null, 2);
-      return String(value);
+      
+      const str = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
+      
+      // Campos importantes como 'conteudo' não devem ser truncados
+      const camposImportantes = ['conteudo', 'conteudo_adesao', 'conteudo_permanencia'];
+      if (camposImportantes.includes(fieldName)) {
+        return str; // Sem truncamento para conteúdo
+      }
+      
+      // Para outros campos, truncar apenas se for muito grande (acima de 5000 caracteres)
+      const maxLength = 5000;
+      if (str.length > maxLength) {
+        return str.substring(0, maxLength) + `... (truncado, ${str.length} caracteres total)`;
+      }
+      return str;
     };
 
-    // Função auxiliar para gerar HTML dos campos
+    const camposExcluir = [
+      'createdAt', 'updatedAt', 'created_at', 'updated_at',
+      'content', 'html', 'body', 'texto', 'text',
+      'descricao_completa', 'observacoes', 'observacoes_completas'
+    ];
+    
     const gerarCamposHtml = (dados: any): string => {
       if (!dados || typeof dados !== 'object') return '';
       
       return Object.entries(dados)
-        .filter(([key]) => !['createdAt', 'updatedAt', 'created_at', 'updated_at'].includes(key))
+        .filter(([key]) => !camposExcluir.includes(key))
         .map(([key, value]) => `
           <tr>
             <td>${escapeHtml(key)}</td>
-            <td>${escapeHtml(formatarValor(value))}</td>
+            <td>${escapeHtml(formatarValor(value, key))}</td>
           </tr>
         `).join('');
     };

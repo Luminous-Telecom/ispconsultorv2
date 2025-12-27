@@ -32,6 +32,7 @@ const ROUTE_ENTITY_MAP: Record<string, string> = {
   '/api/assinaturas-digital': 'AssinaturaDigital',
   '/api/assinatura-digital': 'AssinaturaDigital',
   '/api/cliente-arquivos': 'ClienteArquivo',
+  '/api/scheduler': 'ScheduledRoutine',
 };
 
 /**
@@ -231,7 +232,7 @@ export const auditLogMiddleware = (req: AuthenticatedRequest, res: Response, nex
             });
             
             if (dadosAnteriores && dadosNovos) {
-              logger.info('Registrando auditoria de atualização', {
+              logger.debug('Registrando auditoria de atualização via middleware', {
                 context: 'auditMiddleware',
                 entity,
                 entityId,
@@ -247,14 +248,14 @@ export const auditLogMiddleware = (req: AuthenticatedRequest, res: Response, nex
                 `Atualização via ${req.method} ${req.originalUrl}`
               );
             } else {
-              logger.warn('Dados de auditoria não encontrados para UPDATE', {
+              // Se não houver dados, o controller provavelmente já registrou a auditoria diretamente
+              // Não é necessário logar como warning, apenas debug para rastreamento
+              logger.debug('Dados de auditoria não encontrados para UPDATE - controller pode ter registrado diretamente', {
                 context: 'auditMiddleware',
                 entity,
                 entityId,
                 method,
-                url: req.originalUrl,
-                hasDadosAnteriores: !!dadosAnteriores,
-                hasDadosNovos: !!dadosNovos
+                url: req.originalUrl
               });
             }
           }

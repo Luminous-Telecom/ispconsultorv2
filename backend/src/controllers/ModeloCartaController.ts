@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../types/auth';
 
 export class ModeloCartaController {
@@ -122,16 +123,19 @@ export class ModeloCartaController {
         return;
       }
 
-      const dadosAnteriores = carta.toJSON();
+      const dadosAnteriores = carta.toJSON() as unknown as Record<string, unknown>;
       await carta.update(updateData);
       await carta.reload();
+
+      const dadosNovos = carta.toJSON() as unknown as Record<string, unknown>;
+      setAuditData(req, dadosAnteriores, dadosNovos);
 
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'ModeloCarta',
         carta.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        carta.toJSON() as unknown as Record<string, unknown>
+        dadosAnteriores,
+        dadosNovos
       );
 
       res.json({
@@ -165,14 +169,15 @@ export class ModeloCartaController {
         return;
       }
 
-      const dadosAnteriores = carta.toJSON();
+      const dadosAnteriores = carta.toJSON() as unknown as Record<string, unknown>;
+      setAuditData(req, dadosAnteriores);
       await carta.destroy();
 
       await registrarExclusao(
         req as AuthenticatedRequest,
         'ModeloCarta',
         carta.id,
-        dadosAnteriores as unknown as Record<string, unknown>
+        dadosAnteriores
       );
 
       res.json({

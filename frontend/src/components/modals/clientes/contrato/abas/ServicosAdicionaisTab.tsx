@@ -16,6 +16,8 @@ interface ServicosAdicionaisTabProps {
   setSelectedItems: (items: ContratoPlanoAdicional[]) => void;
   columns: TableColumn<ContratoPlanoAdicional>[];
   onRefresh?: () => void;
+  onAudit?: (item: ContratoPlanoAdicional) => void;
+  auditEntity?: string;
 }
 
 const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
@@ -30,6 +32,8 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
   setSelectedItems,
   columns,
   onRefresh,
+  onAudit,
+  auditEntity,
 }) => {
   return (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
@@ -65,6 +69,8 @@ const ServicosAdicionaisTab: React.FC<ServicosAdicionaisTabProps> = ({
           onPageChange={setPage}
           onPageSizeChange={setLimit}
           onRefresh={onRefresh}
+          onAudit={onAudit}
+          auditEntity={auditEntity}
         />
         </div>
       </div>

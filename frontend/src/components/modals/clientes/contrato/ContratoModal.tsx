@@ -27,6 +27,7 @@ import { CONTEXT_ERROR_MESSAGES } from '@/constants/ErrorMessages';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 import { useImpressaoContrato } from '@/hooks/useImpressaoContrato';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAuditoria } from '@/hooks/useAuditoria';
 import ModeloContratoSelectModal from '@/components/modals/parametros/ModeloContratoSelectModal';
 import { Button } from '@/components/ui';
 import '../../contratos/ContratoModals.css';
@@ -55,6 +56,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
   clienteId
 }) => {
   const isMobile = useIsMobile();
+  const auditoria = useAuditoria();
   // Estado interno para controlar o contratoId após criação
   const [internalContratoId, setInternalContratoId] = useState<number | null>(contratoId);
   
@@ -1695,6 +1697,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   columns={termosColumns}
                   isGeneratingPdf={impressaoHook.isGeneratingPdf || isGeneratingPdfLocal}
                   onRefresh={refetchTermos}
+                  onAudit={(termo) => auditoria.handleAudit('TermoContrato', termo.id)}
+                  auditEntity="TermoContrato"
                 />
               ) : (
                 <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
@@ -1723,6 +1727,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   onRefresh={refetchTitulos}
                   showCancelados={showCancelados}
                   setShowCancelados={setShowCancelados}
+                  onAudit={(titulo) => auditoria.handleAudit('Titulo', titulo.id)}
+                  auditEntity="Titulo"
                 />
               ) : (
                 <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
@@ -1751,6 +1757,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   onRefresh={refetchTitulosAvulsos}
                   showCancelados={showCanceladosAvulsos}
                   setShowCancelados={setShowCanceladosAvulsos}
+                  onAudit={(titulo) => auditoria.handleAudit('Titulo', titulo.id)}
+                  auditEntity="Titulo"
                 />
               ) : (
                 <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
@@ -1776,6 +1784,8 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                   setSelectedItems={setSelectedServicosAdicionaisItems}
                   columns={servicosAdicionaisColumns}
                   onRefresh={refetchServicosAdicionais}
+                  onAudit={(servico) => auditoria.handleAudit('ContratoPlanoAdicional', servico.id)}
+                  auditEntity="ContratoPlanoAdicional"
                 />
               ) : (
                 <div className="d-flex align-items-center justify-content-center" style={{ height: '100%', padding: '2rem' }}>
@@ -1920,6 +1930,14 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
             pdfUrl={impressaoHook.pdfUrl || pdfUrlLocal}
             title="Visualizar Documento"
             modalId="contrato-imprimir-modal"
+          />
+
+          <ImprimirModal
+            show={auditoria.showPreview}
+            onClose={auditoria.handleClosePreview}
+            pdfUrl={auditoria.pdfUrl}
+            title="Relatórios de logs"
+            modalId="auditoria-contrato-modal"
           />
         </>
       )}

@@ -7,6 +7,7 @@ import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService
 import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
 import { logger } from '../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../types/auth';
 
 export class ModeloTermoController {
@@ -25,14 +26,7 @@ export class ModeloTermoController {
         data: modelos
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao listar modelos de termo', {
-        context: 'ModeloTermoController',
-        action: 'index',
-        error: errorMessage,
-        stack: errorStack
-      });
+      logger.error('Erro ao listar modelos de termo:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -59,15 +53,7 @@ export class ModeloTermoController {
         data: modelo
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar modelo de termo', {
-        context: 'ModeloTermoController',
-        action: 'show',
-        error: errorMessage,
-        stack: errorStack,
-        id: req.params.id
-      });
+      logger.error('Erro ao buscar modelo de termo:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -114,15 +100,7 @@ export class ModeloTermoController {
         data: modelo
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao criar modelo de termo', {
-        context: 'ModeloTermoController',
-        action: 'create',
-        error: errorMessage,
-        stack: errorStack,
-        body: req.body
-      });
+      logger.error('Erro ao criar modelo de termo:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -145,7 +123,7 @@ export class ModeloTermoController {
         return;
       }
 
-      const dadosAnteriores = modelo.toJSON();
+      const dadosAnteriores = modelo.toJSON() as unknown as Record<string, unknown>;
       await modelo.update({
         nome,
         descricao,
@@ -155,12 +133,15 @@ export class ModeloTermoController {
       });
       await modelo.reload();
 
+      const dadosNovos = modelo.toJSON() as unknown as Record<string, unknown>;
+      setAuditData(req, dadosAnteriores, dadosNovos);
+
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'ModeloTermo',
         modelo.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        modelo.toJSON() as unknown as Record<string, unknown>
+        dadosAnteriores,
+        dadosNovos
       );
 
       res.json({
@@ -169,16 +150,7 @@ export class ModeloTermoController {
         data: modelo
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao atualizar modelo de termo', {
-        context: 'ModeloTermoController',
-        action: 'update',
-        error: errorMessage,
-        stack: errorStack,
-        id: req.params.id,
-        body: req.body
-      });
+      logger.error('Erro ao atualizar modelo de termo:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -200,14 +172,15 @@ export class ModeloTermoController {
         return;
       }
 
-      const dadosAnteriores = modelo.toJSON();
+      const dadosAnteriores = modelo.toJSON() as unknown as Record<string, unknown>;
+      setAuditData(req, dadosAnteriores);
       await modelo.destroy();
 
       await registrarExclusao(
         req as AuthenticatedRequest,
         'ModeloTermo',
         modelo.id,
-        dadosAnteriores as unknown as Record<string, unknown>
+        dadosAnteriores
       );
 
       res.json({
@@ -215,15 +188,7 @@ export class ModeloTermoController {
         message: 'Modelo de termo excluído com sucesso'
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao excluir modelo de termo', {
-        context: 'ModeloTermoController',
-        action: 'delete',
-        error: errorMessage,
-        stack: errorStack,
-        id: req.params.id
-      });
+      logger.error('Erro ao excluir modelo de termo:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -248,15 +213,7 @@ export class ModeloTermoController {
         data: modelos
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao buscar modelos por tipo', {
-        context: 'ModeloTermoController',
-        action: 'getByTipo',
-        error: errorMessage,
-        stack: errorStack,
-        tipo: req.params.tipo
-      });
+      logger.error('Erro ao buscar modelos por tipo:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -326,10 +283,9 @@ export class ModeloTermoController {
 
     } catch (error: unknown) {
       logger.error('Erro ao gerar PDF do modelo de termo:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       res.status(500).json({
         success: false,
-        message: `Erro interno do servidor: ${errorMessage}`
+        message: 'Erro interno do servidor'
       });
     }
   }
@@ -404,16 +360,7 @@ export class ModeloTermoController {
       res.send(pdfBuffer);
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Erro ao gerar PDF de teste do modelo de termo', {
-        context: 'ModeloTermoController',
-        action: 'generateTestPdf',
-        error: errorMessage,
-        stack: errorStack,
-        id: req.params.id,
-        clienteId: req.body?.cliente_id
-      });
+      logger.error('Erro ao gerar PDF de teste do modelo de termo:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -508,10 +455,9 @@ export class ModeloTermoController {
       res.end(pdfBuffer);
     } catch (error: unknown) {
       logger.error('Erro ao gerar PDF do termo:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       res.status(500).json({
         success: false,
-        message: `Erro interno do servidor: ${errorMessage}`
+        message: 'Erro interno do servidor'
       });
     }
   }

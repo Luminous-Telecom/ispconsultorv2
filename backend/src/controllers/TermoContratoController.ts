@@ -4,6 +4,7 @@ import { Contrato } from '../models/Contrato';
 import { ModeloDocumento } from '../models/ModeloDocumento';
 import { logger } from '../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../types/auth';
 
 export class TermoContratoController {
@@ -228,12 +229,17 @@ export class TermoContratoController {
       await termo.save();
       await termo.reload();
 
+      const dadosNovos = termo.toJSON() as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores as Record<string, unknown>, dadosNovos);
+
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'TermoContrato',
         termo.id,
         dadosAnteriores as Record<string, unknown>,
-        termo.toJSON() as Record<string, unknown>
+        dadosNovos
       );
 
       res.json({
@@ -362,14 +368,18 @@ export class TermoContratoController {
         return;
       }
 
-      const dadosAnteriores = termo.toJSON();
+      const dadosAnteriores = termo.toJSON() as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores);
+      
       await termo.destroy();
 
       await registrarExclusao(
         req as AuthenticatedRequest,
         'TermoContrato',
         termo.id,
-        dadosAnteriores as Record<string, unknown>
+        dadosAnteriores
       );
 
       res.json({

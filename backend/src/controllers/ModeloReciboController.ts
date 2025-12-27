@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 import { VariaveisDocumentoService } from '../services/VariaveisDocumentoService';
 import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationService';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../types/auth';
 
 export class ModeloReciboController {
@@ -122,16 +123,19 @@ export class ModeloReciboController {
         return;
       }
 
-      const dadosAnteriores = recibo.toJSON();
+      const dadosAnteriores = recibo.toJSON() as unknown as Record<string, unknown>;
       await recibo.update(updateData);
       await recibo.reload();
+
+      const dadosNovos = recibo.toJSON() as unknown as Record<string, unknown>;
+      setAuditData(req, dadosAnteriores, dadosNovos);
 
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'ModeloRecibo',
         recibo.id,
-        dadosAnteriores as unknown as Record<string, unknown>,
-        recibo.toJSON() as unknown as Record<string, unknown>
+        dadosAnteriores,
+        dadosNovos
       );
 
       res.json({
@@ -165,14 +169,15 @@ export class ModeloReciboController {
         return;
       }
 
-      const dadosAnteriores = recibo.toJSON();
+      const dadosAnteriores = recibo.toJSON() as unknown as Record<string, unknown>;
+      setAuditData(req, dadosAnteriores);
       await recibo.destroy();
 
       await registrarExclusao(
         req as AuthenticatedRequest,
         'ModeloRecibo',
         recibo.id,
-        dadosAnteriores as unknown as Record<string, unknown>
+        dadosAnteriores
       );
 
       res.json({

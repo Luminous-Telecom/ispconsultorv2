@@ -4,6 +4,7 @@ import { SchedulerService } from '../services/SchedulerService';
 import { ScheduledRoutine } from '../models';
 import { logger } from '../utils/logger';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 
 export class SchedulerController {
   private schedulerService: SchedulerService;
@@ -159,9 +160,23 @@ export class SchedulerController {
       const dadosAnteriores = routineBefore ? (routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>)) : {};
 
       const routine = await this.schedulerService.updateRoutine(Number(id), updateData);
+      
+      // Recarregar rotina para obter dados atualizados
+      const routineAtualizada = await ScheduledRoutine.findByPk(Number(id));
+      if (!routineAtualizada) {
+        res.status(404).json({
+          success: false,
+          message: 'Rotina não encontrada após atualização'
+        });
+        return;
+      }
 
       // Registrar auditoria
-      const dadosNovos = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
+      const dadosNovos = routineAtualizada.toJSON ? routineAtualizada.toJSON() as Record<string, unknown> : (routineAtualizada as unknown as Record<string, unknown>);
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores, dadosNovos);
+      
       await registrarAtualizacao(
         req,
         'ScheduledRoutine',
@@ -173,7 +188,7 @@ export class SchedulerController {
       res.json({
         success: true,
         message: 'Rotina atualizada com sucesso',
-        data: routine
+        data: routineAtualizada
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -203,6 +218,9 @@ export class SchedulerController {
       const routine = await ScheduledRoutine.findByPk(Number(id));
       if (routine) {
         const dadosAnteriores = routine.toJSON ? routine.toJSON() as Record<string, unknown> : (routine as unknown as Record<string, unknown>);
+        
+        // Disponibilizar dados para o middleware
+        setAuditData(req, dadosAnteriores);
         
         // Registrar auditoria
         await registrarExclusao(
@@ -251,12 +269,40 @@ export class SchedulerController {
         return;
       }
 
+      // Buscar rotina antes de atualizar para capturar dados anteriores
+      const routineBefore = await ScheduledRoutine.findByPk(Number(id));
+      const dadosAnteriores = routineBefore ? (routineBefore.toJSON ? routineBefore.toJSON() as Record<string, unknown> : (routineBefore as unknown as Record<string, unknown>)) : {};
+
       const routine = await this.schedulerService.toggleRoutine(Number(id), ativo);
+      
+      // Recarregar rotina para obter dados atualizados
+      const routineAtualizada = await ScheduledRoutine.findByPk(Number(id));
+      if (!routineAtualizada) {
+        res.status(404).json({
+          success: false,
+          message: 'Rotina não encontrada após atualização'
+        });
+        return;
+      }
+
+      // Registrar auditoria
+      const dadosNovos = routineAtualizada.toJSON ? routineAtualizada.toJSON() as Record<string, unknown> : (routineAtualizada as unknown as Record<string, unknown>);
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores, dadosNovos);
+      
+      await registrarAtualizacao(
+        req,
+        'ScheduledRoutine',
+        Number(id),
+        dadosAnteriores,
+        dadosNovos
+      );
 
       res.json({
         success: true,
         message: `Rotina ${ativo ? 'ativada' : 'desativada'} com sucesso`,
-        data: routine
+        data: routineAtualizada
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';

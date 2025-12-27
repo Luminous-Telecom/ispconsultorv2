@@ -9,6 +9,8 @@ import { useNotificationContext } from '@/components/notifications/NotificationP
 import { formatDateTime } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import RotinaAgendadaModal from './RotinaAgendadaModal';
+import { useAuditoria } from '@/hooks/useAuditoria';
+import ImprimirModal from '@/components/common/ImprimirModal';
 
 interface AgendadorTarefasModalProps {
   show: boolean;
@@ -21,6 +23,11 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
+  const auditoria = useAuditoria();
+
+  const handleAudit = (rotina: RotinaAgendada) => {
+    auditoria.handleAudit('ScheduledRoutine', rotina.id);
+  };
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -305,6 +312,8 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         refreshQueryKeys={['agendador-tarefas']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}
+        onAudit={handleAudit}
+        auditEntity="ScheduledRoutine"
       />
 
       <RotinaAgendadaModal
@@ -316,6 +325,14 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
         }}
         rotinaId={showEditModal ? selectedRotinaId : null}
         onSuccess={handleSuccess}
+      />
+
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        title="Relatórios de logs"
+        modalId="auditoria-scheduled-routine-modal"
       />
     </>
   );

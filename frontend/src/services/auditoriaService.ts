@@ -189,20 +189,19 @@ class AuditoriaService {
     params.append('entidade', entidade);
     params.append('entidade_id', entidadeId.toString());
     
+    const url = `${this.baseEndpoint}/pdf?${params.toString()}`;
+    
     try {
-      // Acessar a instância do axios diretamente para fazer requisição com blob
-      // O interceptor do ApiClient já trata responseType === 'blob' e retorna response.data
       interface ApiClientWithApi {
         api: import('axios').AxiosInstance;
       }
       const apiInstance = (defaultApiClient as unknown as ApiClientWithApi).api;
       
-      const response = await apiInstance.get<Blob>(`${this.baseEndpoint}/pdf?${params.toString()}`, {
-        responseType: 'blob'
+      const response = await apiInstance.get<Blob>(url, {
+        responseType: 'blob',
+        timeout: 60000
       });
 
-      // O interceptor já retorna response.data quando responseType é 'blob'
-      // response já é um Blob devido ao interceptor, mas TypeScript não sabe disso
       const blob = (response as unknown) as Blob;
       
       if (!blob || !(blob instanceof Blob)) {
@@ -211,7 +210,6 @@ class AuditoriaService {
       
       return blob;
     } catch (error) {
-      // Se já é um Error com mensagem, apenas relançar
       if (error instanceof Error && !('isAxiosError' in error)) {
         throw error;
       }

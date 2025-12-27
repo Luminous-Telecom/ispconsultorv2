@@ -11,6 +11,8 @@ import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
 import { DocumentoUnion } from '../types';
 import { DocumentoTabProps } from '../types';
+import { useAuditoria } from '@/hooks/useAuditoria';
+import ImprimirModal from '@/components/common/ImprimirModal';
 
 const DocumentoTab: React.FC<DocumentoTabProps> = ({
   tipo,
@@ -23,6 +25,30 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
   const queryClient = useQueryClient();
   const { success, error: showError } = useNotificationContext();
   const [, setSelectedItems] = useState<DocumentoUnion[]>([]);
+  const auditoria = useAuditoria();
+
+  // Função para obter o nome da entidade baseado no tipo
+  const getAuditEntity = (tipo: string): string | null => {
+    switch (tipo) {
+      case 'contrato':
+        return 'ModeloDocumento';
+      case 'recibo':
+        return 'ModeloDocumento'; // Usa /modelos-documento com tipo=recibo
+      case 'carta_cobranca':
+        return 'ModeloDocumento'; // Usa /modelos-documento com tipo=carta
+      case 'termo':
+        return 'ModeloTermo'; // Usa /modelos-termo
+      default:
+        return null;
+    }
+  };
+
+  const handleAudit = (documento: DocumentoUnion) => {
+    const entity = getAuditEntity(tipo);
+    if (entity) {
+      auditoria.handleAudit(entity, documento.id);
+    }
+  };
 
   // Query para buscar documentos por tipo
   const { data: documentos, isLoading, refetch } = useQuery({
@@ -188,32 +214,48 @@ const DocumentoTab: React.FC<DocumentoTabProps> = ({
     }
   ];
 
+  const auditEntity = getAuditEntity(tipo);
+
   return (
-    <Table
-      config={{
-        columns,
-        data: documentos?.data as DocumentoUnion[] || [],
-        loading: isLoading,
-        searchable: true,
-        searchPlaceholder: `Buscar ${getTipoLabel(tipo).toLowerCase()}...`,
-        sortable: true,
-        striped: true,
-        hover: true,
-        responsive: true,
-        bulkActions: bulkActions.map(action => ({
-          key: action.label.toLowerCase().replace(/\s+/g, '-'),
-          label: action.label,
-          variant: action.variant,
-          onClick: action.onClick,
-          ...('disabled' in action && { disabled: action.disabled as boolean | ((selectedItems: DocumentoUnion[]) => boolean) })
-        })),
-        emptyMessage: `Nenhum modelo de ${getTipoLabel(tipo).toLowerCase()} cadastrado ainda.`,
-        className: 'no-padding'
-      }}
-      tableId={`documentos-${tipo}`}
-      onSelectionChange={setSelectedItems}
-      onRefresh={refetch}
-    />
+    <>
+      <Table
+        config={{
+          columns,
+          data: documentos?.data as DocumentoUnion[] || [],
+          loading: isLoading,
+          searchable: true,
+          searchPlaceholder: `Buscar ${getTipoLabel(tipo).toLowerCase()}...`,
+          sortable: true,
+          striped: true,
+          hover: true,
+          responsive: true,
+          bulkActions: bulkActions.map(action => ({
+            key: action.label.toLowerCase().replace(/\s+/g, '-'),
+            label: action.label,
+            variant: action.variant,
+            onClick: action.onClick,
+            ...('disabled' in action && { disabled: action.disabled as boolean | ((selectedItems: DocumentoUnion[]) => boolean) })
+          })),
+          emptyMessage: `Nenhum modelo de ${getTipoLabel(tipo).toLowerCase()} cadastrado ainda.`,
+          className: 'no-padding'
+        }}
+        tableId={`documentos-${tipo}`}
+        onSelectionChange={setSelectedItems}
+        onRefresh={refetch}
+        onAudit={auditEntity ? handleAudit : undefined}
+        auditEntity={auditEntity || undefined}
+      />
+
+      {auditEntity && (
+        <ImprimirModal
+          show={auditoria.showPreview}
+          onClose={auditoria.handleClosePreview}
+          pdfUrl={auditoria.pdfUrl}
+          title="Relatórios de logs"
+          modalId={`auditoria-modelo-documento-${tipo}-modal`}
+        />
+      )}
+    </>
   );
 };
 

@@ -198,6 +198,7 @@ app.use(ddosProtectionMiddleware({
     '/config.js',
     '/uploads',
     '/api/titulos/boletos-multiplos-pdf', // Geração de PDF pode demorar mais que 15s
+    '/api/auditoria/pdf', // Geração de PDF de auditoria pode demorar mais que 15s
     '/api/atualizacoes/update' // Atualização pode levar vários minutos (git pull, npm install, build, migrations, pm2 reload)
   ]
 }));

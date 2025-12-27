@@ -201,6 +201,10 @@ export class ModeloDocumentoController {
       }
 
       const dadosAnteriores = documento.toJSON();
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores as unknown as Record<string, unknown>);
+      
       await documento.destroy();
 
       await registrarExclusao(

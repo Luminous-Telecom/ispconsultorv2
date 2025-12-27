@@ -17,6 +17,8 @@ interface TermosTabProps {
   columns: TableColumn<TermoContrato>[];
   isGeneratingPdf: boolean;
   onRefresh?: () => void;
+  onAudit?: (item: TermoContrato) => void;
+  auditEntity?: string;
 }
 
 const TermosTab: React.FC<TermosTabProps> = ({
@@ -32,6 +34,8 @@ const TermosTab: React.FC<TermosTabProps> = ({
   columns,
   isGeneratingPdf,
   onRefresh,
+  onAudit,
+  auditEntity,
 }) => {
   return (
     <div className="row" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
@@ -69,6 +73,8 @@ const TermosTab: React.FC<TermosTabProps> = ({
             onPageChange={setPage}
             onPageSizeChange={setLimit}
             onRefresh={onRefresh}
+            onAudit={onAudit}
+            auditEntity={auditEntity}
           />
         </div>
       </div>

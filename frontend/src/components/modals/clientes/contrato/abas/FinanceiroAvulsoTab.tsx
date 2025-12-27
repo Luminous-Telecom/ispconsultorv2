@@ -21,6 +21,8 @@ interface FinanceiroAvulsoTabProps {
   onRefresh?: () => void;
   showCancelados: boolean;
   setShowCancelados: (show: boolean) => void;
+  onAudit?: (item: Titulo) => void;
+  auditEntity?: string;
 }
 
 const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
@@ -38,6 +40,8 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
   onRefresh,
   showCancelados,
   setShowCancelados,
+  onAudit,
+  auditEntity,
 }) => {
   const isMobile = useIsMobile();
   
@@ -144,6 +148,8 @@ const FinanceiroAvulsoTab: React.FC<FinanceiroAvulsoTabProps> = ({
             onPageSizeChange={setLimit}
             onRefresh={onRefresh}
             onSort={handleSort}
+            onAudit={onAudit}
+            auditEntity={auditEntity}
           />
         </div>
 
