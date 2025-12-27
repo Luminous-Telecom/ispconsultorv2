@@ -819,16 +819,46 @@ export class AuditoriaController {
       const dataFormatada = formatDate(log.timestamp);
       const usuarioNome = log.usuario_nome || log.usuario_email || 'N/A';
       
-      // Obter dados do log (anteriores ou novos)
-      const dadosLog = log.dados_novos || log.dados_anteriores || {};
-      const dadosHtml = gerarCamposHtml(dadosLog);
+      // Gerar HTML dos campos com comparação se for update
+      let dadosHtml = '';
+      const isUpdate = log.acao === 'update' && log.dados_anteriores && log.dados_novos;
+      
+      if (isUpdate) {
+        // Para updates, mostrar comparação entre anterior e novo
+        const dadosAnteriores = log.dados_anteriores || {};
+        const dadosNovos = log.dados_novos || {};
+        const todosCampos = new Set([...Object.keys(dadosAnteriores), ...Object.keys(dadosNovos)]);
+        
+        dadosHtml = Array.from(todosCampos)
+          .filter(key => !camposExcluir.includes(key))
+          .map(key => {
+            const valorAnterior = dadosAnteriores[key];
+            const valorNovo = dadosNovos[key];
+            const valorAnteriorFormatado = formatarValor(valorAnterior, key);
+            const valorNovoFormatado = formatarValor(valorNovo, key);
+            const mudou = JSON.stringify(valorAnterior) !== JSON.stringify(valorNovo);
+            const estiloDestaque = mudou ? 'background-color: #fff3cd;' : '';
+            
+            return `
+              <tr>
+                <td style="${estiloDestaque}">${escapeHtml(key)}</td>
+                <td style="${estiloDestaque}">${escapeHtml(valorAnteriorFormatado)}</td>
+                <td style="${estiloDestaque}">${escapeHtml(valorNovoFormatado)}</td>
+              </tr>
+            `;
+          }).join('');
+      } else {
+        // Para create/delete, mostrar apenas os dados disponíveis
+        const dadosLog = log.dados_novos || log.dados_anteriores || {};
+        dadosHtml = gerarCamposHtml(dadosLog);
+      }
 
     return `
       <div class="audit-item" style="margin-bottom: 0; ${index > 0 ? 'margin-top: 10px;' : ''}">
         <table class="data-table" style="margin-bottom: 0; margin-top: 0;">
           <thead>
             <tr>
-              <td colspan="2" style="font-size: 7pt; padding: 4px 6px; background-color: #555; color: #fff; border: 1px solid #666; font-weight: normal;">
+              <td ${isUpdate ? 'colspan="3"' : 'colspan="2"'} style="font-size: 7pt; padding: 4px 6px; background-color: #555; color: #fff; border: 1px solid #666; font-weight: normal;">
                 <strong>Forma:</strong> Sistema | 
                 <strong>Usuário:</strong> ${escapeHtml(usuarioNome)} | 
                 <strong>Operação:</strong> ${escapeHtml(acaoFormatada)} | 
@@ -837,11 +867,14 @@ export class AuditoriaController {
             </tr>
             <tr>
               <td style="font-weight: bold; border-top: 1px solid #666;">Campo</td>
-              <td style="font-weight: bold; border-top: 1px solid #666;">Valor</td>
+              ${isUpdate ? 
+                '<td style="font-weight: bold; border-top: 1px solid #666;">Valor Anterior</td><td style="font-weight: bold; border-top: 1px solid #666;">Valor Novo</td>' :
+                '<td style="font-weight: bold; border-top: 1px solid #666;">Valor</td>'
+              }
             </tr>
           </thead>
           <tbody>
-            ${dadosHtml || '<tr><td colspan="2">Sem dados disponíveis</td></tr>'}
+            ${dadosHtml || (isUpdate ? '<tr><td colspan="3">Sem dados disponíveis</td></tr>' : '<tr><td colspan="2">Sem dados disponíveis</td></tr>')}
           </tbody>
         </table>
       </div>
