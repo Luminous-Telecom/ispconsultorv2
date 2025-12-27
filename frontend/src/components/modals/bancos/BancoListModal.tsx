@@ -7,6 +7,8 @@ import { Banco } from '@/types';
 import { formatDateTime } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import BancoModal from './BancoModal';
+import { useAuditoria } from '@/hooks/useAuditoria';
+import ImprimirModal from '@/components/common/ImprimirModal';
 interface BancoListModalProps {
   show: boolean;
   onClose: () => void;
@@ -24,6 +26,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
 }) => {
   const [showBancoModal, setShowBancoModal] = useState(false);
   const [selectedBancoId, setSelectedBancoId] = useState<number | null>(null);
+  
+  const auditoria = useAuditoria();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -171,6 +175,10 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
     }
   };
 
+  const handleAudit = (banco: Banco) => {
+    auditoria.handleAudit('Banco', banco.id);
+  };
+
   // Bulk actions
   const bulkActions = onSelectBanco ? [
     {
@@ -243,6 +251,8 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         refreshQueryKeys={['bancos']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}
+        onAudit={handleAudit}
+        auditEntity="Banco"
         skipWrapper={skipWrapper}
       />
 
@@ -258,6 +268,15 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
           refetch();
           setSelectedBancoId(banco.id);
         }}
+      />
+
+      {/* Modal de Visualização de PDF de Auditoria */}
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        title="Relatórios de logs"
+        modalId="auditoria-banco-modal"
       />
     </>
   );

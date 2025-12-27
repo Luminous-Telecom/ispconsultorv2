@@ -4,8 +4,7 @@ import { useModalSelect } from '@/hooks/useModalSelect';
 import { useListModal } from '@/hooks/useListModal';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import { formatDateTime } from '@/utils/formatters';
-import { auditoriaService } from '@/services/auditoriaService';
-import { useNotificationContext } from '@/components/notifications/NotificationProvider';
+import { useAuditoria } from '@/hooks/useAuditoria';
 import ListModal from '@/components/common/ListModal';
 import ClienteModal from './cliente/ClienteModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
@@ -44,26 +43,11 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const { success, error: showError } = useNotificationContext();
+  
+  const auditoria = useAuditoria();
 
-  const handleAudit = async (cliente: Cliente) => {
-    try {
-      const blob = await auditoriaService.generatePdf('Cliente', cliente.id);
-      const url = window.URL.createObjectURL(blob);
-      // Limpar URL anterior se existir
-      if (pdfUrl) {
-        window.URL.revokeObjectURL(pdfUrl);
-      }
-      setPdfUrl(url);
-      setShowPreview(true);
-      success('PDF de auditoria gerado com sucesso!');
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[ClienteListModal] handleAudit - Erro:', err);
-      showError('Erro ao gerar PDF de auditoria');
-    }
+  const handleAudit = (cliente: Cliente) => {
+    auditoria.handleAudit('Cliente', cliente.id);
   };
   
   // Hook unificado para filtros, busca e paginação
@@ -360,15 +344,9 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
 
       {/* Modal de Visualização de PDF de Auditoria */}
       <ImprimirModal
-        show={showPreview}
-        onClose={() => {
-          setShowPreview(false);
-          if (pdfUrl) {
-            window.URL.revokeObjectURL(pdfUrl);
-            setPdfUrl(null);
-          }
-        }}
-        pdfUrl={pdfUrl}
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
         title="Relatórios de logs"
         modalId="auditoria-cliente-modal"
       />

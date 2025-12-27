@@ -8,6 +8,8 @@ import { Plano } from '@/types';
 import { formatDateTime } from '@/utils/formatters';
 import ListModal from '@/components/common/ListModal';
 import PlanoModal from './PlanoModal';
+import { useAuditoria } from '@/hooks/useAuditoria';
+import ImprimirModal from '@/components/common/ImprimirModal';
 
 interface PlanoListModalProps {
   show: boolean;
@@ -28,6 +30,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
+  
+  const auditoria = useAuditoria();
   
   // Hook unificado para filtros, busca e paginação
   const tableFilters = useTableFilters({
@@ -209,6 +213,10 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
     }
   };
 
+  const handleAudit = (plano: Plano) => {
+    auditoria.handleAudit('Plano', plano.id);
+  };
+
   // Bulk actions
   const bulkActions = onSelectPlano ? [
     {
@@ -278,6 +286,8 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         refreshQueryKeys={['planos']}
         refreshQueryFn={refetch}
         bulkActions={bulkActions}
+        onAudit={handleAudit}
+        auditEntity="Plano"
         skipWrapper={skipWrapper}
       />
 
@@ -297,6 +307,15 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
           setShowEditModal(false);
           setSelectedPlanoId(null);
         }}
+      />
+
+      {/* Modal de Visualização de PDF de Auditoria */}
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        title="Relatórios de logs"
+        modalId="auditoria-plano-modal"
       />
     </>
   );

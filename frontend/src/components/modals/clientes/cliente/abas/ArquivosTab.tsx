@@ -9,9 +9,11 @@ import AdicionarArquivoModal from './AdicionarArquivoModal';
 
 interface ArquivosTabProps {
   clienteId?: number | null;
+  onAudit?: (arquivo: ClienteArquivo) => void;
+  auditEntity?: string;
 }
 
-const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
+const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEntity }) => {
   const [_selectedItems, setSelectedItems] = useState<ClienteArquivo[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -207,6 +209,8 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId }) => {
             config={{ ...tableConfig, loading: isLoading }}
             onRefresh={refetch}
             onSelectionChange={setSelectedItems}
+            onAudit={onAudit}
+            auditEntity={auditEntity}
           />
         </div>
       </div>

@@ -13,6 +13,7 @@ import { TableConfig } from '@/components/tables/types';
 import ContratoModal from '@/components/modals/clientes/contrato/ContratoModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAuditoria } from '@/hooks/useAuditoria';
 
 interface ContratoListModalProps {
   show: boolean;
@@ -40,6 +41,7 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
   const [isGeneratingPdfLocal, setIsGeneratingPdfLocal] = useState(false);
   
   const { success, error } = useNotificationContext();
+  const auditoria = useAuditoria();
 
   // Hook para impressão de contratos
   const impressaoHook = useImpressaoContrato({
@@ -74,6 +76,10 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
         error('Erro ao excluir contrato');
       }
     }
+  };
+
+  const handleAudit = (contrato: Contrato) => {
+    auditoria.handleAudit('Contrato', contrato.id);
   };
 
   // Adicionar campos virtuais para busca e ordenação funcionar com campos aninhados
@@ -573,6 +579,8 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               onClose();
             } : undefined}
             onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="Contrato"
           />
         </div>
         
@@ -627,6 +635,15 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
           pdfUrl={impressaoHook.pdfUrl || pdfUrlLocal || null}
         />
       )}
+
+      {/* Modal de Visualização de PDF de Auditoria */}
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        title="Relatórios de logs"
+        modalId="auditoria-contrato-modal"
+      />
     </>
   );
 

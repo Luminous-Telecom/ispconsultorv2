@@ -9,6 +9,7 @@ import { PDFGenerationService } from '../services/pdf-generation/PDFGenerationSe
 import * as fs from 'fs/promises';
 import { ValidationError } from 'sequelize';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../types/auth';
 
 export class ModeloDocumentoController {
@@ -145,12 +146,17 @@ export class ModeloDocumentoController {
       await documento.update(documentoData);
       await documento.reload();
 
+      const dadosNovos = documento.toJSON() as unknown as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores as unknown as Record<string, unknown>, dadosNovos);
+
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'ModeloDocumento',
         documento.id,
         dadosAnteriores as unknown as Record<string, unknown>,
-        documento.toJSON() as unknown as Record<string, unknown>
+        dadosNovos
       );
 
       res.json({

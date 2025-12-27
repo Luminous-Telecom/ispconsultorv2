@@ -5,6 +5,7 @@ import * as Joi from 'joi';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { logger } from '../utils/logger';
+import { setAuditData } from '../middleware/auditMiddleware';
 
 export class UsuarioController {
   private static createSchema = Joi.object({
@@ -212,6 +213,10 @@ export class UsuarioController {
       // Registrar auditoria
       const { registrarAtualizacao } = await import('../services/AuditoriaService');
       const dadosNovos = { ...usuario.toJSON(), password_hash: '[REDACTED]' } as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores, dadosNovos);
+      
       await registrarAtualizacao(
         req,
         'Usuario',

@@ -10,6 +10,8 @@ import DraggableModal from '@/components/common/DraggableModal';
 import Table from '@/components/tables/Table';
 import { TableConfig } from '@/components/tables/types';
 import UsuarioFormModal from './UsuarioFormModal';
+import { useAuditoria } from '@/hooks/useAuditoria';
+import ImprimirModal from '@/components/common/ImprimirModal';
 
 interface UsuariosModalProps {
   show: boolean;
@@ -28,6 +30,7 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
   const [, setSelectedItems] = useState<Usuario[]>([]);
   
   const { success, error } = useNotificationContext();
+  const auditoria = useAuditoria();
   
   // Hook unificado para filtros, busca, ordenação e paginação
   const tableFilters = useTableFilters({
@@ -74,6 +77,10 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
         error('Erro ao excluir usuário');
       }
     }
+  };
+
+  const handleAudit = (usuario: Usuario) => {
+    auditoria.handleAudit('Usuario', usuario.id);
   };
 
   const sortedData = useSorting(usuarios as unknown as Record<string, unknown>[], tableFilters.sortColumn, tableFilters.sortDirection) as unknown as Usuario[];
@@ -217,6 +224,8 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
             onPageChange={tableFilters.setPage}
             onPageSizeChange={tableFilters.setLimit}
             onRefresh={refetch}
+            onAudit={handleAudit}
+            auditEntity="Usuario"
           />
         </div>
       </div>
@@ -232,6 +241,15 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
         onSuccess={() => {
           refetch();
         }}
+      />
+
+      {/* Modal de Visualização de PDF de Auditoria */}
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        title="Relatórios de logs"
+        modalId="auditoria-usuario-modal"
       />
     </>
   );

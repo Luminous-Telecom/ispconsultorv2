@@ -3,6 +3,7 @@ import { ClienteArquivoService, CreateClienteArquivoData, UpdateClienteArquivoDa
 import { logger } from '../utils/logger';
 import Joi from 'joi';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../types/auth';
 import { ClienteArquivo } from '../models/ClienteArquivo';
 
@@ -167,12 +168,17 @@ export class ClienteArquivoController {
 
       const arquivo = await ClienteArquivoService.update(Number(id), value as UpdateClienteArquivoData);
 
+      const dadosNovos = arquivo.toJSON() as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores as Record<string, unknown>, dadosNovos);
+
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'ClienteArquivo',
         arquivo.id,
         dadosAnteriores as Record<string, unknown>,
-        arquivo.toJSON() as Record<string, unknown>
+        dadosNovos
       );
 
       res.json({

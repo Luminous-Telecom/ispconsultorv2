@@ -6,6 +6,7 @@ import * as Joi from 'joi';
 import { logger } from '../utils/logger';
 import { isJoiError, getErrorMessage } from '../utils/errorUtils';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 import type { AuthenticatedRequest } from '../types/auth';
 //
 export class ContratoPlanoAdicionalController {
@@ -265,12 +266,18 @@ export class ContratoPlanoAdicionalController {
         ]
       });
 
+      const dadosAnteriores = servico.toJSON() as Record<string, unknown>;
+      const dadosNovos = servicoAtualizado?.toJSON() as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores, dadosNovos);
+
       await registrarAtualizacao(
         req as AuthenticatedRequest,
         'ContratoPlanoAdicional',
         servico.id,
-        servico.toJSON() as Record<string, unknown>,
-        servicoAtualizado?.toJSON() as Record<string, unknown>
+        dadosAnteriores,
+        dadosNovos
       );
 
       res.json({

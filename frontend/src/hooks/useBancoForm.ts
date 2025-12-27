@@ -105,20 +105,20 @@ const mapBancoToForm = (banco: Banco): BancoForm => ({
   client_secret_producao: banco.client_secret_producao || '',
   url_retorno: banco.url_retorno || '/webhook/efi',
   repassar_email_cliente: banco.repassar_email_cliente ?? false,
-  percentual_multa: banco.percentual_multa || 2,
-  percentual_juros: banco.percentual_juros || 0.03,
+  percentual_multa: typeof banco.percentual_multa === 'number' ? banco.percentual_multa : parseFloat(String(banco.percentual_multa || 2)) || 2,
+  percentual_juros: typeof banco.percentual_juros === 'number' ? banco.percentual_juros : parseFloat(String(banco.percentual_juros || 0.03)) || 0.03,
   desconto_tipo: banco.desconto_tipo || 'fixo',
-  desconto_valor: banco.desconto_valor || 0,
+  desconto_valor: typeof banco.desconto_valor === 'number' ? banco.desconto_valor : parseFloat(String(banco.desconto_valor || 0)) || 0,
   contra_apresentacao: banco.contra_apresentacao ?? false,
   recalcular_segunda_via: banco.recalcular_segunda_via ?? false,
-  maximo_dias_recalcular: banco.maximo_dias_recalcular || 0,
+  maximo_dias_recalcular: typeof banco.maximo_dias_recalcular === 'number' ? banco.maximo_dias_recalcular : parseInt(String(banco.maximo_dias_recalcular || 0), 10) || 0,
   layout_web: banco.layout_web || 'normal',
   layout_pdf: banco.layout_pdf || 'normal',
   layout_carne: banco.layout_carne || '',
   local_pagamento: banco.local_pagamento || '',
   dados_avalista: banco.dados_avalista || '',
   exibir_mes_referente: banco.exibir_mes_referente ?? false,
-  taxa_cobranca: banco.taxa_cobranca || 0,
+  taxa_cobranca: typeof banco.taxa_cobranca === 'number' ? banco.taxa_cobranca : parseFloat(String(banco.taxa_cobranca || 0)) || 0,
   incluir_taxa: banco.incluir_taxa ?? false,
   observacao_linha_1: banco.observacao_linha_1 || '',
   observacao_linha_2: banco.observacao_linha_2 || '',
@@ -152,7 +152,8 @@ export const useBancoForm = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(bancoSchema) as any,
     defaultValues: initialFormData as ZodBancoFormData,
-    mode: 'onChange'
+    mode: 'onSubmit',
+    reValidateMode: 'onChange'
   });
 
   // Observar todos os campos para re-renderizar quando mudarem
@@ -243,19 +244,37 @@ export const useBancoForm = ({
     // Normalizar o valor baseado no tipo esperado do campo
     let normalizedValue: string | boolean | number;
     
+    // Campos numéricos que devem ser convertidos
+    const numericFields: (keyof BancoForm)[] = [
+      'percentual_multa',
+      'percentual_juros',
+      'desconto_valor',
+      'maximo_dias_recalcular',
+      'taxa_cobranca'
+    ];
+    
     if (value === null || value === undefined) {
-      const fieldType = typeof formData[field];
-      if (fieldType === 'boolean') {
-        normalizedValue = false;
-      } else if (fieldType === 'number') {
+      if (numericFields.includes(field)) {
         normalizedValue = 0;
+      } else if (typeof formData[field] === 'boolean') {
+        normalizedValue = false;
       } else {
         normalizedValue = '';
       }
     } else if (Array.isArray(value)) {
-      normalizedValue = value.length > 0 ? String(value[0]) : '';
+      const arrayValue = value.length > 0 ? value[0] : '';
+      if (numericFields.includes(field)) {
+        normalizedValue = parseFloat(String(arrayValue)) || 0;
+      } else {
+        normalizedValue = String(arrayValue);
+      }
+    } else if (numericFields.includes(field)) {
+      // Converter para número se for campo numérico
+      normalizedValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0;
+    } else if (typeof formData[field] === 'boolean') {
+      normalizedValue = Boolean(value);
     } else {
-      normalizedValue = value as string | boolean | number;
+      normalizedValue = String(value);
     }
 
     // Atualizar React Hook Form
@@ -293,50 +312,64 @@ export const useBancoForm = ({
   // Handler de submit usando React Hook Form
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = (data: any) => {
-    const typedData = data as ZodBancoFormData;
-    
-    // Preparar dados para envio
-    const dataToSend: BancoForm = { ...typedData } as BancoForm;
+    try {
+      const typedData = data as ZodBancoFormData;
+      
+      // Preparar dados para envio
+      const dataToSend: BancoForm = { ...typedData } as BancoForm;
 
-    if (isEditing) {
-      // Modo edição - não enviar campos de senha vazios
-      if (!dataToSend.api_key || dataToSend.api_key.trim() === '') {
-        delete (dataToSend as Partial<BancoForm>).api_key;
+      if (isEditing) {
+        // Modo edição - não enviar campos de senha vazios
+        if (!dataToSend.api_key || dataToSend.api_key.trim() === '') {
+          delete (dataToSend as Partial<BancoForm>).api_key;
+        }
+        if (!dataToSend.client_id_producao || dataToSend.client_id_producao.trim() === '') {
+          delete (dataToSend as Partial<BancoForm>).client_id_producao;
+        }
+        if (!dataToSend.client_secret_producao || dataToSend.client_secret_producao.trim() === '') {
+          delete (dataToSend as Partial<BancoForm>).client_secret_producao;
+        }
+        if (!dataToSend.api_secret || dataToSend.api_secret.trim() === '') {
+          delete (dataToSend as Partial<BancoForm>).api_secret;
+        }
+        if (!dataToSend.webhook_secret || dataToSend.webhook_secret.trim() === '') {
+          delete (dataToSend as Partial<BancoForm>).webhook_secret;
+        }
+        delete (dataToSend as Partial<BancoForm>).has_api_key;
+        
+        updateBancoMutation.mutate(dataToSend);
+      } else {
+        // Modo criação
+        if (!dataToSend.webhook_secret || dataToSend.webhook_secret.trim() === '') {
+          delete (dataToSend as Partial<BancoForm>).webhook_secret;
+        }
+        if (!dataToSend.api_secret || dataToSend.api_secret.trim() === '') {
+          delete (dataToSend as Partial<BancoForm>).api_secret;
+        }
+        delete (dataToSend as Partial<BancoForm>).has_api_key;
+        
+        createBancoMutation.mutate(dataToSend);
       }
-      if (!dataToSend.client_id_producao || dataToSend.client_id_producao.trim() === '') {
-        delete (dataToSend as Partial<BancoForm>).client_id_producao;
-      }
-      if (!dataToSend.client_secret_producao || dataToSend.client_secret_producao.trim() === '') {
-        delete (dataToSend as Partial<BancoForm>).client_secret_producao;
-      }
-      if (!dataToSend.api_secret || dataToSend.api_secret.trim() === '') {
-        delete (dataToSend as Partial<BancoForm>).api_secret;
-      }
-      if (!dataToSend.webhook_secret || dataToSend.webhook_secret.trim() === '') {
-        delete (dataToSend as Partial<BancoForm>).webhook_secret;
-      }
-      delete (dataToSend as Partial<BancoForm>).has_api_key;
-      
-      updateBancoMutation.mutate(dataToSend);
-    } else {
-      // Modo criação
-      if (!dataToSend.webhook_secret || dataToSend.webhook_secret.trim() === '') {
-        delete (dataToSend as Partial<BancoForm>).webhook_secret;
-      }
-      if (!dataToSend.api_secret || dataToSend.api_secret.trim() === '') {
-        delete (dataToSend as Partial<BancoForm>).api_secret;
-      }
-      delete (dataToSend as Partial<BancoForm>).has_api_key;
-      
-      createBancoMutation.mutate(dataToSend);
+    } catch (err) {
+      error('Erro ao processar formulário');
     }
   };
 
   // Handler de submit mantido para compatibilidade
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rhfHandleSubmit(onSubmit as any)(e);
+    rhfHandleSubmit(onSubmit as any, (errors) => {
+      // Mostrar primeiro erro de validação
+      const firstError = Object.values(errors)[0];
+      if (firstError?.message) {
+        error(firstError.message as string);
+      } else {
+        error('Por favor, corrija os erros no formulário');
+      }
+    })(e);
   };
 
   return {

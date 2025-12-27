@@ -30,4 +30,5 @@ export * from './useCep';
 export * from './useDashboard';
 export * from './useClienteEditModal';
 export * from './useMediaQuery';
+export * from './useAuditoria';
 

@@ -61,6 +61,8 @@ export interface ContratosTabProps {
   onShowCreateModal: () => void;
   onShowEditModal: (contratoId: number) => void;
   isGeneratingPdf: boolean;
+  onAudit?: (contrato: Contrato) => void;
+  auditEntity?: string;
 }
 
 export interface FinanceiroTabProps {
@@ -79,5 +81,7 @@ export interface FinanceiroTabProps {
     sortable?: boolean;
     render?: (item: CarneParcela) => React.ReactNode;
   }>;
+  onAudit?: (titulo: CarneParcela) => void;
+  auditEntity?: string;
 }
 

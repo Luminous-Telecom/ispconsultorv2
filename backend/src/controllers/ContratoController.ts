@@ -10,6 +10,7 @@ import * as Joi from 'joi';
 import { logger } from '../utils/logger';
 import { withTransaction } from '../utils/transaction';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 
 export class ContratoController {
   // Função auxiliar para normalizar data (evitar problemas de timezone)
@@ -510,6 +511,10 @@ export class ContratoController {
       
       // Registrar auditoria
       const dadosNovos = contrato.toJSON() as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores, dadosNovos);
+      
       await registrarAtualizacao(
         req,
         'Contrato',

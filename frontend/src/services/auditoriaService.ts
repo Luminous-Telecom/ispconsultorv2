@@ -1,5 +1,6 @@
 import { defaultApiClient } from './core';
 import { ApiResponse, PaginatedResponse } from '../types';
+import { extractApiErrorMessage } from '../utils/apiErrorHelper';
 
 export interface AuditoriaLog {
   id: string;
@@ -210,7 +211,20 @@ class AuditoriaService {
       
       return blob;
     } catch (error) {
-      throw error;
+      // Se já é um Error com mensagem, apenas relançar
+      if (error instanceof Error && !('isAxiosError' in error)) {
+        throw error;
+      }
+      
+      const errorMessage = await extractApiErrorMessage(error, {
+        defaultMessage: 'Erro ao gerar PDF de auditoria',
+        handleBlobResponse: true,
+        customStatusMessages: {
+          404: 'Nenhum log de auditoria encontrado para este registro'
+        }
+      });
+      
+      throw new Error(errorMessage);
     }
   }
 }

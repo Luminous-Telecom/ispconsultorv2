@@ -14,6 +14,7 @@ import { TituloModal } from '@/components/modals/titulos';
 import ReceberModal from '@/components/modals/pagamentos/ReceberModal';
 import ImprimirModal from '@/components/common/ImprimirModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAuditoria } from '@/hooks/useAuditoria';
 
 interface FinanceiroModalProps {
   show: boolean;
@@ -62,6 +63,11 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   
   const { success, error } = useNotificationContext();
   const queryClient = useQueryClient();
+  const auditoria = useAuditoria();
+
+  const handleAudit = (titulo: Titulo) => {
+    auditoria.handleAudit('Titulo', titulo.id);
+  };
   
   // Resetar página quando filtros específicos mudarem
   useEffect(() => {
@@ -574,6 +580,8 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
               onPageChange={tableFilters.setPage}
               onPageSizeChange={tableFilters.setLimit}
               onRefresh={refetch}
+              onAudit={handleAudit}
+              auditEntity="Titulo"
             />
             </div>
 
@@ -678,6 +686,15 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
             pdfUrl={pdfUrl}
           />
         )}
+
+        {/* Modal de Visualização de PDF de Auditoria */}
+        <ImprimirModal
+          show={auditoria.showPreview}
+          onClose={auditoria.handleClosePreview}
+          pdfUrl={auditoria.pdfUrl}
+          title="Relatórios de logs"
+          modalId="auditoria-titulo-modal"
+        />
       </>
     );
   }
@@ -742,6 +759,15 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
           pdfUrl={pdfUrl}
         />
       )}
+
+      {/* Modal de Visualização de PDF de Auditoria */}
+      <ImprimirModal
+        show={auditoria.showPreview}
+        onClose={auditoria.handleClosePreview}
+        pdfUrl={auditoria.pdfUrl}
+        title="Relatórios de logs"
+        modalId="auditoria-titulo-modal"
+      />
     </>
   );
 };

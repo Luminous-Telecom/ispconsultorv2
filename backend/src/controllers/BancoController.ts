@@ -2,10 +2,11 @@ import { Request, Response } from 'express';
 import { Banco } from '../models/Banco';
 import { BancoApiService } from '../services/BancoApiService';
 import { logger } from '../utils/logger';
-import { Op, WhereOptions } from 'sequelize';
+import { Op, WhereOptions, ValidationError } from 'sequelize';
 import { randomBytes } from 'crypto';
 import { cache } from '../utils/cache';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 
 export class BancoController {
   /**
@@ -192,11 +193,33 @@ export class BancoController {
         data: banco
       });
     } catch (error: unknown) {
+      // Capturar erros de validação do Sequelize
+      if (error instanceof ValidationError) {
+        const errorMessages = error.errors.map(err => err.message);
+        logger.warn('Erro de validação ao criar banco', {
+          errors: errorMessages,
+          body: req.body
+        });
+        res.status(400).json({
+          success: false,
+          error: 'Dados inválidos',
+          message: errorMessages.join(', ')
+        });
+        return;
+      }
+      
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       logger.error('Erro ao criar banco', {
-        error: errorMessage
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor',
+        message: errorMessage
+      });
     }
   }
 
@@ -283,6 +306,10 @@ export class BancoController {
       
       // Registrar auditoria
       const dadosNovos = banco.toJSON() as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores, dadosNovos);
+      
       await registrarAtualizacao(
         req,
         'Banco',
@@ -310,12 +337,35 @@ export class BancoController {
         data: banco
       });
     } catch (error: unknown) {
+      // Capturar erros de validação do Sequelize
+      if (error instanceof ValidationError) {
+        const errorMessages = error.errors.map(err => err.message);
+        logger.warn('Erro de validação ao atualizar banco', {
+          banco_id: req.params.id,
+          errors: errorMessages,
+          body: req.body
+        });
+        res.status(400).json({
+          success: false,
+          error: 'Dados inválidos',
+          message: errorMessages.join(', ')
+        });
+        return;
+      }
+      
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       logger.error('Erro ao atualizar banco', {
         banco_id: req.params.id,
-        error: errorMessage
+        error: errorMessage,
+        stack: errorStack,
+        body: req.body
       });
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor',
+        message: errorMessage
+      });
     }
   }
 

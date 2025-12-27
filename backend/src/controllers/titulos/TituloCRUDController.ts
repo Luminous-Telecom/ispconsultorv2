@@ -11,6 +11,7 @@ import { gerarLinkPagamentoPublico } from './TituloHelpers';
 import { TituloBulkController } from './TituloBulkController';
 import type { TituloComRelacoes } from './types';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../../services/AuditoriaService';
+import { setAuditData } from '../../middleware/auditMiddleware';
 
 export class TituloCRUDController {
   
@@ -375,6 +376,10 @@ export class TituloCRUDController {
       
       // Registrar auditoria
       const dadosNovos = titulo.toJSON() as Record<string, unknown>;
+      
+      // Disponibilizar dados para o middleware
+      setAuditData(req, dadosAnteriores, dadosNovos);
+      
       await registrarAtualizacao(
         req,
         'Titulo',

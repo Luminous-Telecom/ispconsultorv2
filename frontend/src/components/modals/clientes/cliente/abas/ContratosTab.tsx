@@ -12,7 +12,9 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
   contratosBulkActions,
   showInativosContratos,
   setShowInativosContratos,
-  onRefresh
+  onRefresh,
+  onAudit,
+  auditEntity
 }) => {
   const isMobile = useIsMobile();
   
@@ -264,6 +266,8 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
           }}
           onSelectionChange={setSelectedContratosItems}
           onRefresh={onRefresh}
+          onAudit={onAudit}
+          auditEntity={auditEntity}
         />
         </div>
 

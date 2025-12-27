@@ -6,6 +6,7 @@ import { sequelize } from '../config/database';
 import { logger } from '../utils/logger';
 import { cache } from '../utils/cache';
 import { registrarCriacao, registrarAtualizacao, registrarExclusao } from '../services/AuditoriaService';
+import { setAuditData } from '../middleware/auditMiddleware';
 
 export class PlanoController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -361,6 +362,10 @@ export class PlanoController {
       // Registrar auditoria
       if (plano) {
         const dadosNovos = plano.toJSON() as Record<string, unknown>;
+        
+        // Disponibilizar dados para o middleware
+        setAuditData(req, dadosAnteriores, dadosNovos);
+        
         await registrarAtualizacao(
           req,
           'Plano',

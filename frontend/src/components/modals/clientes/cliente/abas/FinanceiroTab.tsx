@@ -14,7 +14,9 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   showCancelados,
   setShowCancelados,
   onRefresh,
-  columns
+  columns,
+  onAudit,
+  auditEntity
 }) => {
   const isMobile = useIsMobile();
 
@@ -95,6 +97,8 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             setSelectedItems(tituloItems);
           }}
           onRefresh={onRefresh}
+          onAudit={onAudit}
+          auditEntity={auditEntity}
         />
         </div>
 

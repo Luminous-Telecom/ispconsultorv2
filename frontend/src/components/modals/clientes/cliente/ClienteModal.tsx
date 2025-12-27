@@ -7,6 +7,7 @@ import { useClienteContratos } from '@/hooks/useClienteContratos';
 import { useClienteImpressao } from '@/hooks/useClienteImpressao';
 import { useClienteBulkActions } from '@/hooks/useClienteBulkActions';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAuditoria } from '@/hooks/useAuditoria';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatters';
 import { CarneParcela } from '@/types';
 import { TituloItem } from '@/types/cliente';
@@ -85,6 +86,9 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
     clienteId,
     parcelasData
   });
+
+  // Hook de auditoria
+  const auditoria = useAuditoria();
 
   // Criar handlers que serão passados para bulkActions
   const handleImprimirTitulosSelecionadosWrapper = async (selectedItems: TituloItem[]) => {
@@ -482,6 +486,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                   setShowContratoEditModal(true);
                 }}
                 isGeneratingPdf={impressaoHook.isGeneratingPdf}
+                onAudit={(contrato) => auditoria.handleAudit('Contrato', contrato.id)}
+                auditEntity="Contrato"
               />
             )}
 
@@ -498,6 +504,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
                 onRefresh={() => refetchParcelas()}
                 isGeneratingPdf={impressaoHook.isGeneratingPdf}
                 columns={columns}
+                onAudit={(titulo) => auditoria.handleAudit('Titulo', titulo.id)}
+                auditEntity="Titulo"
               />
             )}
 
@@ -516,6 +524,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
             {activeTab === "arquivos" && (
               <ArquivosTab
                 clienteId={effectiveClienteIdForParcelas}
+                onAudit={(arquivo) => auditoria.handleAudit('ClienteArquivo', arquivo.id)}
+                auditEntity="ClienteArquivo"
               />
             )}
           </div>
@@ -586,6 +596,15 @@ const ClienteModal: React.FC<ClienteModalProps> = ({
           pdfUrl={impressaoHook.pdfUrl}
           title="Visualizar Documento"
           modalId="cliente-imprimir-modal"
+        />
+
+        {/* Modal de Visualização de PDF de Auditoria */}
+        <ImprimirModal
+          show={auditoria.showPreview}
+          onClose={auditoria.handleClosePreview}
+          pdfUrl={auditoria.pdfUrl}
+          title="Relatórios de logs"
+          modalId="auditoria-cliente-modal"
         />
       </>
     );
