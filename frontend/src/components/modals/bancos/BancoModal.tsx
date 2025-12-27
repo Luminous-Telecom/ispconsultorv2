@@ -242,7 +242,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
                 type="button"
                 onClick={() => setActiveTab('informacoes-basicas')}
               >
-                Informações Básicas
+                Banco
               </button>
             </li>
             <li className="nav-item" role="presentation">
@@ -267,7 +267,7 @@ const BancoModal: React.FC<BancoModalProps> = ({
               minHeight: 0
             }}
           >
-            {/* Aba Informações Básicas */}
+            {/* Aba Banco */}
             {activeTab === 'informacoes-basicas' && (
               <InformacoesBasicasTab
                 formData={formData}

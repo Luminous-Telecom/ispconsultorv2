@@ -15,7 +15,7 @@ import {
  * Schema completo para criação/atualização de Cliente
  */
 export const clienteSchema = z.object({
-  // Dados básicos
+  // Cliente
   cnpj: cnpjSchema,
   
   razao_social: z

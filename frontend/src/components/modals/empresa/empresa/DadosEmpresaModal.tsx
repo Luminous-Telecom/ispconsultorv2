@@ -181,7 +181,7 @@ const DadosEmpresaModal: React.FC<DadosEmpresaModalProps> = ({
               onClick={() => setActiveTab('basico')}
             >
               <i className="bi bi-building me-2"></i>
-              Dados Básicos
+              Empresa
             </button>
           </li>
           <li className="nav-item" role="presentation">
