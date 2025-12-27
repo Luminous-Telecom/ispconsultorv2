@@ -136,14 +136,27 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
         key: 'usuario_email',
         label: 'Usuário',
         sortable: false,
-        width: '200px',
+        width: '180px',
         render: (log: AuditoriaLog) => (
-          <div className="small">
-            <div>{log.usuario_email || 'N/A'}</div>
-            {log.usuario_nome && (
-              <div className="text-muted">{log.usuario_nome}</div>
-            )}
-          </div>
+          <span className="small">{log.usuario_email || 'N/A'}</span>
+        )
+      },
+      {
+        key: 'usuario_nome',
+        label: 'Nome',
+        sortable: false,
+        width: '150px',
+        render: (log: AuditoriaLog) => (
+          <span className="small text-muted">{log.usuario_nome || '-'}</span>
+        )
+      },
+      {
+        key: 'metodo_http',
+        label: 'Método',
+        sortable: false,
+        width: '80px',
+        render: (log: AuditoriaLog) => (
+          <code className="text-primary small">{log.metodo_http || '-'}</code>
         )
       },
       {
@@ -152,12 +165,16 @@ const AuditoriaModal: React.FC<AuditoriaModalProps> = ({ show, onClose }) => {
         sortable: false,
         width: '200px',
         render: (log: AuditoriaLog) => (
-          <div className="small">
-            <div><code className="text-primary">{log.metodo_http || 'N/A'}</code> {log.rota || 'N/A'}</div>
-            {log.ip_address && (
-              <div className="text-muted">IP: {log.ip_address}</div>
-            )}
-          </div>
+          <span className="small">{log.rota || '-'}</span>
+        )
+      },
+      {
+        key: 'ip_address',
+        label: 'IP',
+        sortable: false,
+        width: '120px',
+        render: (log: AuditoriaLog) => (
+          <span className="small text-muted">{log.ip_address || '-'}</span>
         )
       },
       {

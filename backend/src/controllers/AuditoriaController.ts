@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from '../types/auth';
 import { getElasticsearchService } from '../services/elasticsearch/ElasticsearchService';
 import { logger } from '../utils/logger';
 import { Auditoria } from '../models/Auditoria';
+import { Usuario } from '../models/Usuario';
 import { Op, WhereOptions } from 'sequelize';
 
 export class AuditoriaController {
@@ -40,13 +41,50 @@ export class AuditoriaController {
       const must: any[] = [];
 
       if (search) {
-        must.push({
-          multi_match: {
-            query: search,
-            fields: ['observacoes', 'rota', 'usuario_email', 'usuario_nome'],
-            type: 'phrase_prefix'
-          }
-        });
+        const isRoute = search.startsWith('/api/');
+        const isEmail = search.includes('@');
+        const isEntity = /^[A-Z][a-zA-Z]*$/.test(search.trim()) && search.trim().length > 2 && !search.includes(' ');
+        
+        if (isRoute) {
+          must.push({
+            bool: {
+              should: [
+                { match_phrase: { rota: { query: search } } },
+                { wildcard: { rota: { value: `*${search.toLowerCase()}*` } } }
+              ],
+              minimum_should_match: 1
+            }
+          });
+        } else if (isEmail) {
+          must.push({
+            bool: {
+              should: [
+                { match_phrase: { usuario_email: { query: search } } },
+                { wildcard: { usuario_email: { value: `*${search.toLowerCase()}*` } } }
+              ],
+              minimum_should_match: 1
+            }
+          });
+        } else if (isEntity) {
+          must.push({
+            bool: {
+              should: [
+                { term: { entidade: search } },
+                { match_phrase: { entidade: { query: search } } }
+              ],
+              minimum_should_match: 1
+            }
+          });
+        } else {
+          must.push({
+            multi_match: {
+              query: search,
+              fields: ['observacoes', 'rota', 'usuario_email', 'usuario_nome'],
+              type: 'best_fields',
+              operator: 'or'
+            }
+          });
+        }
       }
 
       if (acao) {
@@ -100,6 +138,7 @@ export class AuditoriaController {
       });
 
       const total = typeof countResult.count === 'number' ? countResult.count : (countResult.count as any).value || 0;
+
       const hits = result.hits.hits.map((hit: any) => ({
         id: hit._id,
         ...hit._source
@@ -118,18 +157,23 @@ export class AuditoriaController {
         }
       });
     } catch (error) {
-      logger.error('Erro ao buscar logs de auditoria', {
-        context: 'AuditoriaController',
-        action: 'list',
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      // Tentar fallback para banco de dados sem logar erro (é esperado que possa falhar)
+      try {
+        return await AuditoriaController.listFromDatabase(req, res);
+      } catch (fallbackError) {
+        logger.error('Erro ao buscar logs de auditoria (Elasticsearch e banco de dados falharam)', {
+          context: 'AuditoriaController',
+          action: 'list',
+          elasticsearchError: error instanceof Error ? error.message : 'Erro desconhecido',
+          databaseError: fallbackError instanceof Error ? fallbackError.message : 'Erro desconhecido'
+        });
 
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao buscar logs de auditoria',
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      });
+        res.status(500).json({
+          success: false,
+          message: 'Erro ao buscar logs de auditoria',
+          error: fallbackError instanceof Error ? fallbackError.message : 'Erro desconhecido'
+        });
+      }
     }
   }
 
@@ -175,9 +219,15 @@ export class AuditoriaController {
         }
       }
 
-      // Buscar logs
+      // Buscar logs com usuário incluído
       const { count, rows } = await Auditoria.findAndCountAll({
         where,
+        include: [{
+          model: Usuario,
+          as: 'usuario',
+          required: false,
+          attributes: ['id', 'nome', 'email']
+        }],
         order: [['created_at', 'DESC']],
         limit,
         offset
@@ -187,45 +237,58 @@ export class AuditoriaController {
       let filteredRows = rows;
       if (search) {
         const searchLower = search.toLowerCase();
-        filteredRows = rows.filter((log) => {
+        const isRoute = search.startsWith('/api/');
+        const isEmail = search.includes('@');
+        const isEntity = /^[A-Z][a-zA-Z]*$/.test(search.trim()) && search.trim().length > 2 && !search.includes(' ');
+
+        filteredRows = rows.filter((log: any) => {
+          if (isRoute) {
+            const dadosAnterioresStr = JSON.stringify(log.dados_anteriores || {}).toLowerCase();
+            const dadosNovosStr = JSON.stringify(log.dados_novos || {}).toLowerCase();
+            return dadosAnterioresStr.includes(searchLower) || dadosNovosStr.includes(searchLower);
+          }
+          
+          if (isEmail) {
+            const usuarioEmail = log.usuario?.email?.toLowerCase() || '';
+            return usuarioEmail.includes(searchLower);
+          }
+          
+          if (isEntity) {
+            const entidadeNome = log.entidade?.toLowerCase() || '';
+            return entidadeNome === searchLower;
+          }
+
           const observacoes = log.observacoes?.toLowerCase() || '';
           const entidadeNome = log.entidade?.toLowerCase() || '';
-          const usuarioNome = (log.getUsuario && (log.getUsuario() as any)?.nome?.toLowerCase()) || '';
-          const usuarioEmail = (log.getUsuario && (log.getUsuario() as any)?.email?.toLowerCase()) || '';
+          const usuarioNome = log.usuario?.nome?.toLowerCase() || '';
+          const usuarioEmail = log.usuario?.email?.toLowerCase() || '';
+          const ipAddress = log.ip_address?.toLowerCase() || '';
           
           return observacoes.includes(searchLower) ||
                  entidadeNome.includes(searchLower) ||
                  usuarioNome.includes(searchLower) ||
-                 usuarioEmail.includes(searchLower);
+                 usuarioEmail.includes(searchLower) ||
+                 ipAddress.includes(searchLower);
         });
       }
 
       // Mapear para formato esperado pelo frontend
-      const logs = await Promise.all(filteredRows.map(async (log) => {
-        let usuario = null;
-        try {
-          if (log.usuario_id) {
-            usuario = await log.getUsuario();
-          }
-        } catch (error) {
-          // Ignorar erro ao buscar usuário
-        }
-        
-        return {
-          id: log.id.toString(),
-          usuario_id: log.usuario_id,
-          usuario_nome: (usuario as any)?.nome || null,
-          usuario_email: (usuario as any)?.email || null,
-          acao: log.acao,
-          entidade: log.entidade,
-          entidade_id: log.entidade_id,
-          dados_anteriores: log.dados_anteriores,
-          dados_novos: log.dados_novos,
-          ip_address: log.ip_address,
-          user_agent: log.user_agent,
-          observacoes: log.observacoes,
-          timestamp: log.created_at.toISOString()
-        };
+      const logs = filteredRows.map((log: any) => ({
+        id: log.id.toString(),
+        usuario_id: log.usuario_id,
+        usuario_nome: log.usuario?.nome || null,
+        usuario_email: log.usuario?.email || null,
+        acao: log.acao,
+        entidade: log.entidade,
+        entidade_id: log.entidade_id,
+        dados_anteriores: log.dados_anteriores,
+        dados_novos: log.dados_novos,
+        ip_address: log.ip_address,
+        user_agent: log.user_agent,
+        rota: null,
+        metodo_http: null,
+        observacoes: log.observacoes,
+        timestamp: log.created_at.toISOString()
       }));
 
       const total = search ? filteredRows.length : count;
