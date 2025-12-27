@@ -560,6 +560,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               try {
                 let successCount = 0;
                 let errorCount = 0;
+                let firstErrorMessage = '';
                 
                 for (const item of items) {
                   if (item.status === 'cancelado') continue;
@@ -569,9 +570,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                       successCount++;
                     } else {
                       errorCount++;
+                      if (!firstErrorMessage && response.message) {
+                        firstErrorMessage = response.message;
+                      }
                     }
                   } catch (err) {
                     errorCount++;
+                    if (!firstErrorMessage) {
+                      if (err && typeof err === 'object' && 'message' in err) {
+                        firstErrorMessage = (err as { message: string }).message;
+                      } else if (err instanceof Error) {
+                        firstErrorMessage = err.message;
+                      }
+                    }
                   }
                 }
                 
@@ -583,9 +594,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 }
                 
                 if (errorCount > 0) {
-                  const message = errorCount === 1 
+                  const message = firstErrorMessage || (errorCount === 1 
                     ? '1 mensagem não pôde ser enviada'
-                    : `${errorCount} mensagens não puderam ser enviadas`;
+                    : `${errorCount} mensagens não puderam ser enviadas`);
                   error(message);
                 }
               } catch (err) {
@@ -602,6 +613,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               try {
                 let successCount = 0;
                 let errorCount = 0;
+                let firstErrorMessage = '';
                 
                 for (const item of items) {
                   if (item.status === 'cancelado') continue;
@@ -611,9 +623,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                       successCount++;
                     } else {
                       errorCount++;
+                      if (!firstErrorMessage && response.message) {
+                        firstErrorMessage = response.message;
+                      }
                     }
                   } catch (err) {
                     errorCount++;
+                    if (!firstErrorMessage) {
+                      if (err && typeof err === 'object' && 'message' in err) {
+                        firstErrorMessage = (err as { message: string }).message;
+                      } else if (err instanceof Error) {
+                        firstErrorMessage = err.message;
+                      }
+                    }
                   }
                 }
                 
@@ -625,9 +647,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 }
                 
                 if (errorCount > 0) {
-                  const message = errorCount === 1 
+                  const message = firstErrorMessage || (errorCount === 1 
                     ? '1 email não pôde ser enviado'
-                    : `${errorCount} emails não puderam ser enviados`;
+                    : `${errorCount} emails não puderam ser enviados`);
                   error(message);
                 }
               } catch (err) {
@@ -788,6 +810,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               try {
                 let successCount = 0;
                 let errorCount = 0;
+                let firstErrorMessage = '';
                 
                 for (const item of items) {
                   if (item.status === 'cancelado') continue;
@@ -797,9 +820,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                       successCount++;
                     } else {
                       errorCount++;
+                      if (!firstErrorMessage && response.message) {
+                        firstErrorMessage = response.message;
+                      }
                     }
                   } catch (err) {
                     errorCount++;
+                    if (!firstErrorMessage) {
+                      if (err && typeof err === 'object' && 'message' in err) {
+                        firstErrorMessage = (err as { message: string }).message;
+                      } else if (err instanceof Error) {
+                        firstErrorMessage = err.message;
+                      }
+                    }
                   }
                 }
                 
@@ -811,9 +844,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 }
                 
                 if (errorCount > 0) {
-                  const message = errorCount === 1 
+                  const message = firstErrorMessage || (errorCount === 1 
                     ? '1 mensagem não pôde ser enviada'
-                    : `${errorCount} mensagens não puderam ser enviadas`;
+                    : `${errorCount} mensagens não puderam ser enviadas`);
                   error(message);
                 }
               } catch (err) {
@@ -830,6 +863,7 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
               try {
                 let successCount = 0;
                 let errorCount = 0;
+                let firstErrorMessage = '';
                 
                 for (const item of items) {
                   if (item.status === 'cancelado') continue;
@@ -839,9 +873,19 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                       successCount++;
                     } else {
                       errorCount++;
+                      if (!firstErrorMessage && response.message) {
+                        firstErrorMessage = response.message;
+                      }
                     }
                   } catch (err) {
                     errorCount++;
+                    if (!firstErrorMessage) {
+                      if (err && typeof err === 'object' && 'message' in err) {
+                        firstErrorMessage = (err as { message: string }).message;
+                      } else if (err instanceof Error) {
+                        firstErrorMessage = err.message;
+                      }
+                    }
                   }
                 }
                 
@@ -853,9 +897,9 @@ const ContratoModal: React.FC<ContratoModalProps> = ({
                 }
                 
                 if (errorCount > 0) {
-                  const message = errorCount === 1 
+                  const message = firstErrorMessage || (errorCount === 1 
                     ? '1 email não pôde ser enviado'
-                    : `${errorCount} emails não puderam ser enviados`;
+                    : `${errorCount} emails não puderam ser enviados`);
                   error(message);
                 }
               } catch (err) {

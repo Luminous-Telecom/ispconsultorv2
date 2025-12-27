@@ -129,6 +129,11 @@ export class WhatsAppService {
           continue;
         }
 
+        if (!cliente.recebe_whatsapp) {
+          logger.info(`WhatsApp não enviado para cliente ${cliente.id}: comunicação por WhatsApp desativada`);
+          continue;
+        }
+
         const contratoRef: Contrato | undefined = titulo.contrato_id 
           ? ({ id: titulo.contrato_id } as Contrato)
           : undefined;
@@ -569,6 +574,10 @@ export class WhatsAppService {
 
       if (!cliente.telefone) {
         return { sucesso: false, mensagem: 'Cliente não possui telefone cadastrado' };
+      }
+
+      if (!cliente.recebe_whatsapp) {
+        return { sucesso: false, mensagem: 'Ative a comunicação "Recebe WhatsApp" na aba Contato do cadastro do cliente para enviar mensagens' };
       }
 
       const servidor = await ServidorWhatsApp.findOne({ where: { ativo: true } });

@@ -414,22 +414,40 @@ export class TituloService {
    * Enviar título via WhatsApp
    */
   static async enviarWhatsApp(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await tituloServiceInstance.enviarWhatsApp(id);
-    return {
-      success: response.success || true,
-      message: response.message || response.data?.message || 'Mensagem enviada com sucesso'
-    };
+    try {
+      const response = await tituloServiceInstance.enviarWhatsApp(id);
+      return {
+        success: response.success || true,
+        message: response.message || response.data?.message || 'Mensagem enviada com sucesso'
+      };
+    } catch (error) {
+      // Se for um ApiError, extrair a mensagem
+      if (error && typeof error === 'object' && 'message' in error) {
+        const apiError = error as { message: string; statusCode?: number };
+        throw new Error(apiError.message || 'Erro ao enviar mensagem');
+      }
+      throw error;
+    }
   }
 
   /**
    * Enviar título via Email
    */
   static async enviarEmail(id: number): Promise<{ success: boolean; message: string }> {
-    const response = await tituloServiceInstance.enviarEmail(id);
-    return {
-      success: response.success || true,
-      message: response.message || response.data?.message || 'Email enviado com sucesso'
-    };
+    try {
+      const response = await tituloServiceInstance.enviarEmail(id);
+      return {
+        success: response.success || true,
+        message: response.message || response.data?.message || 'Email enviado com sucesso'
+      };
+    } catch (error) {
+      // Se for um ApiError, extrair a mensagem
+      if (error && typeof error === 'object' && 'message' in error) {
+        const apiError = error as { message: string; statusCode?: number };
+        throw new Error(apiError.message || 'Erro ao enviar email');
+      }
+      throw error;
+    }
   }
 }
 

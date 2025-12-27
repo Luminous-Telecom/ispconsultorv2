@@ -108,6 +108,11 @@ export class EmailService {
           continue;
         }
 
+        if (!cliente.recebe_email) {
+          logger.info(`Email não enviado para cliente ${cliente.id}: comunicação por email desativada`);
+          continue;
+        }
+
         let corpoHtml = '';
         if (mensagem?.mensagem_padrao) {
           const contratoRef: (Partial<Contrato> & { id: number }) | undefined = titulo.contrato_id ? { id: titulo.contrato_id } : undefined;
@@ -240,6 +245,10 @@ export class EmailService {
 
       if (!cliente.email) {
         return { sucesso: false, mensagem: 'Cliente não possui email cadastrado' };
+      }
+
+      if (!cliente.recebe_email) {
+        return { sucesso: false, mensagem: 'Ative a comunicação "Recebe Email" na aba Contato do cadastro do cliente para enviar mensagens' };
       }
 
       const servidor = await ServidorEmail.findOne({ where: { ativo: true } });
