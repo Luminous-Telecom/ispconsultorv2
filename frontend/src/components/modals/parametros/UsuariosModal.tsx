@@ -42,11 +42,14 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
     searchDebounceMs: 300,
     resetPageOnFilterChange: true,
   });
+
+  const [searchField, setSearchField] = useState<string>('nome');
   
   const { data: usuariosData, isLoading, refetch } = useUsuarios({
     page: tableFilters.page,
     limit: tableFilters.limit,
-    search: tableFilters.debouncedSearch || undefined
+    search: tableFilters.debouncedSearch || undefined,
+    searchField: searchField || undefined
   });
 
   const usuarios = usuariosData?.data || [];
@@ -200,6 +203,13 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
               loading: isLoading,
               searchable: true,
               searchPlaceholder: 'Buscar por nome ou email...',
+              searchFields: [
+                { key: 'id', label: 'ID' },
+                { key: 'nome', label: 'Nome' },
+                { key: 'email', label: 'Email' },
+                { key: 'role', label: 'Perfil' },
+                { key: 'ativo', label: 'Status' }
+              ],
               sortable: true,
               striped: true,
               hover: true,
@@ -220,7 +230,11 @@ const UsuariosModal: React.FC<UsuariosModalProps> = ({
               setSelectedItems(items);
             }}
             onSort={tableFilters.setSort}
-            onSearch={tableFilters.setSearch}
+            onSearch={(term, field) => {
+              tableFilters.setSearch(term);
+              setSearchField(field);
+            }}
+            onSearchFieldChange={setSearchField}
             onPageChange={tableFilters.setPage}
             onPageSizeChange={tableFilters.setLimit}
             onRefresh={refetch}

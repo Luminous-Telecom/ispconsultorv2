@@ -38,7 +38,8 @@ interface TableProps<T = Record<string, unknown>> {
   onSelectionChange?: (selectedItems: T[]) => void;
   onSort?: (column: string, direction: SortDirection) => void;
   onFilter?: (filters: Record<string, FilterValue>) => void;
-  onSearch?: (term: string) => void;
+  onSearch?: (term: string, field: string) => void;
+  onSearchFieldChange?: (field: string) => void;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onRefresh?: () => void;
@@ -63,6 +64,7 @@ function Table<T extends { id: number | string }>({
   onRefresh,
   onAudit,
   auditEntity,
+  onSearchFieldChange,
   className = '',
   tableId,
   title
@@ -314,6 +316,8 @@ function Table<T extends { id: number | string }>({
     bulkActions = [],
     searchable = true,
     searchPlaceholder = 'Buscar...',
+    searchField: configSearchField = '',
+    searchFields: configSearchFields,
     sortable = true,
     selectable = true,
     multiSelect = false,
@@ -334,6 +338,9 @@ function Table<T extends { id: number | string }>({
   } = config;
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSearchField, setSelectedSearchField] = useState<string>(
+    configSearchField || (configSearchFields && configSearchFields.length > 0 ? configSearchFields[0].key : '')
+  );
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const _tableRef = useRef<HTMLTableElement>(null);
 
@@ -373,7 +380,7 @@ function Table<T extends { id: number | string }>({
     onSelectionChange: handleSelectionChange,
     onSort,
     onFilter,
-    onSearch,
+    onSearch: onSearch ? (term: string, field?: string) => onSearch(term, field || selectedSearchField) : undefined,
     onPageChange,
     onPageSizeChange,
     onRefresh,
@@ -526,19 +533,19 @@ function Table<T extends { id: number | string }>({
       // Propagar para callback externo imediatamente se necessário
       // Não chamamos tableActions aqui para evitar race condition com o efeito acima
       if (onSearchRef.current) {
-        onSearchRef.current(headerSearchValue);
+        onSearchRef.current(headerSearchValue, selectedSearchField);
       }
     }
-  }, [isMobile, headerSearchValue, searchTerm]);
+  }, [isMobile, headerSearchValue, searchTerm, selectedSearchField]);
 
   // Conectar busca com callback externo
   useEffect(() => {
     // Apenas chamar callback se não for mobile (no mobile já chamamos acima)
     // Ou se for uma mudança iniciada pelo hook (ex: filtro)
     if (!isMobile && onSearch && searchTerm !== state.searchTerm) {
-      onSearch(searchTerm);
+      onSearch(searchTerm, selectedSearchField);
     }
-  }, [searchTerm, onSearch, state.searchTerm, isMobile]);
+  }, [searchTerm, selectedSearchField, onSearch, state.searchTerm, isMobile]);
 
   // Fechar dropdown quando clicar fora (callback memoizado)
   const handleClickOutside = useCallback(() => {
@@ -1279,16 +1286,42 @@ function Table<T extends { id: number | string }>({
         <div className="d-flex align-items-center gap-3">
           {/* Busca */}
           {searchable && (
-            <div className="search-box" style={{ minWidth: '300px' }}>
-              <FormField
-                type="text"
-                name="search"
-                value={searchTerm}
-                onChange={(val) => setSearchTerm(val as string)}
-                placeholder={searchPlaceholder}
-                icon="search"
-                size="sm"
-              />
+            <div className="search-box d-flex align-items-center gap-2" style={{ minWidth: '300px' }}>
+              {configSearchFields && configSearchFields.length > 0 && (
+                <select
+                  className="form-select form-select-sm"
+                  value={selectedSearchField}
+                  onChange={(e) => {
+                    const field = e.target.value;
+                    setSelectedSearchField(field);
+                    onSearchFieldChange?.(field);
+                  }}
+                  style={{ width: 'auto', minWidth: '150px' }}
+                >
+                  {configSearchFields.map((field) => (
+                    <option key={field.key} value={field.key}>
+                      {field.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <div style={{ flex: 1 }}>
+                <FormField
+                  type="text"
+                  name="search"
+                  value={searchTerm}
+                  onChange={(val) => {
+                    const newValue = val as string;
+                    setSearchTerm(newValue);
+                    if (onSearchRef.current) {
+                      onSearchRef.current(newValue, selectedSearchField);
+                    }
+                  }}
+                  placeholder={searchPlaceholder}
+                  icon="search"
+                  size="sm"
+                />
+              </div>
             </div>
           )}
           
@@ -1440,7 +1473,25 @@ function Table<T extends { id: number | string }>({
           {/* Busca e controles customizados à esquerda */}
           <div className="d-flex align-items-center gap-3">
             {searchable && (
-              <div className="d-flex align-items-center">
+              <div className="d-flex align-items-center gap-2">
+                {configSearchFields && configSearchFields.length > 0 && (
+                  <select
+                    className="form-select form-select-sm"
+                    value={selectedSearchField}
+                    onChange={(e) => {
+                      const field = e.target.value;
+                      setSelectedSearchField(field);
+                      onSearchFieldChange?.(field);
+                    }}
+                    style={{ width: 'auto', minWidth: '150px', height: '32px' }}
+                  >
+                    {configSearchFields.map((field) => (
+                      <option key={field.key} value={field.key}>
+                        {field.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <input
                   type="text"
                   className="form-control form-control-sm"
@@ -1448,7 +1499,13 @@ function Table<T extends { id: number | string }>({
                   name="search"
                   placeholder={searchPlaceholder}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    setSearchTerm(newValue);
+                    if (onSearchRef.current) {
+                      onSearchRef.current(newValue, selectedSearchField);
+                    }
+                  }}
                   style={{ width: '400px', height: '32px' }}
                 />
               </div>

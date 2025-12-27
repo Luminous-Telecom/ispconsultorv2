@@ -13,6 +13,7 @@ function ListModal<T extends { id: number | string }>({
   onSelectionChange,
   search: _search = '',
   onSearchChange,
+  onSearchFieldChange,
   pagination,
   onPageChange,
   limit: _limit = 15,
@@ -28,6 +29,7 @@ function ListModal<T extends { id: number | string }>({
     title,
     columns,
     searchPlaceholder = 'Buscar...',
+    searchFields,
     emptyMessage = 'Nenhum item encontrado',
     multiSelect = false
   } = config;
@@ -55,6 +57,7 @@ function ListModal<T extends { id: number | string }>({
           multiSelect,
           searchable: !!onSearchChange,
           searchPlaceholder,
+          searchFields,
           emptyMessage,
           className: 'no-padding',
           bulkActions: useMemo(() => {
@@ -82,7 +85,10 @@ function ListModal<T extends { id: number | string }>({
           }, [bulkActions])
         }}
         onSelectionChange={onSelectionChange}
-        onSearch={onSearchChange}
+        onSearch={(search, field) => {
+          onSearchChange?.(search, field);
+        }}
+        onSearchFieldChange={onSearchFieldChange}
         onPageChange={onPageChange}
         onPageSizeChange={onLimitChange}
         onRefresh={onRefresh || refreshQueryFn}

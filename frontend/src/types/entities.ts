@@ -115,6 +115,7 @@ export interface TituloFilters extends Record<string, string | number | boolean 
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   status?: 'pendente' | 'pago' | 'vencido' | 'cancelado' | 'parcial' | 'pago_atraso' | `!${string}`;
   cliente_id?: number;
   data_vencimento_inicio?: string;
@@ -533,6 +534,7 @@ export interface UsuarioFilters extends Record<string, string | number | boolean
   page?: number;
   limit?: number;
   search?: string;
+  searchField?: string;
   ativo?: boolean;
 }
 

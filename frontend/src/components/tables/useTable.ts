@@ -260,7 +260,7 @@ export const useTable = <T extends { id: number | string }>(options: UseTableOpt
         if (prev.searchTerm === term) return prev;
         return { ...prev, searchTerm: term };
       });
-      onSearchRef.current?.(term);
+      onSearchRef.current?.(term, '');
     },
 
     setSort: (column: string, direction: SortDirection) => {

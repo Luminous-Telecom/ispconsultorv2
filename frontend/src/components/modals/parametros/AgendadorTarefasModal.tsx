@@ -121,6 +121,13 @@ const AgendadorTarefasModal: React.FC<AgendadorTarefasModalProps> = ({
       }
     ],
     searchPlaceholder: 'Buscar por tipo ou descrição...',
+    searchFields: [
+      { key: 'id', label: 'ID' },
+      { key: 'tipo', label: 'Tipo' },
+      { key: 'descricao', label: 'Descrição' },
+      { key: 'frequencia', label: 'Frequência' },
+      { key: 'hora_execucao', label: 'Horário' }
+    ],
     multiSelect: false
   });
 

@@ -11,6 +11,7 @@ export interface ListModalConfig<T> {
   title: string;
   columns: ListModalColumn<T>[];
   searchPlaceholder?: string;
+  searchFields?: Array<{ key: string; label: string }>;
   emptyMessage?: string;
   multiSelect?: boolean;
   showRefresh?: boolean;
@@ -26,7 +27,8 @@ export interface ListModalProps<T> {
   selectedItems?: T[];
   onSelectionChange?: (items: T[]) => void;
   search?: string;
-  onSearchChange?: (search: string) => void;
+  onSearchChange?: (search: string, field: string) => void;
+  onSearchFieldChange?: (field: string) => void;
   pagination?: {
     current_page: number;
     last_page: number;

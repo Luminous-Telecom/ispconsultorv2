@@ -42,6 +42,17 @@ const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
             multiSelect: true,
             searchable: true,
             searchPlaceholder: 'Buscar por ID, carnê, valor...',
+            searchFields: [
+              { key: 'id', label: 'ID' },
+              { key: 'numero_titulo', label: 'Número Título' },
+              { key: 'status', label: 'Status' },
+              { key: 'valor', label: 'Valor' },
+              { key: 'valor_pago', label: 'Valor Pago' },
+              { key: 'data_vencimento', label: 'Data Vencimento' },
+              { key: 'data_pagamento', label: 'Data Pagamento' },
+              { key: 'charge_id', label: 'Charge ID' },
+              { key: 'nosso_numero', label: 'Nosso Número' }
+            ],
             sortable: true,
             striped: true,
             hover: true,

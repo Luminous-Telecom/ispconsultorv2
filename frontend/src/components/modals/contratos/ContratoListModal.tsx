@@ -548,6 +548,16 @@ const ContratoListModal: React.FC<ContratoListModalProps> = ({
               loading: isLoading,
               searchable: true,
               searchPlaceholder: 'Buscar por cliente ou plano...',
+              searchFields: [
+                { key: 'id', label: 'ID' },
+                { key: 'cliente_razao_social', label: 'Cliente' },
+                { key: 'plano_nome', label: 'Plano' },
+                { key: 'status', label: 'Status' },
+                { key: 'valor_final_num', label: 'Valor Final' },
+                { key: 'endereco', label: 'Endereço' },
+                { key: 'cidade', label: 'Cidade' },
+                { key: 'estado', label: 'Estado' }
+              ],
               sortable: true,
               striped: true,
               hover: true,

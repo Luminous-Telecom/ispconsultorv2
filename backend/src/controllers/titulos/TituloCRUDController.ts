@@ -5,6 +5,7 @@ import { Contrato } from '../../models/Contrato';
 import { Plano } from '../../models/Plano';
 import { Banco } from '../../models/Banco';
 import { Op, WhereOptions } from 'sequelize';
+import { sequelize } from '../../config/database';
 import { logger } from '../../utils/logger';
 import { normalizeDateForDb } from '../../utils/dateUtils';
 import { gerarLinkPagamentoPublico } from './TituloHelpers';
@@ -52,9 +53,22 @@ export class TituloCRUDController {
       }
 
       if (search) {
+        // Buscar apenas nos campos que correspondem às colunas da tabela
+        // Incluir busca em relacionamentos usando Sequelize.literal
+        const searchString = typeof search === 'string' ? search : String(search);
+        const searchPattern = `%${searchString}%`;
+        const escapedSearch = searchString.replace(/'/g, "''");
         (where as Record<symbol, unknown>)[Op.or] = [
-          { numero_titulo: { [Op.like]: `%${search}%` } },
-          { observacoes: { [Op.like]: `%${search}%` } }
+          { id: { [Op.like]: searchPattern } },
+          { numero_titulo: { [Op.like]: searchPattern } },
+          { status: { [Op.like]: searchPattern } },
+          { charge_id: { [Op.like]: searchPattern } },
+          { nosso_numero: { [Op.like]: searchPattern } },
+          { valor: { [Op.like]: searchPattern } },
+          { valor_pago: { [Op.like]: searchPattern } },
+          { contrato_id: { [Op.like]: searchPattern } },
+          sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = titulos.cliente_id AND (clientes.razao_social LIKE '${escapedSearch}' OR clientes.nome_fantasia LIKE '${escapedSearch}'))`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM planos WHERE planos.id = titulos.plano_id AND planos.nome_plano LIKE '${escapedSearch}')`)
         ];
       }
 

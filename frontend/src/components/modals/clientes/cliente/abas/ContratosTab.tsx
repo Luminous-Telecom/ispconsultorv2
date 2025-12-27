@@ -225,6 +225,18 @@ const ContratosTab: React.FC<ContratosTabProps> = ({
             multiSelect: false,
             searchable: true,
             searchPlaceholder: 'Buscar por plano, status, valor...',
+            searchFields: [
+              { key: 'id', label: 'ID' },
+              { key: 'plano_nome', label: 'Plano' },
+              { key: 'status', label: 'Status' },
+              { key: 'valor_final', label: 'Valor Final' },
+              { key: 'desconto_percentual', label: 'Desconto %' },
+              { key: 'desconto_valor', label: 'Desconto R$' },
+              { key: 'banco_nome', label: 'Banco' },
+              { key: 'endereco', label: 'Endereço' },
+              { key: 'cidade', label: 'Cidade' },
+              { key: 'estado', label: 'Estado' }
+            ],
             sortable: true,
             striped: true,
             hover: true,

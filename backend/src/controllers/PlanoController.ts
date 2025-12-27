@@ -37,10 +37,17 @@ export class PlanoController {
       const whereConditions: Array<WhereOptions<Plano>> = [];
       
       if (search) {
+        // Buscar apenas nos campos que correspondem às colunas da tabela
         whereConditions.push({
           [Op.or]: [
+            { id: { [Op.like]: `%${search}%` } },
             { nome_plano: { [Op.like]: `%${search}%` } },
-            { descricao: { [Op.like]: `%${search}%` } }
+            { descricao: { [Op.like]: `%${search}%` } },
+            { tipo_servico: { [Op.like]: `%${search}%` } },
+            { valor_mensal: { [Op.like]: `%${search}%` } },
+            { quantidade_usuarios: { [Op.like]: `%${search}%` } },
+            { periodicidade: { [Op.like]: `%${search}%` } },
+            { status: { [Op.like]: `%${search}%` } }
           ]
         } as WhereOptions<Plano>);
       }

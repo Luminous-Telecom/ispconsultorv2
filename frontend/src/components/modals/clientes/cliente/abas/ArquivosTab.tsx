@@ -189,6 +189,12 @@ const ArquivosTab: React.FC<ArquivosTabProps> = ({ clienteId, onAudit, auditEnti
       }
     ],
     searchPlaceholder: 'Buscar arquivos...',
+    searchFields: [
+      { key: 'id', label: 'ID' },
+      { key: 'nome', label: 'Nome' },
+      { key: 'tipo', label: 'Tipo' },
+      { key: 'origem', label: 'Origem' }
+    ],
     emptyMessage: 'Nenhum arquivo encontrado'
   }), [arquivos, deleteMutation, handleDownload, handleView]);
 

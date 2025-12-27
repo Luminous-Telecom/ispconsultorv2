@@ -101,6 +101,7 @@ export class ClienteController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 15;
       const search = req.query.search as string;
+      const searchField = req.query.searchField as string;
       const ativo = req.query.ativo as string;
       const cidade = req.query.cidade as string;
       const estado = req.query.estado as string;
@@ -111,12 +112,14 @@ export class ClienteController {
       const where: WhereOptions = {};
       
       if (search) {
-        (where as Record<symbol, unknown>)[Op.or] = [
-          { razao_social: { [Op.like]: `%${search}%` } },
-          { nome_fantasia: { [Op.like]: `%${search}%` } },
-          { email: { [Op.like]: `%${search}%` } },
-          { cnpj: { [Op.like]: `%${search}%` } }
-        ];
+        const searchPattern = `%${search}%`;
+        // Sempre buscar no campo específico selecionado
+        if (searchField) {
+          const allowedFields = ['id', 'cnpj', 'razao_social', 'nome_fantasia', 'email', 'whatsapp', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
+          if (allowedFields.includes(searchField)) {
+            where[searchField as keyof typeof where] = { [Op.like]: searchPattern };
+          }
+        }
       }
 
       if (ativo !== undefined) {

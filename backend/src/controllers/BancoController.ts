@@ -57,11 +57,16 @@ export class BancoController {
       
       const where: WhereOptions<Banco> = {};
       
-      // Filtro por busca
+      // Filtro por busca - buscar apenas nos campos que correspondem às colunas da tabela
       if (search) {
-        where.nome = {
-          [Op.like]: `%${search}%`
-        };
+        (where as Record<symbol, unknown>)[Op.or] = [
+          { id: { [Op.like]: `%${search}%` } },
+          { nome: { [Op.like]: `%${search}%` } },
+          { descricao: { [Op.like]: `%${search}%` } },
+          { tipo_banco: { [Op.like]: `%${search}%` } },
+          { sandbox: { [Op.like]: `%${search}%` } },
+          { ativo: { [Op.like]: `%${search}%` } }
+        ];
       }
       
       // Filtro por status

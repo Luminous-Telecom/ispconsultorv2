@@ -43,6 +43,7 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null);
+  const [searchField, setSearchField] = useState<string>('razao_social');
   
   const auditoria = useAuditoria();
 
@@ -196,13 +197,28 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         }
       }
     ],
-    searchPlaceholder: 'Buscar por CNPJ, razão social...',
+    searchPlaceholder: 'Buscar...',
+    searchFields: [
+      { key: 'id', label: 'ID' },
+      { key: 'cnpj', label: 'CNPJ' },
+      { key: 'razao_social', label: 'Razão Social' },
+      { key: 'nome_fantasia', label: 'Nome Fantasia' },
+      { key: 'email', label: 'Email' },
+      { key: 'whatsapp', label: 'WhatsApp' },
+      { key: 'endereco', label: 'Endereço' },
+      { key: 'numero', label: 'Número' },
+      { key: 'complemento', label: 'Complemento' },
+      { key: 'bairro', label: 'Bairro' },
+      { key: 'cidade', label: 'Cidade' },
+      { key: 'estado', label: 'Estado' }
+    ],
     multiSelect: false // Sempre permitir apenas 1 seleção
   });
 
   // Hook para buscar clientes usando parâmetros do useTableFilters
   const { data: clientesData, isLoading, refetch } = useClientes({
     search: tableFilters.debouncedSearch || undefined,
+    searchField: searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit
   });
@@ -306,7 +322,11 @@ const ClienteListModal: React.FC<ClienteListModalProps> = ({
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={tableFilters.setSearch}
+        onSearchChange={(search, field) => {
+          tableFilters.setSearch(search);
+          setSearchField(field);
+        }}
+        onSearchFieldChange={setSearchField}
         pagination={pagination}
         onPageChange={tableFilters.setPage}
         limit={tableFilters.limit}

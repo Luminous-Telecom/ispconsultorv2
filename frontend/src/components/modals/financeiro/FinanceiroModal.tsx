@@ -41,6 +41,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
   });
   
   const [selectedItems, setSelectedItems] = useState<Titulo[]>([]);
+  const [searchField, setSearchField] = useState<string>('numero_titulo');
   const [showCancelados, setShowCancelados] = useState(false);
   const [dataVencimentoInicio, setDataVencimentoInicio] = useState<string>('');
   const [dataVencimentoFim, setDataVencimentoFim] = useState<string>('');
@@ -78,6 +79,7 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
     page: tableFilters.page,
     limit: tableFilters.limit,
     search: tableFilters.debouncedSearch || undefined,
+    searchField: searchField || undefined,
     // Aplicar filtro de status no backend quando não mostrar cancelados
     ...(showCancelados ? {} : { status: '!cancelado' }),
     // Aplicar filtros de data de vencimento se preenchidos
@@ -495,6 +497,18 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 loading: isLoading,
                 searchable: true,
                 searchPlaceholder: 'Buscar por número, cliente ou observações...',
+                searchFields: [
+                  { key: 'id', label: 'ID' },
+                  { key: 'numero_titulo', label: 'Número Título' },
+                  { key: 'cliente', label: 'Cliente' },
+                  { key: 'plano_nome', label: 'Plano' },
+                  { key: 'contrato_id', label: 'Contrato' },
+                  { key: 'status', label: 'Status' },
+                  { key: 'valor', label: 'Valor' },
+                  { key: 'valor_pago', label: 'Valor Pago' },
+                  { key: 'charge_id', label: 'Charge ID' },
+                  { key: 'nosso_numero', label: 'Nosso Número' }
+                ],
                 sortable: true,
                 striped: true,
                 hover: true,
@@ -576,7 +590,15 @@ const FinanceiroModal: React.FC<FinanceiroModalProps> = ({
                 }
               }}
               onSort={tableFilters.setSort}
-              onSearch={tableFilters.setSearch}
+              onSearch={(term, field) => {
+                tableFilters.setSearch(term);
+                if (field) {
+                  setSearchField(field);
+                }
+              }}
+              onSearchFieldChange={(field) => {
+                setSearchField(field);
+              }}
               onPageChange={tableFilters.setPage}
               onPageSizeChange={tableFilters.setLimit}
               onRefresh={refetch}

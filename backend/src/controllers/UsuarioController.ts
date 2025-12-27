@@ -34,9 +34,13 @@ export class UsuarioController {
       const whereClause: WhereOptions = {};
       
       if (search) {
+        // Buscar apenas nos campos que correspondem às colunas da tabela
         (whereClause as Record<symbol, unknown>)[Op.or] = [
+          { id: { [Op.like]: `%${search}%` } },
           { nome: { [Op.like]: `%${search}%` } },
-          { email: { [Op.like]: `%${search}%` } }
+          { email: { [Op.like]: `%${search}%` } },
+          { role: { [Op.like]: `%${search}%` } },
+          { ativo: { [Op.like]: `%${search}%` } }
         ];
       }
 

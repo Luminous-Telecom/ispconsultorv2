@@ -60,6 +60,7 @@ export interface ApiError {
  */
 export interface BaseFilters {
   search?: string;
+  searchField?: string;
   page?: number;
   limit?: number;
   sortColumn?: string;

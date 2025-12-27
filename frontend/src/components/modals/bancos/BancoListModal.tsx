@@ -125,12 +125,23 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
       }
     ],
     searchPlaceholder: 'Buscar por nome do banco...',
+    searchFields: [
+      { key: 'id', label: 'ID' },
+      { key: 'nome', label: 'Nome' },
+      { key: 'descricao', label: 'Descrição' },
+      { key: 'tipo_banco', label: 'Tipo de Banco' },
+      { key: 'sandbox', label: 'Sandbox' },
+      { key: 'ativo', label: 'Status' }
+    ],
     multiSelect: false
   });
+
+  const [searchField, setSearchField] = useState<string>('nome');
 
   // Hook para buscar bancos usando parâmetros do useTableFilters
   const { data: bancosData, isLoading, refetch } = useBancos({
     search: tableFilters.debouncedSearch || undefined,
+    searchField: searchField || undefined,
     tipo_banco: undefined,
     page: tableFilters.page,
     limit: tableFilters.limit
@@ -243,7 +254,11 @@ const BancoListModal: React.FC<BancoListModalProps> = ({
         selectedItems={selectedBanco ? [selectedBanco] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={tableFilters.setSearch}
+        onSearchChange={(search, field) => {
+          tableFilters.setSearch(search);
+          setSearchField(field);
+        }}
+        onSearchFieldChange={setSearchField}
         pagination={pagination}
         onPageChange={tableFilters.setPage}
         limit={tableFilters.limit}

@@ -147,12 +147,25 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
       }
     ],
     searchPlaceholder: 'Buscar por nome do plano...',
+    searchFields: [
+      { key: 'id', label: 'ID' },
+      { key: 'nome_plano', label: 'Nome do Plano' },
+      { key: 'descricao', label: 'Descrição' },
+      { key: 'tipo_servico', label: 'Tipo de Serviço' },
+      { key: 'valor_mensal', label: 'Valor Mensal' },
+      { key: 'quantidade_usuarios', label: 'Quantidade Usuários' },
+      { key: 'periodicidade', label: 'Periodicidade' },
+      { key: 'status', label: 'Status' }
+    ],
     multiSelect: false
   });
+
+  const [searchField, setSearchField] = useState<string>('nome_plano');
 
   // Hook para buscar planos usando parâmetros do useTableFilters
   const { data: planosData, isLoading, refetch } = usePlanos({
     search: tableFilters.debouncedSearch || undefined,
+    searchField: searchField || undefined,
     page: tableFilters.page,
     limit: tableFilters.limit
   });
@@ -278,7 +291,11 @@ const PlanoListModal: React.FC<PlanoListModalProps> = ({
         selectedItems={selectedItem ? [selectedItem] : []}
         onSelectionChange={handleSelectionChange}
         search={tableFilters.search}
-        onSearchChange={tableFilters.setSearch}
+        onSearchChange={(search, field) => {
+          tableFilters.setSearch(search);
+          setSearchField(field);
+        }}
+        onSearchFieldChange={setSearchField}
         pagination={pagination}
         onPageChange={tableFilters.setPage}
         limit={tableFilters.limit}

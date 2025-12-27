@@ -6,6 +6,7 @@ import { Banco } from '../models/Banco';
 import { ModeloDocumento } from '../models/ModeloDocumento';
 import { ContratoPlanoAdicional } from '../models/ContratoPlanoAdicional';
 import { Op, WhereOptions, Transaction } from 'sequelize';
+import { sequelize } from '../config/database';
 import * as Joi from 'joi';
 import { logger } from '../utils/logger';
 import { withTransaction } from '../utils/transaction';
@@ -88,7 +89,7 @@ export class ContratoController {
   // Listar todos os contratos com paginação
   static async list(req: Request, res: Response): Promise<void> {
     try {
-      const { page = 1, limit = 10, search = '', status } = req.query;
+      const { page = 1, limit = 10, search = '', status, searchField } = req.query;
       const pageNum = Number(page);
       const limitNum = Number(limit);
       const offset = (pageNum - 1) * limitNum;
@@ -96,9 +97,36 @@ export class ContratoController {
       const whereClause: WhereOptions = {};
       
       if (search) {
-        (whereClause as Record<symbol, unknown>)[Op.or] = [
-          { observacoes: { [Op.like]: `%${search}%` } }
-        ];
+        const searchString = typeof search === 'string' ? search : String(search);
+        const searchPattern = `%${searchString}%`;
+        const escapedSearch = searchString.replace(/'/g, "''");
+        // Se um campo específico foi selecionado, buscar apenas nele
+        if (searchField && typeof searchField === 'string') {
+          // Buscar em um campo específico
+          if (searchField === 'cliente') {
+            (whereClause as Record<symbol, unknown>)[Op.or] = [
+              sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = contratos.cliente_id AND clientes.razao_social LIKE '${escapedSearch}')`)
+            ];
+          } else if (searchField === 'plano') {
+            (whereClause as Record<symbol, unknown>)[Op.or] = [
+              sequelize.literal(`EXISTS (SELECT 1 FROM planos WHERE planos.id = contratos.plano_id AND planos.nome_plano LIKE '${escapedSearch}')`)
+            ];
+          } else {
+            // Para outros campos diretos
+            (whereClause as Record<symbol, unknown>)[Op.or] = [
+              { [searchField]: { [Op.like]: searchPattern } }
+            ];
+          }
+        } else {
+          // Buscar em múltiplos campos se nenhum campo específico for fornecido
+          (whereClause as Record<symbol, unknown>)[Op.or] = [
+            { id: { [Op.like]: searchPattern } },
+            { status: { [Op.like]: searchPattern } },
+            { valor_final: { [Op.like]: searchPattern } },
+            sequelize.literal(`EXISTS (SELECT 1 FROM clientes WHERE clientes.id = contratos.cliente_id AND clientes.razao_social LIKE '${escapedSearch}')`),
+            sequelize.literal(`EXISTS (SELECT 1 FROM planos WHERE planos.id = contratos.plano_id AND planos.nome_plano LIKE '${escapedSearch}')`)
+          ];
+        }
       }
 
       if (status) {

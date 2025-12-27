@@ -101,6 +101,9 @@ export interface TableConfig<T = Record<string, unknown>> {
   bulkActions?: BulkAction<T>[];
   searchable?: boolean;
   searchPlaceholder?: string;
+  searchField?: string;
+  searchFields?: Array<{ key: string; label: string }>;
+  onSearchFieldChange?: (field: string) => void;
   sortable?: boolean;
   selectable?: boolean;
   multiSelect?: boolean;
@@ -175,7 +178,7 @@ export interface UseTableOptions<T = Record<string, unknown>> {
   onSelectionChange?: (selectedItems: T[]) => void;
   onSort?: (column: string, direction: SortDirection) => void;
   onFilter?: (filters: Record<string, FilterValue>) => void;
-  onSearch?: (term: string) => void;
+  onSearch?: (term: string, field?: string) => void;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   onRefresh?: () => void;
