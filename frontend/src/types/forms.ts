@@ -38,7 +38,6 @@ export interface ClienteFormData {
   tipo_cobranca: 'titulo' | 'boleto' | 'carne';
   valor_primeiro_titulo: 'total' | 'proporcional';
   recebe_email: boolean;
-  recebe_sms: boolean;
   recebe_whatsapp: boolean;
   observacoes: string;
 }

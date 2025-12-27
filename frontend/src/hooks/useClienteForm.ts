@@ -71,7 +71,6 @@ const initialFormData: ClienteFormData = {
   tipo_cobranca: 'titulo',
   valor_primeiro_titulo: 'total',
   recebe_email: true,
-  recebe_sms: false,
   recebe_whatsapp: true,
   observacoes: ''
 };
@@ -173,7 +172,6 @@ export const useClienteForm = ({
       tipo_cobranca: (cliente.tipo_cobranca === 'carne' ? 'titulo' : cliente.tipo_cobranca) || 'titulo',
       valor_primeiro_titulo: cliente.valor_primeiro_titulo || 'total',
       recebe_email: cliente.recebe_email ?? true,
-      recebe_sms: cliente.recebe_sms ?? false,
       recebe_whatsapp: cliente.recebe_whatsapp ?? true,
       observacoes: cliente.observacoes || ''
     } as ZodClienteFormData;
@@ -385,9 +383,8 @@ export const useClienteForm = ({
       ativo: data.ativo,
       tipo_cobranca: data.tipo_cobranca as 'titulo' | 'boleto' | 'carne',
       valor_primeiro_titulo: data.valor_primeiro_titulo as 'total' | 'proporcional',
-      recebe_email: data.recebe_email,
-      recebe_sms: data.recebe_sms,
-      recebe_whatsapp: data.recebe_whatsapp,
+        recebe_email: data.recebe_email,
+        recebe_whatsapp: data.recebe_whatsapp,
       observacoes: data.observacoes || undefined
     };
 

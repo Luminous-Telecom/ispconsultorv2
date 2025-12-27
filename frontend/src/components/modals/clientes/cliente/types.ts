@@ -37,7 +37,6 @@ export interface ClienteForm {
   tipo_cobranca: 'titulo' | 'carnê';
   valor_primeiro_titulo: 'total' | 'parcial';
   recebe_email: boolean;
-  recebe_sms: boolean;
   recebe_whatsapp: boolean;
   observacoes: string;
 }

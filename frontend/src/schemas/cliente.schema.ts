@@ -116,8 +116,6 @@ export const clienteSchema = z.object({
   // Preferências de comunicação
   recebe_email: z.boolean().default(true),
   
-  recebe_sms: z.boolean().default(false),
-  
   recebe_whatsapp: z.boolean().default(true),
   
   // Observações

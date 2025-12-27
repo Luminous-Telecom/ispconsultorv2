@@ -43,17 +43,6 @@ const ContatoTab: React.FC<ClienteTabProps> = ({
 
         <div className="mb-3">
           <FormField
-            name="recebe_sms"
-            type="checkbox"
-            label="Recebe SMS"
-            value={formData.recebe_sms}
-            onChange={(value: FormValue) => handleInputChange('recebe_sms', value as boolean)}
-            formPrefix={formPrefix}
-          />
-        </div>
-
-        <div className="mb-3">
-          <FormField
             name="recebe_whatsapp"
             type="checkbox"
             label="Recebe WhatsApp"

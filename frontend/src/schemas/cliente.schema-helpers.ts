@@ -51,7 +51,6 @@ export const validateClienteFormWithZod = (data: ClienteFormData): ClienteFormEr
       tipo_cobranca: data.tipo_cobranca || 'titulo',
       valor_primeiro_titulo: data.valor_primeiro_titulo || 'total',
       recebe_email: data.recebe_email ?? true,
-      recebe_sms: data.recebe_sms ?? false,
       recebe_whatsapp: data.recebe_whatsapp ?? true,
       observacoes: data.observacoes || ''
     };

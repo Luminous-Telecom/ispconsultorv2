@@ -29,7 +29,6 @@ export const useClienteEditModal = (clienteId: number | null) => {
     tipo_cobranca: 'titulo',
     valor_primeiro_titulo: 'total',
     recebe_email: true,
-    recebe_sms: false,
     recebe_whatsapp: true,
     observacoes: ''
   });
@@ -110,7 +109,6 @@ export const useClienteEditModal = (clienteId: number | null) => {
       tipo_cobranca: formData.tipo_cobranca,
       valor_primeiro_titulo: formData.valor_primeiro_titulo,
       recebe_email: formData.recebe_email,
-      recebe_sms: formData.recebe_sms,
       recebe_whatsapp: formData.recebe_whatsapp,
       observacoes: formData.observacoes
     };
